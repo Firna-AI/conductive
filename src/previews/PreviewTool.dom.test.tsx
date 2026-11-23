@@ -1,12 +1,7 @@
-import type { Preview } from '../shared/generated/Preview'
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
-import { WorkspaceStream } from '../app/events'
-import { ManualDelay, RecordingEvents } from '../app/test-kit'
-import { ToolEvents } from '../shell/workspace/tools/tool-events'
-import { previewsPath } from '../shared/previews'
+import { servicePaths } from '../shared/services'
 import {
-  accessibleName,
   byLabel,
   byRole,
   byText,
@@ -14,12 +9,11 @@ import {
   queryByRole,
   queryByText,
 } from '../test-support/dom-queries'
-import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
+import { serviceList } from '../test-support/fixtures/services'
 import {
   deferred,
   holdAnimationFrames,
-  mount,
   MOUNTED_TEST_TIMEOUT,
   press,
   typeText,
@@ -27,97 +21,24 @@ import {
 } from '../test-support/mount'
 import { fullReport, refusedReport } from '../test-support/recorded-repairs'
 import type { ApiFetch } from '../terminal/tool-parts/request'
-import { PreviewTool } from './PreviewTool'
+import {
+  askForServer,
+  connectedServices,
+  draftIn,
+  listIntro,
+  mountTool,
+  path,
+  preview,
+  serverRows,
+  serverWith,
+  unavailable,
+  waitForForm,
+  workspaceEvents,
+} from './preview-tool-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const { org, workspace: workspaceId } = FAKE_IDS
-const path = previewsPath(org, workspaceId)
-const listIntro = 'Open a web server that runs in this sandbox.'
-const askForServer =
-  'Servers that run in this sandbox show here. Start one in the terminal, or ask the agent.'
-const unavailable = 'The latest list of servers is unavailable'
-
-function preview(port: number): Preview {
-  return {
-    id: `preview-${port}`,
-    port,
-    url: `https://p${port}a4826b97d1c04f15802c7e9bb2546d30.conductive-previews.test/`,
-    expiresAt: FAKE_TIME + 86_400_000,
-  }
-}
-
-/** The fake API with these open previews. */
-function serverWith(previews: readonly Preview[]): FakeApiServer {
-  const server = new FakeApiServer()
-  server.json('GET', path, { previews })
-  return server
-}
-
-/**
- * The events of the workspace as the Preview tool reads them in the app:
- * raw socket messages, through the stream and the tool events.
- */
-function workspaceEvents() {
-  const source = new RecordingEvents()
-  const target = { orgId: org, workspaceId }
-  const stream = new WorkspaceStream(source, target, new ManualDelay().delay)
-  const tools = new ToolEvents()
-  tools.follow(stream)
-  stream.start()
-  source.send({
-    type: 'history',
-    history: { events: [], throughEventNumber: 0 },
-  })
-  let last = 0
-  const send = (event: object, occurredAt = FAKE_TIME) => {
-    last += 1
-    const envelope = { workspaceId, eventNumber: last, occurredAt, event }
-    source.send({ type: 'event', envelope })
-  }
-  return { tools, send }
-}
-
-/** Mounts the tool with no preview in its address, at FAKE_TIME. */
-async function mountTool(fetch: ApiFetch, tools: ToolEvents) {
-  const navigate = vi.fn<(previewId: string) => void>()
-  await mount(
-    <PreviewTool
-      now={() => FAKE_TIME}
-      route={{
-        previewId: null,
-        port: null,
-        href: (id) => `#${id}`,
-        navigate,
-        replace: vi.fn(),
-      }}
-      touch={false}
-      workspace={{ orgId: org, workspaceId, fetch, subscribe: tools.subscribe }}
-    />,
-  )
-  return navigate
-}
-
-/** The spoken names of the buttons of the detected servers. */
-function serverRows(): string[] {
-  const list = byRole('list', 'Servers in this sandbox')
-  return Array.from(list.querySelectorAll('button'), accessibleName)
-}
-
-const waitForForm = () =>
-  waitFor(() => queryByRole('button', 'Open preview'), 'the port form')
-
-/** The text of the port field, and whether it keeps the focus and selection. */
-function draftIn(label: string) {
-  const field = byLabel(label)
-  return field instanceof HTMLInputElement
-    ? {
-        value: field.value,
-        focused: document.activeElement === field,
-        selection: [field.selectionStart, field.selectionEnd],
-      }
-    : null
-}
 
 describe('the Preview tool with detected servers', () => {
   it('lists each reported server without a tab after "+", waits while one opens, and opens its port with the open request', async () => {
@@ -208,6 +129,33 @@ describe('the Preview tool with detected servers', () => {
       { port: 8080 },
     ])
     expect(navigate.mock.calls).toEqual([['preview-8080']])
+  })
+
+  it('keeps a typed port, its focus, and its selection while the Services part shows and goes', async () => {
+    holdAnimationFrames()
+    const server = serverWith([])
+    const { tools, send } = workspaceEvents()
+    const services = connectedServices(server.fetch, tools)
+    await mountTool(server.fetch, tools, services)
+    await waitForForm()
+    const field = byLabel('Port')
+    await typeText(field, '8080')
+    if (field instanceof HTMLInputElement) field.setSelectionRange(2, 4)
+    const kept = { value: '8080', focused: true, selection: [2, 4] }
+    const catalogue = servicePaths.catalogue(org, workspaceId)
+
+    server.json('GET', catalogue, serviceList())
+    send({ type: 'ports.updated', ports: [] })
+    await waitFor(() => queryByRole('region', 'Services'), 'the Services part')
+    const shown = draftIn('Other port')
+    server.json('GET', catalogue, { state: 'unsupported' })
+    send({ type: 'ports.updated', ports: [] })
+    await waitFor(() => queryByText(askForServer), 'the request for a server')
+
+    expect({ shown, gone: draftIn('Port') }).toEqual({
+      shown: kept,
+      gone: kept,
+    })
   })
 
   it('keeps the field, without the request for a server, when each reported server has a tab', async () => {

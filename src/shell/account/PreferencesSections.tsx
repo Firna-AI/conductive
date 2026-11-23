@@ -80,6 +80,7 @@ export function DefaultsSection() {
           change={change}
           choice={saving ?? account.defaultChoice}
           disabled={save.pending}
+          favourites={account.favourites}
           models={models}
           placement="below-start"
         />

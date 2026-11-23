@@ -59,7 +59,7 @@ function checked(control: HTMLElement, name: string): boolean {
 }
 
 describe('the Capabilities control of a workspace', () => {
-  test('a member who is not an admin sees the approvals of this session, and changes a pre-approval, an approval, and Mac access', async () => {
+  test('a member who is not an admin sees the approvals of this session, and changes a pre-approval and an approval', async () => {
     const server = capabilitiesServer(new FakeApiServer({ role: 'member' }))
     const tab = await openTab(server)
     click(byRole('button', 'Capabilities', tab.view))
@@ -90,15 +90,11 @@ describe('the Capabilities control of a workspace', () => {
       byRole('button', 'Remove PROD_DATABASE_URL from this session', control),
     )
     await settle()
-    answerWith(server, { ...left, macAccess: false })
-    click(byRole('switch', 'Mac access', control))
-    await settle()
     expect({
       sent: await bodiesOf(server, 'PATCH', path, from),
       covered,
       uncovered,
       approvals: approvals(control),
-      mac: byRole('switch', 'Mac access', control).getAttribute('aria-checked'),
     }).toEqual({
       sent: [
         { preapprovedSecretIds: preapproved },
@@ -108,12 +104,10 @@ describe('the Capabilities control of a workspace', () => {
             { secretId: 'prod-database-url', sessionId: 'autocomplete' },
           ],
         },
-        { macAccess: false },
       ],
       covered: [],
       uncovered: [replicaRow],
       approvals: [],
-      mac: 'false',
     })
   })
 
@@ -151,14 +145,11 @@ describe('the Capabilities control of a workspace', () => {
     const before = reads()
     click(byRole('button', 'Capabilities', tab.view))
     const control = byRole('dialog', 'Capabilities', tab.view)
-    const shown = {
-      figma: checked(control, 'FIGMA_TOKEN'),
-      mac: byRole('switch', 'Mac access', control).getAttribute('aria-checked'),
-    }
+    const shown = checked(control, 'FIGMA_TOKEN')
     await settle()
     expect({ before, shown, after: reads() }).toEqual({
       before: 1,
-      shown: { figma: true, mac: 'true' },
+      shown: true,
       after: 2,
     })
   })

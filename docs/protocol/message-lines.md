@@ -50,6 +50,12 @@ number names a decision of the change that added the
   a message of a member. Its text names the member who answered, in place
   of a sender line, as [Late answers](secret-requests.md#late-answers)
   says.
+- The [wake](session-watches.md#the-wake-line) of a watch is a line of the
+  app too, not a message of a member. It reaches the agent as a message,
+  with its sender line under the rules above.
+- That sender line names the member who set the watch. When the wake joins
+  a running turn, it names the sender of that turn, as
+  [Delivery](session-watches.md#delivery) says.
 - The sender line exists only in the text that reaches the agent. The
   stored message, the chat, and the titles from messages never hold it.
 - The chat never shows the sender line or the agent instructions. Reason:
@@ -71,6 +77,8 @@ number names a decision of the change that added the
   the turn that asked (secrets decision 10 B). So its Mac commands, its
   GitHub token, and its commits follow that sender, not the member who
   answered.
+- A turn that a wake starts has the sender of the turn that set its watch.
+  So its Mac commands, its GitHub token, and its commits follow that member.
 - Each write of the workspace tools acts for the sender of the turn too,
   also while the agent answers a message of another member, as
   [The sender](agent-tool-access.md#the-sender) says.

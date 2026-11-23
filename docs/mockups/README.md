@@ -54,11 +54,14 @@ Use the expand control of the frame to see the full desktop layout.
 desktop and the phone, the design tokens, and the parts that the screens
 share. Its linked pages give the parts of
 [the workspace](design-workspace.md), of [the chat](design-chat.md),
-of [the operator section](design-operator.md), and of
-[the pull request bar](design-bar.md). They also give [the marks](design-marks.md),
+of [the model menu](design-model-menu.md),
+of [the operator section](design-operator.md), of
+[the pull request bar](design-bar.md), and of
+[New workspace](design-new-workspace.md). They also give [the marks](design-marks.md),
 [secrets and Capabilities](design-secrets.md),
-[the links in text](design-links.md), and
-[the Markdown of replies](design-markdown.md).
+[the links in text](design-links.md),
+[the Markdown of replies](design-markdown.md), and
+[the end of a turn](design-turn-ends.md).
 
 ## The catalogue
 
@@ -70,7 +73,8 @@ dialog. Its linked page,
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
 operator section. Its linked page
 [the pull request bar](catalogue-bar.md) gives `app/banner` and its child
-pages. The [chat and automations](catalogue-chat-and-automations.md) page gives
+pages. Its linked page [New workspace](catalogue-new-workspace.md) gives
+`app/new-workspace/start-branch` and its child pages. The [chat and automations](catalogue-chat-and-automations.md) page gives
 the child pages and flows of `app/chat` and `app/automations`. The
 [workspace links, file and skill mentions, and tools](catalogue-workspace-tools.md)
 page gives the child pages and flows of `app/workspace-links`,
@@ -140,7 +144,7 @@ a dropped folder that the browser cannot read. The app shares these words.
 | `src/design/`             | The design tokens: colours, type, density, sizes, radii, and fonts  |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
-| `src/paths.ts`            | The catalogue paths that screens link to, with those of `src/bannerPaths.ts` for the pull request bar |
+| `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, and `src/servicePaths.ts` for the services of the Preview tool |
 | `src/brand.ts`            | The name "Conductive", its domains, its repository, and DMG names   |
 | `src/defined.ts`, `src/instanceKey.ts` | Helpers for the wrappers of registered parts: props without undefined values, and instance names |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
@@ -155,18 +159,30 @@ a dropped folder that the browser cannot read. The app shares these words.
   workspace screen declares its states in `src/screens/workspaceState.ts`, so
   `mockups:serve` offers a control for each part of the state. The automation
   screen declares its states in `src/screens/automationState.ts` in the same
-  way. The tab and composer states of the workspace screen live in
+  way, and the Mac app screen in `src/screens/macAppState.ts`. The pages of
+  the Mac app take the composer of a workspace and the Capabilities control
+  of New workspace from the states of those two screens. The tab and
+  composer states of the workspace screen live in
   `src/screens/chatStates.ts`. `tabStates` covers the session, file,
   image, HTML, and Preview tabs of the centre column. `temporaryTabStates` covers the
   temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
   row. `composerStates` covers the composer, with its links, mentions,
-  skills, attached files, drops, and the chip of Add to chat.
+  skills, attached files, drops, the chip of Add to chat, and the
+  Capabilities control.
   `src/screens/composerState.ts` adds that composer to the workspace state,
-  with the login of the open session and the model of the next message.
+  with the login of the open session, the model of the next message, and
+  the favourites and All models of an open model menu.
   `src/screens/rowMenuState.ts` holds the open menu of a row of All files
   or Changes, which `src/screens/workspaceRowMenu.ts` draws, and the toast
-  after Copy path. `src/screens/layoutState.ts` holds the layout of the
+  after Copy path. `src/screens/explainState.ts` holds the marks of
+  explanations, the state of the explanation of Cal, and what lies open
+  by the text or over the chat, which `src/screens/explainModel.ts`
+  reads. `src/screens/layoutState.ts` holds the layout of the
   desktop columns: a drag of a handle, the right column, and the sidebar.
+  `src/screens/serviceState.ts` holds the services of the Preview tool and
+  what lies open over them, which `src/screens/workspaceServices.tsx`
+  draws. The pages of the services start from `servicesWorkspace` in
+  `src/screens/servicesWorkspace.ts`.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from
@@ -208,6 +224,20 @@ and `envVarCopy.ts` beside it gives the note under the list. The app shares
 both.
 `app/org-settings/cloud-computer`, its `add-variable` and `change-value`
 pages, and its `member` page show them.
+
+The Skills section of the Cloud computer tab names the public GitHub
+repository whose skills the agents of every workspace use. An admin edits
+it in a field, and a member sees it as text. Under it, the section lists
+the skills that a lookup on GitHub finds, or it shows a notice in place of
+the list. `src/components/settings/SkillsSection.tsx` draws the section,
+and `SkillList.tsx` beside it draws the list. `skillsCopy.ts` beside them
+holds the words and the result of the lookup, so that the app can share
+them. Under the field, an admin sets the switch "Trust this skills
+repository", which starts off for each repository, and a member sees the
+saved choice as text. The choice exists only while the field names a
+repository as owner/name. `SkillsTrust.tsx` draws the switch and the
+read-only choice, and `skillsTrustCopy.ts` holds their words and the
+address of the guide. [The catalogue](catalogue.md) gives its pages.
 
 A secret of an org differs from an env var. An env var reaches every cloud
 computer at each start. A secret reaches only one command that an agent

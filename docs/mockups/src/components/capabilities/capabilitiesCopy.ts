@@ -57,9 +57,36 @@ export function valueDetail(who: string, when: string): string {
   return `Given by ${who}, ${when}`
 }
 
+/**
+ * The Mac access part, which only the Mac app shows. Its one switch has no
+ * hint (Mac access decision 7).
+ */
 export const macAccessWords = {
   title: 'Mac access',
-  hint: 'Lets agents ask to run commands on the Mac of the member who sent the message.',
+} as const
+
+/**
+ * The words of this Mac in the Mac access part. In the Mac app, the switch
+ * starts or stops a grant until Stop of the workspace on this Mac (Mac
+ * access decision 7). The part shows only short results: Not started with
+ * its cause, and This Mac is not available. The notice of a new workspace
+ * whose grant did not start has its own title and Try again.
+ */
+export const thisMacWords = {
+  /**
+   * The words under the switch, off and disabled, while the page cannot
+   * read this Mac.
+   */
+  notAvailableHint: 'This Mac is not available.',
+  /** The title of the result of a start that failed. */
+  notStarted: 'Not started',
+  /** Why a start failed when it found this Mac not available. */
+  notAvailable:
+    'This Mac is not available, so each command still asks first. Try again once it connects.',
+  /** The notice in a new workspace whose grant did not start. */
+  noticeTitle: 'Could not allow all commands on this Mac',
+  tryAgain: 'Try again',
+  tryAgainLabel: 'Try again to allow all commands on this Mac',
 } as const
 
 /**

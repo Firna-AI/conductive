@@ -8,6 +8,7 @@ import {
   type WorkspaceView,
 } from '../../shared/workspace-view'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import type { StreamListener } from '../stream/workspace-stream'
 import { tabChat } from './tab-order-test-kit'
 import { newSessionRecord } from './test-kit'
@@ -43,6 +44,27 @@ export function envelope(
     eventNumber,
     occurredAt: FAKE_TIME,
     event: { type: 'session.updated', session: { ...session, closedAt } },
+  }
+}
+
+export function replayMessage(
+  eventNumber: number,
+  text: string,
+  session = first,
+): WorkspaceEventEnvelope {
+  return {
+    workspaceId: ws,
+    eventNumber,
+    occurredAt: FAKE_TIME + eventNumber,
+    event: {
+      type: 'message.accepted',
+      message: {
+        ...workspaceFixtures().message,
+        id: `message-${eventNumber}`,
+        sessionId: session.id,
+        text,
+      },
+    },
   }
 }
 

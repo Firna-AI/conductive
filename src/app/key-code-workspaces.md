@@ -4,6 +4,8 @@ This page is part of the [web app guide](README.md), beside
 [Key code](key-code.md). It names the entry points of the workspace list,
 with its rows, its menus, Archive, and Restore. It also names the models of
 an open workspace and of New workspace, and the store of a connected view.
+It names the repository changes, their readiness, and the readers of the
+parts of an org too.
 Each path is relative to `src/app/`, the folder of this page.
 [Life of a workspace](../../docs/protocol/workspace-life.md) gives the
 rules of Archive and Restore.
@@ -62,14 +64,24 @@ rules of Archive and Restore.
   [Workspace menu](../../docs/protocol/workspace-menu.md) states the menu
   of a workspace row.
 - `../shell/ui/Menu.tsx`: `MenuButton`, the menu of the shell, a sheet on
-  a phone. On desktop it opens on `PopoverSurface.tsx`, in the top layer,
-  which places it beside its button with the dropdown placement of
-  `@firna/ui`, and flips it when it does not fit. The member menus use the
-  same surface. `MenuList.tsx` draws the items, also a switch row, such as
-  Fast in the model menu, which keeps the menu open, and an item that shows
-  choices. While the owner of a `MenuButton` saves a change, its `busy`
-  state turns off the trigger and the items and switches of the open menu.
+  a phone. With `besideOnPhone`, as each model picker gives it, a phone
+  opens it beside its button too. `OpenMenu.tsx` draws the open menu on
+  `PopoverSurface.tsx`, in the top layer, which places it beside its button
+  with the dropdown placement of `@firna/ui`, and flips it when it does not
+  fit. The member menus use the same surface. `OpenMenu` also shows the
+  choices of an item with a submenu, such as All models: beside the menu,
+  or in its place with Back in the phone layout and in a sheet.
+  `submenu.tsx` holds the open submenu, its focus, and its layer beside the
+  menu, which the menu of the chat shares. `MenuList.tsx` draws the rows of
+  `menu-items.tsx`, also a switch row, such as Fast in the model menu,
+  which keeps the menu open, and an item that shows choices. While the
+  owner of a `MenuButton` saves a change, its `busy` state turns off the
+  trigger and the items, switches, and submenu items of the open menu.
   These rows keep the focus, and the menu stays open.
+- `../shell/ui/ModelPicker.tsx`: the model picker of New workspace, of the
+  default of new workspaces, of an automation, and of each Favourites row.
+  It draws the rows of `modelMenuRows` of the chat, with the favourites
+  that its owner gives, as `MenuButton` entries.
   `PointMenu.tsx` draws a menu at a point above the page, with its
   choices beside it, and `menu-place.ts` keeps both inside the window.
   `menu-keys.ts`: `opensMenu`, the menu keys of a row and of a tab.
@@ -94,6 +106,9 @@ rules of Archive and Restore.
   names that it refuses, as
   [Refused files and folders](../chat/draft-files.md#refused-files-and-folders)
   says.
+- `new-workspace-request.ts`: `createRequest`, the create request of a
+  draft, with its start branch and base branch, its Capabilities choices,
+  and its first message.
 - `new-workspace-marks.test.ts` checks the IDs at once, the words outside
   the chips, and the mentions in the order of the chips. It also checks
   undo of a ready file, stopped and queued uploads, a Remove while the
@@ -101,6 +116,20 @@ rules of Archive and Restore.
   text that a create took. `new-workspace-refusals.test.ts` checks folder
   names with no files, an empty pick, a file with no bytes, a sign-out,
   and a failed create.
+- `repository-changes.ts`: the saved repository changes that the org
+  image lacks, from `BuildsResponse.changes`. `repositoryWaitOf` gives
+  their state, `repositoryChangesOf` the changes of the repository
+  notice, and `changeWaits` whether the build history stays closed. For
+  New workspace, `waitsForBuild` says whether a repository waits, from its
+  `ready`, else from the builds. `imageReadyOf` says whether the
+  repositories reply shows a good image, and `waitingRepositoriesOf` gives
+  the waiting repositories. `../shell/settings/RepositoryChangeNotice.tsx`
+  draws the notice of an admin, and `../members/RepositoryNotice.tsx` the
+  notice of a member.
+- `org-refresh.ts`: `orgRefreshers`, the reader of each part of
+  `OrgModel`. The reader of the repositories also reads them again after a
+  build ends or the image changes, as [Data lifecycle](data-lifecycle.md)
+  says.
 - `creations.ts`: `Creations`, the life of the create requests of an org in
   this tab, which a sign-out ends. `first-start.ts`: `failedFirstStart`,
   which tells a failed first start, and `resumesAtOpen`.

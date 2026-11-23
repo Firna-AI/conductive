@@ -5,9 +5,9 @@ tree of every file. Changes lists the files that the branch changes
 against the base branch, under the totals of the change. A file opens as a
 page with rendered Markdown or text with line numbers and syntax colours.
 An image file, which is a PNG, JPEG, GIF, or WebP file, opens as a
-picture. An HTML file opens its page in a frame from the files preview of
-the workspace. A changed file opens its unified diff, with the same syntax
-colours. The requirements are in
+picture, which zooms and expands. An HTML file opens its page in a frame
+from the files preview of the workspace. A changed file opens its unified
+diff, with the same syntax colours. The requirements are in
 [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
 and [HTML file preview](../../docs/protocol/html-file-preview.md).
 The visual spec is the `app/files` page of the

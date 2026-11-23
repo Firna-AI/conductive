@@ -52,6 +52,20 @@ export async function productionGitHubWebhook(
         })
       },
       repositoryChange: {
+        prepareDefaultBranchChange: async (
+          workspace,
+          values,
+          installationId,
+          deliveryId,
+        ) => {
+          requireFeatureResult(
+            await workspaceBinding(env)
+              .getByName(workspace.id)
+              .refreshGitHub(workspace, {
+                repositoryDefault: { ...values, installationId, deliveryId },
+              }),
+          )
+        },
         read: (change) =>
           readGitHubRepository(
             dependencies,

@@ -28,9 +28,17 @@ If you joined an org, its admin manages the repositories and shared setup.
 2. Select **New workspace**.
 3. Choose the repository for the task.
    **New workspace** starts with the org's default repository.
-4. Choose a model and effort.
-5. Describe the task in the message box.
-6. Select **Send** on the page, or **Create** in the dialog.
+4. Keep the default branch, or choose another starting branch.
+5. If you choose another branch, open the branch control again and choose its target under **Target**.
+6. Choose a favourite or a model in **All models**.
+7. Adjust the effort and **Fast** if needed.
+8. Describe the task in the message box.
+9. Select **Send** on the page, or **Create** in the dialog.
+
+A favourite sets the model, effort, and **Fast** together.
+With no favourites to show, choose a model in **All models**.
+
+- [Choose models and set favourites](/docs/sessions-and-chat#choose-a-model)
 
 For example:
 
@@ -55,6 +63,31 @@ The repository menu lists the org's repositories in the order that admins set.
 A newly added repository shows as unavailable in the repository menu until its build succeeds.
 Its note says when it will be ready.
 The send button stays off while the selected repository waits for its build.
+
+## Start from another branch
+
+**New workspace** selects the repository's default branch at first.
+The branch control sits beside the repository on the page and in the dialog.
+Open it to search the branches that your GitHub account can read.
+The default branch appears first.
+Conductive creates its own branch from the latest commit of the branch you select.
+
+If you select another branch, open the branch control again.
+Under **Target**, choose where your work will merge:
+
+- Target the selected branch to include only your new work in the pull request.
+- Target the default branch to include the selected branch's commits too.
+
+The selected branch is the target until you choose otherwise.
+When the default branch is the target, the branch control adds an arrow and the default branch's name, such as `→ main`.
+Choosing another branch that is not the default keeps your target choice.
+Changing repositories clears your branch and target choices.
+**Changes**, diffs, and **Create PR** use this target as the workspace's base branch.
+
+If the list shows **Try again**, select it to reload.
+The default branch stays available while the list loads or cannot load.
+If the selected branch is missing on GitHub, **New workspace** keeps your message.
+Select **Start from** followed by the default branch's name, or choose another branch.
 
 ## Choose the page or dialog
 
@@ -189,6 +222,9 @@ Ask for your workspaces, or give another member's name or GitHub login.
 
 Workspace and session lists can return a smaller page of results.
 When an agent creates a workspace, it can set the workspace name and its first session's title.
+It can also choose a starting branch and a base branch for the new workspace.
+With only one branch choice, it uses that branch for both.
+With neither choice, it uses the repository's default branch for both.
 
 An agent puts related work in a sub-workspace of the current workspace:
 
@@ -245,6 +281,9 @@ The computer stops after a set time without user activity and without a running 
 An open tab alone does not keep it running.
 Using a port preview or the preview of an HTML file does not keep it running either.
 A normal stop keeps its files, sessions, and chat history.
+Services do not count as activity and never keep the computer running.
+The stop ends every service and discards its saved command, settings, and logs.
+Start needed services again after **Resume**.
 
 Open a stopped workspace to start its computer again.
 If it stops while the workspace is open, select **Resume**, or open a file or a change.
@@ -264,8 +303,15 @@ This happens when you allow the secret or supply a value after the agent stopped
 The agent receives a message in the session that asked.
 The start follows the same checks as opening the workspace.
 
+An accepted watch wake can also start the computer.
+It returns to the session that set the watch.
+The start follows the same checks as opening the workspace.
+
 **Stop** in chat interrupts an agent turn.
+Services keep running after this Stop.
 It is separate from the computer's automatic stop.
+It also drops that session's earlier pending watch wakes.
+An automatic idle stop keeps those watches.
 
 ## Restart the software
 
@@ -273,13 +319,15 @@ Select the state in the workspace header, such as **Ready**, then **Restart**.
 Restart restarts Conductive's agent software, terminal software, and port previews in the running computer.
 After a software update, Restart also brings terminal tabs to a workspace that had only one terminal.
 Use it when an agent or a preview stops responding, or to apply a software update now.
-Any member can restart a workspace while it is ready, working, needs input, or has unread output.
+Any member of an active org can restart a workspace while it is ready, working, needs input, or has unread output.
+Its owner must not be suspended.
 
 Restart first downloads the newest software, for up to 60 seconds.
 If that download fails, a message says so, and the restart uses the installed software.
 The header shows **Starting** until the agents are back.
 
 Restart stops each running agent turn, so it asks first while an agent works.
+Services keep running.
 The shells and commands in your terminals keep running.
 An open terminal tab disconnects until the agents are back. Then select **Reconnect**.
 Files, sessions, and chat history stay.
@@ -309,7 +357,7 @@ Your GitHub account needs permission to push that commit.
 ## Continue after a merge
 
 Every org member can continue a workspace after its pull request merges.
-Your GitHub account needs read access to fetch the repository's latest default branch.
+Your GitHub account needs read access to fetch the branch for the next task.
 
 1. Open the merged workspace.
 2. Wait for every running agent turn in that workspace to finish.
@@ -319,12 +367,13 @@ Your GitHub account needs read access to fetch the repository's latest default b
 
 On a phone, open **Checks** from the pull request row to find **Continue**.
 The computer starts first if it is stopped.
-The new branch starts from the repository's latest default branch.
-That default branch becomes the workspace's base branch for its new task.
+The new branch starts from the latest commit of the branch that the pull request merged into.
+If that branch no longer exists, Continue uses the repository's default branch.
+The starting branch becomes the workspace's base branch for its new task.
 The new branch name uses the workspace name, a version such as `v2`, and a new short suffix.
 A workspace without a name uses a city in place of the name.
 
-Continue keeps the same cloud computer, files, running servers, sessions, and workspace name.
+Continue keeps the same cloud computer, files, running servers and services, sessions, and workspace name.
 It also keeps the software installed by the org's install script.
 Conductive's own software still updates itself.
 Changed files move to the new branch.
@@ -335,7 +384,7 @@ The earlier branch stays on GitHub with its merged pull request.
 Each session shows who continued and the new branch.
 The pull request bar then follows that branch without a pull request.
 
-If changed files clash with the latest default branch, Continue stops and keeps the earlier branch.
+If changed files clash with the new base branch, Continue stops and keeps the earlier branch.
 Review the files with the agent or **Terminal** before trying again.
 For another failure, follow the reason shown under the bar.
 
@@ -374,6 +423,9 @@ Use **Restart**, as [Restart the software](/docs/workspaces#restart-the-software
 The computer starts first if it is stopped.
 The new branch starts from the latest default branch of the new repository.
 That default branch becomes the workspace's base branch.
+The base follows a later rename of that default branch.
+Conductive fetches the new default before the cloud computer targets it.
+A stopped computer completes this move when it resumes.
 Your GitHub account needs read access to fetch it.
 The new branch name uses the owner's GitHub login, the workspace name, a version such as `v2`, and a new short suffix.
 The change copies the `.context/` folder into the folder of the new repository.
@@ -385,6 +437,8 @@ Each session shows who changed the repository, the new repository, and the new b
 The agents keep their conversations and work in the new folder.
 Programs that already run, such as development servers, keep running in the old folder.
 Their previews show the old repository until you start them again in the new folder.
+For a service, stop it and start it from the new folder.
+Its **Restart** action uses its saved folder.
 The pull request bar then follows the new branch without a pull request.
 Each idle shell in the old folder moves to the new folder, and a line that you typed but did not send is cleared.
 A shell that runs a command keeps its folder.

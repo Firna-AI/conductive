@@ -56,6 +56,11 @@ decision number names a decision of the change that adds
   workspaces and their sessions with no request, as
   [Turns that no person started](secrets.md#turns-that-no-person-started)
   says.
+- Risk: such text can also make the agent ask for a command on the Mac of
+  the owner, from the first turn of the run. A command that the owner
+  always allowed then runs with no question. A turn that the agent starts
+  in a workspace where that Mac holds a grant runs each command there with
+  no question. [Risks](mac-access.md#risks) states these risks.
 - Risk: the [chosen secrets](automations.md#chosen-secrets) stay as
   pre-approvals in each kept run workspace, until a member removes them
   there. Through the session calls, an agent in each workspace of the org

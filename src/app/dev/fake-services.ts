@@ -21,6 +21,7 @@ import { attachmentRoutes } from './attachment-routes'
 import { attachmentFileRoutes } from './attachment-files'
 import { attachmentMessageFetch } from './attachment-message-routes'
 import { createBackend, guardScope } from './backend'
+import { branchRoutes } from './branch-routes'
 import { buildRoutes } from './build-routes'
 import { createRoutes } from './create-routes'
 import { feedbackRoutes } from './feedback-routes'
@@ -40,6 +41,7 @@ import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
 import { sessionLoginRoutes } from './session-login-routes'
 import { settingsRoutes } from './settings-routes'
+import { seedSkills, skillsRoutes } from './skills-routes'
 import { admitOpenSignup, waitlistRoutes } from './waitlist-routes'
 import { workspaceRoutes } from './workspace-routes'
 
@@ -65,6 +67,7 @@ export function createFakeServices(search: string): AppServices {
   const offset = FAKE_TIME - Date.now()
   const now = () => Date.now() + offset
   const newId = () => crypto.randomUUID()
+  seedSkills(state, options.skills, options.skillsTrusted)
   const backend = createBackend(state, server.events, now, newId)
   seedSecretRequests(backend, server.events, options.secrets)
   const signedOut: Route[] = options.signedOut
@@ -88,10 +91,12 @@ export function createFakeServices(search: string): AppServices {
     ...orgRoutes(backend),
     ...sectionRoutes(backend),
     ...workspaceRoutes(backend),
-    ...createRoutes(backend),
+    ...createRoutes(backend, options.branchCheck),
+    ...branchRoutes(backend, options.branches),
     ...attachmentRoutes(backend, options.upload),
     ...attachmentFileRoutes(backend),
     ...settingsRoutes(backend),
+    ...skillsRoutes(backend, options.skills),
     ...orgLoginRoutes(backend),
     ...secretRoutes(backend),
     ...secretRequestRoutes(backend),

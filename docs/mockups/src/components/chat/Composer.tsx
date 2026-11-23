@@ -61,6 +61,13 @@ export type ComposerState = {
   /** The model picker is open. */
   picker?: boolean
   /**
+   * The favourites of the model menu, by default those of the viewer. With
+   * none, the menu starts with All models.
+   */
+  favourites?: readonly AgentChoice[]
+  /** The submenu of All models of the open model menu is open. */
+  allModels?: boolean
+  /**
    * The agent of the session, once it has messages. A model of the other
    * agent opens a new session with the draft (decision 51).
    */
@@ -104,8 +111,9 @@ export type ComposerState = {
    */
   pointer?: boolean
   /**
-   * A picker in place of the model picker, for a page that draws another
-   * menu of the model, such as `app/model-favourites`.
+   * A picker in place of the model picker, for a page that draws the model
+   * menu in another place, such as above the page in
+   * `app/chat/menu-placement`.
    */
   pickerPart?: ReactNode
   /**
@@ -221,7 +229,9 @@ export function Composer(props: ComposerState & { lines?: number }) {
                 choice={props.choice}
                 moklyInstance="model-picker"
                 {...defined({
+                  allModels: props.allModels,
                   fastKey: props.fastKey,
+                  favourites: props.favourites,
                   hiddenModels: props.hiddenModels,
                   open: props.picker,
                   sessionAgent: props.sessionAgent,

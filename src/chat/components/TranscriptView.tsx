@@ -4,6 +4,7 @@ import { retryItemId } from '../../shared/transcript/known-turns'
 import type { Transcript } from '../../shared/transcript/transcript'
 import {
   groupEntries,
+  type Entry,
   type SingleItem,
   type TranscriptInsert,
 } from '../../shared/transcript/transcript-entries'
@@ -30,6 +31,8 @@ interface RowsProps {
   retrying: boolean
   onRetry: (messageId: string) => void
   onOpenDiff?: (path: string) => void
+  /** The ID of a member message that the rows leave out, as `hide` says. */
+  hide: string | null
 }
 
 /**
@@ -102,18 +105,30 @@ function itemRow(item: SingleItem, props: RowsProps, marked: MarkedItems) {
   }
 }
 
+/** Whether an entry is the member message with the ID `hide`. */
+function hides(entry: Entry<ReactNode>, hide: string | null): boolean {
+  return (
+    entry.kind === 'item' &&
+    entry.item.kind === 'user' &&
+    entry.item.message.id === hide
+  )
+}
+
 /**
  * The rows of the items, in the order of `groupEntries`. Each row draws
  * again only when its own data changes. A tick of the clock changes no
  * input here, so it draws none of them.
  */
 const TranscriptRows = memo(function TranscriptRows(props: RowsProps) {
-  const { transcript } = props
+  const { transcript, hide } = props
   // The newest session record gives the permission. The order of the items
   // gives none. A read-only chat offers no Try again.
   const retryable = props.readOnly ? null : retryItemId(transcript)
   const marked = { retryable, writing: writingMessage(transcript) }
-  return groupEntries(transcript, props.inserts).map((entry) => {
+  const entries = groupEntries(transcript, props.inserts).filter(
+    (entry) => !hides(entry, hide),
+  )
+  return entries.map((entry) => {
     switch (entry.kind) {
       case 'insert':
         return (
@@ -155,17 +170,24 @@ export function TranscriptView(props: {
   inserts?: readonly TranscriptInsert<ReactNode>[]
   readers: ChatReaders
   pending: readonly PendingMessage[]
-  now: number
   readOnly: boolean
   retrying: boolean
   onRetry: (messageId: string) => void
   onOpenDiff?: (path: string) => void
+  /**
+   * The ID of a message that the chat leaves out, such as the written
+   * prompt of an explanation in its popover. It still starts its turn, so
+   * the work of that turn folds.
+   */
+  hide?: string | null
   children?: ReactNode
 }) {
   const { turn } = props.transcript
+  const hide = props.hide ?? null
   return (
     <>
       <TranscriptRows
+        hide={hide}
         inserts={props.inserts ?? noInserts}
         onOpenDiff={props.onOpenDiff}
         onRetry={props.onRetry}
@@ -174,15 +196,13 @@ export function TranscriptView(props: {
         retrying={props.retrying}
         transcript={props.transcript}
       />
-      {props.pending.map((message) => (
-        <PendingRow key={`pending:${message.id}`} message={message} />
-      ))}
+      {props.pending
+        .filter((message) => message.id !== hide)
+        .map((message) => (
+          <PendingRow key={`pending:${message.id}`} message={message} />
+        ))}
       {turn ? (
-        <WorkingRow
-          now={props.now}
-          startedAt={turn.startedAt}
-          thinking={turn.thinking}
-        />
+        <WorkingRow startedAt={turn.startedAt} thinking={turn.thinking} />
       ) : null}
       {props.children}
     </>

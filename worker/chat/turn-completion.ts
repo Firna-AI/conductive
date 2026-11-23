@@ -4,6 +4,7 @@ import { continueUnanswered } from './continuation'
 import { firstStopRequester } from './stop-request'
 import type { ChatTransaction } from './store'
 import type { StoredTurn } from './types'
+import { readySessionWatches } from './session-watch-end'
 
 export type TurnEnd =
   | { state: 'stopped' }
@@ -59,6 +60,7 @@ export class TurnCompletion {
     turn.nextTurnId = null
     await this.removeCommands(turn.id)
     await this.transaction.saveTurn(turn)
+    await readySessionWatches(this.transaction, turn)
     if (this.session.activeTurnId === turn.id) {
       this.session.retryMessageId =
         end.state === 'failed' &&

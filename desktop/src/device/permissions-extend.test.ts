@@ -27,7 +27,11 @@ it('saves a running grant at Mac now plus 15 minutes and keeps its workspace nam
   store.allowWorkspace('one', 'First workspace')
   store.allowWorkspace('two', 'Second workspace')
   test.advance(300_000)
-  expect(store.extendWorkspace('one')).toEqual({ status: 'done' })
+  expect(
+    store
+      .prepareWorkspace({ action: 'extend-workspace', workspaceId: 'one' })
+      .commit(),
+  ).toEqual({ status: 'done' })
   const windows = [
     {
       workspaceId: 'one',
@@ -52,7 +56,11 @@ it('fails Extend for an ended or absent grant even before its old timer fires', 
   const contents = [...test.contents]
   vi.spyOn(test.clock, 'now').mockReturnValue(1_800_000_900_000)
   for (const workspaceId of ['one', 'absent']) {
-    expect(store.extendWorkspace(workspaceId)).toEqual({
+    expect(
+      store
+        .prepareWorkspace({ action: 'extend-workspace', workspaceId })
+        .commit(),
+    ).toEqual({
       status: 'failed',
       message:
         'The 15 minutes already ended. Approve a request again to allow all commands.',
@@ -78,7 +86,11 @@ it('keeps the old end and timer when saving Extend fails', () => {
     expect([...test.timers]).toEqual(timers)
     throw new Error('private disk failure')
   }
-  expect(store.extendWorkspace('one')).toEqual({
+  expect(
+    store
+      .prepareWorkspace({ action: 'extend-workspace', workspaceId: 'one' })
+      .commit(),
+  ).toEqual({
     status: 'failed',
     message: 'The Mac could not extend the 15 minutes. Try again.',
   })
@@ -97,12 +109,20 @@ it('leaves an until-Stop grant in memory when Extend is requested', () => {
   const store = test.open()
   store.allowWorkspaceUntilStop('one', 'First workspace')
   const write = vi.spyOn(test.files, 'write')
-  expect(store.extendWorkspace('one')).toEqual({
+  expect(
+    store
+      .prepareWorkspace({ action: 'extend-workspace', workspaceId: 'one' })
+      .commit(),
+  ).toEqual({
     status: 'failed',
     message: 'This workspace already allows all commands until you stop.',
   })
   expect(store.settings().workspaceWindows).toEqual([
-    { workspaceId: 'one', workspaceName: 'First workspace', expiresAt: null },
+    {
+      workspaceId: 'one',
+      workspaceName: 'First workspace',
+      expiresAt: null,
+    },
   ])
   expect(store.permits('anything', 'one')).toBe(true)
   expect(write).not.toHaveBeenCalled()
@@ -115,7 +135,9 @@ it('replaces the old timer and removes the saved grant at the extended end', () 
   const write = vi.spyOn(test.files, 'write')
   store.allowWorkspace('one', null)
   test.advance(300_000)
-  store.extendWorkspace('one')
+  store
+    .prepareWorkspace({ action: 'extend-workspace', workspaceId: 'one' })
+    .commit()
   write.mockClear()
   test.advance(600_000)
   expect(store.permits('anything', 'one')).toBe(true)

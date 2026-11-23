@@ -8,9 +8,9 @@ import {
 export const noCommits = defineScreen({
   title: 'No commits yet',
   description:
-    'A new workspace whose agent works on its first message and has not changed a file yet. The bar shows the branch, its target, and No commits yet, without Create PR. On a phone the row is not a link. The Checks tab waits for a pull request.',
+    'A new workspace whose agent works on its first message and has not changed a file yet. The bar shows the branch, its target, and No commits yet, without Create PR. On a phone the row is not a link, and the top of the Checks tab names the branch and its base, calummoore/lisbon-7k2q → main, without an action. The Checks tab waits for a pull request.',
   rationale:
-    'The bar offers Create PR when GitHub has commits of the branch, or when the sandbox has local work that the agent can commit first (decision 220).',
+    'The bar offers Create PR when GitHub has commits of the branch, or when the sandbox has local work that the agent can commit first (decision 220). The top of the Checks tab of a phone names the branch and its base in each state without a pull request, also without an action, as decision 306 gives one rule for every workspace.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: {
@@ -27,7 +27,7 @@ export const noCommits = defineScreen({
       slug: 'local-work',
       title: 'Local work, no commits',
       description:
-        'The agent changed files in the sandbox and has not committed them, so GitHub has no commit of the branch yet. The bar offers Create PR, which asks the agent to commit, push, and open the pull request. It has no link to GitHub, which has nothing to compare. On a phone the row opens the Checks tab, whose top holds Create PR.',
+        'The agent changed files in the sandbox and has not committed them, so GitHub has no commit of the branch yet. The bar offers Create PR, which asks the agent to commit, push, and open the pull request. It has no link to GitHub, which has nothing to compare. On a phone the row opens the Checks tab, whose top names the branch and its base, with Create PR under them.',
       props: { localWork: 'changes' },
     },
   ],

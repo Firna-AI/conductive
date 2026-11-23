@@ -53,6 +53,7 @@ describe('the editors of saved settings', () => {
     await app.org(org.id).reload('builds')
     const computer = new ComputerModel(app.org(org.id), new ManualDelay().delay)
     await computer.load()
+    await computer.loadSkills()
     const view = mountScreen(
       app,
       <ComputerSettings computer={computer} org={org} />,

@@ -24,7 +24,8 @@ sorts below every release.
 
 The commands are `runner`, `relay`, `mcp`, `git-credential`, `update`,
 `workspaces`, `sessions`, `messages`, `sections`, `repositories`, `models`,
-`previews`, `mac`, and `secrets`. The workspace commands and `mcp` run the 26 calls in
+`previews`, `mac`, `secrets`, and `services`. The workspace commands and
+`mcp` run 27 Worker calls and five local service calls in
 [cnd-tools](../cnd-tools/README.md). They preserve the Worker replies and
 refusal codes. `relay` serves previews through [cnd-relay](../cnd-relay/README.md).
 `secrets list` returns metadata only. `secrets run --secret NAME -- <command>`
@@ -43,6 +44,10 @@ The credential helper keeps the caller's turn ID even when the file has another 
 resolve Node and the helper beside the running release executable. Local
 builds use `node` and `dist/sdk-helper/sdk-helper.mjs` in the working folder.
 SIGTERM and SIGINT end live turns, save pending events, and close the connection.
+They end no service unit. One native service manager and its private socket
+stay shared across runner rounds. A new runner reconciles saved runtime
+records with actual units. The hidden `service-exec` entry owns each unit's
+child and rotating output writer as `user`.
 The installed service runs this Rust runner. Its first valid welcome confirms
 the release through the pinned executable. It keeps the Node-format state file.
 
@@ -76,14 +81,29 @@ Development builds disable idle swaps.
 `update check` uses `cli-updater` to read and compare the newest release.
 It downloads into a private version folder. It checks the program digest
 through `cli-updater` and checks every part digest before extraction.
-It reuses complete parts with the same digest. A failed check logs a
+It reuses present parts with the same digest. A failed check logs a
 warning and returns failure. The independent background unit cannot block a start.
 It leaves no complete version on failure. A concurrent background check returns a busy error.
 An installation check with `--bootstrap` waits for the download lock.
 Downloads have a one-hour total timeout and a ten-second connect timeout.
 
-`update apply` uses no network. It switches to the newest complete version
-and installs its system files. It leaves a pending marker until
+`update apply` switches to the newest complete version and installs its
+system files. First it checks that each part of the version that starts
+is present. In a fallback, that version is the previous release. A part
+is present when its folder has the complete marker and the entry files of
+its role, such as `bin/node` or `runner-start.sh`. When a part is missing,
+apply downloads that part again with the digest check of `update check`.
+The repair takes no download lock. Each unpack, by a check or by apply,
+writes into a private folder. `part-publish.lock` covers only the last
+presence check and the rename, so a part that is present stays, and a
+background check delays a repair only for one rename. Each missing part
+gets an equal share of what is left of 60 seconds. A failed download, or
+a download that uses up its share, logs a warning with the part name.
+The next part still gets its attempt, and apply goes on. The next apply
+tries again. When no part is missing, apply uses no network. When the
+installer of a fallback fails, apply sets `current` back to the failed
+release and keeps its pending marker, so the next start runs the same
+updater again. It leaves a pending marker until
 `update started` confirms the runner start. Confirmation checks this executable's
 version against current and pending. A different version changes nothing.
 A later apply with that marker restores the previous version and its system files. A persistent rejection
@@ -104,6 +124,17 @@ program already has the newest version. An existing active release still
 prevents a downgrade. See [the install guide](../../image/install.md#release-installation)
 for the image-build sequence and the folder layout.
 
+### Session watches
+
+`conductive sessions watch --session ID [--workspace ID] [--turn-id ID]`
+and MCP `watch_session` ask for one wake when one turn finishes, fails, or stops.
+Use the actual session and exact `turnId` returned with the work, when available.
+The call returns at once. Set the watch, then end the reply when only that work remains.
+After a wake, use `read_session` for the result.
+An idle or ended reply means read it at once.
+A turn end does not mean the whole delegated task is complete.
+[Session watches](../../tools/calls.md#session-watches) gives targeting, replies, and Stop behavior.
+
 ## Quick Start
 
 Run these commands from the repository root:
@@ -116,6 +147,15 @@ cargo run -p cnd-cli -- update parts
 ```
 
 The last command prints the embedded parts without a network request.
+
+To create a workspace from a branch and target another branch:
+
+```sh
+cargo run -p cnd-cli -- workspaces create --repository repo-id --message 'Build the next change.' \
+  --start-branch feature/review --base-branch main
+```
+
+[Workspace tool calls](../../tools/calls.md#workspaces) gives the branch defaults and replay rules.
 
 ## Development
 
@@ -142,10 +182,15 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [build.rs](build.rs) validates and embeds the release inputs.
 - [release.rs](src/release.rs) reads the embedded version and parts.
 - [update/engine.rs](src/update/engine.rs) owns download, activation, and fallback policy.
+- [update/repair.rs](src/update/repair.rs) downloads the missing parts of the release that apply starts.
+- [update/presence.rs](src/update/presence.rs) says when an unpacked part counts as present.
 - [update/ports.rs](src/update/ports.rs) defines disk, process, and updater boundaries.
 - [update/disk.rs](src/update/disk.rs) stores complete versions and locks.
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.
 - [runner_command.rs](src/runner_command.rs) makes one `RunnerStart` before its reconstruction loop, and composes the full runner and graceful shutdown.
+- [runner_round.rs](src/runner_round.rs) composes each runner round, negotiates its private service transport, and updates display context without blocking a move on native work.
+- [runner_services.rs](src/runner_services.rs) composes the one native manager and private socket.
+- [service_command.rs](src/service_command.rs) runs the unit-owned execution and output helper.
 - [runner_start.rs](src/runner_start.rs) owns `RunnerStart`, which makes the process-start ID and gives it to each `SavedRunnerLink`.
 - [runner_update/idle.rs](src/runner_update/idle.rs) shares one idle update attempt across fresh runner instances and disables readiness afterward.
 - [runner_update/releases.rs](src/runner_update/releases.rs) checks complete releases and running-release confirmation through `DiskStore`.

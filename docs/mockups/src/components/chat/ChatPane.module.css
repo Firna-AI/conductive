@@ -156,3 +156,30 @@
 .mobile .footer {
   padding: 0 10px 10px;
 }
+
+/*
+ * A small chat, such as the popover of an explanation, keeps less room
+ * around its transcript and its footer, and fills its box.
+ *
+ * The popover has only a highest height, so a flex column would size the
+ * transcript from its text and shrink it together with the footer. A long
+ * chat then pushed the follow-up field out of the popover. The rows give
+ * the footer its height first and the transcript the rest, as in a chat
+ * with a fixed height. A footer that is higher than the chat still shrinks
+ * its region of the requests.
+ */
+.compact {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.compact .transcript {
+  max-width: none;
+  padding: 12px 14px 10px;
+}
+
+.compact .footer {
+  gap: 8px;
+  max-width: none;
+  padding: 0 8px 8px;
+}

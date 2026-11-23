@@ -2,7 +2,6 @@ import type { StartStep } from '../../src/shared/generated/StartStep'
 import type { WorkspaceStart } from '../../src/shared/generated/WorkspaceStart'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
-import { requireWorkspaceOrg } from './access'
 import { runWorkspaceAlarm } from './workspace-alarm'
 import { WorkspaceEventJournal } from './durable-journal'
 import type { DurableLifecycleState } from './durable-types'
@@ -34,6 +33,7 @@ import {
 } from './workspace-task-alarms'
 import { ComputerStopTask } from './computer-stop-task'
 import { startGuard } from './start-guard'
+import { preparingCredentialSender } from './preparing-credential-sender'
 
 export function createWorkspaceController(
   env: AppEnv & { GITHUB_APP_PRIVATE_KEY?: string },
@@ -81,6 +81,8 @@ export function createWorkspaceController(
     alarms,
   }))
   const controller: WorkspaceController = {
+    prepareWorkspaceBase: async () =>
+      (await platform.baseChanges?.resume()) ?? false,
     archiveLifecycle: (id) => archive.begin(id),
     reserveArchive: (id) => archive.reserve(id),
     restoreWorkspace: (orgId, id, userId, origin) =>
@@ -215,20 +217,8 @@ export function createWorkspaceController(
       const turn = await turns.remove(turnId)
       if (turn) await lifecycle.turn(turn.sessionId, false, publish)
     },
-    async credentialSender(turnId: string): Promise<string | null> {
-      const state = await lifecycle.read()
-      if (!state || state.state === 'stopped' || state.state === 'archived')
-        return null
-      await requireWorkspaceOrg(env.DB, state.orgId, state.workspaceId)
-      const job = await platform.storage.get('job', START_JOB_KEY)
-      return job?.kind === 'create' &&
-        (job.phase === 'fetch' || job.phase === 'branch') &&
-        !job.cancelled &&
-        !job.failure &&
-        job.turnId === turnId
-        ? job.admission.first.sender.id
-        : null
-    },
+    credentialSender: (turnId) =>
+      preparingCredentialSender(env, platform, lifecycle, turnId),
     async reportRunnerLifecycle(event, publish): Promise<void> {
       const apply = () => applyRunnerLifecycle(lifecycle, turns, event, publish)
       if (event.type === 'runner.ready') await starts.reportRunnerReady(apply)

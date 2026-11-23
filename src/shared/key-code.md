@@ -12,7 +12,8 @@ page.
   they put the escaped name of each attached file in place of its mention.
   The attachments line then lists only the other files. A Continue note
   copies as one note with the words of the chat, the name of the member,
-  and both branches as code, under no heading.
+  and both branches as code, under no heading. Each branch shows by its
+  label, or by its real name when the note has no label.
   [Markdown code](transcript/markdown-code.ts)
   keeps inline and block fences longer than their content's backticks.
 - [Lost data](transcript/lost-data.ts) maps refusal event types to the same
@@ -41,10 +42,20 @@ page.
   Continue note.
 - [Session log](transcript/session-log.ts) folds those events and session
   records in event order. It keeps the transcript and each item's first time.
-- [Transcript](transcript/transcript.ts) defines the items and folds each
-  session event with its [turn helpers](transcript/turn-events.ts).
-- [Item placement](transcript/item-placement.ts) keeps late items in their
-  turn. [Command placement](transcript/command-placement.ts) puts each Mac
+  It folds the new entries of each `merge` or `offer` as one
+  [transcript batch](transcript/transcript-batch.ts), a private working copy
+  that publishes one transcript. An older entry makes the next read fold the
+  whole log again.
+- [Transcript](transcript/transcript.ts) defines the items, and its
+  `foldEvent` folds one event as a batch of one. The batch folds each event
+  with its [turn helpers](transcript/turn-events.ts).
+- [Fold items](transcript/fold-items.ts) index the items of a batch, with
+  [fold turns](transcript/fold-turns.ts) and the
+  [item order](transcript/item-order.ts). `FoldItems.place` keeps each item
+  of a turn in that turn, also a late item.
+  [Transcript lookups](transcript/transcript-lookups.ts) index a published
+  transcript for reads such as `turnOf`.
+  [Command placement](transcript/command-placement.ts) puts each Mac
   command after the items that began before it.
 - [Turn work](transcript/turn-work.ts) finds each ended turn's folded work.
   [Transcript entries](transcript/transcript-entries.ts) group the items and
@@ -105,8 +116,8 @@ page.
 - [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the required `waitlistOn` flag of the waitlist switch, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.
 - [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause and switch changes, and user access details.
 - [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.
-- [Workspace contracts](workspaces.ts) give `workspacePaths.continue` and `workspacePaths.continueResult`. `ContinueWorkspaceRequest` sends the `expectedBranch` that the caller shows, and an optional `allowLocalWork`. `ContinueWorkspaceResponse` is a pending job with its `continueId`, a `confirmation-required` reply with the `branch`, the `baseBranch`, and the `LocalWork` that the check of Continue found, or a `continued` reply with the `workspace` and its `eventNumber`. [Continue routes](../../worker/lifecycle/continue-routes.md) gives the routes and the errors.
-- [GitHub contracts](github.ts) give the seven `githubPaths` routes of a workspace: the banner, checks, and stored reads, the member capability, the merge start, the merge result, and Ready for review. `GitHubBanner.displayBranch` and `displayBaseBranch` are optional masked labels of the exact `branch` and `baseBranch`. The Worker leaves out a label that equals its real name, and `filterGitHubBanner` in [output fields](output-fields.ts) fills them. `PullRequest.headSha` is the head commit that the banner shows, and `GitHubMergeRequest` sends it back with the merge method. `GitHubCapabilities` gives `canWrite` and the `mergeMethod` that the member may use, or null. `GitHubMergeResponse` is a pending app job with its `mergeId`, or a completed merge. `GitHubReadyRequest` sends the `pullNumber` that the bar shows, and `GitHubReadyResponse` says that the pull request is ready. These member replies never become workspace events. [Member merges](../../worker/github/merges.md) gives the replies and the error codes.
+- [Workspace contracts](workspaces.ts) give `workspacePaths.continue` and `workspacePaths.continueResult`. `ContinueWorkspaceRequest` sends the `expectedBranch` that the caller shows, and an optional `allowLocalWork`. `ContinueWorkspaceResponse` is a pending job with its `continueId`, a `confirmation-required` reply with the `branch`, the `baseBranch`, and the `LocalWork` that the check of Continue found, or a `continued` reply with the `workspace` and its `eventNumber`. The optional `displayBaseBranch` of that question and `LocalWork.displayUncommittedFiles` are masked labels of the exact `baseBranch` and of each path of `uncommittedFiles`, in the same order. `filterContinueResponse` in [output fields](output-fields.ts) fills them. The Continue routes send them. The repository change routes send `LocalWork.displayUncommittedFiles` too, as [Labels](../../worker/lifecycle/repository-change.md#labels) in the repository change guide says. Requests and Git keep the real names. [Continue routes](../../worker/lifecycle/continue-routes.md) gives the routes and the errors.
+- [GitHub contracts](github.ts) give the seven `githubPaths` routes of a workspace: the banner, checks, and stored reads, the member capability, the merge start, the merge result, and Ready for review. `GitHubBanner.displayBranch`, `displayBaseBranch`, and `displayBaseMoved` are optional masked labels of the exact `branch`, `baseBranch`, and `baseMoved`. The Worker leaves out a label that equals its real name, and `filterGitHubBanner` in [output fields](output-fields.ts) fills them, with `movedBaseLabel` in [the moved base label](moved-base-label.ts) for `baseMoved`. `PullRequest.headSha` is the head commit that the banner shows, and `GitHubMergeRequest` sends it back with the merge method. `GitHubCapabilities` gives `canWrite` and the `mergeMethod` that the member may use, or null. `GitHubMergeResponse` is a pending app job with its `mergeId`, or a completed merge. `GitHubReadyRequest` sends the `pullNumber` that the bar shows, and `GitHubReadyResponse` says that the pull request is ready. These member replies never become workspace events. [Member merges](../../worker/github/merges.md) gives the replies and the error codes.
 - `githubSummary` in [GitHub contracts](github.ts) maps the banner state to the list mark, and `checksSummary` gives the checks state that the bar uses. [The summary reader](github-read.ts) reads `Workspace.github`.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
 - [Feedback contracts](feedback.ts) define the feedback path, its request and reply, its byte limits, and its send limit.

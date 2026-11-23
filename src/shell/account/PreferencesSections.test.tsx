@@ -15,6 +15,7 @@ import { holdAnimationFrames } from '../../test-support/mount'
 import { click, mountScreen, settle } from '../test-mount'
 import { startedApp } from '../test-render'
 import { AccountScreen } from './AccountScreen'
+import { sectionTitled } from './test-markup'
 
 /** The Preferences tab of the account of the fake API, mounted. */
 async function mountPreferences(server: FakeApiServer) {
@@ -60,7 +61,12 @@ describe('Model and effort of Preferences', () => {
     }
     server.json('PUT', path, { error }, 503)
     held.holdAnswer('PUT', path)
-    const trigger = byRole('button', 'Model and effort: Opus 5.5, High', view)
+    // The Favourites section above holds a picker with the same name.
+    const trigger = byRole(
+      'button',
+      'Model and effort: Opus 5.5, High',
+      sectionTitled(view, 'New workspaces'),
+    )
     click(trigger)
     click(byRole('menuitemcheckbox', 'Fast'))
     await settle()

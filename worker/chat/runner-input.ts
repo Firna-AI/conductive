@@ -63,6 +63,7 @@ export function parseRunnerTransport(
         ? { completeToolDetails: true }
         : {}),
       ...(input.fileServer === true ? { fileServer: true } : {}),
+      ...(input.services === true ? { services: true } : {}),
       ...(input.loginKinds === undefined
         ? {}
         : { loginKinds: parseLoginKinds(input.loginKinds) }),

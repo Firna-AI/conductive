@@ -464,6 +464,10 @@ Register the parts of the operator section and the automations: 55 parts.
       files to wrappers. `.context/registered-mockup-parts/merge6-plain-uses.txt`
       lists them. `HistoryAnchor` and `ChatPictures` are contexts, so they
       stay out.
+- [ ] Register the mockup parts that the Mac access branch
+      (`calummoore/mac-permission-issue-o7fv`, 2026-11-21) added:
+      `StartFailedNotice`, and `MacAccessPart` with its switch in
+      `docs/mockups/src/components/capabilities/MacAccessPart.tsx`.
 - [ ] Register the parts that the fourth merge of `main` (2026-11-20,
       `7fd59e6eb`) added: `CapabilitiesButton`, `CapabilitiesPanel`,
       `GrantList`, `SendButton`, `StopButton`, `ComposerMenu`,

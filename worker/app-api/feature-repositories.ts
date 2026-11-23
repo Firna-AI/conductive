@@ -11,6 +11,7 @@ import { latestSoftwareRelease } from '../lifecycle/software-release'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import { startImageBuild } from '../lifecycle/image-builds'
+import { currentImageRepositoryReadiness } from '../lifecycle/published-image-data'
 import { imageRuntime } from '../lifecycle/runtime'
 import {
   assertCanChangeSharedSettings,
@@ -60,6 +61,22 @@ function mergeRepositories(
   return [...result.values()].sort(compareInRepositoryOrder(chosenIds))
 }
 
+async function withRepositoryReadiness(
+  db: D1Database,
+  orgId: string,
+  repositories: readonly Repository[],
+): Promise<Repository[]> {
+  const { imageReady, repositoryIds } = await currentImageRepositoryReadiness(
+    db,
+    orgId,
+  )
+  return repositories.map((repository) => ({
+    ...repository,
+    ready: repositoryIds.has(repository.id),
+    imageReady,
+  }))
+}
+
 export async function shellRepositoryChoices(
   env: AppEnv,
   orgId: string,
@@ -68,9 +85,14 @@ export async function shellRepositoryChoices(
 ): Promise<Repository[]> {
   await requireOrgMember(env.DB, orgId, userId)
   const stored = await shellRepositories(env.DB, orgId)
-  if (!(await readGitHubConnection(env.DB, userId))) return stored
+  if (!(await readGitHubConnection(env.DB, userId)))
+    return withRepositoryReadiness(env.DB, orgId, stored)
   const access = await shellGitHubAccess(env, userId, dependencies)
-  return mergeRepositories(orgId, stored, access.repositories)
+  return withRepositoryReadiness(
+    env.DB,
+    orgId,
+    mergeRepositories(orgId, stored, access.repositories),
+  )
 }
 
 /**
@@ -142,12 +164,13 @@ export async function changeShellRepository(
     }
   }
   await requireOrgMember(env.DB, orgId, userId)
+  const repositories = mergeRepositories(
+    orgId,
+    await shellRepositories(env.DB, orgId),
+    availableRepositories,
+  )
   return Response.json({
-    repositories: mergeRepositories(
-      orgId,
-      await shellRepositories(env.DB, orgId),
-      availableRepositories,
-    ),
+    repositories: await withRepositoryReadiness(env.DB, orgId, repositories),
   })
 }
 

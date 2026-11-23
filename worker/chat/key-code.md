@@ -21,6 +21,8 @@ first.
 - `workspace-integration.ts`: `createWorkspaceIntegration`, which joins
   chat, the lifecycle, and the Mac devices in the workspace object. It
   sets the hooks, and gives the Mac devices the shared state writer.
+  `fenced-dependencies.ts` gives its fetch, which needs an active receiver
+  before and after each request.
 - `workspace-operations.ts`: `WorkspaceOperations`, the queue-owned work of
   the lifecycle: the first message, the stop, the summary, and the
   lifecycle events. Its stop transaction clears the port report with
@@ -56,9 +58,10 @@ first.
   `browserRequest` uses this form in the queue for each browser write.
 - `runner-authorization.ts`: `authorizeChatRunner`, the machine origin and
   token checks before the runner connection opens.
-- `browser-subscription.ts`: `subscribeBrowser`, the queue-owned start of
-  a browser tab: the login refresh, the tab registration, the close after
-  a failed start, and the grant check before the history.
+- `browser-subscription.ts`: `subscribeBrowser`, the start of a browser
+  tab in the queue task that `BrowserConnections.subscribe` holds: the
+  login refresh, the tab registration, the close after a failed start, and
+  the grant check before the history.
 - `browser-request.ts`: the queued browser writes and the transcript read
   that yields between history pages.
 - `session-transcript.ts`: the transcript snapshot, metadata reads, and
@@ -85,6 +88,17 @@ first.
   chunks of large file reports and tree deltas. `ChatTransaction.newestHistory`
   serves the browser's session history. `history` keeps the forward read
   for the events socket, workspace summary, Continue, and transcript copy.
+- `workspace-event-labels.ts`, `workspace-labels.ts`, and
+  `workspace-labels-data.ts`: the masked labels of events, as
+  [Branch and path labels](integration/README.md#branch-and-path-labels)
+  says. `eventLabeler` gives the labels of `github.updated`,
+  `workspace.continued`, and `workspace.repository-changed` events.
+  `WorkspaceEventLabels` labels with the values of one read.
+  `WorkspaceEventLabelPreparation` makes that read at most once. Its
+  `event` and `history` make it only for such an event.
+  `ChatStore.eventLabels` gives one preparation, through
+  `storedWorkspaceEventLabels`, which finds the org of the workspace in D1.
+  `prepareWorkspaceEventLabels` gives one for a route that knows the org.
 - `queue-turn.ts`: `ChatQueue`, the serial queue of `ChatStore.run`, and
   `QueueTurn`, the handle whose `outside(call)` runs one call outside the
   queue. `hasOutsideTurns` tells Archive that a queue task is outside.
@@ -105,7 +119,7 @@ first.
   of a session, and its frontier. `prepareSessionHistory` in
   `history-session-preparation.ts` builds it, and yields between batches.
 - `automation-run.ts`: reports an automation's stored first-turn result after a chat transaction commits.
-- `workspace-store.ts`: creates the chat store with lifecycle turn-end reports and automation outcome recovery after each change.
+- `workspace-store.ts`: creates the chat store with lifecycle turn-end reports and [prompt watch delivery](key-code-session-watches.md) at each committed end. It also recovers automation outcomes after each change.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt
   or refusal marker of each runner event. An accepted connection has the
@@ -114,6 +128,8 @@ first.
   dispatch checks, `hello.processStartId` for its warnings, and
   `hello.repositoryFolder` for the folder check. Its `welcome` accepts
   `hello.completeToolDetails` when the `hello` offers it.
+- [runner-hello.ts](runner-hello.ts): `acceptRunnerHello` keeps the saved-ready check, optional service negotiation, welcome, and ready callbacks in their hello order.
+- [../services/runtime.ts](../services/runtime.ts): `WorkspaceServices` receives private service parts before numbered receipt work, and owns the service-aware disconnect and stop hooks.
 - `runner-repository-move.ts`: `RepositoryMoves` compares the runner folder
   with the record folder from `branch-data.ts`. It sends one
   `repository.move` to each capable connection in the stored folder of
@@ -124,12 +140,18 @@ first.
 - `runner-connections.ts` and `runner-connection-store.ts`:
   `RunnerConnections`, the native acceptance, restore, close, and idle
   alarm of the current runner, and the chunked durable record of a
-  physical runner socket. That record keeps the protocol version, the
-  process-start ID, the login kinds, and the repository folder declared
-  in `hello`. A record without login kinds keeps that list absent, as its
-  `hello` did. So after a wake, the runner keeps its login support and its
-  process-start ID with no second `hello` or `welcome`. A restore retires
-  a record of an unsupported version, or with a stream and no version.
+  physical runner socket. `persist` saves the whole `ActiveRunner.state`,
+  and `activate` restores the whole value at a wake, as
+  [The runner](access.md#the-runner) says. The one reader of the store
+  accepts older records. A record without login kinds keeps that list
+  absent, as its `hello` did. A restore retires a record of an
+  unsupported version, or with a stream and no version.
+- `runner-connection-state.ts`: `RunnerConnectionState`, the whole value
+  of a runner connection that native storage saves and a wake restores.
+  `ActiveRunner` in `types.ts` holds it as `state`, beside the
+  memory-only `peer`. Optional `services` and `serviceBinding` fields retain
+  service negotiation and its exact sandbox identity. Older saved records
+  omit them.
 - `runner-output.ts` and `runner-output-state.ts`: the filter from the
   actual start capture, and its encrypted state. Each runner stream keeps
   its held answer text. Each answer record keeps the shown ends of its
@@ -204,6 +226,7 @@ first.
   displayed-label checks. Private labels stay complete for the output filter.
   Runner reports require a sorted unique array. Only a workspace stop
   publishes a null list.
+  A string `serviceId` survives parsing and filtering as an optional port field.
 - `skill-reports.ts`: the skills-report parser, the description cut to 300
   characters after the final filter, the check of the cut, and the browser
   form `SkillsUpdated`. The parser leaves out a name that no skill text can
@@ -247,9 +270,10 @@ first.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `browser-connections.ts` and `browser-registration.ts`:
   `BrowserConnections`, the native acceptance, restore, and close of tab
-  sockets, and the read of a saved registration. `BrowserConnections` adds
-  the branch labels of [`worker/github/output.ts`](../github/output.ts) to
-  each GitHub event that it sends a tab, also in old history.
+  sockets, and the read of a saved registration. It labels each message
+  that it sends a tab, as
+  [Branch and path labels](integration/README.md#branch-and-path-labels)
+  says.
 - `browser-tabs.ts`: open tabs, their grants, the batch refresh, the
   `browser` alarm deadlines of physical tab sockets, and the grant check
   before each send. By default,
@@ -272,6 +296,7 @@ first.
 - `session-login.ts` and `session-storage.ts`: the two login paths of
   `SessionLogins`, credential-aware default resolution, and older session defaults.
 - `session-record.ts`: `sessionFor`, the read of one session record.
+- [`pending-command.ts`](pending-command.ts): `PendingCommand`, the internal stored runner command union.
 - `types.ts`: `ChatDependencies`, `ChatCallbackPublisher`, `ChatStorage`,
   `PreparedCommand`, `ResolvedCommand`, and the peer types.
   `StoredTurn.stopRequest` is optional, because older records lack it. A

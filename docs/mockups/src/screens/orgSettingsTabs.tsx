@@ -31,6 +31,7 @@ import { orgAgentsFor } from './orgAgentsState'
 import type { OrgSettingsState } from './orgSettingsState'
 import { settingsOrg } from './settingsOrgs'
 import { settingsRepositoryNotice } from './settingsRepositoryNotice'
+import { skillsDraft, skillsTrust } from './settingsSkills'
 import { defined, plainData } from '../defined'
 
 /** The person signed in: Cal, an admin, or Priya, a member who is not. */
@@ -185,6 +186,8 @@ export function TabBody(props: {
             readOnly,
             repositoryNotice:
               settingsRepositoryNotice(state, settings) ?? undefined,
+            skillsDraft: skillsDraft(state),
+            skillsTrust: skillsTrust(state, readOnly !== undefined),
           })}
         />
       )

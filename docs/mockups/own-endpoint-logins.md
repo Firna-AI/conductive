@@ -18,7 +18,11 @@
     and `app/chat/endpoint-models` show. On an org endpoint, every picker
     of a session or a new session on the org login hides them (decision
     3 A of the org logins plan), as `app/chat/endpoint-models/org` and
-    `app/automations/automation/new/org-models` show.
+    `app/automations/automation/new/org-models` show. The model menu also
+    leaves out each favourite on a hidden model, as
+    `app/model-favourites/endpoint` shows. Preferences greys such a
+    favourite only for an own endpoint of the member, as
+    `app/model-favourites/preferences/hidden` shows.
   - The address is the base address of the endpoint. The placeholder gives
     an example, without `/v1` for Claude, and with `/v1` for Codex. One
     shared rule checks the address and builds the exact address of each

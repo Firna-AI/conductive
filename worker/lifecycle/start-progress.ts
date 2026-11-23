@@ -24,6 +24,7 @@ export async function advanceStartSteps(
   row: WorkspaceRow,
   job: WorkspaceStartJob,
   call: StartCall,
+  preserveBase = false,
 ): Promise<boolean> {
   if (job.phase === 'records') throw new WorkspaceStartError(null)
   if (startTimeLimitReached(job, dependencies.now()))
@@ -35,7 +36,9 @@ export async function advanceStartSteps(
     return true
   }
   const label =
-    job.phase === 'fetch' && job.baseBranch
+    job.phase === 'fetch' &&
+    (job.baseBranch ||
+      (job.startBranch ?? job.defaultBranch) !== job.defaultBranch)
       ? await call(() => creationFetchLabel(env.DB, job))
       : stepLabel(job.phase)
   if (
@@ -49,6 +52,7 @@ export async function advanceStartSteps(
       label,
       call,
       dependencies,
+      preserveBase,
     ))
   )
     return false

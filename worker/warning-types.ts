@@ -16,6 +16,16 @@ import type { GatewayRefusal } from './model-gateway/errors'
 import type { UnexpectedErrorFields } from './unexpected-error'
 
 export const SIMPLE_WARNINGS = {
+  starting_favourite_skipped:
+    'An entry of CONDUCTIVE_STARTING_FAVOURITES was skipped.',
+  saved_favourites_unreadable:
+    'The saved model favourites of an account could not be read. The account uses the starting favourites.',
+  starting_favourites_fallback:
+    'CONDUCTIVE_STARTING_FAVOURITES has no usable entries. Starting favourites use the app default when available.',
+  runner_service_message_invalid:
+    'A private service transfer was discarded. The runner connection stays open.',
+  runner_service_negotiation_unavailable:
+    'Service support could not be negotiated. The runner connection continues without services.',
   provider_switch_wake_failed:
     'The provider account switch remains saved for its next image alarm.',
   provider_accounts_invalid:
@@ -63,6 +73,12 @@ export const SIMPLE_WARNINGS = {
     'The retry of approval emails failed. It runs again at the next timer.',
   feedback_send_cleanup_failed:
     'Feedback send record cleanup failed. It runs again at the next timer.',
+  codex_device_cleanup_failed:
+    'Codex device cleanup failed. It runs again at the next timer.',
+  record_cleanup_failed:
+    'Record cleanup failed. It runs again at the next timer.',
+  lifecycle_alarm_repair_failed:
+    'Lifecycle alarm repair failed. It runs again at the next timer.',
   software_image_repair_failed:
     'Software image repair failed. It runs again at the next timer.',
   job_record_cleanup_failed:

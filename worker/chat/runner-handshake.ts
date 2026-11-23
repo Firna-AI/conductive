@@ -24,14 +24,17 @@ export async function prepareRunnerHello(
   cursor: number
   savedReady: boolean
 } | null> {
-  if (active.streamId || message.workspaceId !== active.workspace.id)
+  if (
+    active.state.streamId ||
+    message.workspaceId !== active.state.workspace.id
+  )
     throw new HttpError(
       400,
       'runner_hello_mismatch',
       'The connection is not available.',
     )
   const requiredVersion = await dependencies.readRunnerProtocolVersion(
-    active.workspace.id,
+    active.state.workspace.id,
   )
   if (
     !isSupportedRunnerVersion(message.protocolVersion) ||
@@ -40,21 +43,21 @@ export async function prepareRunnerHello(
   ) {
     warnWorker({
       kind: 'runner_protocol_version_mismatch',
-      workspaceId: WarningId.checked(active.workspace.id),
+      workspaceId: WarningId.checked(active.state.workspace.id),
     })
     if (message.protocolVersion < RUNNER_PROTOCOL_VERSION)
       await failUnsupportedRunner(
         store,
         dependencies,
         publish,
-        active.workspace.id,
+        active.state.workspace.id,
       )
     active.peer.close()
     return null
   }
   const protocolVersion = message.protocolVersion
   return store.change(
-    active.workspace.id,
+    active.state.workspace.id,
     async (transaction) => {
       await new RunnerFileReports(transaction.files).beginStream(
         message.streamId,

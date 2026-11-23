@@ -160,6 +160,9 @@ says. A switch decision number names a decision of the change that adds
 - Only an admin changes the repositories, the install script, the startup
   script, and the env vars (decision 57). Other members see them
   read-only.
+- Only an admin changes the skills repository, as
+  [The Skills section](org-skills.md#the-skills-section) says. Other
+  members see it read-only.
 - Only an admin changes the org's name, initials, and colour. Other
   members see them read-only.
 - Only an admin connects, replaces, or removes an org login, and changes
@@ -175,8 +178,9 @@ says. A switch decision number names a decision of the change that adds
   for all agents and reveals a value (secrets decisions 2 A and 3 B).
   [Rights](secrets.md#rights) gives the reasons.
 - Every member can see and change the Capabilities of each workspace: its
-  pre-approved secrets, its Mac access, and its other grants
-  (secrets decision 8 B).
+  pre-approved secrets and its other grants of secrets
+  (secrets decision 8 B). The Mac access switch acts only on the Mac of the
+  member who uses it, as [Mac access](mac-access.md#the-switch) says.
 - Every member who sees a session can answer its secret requests
   (secrets decision 4 B).
 - Every member of the org sees all of its workspaces (decision 39).

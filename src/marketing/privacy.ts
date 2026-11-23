@@ -10,6 +10,7 @@ import {
   type LegalDocument,
 } from './legal-text'
 import { privacyRecipientsSection } from './privacy-recipients'
+import { privacySkillsSection } from './privacy-skills'
 import { privacyUsesSection } from './privacy-uses'
 
 /**
@@ -24,7 +25,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 20 November 2026.`,
+  it uses it, and who gets it. Effective date: 22 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -42,6 +43,7 @@ export const privacyDocument: LegalDocument = {
     },
     privacyUsesSection,
     privacyRecipientsSection,
+    privacySkillsSection,
     {
       title: 'Transfers to other countries',
       blocks: [
@@ -96,6 +98,12 @@ export const privacyDocument: LegalDocument = {
           then deletes the cloud computer, unless a member restores the
           workspace before then. At the end of the 14 days, the workspace
           leaves the Archived group and the command palette.`,
+        paragraph`Service definitions and raw logs use memory in the running
+          cloud computer. Retained logs hold at most 10 MiB in total per
+          service. A computer stop discards these definitions, logs, and
+          the current service list. They do not enter saved disks and do
+          not restore themselves after a resume. A program can still write
+          copied output or secrets to its own files.`,
         paragraph`Removing a workspace from the list keeps its chat history
           until the org is deleted. A direct link or a chat link still opens
           its read-only chat.`,
@@ -178,8 +186,8 @@ export const privacyDocument: LegalDocument = {
             ${productName} puts the text of agent output in the chat history
             or on a screen, it hides each exact copy of a secret value in it.
             It also hides such a copy in each start log that it shows, in
-            the names and folders of the servers that it lists, and in the
-            names and descriptions of the skills that it lists. It does not
+            the server and service details that it lists, in service logs,
+            and in the names and descriptions of the skills that it lists. It does not
             hide a changed or encoded value, or a value in a picture that an
             agent answer shows. A change of the mark applies at the next start
             of a cloud computer.`,
@@ -190,9 +198,10 @@ export const privacyDocument: LegalDocument = {
             of a secret value in these paths and names. Your browser still gets
             the real values, so a secret value can show in the data that your
             browser gets and sends (decision 145).`,
-          text`Agent output, start logs, and the lists of servers and skills can show
-            the value of an env var that is not secret. Each member who reads
-            them then sees that value. The agents and each member with a terminal can read every
+          text`Agent output, start logs, and service logs can show the value
+            of an env var that is not secret. The lists of servers, services,
+            and skills can show it too. Each member who reads them then sees
+            that value. The agents and each member with a terminal can read every
             env var value in the cloud computers. Secret values can also stay
             on the disk of a cloud computer, for example in its agent sessions
             and its agent output.`,
@@ -200,6 +209,12 @@ export const privacyDocument: LegalDocument = {
             its value is in the cloud computer. Programs there, and each
             member with a terminal, can read it then. The command can also
             write it to a file on the disk of the cloud computer.`,
+          text`A service uses the org environment values installed at this
+            computer start, plus values supplied for that service. It does
+            not inherit the agent's credentials, turn context, or secrets
+            added to an approved command. It runs as the same computer user
+            as other programs and can still read available files and
+            credentials, including those of later turns.`,
         ),
       ],
     },

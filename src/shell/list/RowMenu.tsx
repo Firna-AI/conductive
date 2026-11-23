@@ -13,7 +13,7 @@ import type { Section } from '../../shared/sections'
 import { useMembersApi } from '../settings/members-api'
 import type { MenuEntry } from '../ui/Menu'
 import { MenuList } from '../ui/MenuList'
-import { PointMenu, useChoiceFocus, useLostFocus } from '../ui/PointMenu'
+import { PointMenu, useChoiceFocus } from '../ui/PointMenu'
 import { Sheet } from '../ui/Sheet'
 import type { MenuOpening } from './row-menu'
 
@@ -87,8 +87,10 @@ export function RowMenu(props: {
     scope: `${workspace.orgId}/${workspace.id}/${available('reassign')}`,
   })
   const content = useRef<HTMLDivElement>(null)
+  // The sheet gives a focus that a render loses back to its first action.
+  // Choices that show in place of the actions take the focus here before
+  // that: the checked choice, else the first.
   useChoiceFocus(content, phone && choices !== null)
-  useLostFocus(content, phone)
   // A change of the access can take the action of the open choices away.
   if (choices && !available(choices.id)) setChoices(null)
   const close = () => {

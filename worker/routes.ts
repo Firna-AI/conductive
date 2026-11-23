@@ -23,6 +23,7 @@ import { automationRunsRoute } from './automations/run-route'
 import { hasAppAccess } from './waitlist/data'
 import { waitlistRoute } from './waitlist/route'
 import { feedbackRoute } from './app-api/feedback'
+import { branchesRoute } from './app-api/branches'
 import { secretsRoute } from './app-api/secrets'
 import { capabilitiesRoute } from './app-api/capabilities'
 
@@ -88,6 +89,8 @@ export async function route(
     dependencies,
   )
   if (automations) return automations
+  const branches = await branchesRoute(request, env, context, dependencies)
+  if (branches) return branches
   const featureShell = await featureShellRoute(
     request,
     env,

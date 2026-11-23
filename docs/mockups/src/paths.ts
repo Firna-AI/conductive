@@ -244,6 +244,7 @@ export const paths = {
   image: 'app/files/image',
   imageNotDrawn: 'app/files/image/cannot-draw',
   imageFromAnswer: 'app/files/image/from-answer',
+  imageExpanded: 'app/files/image/expanded',
   html: 'app/files/html',
   htmlSource: 'app/files/html/source',
   htmlOpening: 'app/files/html/opening',
@@ -291,3 +292,4 @@ export const paths = {
 } as const
 
 export { barPaths, checksPaths } from './bannerPaths.ts'
+export { branchPaths } from './branchPaths.ts'

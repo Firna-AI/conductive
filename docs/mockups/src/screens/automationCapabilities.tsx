@@ -17,8 +17,8 @@ import type { AutomationState } from './automationState'
 /**
  * The control of an automation: the secrets of Acme, with the secrets that
  * each run workspace pre-approves checked. It has only the secrets part,
- * because run workspaces keep Mac access off (automation capabilities
- * decision 2 A).
+ * because no person watches the Mac of the owner during a run (automation
+ * capabilities decision 2 A).
  */
 function panelOf(automation: Automation, sheet: boolean) {
   const parts = automationCapabilityParts({

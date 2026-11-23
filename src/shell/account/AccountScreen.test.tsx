@@ -193,7 +193,7 @@ describe('AccountScreen', () => {
       address: routes.accountTab('preferences'),
       preferences: {
         current: ['Preferences'],
-        sections: ['New workspaces'],
+        sections: ['Favourites', 'New workspaces'],
         model: true,
         choice: ['Dialog'],
       },

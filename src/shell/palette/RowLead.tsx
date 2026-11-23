@@ -26,6 +26,7 @@ import {
   SlidersHorizontal,
   SquarePlus,
   SquareTerminal,
+  Star,
   Users,
 } from 'lucide-react'
 import { GitHubMark } from '../../../docs/mockups/src/components/common/GitHubMark'
@@ -78,6 +79,7 @@ const accountIcons: Readonly<
 > = {
   'sign-in': LogIn,
   agents: Bot,
+  favourites: Star,
   'new-workspaces': SlidersHorizontal,
   'this-mac': Laptop,
   'keyboard-shortcuts': Keyboard,

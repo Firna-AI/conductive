@@ -71,7 +71,12 @@ decision 265 B. Its `cannot-draw` variant has an image whose bytes the
 browser cannot draw, with "Download this file to open it". Its
 `from-answer` variant has the screenshot after.png of the agent, which a
 press on its picture in `app/file-mentions/answers` opened in the
-temporary tab, from screenshot decision 2 of 18 November 2026.
+temporary tab, from screenshot decision 2 of 18 November 2026. The
+picture has its zoom bar under it, from Cal's request of 22 November
+2026. Its `expanded` variant has the picture in the large window of an
+expanded Preview tab, after Expand. The `image-view` component page has a
+`zoomed` variant, and the `picture-zoom-bar` component page has the
+states of the bar.
 
 `app/files/html` has `.context/report.html` in the temporary tab, in
 Preview, from HTML preview decision 1 A, which Cal chose on 18 November

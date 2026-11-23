@@ -1,5 +1,5 @@
 import type { AgentModel } from '../../shared/generated/AgentModel'
-import { useRef } from 'react'
+import { useRef, type RefObject } from 'react'
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Paperclip } from 'lucide-react'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
@@ -50,9 +50,13 @@ export function Composer(props: {
   /** The login of the first message when it is not the person's own. */
   login?: SessionLogin
   models: readonly AgentModel[]
+  /** The favourites of the account, which the model menu lists first. */
+  favourites: readonly AgentChoice[]
   /** Whether the message can go now. */
   ready: boolean
   send: () => void
+  /** The handle of the message field, which the page can focus. */
+  field: RefObject<FieldHandle | null>
   /** The tools of the form, such as Capabilities. */
   tools: readonly ComposerTool[]
 }) {
@@ -60,7 +64,7 @@ export function Composer(props: {
   const draft = useStore(props.model.draft)
   const create = useStore(props.model.create)
   const picker = useRef<HTMLInputElement>(null)
-  const field = useRef<FieldHandle>(null)
+  const { field } = props
   const sending = create.state === 'sending'
   const sendKey = useSendKey(props.ready, props.send)
   const drop = useComposerDrop({
@@ -124,6 +128,7 @@ export function Composer(props: {
               <ModelPicker
                 change={(choice) => props.model.setChoice(choice)}
                 choice={props.choice}
+                favourites={props.favourites}
                 models={props.models}
               />
             ) : null}

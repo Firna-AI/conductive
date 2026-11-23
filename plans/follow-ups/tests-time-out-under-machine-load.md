@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-08, from the branch `calummoore/chat-title-rename`, where several agents ran tests, a mockup build, and Chrome on one machine at the same time.
-- **Location:** `worker/chat/retry.test.ts`, `worker/chat/retry-queue.test.ts`, `worker/lifecycle/runner-environment.test.ts`, `worker/lifecycle/disk-retention.test.ts`, `worker/operator/suspension-race.test.ts:20`, two Git tests of the agent runner under `runner/src/`, and `worker/tools/sessions.test.ts:48`.
+- **Location:** `worker/chat/retry.test.ts`, `worker/chat/retry-queue.test.ts`, `worker/lifecycle/runner-environment.test.ts`, `worker/lifecycle/disk-retention.test.ts`, `worker/operator/suspension-race.test.ts:20`, two Git tests of the agent runner under `runner/src/`, `worker/tools/sessions.test.ts:48`, `worker/chat/adapter.test.ts`, `worker/lifecycle/skills-environment.test.ts`, and `worker/lifecycle/image-lease-builds.test.ts`.
 - **Reason:** The original branch changed none of the first five tests. Each passed alone and in two complete gate runs.
 
 - **Source:** Implementation. **Category:** Test.
@@ -169,7 +169,7 @@
   Each reported `Error: Test timed out in 15000ms.`
   Marketing setup reported `EXDEV: cross-device link not permitted` while
   Astro renamed an asset from `.astro/.prerender/` into `/tmp`.
-  This is the existing issue in `plans/follow-ups/built-site-test-cross-device-rename.md`.
+  This is the existing issue in [`plans/follow-ups/built-site-test-cross-device-rename.md`](https://github.com/Firna-AI/conductive/blob/af68ff544c64b86351a731daa79e48c2a790e93b/plans/follow-ups/built-site-test-cross-device-rename.md).
   Running that marketing file with `TMPDIR` inside the ignored `.context/`
   folder passed all 12 cases in 8.83 seconds, with no code or test edit.
 - On 16 November 2026, the main merge into `calummoore/delft-i3g7`
@@ -189,6 +189,54 @@
   This proves that the Continue timeout occurs without the merge.
   The other failures were not reproduced on main in this attempt.
   The blocked await and cause remain unknown.
+- On 17 November 2026, the main merge into `calummoore/oslo-3u7a`
+  ran four selected test files beside Rust compilation, lint, and format checks.
+  Eleven tests passed and these two cases failed with
+  `Error: Test timed out in 15000ms.`:
+  - `worker/lifecycle/runner-environment.test.ts`, "captures fresh resume settings, preserves the ready computer capture, and pins retention settings after rotation".
+  - `worker/lifecycle/skills-environment.test.ts`, "sets skills at create and refreshes them at each resume, overriding org env vars also when invalid or removed".
+  Both files then passed together without competing checks: six tests,
+  no failures or skips, in 34.44 seconds. No assertion or timeout changed.
+  The runner-environment file matches main at
+  `94924b6d59c57d5a230eb2350e84f2869c653c19`.
+  The skills file belongs to the skills feature of this branch; the merge
+  did not change it. Contention during native fixture work is suspected.
+  The blocked await and the cause are not established.
+- The complete gate on that merged tree then passed every static check
+  and all 121 SDK helper tests. The app and Worker suite passed 4,012
+  tests and failed two, with no skipped tests. These cases failed with
+  `Error: Test timed out in 15000ms.`:
+  - `worker/chat/adapter.test.ts:24`, "serves the actual Durable Object with SQLite storage and authenticated WebSockets".
+  - `worker/lifecycle/image-lease-builds.test.ts:15`, "keeps a leased image until its workspace starts across a replacement publication".
+  Both files match main at `94924b6d59c57d5a230eb2350e84f2869c653c19`.
+  A rerun of just these two files without competing checks passed the chat
+  adapter case and timed out in the image case again.
+  A clean detached checkout of that main commit then ran the image file
+  alone. Its only case also failed with `Error: Test timed out in 15000ms.`
+  in a 32.66-second run. This proves that the image failure occurs without
+  the merge. No assertion, fixture, timeout, or test configuration changed.
+  No further local image-test attempt ran after these three failures.
+  Native runtime or storage delays are suspected; the blocked await and
+  the cause remain unknown.
+- On 17 November 2026, the next main merge into `calummoore/oslo-3u7a`
+  integrated `989adcb9319497507f9f6ab007ffdd3c094b1762`.
+  The complete gate passed every static check and all 121 helper tests.
+  The root suite ran all 1,280 files. It passed 4,170 tests and failed
+  seven, with no skipped tests. Each failed with
+  `Error: Test timed out in 15000ms.`:
+  - `worker/lifecycle/added-repository-build.test.ts`, "starts one added build for a repository added during a successful build".
+  - `worker/lifecycle/added-repository-build.test.ts`, "starts one added build for a repository added during a successful refresh".
+  - `worker/devices/lifecycle.test.ts`, "relays all four approval choices only from the paired desktop session".
+  - `worker/secrets/late.test.ts`, "turns an unfinished request late at turn end and starts its notice for the original sender".
+  - `worker/lifecycle/published-image-creation.test.ts`, "creates from captured image repositories while current settings and selection change".
+  - `worker/lifecycle/terminal-lifecycle.test.ts`, "starts and caches the terminal after startup at create and resume while retention starts no terminal".
+  - `worker/lifecycle/account-routing.test.ts`, "replays a lost allocation and resumes its disk through the stored secondary account".
+  All six files match that main commit. A single rerun of the six full
+  files with `--maxWorkers=1` passed all 25 tests in 75.86 seconds.
+  It skipped none. No competing check ran beside either run.
+  No test, assertion, timeout, fixture, or gate configuration changed.
+  The full run took 1,964.52 seconds. Native runtime or storage contention
+  is suspected, but the blocked awaits and the cause remain unknown.
 - On 18 November 2026, the branch `calummoore/kyoto-votd` ran the complete
   gate on a machine with 4 CPUs. The workspace runner used about 55% of
   one CPU, and the load average was about 5. Both tests of
@@ -245,5 +293,7 @@
 - **Left out:** A longer time limit. The `testing` skill needs the user's approval for it, and it hides the slow step.
 - **Wider fix:** A. It removes the dependence on machine speed.
 - **Previous examples:** `plans/follow-ups/start-time-limit-test-under-load.md` and `plans/follow-ups/harness-test-speed.md`. On 10 November 2026, on the branch `calummoore/mac-app-downloads-site`, the complete gate ran beside a review session that ran type checks. `worker/lifecycle/disk-retention.test.ts > ends failed maintenance and refuses destructive resume of a normal errored workspace` failed with "Error: Test timed out in 15000ms." It passed alone, and that branch changed no lifecycle file. Also on 10 November 2026, CI ran the complete gate of the pull request branch `calummoore/file-selector-list` at commit `823d4c0`, in run 42756364794, attempt 2. `worker/operator/suspension-race.test.ts > cancels an in-flight allocation and cleans its delayed computer after actor recovery` failed with "Error: Test timed out in 15000ms." at `worker/operator/suspension-race.test.ts:20:1`. Attempt 1 of the same run had passed it. It passed locally in the complete gate on that tree, and alone on `main` at `ab58467`. That branch changed no Worker file, so a CI runner can be the busy machine too.
+- **Evidence of 20 November 2026:** on the branch `calummoore/delft-39rk`, in a workspace cloud computer with 4 CPUs and 8 GB of memory, native lifecycle tests timed out with no other load: both cases of `worker/lifecycle/start-branch-retry.test.ts`, the cases "reserves one actor for simultaneous creates before any workspace row exists" and "repairs a claim with no queued job and keeps successful retries independent of a later resume" of `worker/lifecycle/create-retry.test.ts`, the case "keeps a retried create behind failed-computer cleanup and preserves the replacement token and identity" of `worker/lifecycle/creation-failure-retry.test.ts`, and the case "recovers pending resume stop cleanup after native completion loses its caller" of `worker/lifecycle/start-completion-restart.test.ts`. Each failed with "Error: Test timed out in 15000ms.", also on unchanged `main` at `f681c8a6c` from a copy under `/tmp`. A measurement found a median durable write of 17.183 ms under the checkout, 21.250 ms under `/tmp`, and 0.001 ms on `/dev/shm`. The native SQLite commits of these tests wait on the disk. A trial that put the scratch folders of `worker/test-support/migrated-storage.ts` and `worker/test-support/native-global-setup.ts` on `/dev/shm` made all of these cases pass ten times in a row. That trial was not kept, because it moves every native test's data into memory on a machine that rebooted under memory pressure.
+  - **D.** Put the native test scratch folders on `/dev/shm` on Linux, with a fall back to the temporary folder. Cost: test data then uses memory. Effort: Small.
 - **Recommendation:** A. Each test then fails only for a real defect.
 - **Action:** ask the user, because these are tests of code outside the branch, and A and B each cost real time while the failures came only under unusual load.

@@ -60,10 +60,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `src/components/common/touch.tsx`, and local controls read the
   `--ui-touch-min` variable, which is 0 on desktop.
 - One `ModelPicker` in `src/components/chat/` sets the model and the effort
-  in every composer, such as "Opus 5.5 High". It names no agent brand. In a
-  session with messages, each model of the other agent ends with the
-  external link icon, because it opens a new session with the draft, from
-  decision 51. A screen reader says "New session" for the icon.
+  in every composer, such as "Opus 5.5 High". It names no agent brand.
+  [The model menu](design-model-menu.md) gives its menu, with the
+  favourites first.
 - A workspace or a session that has no name yet shows "Untitled", in the
   style of a name, from decisions 182 and 185. The list, the header, the
   session tabs, and the session history show it, as
@@ -214,7 +213,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the operator, and Keyboard shortcuts.
 - `LoadFailure` in `src/components/common/` draws data that did not load,
   as the lists of the app show it: what failed, the message of the server,
-  and Try again.
+  and Try again. When the server answered but a service behind it did not,
+  such as GitHub for the list of skills, its message names that service.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
@@ -230,19 +230,25 @@ sessions as tabs above the chat, and four tabs at the bottom.
   Archive, over the workspace and over the list. Its second line gives the
   day when the workspace leaves the list.
 - [The pull request bar](design-bar.md) gives its one main action in each
-  state, the line under the bar, the actions on top of the Checks tab of a
-  phone, and the question and the note of Continue.
+  state, the line under the bar, the branches and the actions on top of the
+  Checks tab of a phone, and the question and the note of Continue.
 - `NewWorkspaceDialog` in `src/components/new-workspace/` draws New
   workspace as a wide, compact dialog over the dimmed app, for a user who
   chose the dialog in Preferences. It lies in the layer and over the scrim
-  of `ConfirmDialog`. The repository picker sits at the top left, and the
-  org and the section of the new workspace, in plain text, at the top
-  right. The message and its files fill the middle, and the notices of the
-  New workspace page follow them. The attach button, the Capabilities icon,
-  and the model picker sit at the bottom left. The org login label follows
-  the model picker when the first message uses it. Create, with the hint of
-  the Enter key, sits at the bottom right. A phone always opens the page,
-  so the dialog has no phone layout.
+  of `ConfirmDialog`. The repository picker and the branch control
+  directly right of it sit at the top left, and the org and the section of
+  the new workspace, in plain text, at the top right. The target of a
+  picked branch lives in the dropdown of the branch control, so no line
+  follows the header (decision 309). The message and its files fill the
+  middle, and the notices of the New workspace page follow them.
+  The attach button, the Capabilities icon, and the model picker sit at
+  the bottom left. The org login label follows the model picker when the
+  first message uses it. Create, with the hint of the Enter key, sits at
+  the bottom right. A phone always opens the page, so the dialog has no
+  phone layout.
+- [New workspace](design-new-workspace.md) gives the branch control of the
+  page and of the dialog, its dropdown with the parts Start from and
+  Target, and the refusals of the branch check.
 - The account has five tabs, General, Agents, Preferences, Keyboard
   shortcuts, and Stats, as links, as the org settings have. The Mac app
   adds This Mac as its sixth tab. On a phone, a tab that
@@ -324,8 +330,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   its automations read-only under its notice. `RunLinks` in
   `src/components/workspace/` draws the line under the header of a run
   workspace, which links to its automation and to its pull request. The pull
-  request bar names the base branch of a workspace: the default branch, or
-  for a pull request run the head branch of its pull request. A long base
+  request bar names the base branch of a workspace: the default branch, the
+  picked branch of a start that stacks on it, or for a pull request run the
+  head branch of its pull request. A long base
   branch ends in an ellipsis at half of the line. The
   bubble of a message keeps its line breaks, as in the app, so the first
   message of a run shows the facts of its trigger on their own lines.
@@ -413,7 +420,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
   link. It also gives the bars of the cloud computer.
 - [The chat](design-chat.md) gives the chips of attached files and the
   fold of the work of a turn. It also gives the data that the chat does
-  not have, and the files that the cloud computer could not read.
+  not have, and the files that the cloud computer could not read. Its
+  [Explain](design-chat.md#explain) section gives the marks in the text
+  of the chat, and the popover of an explanation: a small panel by its
+  mark on a computer, and a sheet on a phone.
 - [The Markdown of replies](design-markdown.md) gives the tables, the
   headings, the quotes, the rules, the marks, the line breaks, and the
   pictures of a reply and of a file preview, and how a message line in the
