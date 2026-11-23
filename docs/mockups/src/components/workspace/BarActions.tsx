@@ -1,8 +1,8 @@
 import type { LucideIcon } from 'lucide-react'
-import { ArrowRight, CircleAlert, Clock, GitBranch, Info } from 'lucide-react'
+import { CircleAlert, Clock, Info } from 'lucide-react'
 import { pullRequest } from '../../fixtures/pullRequests'
 import { repositories } from '../../fixtures/repositories'
-import { baseBranchOf, type Workspace } from '../../fixtures/workspaces'
+import type { Workspace } from '../../fixtures/workspaces'
 import { barPaths, paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../../../../../src/ui/components/common/classes'
@@ -29,6 +29,7 @@ import {
   barGitHubLink,
   githubLink,
 } from '../../entries/components/workspace/barParts.mockup'
+import { ChecksBranches } from './ChecksBranches'
 import { barTint, hasPullRequest } from './prStatus'
 import { iconKeyOf } from '../../entries/components/common/icons'
 import styles from '../../../../../src/ui/components/workspace/BarActions.module.css'
@@ -247,28 +248,6 @@ export function BarMessage(props: {
           label={barLabels.openOnGitHub}
         />
       ) : null}
-    </div>
-  )
-}
-
-/**
- * The branch and its base at the top of the Checks tab of a phone, where
- * Create PR stands (decision 306). They take the parts of the desktop bar.
- * The names wrap, and the base keeps its arrow on a line of its own, so
- * each name shows in full: a phone has no tooltip.
- */
-function ChecksBranches(props: { workspace: Workspace }) {
-  const { workspace } = props
-  return (
-    <div className={styles.branches}>
-      <GitBranch className={styles.branchIcon} size={13} />
-      <span className={styles.names}>
-        <span className={styles.branch}>{workspace.branch}</span>
-        <span className={styles.base}>
-          <ArrowRight className={styles.branchIcon} size={12} />
-          <span className={styles.baseName}>{baseBranchOf(workspace)}</span>
-        </span>
-      </span>
     </div>
   )
 }
