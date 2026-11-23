@@ -233,6 +233,7 @@ Changed by the options check: a wider root question, the cost of B, and new opti
 - **Related:** OpenCode decision 4.
 - **Recommendation:** E, changed from B after the user's proposal. It keeps older clients working as B does. It also uses the one product version that already exists, and it serves each later compatibility change. A version moves only at a release, so a build between the merge of the new readers and the next release counts as old. That build only shows no OpenCode. The options check recommended B, before E existed.
 - **Action:** ask the user, because A, C, and D break older clients for some users, D adds a gate, and B and E cost more.
+- **Chosen:** E, by the user on 23 November 2026, as recommended. The user proposed E.
 
 ### OpenCode decision 6. Repository settings of OpenCode
 
@@ -465,8 +466,8 @@ do not know. This ships before any OpenCode value reaches a client.
       event that it cannot read, as the chat reader does.
 - [ ] Make the agent tools in `crates/cnd-tools/` skip an entry with an
       unknown agent.
-- [ ] Send the header of OpenCode decision 5 B or E from the web app, the
-      Mac app, the event socket, and the agent tools, if B or E is chosen.
+- [ ] Send the app version of OpenCode decision 5 E from the web app, the
+      Mac app, the event socket, and the agent tools.
 - [ ] Test each reader with an unknown agent.
 
 ## Milestone 5: Wire types and stored data
@@ -481,7 +482,8 @@ Depends on: 4
 - [ ] Make `runnerSupportsLogin` refuse an OpenCode login on a runner that
       does not advertise it. Send OpenCode commands only to such a runner.
 - [ ] Make the Worker leave OpenCode values out of replies and events for
-      older clients, if OpenCode decision 5 B or E is chosen.
+      clients older than the first version that reads them, as OpenCode
+      decision 5 E chooses. Add the table of those first versions.
 
 ## Milestone 6: OpenCode logins and the gateway
 
