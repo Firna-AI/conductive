@@ -947,19 +947,20 @@ Depends on: 6
 
 - [x] Merge the highest ready layer as its queuer, with the wait for the
       layer above it, and save the merge records.
-- [ ] Keep the restack rule after each read: from the lowest layer that
+- [x] Keep the restack rule after each read: from the lowest layer that
       does not hold the head below it, upward.
-- [ ] Run the leave step for each cause, with the base reset to the trunk.
+- [x] Run the leave step for each cause, with the base reset to the trunk.
 - [x] Keep a layer that cannot merge in its place, merge the layers below
       it, and give the bar line the reason that the queue waits
       ("Failures").
-- [ ] Send one agent turn for a conflict of a restack, then wait for a
+- [x] Send one agent turn for a conflict of a restack, then wait for a
       member (decision 321).
 - [x] Re-order with unstack, base changes, restacks from the bottom up, and
       the add back.
-- [ ] Tests for each path, also with two steps that arrive at once.
+- [x] Tests for each path, also with two steps that arrive at once.
 
 Verification logs are listed in `.context/merge-queue/m7-checks.md`.
+The final path and race checks are in `.context/merge-queue/m7-closure-checks.md`.
 
 ## Milestone 8: The sidebar group
 
@@ -1004,7 +1005,7 @@ Depends on: 1, 4
 
 Depends on: every other milestone
 
-- [ ] Smoke-test the queue with the local Worker and the fake GitHub
+- [x] Smoke-test the queue with the local Worker and the fake GitHub
       server: join three workspaces, re-order, fail one, and merge.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
@@ -1019,6 +1020,8 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+The smoke test results are in `.context/merge-queue/smoke/results.md`.
 
 ## Post-merge follow-up (non-blocking)
 

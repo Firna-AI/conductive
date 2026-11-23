@@ -35,19 +35,23 @@ export async function leaveQueue(
   if (!removed.length) return entries
   if (writer)
     await authorizeMerge(runtime.env.DB, writer.workspace, writer.memberId)
-  const notices = await resetLeavingBases(runtime, queue, entries, removed, {
-    ...signal,
-    actorId: writer?.memberId ?? signal.actorId,
-  })
+  const { bases, notices } = await resetLeavingBases(
+    runtime,
+    queue,
+    entries,
+    removed,
+    {
+      ...signal,
+      actorId: writer?.memberId ?? signal.actorId,
+    },
+  )
   if (signal.cause !== 'merged') {
     for (const entry of removed) {
       const base =
         signal.cause === 'base-changed' &&
         entry.workspaceId === signal.workspaceId
           ? signal.baseBranch
-          : (notices.find(
-              ({ workspaceId }) => workspaceId === entry.workspaceId,
-            )?.baseBranch ??
+          : (bases.get(entry.workspaceId) ??
             (entry.githubBase === queue.trunk
               ? queue.trunk
               : entry.memberBase) ??

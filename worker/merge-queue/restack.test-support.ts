@@ -1,7 +1,5 @@
-import { createHmac } from 'node:crypto'
 import { expect } from 'vitest'
 
-import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { chatHistoryPath } from '../../src/shared/events'
 import { sessionPaths, sessionsPath } from '../../src/shared/sessions'
 import { readNewestStoredEvents } from '../../src/chat/api/read-workspace'
@@ -10,13 +8,12 @@ import {
   readSessions,
 } from '../../src/chat/api/read-responses'
 import { CLAUDE } from '../chat/harness.test-support'
-import { OUTER_MACHINE_ORIGIN } from '../chat/integration/outer-runtime.test-support'
 import { OUTER_ORG } from '../chat/integration/outer-seed.test-support'
 import { requireFeatureResult } from '../features/result'
 import { HEAD_SHA, passedRun } from '../github/fake-pull'
 import { recordedPullRequest, recordedPush } from '../github/recorded-webhooks'
 import { mergeFixture } from './merge.test-support'
-import { QUEUE_WEBHOOK_SECRET } from './queue.test-support'
+import { queueWebhook } from './queue.test-support'
 
 export async function restackFixture(bundle: string) {
   const f = await mergeFixture(bundle, 'single')
@@ -27,23 +24,7 @@ export async function restackFixture(bundle: string) {
       body: JSON.stringify(value),
     })
   const webhook = async (event: string, delivery: string, payload: unknown) => {
-    const body = JSON.stringify(payload)
-    const signature = createHmac('sha256', QUEUE_WEBHOOK_SECRET)
-      .update(body)
-      .digest('hex')
-    const response = await f.runtime.dispatchFetch(
-      `${OUTER_MACHINE_ORIGIN}${MACHINE_PATHS.githubWebhook}`,
-      {
-        method: 'POST',
-        body,
-        headers: {
-          'X-Hub-Signature-256': `sha256=${signature}`,
-          'X-GitHub-Event': event,
-          'X-GitHub-Delivery': delivery,
-        },
-      },
-    )
-    expect(response.status).toBe(204)
+    expect((await queueWebhook(f, event, delivery, payload)).status).toBe(204)
   }
   return {
     ...f,
@@ -103,6 +84,13 @@ export async function restackFixture(bundle: string) {
         ref: `refs/heads/${branch}`,
         before,
         after,
+      }),
+    status: (delivery: string, number: number) =>
+      webhook('status', delivery, {
+        repository: recordedPush.repository,
+        installation: recordedPush.installation,
+        sha: f.api.pulls[number].headRefOid,
+        branches: [{ name: f.api.pulls[number].headRefName }],
       }),
     session: async (id: string) => {
       await f.db

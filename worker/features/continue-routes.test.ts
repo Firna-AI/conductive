@@ -35,6 +35,9 @@ it('resumes Continue through real routes and socket wake, fences sends and Archi
   let runner: OuterFakeRunner | undefined
   let browser: WebSocket | undefined
   try {
+    expect((await f.queueOldBranch()).status).toBe(204)
+    f.api.pulls[2].state = 'MERGED'
+    f.api.pulls[2].mergedAt = '2026-11-09T12:00:00Z'
     const path = workspacePaths.continue(OUTER_ORG, OUTER_WORKSPACE)
     const input = { expectedBranch: 'changes', allowLocalWork: true }
     const post = (cookie = f.cookies.memberCookie) =>
@@ -113,6 +116,7 @@ it('resumes Continue through real routes and socket wake, fences sends and Archi
       const job = record(state.get(CONTINUE_JOB_KEY) ?? {})
       return job.phase === 'fetch' && typeof job.processId === 'number'
     })
+    expect(await f.queuedPulls()).toEqual([2])
     const fetchId = string(record(fetching.get(CONTINUE_JOB_KEY)).fetchId)
     expect(
       runner.received.filter((message) => record(message).type === 'turn'),
@@ -175,6 +179,7 @@ it('resumes Continue through real routes and socket wake, fences sends and Archi
     expect((await f.credential(token, fetchId)).status).toBe(409)
     f.boat.commandRunning = false
     await f.drive((state) => state.get(CONTINUE_JOB_KEY) === null)
+    expect(await f.queuedPulls()).toEqual([])
     const resultPath = workspacePaths.continueResult(
       OUTER_ORG,
       OUTER_WORKSPACE,

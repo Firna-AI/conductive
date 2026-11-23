@@ -76,6 +76,8 @@ type EntryFacts = {
    * not ready yet. Its Merge waits for that layer (decision 316).
    */
   waitsFor?: number
+  /** A member can rebase this layer onto the intended base. */
+  waitsForRebase?: true
   /** The count from the queue when a member can land this layer and the ones ahead. */
   mergeAhead?: number
   /** Why the queue could not merge it, while it is ready. */

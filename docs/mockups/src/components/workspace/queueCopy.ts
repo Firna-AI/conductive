@@ -92,7 +92,10 @@ function waitText(
     return `The queue waits for #${line.waitsFor}.`
   }
   if (line.localWork) return 'The queue waits for its local work to be pushed.'
-  return ownWait(github, below) ?? `It builds on ${below}.`
+  return (
+    ownWait(line.waitsForRebase ? 'conflict' : github, below) ??
+    `It builds on ${below}.`
+  )
 }
 
 /**

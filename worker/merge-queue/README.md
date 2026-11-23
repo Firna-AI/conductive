@@ -30,7 +30,8 @@ and resets its base to the stored trunk. It uses the queuer's token when
 the queuer can act, then the member who caused the leave or the owner.
 The step saves a notice for a failed base reset. Upper entries of a
 member stack keep their member base. A signal for a member's own base
-change keeps the new base.
+change keeps the new base. The leave step also keeps a member's new base
+when another leave reaches the queue before the edited webhook.
 
 The step removes the affected suffix and compacts the places. A merge
 removes each completed layer. A wake names the entry's branch and can
@@ -84,10 +85,14 @@ accepted-message path resumes the cloud computer when necessary.
 The workspace reports the final state of the turn from its own alarm.
 The coordinator saves the result under the restack ID. The next step
 checks the pushed branch against the latest base again.
+If the branch still needs a rebase, the bar shows Resolve conflicts and
+uses the intended base of the queue.
 
 ## Development
 
 Run `npm run test -- worker/merge-queue`.
+The [Worker smoke test](smoke.test.ts) runs a join, a re-order, a failed
+check, and a merge through the app routes and a fake GitHub server.
 
 ### Key Code
 

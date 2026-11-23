@@ -39,7 +39,10 @@ function factsOf(snapshot: GitHubSnapshot): PromptFacts {
   }
   return {
     number: banner.pullRequest.number,
-    base: banner.baseBranch,
+    base:
+      snapshot.queue?.belowPullNumber === null
+        ? snapshot.queue.trunk
+        : banner.baseBranch,
     failedChecks: failingChecks(snapshot),
     reviewers: banner.changesRequestedBy,
     ...(snapshot.queue && {

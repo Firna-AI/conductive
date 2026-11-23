@@ -1,5 +1,11 @@
+import { createHmac } from 'node:crypto'
+
+import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { mergeQueuePaths } from '../../src/shared/merge-queue'
-import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
+import {
+  OUTER_MACHINE_ORIGIN,
+  outerWorkerBundle,
+} from '../chat/integration/outer-runtime.test-support'
 import {
   OTHER_WORKSPACE,
   OUTER_ORG,
@@ -18,7 +24,7 @@ export const PARALLEL = 'parallel workspace'
 export const FOREIGN = 'foreign workspace'
 export const OWNER_TOKEN = 'owner-queue-token'
 export const MEMBER_TOKEN = 'member-queue-token'
-export const QUEUE_WEBHOOK_SECRET = 'merge-queue-webhook-secret'
+const QUEUE_WEBHOOK_SECRET = 'merge-queue-webhook-secret'
 export const queueBundle = () =>
   outerWorkerBundle('worker/features/entry.test-support.ts')
 
@@ -71,6 +77,7 @@ export async function queueFixture(bundle: string, privateKey?: string) {
     configuration: {
       GITHUB_APP_PRIVATE_KEY: privateKey,
       GITHUB_WEBHOOK_SECRET: QUEUE_WEBHOOK_SECRET,
+      OPERATOR_GITHUB_IDS: '103',
     },
     outbound: (request, fallback) => {
       const path = new URL(request.url).pathname
@@ -200,3 +207,27 @@ export async function queueFixture(bundle: string, privateKey?: string) {
 }
 
 export type QueueFixture = Awaited<ReturnType<typeof queueFixture>>
+
+export function queueWebhook(
+  { runtime }: Pick<QueueFixture, 'runtime'>,
+  event: string,
+  delivery: string,
+  payload: unknown,
+) {
+  const body = JSON.stringify(payload)
+  const signature = createHmac('sha256', QUEUE_WEBHOOK_SECRET)
+    .update(body)
+    .digest('hex')
+  return runtime.dispatchFetch(
+    `${OUTER_MACHINE_ORIGIN}${MACHINE_PATHS.githubWebhook}`,
+    {
+      method: 'POST',
+      body,
+      headers: {
+        'X-Hub-Signature-256': `sha256=${signature}`,
+        'X-GitHub-Event': event,
+        'X-GitHub-Delivery': delivery,
+      },
+    },
+  )
+}

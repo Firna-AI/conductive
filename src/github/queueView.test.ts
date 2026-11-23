@@ -125,6 +125,33 @@ describe('the merge queue in the bar', () => {
     })
   })
 
+  it('offers Resolve conflicts after a queue restack fails against a base GitHub has yet to see', () => {
+    const queue = {
+      ...entry,
+      state: 'waiting',
+      wait: 'rebase',
+    } satisfies MergeQueueBarState
+    const bar = view('ready-to-merge', queue)
+    expect(kinds(bar)).toEqual(['resolve-conflicts'])
+    expect(bar.queue?.line?.text).toBe(
+      'Place 3 of 3 in the merge queue. The queue waits for a rebase onto #479.',
+    )
+    expect(
+      kinds(view('ready-to-merge', queue, { localWork: 'commits' })),
+    ).toEqual(['push'])
+
+    const ready = snapshotOf('ready-to-merge')
+    const oldBase = 'a'.repeat(40)
+    const bottom = {
+      ...ready,
+      banner: { ...ready.banner, baseBranch: 'old-layer' },
+      queue: { ...queue, place: 1, belowPullNumber: null, oldBase },
+    }
+    expect(promptOf('resolve-conflicts', bottom)).toContain(
+      `git rebase --onto origin/main ${oldBase}`,
+    )
+  })
+
   it('uses the count from the checked prefix and preserves the bottom-layer action', () => {
     expect(
       view('ready-to-merge', {

@@ -172,6 +172,13 @@ function mainAction(facts: BarFacts): BarAction | undefined {
   }
   const local = localWorkAction(facts.localWork)
   if (local && isOpen(banner)) return agent(local)
+  if (
+    banner !== 'draft' &&
+    isOpen(banner) &&
+    facts.queue?.kind === 'entry' &&
+    facts.queue.waitsForRebase
+  )
+    return agent('resolve-conflicts')
   const fix = fixOf(banner)
   if (fix) return agent(fix)
   if (banner === 'draft') {

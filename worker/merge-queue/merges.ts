@@ -129,8 +129,10 @@ export class QueueMerges {
       !prefix ||
       prefix.length !== ahead + 1 ||
       prefix.some((layer) => !layer.stacked || layerWait(layer) !== null)
-    )
+    ) {
+      await this.schedule(queue, this.runtime.dependencies.now())
       throw queueMergeNotReady()
+    }
     if (
       !(await this.start(queue, prefix, userId, actor.capabilities.mergeMethod))
     )

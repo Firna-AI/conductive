@@ -1,8 +1,5 @@
-import { createHmac } from 'node:crypto'
 import { beforeAll, expect, it } from 'vitest'
 
-import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import { OUTER_MACHINE_ORIGIN } from '../chat/integration/outer-runtime.test-support'
 import {
   OUTER_REPOSITORY,
   OUTER_WORKSPACE,
@@ -14,8 +11,8 @@ import { mergeFixture } from './merge.test-support'
 import {
   MEMBER_TOKEN,
   OWNER_TOKEN,
-  QUEUE_WEBHOOK_SECRET,
   queueBundle,
+  queueWebhook,
 } from './queue.test-support'
 
 let bundle: string
@@ -185,7 +182,7 @@ it.each([
     if (action === 'closed') pull.state = 'CLOSED'
     else pull.isDraft = true
     f.api.merges.memberPermissions.set(MEMBER_TOKEN, 'READ')
-    const body = JSON.stringify({
+    const response = await queueWebhook(f, 'pull_request', 'queue-leave', {
       ...recordedPullRequest,
       action,
       number: f.pullNumber,
@@ -200,23 +197,9 @@ it.each([
         },
       },
     })
-    const signature = createHmac('sha256', QUEUE_WEBHOOK_SECRET)
-      .update(body)
-      .digest('hex')
-    const response = await f.runtime.dispatchFetch(
-      `${OUTER_MACHINE_ORIGIN}${MACHINE_PATHS.githubWebhook}`,
-      {
-        method: 'POST',
-        body,
-        headers: {
-          'X-Hub-Signature-256': `sha256=${signature}`,
-          'X-GitHub-Event': 'pull_request',
-          'X-GitHub-Delivery': 'queue-leave',
-        },
-      },
-    )
     expect(response.status).toBe(204)
     expect((await f.entries()).map(({ pullNumber }) => pullNumber)).toEqual([2])
+    expect(pull.baseRefName).toBe(action === 'closed' ? 'changes' : 'main')
     expect(
       f.api.requests
         .filter(({ method }) => method === 'PATCH')

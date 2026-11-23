@@ -8,14 +8,18 @@ import { freshGitHubUserToken } from '../security/github-tokens'
 import type { QueueEntry, QueueLeave, QueueRecord } from './contracts'
 import { canResetBase, leaveOwner, type QueueLeaveNotice } from './leave-data'
 import { queueReader, queueReadToken, queueWorkspace } from './repository'
+import { followsQueueBase } from './stack-read'
 import type { QueueRuntime } from './step'
+
+type LeaveBase = { baseBranch: string; resetFailed?: true }
 
 async function resetBase(
   runtime: QueueRuntime,
   queue: QueueRecord,
   entry: QueueEntry,
   signal: QueueLeave,
-): Promise<QueueLeaveNotice | null> {
+  intendedBase: string,
+): Promise<LeaveBase | null> {
   const { env, dependencies } = runtime
   const binding = queueWorkspace(queue, entry)
   const owner = await leaveOwner(env.DB, queue, entry)
@@ -41,6 +45,8 @@ async function resetBase(
       )
       if (pull.state !== 'OPEN' || pull.baseBranch === queue.trunk) return null
       baseBranch = pull.baseBranch
+      if (!followsQueueBase(entry, baseBranch, intendedBase))
+        return { baseBranch }
       if (!(await readQueueWriteAccess(dependencies.fetch, token, binding)))
         continue
       if (!(await canResetBase(env.DB, queue, entry, user))) continue
@@ -57,11 +63,13 @@ async function resetBase(
         live.kind !== 'open' ||
         live.pull.number !== entry.pullNumber ||
         live.pull.headSha !== pull.headSha ||
-        live.pull.base !== baseBranch ||
         !live.refHead ||
         live.fullName !== queue.fullName
       )
         break
+      if (!followsQueueBase(entry, live.pull.base, intendedBase))
+        return { baseBranch: live.pull.base }
+      if (live.pull.base !== baseBranch) break
       const common = await compareMergeBase(
         dependencies.fetch,
         token,
@@ -95,17 +103,14 @@ async function resetBase(
     )
     if (pull.state !== 'OPEN' || pull.baseBranch === queue.trunk) return null
     baseBranch = pull.baseBranch
+    if (!followsQueueBase(entry, baseBranch, intendedBase))
+      return { baseBranch }
   } catch (error) {
     if (!(error instanceof HttpError)) throw error
   }
   return baseBranch === undefined || baseBranch === queue.trunk
     ? null
-    : {
-        workspaceId: entry.workspaceId,
-        branch: entry.branch,
-        pullNumber: entry.pullNumber,
-        baseBranch,
-      }
+    : { baseBranch, resetFailed: true }
 }
 
 export async function resetLeavingBases(
@@ -114,14 +119,30 @@ export async function resetLeavingBases(
   order: readonly QueueEntry[],
   removed: readonly QueueEntry[],
   signal: QueueLeave,
-): Promise<QueueLeaveNotice[]> {
-  if (signal.cause === 'base-changed' || signal.cause === 'merged') return []
+) {
+  const bases = new Map<string, string>()
   const notices: QueueLeaveNotice[] = []
+  if (signal.cause === 'base-changed' || signal.cause === 'merged')
+    return { bases, notices }
   for (const entry of removed) {
     const below = order[order.indexOf(entry) - 1]
     if (entry.memberBase || below?.unitId === entry.unitId) continue
-    const notice = await resetBase(runtime, queue, entry, signal)
-    if (notice) notices.push(notice)
+    const base = await resetBase(
+      runtime,
+      queue,
+      entry,
+      signal,
+      below?.branch ?? queue.trunk,
+    )
+    if (!base) continue
+    bases.set(entry.workspaceId, base.baseBranch)
+    if (base.resetFailed)
+      notices.push({
+        workspaceId: entry.workspaceId,
+        branch: entry.branch,
+        pullNumber: entry.pullNumber,
+        baseBranch: base.baseBranch,
+      })
   }
-  return notices
+  return { bases, notices }
 }

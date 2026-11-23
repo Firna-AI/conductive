@@ -102,6 +102,10 @@ export function queueFactsOf(
       step: stepOf(queue.state),
       ...(problem && { problem }),
       ...(turnWait && { turnWait }),
+      ...(queue.state === 'waiting' &&
+        queue.wait === 'rebase' && {
+          waitsForRebase: true as const,
+        }),
       ...(queue.wait === 'lower-layer' &&
         queue.blockedByPullNumber !== undefined && {
           waitsFor: queue.blockedByPullNumber,
