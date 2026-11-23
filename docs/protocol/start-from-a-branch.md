@@ -56,6 +56,11 @@ branches that the create call of an agent takes.
   placed the control next to the repository picker (decision 309).
 - The control always names a branch. It shows the default branch of the
   repository until the member picks another branch.
+- In the dialog, the control shows only a faded branch icon while the
+  default branch is picked. A screen reader still hears the name of the
+  branch, as
+  [The parts and the section](create-a-workspace-dialog.md#the-parts-and-the-section)
+  says.
 - While a picked branch targets the default branch, the control adds an
   arrow and the name of the default branch after the picked branch, such
   as `→ main` (decision 309). A screen reader hears the target too.

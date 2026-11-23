@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Check, ChevronDown, GitBranch } from 'lucide-react'
-import { ActionButton, type ActionTone } from '../common/actions'
+import { ActionButton, IconButton } from '../common/actions'
 import { classes } from '../common/classes'
 import menu from '../common/Menu.module.css'
 import { ScreenLink } from '../common/ScreenLink'
@@ -27,11 +27,11 @@ export type BranchOption = {
  * the default branch, such as `→ main`, then the chevron. The target keeps
  * its width, so a long name gives way first.
  */
-function ControlEnd(props: { target?: string }) {
+function ControlEnd(props: { target?: string; chevron: boolean }) {
   const { labelSize } = useControlSizes()
-  const chevron = (
+  const chevron = props.chevron ? (
     <ChevronDown aria-hidden className={styles.chevron} size={13} />
-  )
+  ) : null
   if (props.target === undefined) return chevron
   return (
     <span className={styles.end}>
@@ -54,26 +54,37 @@ function ControlEnd(props: { target?: string }) {
  * branch. While a picked branch targets the default branch, a muted
  * `→ main` follows the name. A long name ends in an ellipsis, and the
  * target and the chevron stay in view. On a phone the control may take the
- * whole width of its line. The page uses the default tone, and the dialog
- * the plain tone, as for the repository picker. `to` is the screen of the
- * open dropdown, in the mockups.
+ * whole width of its line. The page uses the default tone. The dialog is
+ * `compact`: it uses the plain tone and shows no chevron, as for the
+ * repository picker, and on the default branch it shows only the muted
+ * branch icon. `to` is the screen of the open dropdown, in the mockups.
  */
 function BranchButton(props: {
   branch: string
   target?: string
   expanded: boolean
-  tone?: ActionTone
+  compact: boolean
+  /** The control names the default branch. */
+  onDefault: boolean
   to?: string
 }) {
   const touch = useTouch()
-  const button = (
+  const iconOnly = props.compact && props.onDefault
+  const button = iconOnly ? (
+    <IconButton
+      expanded={props.expanded}
+      icon={GitBranch}
+      label={branchCopy.control(props.branch, props.target)}
+      menu
+    />
+  ) : (
     <ActionButton
       accessibilityLabel={branchCopy.control(props.branch, props.target)}
       expanded={props.expanded}
       icon={GitBranch}
       menu
-      tone={props.tone}
-      trailing={<ControlEnd target={props.target} />}
+      tone={props.compact ? 'plain' : undefined}
+      trailing={<ControlEnd chevron={!props.compact} target={props.target} />}
     >
       {props.branch}
     </ActionButton>
@@ -81,7 +92,7 @@ function BranchButton(props: {
   return (
     <span
       className={classes(
-        styles.control,
+        !iconOnly && styles.control,
         props.target !== undefined && styles.targeted,
         touch && styles.wide,
       )}
@@ -189,7 +200,13 @@ export function BranchPicker(props: {
   /** The default branch, while the picked branch targets it. */
   target?: string
   expanded: boolean
-  tone?: ActionTone
+  /** The default branch of the repository. */
+  defaultBranch: string
+  /**
+   * The look of the dialog: plain, with no chevron, and only the icon on
+   * the default branch.
+   */
+  compact?: boolean
   to?: string
   /** The open dropdown below the control, on a computer. */
   open?: ReactNode
@@ -203,10 +220,11 @@ export function BranchPicker(props: {
     <span className={styles.anchor}>
       <BranchButton
         branch={props.branch}
+        compact={props.compact === true}
         expanded={props.expanded}
+        onDefault={props.branch === props.defaultBranch}
         target={props.target}
         to={props.expanded ? undefined : props.to}
-        tone={props.tone}
       />
       {props.open ? (
         <div

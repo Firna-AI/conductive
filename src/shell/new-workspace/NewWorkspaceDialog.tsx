@@ -207,10 +207,11 @@ function DialogCard(props: {
 
 /**
  * New workspace as a dialog over the whole frame, on a computer, as the
- * mockup draws it. The repository picker and the branch control directly
- * right of it sit at the top left, and the org and the section of the new
- * workspace at the top right, as a menu of the sections of the org. The
- * target of a picked branch lives in the dropdown of the branch control.
+ * mockup draws it. The repository picker and the branch control close
+ * right of it sit at the top left, and the section of the new workspace at
+ * the top right, as a menu of the sections of the org. These pickers show
+ * no chevrons, and on the default branch the branch control is only a
+ * muted icon. The target of a picked branch lives in the dropdown of the branch control.
  * The message and its files fill the middle, with the notices of the page
  * under them. The attach button, the Capabilities icon, and the model
  * picker sit at the bottom left, with the label of the org login after the

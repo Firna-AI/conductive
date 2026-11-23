@@ -31,10 +31,12 @@ function useSection(org: OrgSummary, model: NewWorkspaceModel) {
 
 /**
  * The header of the dialog: the repository picker and the branch control
- * directly right of it at the start, and the menu of the org and the
- * section at the end. The target of a picked branch lives in the dropdown
- * of the branch control (decision 309), so no line follows the header. A
- * suspended org refuses each create, so it shows no pickers.
+ * close right of it at the start, and the menu of the section at the end.
+ * The buttons show no chevrons. On the default branch the branch control
+ * is only a muted icon. The target of a picked branch lives in the
+ * dropdown of the branch control (decision 309), so no line follows the
+ * header. A suspended org refuses each create, so it shows no pickers.
+ * While the sections load, the end of the header stays empty.
  */
 export function DialogHeader(props: {
   org: OrgSummary
@@ -50,38 +52,35 @@ export function DialogHeader(props: {
   return (
     <div className={classes(styles.header, card.head)}>
       {repository ? (
-        <RepositoryMenu
-          chevron={styles.chevron}
-          choose={(id) => model.setRepository(id)}
-          chosen={repository}
-          repositories={form.repositories ?? []}
-          tone="plain"
-          waiting={form.waiting}
-        />
-      ) : null}
-      {repository && branch ? (
-        <BranchControl
-          branch={branch}
-          choose={form.chooseTarget}
-          orgId={org.id}
-          pick={form.pickBranch}
-          repository={repository}
-          tone="plain"
-        />
+        <span className={styles.source}>
+          <RepositoryMenu
+            choose={(id) => model.setRepository(id)}
+            chosen={repository}
+            repositories={form.repositories ?? []}
+            tone="plain"
+            waiting={form.waiting}
+          />
+          {branch ? (
+            <BranchControl
+              branch={branch}
+              choose={form.chooseTarget}
+              compact
+              orgId={org.id}
+              pick={form.pickBranch}
+              repository={repository}
+            />
+          ) : null}
+        </span>
       ) : null}
       {section ? (
         <SectionMenu
-          chevron={styles.chevron}
           choose={(id) => model.setSection(id)}
           chosen={section}
           className={classes(styles.anchor, styles.placeMenu)}
           disabled={props.sending}
-          org={org.name}
           sections={sections}
         />
-      ) : (
-        <span className={styles.place}>{org.name}</span>
-      )}
+      ) : null}
     </div>
   )
 }
