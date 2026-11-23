@@ -35,6 +35,12 @@ export function OrgSettingsScreen(props: {
   viewport: Viewport
   /** The orgs of the person signed in, which the rail lists. */
   railOrgs?: readonly Org[]
+  /** A body in place of the open tab, for a proposal that is not in force yet. */
+  body?: ReactNode
+  /** A dialog in place of the one that `state.dialog` names. */
+  dialog?: ReactNode
+  /** A label of the Secrets tab, for a proposal that renames it. */
+  secretsLabel?: string
 }) {
   const { state, viewport } = props
   const admin = state.viewer === 'admin'
@@ -87,7 +93,7 @@ export function OrgSettingsScreen(props: {
     state.repositoryOrder === 'menu' ? (
       <RepositoryMenuSheet repositories={settings.repositories} />
     ) : null
-  const dialog = dialogs[state.dialog] ?? repositoryMenu
+  const dialog = props.dialog ?? dialogs[state.dialog] ?? repositoryMenu
   const page = (
     <pagePart.Component
       subtitle="Org settings"
@@ -98,6 +104,7 @@ export function OrgSettingsScreen(props: {
         <settingsTabs.Component
           links={settings.links}
           moklyInstance="settings-tabs"
+          {...defined({ secretsLabel: props.secretsLabel })}
           tab={state.tab}
           wrap={mobile}
         />
@@ -111,11 +118,13 @@ export function OrgSettingsScreen(props: {
           org={{ name: org.name }}
         />
       ) : null}
-      <tabBody.Component
-        moklyInstance="tab-body"
-        state={state}
-        viewport={viewport}
-      />
+      {props.body ?? (
+        <tabBody.Component
+          moklyInstance="tab-body"
+          state={state}
+          viewport={viewport}
+        />
+      )}
     </pagePart.Component>
   )
   if (mobile) {

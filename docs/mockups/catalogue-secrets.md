@@ -25,6 +25,21 @@ sees it. Its child pages:
   has her form without the switch for all agents, and its `replace` variant
   has the Replace form of one of her secrets.
 - `empty` has Firna, a new org, without secrets.
+- `combined` is a proposal for review, not the spec in force. It draws
+  the Env & secrets tab of Cal's reviews of 20 November 2026: env vars and
+  secrets in one short list, each row with its name, an Env or Secret
+  badge, the description of a secret, and one "⋯" menu. It also draws
+  item 2 B, which Cal chose on 20 November 2026, and the open items 3
+  and 4. Its child pages:
+  - `add` has the compact Add modal with one secret. Its `env` variant
+    has four env vars that a paste of `.env` lines split into rows.
+  - `edit` has the Edit modal of FIGMA_TOKEN, which also renames it. Its
+    `env` variant has the Edit modal of PLACES_API_KEY, and its `type`
+    variant changes STRIPE_SECRET_KEY from an env var to a secret.
+  - `menu` has the open menu of STRIPE_SECRET_KEY.
+  - `member` has the list as Priya, a member, sees it. Its `add` variant
+    has her modal, with no type.
+  - `cloud-computer` has the Cloud computer tab without the env vars.
 
 The child page `app/orgs/suspended/settings/secrets` has the tab of a
 suspended org, with no action.

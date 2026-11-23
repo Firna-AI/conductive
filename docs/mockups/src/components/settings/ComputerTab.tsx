@@ -124,6 +124,8 @@ export function ComputerTab(props: {
   skillsTrust?: SkillsTrust
   /** The repository notice, while a repository change waits for a build. */
   repositoryNotice?: ReactNode
+  /** Leave out the env vars, for a proposal that moves them to another tab. */
+  withoutEnvVars?: boolean
 }) {
   const { computer } = props
   const changed = props.script === 'changed'
@@ -169,13 +171,15 @@ export function ComputerTab(props: {
         script={computer.startupScript}
         title="Startup script"
       />
-      <envVarsSection.Component
-        moklyInstance="env-vars"
-        org={props.org}
-        readOnly={readOnly}
-        vars={computer.envVars}
-        {...defined({ form: props.envForm })}
-      />
+      {props.withoutEnvVars ? null : (
+        <envVarsSection.Component
+          moklyInstance="env-vars"
+          org={props.org}
+          readOnly={readOnly}
+          vars={computer.envVars}
+          {...defined({ form: props.envForm })}
+        />
+      )}
       <skillsSection.Component
         moklyInstance="skills"
         {...defined({

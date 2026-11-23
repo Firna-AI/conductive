@@ -46,6 +46,8 @@ export function SettingsTabs(props: {
   tab: SettingsTab
   wrap?: boolean
   links?: Readonly<Record<SettingsTab, string>>
+  /** A label of the Secrets tab, for a proposal that renames it. */
+  secretsLabel?: string
 }) {
   const links = props.links ?? settingsLinks
   const tabs = [
@@ -53,7 +55,7 @@ export function SettingsTabs(props: {
     { label: 'Repositories', tab: 'repositories' },
     { label: 'Cloud computer', tab: 'computer' },
     { label: 'Agents', tab: 'agents' },
-    { label: 'Secrets', tab: 'secrets' },
+    { label: props.secretsLabel ?? 'Secrets', tab: 'secrets' },
     { label: 'Members', tab: 'members' },
   ] satisfies readonly { label: string; tab: SettingsTab }[]
   return (

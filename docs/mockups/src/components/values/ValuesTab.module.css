@@ -1,0 +1,105 @@
+/* The list of the env vars and the secrets of an org. */
+.list {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  list-style: none;
+}
+
+/* A value: its name, its badges, and a description, then its menu button. */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 6px 4px 6px 12px;
+  box-sizing: border-box;
+}
+
+.row + .row {
+  border-top: 1px solid var(--ui-border);
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* The name and its badges, on one line. */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The description of a secret, on one line. */
+.description {
+  overflow: hidden;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The menu button, and the open menu under it. */
+.more {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* The fields of the Add and Edit modals. */
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* The choice of the type in the Add modal, with the hint of the choice. */
+.kind {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kindLabel {
+  color: var(--ui-ink);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+}
+
+.hint {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+/* The rows of the Add modal, with the labels of the columns first. */
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* One row: the name, the value, and Remove. */
+.addRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 8px;
+}

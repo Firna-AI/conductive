@@ -42,6 +42,8 @@ export const settingsTabs = defineComponent({
       tab: { enum: settingsTabKeys },
       /** The tabs wrap to two lines, for a phone. */
       wrap: { type: 'boolean' },
+      /** A label of the Secrets tab, for a proposal that renames it. */
+      secretsLabel: { type: 'string', minLength: 1 },
       /** The page of each tab, when it is not the page of Acme. */
       links: {
         type: 'object',
@@ -60,7 +62,12 @@ export const settingsTabs = defineComponent({
   } as const,
   props: { tab: 'general' },
   render: (props) => (
-    <SettingsTabs links={props.links} tab={props.tab} wrap={props.wrap} />
+    <SettingsTabs
+      links={props.links}
+      secretsLabel={props.secretsLabel}
+      tab={props.tab}
+      wrap={props.wrap}
+    />
   ),
   variants: [
     {
