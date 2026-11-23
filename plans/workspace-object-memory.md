@@ -682,43 +682,43 @@ This milestone bounds each history page, as M2 A says. It builds on the
 `6408c95`, with the session index preserved. It sets the replay budget of
 8 MiB in `worker/chat/browser-subscription.ts`.
 
-- [ ] Merge `main` into this branch after PR #477 merges. Resolve
+- [x] Merge `main` into this branch after PR #477 merges. Resolve
       `store.ts` and `history-pages.ts` with Milestone 3 and the session
       index already on `main`. Preserve its committed frontier and keys.
-- [ ] Read forward pages as design call 5 says. Count each shown event once
+- [x] Read forward pages as design call 5 says. Count each shown event once
       for both byte limits. Keep `nextAfterEventNumber` at the last stored
       step, also when the page shows no event.
-- [ ] Count a chunked event from its stored text, as design call 6 says.
-- [ ] Make the newest-first reader and `prepare` list at most four stored
+- [x] Count a chunked event from its stored text, as design call 6 says.
+- [x] Make the newest-first reader and `prepare` list at most four stored
       events at a time. Set the indexed read batch to four in
       `history-session-records.ts`. Cap its parallel body loads too.
-- [ ] Apply the 4 MiB forward stop to indexed `readSessionHistory`, as
+- [x] Apply the 4 MiB forward stop to indexed `readSessionHistory`, as
       call 19 says. Keep the newest-first scan limit at 2,048 session keys
       and its existing byte limit. Preserve stale-index cursor progress.
-- [ ] Keep session-index preparation resumable and atomic. Use four-record
+- [x] Keep session-index preparation resumable and atomic. Use four-record
       batches. Yield the chat queue only between committed batches.
       Preserve the write-transaction fallback when the index is not ready.
-- [ ] Add tests:
-  - [ ] A page ends after the event that reaches 4 MiB. The next page
+- [x] Add tests:
+  - [x] A page ends after the event that reaches 4 MiB. The next page
         starts after that event.
-  - [ ] An oversized first event advances the cursor on its own page.
+  - [x] An oversized first event advances the cursor on its own page.
         An event that crosses the limit can follow earlier events on that page.
-  - [ ] No storage list asks for more than four events.
-  - [ ] The connection budget goes down across pages, and a new page does
+  - [x] No storage list asks for more than four events.
+  - [x] The connection budget goes down across pages, and a new page does
         not reset it. A budget end inside a page sets `hasMore` as before.
-  - [ ] An indexed read loads only the requested session. Both directions
+  - [x] An indexed read loads only the requested session. Both directions
         load at most four bodies together. Forward byte stops preserve
         every later event and advance past missing stored bodies.
-  - [ ] An unprepared write-transaction fallback past 3,000 events of
+  - [x] An unprepared write-transaction fallback past 3,000 events of
         another session gives an empty page with `hasMore`. Its cursor
         advances after 2,048 stored steps without starting an index build.
-  - [ ] A stopped four-record index batch resumes after its last commit.
+  - [x] A stopped four-record index batch resumes after its last commit.
         Queued writes still run between batches without changing the cutoff.
-  - [ ] The transcript copy, the workspace summary, Continue, and the first
+  - [x] The transcript copy, the workspace summary, Continue, and the first
         stop requester give the same results over many pages.
-- [ ] Update [History and event order](../worker/chat/history.md) for the
+- [x] Update [History and event order](../worker/chat/history.md) for the
       forward page limits and the list size.
-- [ ] Run the targeted tests: `worker/chat/history-pages.test.ts`,
+- [x] Run the targeted tests: `worker/chat/history-pages.test.ts`,
       `history-newest-pages.test.ts`, `history-newest-routes.test.ts`,
       `history-session-pages.test.ts`, `transcript-pages.test.ts`,
       `session-transcripts.test.ts`, `workspace-summary.test.ts`,
@@ -726,6 +726,8 @@ This milestone bounds each history page, as M2 A says. It builds on the
       `history-session-index.test.ts`, `history-session-commit.test.ts`,
       and the new tests. Update batch-size expectations while keeping the
       existing cutoff, rollback-gap, atomicity, and queue-yield assertions.
+Evidence: `.context/workspace-object-memory/m4-*.log` and
+`m4-reader-inventory.md`.
 
 ## Milestone 5: Runner part checks
 
