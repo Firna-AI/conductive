@@ -244,6 +244,18 @@ The linked page `docs/protocol/wake-ups-delivery.md` states decisions 6 and 7 as
 - The public guide leaves a closed session out of the cases where a wake-up could not start. Reason: decision 7 can change that case.
 - The Privacy page also takes the effective date of 23 November 2026. Reason: the page says that each change updates its date.
 
+## Milestone 2a: Mockups for the tool cancel line and the copy
+
+Tags: mockup
+
+Depends on: 2
+
+Use the `ui implementor` action. Milestone 2 found a mockup gap: no mockup and no words for the line of a cancel through the workspace tools, or for the pending wake-ups at the end of a copy.
+
+- [ ] Add the words to `docs/mockups/src/components/chat/wakeUpCopy.ts`: the "Cancelled from" line with the session link of the sending session, and the copy text of the pending wake-ups, soonest first, with the time in UTC and the text.
+- [ ] Draw the "Cancelled from" line with its session chip, on desktop and on a phone.
+- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+
 ## Milestone 3: Worker wake-ups and shared contracts
 
 Depends on: 2, and PR #627 merged into `main`
@@ -258,7 +270,7 @@ Use the `non-ui implementor` action. Merge `main` into the branch first.
 - [ ] Apply the Stop rule of decision 6. Blocked until Cal answers.
 - [ ] Apply the Close rule of decision 7. Blocked until Cal answers.
 - [ ] Add the member Cancel route and the chat events for pending wake-ups, with the Cancel line of decision 5.
-- [ ] Add the additive wake-up field to the runner command in `crates/cnd-runner-interface/`.
+- [ ] Add the additive wake-up field to the runner command in `crates/cnd-runner-interface/`. Set it for a watch wake too, because background work lets only a member message restart the 30-day count, and the watch change of PR #627 left that gap.
 - [ ] Check that the previous Worker keeps working with the new keys, as `migrations/README.md` says. A rollback must not lose a wake-up for good.
 - [ ] Add Worker tests with a fake clock: fire, a stopped computer, a closed session, a Stop, a cancel, a retry, a repeat while pending, and a repeat after the fire.
 - [ ] Update `worker/tools/README.md` and the README of each changed Worker area.
@@ -295,7 +307,7 @@ Use the `non-ui implementor` action.
 - [ ] Set `disallowedTools` and `CLAUDE_CODE_DISABLE_CRON=1` in `runner/sdk-helper/src/providers/claude.ts`.
 - [ ] Set `skillOverrides: { loop: 'off' }`. Check in the SDK run that neither the model nor `/loop` gets the skill.
 - [ ] Keep the cron set and the `session_crons` read as the guard of decision 1 D: change the note text, log a warning, and wait for no such wake-up. Update their tests. Search for `session_crons`, `CronDelete`, and `cron` in `runner/`, `crates/`, and `docs/`.
-- [ ] Keep the deadline of a waiting turn when the input is a wake-up, in `crates/cnd-runner/src/engine/`. Add the test with a paused clock.
+- [ ] Keep the deadline of a waiting turn when the input carries the wake-up field, for a wake-up and a watch wake, in `crates/cnd-runner/src/engine/`. Add the test with a paused clock.
 - [ ] Check with a real SDK run that the model sees no cron tool and that `session_crons` stays empty. Start the run with a durable job in `.claude/scheduled_tasks.json`, and check that it never fires. Save the result in `.context/agent-wake/`.
 - [ ] Check the pinned Codex 0.170.0 for a scheduling tool. Turn off each one that it has.
 - [ ] Update `runner/background-work.md` and `runner/README.md`.
