@@ -635,40 +635,42 @@ This milestone changes what the history keeps and how `emit` stores a file
 event. It covers M1 A, M2 B, and M3 F. It does not change the history
 pages.
 
-- [ ] Add the index key of the newest changes list, as design call 1 says.
+- [x] Add the index key of the newest changes list, as design call 1 says.
       Index a newer changes list in the transaction of its event. Delete
       the older list and its chunks.
-- [ ] Keep the index watermarks as they are. Add no sweep of older
+- [x] Keep the index watermarks as they are. Add no sweep of older
       histories. Record the cutover from the stored workspace tip, not a
       caller's older page cutoff. Skip old changes during index preparation.
-- [ ] Store a file event above 4 KiB, or 4,096 bytes, as the existing stub
+- [x] Store a file event above 4 KiB, or 4,096 bytes, as the existing stub
       and chunks, as design call 2 says.
-- [ ] Take each file event in `emit` without `structuredClone`, and
+- [x] Take each file event in `emit` without `structuredClone`, and
       deep-freeze it, as design call 3 says. Confirm that no code after
       `emit` writes to a file event. Include the publisher and the browser
       presentation.
-- [ ] Serialize a file event once for the byte check and the chunks, as
+- [x] Serialize a file event once for the byte check and the chunks, as
       design call 4 says.
-- [ ] Add tests:
-  - [ ] A second changes list deletes the first and its chunks. Each tree
+- [x] Add tests:
+  - [x] A second changes list deletes the first and its chunks. Each tree
         delta and the newest tree stay.
-  - [ ] A changes list stored before the index key existed stays after a
+  - [x] A changes list stored before the index key existed stays after a
         newer list. Cover both indexed history and cold unindexed history.
         No watermark resets.
-  - [ ] An envelope of 4,096 bytes stays one value. An envelope of 4,097
+  - [x] An envelope of 4,096 bytes stays one value. An envelope of 4,097
         bytes becomes a stub with chunks. Include UTF-8 and JSON escapes.
-  - [ ] With compaction ready, legacy session-index preparation skips file
+  - [x] With compaction ready, legacy session-index preparation skips file
         stubs without reading their chunks. Keep warm session reads off
         workspace-only file events.
-  - [ ] `emit` stores and publishes the file event object that it gets. A
+  - [x] `emit` stores and publishes the file event object that it gets. A
         write to that object throws. Other event types are still copied.
-  - [ ] The published events equal the stored history after a reload.
-- [ ] Update [History and event order](../worker/chat/history.md) for the
+  - [x] The published events equal the stored history after a reload.
+- [x] Update [History and event order](../worker/chat/history.md) for the
       stored shape and the retention of changes lists.
-- [ ] Run the targeted tests: `worker/chat/history-snapshot.test.ts`,
+- [x] Run the targeted tests: `worker/chat/history-snapshot.test.ts`,
       `history-grown-delta.test.ts`, `history-order.test.ts`,
       `history-session-pages.test.ts`, `recorded-events.test.ts`,
       `runner-grown-reports.test.ts`, and the new tests.
+Evidence: `.context/workspace-object-memory/m3-history-save-*.log`.
+
 ## Milestone 4: Forward history pages
 
 Depends on: 1, 3, and the merge of PR #477 into `main`

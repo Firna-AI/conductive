@@ -13,7 +13,13 @@ import {
   loadHistoryEvent,
   type StoredWorkspaceEvent,
 } from './history-storage'
-import { CHAT_EVENT_PREFIX, chatEventKey, chatKey } from './storage-keys'
+import {
+  CHAT_EVENT_PREFIX,
+  CHAT_META,
+  chatEventKey,
+  chatKey,
+} from './storage-keys'
+import type { ChatMetadata } from './store-metadata'
 import type { ChatData } from './types'
 
 /** One storage list reads at most this many stored events. */
@@ -21,6 +27,8 @@ const PAGE_SIZE = 32
 const INDEX_THROUGH = chatKey('history-index', 'through')
 const POSITION_THROUGH = chatKey('history-index', 'positions-through')
 const NEWEST_TREE = chatKey('history-index', 'tree')
+const NEWEST_CHANGES = chatKey('history-index', 'changes')
+const CHANGES_CUTOVER = chatKey('history-index', 'changes-cutover')
 const NEWEST_SKILLS = chatKey('history-index', 'skills')
 
 /** The limits that end a newest-first page of the history. */
@@ -87,12 +95,24 @@ export class HistoryPages {
     const event = envelope.event
     if (event.type === 'files.snapshot')
       await this.replace(NEWEST_TREE, envelope.eventNumber)
+    if (event.type === 'changes.updated')
+      await this.indexChanges(envelope.eventNumber)
     // Only the latest skills event holds the lists of the workspace.
     if (event.type === 'skills.updated')
       await this.replace(NEWEST_SKILLS, envelope.eventNumber)
     await this.compaction.index(envelope)
     await this.data.put(INDEX_THROUGH, envelope.eventNumber)
     await this.data.put(POSITION_THROUGH, envelope.eventNumber)
+  }
+
+  private async indexChanges(eventNumber: number): Promise<void> {
+    let cutover = await this.data.get<number>(CHANGES_CUTOVER)
+    if (cutover === undefined) {
+      // A page can prepare an older cutoff than the committed workspace tip.
+      cutover = (await this.data.get<ChatMetadata>(CHAT_META))?.through ?? 0
+      await this.data.put(CHANGES_CUTOVER, cutover)
+    }
+    if (eventNumber > cutover) await this.replace(NEWEST_CHANGES, eventNumber)
   }
 
   /** Deletes the older event that a newer full event replaces. */
