@@ -277,3 +277,14 @@ export const checksWorkspace: WorkspaceState = {
   tool: 'preview',
   focus: 'files',
 }
+
+/**
+ * The part of the state that each page of the large branch shares: its
+ * limited lists, and the checks of its pull request. So its linked pages
+ * show the same lists and the same checks. No other page sets limited
+ * lists.
+ */
+export const largeBranchState = {
+  lists: 'limited',
+  banner: 'checks-failed',
+} as const satisfies Partial<WorkspaceState>

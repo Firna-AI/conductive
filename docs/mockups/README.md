@@ -182,10 +182,13 @@ as [`src/ui/components/chat/`](../../src/ui/components/chat/).
   `src/screens/rowMenuState.ts` holds the open menu of a row of All files
   or Changes, which `src/screens/workspaceRowMenu.ts` draws, and the toast
   after Copy path. `src/screens/listsState.ts` holds the lists of All files
-  and Changes, complete or limited. `src/fixtures/limitedFiles.ts` fills the
-  lists of a large branch, and All files draws its rows from one list of
-  kept entries there. The list of `@` searches the same list while the lists
-  are limited, as `src/screens/mentionComposer.ts` chooses.
+  and Changes, complete or limited. Each page of the large branch spreads
+  `largeBranchState` of `src/screens/workspaceState.ts`, the one place that
+  sets limited lists, so its pages also show the same checks.
+  `src/fixtures/limitedFiles.ts` fills the lists of a large branch, and All
+  files draws its rows from one list of kept entries there. The list of `@`
+  searches the same list while the lists are limited, as
+  `src/screens/mentionComposer.ts` chooses.
   `src/screens/explainState.ts` holds the marks of
   explanations, the state of the explanation of Cal, and what lies open
   by the text or over the chat, which `src/screens/explainModel.ts`

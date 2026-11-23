@@ -2,6 +2,8 @@ import { defineComponent } from '@mokly/mokly'
 import { ChangeList } from '../../../components/files/ChangeList'
 import { changedFiles } from '../../../fixtures/files'
 import { limitedLists } from '../../../fixtures/limitedFiles'
+import { limitedPageOf } from '../../../limitedListPaths'
+import { paths } from '../../../paths'
 import { changedFileSchema, limitedTotalsSchema } from './fileSchemas'
 import { fileRowMenuSchema, pointerMenu } from './rowMenuSchemas'
 
@@ -66,8 +68,12 @@ export const changeList = defineComponent({
       slug: 'limited',
       title: 'Files left out',
       description:
-        'The branch changes 2,243 files, and the list shows 1,000 of them. The summary gives the totals of the whole change, and the notice under it says that the totals include 1,243 files that the list does not show.',
-      props: { files: limitedLists.changes, totals: limitedLists.totals },
+        'The branch changes 2,243 files, and the list shows 1,000 of them. The summary gives the totals of the whole change, and the notice under it says that the totals include 1,243 files that the list does not show. A press on AddressForm.tsx opens its diff beside the limited lists.',
+      props: {
+        files: limitedLists.changes,
+        totals: limitedLists.totals,
+        diffTo: limitedPageOf(paths.diff),
+      },
     },
   ],
 })

@@ -1,6 +1,7 @@
 import { defineScreen } from '@mokly/mokly'
 import { WorkspaceScreen } from '../../../../screens/WorkspaceScreen'
 import {
+  largeBranchState,
   readyWorkspace,
   workspaceStateSchema,
 } from '../../../../screens/workspaceState'
@@ -15,10 +16,9 @@ export const filesLimited = defineScreen({
   propSchema: workspaceStateSchema,
   props: {
     ...readyWorkspace,
-    banner: 'checks-failed',
+    ...largeBranchState,
     files: 'all',
     focus: 'files',
-    lists: 'limited',
   },
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />

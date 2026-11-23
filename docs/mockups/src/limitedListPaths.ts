@@ -15,3 +15,12 @@ export const limitedListPaths: ReadonlyMap<string, string> = new Map([
   [paths.code, 'app/files/code/limited'],
   [paths.markdown, 'app/files/markdown/limited'],
 ])
+
+/**
+ * The page that a link to `page` opens while the lists are limited: its
+ * limited page from the table, or `page` when the table names none, as
+ * `ScreenLink` reads the table.
+ */
+export function limitedPageOf(page: string): string {
+  return limitedListPaths.get(page) ?? page
+}

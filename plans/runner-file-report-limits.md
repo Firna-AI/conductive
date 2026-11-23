@@ -336,6 +336,7 @@ Use the current workspace layout, shared components, and existing notice pattern
 The implementor report is `.context/runner-file-report-limits/m1-implementor-report.md`.
 The screenshots are in `.context/runner-file-report-limits/screenshots/`.
 Review round 3 confirmed five mockup findings, 6 to 10. The fix round applied all five. The review folder of the branch holds the reports.
+Review round 4 confirmed findings 11, 13, and 14, and its check removed finding 12. Fix round 2 applied 13 and 14. Finding 11 is a follow-up item, `plans/follow-ups/saved-list-links-keep-notice.md`.
 
 ## Milestone 2: Documentation and protocol
 
