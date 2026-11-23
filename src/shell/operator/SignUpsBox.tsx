@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { DoorOpen, Pause } from 'lucide-react'
 import { SkeletonBar, SkeletonGroup } from '@firna/ui/skeleton'
-import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
+import { StatusText } from '../../ui/components/common/StatusText'
 import {
   pauseWords,
   waitlistWords,
-} from '../../../docs/mockups/src/components/operator/codeCopy'
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
+} from '../../ui/components/operator/codeCopy'
+import { Section } from '../../ui/components/settings/Section'
 import { useStore } from '../../app/store'
 import { ActionButton } from '../ui/actions'
 import { LoadFailure } from '../ui/LoadFailure'

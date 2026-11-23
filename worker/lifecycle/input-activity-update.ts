@@ -10,6 +10,7 @@ import {
 import type { LifecycleActivitySnapshot } from './input-activity-state'
 import { providerState } from './provider-state'
 import { replyOrCurrentState } from './workspace-actions'
+import { workspaceAutoStopSeconds } from './idle-stop'
 
 export interface CapturedInputActivity {
   generation: number
@@ -68,11 +69,12 @@ export function inputActivityUpdate(options: {
       },
       target.providerAccount,
     )
+    const autoStop = await workspaceAutoStopSeconds(options.env.DB)
     const remote = await options.extendDeadline(async () => {
       const sandbox = await replyOrCurrentState(
         provider,
         target.sandboxId,
-        () => provider.setAutoStop(target.sandboxId, 1_860),
+        () => provider.setAutoStop(target.sandboxId, autoStop),
       )
       const state = providerState(sandbox.state)
       return state === 'stopped' || state === 'error' ? state : undefined

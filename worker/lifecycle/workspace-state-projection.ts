@@ -8,6 +8,7 @@ import type {
   LifecyclePublication,
   WorkspaceEventJournal,
 } from './durable-journal'
+import type { StartJobRecords } from './start-job-records'
 import {
   persistLifecycleState,
   readWorkspace,
@@ -18,6 +19,7 @@ interface ProjectionOptions {
   env: AppEnv
   dependencies: AppDependencies
   journal: WorkspaceEventJournal
+  records?: Pick<StartJobRecords, 'send'>
   readLifecycle(): Promise<DurableLifecycleState | undefined>
   deviceWaiting(workspaceId: string): Promise<boolean>
   latestTitle(
@@ -50,7 +52,8 @@ export class WorkspaceStateProjection {
       )
     const waiting = await deviceWaiting(current.workspaceId)
     const state =
-      waiting && !['stopped', 'error', 'archived'].includes(current.state)
+      waiting &&
+      !['starting', 'stopped', 'error', 'archived'].includes(current.state)
         ? 'input'
         : current.state
     const before = await readWorkspace(
@@ -76,7 +79,10 @@ export class WorkspaceStateProjection {
         return { titleError }
       }
     }
-    await persistLifecycleState(env.DB, { ...current, state }, updatedAt)
+    const save = (records: readonly D1PreparedStatement[]) =>
+      persistLifecycleState(env.DB, { ...current, state }, updatedAt, records)
+    if (this.options.records) await this.options.records.send(current, save)
+    else await save([])
     const row = await readWorkspace(env.DB, current.orgId, current.workspaceId)
     return {
       response: {

@@ -10,9 +10,11 @@ import { DEVICE_TEST_NOW } from '../devices/clock.test-support'
 import { sessionLink } from '../../src/shared/session-link'
 import type { AgentListSessionsResponse } from '../../src/shared/generated/AgentListSessionsResponse'
 import type { AgentReadSessionResponse } from '../../src/shared/generated/AgentReadSessionResponse'
+import type { AgentGetMessageRequest } from '../../src/shared/generated/AgentGetMessageRequest'
 import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
 import {
   OTHER_WORKSPACE,
+  OUTER_ORG,
   OUTER_WORKSPACE,
 } from '../chat/integration/outer-seed.test-support'
 import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
@@ -195,4 +197,77 @@ it('gets exact session and stored-message facts across workspaces and permits re
       active.env.APP_ORIGIN,
     ),
   ).toMatchObject({ ok: false, error: { code: 'workspace_not_found' } })
+})
+
+it('gets a finished agent message only for a caller that reads agent messages', async () => {
+  const active = (fixture = await agentWriteFixture(bundle))
+  const runner = active.sourceRunner
+  const answer = {
+    sessionId: active.sourceSessionId,
+    turnId: active.sourceTurnId,
+    messageId: 'answer-1',
+    text: 'Finished answer',
+  }
+  const reads: Record<keyof AgentGetMessageRequest, string> = {
+    agentMessages: 'true',
+  }
+  const path = (sessionId: string) =>
+    `${agentMessagePath(OUTER_WORKSPACE, sessionId, answer.messageId)}?${new URLSearchParams(reads)}`
+  runner.emit({ type: 'assistant.delta', ...answer })
+  await runner.inbox.next()
+  const streaming = await machineRead(active, path(answer.sessionId))
+  expect(streaming.status).toBe(404)
+  expect(await streaming.json()).toMatchObject({
+    error: { code: 'message_not_found' },
+  })
+  const completed = runner.emit({
+    type: 'assistant.completed',
+    ...answer,
+    userMessageIds: ['member-starting-message'],
+  })
+  await runner.inbox.next()
+  const read = await machineRead(active, path(answer.sessionId))
+  expect(read.status).toBe(200)
+  expect(await read.json()).toMatchObject({
+    session: {
+      id: answer.sessionId,
+      link: sessionLink(
+        active.env.APP_ORIGIN,
+        OUTER_ORG,
+        OUTER_WORKSPACE,
+        answer.sessionId,
+      ),
+    },
+    message: {
+      author: 'agent',
+      id: 'answer-1',
+      sessionId: answer.sessionId,
+      text: 'Finished answer',
+      createdAt: completed.occurredAt,
+    },
+    turnId: answer.turnId,
+  })
+  const otherSessionId = await active.createSession(OUTER_WORKSPACE)
+  for (const missingPath of [
+    agentMessagePath(OUTER_WORKSPACE, answer.sessionId, answer.messageId),
+    path(otherSessionId),
+  ]) {
+    const missing = await machineRead(active, missingPath)
+    expect(missing.status, missingPath).toBe(404)
+    expect(await missing.json()).toMatchObject({
+      error: { code: 'message_not_found' },
+    })
+  }
+  // The previous Worker calls the workspace object with no request input.
+  expect(
+    await (
+      await active.actor(OUTER_WORKSPACE)
+    ).getAgentMessage(
+      OUTER_ORG,
+      OUTER_WORKSPACE,
+      answer.sessionId,
+      answer.messageId,
+      active.env.APP_ORIGIN,
+    ),
+  ).toMatchObject({ ok: false, error: { code: 'message_not_found' } })
 })

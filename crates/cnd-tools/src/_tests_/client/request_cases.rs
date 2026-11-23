@@ -197,7 +197,7 @@ pub(super) fn cases() -> Result<Vec<Case>> {
                 "messages",
                 "message%20%2F%20one",
             ],
-            json!({}),
+            json!({"agentMessages":"true"}),
         )?,
         write(
             Name::CreateSection,

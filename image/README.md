@@ -147,6 +147,17 @@ startup bootstrap.
 [Workspace startup](start.md#start-in-a-workspace) gives the sandbox variables,
 startup command, service gates, and runner settings.
 
+## Services
+
+[Services](../docs/protocol/services.md) run outside every agent turn.
+The image installs no project service unit. The runner's
+[native manager](../crates/cnd-services/README.md) creates each unit at run
+time through noninteractive sudo. Systemd sets its user and group to `user`
+before the helper reads private command, folder, and environment data.
+Its independent cgroup survives a runner restart. Its unit-owned writer
+stores output under `/run/conductive/services`, with definitions and receipts.
+No saved disk or org image holds these runtime files.
+
 ## Git credentials
 
 [GitHub access](github.md) describes the git credential helper and the
@@ -213,6 +224,8 @@ A build, a disk retention restart, and an unfinished start launch no runner.
   start steps, and the git credential route.
 - [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md):
   the org image, the startup script, and the env vars.
+- [Services](../docs/protocol/services.md): the lifetime, the environment,
+  and the logs of services.
 - [Access and security](../docs/protocol/access-and-security.md): what a
   sandbox holds, GitHub tokens, and the terminal.
 - [Architecture](../docs/architecture/components.md#sandbox-software): the sandbox

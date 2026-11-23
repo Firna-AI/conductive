@@ -1,22 +1,14 @@
-import { useId, type ReactNode } from 'react'
-import { Spinner } from '@firna/ui/spinner'
-import { Switch } from '@firna/ui/switch'
-import { useSharedUiTheme } from '@firna/ui/theme'
-import {
-  macAccessWords,
-  noSecrets,
-  secretsPartWords,
-} from '../../../docs/mockups/src/components/capabilities/capabilitiesCopy'
-import type { CapabilityPart } from '../../../docs/mockups/src/components/capabilities/CapabilitiesPanel'
-import styles from '../../../docs/mockups/src/components/capabilities/Capabilities.module.css'
-import check from '../../../docs/mockups/src/components/common/CheckOption.module.css'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
+import type { ReactNode } from 'react'
+import { secretsPartWords } from '../../ui/components/capabilities/capabilitiesCopy'
+import type { CapabilityPart } from '../../ui/components/capabilities/CapabilitiesPanel'
+import styles from '../../ui/components/capabilities/Capabilities.module.css'
 import { routes } from '../../app/router'
 import type { Loadable } from '../../app/store'
 import type { OrgSummary } from '../../shared/orgs'
 import type { OrgSecret } from '../../shared/secrets'
 import { AppLink } from '../ui/AppLink'
-import { LoadFailure } from '../ui/LoadFailure'
+import { macAccessPart, type MacSwitchView } from './MacAccessPart'
+import { SecretPicker } from './SecretPicker'
 
 /** What the Capabilities control shows for one workspace or one draft. */
 export interface CapabilitiesView {
@@ -29,110 +21,32 @@ export interface CapabilitiesView {
   /** The IDs of the secrets that the workspace pre-approves. */
   preapproved: readonly string[]
   setPreapproved: (secretId: string, on: boolean) => void
-  /** Mac access, or null while its read runs, which hides its switch. */
-  macAccess: boolean | null
-  setMacAccess: (on: boolean) => void
-  /** The controls take no change, such as while a create or a change runs. */
+  /**
+   * The switch of Mac access of this Mac, which only the Mac app shows, or
+   * null in a browser, which shows no Mac access part, because a browser
+   * cannot change what runs on a Mac (Mac access decision 7). The control
+   * chooses by where it runs, not by a pairing, so the Mac app with no
+   * device connection still shows the switch.
+   */
+  macAccess: MacSwitchView | null
+  /** The secrets take no change, such as while a create or a change runs. */
   disabled: boolean
   /**
-   * The approvals of the sessions, each with Remove, which only a workspace
-   * that exists has.
+   * The approvals of the open session and the values for the workspace,
+   * each with Remove, which only a workspace that exists has.
    */
   grants?: ReactNode
 }
 
 /**
- * A secret of the org with its checkbox, which pre-approves it for the
- * workspace. A secret for all agents is always available, so its checkbox
- * stays checked and off, with the words "All agents".
+ * What the secrets part shows: the secrets of the org with the pre-approved
+ * ones checked, and the link to the Secrets tab. An automation has only
+ * this part.
  */
-function SecretCheck(props: {
-  secret: OrgSecret
-  checked: boolean
-  disabled: boolean
-  change: (on: boolean) => void
-}) {
-  const { secret } = props
-  const hint = useId()
-  const tag = useId()
-  return (
-    <label className={check.option}>
-      <input
-        aria-describedby={secret.allAgents ? `${hint} ${tag}` : hint}
-        aria-label={secret.name}
-        checked={props.checked || secret.allAgents}
-        className={check.box}
-        disabled={secret.allAgents || props.disabled}
-        onChange={(event) => props.change(event.currentTarget.checked)}
-        type="checkbox"
-      />
-      <span className={check.text}>
-        <span className={styles.secretName}>{secret.name}</span>
-        <span className={check.hint} id={hint}>
-          {secret.description}
-        </span>
-      </span>
-      {secret.allAgents ? (
-        <span className={styles.tag} id={tag}>
-          {secretsPartWords.allAgents}
-        </span>
-      ) : null}
-    </label>
-  )
-}
-
-/**
- * The secrets of the org, each with its checkbox. An org without secrets
- * links to its Secrets tab. A quiet spinner shows while the secrets load,
- * and a failed read shows Try again.
- */
-function SecretPicker(props: { view: CapabilitiesView }) {
-  const { view } = props
-  const theme = useSharedUiTheme()
-  const { secrets } = view
-  if (secrets.state === 'loading') {
-    return <Spinner color={theme.colors.muted} size={14} />
-  }
-  if (secrets.state === 'failed') {
-    return (
-      <LoadFailure
-        error={secrets.error}
-        retry={view.retry}
-        title="The secrets did not load"
-      />
-    )
-  }
-  if (secrets.value.length === 0) {
-    return (
-      <p className={styles.empty}>
-        {noSecrets(view.org.name)}{' '}
-        <AppLink
-          className={styles.link}
-          to={routes.settings(view.org.id, 'secrets')}
-        >
-          {secretsPartWords.add}
-        </AppLink>
-      </p>
-    )
-  }
-  return (
-    <div
-      aria-label="Pre-approved secrets"
-      className={styles.checks}
-      role="group"
-    >
-      {secrets.value.map((secret) => (
-        <SecretCheck
-          change={(on) => view.setPreapproved(secret.id, on)}
-          checked={view.preapproved.includes(secret.id)}
-          disabled={view.disabled}
-          key={secret.id}
-          secret={secret}
-        />
-      ))}
-    </div>
-  )
-}
+export type SecretsView = Pick<
+  CapabilitiesView,
+  'org' | 'secrets' | 'retry' | 'preapproved' | 'setPreapproved' | 'disabled'
+>
 
 function SecretsContent(props: { view: CapabilitiesView }) {
   const { view } = props
@@ -144,59 +58,57 @@ function SecretsContent(props: { view: CapabilitiesView }) {
   )
 }
 
-/** The switch of Mac access, which saves at once. */
-function MacAccessSwitch(props: {
-  on: boolean
-  change: (on: boolean) => void
-  disabled: boolean
-}) {
-  const { field } = useControlSizes()
-  return (
-    <Switch
-      accessibilityLabel={macAccessWords.title}
-      disabled={props.disabled}
-      onValueChange={props.change}
-      size={field === 'lg' ? 'md' : 'sm'}
-      value={props.on}
-    />
-  )
+/**
+ * The secrets part, with its content and an optional hint. Manage secrets opens the
+ * Secrets tab of the org settings, while the org has secrets.
+ */
+function secretsPart(
+  view: SecretsView,
+  hint: string | undefined,
+  content: ReactNode,
+): CapabilityPart {
+  const listed = view.secrets.state === 'ready' && view.secrets.value.length > 0
+  return {
+    key: 'secrets',
+    title: secretsPartWords.title,
+    hint,
+    control: listed ? (
+      <AppLink
+        className={styles.link}
+        to={routes.settings(view.org.id, 'secrets')}
+      >
+        {secretsPartWords.manage}
+      </AppLink>
+    ) : undefined,
+    content,
+  }
 }
 
 /**
  * The parts of the Capabilities control, in their order: the secrets that
- * the workspace pre-approves, with its grants, and Mac access. Manage
- * secrets opens the Secrets tab of the org settings. Later features, such
- * as MCP servers, add their own parts here.
+ * the workspace pre-approves, with its grants, and then Mac access, only
+ * in the Mac app. Later features, such as MCP servers, add their own parts
+ * here.
  */
 export function capabilityParts(view: CapabilitiesView): CapabilityPart[] {
-  const listed = view.secrets.state === 'ready' && view.secrets.value.length > 0
+  const secrets = secretsPart(view, undefined, <SecretsContent view={view} />)
+  if (view.macAccess === null) return [secrets]
+  return [secrets, macAccessPart(view.macAccess)]
+}
+
+/**
+ * The parts of the Capabilities control of an automation: only the secrets
+ * that each run workspace pre-approves (automation capabilities decision
+ * 1 A), with their own hint. The control has no Mac access part, because no
+ * person watches the Mac of the owner during a run (decision 2 A). An
+ * automation has no grants of its own.
+ */
+export function automationCapabilityParts(view: SecretsView): CapabilityPart[] {
   return [
-    {
-      key: 'secrets',
-      title: secretsPartWords.title,
-      hint: secretsPartWords.hint,
-      control: listed ? (
-        <AppLink
-          className={styles.link}
-          to={routes.settings(view.org.id, 'secrets')}
-        >
-          {secretsPartWords.manage}
-        </AppLink>
-      ) : undefined,
-      content: <SecretsContent view={view} />,
-    },
-    {
-      key: 'mac-access',
-      title: macAccessWords.title,
-      hint: macAccessWords.hint,
-      control:
-        view.macAccess === null ? undefined : (
-          <MacAccessSwitch
-            change={view.setMacAccess}
-            disabled={view.disabled}
-            on={view.macAccess}
-          />
-        ),
-    },
+    secretsPart(
+      view,
+      secretsPartWords.automationHint,
+      <SecretPicker view={view} />,
+    ),
   ]
 }

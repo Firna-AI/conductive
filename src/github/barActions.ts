@@ -12,10 +12,15 @@ import type { BarOutcome, CapabilityState } from './barView'
 import type { GitHubSnapshot } from './githubClient'
 import type { GitHubState } from './githubStore'
 
-/** The question of Continue after its check found local work. */
+/**
+ * The question of Continue after its check found local work. The optional
+ * label of the base branch, and of each changed file, hides each secret
+ * value. The real names stay for the requests.
+ */
 interface ContinueQuestion {
   branch: string
   baseBranch: string
+  displayBaseBranch?: string
   localWork: LocalWork
 }
 
@@ -170,9 +175,13 @@ export class BarActions {
       }
       if (signal.aborted) return
       if (reply.state === 'confirmation-required') {
-        const { branch: from, baseBranch, localWork } = reply
+        const { branch: from, baseBranch, displayBaseBranch, localWork } = reply
+        const label =
+          displayBaseBranch === undefined ? {} : { displayBaseBranch }
         if (this.end(run, null)) {
-          this.update({ question: { branch: from, baseBranch, localWork } })
+          this.update({
+            question: { branch: from, baseBranch, ...label, localWork },
+          })
         }
         return
       }

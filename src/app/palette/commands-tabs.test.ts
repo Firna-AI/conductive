@@ -103,7 +103,7 @@ describe('the Actions and Settings tabs of the palette', () => {
     })
   })
 
-  test('the Settings tab shows the tabs of the org settings, then the Account rows in the order of the Account page, with Keyboard shortcuts after New workspaces and This Mac last in the Mac app, and a search finds their pages', () => {
+  test('the Settings tab shows the tabs of the org settings, then the Account rows in the order of the Account page, with Favourites before New workspaces, Keyboard shortcuts after New workspaces, and This Mac last in the Mac app, and a search finds their pages', () => {
     const tab = (overrides: Partial<PaletteSource>, text = '') =>
       paletteResults(query({ tab: 'settings', text }), source(overrides))
     const general = tab({}).groups[0]?.rows[0]
@@ -113,8 +113,13 @@ describe('the Actions and Settings tabs of the palette', () => {
       browser: shown(tab({})),
       mac: shown(tab({ mac: true }))[1],
       search: shown(tab({}, 'env')),
+      skills: shown(tab({}, 'skills')),
       macSearch: shown(tab({ mac: true }, 'always allow')),
+      favoritesSearch: shown(
+        paletteResults(query({ text: 'favorites' }), source()),
+      ),
       generalOpens: general?.kind === 'command' ? general.href : null,
+      favouritesOpens: account('favourites')?.href,
       preferencesOpens: account('new-workspaces')?.href,
       shortcutsOpens: account('keyboard-shortcuts')?.href,
       thisMacOpens: tab({ mac: true }).groups[1]?.rows.find(
@@ -141,14 +146,18 @@ describe('the Actions and Settings tabs of the palette', () => {
           'Sign-in',
           'GitHub',
           'Agents',
+          'Favourites',
           'New workspaces',
           'Keyboard shortcuts',
           'This Mac',
         ],
       ],
       search: [['Acme settings', ['Cloud computer · Acme settings']]],
+      skills: [['Acme settings', ['Cloud computer · Acme settings']]],
       macSearch: [['Account', ['This Mac · Account']]],
+      favoritesSearch: [['Settings', ['Favourites · Account']]],
       generalOpens: routes.settings(acme.id, 'general'),
+      favouritesOpens: routes.accountTab('preferences'),
       preferencesOpens: routes.accountTab('preferences'),
       shortcutsOpens: routes.accountTab('shortcuts'),
       thisMacOpens: routes.accountTab('this-mac'),

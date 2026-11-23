@@ -1,4 +1,3 @@
-import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { fileMark } from '../../app/draft-marks'
@@ -13,8 +12,7 @@ import { retryMessagePath, sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { record, text } from '../api/json'
-import { now, textOf } from '../components/render-kit'
-import { SessionChat } from '../components/SessionChat'
+import { sessionMarkup, textOf } from '../components/render-kit'
 import {
   askedText,
   isSend,
@@ -163,15 +161,9 @@ describe('a reply that names a linked session', () => {
     expect(other.draftOf(first)?.text).toBe('Cal types here.')
     expect(shown(other.controller, LINKED)).toEqual([`user: ${words}`])
     await other.controller.select(LINKED)
-    const markup = renderToStaticMarkup(
-      <SessionChat
-        controller={other.controller}
-        mobile={false}
-        now={now}
-        snapshot={snapshot(other)}
-      />,
+    expect(textOf(sessionMarkup(other.controller))).toContain(
+      "Priya Raman's login",
     )
-    expect(textOf(markup)).toContain("Priya Raman's login")
   })
 })
 

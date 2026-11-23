@@ -1,12 +1,7 @@
-import { ArchiveRestore, CircleAlert } from 'lucide-react'
 import { accountDeletedOrg, orgs } from '../../fixtures/orgs'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { Notice } from '../common/Notice'
-import { ScreenLink } from '../common/ScreenLink'
-import { OrgTile } from '../orgs/OrgTile'
-import { DeletedOrgList } from './DeletedOrgList'
-import { deletedOrgsCopy as copy } from './deletedOrgsCopy'
+import { deletedOrgList } from '../../entries/components/settings/DeletedOrgList.mockup'
+import { deletedOrgsCopy as copy } from '../../../../../src/ui/components/settings/deletedOrgsCopy'
 
 /**
  * The states of the Deleted orgs section: no deleted org, so the section
@@ -35,33 +30,25 @@ export function DeletedOrgsSection(props: {
   const org = orgs[accountDeletedOrg.org]
   const suspended = props.state === 'suspended'
   const day = accountDeletedOrg.deletes
+  // The list draws the tile, Restore, and the notice of each row from data.
   return (
-    <DeletedOrgList
+    <deletedOrgList.Component
+      moklyInstance="list"
       rows={[
         {
-          id: org.id,
-          tile: <OrgTile org={org} size={26} />,
-          name: org.name,
+          org,
           detail: suspended ? copy.suspended(day) : copy.deletes(day),
-          action: suspended ? undefined : (
-            <ScreenLink asChild to={props.restoredTo ?? paths.account}>
-              <ActionButton
-                accessibilityLabel={copy.restoreLabel(org.name)}
-                icon={ArchiveRestore}
-              >
-                {copy.restore}
-              </ActionButton>
-            </ScreenLink>
-          ),
-          error:
-            props.state === 'failed' ? (
-              <Notice
-                body="The request failed. Try again."
-                icon={CircleAlert}
-                title={copy.failed(org.name)}
-                tone="danger"
-              />
-            ) : undefined,
+          ...(suspended
+            ? {}
+            : { restoreTo: props.restoredTo ?? paths.account }),
+          ...(props.state === 'failed'
+            ? {
+                error: {
+                  title: copy.failed(org.name),
+                  body: 'The request failed. Try again.',
+                },
+              }
+            : {}),
         },
       ]}
     />

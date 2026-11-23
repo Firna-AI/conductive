@@ -99,13 +99,15 @@ pages:
   of each, a search by name, a search by preview address, and a search
   with no match. Acme Labs, the newest org, is the test org that the
   operator created on `e2b`.
-- `app/operator/org` has the page of an org, with its account, the names
-  of its members, and Suspend org. Its child pages have the question before the
-  suspension, the suspended org with Lift, the question before the lift,
-  from decision 145, and a deleted org. The child page of the deleted org
-  has its question before a suspension, the deleted org that is also
-  suspended, and its question before a lift. They say that no admin can
-  restore a suspended org, and that a lift leaves the org deleted.
+- `app/operator/org` has the page of an org, with its Provider account box
+  and Switch account, the names of its members, and Suspend org. Its child
+  pages have the switch of the account, which the next paragraph gives,
+  the question before the suspension, the suspended org with Lift, the
+  question before the lift, from decision 145, and a deleted org. The child
+  page of the deleted org has its question before a suspension, the deleted
+  org that is also suspended, and its question before a lift. They say that
+  no admin can restore a suspended org, and that a lift leaves the org
+  deleted.
 - `app/operator/users` has the Users tab: the newest users, with Waiting
   under a person on the waitlist, a search, and a search with no match.
   Its Last active column gives the time of the last new workspace or sent
@@ -133,6 +135,11 @@ pages:
   `three-accounts` has a third account, `e2b-us`, with a field for each
   account and the total under them. Its `uneven` variant has a total of
   110%, so Save weights stays off.
+- `app/operator/settings` has the Settings tab: the Stop time box with
+  the choices 15 min, 30 min, 1 hour, 1.5 hours, and 2 hours, at the
+  default of 30 min. Its child page `changed` has 1 hour picked and not
+  saved, `saved` has it after Save stop time with the time and the
+  operator, and `not-saved` has a save that failed.
 - `app/operator/long-runs` has the Overview at a quiet moment, when 3
   workspaces run. The newest started 41 seconds ago, and its cloud
   computer does not exist yet, so its row shows a dash and no Copy. Its
@@ -141,6 +148,34 @@ pages:
 - `app/operator/error` has the numbers that could not load, with Try
   again. Its `loading` variant has the page while it reads the numbers,
   with placeholder rows for Long runs.
+
+The switch of the provider account comes from switch decisions 1 to 3 of
+20 November 2026. An operator switches an org to another configured
+account. New workspaces move when the build on that account succeeds, and
+existing workspaces stay where they run. Members do not see the switch
+build. The pages draw Hexwave, which switches from `boat` to `e2b`:
+
+- `app/operator/org/switch` has the question before a switch. Its variants
+  have the question while a build of the org runs, with the offer to end
+  it, three accounts with the choice of the new account, and a suspended
+  org, whose switch build starts at Lift.
+- `app/operator/org/switch-waiting` has a switch that waits for the build
+  of @vex-ops. Its variants have a switch that waits for Lift, the question
+  of Lift that then also starts the switch build, and a switch that waits
+  for an admin who is not suspended.
+- `app/operator/org/switch-build` has the switch build that runs, with
+  Stop switch. Its variants have the question before Stop switch, and a
+  switch build that failed, with Switch account again.
+- `app/operator/org/switched` has Hexwave after the switch, with its last
+  switch and its workspaces on each account.
+- `user-flows/switch-org-account` goes from the page of the org through
+  the question and the switch build to the page after the switch.
+- Members see a switch only on the Cloud computer tab, in two states, as
+  [the design](design.md) says: a build of an admin that waits for the
+  switch build, `app/org-settings/cloud-computer/building/waiting`, and a
+  build that an operator ended for the switch,
+  `app/org-settings/cloud-computer/build-failed/ended`. Neither names the
+  switch or a provider.
 
 The child pages of `app/operator/user` follow. The first two were variants
 of `app/operator/user` and kept their paths:

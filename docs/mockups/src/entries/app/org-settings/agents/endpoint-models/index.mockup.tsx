@@ -1,10 +1,10 @@
 import { defineScreen } from '@mokly/mokly'
-import { productName } from '../../../../../brand'
+import { productName } from '../../../../../../../../src/shared/brand'
+import { OrgSettingsScreen } from '../../../../../screens/OrgSettingsScreen'
 import {
   acmeSettings,
-  OrgSettingsScreen,
   orgSettingsSchema,
-} from '../../../../../screens/OrgSettingsScreen'
+} from '../../../../../screens/orgSettingsState'
 
 export const orgAgentsEndpointModels = defineScreen({
   title: 'Model list of the org endpoint',

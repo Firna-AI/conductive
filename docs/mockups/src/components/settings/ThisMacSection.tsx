@@ -1,4 +1,3 @@
-import { Square } from 'lucide-react'
 import {
   allowedWorkspaces,
   alwaysAllowed,
@@ -9,14 +8,22 @@ import {
   thisMac,
   untilStop,
 } from '../../fixtures/mac'
-import { classes } from '../common/classes'
-import { ActionButton } from '../common/actions'
-import { StatusText } from '../common/StatusText'
-import { ChangeOutcome, type ChangeStatus } from '../mac/ChangeOutcome'
-import { useMacApp, type MacChange } from '../mac/MacApp'
-import { DetailList } from './DetailList'
-import { Section } from './Section'
-import styles from './ThisMacSection.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
+import {
+  ChangeOutcome,
+  type ChangeStatus,
+} from '../../../../../src/ui/components/mac/ChangeOutcome'
+import {
+  useMacApp,
+  type MacChange,
+} from '../../../../../src/ui/components/mac/MacApp'
+import { detailList } from '../../entries/components/settings/DetailList.mockup'
+import { section } from '../../entries/components/settings/Section.mockup'
+import { instanceKey } from '../../instanceKey'
+import { thisMacDescription } from '../../../../../src/ui/components/settings/thisMacCopy'
+import styles from '../../../../../src/ui/components/settings/ThisMacSection.module.css'
 
 /** The result of Remove of `npm run lint`, in each state that shows one. */
 const removals: Partial<
@@ -57,12 +64,22 @@ export function ThisMacSection() {
     (command) => !gone || command !== removedCommand,
   )
   return (
-    <Section
-      description="Agents can ask to run commands on this Mac while it is awake and the app is open. Each command asks you first."
-      status={<StatusText label="Available" tone="success" />}
+    <section.Component
+      description={thisMacDescription}
+      moklyInstance="this-mac"
+      status={
+        <statusText.Component
+          label="Available"
+          moklyInstance="mac-available"
+          tone="success"
+        />
+      }
       title="This Mac"
     >
-      <DetailList rows={[{ term: 'Name', value: thisMac.name }]} />
+      <detailList.Component
+        moklyInstance="mac-details"
+        rows={[{ term: 'Name', value: thisMac.name }]}
+      />
       <span className={styles.label}>Always allowed</span>
       <ul aria-label="Always allowed commands" className={styles.list}>
         {commands.map((command) => (
@@ -73,15 +90,24 @@ export function ThisMacSection() {
                   {command}
                 </code>
                 <span className={styles.more}>
-                  <ActionButton tone="plain">Show all</ActionButton>
+                  <actionButton.Component
+                    moklyInstance={`show-all-${instanceKey(command)}`}
+                    tone="plain"
+                  >
+                    Show all
+                  </actionButton.Component>
                 </span>
               </div>
             ) : (
               <code className={styles.command}>{command}</code>
             )}
-            <ActionButton accessibilityLabel={`Remove ${command}`} tone="plain">
+            <actionButton.Component
+              accessibilityLabel={`Remove ${command}`}
+              moklyInstance={`remove-${instanceKey(command)}`}
+              tone="plain"
+            >
               Remove
-            </ActionButton>
+            </actionButton.Component>
           </li>
         ))}
       </ul>
@@ -101,12 +127,13 @@ export function ThisMacSection() {
             >
               {grant.left === null ? untilStop : `${grant.left} left`}
             </span>
-            <ActionButton
+            <actionButton.Component
               accessibilityLabel={`Stop ${grant.name}`}
-              icon={Square}
+              icon="square"
+              moklyInstance={`stop-${instanceKey(grant.name)}`}
             >
               Stop
-            </ActionButton>
+            </actionButton.Component>
           </li>
         ))}
       </ul>
@@ -114,11 +141,12 @@ export function ThisMacSection() {
         <ChangeOutcome
           action={
             gone && removal.status !== 'done' ? (
-              <ActionButton
+              <actionButton.Component
                 accessibilityLabel={`Try again to remove ${removedCommand}`}
+                moklyInstance="retry-remove"
               >
                 Try again
-              </ActionButton>
+              </actionButton.Component>
             ) : null
           }
           code
@@ -128,6 +156,6 @@ export function ThisMacSection() {
           title={removal.title}
         />
       ) : null}
-    </Section>
+    </section.Component>
   )
 }

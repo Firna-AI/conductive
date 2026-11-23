@@ -3,8 +3,9 @@
 This doc holds the requirements and the decisions in force for the agents
 and the sessions of a workspace. It covers the agents and their logins,
 their efforts, the names of the agents in the product, and the sessions
-and their links. Linked pages cover [the tab row](tab-row.md) and
-[the names of workspaces and sessions](workspace-and-session-names.md).
+and their links. Linked pages cover [the tab row](tab-row.md),
+[the names of workspaces and sessions](workspace-and-session-names.md),
+and [Explain](explain.md).
 It belongs to [Chat and events](chat-and-events.md). The terms are those
 of the [architecture doc](../architecture.md#terms). A decision number
 names a dated record, as
@@ -45,6 +46,7 @@ org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
     [Messages](messages-and-attachments.md#messages) says
   - through a call of the agent tools in a turn that the member sent, as
     [The sender](session-calls.md#the-sender) says
+  - with Explain on a selection of chat text, as [Explain](explain.md) says
 - An automation run starts the first session of its workspace in the name of
   the automation owner, as
   [A run acts as its owner](automation-runs.md#a-run-acts-as-its-owner) says.
@@ -194,6 +196,12 @@ org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 [The tab row](tab-row.md) holds the requirements of the order of the tabs,
 their moves, the scroll of the row, the place that each tab keeps, and the
 tab menu.
+
+### Explain
+
+[Explain](explain.md) holds the requirements of the sessions that explain
+a selection of chat text, their marks in the parent chat, and their
+popover.
 
 ### Session links
 

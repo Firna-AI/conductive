@@ -1,12 +1,17 @@
-import { Ban, Hourglass } from 'lucide-react'
 import type { UserPage } from '../../fixtures/operatorUserPages'
 import { paths } from '../../paths'
-import { Notice } from '../common/Notice'
-import { DetailList } from '../settings/DetailList'
-import { Section } from '../settings/Section'
+import { notice as noticePart } from '../../entries/components/common/Notice.mockup'
+import { detailList } from '../../entries/components/settings/DetailList.mockup'
+import { section } from '../../entries/components/settings/Section.mockup'
 import { AppAccessSection, ReferralSection } from './AccessSections'
-import { noVerifiedEmail, waitingNotice } from './accessCopy'
-import { suspendedTitle, suspendedUserBody } from './operatorCopy'
+import {
+  noVerifiedEmail,
+  waitingNotice,
+} from '../../../../../src/ui/components/operator/accessCopy'
+import {
+  suspendedTitle,
+  suspendedUserBody,
+} from '../../../../../src/ui/components/operator/operatorCopy'
 import { TargetList, TargetRow } from './targets'
 
 /**
@@ -19,16 +24,24 @@ function UserNotice(props: { user: UserPage }) {
   if (user.suspension) {
     const { since, by, stopping } = user.suspension
     return (
-      <Notice
+      <noticePart.Component
         body={suspendedUserBody(name, stopping)}
-        icon={Ban}
+        icon="ban"
+        moklyInstance="suspended-notice"
         title={suspendedTitle(since, by)}
       />
     )
   }
   if (user.access.state === 'waiting') {
     const notice = waitingNotice(name, user.access.since)
-    return <Notice body={notice.body} icon={Hourglass} title={notice.title} />
+    return (
+      <noticePart.Component
+        body={notice.body}
+        icon="hourglass"
+        moklyInstance="waiting-notice"
+        title={notice.title}
+      />
+    )
   }
   return null
 }
@@ -52,8 +65,9 @@ export function UserDetails(props: {
   return (
     <>
       <UserNotice user={user} />
-      <Section title="Details">
-        <DetailList
+      <section.Component moklyInstance="details-section" title="Details">
+        <detailList.Component
+          moklyInstance="user-details-list"
           rows={[
             ...(user.name ? [{ term: 'Name', value: user.name }] : []),
             { term: 'Email', value: user.email ?? noVerifiedEmail },
@@ -67,7 +81,7 @@ export function UserDetails(props: {
             },
           ]}
         />
-      </Section>
+      </section.Component>
       {user.access.state === 'granted' ? (
         <AppAccessSection access={user.access} />
       ) : null}
@@ -75,7 +89,7 @@ export function UserDetails(props: {
         <ReferralSection code={user.referral} disable={props.disableCode} />
       ) : null}
       {user.orgs.length > 0 ? (
-        <Section title="Orgs">
+        <section.Component moklyInstance="orgs-section" title="Orgs">
           <TargetList label={`Orgs of @${user.login}`}>
             {user.orgs.map((org) => (
               <TargetRow
@@ -86,7 +100,7 @@ export function UserDetails(props: {
               />
             ))}
           </TargetList>
-        </Section>
+        </section.Component>
       ) : null}
     </>
   )

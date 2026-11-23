@@ -32,6 +32,8 @@ fn engine(state: RunnerState) -> AgentEngine {
                 home: "/home/user".into(),
                 default_branch: "main".into(),
                 workspace_branch: None,
+                skills_repository: None,
+                trusted_skills_repository: None,
                 workspace_context: None,
                 repository_directories: BTreeMap::new(),
                 state_path: "/state".into(),

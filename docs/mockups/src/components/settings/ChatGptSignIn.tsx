@@ -5,14 +5,17 @@ import {
   chatGptDevicePage,
   signInRefusedCause,
 } from '../../fixtures/logins'
-import { ActionButton } from '../common/actions'
-import { classes } from '../common/classes'
-import { ExternalLink } from '../common/ExternalLink'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { StatusText } from '../common/StatusText'
-import { chatGptSignInCopy as copy, type SignInStep } from './chatGptSignInCopy'
-import formStyles from './AgentConnectForm.module.css'
-import styles from './ChatGptSignIn.module.css'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
+import {
+  chatGptSignInCopy as copy,
+  type SignInStep,
+} from '../../../../../src/ui/components/settings/chatGptSignInCopy'
+import formStyles from '../../../../../src/ui/components/settings/AgentConnectForm.module.css'
+import styles from '../../../../../src/ui/components/settings/ChatGptSignIn.module.css'
 
 /** The address of the page of OpenAI, as the user reads and types it. */
 const deviceAddress = chatGptDevicePage.replace(/^https:\/\//, '')
@@ -22,7 +25,11 @@ function Actions(props: { cancel: boolean; children?: ReactNode }) {
   if (!props.cancel && !props.children) return null
   return (
     <div className={formStyles.actions}>
-      {props.cancel ? <ActionButton>Cancel</ActionButton> : null}
+      {props.cancel ? (
+        <actionButton.Component moklyInstance="cancel-sign-in">
+          Cancel
+        </actionButton.Component>
+      ) : null}
       {props.children}
     </div>
   )
@@ -32,7 +39,9 @@ function Actions(props: { cancel: boolean; children?: ReactNode }) {
 function CodeButton(props: { label: string; to: string }) {
   return (
     <ScreenLink asChild to={props.to}>
-      <ActionButton tone="primary">{props.label}</ActionButton>
+      <actionButton.Component moklyInstance="get-code" tone="primary">
+        {props.label}
+      </actionButton.Component>
     </ScreenLink>
   )
 }
@@ -40,9 +49,12 @@ function CodeButton(props: { label: string; to: string }) {
 /** The link to the security settings of ChatGPT, in a new tab. */
 function SettingsLink() {
   return (
-    <ExternalLink href={copy.settingsLink.href}>
+    <externalLink.Component
+      href={copy.settingsLink.href}
+      moklyInstance="chatgpt-settings"
+    >
       {copy.settingsLink.label}
-    </ExternalLink>
+    </externalLink.Component>
   )
 }
 
@@ -55,13 +67,23 @@ function CodeShown() {
     <>
       <p className={formStyles.text}>
         {copy.steps.before}{' '}
-        <ExternalLink href={chatGptDevicePage}>{deviceAddress}</ExternalLink>
+        <externalLink.Component
+          href={chatGptDevicePage}
+          moklyInstance="device-page"
+        >
+          {deviceAddress}
+        </externalLink.Component>
         {copy.steps.after}
       </p>
       <p className={styles.code}>{chatGptCode}</p>
       <p className={styles.hint}>{copy.keep}</p>
       <div role="status">
-        <StatusText busy label={copy.waiting} tone="active" />
+        <statusText.Component
+          busy
+          label={copy.waiting}
+          moklyInstance="waiting-for-code"
+          tone="active"
+        />
       </div>
     </>
   )

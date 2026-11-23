@@ -1,15 +1,33 @@
 import type { MarkdownBlock } from '../../fixtures/fileContents'
-import { classes } from '../common/classes'
-import { InlineText } from '../common/InlineText'
-import headingStyles from '../common/MarkdownHeadings.module.css'
-import { MarkdownTable } from '../common/MarkdownTable'
-import styles from './MarkdownView.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import headingStyles from '../../../../../src/ui/components/common/MarkdownHeadings.module.css'
+import prose from '../../../../../src/ui/components/common/MarkdownProse.module.css'
+import { markdownTable } from '../../entries/components/common/MarkdownTable.mockup'
+import { taskText } from '../common/markdownTasks'
+import { TaskBox } from '../../../../../src/ui/components/common/TaskBox'
+import { PreviewText } from './PreviewText'
+import styles from '../../../../../src/ui/components/files/MarkdownView.module.css'
 
-/** A cell of a table, with its inline code. */
-function fileCell(text: string) {
-  return <InlineText text={text} />
+/**
+ * An item of a list. A task item shows its fixed check box in the place of
+ * its bullet, as the chat does (item 14 B).
+ */
+function listItem(item: string) {
+  const { text, checked } = taskText(item)
+  return (
+    <li className={checked === null ? undefined : prose.task} key={item}>
+      {checked === null ? null : <TaskBox checked={checked} />}
+      <PreviewText text={text} />
+    </li>
+  )
 }
 
+/**
+ * One block of a Markdown file. The blocks of a file have no key that stays
+ * when they move, so their text stays plain: the name of a Mokly instance
+ * must stay the same when the blocks move. A file shows one table, also in
+ * its quotes, which keeps the default name of the registered table.
+ */
 function Block(props: { block: MarkdownBlock }) {
   const { block } = props
   switch (block.kind) {
@@ -22,49 +40,57 @@ function Block(props: { block: MarkdownBlock }) {
       const Heading = block.kind
       return (
         <Heading>
-          <InlineText text={block.text} />
+          <PreviewText text={block.text} />
         </Heading>
       )
     }
     case 'p':
       return (
         <p>
-          <InlineText text={block.text} />
+          <PreviewText text={block.text} />
         </p>
       )
     case 'ol':
     case 'ul': {
       const List = block.kind
-      return (
-        <List>
-          {block.items.map((item) => (
-            <li key={item}>
-              <InlineText text={item} />
-            </li>
-          ))}
-        </List>
-      )
+      return <List>{block.items.map(listItem)}</List>
     }
     case 'code':
       return <pre className={styles.block}>{block.text}</pre>
     case 'table':
       return (
-        <MarkdownTable
+        <markdownTable.Component
           align={block.align}
           className={styles.table}
           head={block.head}
-          renderCell={fileCell}
           rows={block.rows}
         />
       )
+    case 'quote':
+      return (
+        <blockquote>
+          {block.blocks.map((inner, index) => (
+            <Block block={inner} key={index} />
+          ))}
+        </blockquote>
+      )
+    case 'rule':
+      return <hr />
   }
 }
 
-/** A Markdown file, rendered as formatted text. */
+/**
+ * A Markdown file, rendered as formatted text. The headings take the look
+ * of MarkdownHeadings.module.css, and the quotes, the rules, the bold text,
+ * the emphasis, the strikethrough, and the task boxes the look of
+ * MarkdownProse.module.css, which the replies of the chat share.
+ */
 export function MarkdownView(props: { blocks: readonly MarkdownBlock[] }) {
   return (
     <div className={styles.scroll} data-mokly-scroll="file-preview">
-      <article className={classes(styles.doc, headingStyles.headings)}>
+      <article
+        className={classes(styles.doc, headingStyles.headings, prose.prose)}
+      >
         {props.blocks.map((block, index) => (
           <Block block={block} key={index} />
         ))}

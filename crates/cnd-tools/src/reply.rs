@@ -4,6 +4,7 @@ use serde::Serialize;
 use serde_json::Value;
 
 use cnd_runner_interface::json::decoder;
+use cnd_runner_interface::services::local::ServiceLocalResponse;
 use cnd_runner_interface::tools::device::{DeviceCommandResponse, DeviceCommandState};
 use cnd_runner_interface::tools::previews::{
     AgentClosePreviewResponse, AgentListPreviewsResponse, AgentOpenPreviewResponse,
@@ -19,6 +20,7 @@ use cnd_runner_interface::tools::session_actions::{
 use cnd_runner_interface::tools::session_reads::{
     AgentListSessionsResponse, AgentReadSessionResponse,
 };
+use cnd_runner_interface::tools::session_watches::AgentWatchSessionResponse;
 use cnd_runner_interface::tools::sessions::{AgentCreateSessionResponse, AgentSendMessageResponse};
 use cnd_runner_interface::tools::workspaces::{
     AgentCreateWorkspaceResponse, AgentListWorkspacesResponse, AgentWorkspaceResponse,
@@ -26,12 +28,14 @@ use cnd_runner_interface::tools::workspaces::{
 
 use crate::call::Name;
 use crate::error::{Error, ErrorResultExt, Result};
-use crate::reply_validation::{cap_output, normalize_paths, valid};
+use crate::reply_validation::{cap_output, mark_member_author, normalize_paths, valid};
 use crate::secrets::response;
+use crate::services::tools;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(untagged)]
 pub(crate) enum Reply {
+    Services(ServiceLocalResponse),
     ListSecrets(ListSecretsResult),
     RunWithSecrets(RunWithSecretsResult),
     RunMacCommand(DeviceCommandResponse),
@@ -52,6 +56,7 @@ pub(crate) enum Reply {
     RenameSession(AgentSessionResponse),
     CloseSession(AgentSessionResponse),
     StopSession(AgentStopSessionResponse),
+    WatchSession(AgentWatchSessionResponse),
     GetMessage(AgentGetMessageResponse),
     CreateSection(AgentCreateSectionResponse),
     DeleteSection(AgentDeleteSectionResponse),
@@ -63,6 +68,7 @@ pub(crate) enum Reply {
 impl Reply {
     pub(crate) fn failed(&self) -> bool {
         match self {
+            Self::Services(reply) => tools::failed(reply),
             Self::RunWithSecrets(value) => value.exit_code() != 0,
             Self::RunMacCommand(value) => {
                 value.request.state != DeviceCommandState::Completed
@@ -97,6 +103,9 @@ pub(crate) fn parse(name: Name, body: &str) -> Result<Reply> {
         Err(_) => return Err(Error::Reply { mac }),
     };
     normalize_paths(&mut value);
+    if name == Name::GetMessage {
+        mark_member_author(&mut value);
+    }
     if name == Name::ListSecrets {
         return response::list(value).map(Reply::ListSecrets);
     }
@@ -156,6 +165,9 @@ pub(crate) fn parse(name: Name, body: &str) -> Result<Reply> {
             }
             Name::StopSession => {
                 serde_json::from_value::<AgentStopSessionResponse>(value).map(Reply::StopSession)
+            }
+            Name::WatchSession => {
+                serde_json::from_value::<AgentWatchSessionResponse>(value).map(Reply::WatchSession)
             }
             Name::GetMessage => {
                 serde_json::from_value::<AgentGetMessageResponse>(value).map(Reply::GetMessage)

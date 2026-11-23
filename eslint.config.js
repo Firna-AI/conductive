@@ -5,6 +5,15 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
+// The app, the Worker, and the Mac app own the shared UI in src/ui/. The
+// mockup catalogue imports it, never the other way round. Development code
+// and tests may still import the mockup fixtures.
+const mockupImports = {
+  group: ['**/docs/mockups/**'],
+  message:
+    'Shipped code imports nothing from docs/mockups/. Move the module into src/ui/, as src/ui/README.md says.',
+}
+
 export default defineConfig([
   globalIgnores([
     '.context',
@@ -34,6 +43,19 @@ export default defineConfig([
     // and comments count.
     rules: {
       'max-lines': ['error', 300],
+    },
+  },
+  {
+    files: ['src/**/*.{ts,tsx}', 'worker/**/*.ts', 'desktop/**/*.{ts,tsx}'],
+    ignores: [
+      '**/dev/**',
+      '**/test-support/**',
+      '**/*.test-support.ts',
+      '**/*.{test,spec}.{ts,tsx}',
+      'desktop/tests/**',
+    ],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [mockupImports] }],
     },
   },
   {
@@ -69,6 +91,8 @@ export default defineConfig([
               message:
                 'Use guardedStatement from shell-guard.ts for shell access checks.',
             },
+            // A later rule entry replaces an earlier one, so repeat it.
+            mockupImports,
           ],
         },
       ],

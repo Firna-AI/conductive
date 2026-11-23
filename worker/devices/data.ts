@@ -1,8 +1,10 @@
 import type { Workspace } from '../../src/shared/generated/Workspace'
 import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
+import type { ArchivedComputerState } from '../../src/shared/generated/ArchivedComputerState'
 
 import { HttpError } from '../http'
 import { workspaceNameColumn } from '../data/workspace-name'
+import { archivedComputerColumn } from '../data/archived-computer'
 
 export async function workspaceOrg(
   db: D1Database,
@@ -35,6 +37,7 @@ export interface WorkspaceRow {
   createdAt: number
   updatedAt: number
   archivedAt: number | null
+  archivedComputerState: ArchivedComputerState | null
   sandboxId: string | null
   ownerId: string
   githubLogin: string
@@ -49,6 +52,7 @@ export function readDeviceWorkspace(db: D1Database, workspaceId: string) {
     COALESCE(w.section_id, s.id) AS sectionId, w.parent_workspace_id AS parentId, ${workspaceNameColumn('w')}, w.branch, w.state,
     w.github_summary AS github,
     w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
+    ${archivedComputerColumn('w')},
     w.sandbox_id AS sandboxId,
     u.id AS ownerId, u.github_login AS githubLogin, u.display_name AS displayName, u.avatar_url AS avatarUrl
     FROM workspaces w JOIN users u ON u.id = w.owner_user_id

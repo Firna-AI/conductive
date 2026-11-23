@@ -37,7 +37,7 @@ pub struct EngineDependencies {
     pub repositories: Arc<dyn TurnRepositories>,
     /// Unix clock; timers use Tokio's controllable scheduler.
     pub clock: Arc<dyn Clock>,
-    /// Startup cleanup, warm-up, and welcome confirmation.
+    /// Startup credential cleanup and welcome confirmation.
     pub startup: Arc<dyn Startup>,
     /// Production uses thirty days. Harnesses may supply shorter durations.
     pub background_limit: Duration,

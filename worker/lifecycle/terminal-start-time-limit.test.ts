@@ -12,7 +12,7 @@ it('fails a hanging detached terminal setup at the original deadline after recon
   await start.tick(TEST_TIME + 1_197_000)
   expect(await start.job()).toMatchObject({
     phase: 'terminal',
-    processId: null,
+    processId: expect.any(Number),
   })
   fixture.boat.commandRunning = true
   await start.tick(TEST_TIME + 1_198_000)
@@ -56,7 +56,6 @@ it('names only the exit code and time-out when detached terminal setup fails', a
   const start = await startRetryFixture(fixture)
   await start.advance()
   expect(await start.job()).toMatchObject({ phase: 'terminal' })
-  await start.advance()
   fixture.boat.commandExitCode = 1
   fixture.boat.commandOutput = 'password=private-marker'
   fixture.boat.commandStderr = 'token=private-stderr-marker'

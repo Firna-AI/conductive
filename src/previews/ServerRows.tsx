@@ -1,10 +1,10 @@
 import type { ListeningPort } from '../shared/generated/ListeningPort'
-import rows from '../../docs/mockups/src/components/tools/PortForm.module.css'
+import rows from '../ui/components/tools/PortForm.module.css'
 import {
   portFormCopy,
   serverDescription,
-} from '../../docs/mockups/src/components/tools/previewCopy'
-import { classes } from '../../docs/mockups/src/components/common/classes'
+} from '../ui/components/tools/previewCopy'
+import { classes } from '../ui/components/common/classes'
 import styles from './PreviewOpenForm.module.css'
 
 /**

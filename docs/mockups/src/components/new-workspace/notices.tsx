@@ -1,8 +1,12 @@
-import { CircleAlert, FolderGit2 } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { defined } from '../../defined'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { Notice } from '../common/Notice'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
+
+/** The title of a create that failed, or that the server refused. */
+const notCreated = "The workspace wasn't created"
 
 /**
  * A create that failed, over the composer of the New workspace page or in
@@ -10,15 +14,42 @@ import { ScreenLink } from '../common/ScreenLink'
  */
 export function CreateFailedNotice(props: { ready?: boolean }) {
   return (
-    <Notice
+    <notice.Component
       action={
-        <ActionButton disabled={props.ready === false} tone="primary">
+        <actionButton.Component
+          disabled={props.ready === false}
+          moklyInstance="retry-create"
+          tone="primary"
+        >
           Try again
-        </ActionButton>
+        </actionButton.Component>
       }
       body="The app can't reach the server. Your message is kept."
-      icon={CircleAlert}
-      title="The workspace wasn't created"
+      icon="circle-alert"
+      moklyInstance="create-failed"
+      title={notCreated}
+      tone="danger"
+    />
+  )
+}
+
+/**
+ * A create that the server refused, in the place of a failed create, such
+ * as for a picked branch that is no longer on GitHub (decision 303). `body`
+ * names the cause and says that the message stays. `action` is the one
+ * recovery of the refusal.
+ */
+export function CreateRefusedNotice(props: {
+  body: string
+  action: ReactNode
+}) {
+  return (
+    <notice.Component
+      action={props.action}
+      body={props.body}
+      icon="circle-alert"
+      moklyInstance="create-refused"
+      title={notCreated}
       tone="danger"
     />
   )
@@ -41,7 +72,12 @@ function adminChoosesRepositories(org: string): string {
 export function ChooseRepositoriesButton() {
   return (
     <ScreenLink asChild to={paths.repositories}>
-      <ActionButton icon={FolderGit2}>Choose repositories</ActionButton>
+      <actionButton.Component
+        icon="folder-git-2"
+        moklyInstance="choose-repositories"
+      >
+        Choose repositories
+      </actionButton.Component>
     </ScreenLink>
   )
 }
@@ -57,9 +93,12 @@ export function ChooseRepositoriesNotice(props: {
   admin: boolean
 }) {
   return (
-    <Notice
-      action={props.admin ? <ChooseRepositoriesButton /> : undefined}
-      icon={FolderGit2}
+    <notice.Component
+      icon="folder-git-2"
+      moklyInstance="choose-repositories-notice"
+      {...defined({
+        action: props.admin ? <ChooseRepositoriesButton /> : undefined,
+      })}
       title={
         props.admin
           ? chooseRepositoriesFirst(props.org)

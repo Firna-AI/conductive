@@ -2,12 +2,23 @@ import { ChevronRight, GitBranch, GitPullRequest } from 'lucide-react'
 import { pullRequest } from '../../fixtures/pullRequests'
 import type { Workspace } from '../../fixtures/workspaces'
 import { barPaths, checksPaths } from '../../paths'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
-import { BarButtons, BarMessage } from './BarActions'
-import { agentActionLabels, barLabels } from './barCopy'
-import type { BarModel } from './barModel'
-import { Branches, PullRequestNumber, StateLabel } from './barParts'
+import {
+  barButtons,
+  barMessage,
+} from '../../entries/components/workspace/BarActions.mockup'
+import {
+  agentActionLabels,
+  barLabels,
+} from '../../../../../src/ui/components/workspace/barCopy'
+import type { BarModel } from '../../../../../src/ui/components/workspace/barModel'
+import {
+  branches,
+  pullRequestNumber,
+  stateLabel,
+} from '../../entries/components/workspace/barParts.mockup'
+import { prStatusData } from '../../entries/components/workspace/barSchemas'
 import { hasPullRequest, prStatus } from './prStatus'
 import styles from './PullRequestBar.module.css'
 
@@ -18,7 +29,7 @@ import styles from './PullRequestBar.module.css'
 function Actions(props: { bar: BarModel }) {
   return (
     <span className={styles.actions}>
-      <BarButtons bar={props.bar} />
+      <barButtons.Component bar={props.bar} />
     </span>
   )
 }
@@ -35,7 +46,7 @@ export function PullRequestBar(props: { bar: BarModel; workspace: Workspace }) {
   const { banner } = bar
   const withActions = bar.actions.length > 0 && styles.withActions
   const message = bar.message ? (
-    <BarMessage kind={bar.message} workspace={workspace} />
+    <barMessage.Component kind={bar.message} workspace={workspace} />
   ) : null
   if (!hasPullRequest(banner)) {
     const note =
@@ -43,7 +54,7 @@ export function PullRequestBar(props: { bar: BarModel; workspace: Workspace }) {
     return (
       <>
         <div className={classes(styles.bar, withActions)}>
-          <Branches workspace={workspace} />
+          <branches.Component workspace={workspace} />
           {bar.actions.length === 0 ? (
             <span className={styles.note}>{note}</span>
           ) : (
@@ -58,8 +69,11 @@ export function PullRequestBar(props: { bar: BarModel; workspace: Workspace }) {
   return (
     <>
       <div className={classes(styles.bar, styles[status.tone], withActions)}>
-        <PullRequestNumber href={pullRequest.url} number={pullRequest.number} />
-        <StateLabel status={status} />
+        <pullRequestNumber.Component
+          href={pullRequest.url}
+          number={pullRequest.number}
+        />
+        <stateLabel.Component status={prStatusData(status)} />
         {status.detail ? (
           <span className={styles.detail}>{status.detail}</span>
         ) : null}
@@ -108,7 +122,7 @@ export function PullRequestRow(props: { bar: BarModel }) {
       to={checksPaths[banner]}
     >
       <span className={styles.number}>#{pullRequest.number}</span>
-      <StateLabel status={status} />
+      <stateLabel.Component status={prStatusData(status)} />
       <span className={styles.spacer} />
       <ChevronRight className={styles.muted} size={15} />
     </ScreenLink>

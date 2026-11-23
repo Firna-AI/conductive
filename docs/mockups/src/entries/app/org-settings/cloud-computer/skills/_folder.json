@@ -1,0 +1,12 @@
+{
+  "order": [
+    "trust",
+    "pasted-link",
+    "private",
+    "not-found",
+    "invalid",
+    "without-skills",
+    "incomplete",
+    "lookup-failed"
+  ]
+}

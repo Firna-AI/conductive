@@ -1,7 +1,10 @@
 import { useRef, type ReactNode } from 'react'
 import { useModalLayer } from '../../shell/ui/layers'
-import sheetStyles from '../../../docs/mockups/src/components/common/Sheet.module.css'
-import styles from '../../../docs/mockups/src/components/common/ConfirmDialog.module.css'
+import ui from '../../shell/ui/ui.module.css'
+import { classes } from '../../ui/components/common/classes'
+import sheetStyles from '../../ui/components/common/Sheet.module.css'
+import styles from '../../ui/components/common/ConfirmDialog.module.css'
+import card from '../../ui/components/common/ModalCard.module.css'
 import { useEscape, useFocusInside, useFocusTrap } from './dismiss'
 
 type FirstFocus = (node: HTMLElement) => HTMLElement | null
@@ -52,8 +55,9 @@ function DesktopDialog(props: {
   onCancel: () => void
 }) {
   const ref = useRef<HTMLElement>(null)
+  const body = useRef<HTMLDivElement>(null)
   useEscape(props.onCancel)
-  useFocusTrap(ref)
+  useFocusTrap(ref, body)
   useFocusInside(ref, firstButton)
   useModalLayer()
   return (
@@ -62,13 +66,25 @@ function DesktopDialog(props: {
       <section
         aria-label={props.title}
         aria-modal
-        className={styles.dialog}
+        className={classes(styles.dialog, card.card)}
         ref={ref}
         role="dialog"
       >
-        <h2 className={styles.title}>{props.title}</h2>
-        {props.children}
-        <div className={styles.actions}>{props.actions}</div>
+        <h2 className={classes(styles.title, card.head)}>{props.title}</h2>
+        {/*
+         * The browser makes no Tab stop of the body. The trap does, while
+         * the body scrolls text.
+         */}
+        <div
+          className={classes(styles.body, card.body, ui.focusable)}
+          ref={body}
+          tabIndex={-1}
+        >
+          {props.children}
+        </div>
+        <div className={classes(styles.actions, card.foot)}>
+          {props.actions}
+        </div>
       </section>
     </div>
   )
@@ -78,7 +94,10 @@ function DesktopDialog(props: {
  * A question that the user confirms before an action: a dialog over the
  * dimmed app on desktop, and a sheet on a phone. The actions come last, with
  * the confirming action at the end. The focus starts on the first action,
- * the safe one, Tab stays inside, and Escape cancels.
+ * the safe one, Tab stays inside, and Escape cancels. A desktop dialog
+ * taller than its room keeps its title and its actions, and its content
+ * scrolls between them. While that content is text without a control, Tab
+ * stops on it too, so the keys of the keyboard scroll it.
  */
 export function ConfirmDialog(props: {
   title: string

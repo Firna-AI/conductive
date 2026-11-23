@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import { repositoryFailure } from '../../../../docs/mockups/src/components/workspace/repositoryMoveCopy'
+import { repositoryFailure } from '../../../ui/components/workspace/repositoryMoveCopy'
 import {
   byLabel,
   byRole,
@@ -10,6 +10,7 @@ import {
   shownToasts,
 } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
+import { serveMaskedHead } from '../../../test-support/fake-branch-names'
 import {
   changedReply,
   movedWorkspace,
@@ -121,6 +122,51 @@ describe('the question and the failure of a repository change', () => {
       allowWork: [undefined, undefined, true],
       header: 'acme/billing-service',
       open: null,
+    })
+  })
+
+  test('the question names each changed file of both lists by its label, with a row for each real path, also when two paths share one label, and Change repository asks again with the real branch', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    serveHeld(server, ['storefront', 'billing-service'])
+    await serveMaskedHead(server)
+    serveRepositoryChange(server, 'question', 'masked-repository')
+    const tab = await openWorkspace(server)
+
+    await pick(tab)
+    await tab.poll()
+    const dialog = byRole('dialog', title)
+    const text = dialog.textContent ?? ''
+    const shown = {
+      left: rows(dialog, left),
+      carried: rows(dialog, carried),
+      secret: text.includes('acme-7f3k') || text.includes('beta-2m9q'),
+    }
+    await press(byRole('button', 'Change repository', dialog))
+    await tab.poll()
+
+    const start = {
+      expectedRepositoryId: 'storefront',
+      expectedBranch: 'calummoore/checkout-acme-7f3k',
+      repositoryId: 'billing-service',
+    }
+    expect({ ...shown, starts: await changeBodies(server) }).toEqual({
+      left: [
+        'src/app/checkout/AddressForm.tsxnot committed',
+        'tests/checkout/address.test.tsnot committed',
+        'scripts/seed-[redacted].sqlnot committed',
+        'scripts/seed-[redacted].sqlnot committed',
+        '1 commitnot pushed',
+        'Pull request #482open',
+        '3 commits of the branchon GitHub',
+      ],
+      carried: [
+        'src/invoices/refunds.tsnot committed',
+        'src/invoices/refunds-[redacted].tsnot committed',
+        'src/invoices/refunds-[redacted].tsnot committed',
+      ],
+      secret: false,
+      starts: [start, { ...start, allowWork: true }],
     })
   })
 

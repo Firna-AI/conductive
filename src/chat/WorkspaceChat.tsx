@@ -8,7 +8,7 @@ import {
 import type { Agent } from '../shared/generated/Agent'
 import type { WorkspaceView } from '../shared/workspace-view'
 
-import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
+import { TouchScreen } from '../ui/components/common/touch'
 import { useFollowTabs } from '../app/tab-places'
 import {
   ChatDropAreaProvider,
@@ -16,7 +16,8 @@ import {
 } from './components/chat-drop-area'
 import { ChatOverlays, chatHistory } from './components/ChatOverlays'
 import type { ComposerFocus } from './components/composer-requests'
-import { SessionChat, type ChatHost } from './components/SessionChat'
+import { SessionChat } from './components/SessionChat'
+import type { ChatHost } from './components/session-parts'
 import { CodeCopyProvider, useCodeCopyAction } from './components/code-copy'
 import { useSessionLinkCopy } from './components/session-link-copy'
 import { SessionTabs } from './components/SessionTabs'
@@ -30,14 +31,13 @@ import { MentionsProvider, type ChatMentions } from './mentions/MentionsContext'
 import { tabSessions } from './state/archive-view'
 import {
   isRunning,
-  sessionState,
   type ChatSnapshot,
   type Overlay,
 } from './state/chat-snapshot'
 import type { ChatController } from './state/controller'
 import { withoutTabs } from './state/tab-order'
 import { browserCopy, type CopyServices } from './transcript-copy'
-import { systemClock, useNow, type Clock } from './ui/clock'
+import { ChatClock, systemClock, useNow, type Clock } from './ui/clock'
 import { useChatController, type ChatConnection } from './useChatController'
 import styles from './WorkspaceChat.module.css'
 
@@ -129,7 +129,8 @@ function permittedOverlay(overlay: Overlay, readOnly: boolean): Overlay {
 /**
  * The session tabs, the chat of the open session, and the overlays. The
  * whole column is the drop area of the message box, so a drop of files
- * anywhere on the chat attaches them, as `useChatDropArea` says.
+ * anywhere on the chat attaches them, as `useChatDropArea` says. Its parts
+ * read the time from its clock, through `ChatClock`.
  */
 function ChatBody(
   props: ChatViewProps & { controller: ChatController; snapshot: ChatSnapshot },
@@ -141,12 +142,11 @@ function ChatBody(
   const mobile = props.viewport === 'mobile'
   const content = props.content ?? null
   const active = snapshot.activeSessionId
-  const running = active ? sessionState(snapshot, active).transcript.turn : null
-  const ticking =
-    running !== null ||
-    snapshot.workspace?.state === 'starting' ||
-    overlay.kind === 'history'
-  const now = useNow(props.clock ?? systemClock, ticking)
+  const clock = props.clock ?? systemClock
+  // Only the session history ticks here, for the time since each session
+  // closed. Each live time in the chat, such as that of a running turn,
+  // keeps its own tick from `ChatClock` while it shows.
+  const now = useNow(clock, overlay.kind === 'history')
   const links = useChatLinksOf(controller, snapshot, props.onOpenPage)
   const copyServices = props.copy ?? browserCopy
   const copy = useTranscriptCopy(controller, copyServices)
@@ -209,7 +209,6 @@ function ChatBody(
             controller={controller}
             host={props.host}
             mobile={mobile}
-            now={now}
             onConnectAgent={props.onConnectAgent}
             onOpenDiff={props.onOpenDiff}
             readOnly={readOnly}
@@ -228,28 +227,28 @@ function ChatBody(
       />
     </ChatDropAreaProvider>
   )
-  const mentions = props.mentions ?? null
-  if (!mobile) {
-    return (
+  const column = mobile ? (
+    <TouchScreen>
+      <div className={styles.phone} {...drops.handlers}>
+        {body}
+      </div>
+    </TouchScreen>
+  ) : (
+    <div className={styles.column} {...drops.handlers}>
+      {body}
+    </div>
+  )
+  return (
+    <ChatClock.Provider value={clock}>
       <LinksProvider value={links}>
-        <MentionsProvider root={snapshot.repositoryFolder} value={mentions}>
-          <div className={styles.column} {...drops.handlers}>
-            {body}
-          </div>
+        <MentionsProvider
+          root={snapshot.repositoryFolder}
+          value={props.mentions ?? null}
+        >
+          {column}
         </MentionsProvider>
       </LinksProvider>
-    )
-  }
-  return (
-    <LinksProvider value={links}>
-      <MentionsProvider root={snapshot.repositoryFolder} value={mentions}>
-        <TouchScreen>
-          <div className={styles.phone} {...drops.handlers}>
-            {body}
-          </div>
-        </TouchScreen>
-      </MentionsProvider>
-    </LinksProvider>
+    </ChatClock.Provider>
   )
 }
 

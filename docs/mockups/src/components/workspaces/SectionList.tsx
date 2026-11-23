@@ -1,15 +1,19 @@
 import { Fragment } from 'react'
-import { ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
+import { defined } from '../../defined'
 import type { Membership } from '../../fixtures/members'
-import { IconButton } from '../common/actions'
-import { classes } from '../common/classes'
-import { Menu } from '../common/Menu'
-import { ArchivedGroup } from './ArchivedGroup'
+import { iconButton } from '../../entries/components/common/actions.mockup'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { menu } from '../../entries/components/common/Menu.mockup'
+import { instanceKey } from '../../instanceKey'
+import { archivedGroup } from '../../entries/components/workspaces/ArchivedGroup.mockup'
+import type { DrawnRow } from './ArchivedGroup'
 import { sectionMenu, type SectionPlace } from './menus'
 import { mayArchiveWorkspace } from './permissions'
 import { RowDrop } from './RowDrop'
 import { rowControls, type RowContext, type RowFocus } from './rowControls'
-import { SectionDrop } from './SectionDrop'
+import type { RowControls } from './RowMenu'
+import { sectionDrop } from '../../entries/components/workspaces/SectionDrop.mockup'
 import type {
   ListDrag,
   ListMenu,
@@ -17,8 +21,8 @@ import type {
   WorkspaceRow,
 } from './sections'
 import { isNested, treeOf } from './trees'
-import { WorkspaceRowView } from './WorkspaceRow'
-import styles from './SectionList.module.css'
+import { workspaceRow } from '../../entries/components/workspaces/WorkspaceRow.mockup'
+import styles from '../../../../../src/ui/components/workspaces/SectionList.module.css'
 
 type Variant = 'sidebar' | 'page'
 
@@ -61,24 +65,38 @@ function SectionHeader(props: {
       </h3>
       {props.readOnly ? null : (
         <span className={classes(styles.more, props.open && styles.moreOpen)}>
-          <IconButton
+          <iconButton.Component
             expanded={props.open}
-            icon={MoreHorizontal}
+            icon="more-horizontal"
             label={`More for ${section.name}`}
             menu
+            moklyInstance={`more-${section.key}`}
             quiet
           />
         </span>
       )}
       {props.open && props.menuStyle === 'anchored' ? (
-        <Menu
+        <menu.Component
           entries={sectionMenu(props.place)}
           label={section.name}
+          moklyInstance="section-menu"
           placement="below-end"
         />
       ) : null}
     </div>
   )
+}
+
+/** The archived row that the view draws, if any, with what it draws. */
+function drawnOf(
+  rows: readonly WorkspaceRow[],
+  controlsOf: (row: WorkspaceRow) => RowControls | undefined,
+): DrawnRow | undefined {
+  for (const row of rows) {
+    const controls = controlsOf(row)
+    if (controls) return { workspace: row.workspace.key, controls }
+  }
+  return undefined
 }
 
 /**
@@ -127,7 +145,7 @@ export function SectionList(props: {
   const rest = props.sections.filter((item) => item !== liftedSection)
   const sectionLine = (index: number) =>
     liftedSection && sectionDrag?.index === index ? (
-      <SectionDrop item={liftedSection} place={index + 1} />
+      <sectionDrop.Component item={liftedSection} place={index + 1} />
     ) : null
   const context: RowContext = {
     viewer,
@@ -183,19 +201,20 @@ export function SectionList(props: {
                     <Fragment key={row.workspace.key}>
                       {row === before ? drop : null}
                       <li>
-                        <WorkspaceRowView
+                        <workspaceRow.Component
                           archivable={
                             !props.readOnly &&
                             mayArchiveWorkspace(viewer, row.workspace.owner)
                           }
-                          controls={controlsOf(row)}
-                          drag={
-                            moving.has(row.workspace.key)
-                              ? 'placeholder'
-                              : undefined
-                          }
+                          moklyInstance={instanceKey(row.workspace.key)}
                           row={row}
                           variant={props.variant}
+                          {...defined({
+                            controls: controlsOf(row),
+                            drag: moving.has(row.workspace.key)
+                              ? 'placeholder'
+                              : undefined,
+                          })}
                         />
                       </li>
                     </Fragment>
@@ -214,12 +233,12 @@ export function SectionList(props: {
       })}
       {sectionLine(rest.length)}
       {props.archived ? (
-        <ArchivedGroup
-          controlsOf={controlsOf}
+        <archivedGroup.Component
           open={!props.archivedCollapsed}
           readOnly={props.readOnly ?? false}
           rows={props.archived}
           variant={props.variant}
+          {...defined({ drawn: drawnOf(props.archived, controlsOf) })}
         />
       ) : null}
     </div>

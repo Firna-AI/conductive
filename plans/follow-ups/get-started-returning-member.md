@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-08, split off from finding 14 of PR #52, branch `conductor/boat-native-remote-workspaces-milestone-15o`, round 2, option D of its check. The check's second new problem joins it. An options check on the same day added G to J and changed the recommendation from F to H. Its report is in `.context/options-check/report.md`.
-- **Location:** the Get started section of `docs/protocol/orgs-and-members.md`, the shared words in `docs/mockups/src/screens/getStartedCopy.ts`, and the org step in `src/shell/onboarding/OrgStep.tsx`.
+- **Location:** the Get started section of `docs/protocol/orgs-and-members.md`, the shared words in `src/ui/screens/getStartedCopy.ts`, and the org step in `src/shell/onboarding/OrgStep.tsx`.
 - **Reason:** each option adds a requirement to a protocol doc, so the user must decide.
 
 - **Terms:**

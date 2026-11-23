@@ -33,7 +33,7 @@ mount the chat.
   [Workspace and session names](../../docs/protocol/agents-and-sessions.md#workspace-and-session-names)
   says. "New session" names only the action of +: its label, the heading
   of the empty chat, and the spoken name of the icon that marks each model
-  of the other agent in the model picker.
+  and each favourite of the other agent in the model picker.
 - Each tab shows the `title` of its session record. The backend provides
   the titles that the mockups show. The title from the first message names
   the workspace and its first session, as
@@ -87,7 +87,13 @@ mount the chat.
   tree: the `WorkspaceFiles` of the Files screens fits it. `openFile`
   opens a file as a press in All files does, `showFolder` shows All files
   with a folder open, and `href` gives the address of the page of a chip.
-  Without `mentions`, the composer has no list. A message then shows each
+  `skills` is a store of the latest skill lists of the workspace, for the
+  list of `/` and the skill chips. Its snapshot is `MentionSkills` of
+  `mentions/mention-skills.ts`: loading, unavailable, or the list of each
+  agent. The shell gives `WorkspaceSkills`, which follows the
+  `skills.updated` events of the workspace stream.
+  Without `mentions`, the composer has no list of `@` and no list of `/`,
+  and a message shows each skill text as text. A message then shows each
   mention of a file or a folder of the workspace as text, as
   [Chips of files and folders](../../docs/protocol/file-mentions.md#chips-of-files-and-folders)
   says. The chip of each attached file of the message still shows, but it
@@ -123,7 +129,9 @@ mount the chat.
   archived or shown read-only by the app, it changes the view in the
   browser only, and sends no write.
 - `host` takes the start steps and the sandbox bar that the app draws, as
-  `ChatHost` in `components/SessionChat.tsx` says. The chat places them.
+  `ChatHost` in `components/session-parts.tsx` says. The chat places them.
+  The bar takes the place of the composer of a tab, and of the follow-up
+  field of the popover of an explanation.
   `keepsComposer` keeps the composer under the bar, as after a failed first
   start. Without a host, the chat draws both from its own record of the
   workspace, with the message that the workspace saved for a failed start.
@@ -131,7 +139,14 @@ mount the chat.
   `ComposerTool` in `components/ComposerTools.tsx` says. A computer shows
   the icon of each tool after the attach button, and a phone holds Attach
   files and the tools in the menu of one + button. Without tools, the bar
-  keeps its attach button on a phone too.
+  keeps its attach button on a phone too. `host.notice` gives a notice of
+  the app over the composer, such as a grant of the Mac that did not start
+  after a create. A read-only chat shows none.
+  `host.github` gives the branch of the GitHub state that the app shows,
+  with its optional label. The New session text takes that label only when
+  that GitHub branch equals the workspace branch of the chat's own record.
+  Otherwise it names the real workspace branch. The workspace screen gives
+  the banner of its ready GitHub state.
 - `readOnly` says that the workspace takes no write, such as while its org
   is suspended. The app gives `WorkspaceContext.readOnly`. The chat then
   shows its history, as an archived workspace does, and the host's bar
@@ -152,14 +167,21 @@ mount the chat.
   the text of a copy that the clipboard refused for one minute, as
   `copyTranscript` in `transcript-copy.ts` says. Without it, the chat uses
   `browserCopy`: the clipboard of the browser, `Date.now`, and its timers.
+- `clock` gives the time of the durations and the relative times, such as
+  `AppServices.now` in the app. Each live time, such as the time of a
+  running turn, moves on each second while it shows, in each chat that
+  shows it, such as the popover of an explanation. Without it, the chat
+  reads `Date.now`.
 - The chat shows the result of a copy in a toast of `@firna/ui`: through
   the `ToastProvider` of the host, such as the one of the app's
   `ThemeRoot`, else through its own, at the bottom right of the window.
 - Render the chat inside the Firna theme provider and the Graphite token CSS
-  of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
+  of `src/ui/theme.ts`, as `dev/main.tsx` does.
 - The chat sets no CSS position, except on the message box of a composer,
-  so the list of `@` lies just above the box. A dialog or a sheet covers
-  the nearest positioned frame: the app frame. The lifted tab of a drag,
+  so the list of `@` lies just above the box, and on the text of a message
+  that Explain reads, which holds the states of its marks and Explain by a
+  selection. A dialog, a sheet, and the popover of an explanation cover or
+  lie in the nearest positioned frame: the app frame. The lifted tab of a drag,
   and the tab menu on desktop, draw on `document.body` with a fixed
   position, because the row clips what it holds. The model menu, the
   session history on desktop, and the menu of Allow open beside their
@@ -171,9 +193,10 @@ mount the chat.
   the open layers of the app shell, from `../shell/ui/layers.ts`. So the
   key of the command palette closes an open menu, and does nothing while
   a dialog or a sheet is open. Outside the app, nothing notes them.
-- The tab row and the composer offer their commands to the keys of the
-  app through the [shortcut layer](../shell/shortcuts/README.md) of the
-  shell, and their controls show the keys in their tooltips. Outside the
+- The tab row, the composer, Explain, and the follow-up field of a popover
+  offer their commands to the keys of the app through the
+  [shortcut layer](../shell/shortcuts/README.md) of the shell, and their
+  controls show the keys in their tooltips. Outside the
   app, nothing offers them, and the controls show no key.
 - The Mac app shows two more parts of Mac commands outside the chat:
   `ThisMacSection` and `AllowAllBar`. [The Mac commands](device/README.md)

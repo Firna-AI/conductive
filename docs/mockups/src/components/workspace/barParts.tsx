@@ -3,11 +3,11 @@ import { useSharedUiTheme } from '@firna/ui/theme'
 import { ArrowRight, ArrowUpRight, GitBranch } from 'lucide-react'
 import { pullRequest } from '../../fixtures/pullRequests'
 import { baseBranchOf, type Workspace } from '../../fixtures/workspaces'
-import { GitHubMark } from '../common/GitHubMark'
+import { githubMark } from '../../entries/components/common/GitHubMark.mockup'
 import { useOutsideHref } from '../common/ScreenLink'
 import { useShortcutTip } from '../common/ShortcutTip'
-import { useControlSizes } from '../common/touch'
-import { barLabels } from './barCopy'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import { barLabels } from '../../../../../src/ui/components/workspace/barCopy'
 import type { PrStatus } from './prStatus'
 import styles from './PullRequestBar.module.css'
 
@@ -32,7 +32,7 @@ export function GitHubLink(props: { href: string; label: string }) {
       target="_blank"
       title={tip ?? props.label}
     >
-      <GitHubMark className={styles.mark} size={13} />
+      <githubMark.Component className={styles.mark} size={13} />
       <span className={styles.actionLabel}>{props.label}</span>
       <ArrowUpRight aria-hidden className={styles.arrow} size={13} />
     </a>

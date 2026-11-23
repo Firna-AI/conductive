@@ -7,7 +7,9 @@ automation runs. It also gives the mark of an agent.
 [The workspace](design-workspace.md) gives the label of a workspace number
 with Copy link.
 
-- `WorkspaceMark` in `src/components/workspaces/` draws the list mark of a
+- `WorkspaceMark` in
+  [`src/ui/components/workspaces/`](../../src/ui/components/workspaces/)
+  draws the list mark of a
   workspace, which the list, the rows of the command palette, and the
   workspace and session chips show. It is a 3 × 3 dot-matrix square in one colour for
   the GitHub state of the pull request, in the tone of the pull request
@@ -27,13 +29,15 @@ with Copy link.
   `listMarkLabel` in `status.ts` beside it gives the words that screen
   readers hear, such as "Checks failed, Working". The mark imports no
   fixture value, so the app uses it too.
-  - `WorkspaceName` in `src/components/workspaces/` draws the text beside
+  - `WorkspaceName` in
+    [`src/ui/components/workspaces/`](../../src/ui/components/workspaces/)
+    draws the text beside
     the list mark: the name of a workspace, or the title of a session in a
     session chip. It gives that text the emphasis of the state of the
     workspace, such as bold text for unread output. It reads that emphasis
     from `activityPresentation` in `status.ts`. The list, the rows of the
     command palette, and the
-    [workspace and session chips](design-chat.md#workspace-session-and-file-chips)
+    [workspace and session chips](design-chips.md)
     use it. So one part chooses the emphasis in each of these places.
   - Each place gives its own class for each emphasis that it shows, so it
     keeps its own look. Each place must give the class of unread output,

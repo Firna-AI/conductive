@@ -1,27 +1,8 @@
-import type { AgentModel } from '../../shared/generated/AgentModel'
 import { ExternalLink } from 'lucide-react'
-import type { Agent } from '../../shared/generated/Agent'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
-import type { Effort } from '../../shared/generated/Effort'
-import { effortLabels, findModel } from '../../shared/agents'
-import { effortFor, fastFor } from '../state/format'
 import type { ShortcutHint } from '../../shell/shortcuts/shortcut-hints'
-import type { MenuEntry } from '../ui/Menu'
-
-const agentOrder: readonly Agent[] = ['claude', 'codex']
-const effortOrder = Object.keys(effortLabels)
-const divider: MenuEntry = { kind: 'divider' }
-
-/** The efforts of the chosen model, in the order of the menu. */
-export function effortsOf(
-  models: readonly AgentModel[],
-  choice: AgentChoice,
-): Effort[] {
-  const efforts = findModel(models, choice)?.efforts ?? [choice.effort]
-  return [...efforts].sort(
-    (left, right) => effortOrder.indexOf(left) - effortOrder.indexOf(right),
-  )
-}
+import type { MenuEntry, MenuRow } from '../ui/Menu'
+import type { ModelMenuRow, ModelRow } from './model-rows'
 
 /** The Fast row of the menu: what a change of it does, and its key. */
 export interface FastRow {
@@ -32,68 +13,60 @@ export interface FastRow {
 }
 
 /**
- * The menu of the model picker: the models of each agent as a group, with
- * no brand name, then the effort levels of the chosen model, then the Fast
- * switch of a model that the model list marks as fast. The menu marks the
- * current model and effort. When the session has messages, each model of
- * the other agent opens a new session, and the draft moves there
- * (decision 51). The external link icon marks each of those models, and a
- * screen reader says "New session" for it. A model of the session's own
- * agent stays in it. A model keeps fast mode only when it has fast mode.
+ * The entry of one row. A pick of a choice sends its choice through
+ * `choose`. A choice that opens a new session ends with the external link
+ * icon, and a screen reader says "New session" for it.
+ */
+function rowEntry(
+  row: ModelRow,
+  choose: (choice: AgentChoice) => void,
+  fast: FastRow,
+): MenuRow {
+  switch (row.kind) {
+    case 'choice':
+      return {
+        kind: 'item',
+        key: row.key,
+        label: row.label,
+        muted: row.muted,
+        trailingIcon: row.opensSession ? ExternalLink : undefined,
+        trailingLabel: row.opensSession ? 'New session' : undefined,
+        checked: row.checked,
+        onSelect: () => choose(row.choice),
+      }
+    case 'fast':
+      return {
+        kind: 'switch',
+        key: 'fast',
+        label: row.label,
+        on: row.on,
+        onToggle: fast.toggle,
+        shortcut: fast.hint,
+      }
+    case 'label':
+    case 'divider':
+      return row
+  }
+}
+
+/**
+ * The entries of the menu of the model picker of a session, from the rows
+ * of `modelMenuRows`. All models and Effort open their rows in a submenu.
+ * The Fast row changes fast mode through `fast`, and the menu stays open.
  */
 export function modelMenu(
-  models: readonly AgentModel[],
-  choice: AgentChoice,
-  sessionAgent: Agent | undefined,
+  rows: readonly ModelMenuRow[],
   choose: (choice: AgentChoice) => void,
   fast: FastRow,
 ): MenuEntry[] {
-  const entries: MenuEntry[] = []
-  const groups = agentOrder
-    .map((agent) => models.filter((model) => model.agent === agent))
-    .filter((group) => group.length > 0)
-  groups.forEach((group, index) => {
-    const { agent } = group[0]
-    const opensSession = sessionAgent !== undefined && agent !== sessionAgent
-    if (index > 0) entries.push(divider)
-    for (const model of group) {
-      entries.push({
-        kind: 'item',
-        key: `${agent}:${model.model}`,
-        label: model.label,
-        trailingIcon: opensSession ? ExternalLink : undefined,
-        trailingLabel: opensSession ? 'New session' : undefined,
-        checked: agent === choice.agent && model.model === choice.model,
-        onSelect: () =>
-          choose({
-            agent,
-            model: model.model,
-            effort: effortFor(model, choice.effort),
-            fast: fastFor(model, choice.fast),
-          }),
-      })
+  return rows.map((row): MenuEntry => {
+    if (row.kind !== 'submenu') return rowEntry(row, choose, fast)
+    return {
+      kind: 'submenu',
+      key: row.key,
+      label: row.label,
+      muted: row.muted,
+      entries: row.rows.map((item) => rowEntry(item, choose, fast)),
     }
   })
-  if (entries.length > 0) entries.push(divider)
-  entries.push({ kind: 'label', label: 'Effort' })
-  for (const effort of effortsOf(models, choice)) {
-    entries.push({
-      kind: 'item',
-      key: `effort:${effort}`,
-      label: effortLabels[effort],
-      checked: effort === choice.effort,
-      onSelect: () => choose({ ...choice, effort }),
-    })
-  }
-  if (findModel(models, choice)?.fast === true) {
-    entries.push(divider, {
-      kind: 'switch',
-      key: 'fast',
-      label: 'Fast',
-      on: choice.fast,
-      onToggle: fast.toggle,
-      shortcut: fast.hint,
-    })
-  }
-  return entries
 }

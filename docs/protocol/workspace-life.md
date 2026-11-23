@@ -30,7 +30,7 @@ keeps them after the merge.
 - The steps reach every open tab of the workspace as they happen.
 - The steps are product steps, not the raw output of the provider.
 - A new workspace shows steps such as the start from the org image, the
-  fetch of the default branch, and the creation of the branch.
+  fetch of its start branch, and the creation of the branch.
 - The run of a pull request fetches that pull request, or its base branch
   after a merge.
   [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
@@ -87,7 +87,9 @@ keeps them after the merge.
   output, ready, starting, stopped, or error.
 - Needs input shows while the agent waits for the user, such as for help,
   an approval, or an answer (decision 68). The workspace header and its
-  row in the list show it, in the web app and in the Mac app.
+  row in the list show it, in the web app and in the Mac app. Starting
+  shows over needs input, as
+  [Secret requests](secret-requests.md#the-request) says.
 - The workspace header and the operator section give each state its own
   mark shape, so no state there depends on colour alone. Reason: they also
   show the state of the cloud computer. So the header can show ready beside
@@ -109,7 +111,8 @@ keeps them after the merge.
 - [Restart the software](restart-the-software.md) holds the requirements
   of Restart in the workspace header: the states that offer it, what it
   restarts, the download of the newest release, who may restart, and a
-  failed restart.
+  failed restart. It also holds the automatic restart, which the Worker
+  starts by itself when the agent runner stays away while a message waits.
 
 ## Archive
 
@@ -148,6 +151,11 @@ keeps them after the merge.
 - The bar says that the cloud computer is deleted only after the delete.
   Before that, the bar of a removed workspace says that the cloud computer
   is being deleted.
+- An archived workspace can have no kept sandbox while a create or a
+  delete of its cloud computer is still open. A lost reply to the create
+  can cause this. Until Restore ends, its bar then promises only its chat
+  history. Reason: that cloud computer can still exist, but Restore cannot
+  bring it back.
 - A sandbox that the app never deletes was rejected, because each archived
   workspace then uses about two starts a month for its restarts.
 - A saved snapshot at Archive was rejected, because the stopped sandbox
@@ -279,8 +287,10 @@ keeps them after the merge.
 ## Continue
 
 - After the merge of its pull request, Continue moves a workspace to a new
-  branch from the latest default branch. The workspace keeps its sandbox
-  and its sessions (decision 223).
+  branch. The workspace keeps its sandbox and its sessions (decision 223).
+- The new branch starts from the branch that the pull request merged into
+  (decision 300). When GitHub no longer has that branch, it starts from the
+  default branch.
 - [Continue](continue.md) holds its requirements: who may continue, when
   Continue runs, its check for local work, the new branch, and the
   sessions after it.

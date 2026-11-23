@@ -82,7 +82,8 @@ function routeKey(method: string, path: string): string {
 
 /**
  * Fetch-compatible, in-memory server for development and tests.
- * Org moves and terminal writes keep their state. Other writes return recorded replies.
+ * Org moves, terminal writes, and Mac permission starts keep their state.
+ * Other writes return recorded replies.
  * Override a reply with json(), empty(), or response() for the next screen state.
  * This module is opt-in. The production Worker never imports it.
  */

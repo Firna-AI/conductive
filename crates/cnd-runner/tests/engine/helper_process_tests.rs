@@ -9,6 +9,7 @@ use cnd_runner::helper::boundary::{Helper, HelperEvents, HelperPorts, Startup};
 use cnd_runner::helper::driver::HelperConnection;
 use cnd_runner::helper::process::NodeHelpers;
 use cnd_runner::helper::startup::RunnerStartup;
+use cnd_runner::runtime::CommandHandler;
 use cnd_runner_interface::provider_events::ProviderEvent;
 use cnd_runner_interface::sdk_helper::{HelperModelResult, HelperOutput};
 use cnd_runner_interface::sdk_helper_options::{HelperOptions, ProviderInput};
@@ -164,23 +165,45 @@ async fn closes_a_pending_start_and_fails_all_requests_after_exit_or_malformed_o
 }
 
 #[tokio::test]
-async fn removes_only_stale_credentials_before_credential_free_warming() -> TestResult {
+async fn removes_abandoned_claude_profiles_and_preserves_project_credentials() -> TestResult {
     let home = tempfile::tempdir()?;
-    let claude = home.path().join(".conductive/anthropic/credentials");
+    let claude = home.path().join(".conductive/anthropic");
+    let project = home.path().join(".anthropic/credentials");
     let codex = home.path().join(".conductive/codex/session-homes/session");
-    std::fs::create_dir_all(&claude)?;
+    for directory in [
+        "credentials",
+        "configs",
+        "credentials.lock",
+        "credentials/old-process/credentials",
+        "credentials/old-process/configs",
+        "credentials/old-process/credentials.lock",
+    ] {
+        std::fs::create_dir_all(claude.join(directory))?;
+    }
+    std::fs::create_dir_all(&project)?;
     std::fs::create_dir_all(&codex)?;
-    std::fs::write(claude.join("old.json"), "secret")?;
+    std::fs::write(claude.join("credentials/old.json"), "secret")?;
+    std::fs::write(claude.join("configs/old.json"), "old endpoint")?;
+    std::fs::write(
+        claude.join("credentials/old-process/credentials/old.json"),
+        "secret",
+    )?;
+    std::fs::write(claude.join("credentials/old-process/other-state"), "stale")?;
+    std::fs::write(claude.join("other-state"), "stale")?;
+    std::fs::write(project.join("default.json"), "project credential")?;
     std::fs::write(codex.join("auth.json"), "secret")?;
     std::fs::write(codex.join(".auth-old"), "secret")?;
     std::fs::write(codex.join("config.toml"), "keep")?;
     let startup: Arc<dyn Startup> = Arc::new(RunnerStartup {
         home: home.path().to_owned(),
-        helpers: helpers(),
         executable: PathBuf::from("/unused"),
     });
     startup.prepare().await?;
     assert_eq!(std::fs::read_dir(claude)?.count(), 0);
+    assert_eq!(
+        std::fs::read_to_string(project.join("default.json"))?,
+        "project credential"
+    );
     assert!(!codex.join("auth.json").exists());
     assert!(!codex.join(".auth-old").exists());
     assert_eq!(std::fs::read_to_string(codex.join("config.toml"))?, "keep");
@@ -190,13 +213,21 @@ async fn removes_only_stale_credentials_before_credential_free_warming() -> Test
 #[tokio::test]
 async fn runs_a_complete_turn_through_real_helper_pipes_and_saves_only_filtered_events()
 -> TestResult {
+    let home = tempfile::tempdir()?;
+    let helpers = helpers();
+    let startup = RunnerStartup {
+        home: home.path().to_owned(),
+        executable: PathBuf::from("/unused"),
+    };
+    startup.prepare().await?;
     let h = Fixture::compose(
         Arc::new(Memory::default()),
         Arc::new(Helpers::default()),
         None,
-        Some(helpers()),
+        Some(helpers),
     )
     .await?;
+    h.engine.start().await?;
     let mut command = turn("session", "first")?;
     if let cnd_runner_interface::runner_commands::RunnerCommand::RunnerTurn(
         cnd_runner_interface::runner_commands::RunnerTurn::Turn { message, .. },

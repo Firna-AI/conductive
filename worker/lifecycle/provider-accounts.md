@@ -18,10 +18,15 @@ cleanup records, and image pins.
 - A create takes the account of the published org image that it starts
   from, as [Org images](#org-images) says.
 - A resume takes the account of the workspace record.
-- A new build takes the fixed account of its org. Its job row keeps
+- An ordinary new build takes the current account of its org. Its job row keeps
   the account of the previous org image, which `BuildJob` reads as
   `previousProviderAccount`. A new build starts from the image of its own
-  account, so the two can differ only in an older saved job.
+  account, so the two normally agree. A switch build uses the target account and no previous image.
+- A failed first-create retry reads the current org account during its
+  serialized pin. It captures that account's published image and updates
+  an empty workspace record in the same batch. Cleanup of its old computer
+  keeps the account of the cleanup record. A normal resume does not use
+  this retry pin.
 - A saved start job keeps its account. `readStartJob` reads an older job
   without one as `DEFAULT_PROVIDER_ACCOUNT`.
 - A Continue job takes the account of the workspace record when Continue
@@ -113,6 +118,13 @@ A confirmed missing archived disk uses that batch too.
   start job.
 - [`computer-ledger.ts`](computer-ledger.ts): allocation records, returned IDs,
   confirmed deletions, and the live computers that still need cleanup.
+- [`archived-computer.ts`](../data/archived-computer.ts): `archivedComputerColumn`
+  gives each workspace read the state of the cloud computer of an archived
+  workspace. A computer ID on the workspace row, or a live entry that was not
+  refused, gives `may-exist`. Otherwise an entry with an ID and a deletion
+  mark gives `deleted`. Otherwise the state is `unknown`. Entries in every
+  account count. `archivedComputerFields` builds `Workspace.archivedComputer`
+  with the original Restore cutoff.
 - [`computer-stop-task.ts`](computer-stop-task.ts): persistent org Stop tasks.
   The task saves the account and ID of each computer, and its alarm, before the first provider request.
   Its native RPC and alarm share the lifecycle queue.
@@ -129,8 +141,8 @@ vars, and the revision, which all accounts of the org share.
 - [`org-image-data.ts`](org-image-data.ts) gives `OrgImage`, `readOrgImage`,
   and `imageIsPublished`.
   [`org-image-refresh-data.ts`](org-image-refresh-data.ts) holds the push
-  refresh and repository-change queries for the fixed account of each org.
-- [`org-provider-account.ts`](../data/org-provider-account.ts) reads the fixed
+  refresh and repository-change queries for the current account of each org.
+- [`org-provider-account.ts`](../data/org-provider-account.ts) reads the current
   account from `orgs.provider_account`. New creates, builds, refreshes,
   settings reads, and repository lists use that account. Low-level image
   readers require an explicit account. No code picks the newest image
@@ -140,22 +152,25 @@ vars, and the revision, which all accounts of the org share.
   record of the account of its build.
 - The push refresh limit, the pending push refresh, and the daily deadline
   belong to the record of one account. The Cron repair advances the record
-  of the fixed org account. A push refresh finds each matching org through
+  of the current org account. A push refresh finds each matching org through
   that account, including orgs on different accounts.
-- A repository-change wake finds old values in the fixed account's image.
+- A repository-change wake finds old values in the current account's image.
   [`scheduleIdleImage`](image-schedule.ts) reads that account and schedules
   the coordinator from its saved job and refresh deadlines.
 - Build cleanup keeps an old snapshot while any `org_images` record names
   the same account and name, and while a lease holds it.
-- One org still runs one build at a time, with one image coordinator. The
+- One org runs one job at a time, with one image coordinator. A member build can also wait for a hidden switch build. The
   coordinator reads an older saved state without an account as `boat`.
 
 ## Org assignment
 
 The [assignment service](../provider-assignment/README.md) selects an account
 before Create org writes its records and starts its first build.
-Existing orgs receive `boat`. An org keeps its account through Delete and
-Restore. No route changes that account.
+Existing orgs receive `boat`. An operator switch changes the account in the same D1 batch that publishes
+its image. An org with no good image changes account without a build once
+no job runs. Existing workspaces keep their stored accounts. Delete and
+Restore do not move them. [Provider switches](provider-switches.md) gives
+the lifecycle and the member build wait.
 
 The [operator provider API](../operator/providers.md) reads and changes the
 weights for future orgs. Its account list contains only configured IDs.

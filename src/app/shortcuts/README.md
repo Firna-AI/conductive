@@ -15,11 +15,22 @@ The model reads no page elements and runs no command.
 For a command decision, the caller closes a willing menu first.
 If the menu stays open, the caller leaves the key alone.
 Otherwise, it calls `preventDefault` and `stopPropagation` before running
-the command. A stop decision closes a willing menu and consumes the press
-without running a command. A pass decision leaves the press alone.
-A repeat decision comes for each repeat of a held key whose first press
-would run a command now. The caller calls `preventDefault` and
-`stopPropagation`, and runs nothing, so a held key runs its command once.
+the command. A stop decision consumes the press without running a command.
+When its `closeMenu` is true, the caller closes a willing menu first.
+A pass decision leaves the press alone.
+
+A held key runs its command once.
+`AppServices.onKey` sets `firstPressConsumed` on a repeat when the caller
+consumed the first press of the same physical key, for a command or a stop.
+The model gives such a repeat a stop decision with `closeMenu` false,
+before every other rule.
+So the repeat goes no further, also after the first press opened a dialog
+or moved the focus to a field.
+A repeat decision comes for each other repeat of a held key whose first
+press would run a command now. The caller calls `preventDefault` and
+`stopPropagation`, and runs nothing.
+So a repeat of a key that the recorder has just saved stops too.
+Each other repeat gets the decision that its first press would get now.
 
 The [shortcut layer](../../shell/shortcuts/README.md) of the shell calls
 `decideShortcut` for each key of the page. The palette key is one of its
@@ -28,6 +39,14 @@ commands.
 The account stores canonical modifier names, such as `Alt+Meta+N`.
 The key formatter gives Mac symbols or Windows and Linux key names.
 It shows a keypad digit as `Num 8`, so that it differs from the top-row 8.
+It gives one token for each modifier, then one token for the key.
+So on Windows and Linux, a saved `Ctrl++` gives the tokens Ctrl and +.
+
+Draw the key chips and the spoken name of a key from its tokens.
+Join the tokens only for text, such as a tooltip.
+Do not split joined text back into keys, because + is also the separator
+on Windows and Linux.
+
 Each press has one canonical key text for recording and matching.
 A keypad key uses the key that it types, except a keypad digit, which keeps
 its keypad name. With Num Lock off, a keypad navigation key uses its typed
@@ -60,7 +79,8 @@ check unknown input before the app or Worker uses it.
 - [commands.ts](commands.ts): `shortcutCommands` supplies command groups,
   scopes, labels, and search words. Existing palette commands share their text.
   Commands with workspace scope include Copy link, pull request actions,
-  and transcript copies. Agent actions and transcript copies use the shared
+  and transcript copies. Explain the selection has the selection scope: it
+  runs only while Explain shows. Agent actions and transcript copies use the shared
   control labels.
 - [defaults.ts](defaults.ts): `defaultShortcutKeys` supplies both keyboards.
   `commandInHost` keeps Mac window commands in the Mac app.
@@ -72,7 +92,9 @@ check unknown input before the app or Worker uses it.
 - [browser-keys.ts](browser-keys.ts): `shortcutKeyAvailability` separates
   kept keys from keys that the app leaves to the browser.
 - [keys.ts](keys.ts): `matchesShortcut` and `shortcutFromPress` share the
-  character and physical key rules. The formatters supply visible and ARIA text.
+  character and physical key rules. `shortcutTokens` gives the visible
+  tokens of a key. `formatShortcut` joins them into text. `ariaShortcut`
+  gives the ARIA text.
 - [layout-switch.ts](layout-switch.ts): `LayoutSwitchKeys` tracks switch
   codes and their modifiers. `null` means no held switch. An empty list
   means a held switch that took no modifier.
@@ -106,8 +128,12 @@ const press = {
 Pass this press to `shortcutFromPress`, as the shortcut editor does.
 The model restores a recorded key only when it then has Ctrl, Alt, or Meta.
 Other recorded keys keep their normal character and modifiers.
-The optional field on `ShortcutPress` lets callers without a switch keep
-their ordinary character rules. The window listener always supplies the field.
+The optional `layoutModifiers` field on `ShortcutPress` lets callers
+without a switch keep their ordinary character rules.
+`firstPressConsumed` is optional on `ShortcutPress` too, because the
+matchers also read native key events, such as those of the workspace rows
+and the dividers. A repeat without it counts as a repeat whose first press
+was not consumed. The window listener always supplies both fields.
 
 ## Checks
 

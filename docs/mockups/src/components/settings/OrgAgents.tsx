@@ -1,25 +1,26 @@
 import { useId } from 'react'
 import { agentKeys, agents, type AgentKey } from '../../fixtures/agents'
 import {
-  loginLabels,
   shareNotSavedCause,
   type AgentLogin,
   type AgentLogins,
 } from '../../fixtures/logins'
-import { noop } from '../../noop'
-import { ActionButton } from '../common/actions'
-import { classes } from '../common/classes'
+import { plainData } from '../../defined'
+import { endpointDetails } from '../../entries/components/settings/EndpointDetails.mockup'
+import { noop } from '../../../../../src/ui/noop'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
+import { loginLabels } from '../../../../../src/ui/components/settings/agentConnectCopy'
 import { AgentConnectForm } from './AgentConnectForm'
 import { connected, type OpenAgentForm } from './AgentList'
-import { EndpointDetails } from './EndpointDetails'
-import type { ReadOnlyCause } from './OrgSections'
-import { orgAgentsCopy } from './orgAgentsCopy'
-import { Section } from './Section'
-import { SettingSwitch } from './SettingSwitch'
-import listStyles from './AccountSections.module.css'
-import lineStyles from './OrgLoginLines.module.css'
-import styles from './OrgAgents.module.css'
+import type { ReadOnlyCause } from '../../../../../src/ui/components/settings/readOnlyCause'
+import { orgAgentsCopy } from '../../../../../src/ui/components/settings/orgAgentsCopy'
+import { Section } from '../../../../../src/ui/components/settings/Section'
+import { SettingSwitch } from '../../../../../src/ui/components/settings/SettingSwitch'
+import listStyles from '../../../../../src/ui/components/settings/AccountSections.module.css'
+import lineStyles from '../../../../../src/ui/components/settings/OrgLoginLines.module.css'
+import styles from '../../../../../src/ui/components/settings/OrgAgents.module.css'
 
 /**
  * The switch "Use for every member" of each org login: the agents whose
@@ -173,9 +174,10 @@ export function OrgAgentsTab(props: {
                 )}
               </div>
               {login?.kind === 'endpoint' ? (
-                <EndpointDetails
+                <endpointDetails.Component
                   agent={key}
-                  login={login}
+                  login={plainData(login)}
+                  moklyInstance={`endpoint-${key}`}
                   owner="org"
                   readOnly={readOnly}
                 />

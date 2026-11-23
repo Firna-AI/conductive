@@ -1,6 +1,8 @@
+import type { ArchivedComputerState } from '../../shared/generated/ArchivedComputerState'
 import type { Workspace } from '../../shared/generated/Workspace'
 import type { OrgSummary } from '../../shared/orgs'
 import type { AutomationRun } from '../../shared/automations'
+import { WORKSPACE_RESTORE_MS } from '../../shared/workspaces'
 import { fakeGitHubSummary } from '../../test-support/fake-api'
 import {
   FAKE_IDS,
@@ -51,22 +53,50 @@ function seedRuns(
 }
 
 /**
+ * The workspaces with `state` as the state of the cloud computer of each
+ * archived one, with the end of its 14 days, as the Worker sends it. With
+ * no state, they stay as they are, as the records of an older Worker.
+ */
+function withArchivedComputer(
+  workspaces: readonly Workspace[],
+  state: ArchivedComputerState | null,
+): readonly Workspace[] {
+  if (state === null) return workspaces
+  return workspaces.map((workspace) =>
+    workspace.state === 'archived' && workspace.archivedAt !== null
+      ? {
+          ...workspace,
+          archivedComputer: {
+            state,
+            restoreUntil: workspace.archivedAt + WORKSPACE_RESTORE_MS,
+          },
+        }
+      : workspace,
+  )
+}
+
+/**
  * Acme with the recorded sections, workspaces, settings, build, members,
  * and automations with their runs. A starting workspace has the recorded
  * resume step, and a workspace in the error state has the recorded start
  * error. `checkout-autocomplete` has the GitHub state of its recorded bar,
  * as the fake API gives it. With `subWorkspaces`, its list also has the
- * sub-workspaces of the mockups, in two trees in Checkout.
+ * sub-workspaces of the mockups, in two trees in Checkout. With
+ * `archivedComputer`, each archived workspace has that state of its cloud
+ * computer.
  */
 export function acme(
   summary: OrgSummary,
   core: CoreFixtures,
   options: DevOptions,
 ): OrgState {
-  const recorded = workspaceFixtures(
-    options.server.workspaceState,
-    fakeGitHubSummary(options.server),
-  ).workspaces.workspaces
+  const recorded = withArchivedComputer(
+    workspaceFixtures(
+      options.server.workspaceState,
+      fakeGitHubSummary(options.server),
+    ).workspaces.workspaces,
+    options.archivedComputer,
+  )
   const workspaces = options.server.subWorkspaces
     ? withSubWorkspaces(recorded)
     : recorded

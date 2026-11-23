@@ -2,6 +2,13 @@
 
 use std::time::Duration;
 
+/// Only a member can restart the limit of an existing wait.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum InputKind {
+    Member,
+    Notice,
+}
+
 #[derive(Default)]
 pub(super) struct Background {
     live: bool,
@@ -34,8 +41,8 @@ impl Background {
         }
         self.replied && idle && !self.live
     }
-    pub(super) fn input(&mut self, received_at: i64, limit: Duration) {
-        if self.waiting && self.deadline.is_some() {
+    pub(super) fn input(&mut self, kind: InputKind, received_at: i64, limit: Duration) {
+        if kind == InputKind::Member && self.waiting && self.deadline.is_some() {
             self.deadline = Some(received_at.saturating_add(limit.as_millis() as i64));
         }
         self.waiting = false;

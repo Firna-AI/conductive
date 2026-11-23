@@ -7,16 +7,16 @@ import {
   type Ref,
 } from 'react'
 import { CircleAlert, Info, TriangleAlert } from 'lucide-react'
-import { classes } from '../../../../docs/mockups/src/components/common/classes'
+import { classes } from '../../../ui/components/common/classes'
 import {
   KeyChips,
   spokenShortcut,
-} from '../../../../docs/mockups/src/components/common/KeyChips'
-import styles from '../../../../docs/mockups/src/components/settings/ShortcutsSections.module.css'
+} from '../../../ui/components/common/KeyChips'
+import styles from '../../../ui/components/settings/ShortcutsSections.module.css'
 import { useServices } from '../../../app/services'
 import {
-  formatShortcut,
   restoreLayoutModifiers,
+  shortcutTokens,
   type ShortcutPress,
 } from '../../../app/shortcuts/keys'
 import type { LayoutModifiers } from '../../../app/shortcuts/layout-switch'
@@ -60,10 +60,10 @@ export function spokenKey(
   key: ShortcutKeyText,
   keyboard: ShortcutKeyboard,
 ): string {
-  return spokenShortcut(formatShortcut(key, keyboard))
+  return spokenShortcut(shortcutTokens(key, keyboard))
 }
 
-/** A key as its keyboard prints it, in the key chips of the mockups. */
+/** A key as its keyboard prints it, in the shared `KeyChips`. */
 export function Keys(props: {
   shortcut: ShortcutKeyText
   keyboard: ShortcutKeyboard
@@ -72,7 +72,7 @@ export function Keys(props: {
   return (
     <KeyChips
       dimmed={props.dimmed}
-      shortcut={formatShortcut(props.shortcut, props.keyboard)}
+      shortcut={shortcutTokens(props.shortcut, props.keyboard)}
     />
   )
 }
@@ -96,20 +96,20 @@ export function KeyButton({
   /** The button, for the row that moves the focus to it after an edit. */
   ref: Ref<HTMLButtonElement>
 }) {
-  const text = formatShortcut(props.shortcut, props.keyboard)
+  const tokens = shortcutTokens(props.shortcut, props.keyboard)
   const kept = props.keptBy
     ? `, a key that ${props.keptBy} keeps in this tab`
     : ''
   return (
     <button
-      aria-label={`Change ${spokenKey(props.shortcut, props.keyboard)} for ${props.label}${kept}`}
+      aria-label={`Change ${spokenShortcut(tokens)} for ${props.label}${kept}`}
       className={styles.key}
       disabled={props.disabled}
       onClick={props.onPress}
       ref={ref}
       type="button"
     >
-      <KeyChips dimmed={props.keptBy !== undefined} shortcut={text} />
+      <KeyChips dimmed={props.keptBy !== undefined} shortcut={tokens} />
     </button>
   )
 }

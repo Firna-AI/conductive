@@ -1,21 +1,18 @@
 import { Input } from '@firna/ui/input'
 import { SegmentedControl, type SegmentOption } from '@firna/ui/segmented'
-import {
-  typedValue,
-  type SecretRunItem,
-  type ValueLifetime,
-} from '../../fixtures/secretRequests'
-import { noop } from '../../noop'
-import { classes } from '../common/classes'
-import { useControlSizes } from '../common/touch'
-import { saveNeedsName } from '../secrets/secretNameCopy'
+import { typedValue, type SecretRunItem } from '../../fixtures/secretRequests'
+import { type ValueLifetime } from '../../../../../src/ui/components/chat/secretGrant'
+import { noop } from '../../../../../src/ui/noop'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import { saveNeedsName } from '../../../../../src/ui/components/secrets/secretNameCopy'
 import {
   lifetimeHint,
   lifetimeLabels,
   storedAlso,
   valueLabel,
-} from './secretRunCopy'
-import styles from './SecretRequest.module.css'
+} from '../../../../../src/ui/components/chat/secretRunCopy'
+import styles from '../../../../../src/ui/components/chat/SecretRequest.module.css'
 
 /**
  * The choices of how long a value lasts, in their order. Save as secret is

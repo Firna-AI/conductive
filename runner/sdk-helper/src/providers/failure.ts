@@ -31,9 +31,29 @@ export function authenticationFailure(): Extract<
   }
 }
 
-/** Known causes get a short recovery action. Other causes keep their meaning. */
+/**
+ * Codex ends a usage limit message with the reset time, in the time zone of
+ * the sandbox and with no zone name. The runner shares that time zone.
+ */
+function resetTime(message: string): string {
+  const time = /try again at ([\w ,:]{1,40}?)\.?\s*$/i.exec(message)?.[1]
+  if (!time) return ''
+  // Node gives no IANA name for some TZ values, such as UTC+3.
+  const zone: unknown = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const label =
+    typeof zone === 'string' && zone && zone !== 'Etc/Unknown'
+      ? zone
+      : 'sandbox time'
+  return ` Try again at ${time} ${label}.`
+}
+
+/**
+ * Known causes get a short recovery action. Other causes keep their meaning.
+ * Only a Codex event gives the reset time of a usage limit.
+ */
 export function failureCause(
   value: unknown,
+  codex = false,
 ): Extract<ProviderEvent, { type: 'failed' }> {
   const message = errorText(value) ?? 'The agent request failed. Try again.'
   if (
@@ -51,8 +71,7 @@ export function failureCause(
     return {
       type: 'failed',
       code: 'agent_usage_limit',
-      message:
-        'The agent account reached its usage limit. Check your agent account.',
+      message: `The agent account reached its usage limit. Check your agent account.${codex ? resetTime(message) : ''}`,
     }
   }
   if (/429|rate.?limit|overloaded|capacity/i.test(message)) {

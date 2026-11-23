@@ -1,11 +1,10 @@
 import type { ReactElement, ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { Play, Power, Trash2 } from 'lucide-react'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { ActionButton } from '../components/common/actions'
+import { actionButton } from '../entries/components/common/actions.mockup'
 import type { Automation } from '../fixtures/automations'
 import type { AutomationAccess, SaveState } from './automationState'
-import styles from './AutomationScreen.module.css'
+import styles from '../../../../src/ui/screens/AutomationScreen.module.css'
 
 /** An action that opens a screen of the mockups, when they draw one. */
 function linked(button: ReactElement, to: string | undefined): ReactElement {
@@ -18,9 +17,13 @@ function linked(button: ReactElement, to: string | undefined): ReactElement {
 }
 
 const deleteButton = (
-  <ActionButton icon={Trash2} tone="danger">
+  <actionButton.Component
+    icon="trash-2"
+    moklyInstance="delete-automation"
+    tone="danger"
+  >
     Delete
-  </ActionButton>
+  </actionButton.Component>
 )
 
 /**
@@ -55,7 +58,9 @@ export function automationActions(props: {
       return (
         <>
           {props.automation.active ? (
-            <ActionButton icon={Power}>Turn off</ActionButton>
+            <actionButton.Component icon="power" moklyInstance="turn-off">
+              Turn off
+            </actionButton.Component>
           ) : null}
           {deleteButton}
         </>
@@ -63,15 +68,21 @@ export function automationActions(props: {
     case 'owner': {
       const changed = props.save === 'changed'
       const save = linked(
-        <ActionButton disabled={!changed} tone="primary">
+        <actionButton.Component
+          disabled={!changed}
+          moklyInstance="save-automation"
+          tone="primary"
+        >
           Save
-        </ActionButton>,
+        </actionButton.Component>,
         changed ? props.saveTo : undefined,
       )
       if (!props.automation.saved) return save
       const runNow = props.runNow
         ? linked(
-            <ActionButton icon={Play}>Run now</ActionButton>,
+            <actionButton.Component icon="play" moklyInstance="run-now">
+              Run now
+            </actionButton.Component>,
             props.runNowTo,
           )
         : null
@@ -97,9 +108,13 @@ export function PhoneDelete(props: { to?: string }) {
   return (
     <div className={styles.phoneDelete}>
       {linked(
-        <ActionButton icon={Trash2} tone="danger">
+        <actionButton.Component
+          icon="trash-2"
+          moklyInstance="delete-automation"
+          tone="danger"
+        >
           Delete automation
-        </ActionButton>,
+        </actionButton.Component>,
         props.to,
       )}
     </div>

@@ -33,6 +33,25 @@ it('lists each server of the report, then each port with a tab or a preview that
   })
 })
 
+it('leaves out each port that a shown service row lists, also a port of a tab, and keeps a port that no row lists', () => {
+  const state: PreviewsState = {
+    ...loaded,
+    ports: [
+      { port: 3000, name: 'next dev', folder: null },
+      { port: 4321, name: 'astro dev', folder: 'docs' },
+    ],
+  }
+  const visible = [preview('a', 3000, 1)]
+  const owned = new Set([3000, 6006])
+  expect(panelPortList(state, visible, [6006, 3000, 8080], owned)).toEqual({
+    kind: 'servers',
+    servers: [
+      { port: 4321, name: 'astro dev', folder: 'docs' },
+      { port: 8080, name: null, folder: null },
+    ],
+  })
+})
+
 it('shows the field alone without a report, and asks for a server with an empty one', () => {
   expect(panelPortList(loaded, [], [])).toEqual({ kind: 'field' })
   expect(panelPortList({ ...loaded, ports: [] }, [], [])).toEqual({

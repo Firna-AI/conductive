@@ -1,4 +1,6 @@
-import { workspaceLabel } from '../components/workspaces/label'
+import type { TextBlock } from '../../../../src/chat/markdown/agent-blocks'
+import { workspaceLabel } from '../../../../src/ui/components/workspaces/label'
+import { code, link, p } from './agentText'
 import { postcodeLookup } from './archivedWorkspaces'
 import type { ChatItem } from './conversations'
 import { orgs } from './orgs'
@@ -36,11 +38,24 @@ const findSavedCarts = `git ls-remote origin ${savedCarts.branch}`
  * failed webhooks has output that Cal has not read, so its chip shows the
  * name in bold.
  */
-const linkAnswer: readonly string[] = [
-  `[${workspaceLabel(savedCarts.number)}](${savedCarts.link}) has no commits yet, so I checked the address form here. A restored address fills the fields with \`setAddress\`, which skips the lookup. So the suggestions stay closed.`,
-  `I added a test for a restored address. It reuses the test of ${postcodeLookup.link}, which covered the same case for the old lookup.`,
-  `The description of #482 now ends with \`Related: ${savedCarts.link}\`.`,
-  `${webhookRetries.link} finished its turn while I worked, and its checks passed.`,
+const linkAnswer: readonly TextBlock[] = [
+  p(
+    link(savedCarts.link, workspaceLabel(savedCarts.number)),
+    ' has no commits yet, so I checked the address form here. A restored address fills the fields with ',
+    code('setAddress'),
+    ', which skips the lookup. So the suggestions stay closed.',
+  ),
+  p(
+    `I added a test for a restored address. It reuses the test of ${postcodeLookup.link}, which covered the same case for the old lookup.`,
+  ),
+  p(
+    'The description of #482 now ends with ',
+    code(`Related: ${savedCarts.link}`),
+    '.',
+  ),
+  p(
+    `${webhookRetries.link} finished its turn while I worked, and its checks passed.`,
+  ),
 ]
 
 /**
@@ -136,7 +151,9 @@ export function workspaceLinkConversations(history: readonly ChatItem[]) {
         kind: 'agent',
         id: 'other-org-answer',
         blocks: [
-          "That link is a workspace of another org, so I can't read its branch from here. Paste the fix, and I'll apply it.",
+          p(
+            "That link is a workspace of another org, so I can't read its branch from here. Paste the fix, and I'll apply it.",
+          ),
         ],
       },
     ],

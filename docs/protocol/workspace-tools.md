@@ -9,7 +9,9 @@ provider, the org image, and the startup script. The terms are those of the
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A chat link decision number names a decision of the change that
 makes each web address of chat text a link, as
-[Chat links](chat-links.md) says. The
+[Chat links](chat-links.md) says. A Markdown parser decision names a
+decision of the change that reads Markdown with one parser, as
+[Chat Markdown](chat-markdown.md) says. The
 [mockup catalogue](../mockups/catalogue.md) draws the tools at
 `app/files` and `app/tools`.
 
@@ -26,6 +28,19 @@ makes each web address of chat text a link, as
 - Markdown shows rendered, with a switch to its source. Code shows with line
   numbers and syntax colours. An HTML file shows as a page, with a switch to
   its source, as [HTML file preview](html-file-preview.md) says.
+- The Markdown preview reads a file with the parser of the chat, by the
+  rules of CommonMark with the tables and the strikethrough of GitHub, as
+  [Formatting](chat-markdown.md#formatting) says (Markdown parser decision
+  3 C, 16 November 2026). Quotes, rules, strong text, emphasis,
+  strikethrough, task boxes, headings, and tables have the same look as in
+  the chat.
+- HTML in a Markdown file shows as text. A line-break tag, `<br>`,
+  `<br/>`, or `<br />` in any letter case, shows as a line break, also in a
+  table cell, as [Line breaks](chat-markdown.md#line-breaks) says
+  (Markdown parser decision 1, 16 November 2026).
+- Reason: a file of the repository is untrusted, so no HTML of a file
+  reaches the page. A table of a file with line-break tags then reads as
+  on GitHub.
 - A file tab can open at a line or a range of lines, such as from a file
   chip of an answer with a line target, as
   [Line targets](file-mentions-answers.md#line-targets) says (answer
@@ -54,6 +69,15 @@ makes each web address of chat text a link, as
 - Unlike chat text, the Markdown preview also links a `mailto` address,
   an address with a user name or a password, and an address of the app
   that names no page.
+- An image of the Markdown preview shows its alt text, and no picture
+  loads. At a web address, the alt text is a link to that address, with
+  the rules of a link of the Markdown preview (Markdown parser decision
+  10 B, 18 November 2026). Any other image shows its alt text only.
+- Reason: such an image then shows as in an agent message, as
+  [Chat links](chat-links.md#bare-addresses-and-markdown-links) says. The
+  alt text without a link was not chosen for that reason. No picture
+  loads, because a picture at a web address makes the browser of each
+  reader call a server that the file chose.
 - The header of a file tab can copy and download the file.
 - Reading a file has a size limit of 5 MiB, or 5,242,880 bytes.
   Reason: Boat's file read stops at 5 MiB, so a file read that falls back
@@ -66,6 +90,29 @@ makes each web address of chat text a link, as
 - The picture keeps its proportions, in the middle of the tab. It shows at
   its own size, or smaller, so that it fits the width and the height of the
   tab.
+- A zoom bar under the picture holds Zoom out, the zoom as a percentage of
+  the own size of the picture, Zoom in, Fit, and Expand. Zoom in and Zoom
+  out step through fixed scales. Fit shows the whole picture again. The
+  zoom goes from the fit up to eight times the own size of the picture.
+- The wheel and a pinch zoom the picture about the pointer. A drag moves a
+  zoomed picture, which always covers the tab on each side where it is
+  larger. A double press on a fitted picture zooms it to its own size
+  about the pointer, or to two times its size when it already fits at its
+  own size. A double press on a zoomed picture fits it again.
+- From two times its own size, the pixels of the picture show sharp, so the
+  detail of a screenshot stays clear.
+- On desktop, Expand shows the picture in a large window over the whole
+  app, on the dim layer of a dialog, as the window of
+  [an expanded Preview tab](port-previews.md). The header of the window
+  names the file and holds Close. The picture fits the window as it opens,
+  and it zooms as in the tab. Close, Escape, and a press on the dim layer
+  close the window. A phone has no Expand, because its file page fills the
+  screen already.
+- Reason: Cal asked on 22 November 2026 for a zoom with the wheel and with
+  a control, and for a way to expand the picture, because the detail of a
+  wide screenshot was too small to read. The wheel zooms without a
+  modifier key, because the tab has nothing else to scroll. These are
+  design calls of 22 November 2026.
 - When the browser cannot draw the bytes, the tab shows "Download this file
   to open it", with Download, as for each other binary file.
 - An image over the read limit shows "Open this file in the terminal", as

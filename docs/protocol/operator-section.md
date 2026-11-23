@@ -3,13 +3,15 @@
 This doc holds the requirements and the decisions in force for the operator
 section. In this part of the web app, an operator sees the whole app and
 acts on one org or one user (decision 142). The operator also runs the
-waitlist there (decision 160), and sets the weights of new orgs
-(e2b decision 222). [Operator section: the Overview](operator-overview.md)
+waitlist there (decision 160), sets the weights of new orgs
+(e2b decision 222), and sets the stop time of idle cloud computers. [Operator section: the Overview](operator-overview.md)
 states the Overview tab, with its counts and its long runs.
 [Waitlist tabs](operator-waitlist-tabs.md) holds the Waitlist tab, Approve,
 the Invite codes tab, and the pause.
 [Operator actions](operator-actions.md) states who is an operator, and what
-a suspension and a lift do. [Waitlist](waitlist.md) states the waitlist and
+a suspension and a lift do. [Switch account](switch-account.md) states the
+switch of an org to another provider account, with its box on the page of
+the org. [Waitlist](waitlist.md) states the waitlist and
 the codes. [Sign-ups](sign-ups.md) states the pause, the waitlist switch,
 and their controls in the section. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -43,20 +45,25 @@ that doc says.
   gets `access_required`, as
   [What a person who waits can reach](waitlist.md#what-a-person-who-waits-can-reach)
   says.
-- The section changes four settings of the app: the codes, the pause, and
-  the waitlist switch (decisions 160 and 230), and the weights of new orgs
-  (e2b decision 222). It makes and disables invite codes, disables referral
-  codes, turns the pause on and off, turns the waitlist off and on, and
-  saves the weights. It changes no other setting (decision 143).
+- The section changes five settings of the app: the codes, the pause, and
+  the waitlist switch (decisions 160 and 230), the weights of new orgs
+  (e2b decision 222), and the stop time. It makes and disables invite
+  codes, disables referral codes, turns the pause on and off, turns the
+  waitlist off and on, and saves the weights and the stop time. It changes
+  no other setting (decision 143). Cal added the stop time on 20 November
+  2026.
 - The section cannot change who is an operator. Reason: a stolen session
   of an operator then cannot add an operator.
 
 ## What the section shows
 
 - The section has the tabs Overview, Orgs, Users, Waitlist, Invite codes,
-  and Providers (decisions 147 and 160, and e2b decision 222).
+  Providers, and Settings (decisions 147 and 160, and e2b decision 222).
+  Cal chose the Settings tab on 20 November 2026, so that later settings
+  of the whole app have a home. A box on the Providers tab, a box on the
+  Overview, and a dialog from the header of the section were rejected.
 - The section shows only counts, names, IDs, dates, roles, states, codes,
-  and weights. It shows no chat, file, env value, or agent login. Reason:
+  weights, and the stop time. It shows no chat, file, env value, or agent login. Reason:
   the section then holds the least personal data.
 - The only email address that the section shows is the primary verified
   email of a user, on the page of that user. The lists of the Users tab
@@ -100,11 +107,13 @@ that doc says.
 - Each org in the Orgs tab shows its provider account by its ID
   (e2b decision 221).
 - Each org and each user has a page in the section.
-- The page of an org gives its ID, its provider account, its creation
-  day, and the number of its repositories. It also gives its workspaces
-  by state and its cloud computers that run now, as the Overview counts
-  them. It lists the members, each with their name on GitHub and their
-  role (decisions 147 and 149, and e2b decision 221).
+- The page of an org gives its ID, its creation day, and the number of
+  its repositories. Its Provider account box gives its provider account
+  and the switch of that account, as
+  [Switch account on a page](#switch-account-on-a-page) says. It also
+  gives its workspaces by state and its cloud computers that run now, as
+  the Overview counts them. It lists the members, each with their name on
+  GitHub and their role (decisions 147 and 149, and e2b decision 221).
 - The page of a user gives the GitHub login, the name on GitHub, the GitHub
   ID, the join day, and the last active time. It gives the number of
   workspaces that the user owns, and how many of them run now. It lists
@@ -167,6 +176,9 @@ holds these requirements.
 - Its New orgs box shows the weights as one slider between `boat` and
   `e2b`. Each end gives the share of its account, and the two shares add
   up to 100%.
+- The box says that each new org gets an account by chance from the
+  weights. It also says that an operator can switch an org later, on its
+  page.
 - Save weights stays off until the slider moves. It acts at once, with no
   question. Reason: a change applies only to the orgs that are created
   after it, and it moves no org.
@@ -180,6 +192,24 @@ holds these requirements.
   account gets every new org. It shows no slider then.
 - Orgs by account counts the orgs on each configured account. As the
   Overview does, it counts a deleted org while its records exist.
+
+## The Settings tab
+
+- The Settings tab holds the Stop time box. The box sets the
+  [stop time](stop-and-resume.md#the-stop) of idle cloud computers, for
+  every workspace of every org.
+- The box offers 15 min, 30 min, 1 hour, 1.5 hours, and 2 hours as one
+  choice. It says that a running computer takes a new time at its next
+  activity, or when its current time ends.
+- Save stop time stays off until the operator picks another time. It acts
+  at once, with no question.
+- When a save fails, the choice keeps the time that the operator picked,
+  and the box says that the stop time wasn't saved. Cloud computers keep
+  the saved time.
+- The app records each change of the stop time, with its time and its
+  operator, as it records each change of the weights. The box names the
+  operator of the last change, and when. A stop time that no operator
+  changed has no such line.
 
 ## Suspend and Lift on a page
 
@@ -205,6 +235,10 @@ holds these requirements.
 - The question before a lift says what comes back. It also says that a
   workspace on the `boat` account that stopped 14 days ago or more may
   have lost its files.
+- While a switch of the org waits for Lift, the question before a lift
+  also says that Lift starts the switch build.
+  [When the switch build starts](switch-account.md#when-the-switch-build-starts)
+  states that rule.
 - On the page of the operator's own account, the question before a
   suspension warns that the operator is then signed out. It also warns
   that another operator must lift the suspension. The page still allows
@@ -215,3 +249,10 @@ holds these requirements.
   cloud computers that are still stopping. The reply of the suspension
   names them, as [Suspend a user](operator-actions.md#suspend-a-user)
   says.
+
+## Switch account on a page
+
+- [The page of the org](switch-account.md#the-page-of-the-org) states the
+  Provider account box of the page of an org: the account, the switch and
+  the state of its build, the last switch, and the workspaces by account.
+  It also states Switch account, Stop switch, and their questions.

@@ -1,10 +1,9 @@
-import { CircleAlert } from 'lucide-react'
 import type { AgentKey } from '../../fixtures/agents'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { StatusText } from '../common/StatusText'
-import { chatGptSignInCopy as copy } from './chatGptSignInCopy'
-import styles from './LoginNotUsable.module.css'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
+import { chatGptSignInCopy as copy } from '../../../../../src/ui/components/settings/chatGptSignInCopy'
+import styles from '../../../../../src/ui/components/settings/LoginNotUsable.module.css'
 
 /**
  * A connected login that the app can no longer use, such as a ChatGPT
@@ -15,7 +14,14 @@ export type UnusableLogin = { agent: AgentKey; cause: string; signInTo: string }
 
 /** The state of the login in its row, in place of Connected. */
 export function SignedOutStatus() {
-  return <StatusText icon={CircleAlert} label={copy.signedOut} tone="danger" />
+  return (
+    <statusText.Component
+      icon="circle-alert"
+      label={copy.signedOut}
+      moklyInstance="signed-out"
+      tone="danger"
+    />
+  )
 }
 
 /**
@@ -27,7 +33,9 @@ export function LoginNotUsable(props: { cause: string; signInTo: string }) {
     <div className={styles.notUsable}>
       <p className={styles.cause}>{props.cause}</p>
       <ScreenLink asChild to={props.signInTo}>
-        <ActionButton tone="primary">{copy.signInAgain}</ActionButton>
+        <actionButton.Component moklyInstance="sign-in-again" tone="primary">
+          {copy.signInAgain}
+        </actionButton.Component>
       </ScreenLink>
     </div>
   )

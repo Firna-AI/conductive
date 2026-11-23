@@ -189,6 +189,9 @@ at `app/tabs` and `app/transcripts`.
 - Each secret request and each result of a run with secrets in a copy
   gives what its card shows, with no value and no output, as
   [What the chat shows](secret-requests.md#what-the-chat-shows) says.
+- Each change note of the capabilities in a copy gives the words of the
+  chat, with the name of the member, as
+  [In the chat](capabilities-agents.md#in-the-chat) says.
 - Each piece of inline code and each code block takes a fence of backticks
   that is longer than each run of backticks in its text. Reason: the code
   then stays whole when the text shows as Markdown.

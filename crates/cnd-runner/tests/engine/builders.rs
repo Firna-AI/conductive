@@ -13,7 +13,14 @@ use serde_json::json;
 use super::helpers::Process;
 
 pub(super) fn configuration() -> std::result::Result<Configuration, Box<dyn std::error::Error>> {
-    let values = BTreeMap::from([
+    skills_configuration(None, None)
+}
+
+pub(super) fn skills_configuration(
+    repository: Option<&str>,
+    trusted: Option<&str>,
+) -> std::result::Result<Configuration, Box<dyn std::error::Error>> {
+    let mut values = BTreeMap::from([
         ("CONDUCTIVE_WORKSPACE_ID".into(), "workspace".into()),
         (
             "CONDUCTIVE_WORKSPACE_TOKEN".into(),
@@ -30,6 +37,14 @@ pub(super) fn configuration() -> std::result::Result<Configuration, Box<dyn std:
         ),
         ("CONDUCTIVE_DEFAULT_BRANCH".into(), "main".into()),
     ]);
+    for (name, value) in [
+        ("CONDUCTIVE_SKILLS_REPOSITORY", repository),
+        ("CONDUCTIVE_TRUSTED_SKILLS_REPOSITORY", trusted),
+    ] {
+        if let Some(value) = value {
+            values.insert(name.into(), value.into());
+        }
+    }
     Ok(Configuration::parse(
         &values,
         Path::new("/repo"),
@@ -68,7 +83,7 @@ pub(super) fn message(
             command_id,
             session_id,
             turn_id: turn_id.into(),
-            message,
+            message: *message,
             branches,
             repository,
             attachments,
@@ -92,11 +107,12 @@ pub(super) fn input_ids(
         .lock()
         .map_err(|_| "test lock poisoned")?
         .iter()
-        .map(|input| match input {
-            ProviderInput::Turn(RunnerTurn::Turn { message, .. })
-            | ProviderInput::Message(RunnerMessageDuringTurn::Message { message, .. }) => {
-                message.id.clone()
+        .filter_map(|input| match input {
+            ProviderInput::Turn(RunnerTurn::Turn { message, .. }) => Some(message.id.clone()),
+            ProviderInput::Message(RunnerMessageDuringTurn::Message { message, .. }) => {
+                Some(message.id.clone())
             }
+            ProviderInput::Notice(_) => None,
         })
         .collect())
 }

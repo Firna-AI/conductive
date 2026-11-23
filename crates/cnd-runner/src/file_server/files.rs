@@ -1,5 +1,6 @@
 //! Filesystem boundary with shared repository containment and dot-file checks.
 
+use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
 use std::time::SystemTime;
 
@@ -20,6 +21,8 @@ pub struct FileContent {
     pub size: u64,
     /// Descriptor modification time at open.
     pub modified: SystemTime,
+    /// Version of the descriptor metadata at open.
+    pub etag: String,
     /// Streaming file reader.
     pub reader: Box<dyn FileReader>,
 }
@@ -74,6 +77,15 @@ impl Files for RepositoryFiles {
             Ok(Entry::File(FileContent {
                 size: metadata.len(),
                 modified: metadata.modified().internal()?,
+                etag: format!(
+                    "\"{:x}-{:x}-{:x}-{:x}-{:x}-{:x}\"",
+                    metadata.ino(),
+                    metadata.len(),
+                    metadata.mtime(),
+                    metadata.mtime_nsec(),
+                    metadata.ctime(),
+                    metadata.ctime_nsec(),
+                ),
                 reader: Box::new(tokio::fs::File::from_std(opened.file)),
             }))
         })

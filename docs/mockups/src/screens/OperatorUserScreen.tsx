@@ -1,12 +1,11 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { Ban, Check, LockOpen } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
+import { actionButton } from '../entries/components/common/actions.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { ApproveDialog } from '../components/operator/ApproveDialog'
 import { DisableCodeDialog } from '../components/operator/codeDialogs'
 import { LiftDialog } from '../components/operator/LiftDialog'
 import { OperatorPage } from '../components/operator/OperatorPage'
-import type { QuestionTarget } from '../components/operator/operatorCopy'
+import type { QuestionTarget } from '../../../../src/ui/components/operator/operatorCopy'
 import { SuspendDialog } from '../components/operator/SuspendDialog'
 import { UserDetails } from '../components/operator/UserDetails'
 import { accessPages } from '../fixtures/operatorAccessPages'
@@ -96,16 +95,24 @@ function UserActions(props: { page: PageKey; user: UserPage }) {
   if (props.user.suspension) {
     return (
       <ScreenLink asChild to={paths.operatorUserLift}>
-        <ActionButton icon={LockOpen} tone="primary">
+        <actionButton.Component
+          icon="lock-open"
+          moklyInstance="lift-suspension"
+          tone="primary"
+        >
           Lift suspension
-        </ActionButton>
+        </actionButton.Component>
       </ScreenLink>
     )
   }
   const button = (
-    <ActionButton icon={Ban} tone="danger">
+    <actionButton.Component
+      icon="ban"
+      moklyInstance="suspend-user"
+      tone="danger"
+    >
       Suspend user
-    </ActionButton>
+    </actionButton.Component>
   )
   const to = suspendPath(props.page)
   const suspend = to ? (
@@ -120,9 +127,13 @@ function UserActions(props: { page: PageKey; user: UserPage }) {
     <>
       {suspend}
       <ScreenLink asChild to={approvePaths(props.user).question}>
-        <ActionButton icon={Check} tone="primary">
+        <actionButton.Component
+          icon="check"
+          moklyInstance="approve"
+          tone="primary"
+        >
           Approve
-        </ActionButton>
+        </actionButton.Component>
       </ScreenLink>
     </>
   )

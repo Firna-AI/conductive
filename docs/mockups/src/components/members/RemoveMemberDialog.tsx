@@ -1,10 +1,13 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { people, removedMember } from '../../fixtures/members'
 import { orgs } from '../../fixtures/orgs'
 import { workspaceList } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import {
+  confirmDialog,
+  dialogText,
+} from '../../entries/components/common/ConfirmDialog.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 
 /**
@@ -19,22 +22,30 @@ export function RemoveMemberDialog(props: { viewport: Viewport }) {
     (item) => item.owner === removedMember,
   ).length
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           <ScreenLink asChild to={paths.members}>
-            <ActionButton>Cancel</ActionButton>
+            <actionButton.Component moklyInstance="dialog-cancel">
+              Cancel
+            </actionButton.Component>
           </ScreenLink>
-          <ActionButton tone="danger">Remove member</ActionButton>
+          <actionButton.Component
+            moklyInstance="dialog-remove-member"
+            tone="danger"
+          >
+            Remove member
+          </actionButton.Component>
         </>
       }
+      moklyInstance="remove-member-dialog"
       title={`Remove ${person.name} from ${orgs.acme.name}?`}
       viewport={props.viewport}
     >
-      <DialogText>
+      <dialogText.Component>
         {first} can no longer open {orgs.acme.name}. {first}&apos;s {owned}{' '}
         workspaces move to you.
-      </DialogText>
-    </ConfirmDialog>
+      </dialogText.Component>
+    </confirmDialog.Component>
   )
 }

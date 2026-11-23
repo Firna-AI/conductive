@@ -6,7 +6,8 @@
  */
 
 import { failedRuns, turnedOffRuns } from './failedRunLists'
-import { lena, automations, type PullRequestEvent } from './automations'
+import { lena, automations } from './automations'
+import { type PullRequestEvent } from '../../../../src/ui/components/automations/triggers'
 import {
   pr,
   runsOf,

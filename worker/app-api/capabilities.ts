@@ -3,7 +3,6 @@ import {
   type WorkspaceCapabilitiesResponse,
 } from '../../src/shared/secrets'
 import type { AppDependencies, AppEnv } from '../env'
-import { deviceCall } from '../devices/internal'
 import { requireActiveOrg } from '../data/user-access'
 import { requireOrgMember } from '../members/permissions'
 import {
@@ -14,6 +13,8 @@ import { readCapabilitiesChange } from '../secrets/capabilities-input'
 import { updateWorkspaceCapabilities } from '../secrets/capabilities-writes'
 import type { RequestContext } from '../security/gate'
 import { workspaceChildId } from './workspace-path'
+import { requireFeatureResult, type FeatureResult } from '../features/result'
+import { warnWorker } from '../warnings'
 
 export async function capabilitiesRoute(
   request: Request,
@@ -29,27 +30,46 @@ export async function capabilitiesRoute(
     return null
   const userId = context.user.id
   await requireOrgMember(env.DB, orgId, userId)
-  await readWorkspaceCapabilities(env.DB, orgId, workspaceId)
+  let capabilities = await readWorkspaceCapabilities(env.DB, orgId, workspaceId)
   if (request.method === 'PATCH') {
     await requireActiveOrg(env.DB, orgId)
     const change = readCapabilitiesChange(context.body)
     if (change.preapprovedSecretIds !== undefined)
       await requireOrgSecrets(env.DB, orgId, change.preapprovedSecretIds)
-    await updateWorkspaceCapabilities(env.DB, {
-      orgId,
-      workspaceId,
-      userId,
-      now: dependencies.now(),
-      change,
-    })
+    let result: FeatureResult<typeof capabilities> | undefined
+    try {
+      if (!env.WORKSPACES)
+        throw new Error('The workspace object is unavailable.')
+      result = await env.WORKSPACES.getByName(workspaceId).changeCapabilities({
+        orgId,
+        workspaceId,
+        now: dependencies.now(),
+        change,
+        member: {
+          id: context.user.id,
+          githubLogin: context.user.githubLogin,
+          displayName: context.user.displayName,
+          avatarUrl: context.user.avatarUrl,
+        },
+      })
+    } catch {
+      warnWorker({ kind: 'capability_notes_unavailable' })
+    }
+    if (result) capabilities = requireFeatureResult(result)
+    else {
+      await updateWorkspaceCapabilities(env.DB, {
+        orgId,
+        workspaceId,
+        userId,
+        now: dependencies.now(),
+        change,
+      })
+      capabilities = await readWorkspaceCapabilities(env.DB, orgId, workspaceId)
+    }
     await requireOrgMember(env.DB, orgId, userId)
     await requireActiveOrg(env.DB, orgId)
-    if (change.macAccess === false)
-      await deviceCall(env, workspaceId, {
-        type: 'workspace.mac-access-changed',
-      })
   }
   return Response.json({
-    capabilities: await readWorkspaceCapabilities(env.DB, orgId, workspaceId),
+    capabilities,
   } satisfies WorkspaceCapabilitiesResponse)
 }

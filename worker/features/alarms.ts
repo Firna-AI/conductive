@@ -7,9 +7,11 @@ export type AlarmSource =
   | 'secrets'
   | 'previews'
   | 'github'
+  | 'baseChange'
   | 'continue'
   | 'repository-change'
   | 'automation-report'
+  | 'session-watches'
   | 'browser'
   | 'runner'
 
@@ -136,6 +138,8 @@ export class WorkspaceAlarms {
     const owned = due.filter(([key]) => owns(key.slice('alarm:'.length)))
     return {
       due: new Set(due.map(([key]) => key.slice('alarm:'.length))),
+      /** The earliest due time of the due sources that this run owns. */
+      dueAt: owned.length ? Math.min(...owned.map(([, at]) => at)) : null,
       recovering: lifecycleRun && alarms.has('alarm:lifecycle:run'),
       finish: (finishedAt = now) =>
         this.storage.transaction(async (transaction) => {

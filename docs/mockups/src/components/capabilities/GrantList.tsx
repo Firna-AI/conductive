@@ -1,12 +1,12 @@
 import type { PersonKey } from '../../fixtures/members'
 import type { WorkspaceGrants } from '../../fixtures/secretRequests'
-import { ActionButton } from '../common/actions'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
 import {
   approvalDetail,
   secretsPartWords,
   valueDetail,
-} from './capabilitiesCopy'
-import styles from './Capabilities.module.css'
+} from '../../../../../src/ui/components/capabilities/capabilitiesCopy'
+import styles from '../../../../../src/ui/components/capabilities/Capabilities.module.css'
 
 /** One grant: the secret, what it covers, and Remove. */
 function GrantRow(props: { name: string; detail: string; what: string }) {
@@ -27,10 +27,12 @@ function GrantRow(props: { name: string; detail: string; what: string }) {
 }
 
 /**
- * The grants of a workspace that its members can end (secrets decision
- * 8): each approval of a secret in a session, and each value that a member
+ * The grants that the members of a workspace can end from one session
+ * (secrets decision 8): each approval of a secret in this session, and each value that a member
  * gave for the workspace. Each has Remove. A group without grants hides.
- * `who` names a member, "you" for the person signed in.
+ * `grants` holds only the approvals that the control shows, as
+ * `shownGrants` gives them. `who` names a member, "you" for the person
+ * signed in.
  */
 export function GrantList(props: {
   grants: WorkspaceGrants
@@ -41,18 +43,14 @@ export function GrantList(props: {
     <>
       {approvals.length > 0 ? (
         <div className={styles.group}>
-          <h4 className={styles.groupTitle}>{secretsPartWords.sessions}</h4>
+          <h4 className={styles.groupTitle}>{secretsPartWords.session}</h4>
           <ul className={styles.grants}>
             {approvals.map((approval) => (
               <GrantRow
-                detail={approvalDetail(
-                  approval.session,
-                  props.who(approval.by),
-                  approval.when,
-                )}
-                key={`${approval.secret} ${approval.session}`}
+                detail={approvalDetail(props.who(approval.by), approval.when)}
+                key={approval.secret}
                 name={approval.secret}
-                what={`${approval.secret} from ${approval.session}`}
+                what={`${approval.secret} from this session`}
               />
             ))}
           </ul>

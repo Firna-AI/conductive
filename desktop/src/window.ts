@@ -3,7 +3,7 @@ import type {
   BrowserWindowConstructorOptions,
   Rectangle,
 } from 'electron'
-import { productName } from '../../docs/mockups/src/brand.js'
+import { productName } from '../../src/shared/brand.js'
 
 const BAR_HEIGHT = 34
 const TRAFFIC_LIGHT_POSITION = { x: 14, y: (BAR_HEIGHT - 12) / 2 }

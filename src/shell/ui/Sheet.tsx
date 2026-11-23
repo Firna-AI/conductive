@@ -4,13 +4,9 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react'
-import styles from '../../../docs/mockups/src/components/common/Sheet.module.css'
-import {
-  focusableSelector,
-  Overlay,
-  useModalLayer,
-  type Focusable,
-} from './Overlay'
+import styles from '../../ui/components/common/Sheet.module.css'
+import { Overlay, useModalLayer, type Focusable } from './Overlay'
+import { controlsOf, keepTabInside, tabWithScrollingBody } from './tab-stops'
 
 /**
  * Keeps the Tab key inside a modal layer, as a dialog needs. Tab from the
@@ -18,27 +14,20 @@ import {
  * last. From the layer itself, which takes the focus on a press outside its
  * controls, Tab goes to the first and Shift+Tab to the last. The layer
  * listens in the capture phase, because a text field stops its key events.
+ * `tabbableOf` gives the elements that Tab moves between, in their order.
+ * By default they are the controls of the layer that can take the focus.
+ * `body` is the box of a card that scrolls its content. While it scrolls
+ * text without a control, it is a stop too, as `tabWithScrollingBody` says.
  */
-export function trapTab(event: KeyboardEvent<HTMLElement>): void {
+export function trapTab(
+  event: KeyboardEvent<HTMLElement>,
+  tabbableOf: (layer: HTMLElement) => readonly HTMLElement[] = controlsOf,
+  body: HTMLElement | null = null,
+): void {
   if (event.key !== 'Tab') return
-  const tabbable = Array.from(
-    event.currentTarget.querySelectorAll<HTMLElement>(focusableSelector),
-  ).filter((element) => element.tabIndex >= 0)
-  const first = tabbable[0]
-  const last = tabbable.at(-1)
-  if (!first || !last) {
-    event.preventDefault()
-    return
-  }
-  const from = event.target
-  const inside = tabbable.some((element) => element === from)
-  if (event.shiftKey && (from === first || !inside)) {
-    event.preventDefault()
-    last.focus()
-  } else if (!event.shiftKey && (from === last || !inside)) {
-    event.preventDefault()
-    first.focus()
-  }
+  const tabbable = tabbableOf(event.currentTarget)
+  if (tabWithScrollingBody(event, tabbable, body)) return
+  keepTabInside(event, tabbable, event.target)
 }
 
 /**

@@ -1,12 +1,18 @@
 import { DropdownSelector } from '@firna/ui/dropdown'
 import { Input } from '@firna/ui/input'
-import { fonts } from '../../design/metrics'
-import type { ClockTime, ScheduleTrigger } from '../../fixtures/automations'
-import { noop } from '../../noop'
-import { useControlSizes } from '../common/touch'
-import { twoDigits, weekdayLabels } from './triggerCopy'
-import form from './form.module.css'
-import styles from './ScheduleControls.module.css'
+import { fonts } from '../../../../../src/ui/design/metrics'
+import type {
+  ClockTime,
+  ScheduleTrigger,
+} from '../../../../../src/ui/components/automations/triggers'
+import { noop } from '../../../../../src/ui/noop'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import {
+  twoDigits,
+  weekdayLabels,
+} from '../../../../../src/ui/components/automations/triggerCopy'
+import form from '../../../../../src/ui/components/automations/form.module.css'
+import styles from '../../../../../src/ui/components/automations/ScheduleControls.module.css'
 
 type Option = { label: string; value: string }
 

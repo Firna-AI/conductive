@@ -6,7 +6,9 @@ import type {
   OrgSettings,
   RepositoriesResponse,
   Repository,
+  SkillsRepositoryLookupResponse,
 } from '../../shared/org-settings'
+import type { SkillFolderClash } from '../../shared/skill-folders'
 import {
   count,
   countOrNull,
@@ -15,6 +17,7 @@ import {
   nested,
   object,
   oneOf,
+  ResponseShapeError,
   text,
   textOrNull,
 } from './json'
@@ -64,13 +67,58 @@ function envVar(value: unknown): OrgSettings['envVars'][number] {
   }
 }
 
+/** A missing trusted repository in an older reply means untrusted. */
 export function parseSettings(value: unknown): OrgSettings {
   const source = nested(object(value, 'settings response'), 'settings')
   return {
     installScript: text(source, 'installScript'),
     startupScript: text(source, 'startupScript'),
+    ...(source.skillsRepository === undefined
+      ? {}
+      : { skillsRepository: text(source, 'skillsRepository') }),
+    trustedSkillsRepository:
+      source.trustedSkillsRepository === undefined
+        ? ''
+        : text(source, 'trustedSkillsRepository'),
     envVars: list(source, 'envVars', envVar),
     updatedAt: count(source, 'updatedAt'),
+  }
+}
+
+type SkillsNotice = NonNullable<SkillsRepositoryLookupResponse['notice']>
+
+const skillsNotices: Readonly<Record<SkillsNotice, SkillsNotice>> = {
+  private: 'private',
+  'not-found': 'not-found',
+  'no-skills': 'no-skills',
+  incomplete: 'incomplete',
+  failed: 'failed',
+}
+
+function skillClash(value: unknown): SkillFolderClash {
+  const source = object(value, 'skill clash')
+  return {
+    name: text(source, 'name'),
+    keptPath: text(source, 'keptPath'),
+    skippedPath: text(source, 'skippedPath'),
+  }
+}
+
+/** What the lookup of the saved skills repository found on GitHub. */
+export function parseSkillsLookup(
+  value: unknown,
+): SkillsRepositoryLookupResponse {
+  const source = object(value, 'skills lookup')
+  return {
+    repository: text(source, 'repository'),
+    skills: list(source, 'skills', (item) => {
+      if (typeof item !== 'string')
+        throw new ResponseShapeError('skills is not a list of text')
+      return item
+    }),
+    notice:
+      source.notice === null ? null : oneOf(source, 'notice', skillsNotices),
+    clashes: list(source, 'clashes', skillClash),
   }
 }
 

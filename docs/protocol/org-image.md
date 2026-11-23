@@ -4,7 +4,7 @@ This doc holds the requirements and the decisions in force for the org
 image that every sandbox of an org starts from. It covers the builds and
 the refreshes of the org image, the first build of a new org, and the
 builds and the notices of a change of the repositories.
-[Sandbox software](sandbox-software.md) holds the software image that a
+[Software image](software-image.md) holds the software image that a
 first build starts from. It
 belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md). The
 terms are those of the [architecture doc](../architecture.md#terms). A
@@ -12,7 +12,8 @@ decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. An e2b
 decision number names a decision of the change that adds E2B as the second
 [sandbox provider](workspaces-and-sandboxes.md#the-provider), as that doc
-says.
+says. A switch decision number names a decision of the change that adds
+[Switch account](switch-account.md), as that doc says.
 
 ## The org image
 
@@ -22,7 +23,9 @@ says.
 - The org image lives in the provider account of the org, as
   [The account of an org](provider-accounts.md#the-account-of-an-org)
   says. Every build and every refresh of the org runs in that account
-  (e2b decision 222).
+  (e2b decision 222). The one exception is the switch build of an
+  operator, which members do not see, as
+  [The switch build](switch-account.md#the-switch-build) says.
 - One image for each repository was rejected, because each image costs
   its own saved snapshot and starts.
 - The Repositories tab of the org settings chooses the repositories
@@ -39,8 +42,11 @@ says.
   org.
 - "Build computer" starts a build. A build runs the install script on a
   copy of the image, with every chosen repository cloned (decision 12).
-- An add of a repository also starts a build, as
-  [Added repositories](#added-repositories) says (decision 240).
+- A Build computer or a Try again during a switch build waits until that
+  build ends (switch decision 2 D). Its time limit counts from then, as
+  [What members see](switch-account.md#what-members-see) says.
+- Done after an add of a repository also starts a build, as
+  [Added repositories](#added-repositories) says (decisions 240 and 295).
 - The app also starts some builds by itself, as
   [The first build](#the-first-build) and
   [Added repositories](#added-repositories) say.
@@ -105,7 +111,7 @@ says.
   of its account, when that account has a ready one. It copies the
   repositories, installs the newest release of the sandbox software, and
   runs the install script, as
-  [The software image](sandbox-software.md#the-software-image) says.
+  [The software image](software-image.md#the-software-image) says.
 - When the first build cannot start, Create org still creates the org. An
   admin can then start a build on the Cloud computer tab, with Build
   computer or Try again. Reason: the org is valid without a build.
@@ -138,8 +144,8 @@ says.
   removed repository start no build. They wait for the next build, which
   an admin can start with Build computer (decision 12). This also holds
   for such a change during an added build.
-- An added repository starts its own build, as
-  [Added repositories](#added-repositories) says (decision 240).
+- An added repository starts a build at Done, as
+  [Added repositories](#added-repositories) says (decisions 240 and 295).
 - A new name or a new default branch of a repository on GitHub starts a
   build too, as
   [Repository changes on GitHub](repository-changes-on-github.md#the-org-image)
@@ -147,8 +153,8 @@ says.
 
 ## The software image
 
-[The software image](sandbox-software.md#the-software-image) holds the
-saved snapshot of the app's own software that a first build starts from.
+[Software image](software-image.md) holds the saved snapshot of the app's
+own software that a first build starts from.
 
 ## Repository changes
 
@@ -164,22 +170,43 @@ saved snapshot of the app's own software that a first build starts from.
 
 ### Added repositories
 
-- When no job runs, an add of a repository starts a build at once
-  (decision 240). The admin who added it is the starter of that build.
-- Reason: the repository is then ready after one build, with no wait for
-  an admin who finds Build computer.
-- The Repositories tab tells an admin that an add starts a build. The new
-  build shows at once on the Cloud computer tab and in the
+- An admin adds and removes repositories on the Repositories tab,
+  between Edit and Done. Add and Remove change only the open edit. Done
+  saves the edit (decision 296).
+- Reason: the org then gets only the changes that the admin confirms with
+  Done.
+- When no job runs, Done starts one build when it saved an add
+  (decision 295). The admin who selects Done is the starter of that
+  build.
+- Reason: an admin can add many repositories in one edit. One build at
+  Done then holds all of them, with no build that each later add makes
+  old.
+- The repositories are then ready after one build, with no wait for an
+  admin who finds Build computer (decision 240).
+- Done starts no build when the edit added no repository, also after a
+  removal. A repository that the edit added and then removed again counts
+  as not added, and Done saves nothing for it.
+- The Repositories tab tells an admin that Done starts a build after an
+  add. The new build shows at once on the Cloud computer tab and in the
   [repository notice](#the-repository-notice).
-- The add starts its build also when the newest build failed. Reason: the
-  add of an admin starts it, as Try again does. The app still starts no
-  build by itself after a failed build (decision 12).
-- When the build cannot start, the add still saves the repository. The
-  repository then waits for the next build.
-- While a job runs, an add starts no second job.
+- Done starts its build also when the newest build failed. Reason: Done
+  of an admin starts it, as Try again does. The app still starts no build
+  by itself after a failed build (decision 12).
+- When the build cannot start, the added repositories stay saved. They
+  then wait for the next build.
+- A change that Done cannot save stays in the open edit, and the edit
+  stays open. Done then tries it again. The other changes of the edit
+  save, and an add among them starts the build.
+- An edit that ends without Done, such as another tab or a closed
+  window, saves nothing and starts no build (decision 296). The edit has
+  no Cancel. Reason: leaving the edit already drops its changes.
+- An add from an older copy of the app, which has no Done step, still
+  starts a build at once. Reason: older copies of the app keep working.
+- While a job runs, Done starts no second job.
 - When a job succeeds, and the repositories of that job lack a chosen
   repository, the app starts one added build by itself (decision 240). It
-  does so only when the newest build succeeded.
+  does so only when the newest build succeeded. A switch build gets none,
+  as [The switch build](switch-account.md#the-switch-build) says.
 - So the adds during a job share one added build after that job. Reason:
   without it, a repository that an admin adds during a job never builds.
 - A failed build gets no added build. A refresh after a failed build gets
@@ -190,9 +217,13 @@ saved snapshot of the app's own software that a first build starts from.
   build gets one added build, not two.
 - The added build runs for an admin who is not suspended, as the added
   build of [The first build](#the-first-build) does.
+- A build at each add was replaced (decision 295). Reason: a burst of
+  adds made a build that the next add made old.
 - A delay that groups several adds into one build was rejected. Reason:
-  one add is the common case, and it then has no wait. A burst of adds
-  costs one more build.
+  Done already marks the end of the adds, with no wait after it.
+- A save at each Add with a build at Done was replaced (decision 296).
+  Reason: an edit that ended without Done then left saved repositories
+  that waited for Build computer.
 - A refresh that clones a waiting repository into the org image was
   rejected. Reason: the image would then hold a copy that the install
   script never prepared (decision 13).
@@ -223,6 +254,12 @@ saved snapshot of the app's own software that a first build starts from.
   removed repository. So it shows only once the org has an image.
 - Its title names the waiting repositories, or the removed ones when no
   repository waits.
+- While an open edit of the Repositories tab adds repositories, the
+  notice of that admin names them and says to select Done to add them and
+  start a build (decision 297). It has no button. It takes the place of
+  the states below until Done.
+- Reason: no build starts before Done, and the admin learns that Done
+  starts it.
 - The first state that applies gives its words and its action:
   1. No build runs, and the newest build failed. The notice says that the
      change waits for a build that succeeds, and that the last build

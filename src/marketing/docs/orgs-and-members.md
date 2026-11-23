@@ -96,7 +96,7 @@ The list needs access from both your GitHub account and the app.
 
 Admins can later change the selection and its order in **Settings**, under **Repositories**.
 A build applies that changed selection to new workspaces.
-Adding a repository starts a build automatically.
+Selecting **Done** after you add repositories starts a build automatically.
 
 - [Manage the shared cloud computer setup](/docs/cloud-computer)
 
@@ -181,7 +181,8 @@ An org has two roles: **Admin** and **Member**.
 | Add a secret | Yes | Yes |
 | Replace or delete a secret | Any secret | Their own secrets |
 | Reveal a secret's value or mark it for all agents | Yes | No |
-| Change a workspace's **Capabilities** | Any workspace | Any workspace |
+| Change the secrets in a workspace's **Capabilities** | Any workspace | Any workspace |
+| Turn **Mac access** on or off in the Mac app | For their own Mac | For their own Mac |
 | Reassign a workspace | Yes | No |
 | Archive a workspace | Any workspace | Their own workspaces |
 | Restore a workspace within its 14 days | Any workspace | Any workspace |
@@ -199,7 +200,7 @@ The workspace counts in **Members** leave out removed workspaces.
 
 - [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 
-Continue uses the GitHub account of the member who selects it to fetch the latest default branch.
+Continue uses the GitHub account of the member who selects it for its branch fetch.
 That account needs read access to the repository.
 A repository change uses the GitHub account of the member who changes it in the same way, for the new repository.
 Merge uses the clicking member's GitHub account, and GitHub checks its branch rules.

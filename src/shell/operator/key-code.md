@@ -13,7 +13,7 @@ this guide.
 - `OverviewTab.tsx`, `OverviewParts.tsx`, and `OverviewLoading.tsx`: the
   Overview, its tiles with the count of the people who wait, largest orgs,
   and placeholders. Its charts are `DailyChart` of
-  `docs/mockups/src/components/operator/`.
+  `src/ui/components/operator/`.
 - `LongRuns.tsx`: Long runs, with its columns, which the placeholders
   share.
 - `useCopyToast.ts`: Copy of a value, such as a code or a cloud computer
@@ -33,13 +33,19 @@ this guide.
 - `ProvidersTab.tsx` and `provider-weights.ts`: the Providers tab, its
   weights that the operator changed, and Save weights.
   `../orgs/AccountField.tsx`: the account choice of Create org.
-- `OrgPage.tsx`, `UserPage.tsx`, `UserDetails.tsx`, `AccessSections.tsx`,
-  `TargetPage.tsx`, and `TargetDialogs.tsx`: the pages, the app access of
-  a user with each way in, also an open sign-up with its operator, the
-  referral code of a user, Suspend with its offer, Lift, and their
-  questions. `useQuestion.ts`: the write of a question, which closes the
-  question after a write that worked.
+- `SettingsTab.tsx`: the Settings tab, with the Stop time box and Save
+  stop time.
+- `OrgPage.tsx`, `OrgDetails.tsx`, `UserPage.tsx`, `UserDetails.tsx`,
+  `AccessSections.tsx`, `TargetPage.tsx`, and `TargetDialogs.tsx`: the
+  pages, the app access of a user with each way in, also an open sign-up
+  with its operator, the referral code of a user, Suspend with its offer,
+  Lift, and their questions. `useQuestion.ts`: the write of a question,
+  which closes the question after a write that worked.
   `CheckOption.tsx`: the checkbox of the offer.
+- `AccountBox.tsx`, `AccountSwitchDialogs.tsx`, and `account-switch.ts`:
+  the Provider account box of the page of an org, Switch account and Stop
+  switch with their questions, and the words of each state of a switch
+  from the fields of the reply.
 - `TargetParts.tsx` and `format.ts`: the rows of users and orgs, the links
   to a GitHub profile, and the formats of counts, days, and the age of a
   GitHub account.
@@ -54,13 +60,17 @@ this guide.
   row from it. `../../app/operator-row-changes.ts`: `RowChanges`, the
   changes that the writes confirmed, by the key of the row.
 - `../../app/operator-target.ts`: `OperatorTarget`, a page with Suspend
-  and Lift.
+  and Lift. `../../app/operator-org-switch.ts`: `OperatorOrgSwitch`,
+  Switch account and Stop switch of an org.
 - `../../app/operator-pause.ts`: `OperatorPause`, the pause with Pause and
   Resume sign-ups. `../../app/operator-switch.ts`: `OperatorSwitch`, the
   waitlist switch with Turn off and Turn on the waitlist.
   `../../app/operator-access.ts`: Approve, New code, and Disable.
   `../../app/operator-providers.ts`: `OperatorProviders`, the provider
   accounts and the save of their weights.
+  `../../app/operator-idle-stop.ts`: `OperatorIdleStop`, the stop time and
+  its save.
 - `../../app/api/read-operator.ts`, `read-operator-pages.ts`,
-  `read-operator-providers.ts`, `read-operator-runs.ts`, and
+  `read-operator-providers.ts`, `read-operator-idle-stop.ts`,
+  `read-operator-runs.ts`, `read-operator-switch.ts`, and
   `read-operator-waitlist.ts`: the readers of the replies.

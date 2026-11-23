@@ -32,6 +32,17 @@ it('keeps only the kind, the status, and a known code of a provider error', () =
   })
 })
 
+it('keeps the Boat code that says why a resume failed', () => {
+  expect(
+    errorSummary(new ProviderError('conflict', 409, 'resume_failed')),
+  ).toEqual({
+    kind: 'provider',
+    providerKind: 'conflict',
+    status: 409,
+    code: 'resume_failed',
+  })
+})
+
 it('keeps a known HTTP code and drops arbitrary codes, error names, and messages', () => {
   expect(
     errorSummary(new HttpError(502, 'workspace_start_failed', marker)),
@@ -179,4 +190,63 @@ it('keeps checked runner identities and strips private fields and invalid diagno
     ],
   ])
   expect(warningTurnEndState(marker)).toBe('unknown')
+})
+
+it('logs checked runner work values and replaces runner text that fails its check', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+  const work = {
+    kind: 'runner_work_interrupted' as const,
+    workspaceId: WarningId.checked('w'.repeat(43)),
+    connectionId: WarningId.checked(marker),
+    streamId: null,
+    processStartId: null,
+    protocolVersion: 2,
+    work: 'event' as const,
+    stage: 'after_commit' as const,
+    eventType: 'tool.updated',
+    eventNumber: 7,
+    size: 512,
+  }
+  const withPrivate = { ...work, private: marker }
+  warnWorker(withPrivate)
+  warnWorker({
+    ...work,
+    eventType: `${marker} with spaces`,
+    eventNumber: -1,
+    size: 1.5,
+  })
+  expect(warn.mock.calls).toEqual([
+    [
+      {
+        kind: 'runner_work_interrupted',
+        message: 'The work of a runner message did not finish.',
+        workspaceId: 'w'.repeat(43),
+        connectionId: 'unknown',
+        streamId: null,
+        processStartId: null,
+        protocolVersion: 2,
+        work: 'event',
+        stage: 'after_commit',
+        eventType: 'tool.updated',
+        eventNumber: 7,
+        size: 512,
+      },
+    ],
+    [
+      {
+        kind: 'runner_work_interrupted',
+        message: 'The work of a runner message did not finish.',
+        workspaceId: 'w'.repeat(43),
+        connectionId: 'unknown',
+        streamId: null,
+        processStartId: null,
+        protocolVersion: 2,
+        work: 'event',
+        stage: 'after_commit',
+        eventType: 'unknown',
+        eventNumber: null,
+        size: null,
+      },
+    ],
+  ])
 })

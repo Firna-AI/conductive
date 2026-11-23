@@ -1,11 +1,13 @@
 import type { ComponentProps } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { Unplug } from 'lucide-react'
 import type { TerminalLine } from '../../fixtures/terminal'
 import type { SharedSize } from '../../fixtures/terminals'
-import { ActionButton } from '../common/actions'
-import { TerminalTabs } from './TerminalTabs'
-import { TerminalView } from './TerminalView'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import type { TerminalTabs } from './TerminalTabs'
+import { terminalTabs } from '../../entries/components/tools/TerminalTabs.mockup'
+import { terminalView } from '../../entries/components/tools/TerminalView.mockup'
+import { defined } from '../../defined'
 import styles from './TerminalTool.module.css'
 
 type TabsProps = Omit<ComponentProps<typeof TerminalTabs>, 'viewport'>
@@ -31,14 +33,26 @@ export function TerminalTool(props: {
   return (
     <div className={styles.tool}>
       {props.tabs ? (
-        <TerminalTabs {...props.tabs} viewport={props.viewport} />
+        <terminalTabs.Component
+          moklyInstance="terminal-tabs"
+          numbers={props.tabs.numbers}
+          shown={props.tabs.shown}
+          viewport={props.viewport}
+          {...defined({
+            atLimit: props.tabs.atLimit,
+            closeTo: props.tabs.closeTo,
+          })}
+        />
       ) : null}
-      <TerminalView
+      <terminalView.Component
         cursor={!ended}
         extraKeys={mobile && !ended}
         lines={props.lines}
-        prompt={ended ? undefined : props.prompt}
-        shared={props.shared}
+        moklyInstance="terminal-view"
+        {...defined({
+          prompt: ended ? undefined : props.prompt,
+          shared: props.shared,
+        })}
       />
       {ended ? (
         <div className={styles.ended} role="status">
@@ -46,7 +60,9 @@ export function TerminalTool(props: {
             <Unplug aria-hidden size={13} />
             Disconnected
           </span>
-          <ActionButton>Reconnect</ActionButton>
+          <actionButton.Component moklyInstance="reconnect">
+            Reconnect
+          </actionButton.Component>
         </div>
       ) : null}
     </div>

@@ -4,68 +4,23 @@ import {
 } from '../../../../src/shared/agent-tools'
 
 import { object, string } from '../parse'
-import {
-  ATTACHMENT_IMAGE_MAX_BYTES,
-  attachmentDescription,
-  attachmentReadInstruction,
-} from './attachment-description'
 import { codexBinary } from './binaries'
+import { codexInput } from './codex-input'
 import { writeCodexCredentials } from './codex-credentials'
 import { codexNotification } from './codex-events'
 import { codexStdioServer } from './codex-mcp'
 import { checkCodexGateway, codexSettings } from './codex-settings'
+import { prepareCodexSkills } from './codex-skills'
 import { openCodexThread } from './codex-thread'
 import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
-import { providerMessage, type FixedContext } from './message'
+import { InputReceipts } from './input-receipts'
 import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
+import { noSkills, withOrgSkillPaths, type SkillSource } from './skill-input'
 import type { ProviderFactory } from './types'
-import type { ProviderInput } from '../generated/ProviderInput'
-
-function input(command: ProviderInput, fixed: FixedContext) {
-  const images = command.attachments.filter((attachment) => {
-    const metadata = command.message.attachments.find(
-      (item) => item.id === attachment.attachmentId,
-    )
-    return (
-      metadata?.kind === 'image' &&
-      metadata.sizeBytes <= ATTACHMENT_IMAGE_MAX_BYTES
-    )
-  })
-  return [
-    {
-      type: 'text',
-      text: providerMessage(command, fixed),
-      text_elements: [],
-    },
-    ...(command.attachments.length
-      ? [
-          {
-            type: 'text',
-            text:
-              attachmentReadInstruction +
-              (images.length
-                ? ' Only an image that comes right after its file line is also in this message.'
-                : ''),
-            text_elements: [],
-          },
-        ]
-      : []),
-    ...command.attachments.flatMap((attachment) => {
-      const description = {
-        type: 'text',
-        text: attachmentDescription(command, attachment),
-        text_elements: [],
-      }
-      return images.includes(attachment)
-        ? [description, { type: 'localImage', path: attachment.path }]
-        : [description]
-    }),
-  ]
-}
 
 /**
  * Codex runs each subagent in its own thread, and the App Server sends the
@@ -84,9 +39,11 @@ function otherThread(params: unknown, threadId: string | null): boolean {
   )
 }
 
+/** `skills` gives the current Codex list at each send, also during a turn. */
 export function createCodexFactory(
   start: StartProcess = startProcess,
   credentials = writeCodexCredentials,
+  skills: SkillSource = noSkills,
 ): ProviderFactory {
   return async (options) => {
     options.signal?.throwIfAborted()
@@ -121,17 +78,22 @@ export function createCodexFactory(
       await lifetime.close()
       throw error
     }
+    const orgSkills = await prepareCodexSkills(options, lifetime)
+    const inputs = withOrgSkillPaths(skills, options.home, orgSkills.inputs)
     let threadId: string | null = null
     let activeTurn: string | null = null
     let userIds: string[] = []
+    const receipts = new InputReceipts(options.event, 'input')
     let choice = options.choice
     let activeChoice = choice
     let closed = false
     let rpc: JsonRpc
     try {
+      options.signal?.throwIfAborted()
       const args = [
         codexBinary(),
         'app-server',
+        ...orgSkills.args,
         ...Object.entries(settings.config).flatMap(([key, value]) => [
           '-c',
           `${key}=${JSON.stringify(value)}`,
@@ -154,20 +116,28 @@ export function createCodexFactory(
           if (otherThread(params, threadId)) return
           if (method === 'turn/started')
             activeTurn = string(object(object(params).turn).id)
-          codexNotification(method, params, userIds, options.event)
+          if (method === 'item/completed') {
+            const item = object(object(params).item)
+            if (
+              item.type === 'userMessage' &&
+              typeof item.clientId === 'string'
+            )
+              receipts.read([item.clientId])
+          }
+          codexNotification(method, params, userIds, receipts.emit)
           if (method === 'turn/completed') activeTurn = null
         },
         () => {
           void lifetime.close().then(
             () => {
               if (!closed)
-                options.event({
+                receipts.emit({
                   type: 'failed',
                   code: 'agent_exited',
                   message: 'The agent process ended.',
                 })
             },
-            (error: unknown) => options.event(failureCause(error)),
+            (error: unknown) => receipts.emit(failureCause(error)),
           )
         },
       )
@@ -185,7 +155,7 @@ export function createCodexFactory(
       return closing
     }
     const abort = () => {
-      void close().catch((error: unknown) => options.event(failureCause(error)))
+      void close().catch((error: unknown) => receipts.emit(failureCause(error)))
     }
     options.signal?.addEventListener('abort', abort, { once: true })
     if (options.signal?.aborted) abort()
@@ -208,35 +178,49 @@ export function createCodexFactory(
               ? options.credential.token
               : options.credential.login.secret,
         })
+      if (orgSkills.extraRoots.length)
+        await rpc
+          .request('skills/extraRoots/set', {
+            extraRoots: orgSkills.extraRoots,
+          })
+          .catch(() => {
+            options.warn(
+              'The org skills could not be loaded. The turn will continue.',
+            )
+          })
       const thread = await openCodexThread(rpc, options, settings.modelProvider)
       threadId = thread
       options.event({ type: 'conversation', id: thread })
       return {
         send: async (command) => {
+          if (command.type === 'notice' && !activeTurn) return
+          if (!activeTurn) receipts.reset()
+          const inputId = receipts.add(command)
           if (activeTurn) {
             const before = [...userIds]
-            userIds.push(command.message.id)
+            if (command.type !== 'notice') userIds.push(inputId)
             try {
               await rpc.request('turn/steer', {
                 threadId: thread,
                 expectedTurnId: activeTurn,
-                clientUserMessageId: command.message.id,
-                input: input(command, options),
+                clientUserMessageId: inputId,
+                input: codexInput(command, inputs, options),
               })
             } catch (error) {
               userIds = before
+              receipts.discard(inputId)
               throw error
             }
           } else {
-            userIds = [command.message.id]
+            userIds = [inputId]
             activeChoice = choice
             if (choice.fast)
               options.event({ type: 'speed', speed: { state: 'fast' } })
             const result = object(
               await rpc.request('turn/start', {
                 threadId: thread,
-                input: input(command, options),
-                clientUserMessageId: command.message.id,
+                input: codexInput(command, inputs, options),
+                clientUserMessageId: inputId,
                 model: choice.model,
                 effort: choice.effort === 'none' ? 'none' : choice.effort,
                 serviceTierForTurn: choice.fast ? 'priority' : 'default',

@@ -1,8 +1,9 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
-import type { SandboxPanelState } from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
+import type { SandboxPanelState } from '../../ui/components/workspace/sandboxNoticeState'
 import type { ArchiveAction } from '../../app/archive-model'
 import type { WorkspaceStream } from '../../app/events'
+import type { SkillsStore } from '../../chat/mentions/mention-skills'
 import type { ChatController } from '../../chat/state/controller'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
@@ -85,6 +86,8 @@ export interface WorkspaceContext {
    * revokes of its previews, the stored revokes first.
    */
   toolEvents: SubscribeWorkspaceEvents
+  /** The latest skill lists of the workspace, for the list of `/`. */
+  skills: SkillsStore
   /**
    * The request to move the keyboard focus to the terminal, after a choice
    * of Terminal on desktop.

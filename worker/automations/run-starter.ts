@@ -8,6 +8,7 @@ import { createWorkspace } from '../lifecycle/workspaces'
 import { freshGitHubUserToken } from '../security/github-tokens'
 import { warnWorker } from '../warnings'
 import { readAutomation } from './automation-data'
+import { readAutomationCapabilities } from './automation-capabilities-data'
 import { runAdmission, runCreationAttempt } from './run-admission-data'
 import { recordRunChoice } from './run-choice-data'
 import { finishAutomationRun } from './run-outcome-data'
@@ -96,32 +97,47 @@ export async function startAutomationRun(
         return
       }
     }
-    const created = await createWorkspace(
-      runtime,
-      orgId,
-      admission.owner,
-      {
-        repositoryId: automation.repositoryId,
-        sectionId: automation.sectionId,
-        firstMessage: {
-          id: run.messageId,
-          text: automationRunText(automation, run.trigger),
-          attachmentIds: [],
-          choice,
+    const create = async () =>
+      createWorkspace(
+        runtime,
+        orgId,
+        admission.owner,
+        {
+          repositoryId: automation.repositoryId,
+          sectionId: automation.sectionId,
+          capabilities: {
+            ...(await readAutomationCapabilities(env.DB, orgId, automation.id)),
+            macAccess: false,
+          },
+          firstMessage: {
+            id: run.messageId,
+            text: automationRunText(automation, run.trigger),
+            attachmentIds: [],
+            choice,
+          },
         },
-      },
-      admission.owner,
-      run.trigger.kind === 'pull-request'
-        ? {
-            branch:
-              run.trigger.event === 'merged'
-                ? run.trigger.baseBranch
-                : run.trigger.headBranch,
-            startSha:
-              run.trigger.event === 'merged' ? undefined : run.trigger.headSha,
-          }
-        : undefined,
-    )
+        admission.owner,
+        run.trigger.kind === 'pull-request'
+          ? {
+              branch:
+                run.trigger.event === 'merged'
+                  ? run.trigger.baseBranch
+                  : run.trigger.headBranch,
+              startSha:
+                run.trigger.event === 'merged'
+                  ? undefined
+                  : run.trigger.headSha,
+            }
+          : undefined,
+      )
+    let created: Awaited<ReturnType<typeof createWorkspace>>
+    try {
+      created = await create()
+    } catch (error) {
+      if (!(error instanceof HttpError) || error.code !== 'secret_not_found')
+        throw error
+      created = await create()
+    }
     await runtime.acceptFirstMessage(created.first)
     await attachRunWorkspace(
       env.DB,

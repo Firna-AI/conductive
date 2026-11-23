@@ -14,6 +14,7 @@ path = "src/main.rs"
 
 [dependencies]
 cnd-runner = { workspace = true }
+cnd-services = { workspace = true }
 cnd-runner-interface = { workspace = true }
 cnd-credential = { workspace = true }
 cnd-relay = { workspace = true }

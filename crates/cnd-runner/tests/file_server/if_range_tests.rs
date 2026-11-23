@@ -63,9 +63,17 @@ async fn if_range_rejects_unsupported_validators_but_has_no_effect_without_range
     h.write("video.mp4", b"0123456789");
     h.set_modified("video.mp4", UNIX_EPOCH + Duration::from_millis(1_000_900));
     let date = "Thu, 01 Jan 1970 00:16:40 GMT";
+    let current = h.get("/video.mp4").await;
+    let etag = current
+        .headers
+        .get("etag")
+        .map_or("\"missing\"", String::as_str);
+    let weak = format!("W/{etag}");
     for validators in [
         vec![("If-Range", "\"abc\"")],
         vec![("If-Range", "W/\"abc\"")],
+        vec![("If-Range", etag)],
+        vec![("If-Range", &weak)],
         vec![("If-Range", "invalid")],
         vec![("If-Range", "")],
         vec![("If-Range", "Thu, 01 Jan 1970 00:16:39 GMT")],
@@ -90,7 +98,11 @@ async fn if_range_rejects_unsupported_validators_but_has_no_effect_without_range
             !response.headers.contains_key("content-range"),
             "{validators:?}"
         );
-        assert!(!response.headers.contains_key("etag"), "{validators:?}");
+        assert_eq!(
+            response.headers.get("etag"),
+            current.headers.get("etag"),
+            "{validators:?}"
+        );
     }
     h.finish().await;
 }
@@ -165,6 +177,7 @@ async fn if_range_head_sends_the_headers_of_the_selected_whole_or_partial_get() 
             "content-type",
             "content-length",
             "last-modified",
+            "etag",
             "cache-control",
             "accept-ranges",
             "content-range",

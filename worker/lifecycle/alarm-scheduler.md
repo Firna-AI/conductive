@@ -46,6 +46,9 @@ the `browser`, `runner`, and `devices` security sources, on raw storage, as
   the lifecycle due times that had come, as the steps at the end of each
   run do.
 - Each run reads the due times that have come, and it runs their owners.
+  `WorkspaceAlarms.begin` also gives `dueAt`, the earliest of the due times
+  that the run owns, for the
+  [start step records](workspace-object.md#start-step-records).
 - The lifecycle run also has a run lease, the due time `lifecycle:run`.
   At its start, before it runs any owner, the run reads all stored due
   times. Then it stores its own lease 30 seconds after its start. So that

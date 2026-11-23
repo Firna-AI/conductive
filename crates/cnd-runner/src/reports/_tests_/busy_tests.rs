@@ -20,6 +20,7 @@ fn handler(next: Unimock, files: Unimock) -> ReportCommandHandler {
         ReportDependencies {
             files: Arc::new(files),
             ports: None,
+            skills: None,
             emitter: Arc::new(Unimock::new(())),
             link: Arc::new(Unimock::new(())),
             store: Arc::new(Unimock::new(())),
@@ -49,7 +50,7 @@ async fn busy_includes_queued_reports_and_delegates_to_the_turn_handler() {
                 .some_call(matching!())
                 .returns(Ok(())),
         )),
-        Unimock::new(
+        Unimock::new((
             FileReportsMock::refresh
                 .some_call(matching!(_, _, _))
                 .answers_arc(Arc::new(move |_, _, _, _| {
@@ -59,7 +60,8 @@ async fn busy_includes_queued_reports_and_delegates_to_the_turn_handler() {
                         Ok(())
                     })
                 })),
-        ),
+            FileReportsMock::close.some_call(matching!()).returns(()),
+        )),
     );
     assert!(handler.busy().await.unwrap());
     handler

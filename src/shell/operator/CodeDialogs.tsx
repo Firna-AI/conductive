@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Ban, CircleAlert, Plus } from 'lucide-react'
 import { Input } from '@firna/ui/input'
-import { InlineText } from '../../../docs/mockups/src/components/common/InlineText'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
+import { InlineText } from '../../ui/components/common/InlineText'
+import { Notice } from '../../ui/components/common/Notice'
+import { useControlSizes } from '../../ui/components/common/touch'
 import {
   disableCodeWords,
   newCodeWords,
-} from '../../../docs/mockups/src/components/operator/codeCopy'
+} from '../../ui/components/operator/codeCopy'
 import type {
   CreateOperatorCodeRequest,
   OperatorAccessCode,

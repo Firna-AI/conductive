@@ -10,13 +10,53 @@ import { BoatClient } from './boat'
 import { E2bClient } from './e2b/client'
 import type { ProviderAllocationMode, SandboxProvider } from './provider'
 
+type ProviderEnvironment = ProviderAccountEnvironment &
+  Partial<Pick<AppEnv, 'DB' | 'BOAT_KEY_ENCRYPTION_KEY'>>
+
+interface ProviderObserver {
+  /** The binding that the observed env replaces. A provider uses it untimed. */
+  plain: D1Database
+  observe(provider: SandboxProvider): SandboxProvider
+}
+
+const observers = new WeakMap<D1Database, ProviderObserver>()
+
+/**
+ * A workspace object times the provider calls of its start runs. Its env
+ * holds its own timed D1 binding, so the binding marks that env, also in a
+ * copy made with `{ ...env }`.
+ */
+export function observeProviders(
+  db: D1Database,
+  observer: ProviderObserver,
+): void {
+  observers.set(db, observer)
+}
+
 /** Trusted callers authorize the org and its resource before requesting a provider. */
 export function providerForAccount(
-  env: ProviderAccountEnvironment &
-    Partial<Pick<AppEnv, 'DB' | 'BOAT_KEY_ENCRYPTION_KEY'>>,
+  env: ProviderEnvironment,
   fetch: HttpFetch,
   accountId: string,
   allocationMode: ProviderAllocationMode = 'active',
+): SandboxProvider {
+  const observer = env.DB && observers.get(env.DB)
+  if (!observer) return createProvider(env, fetch, accountId, allocationMode)
+  // A live view, not a copy: a workspace object env can gain keys later.
+  const plain = new Proxy(env, {
+    get: (target, key) =>
+      key === 'DB' ? observer.plain : Reflect.get(target, key),
+  })
+  return observer.observe(
+    createProvider(plain, fetch, accountId, allocationMode),
+  )
+}
+
+function createProvider(
+  env: ProviderEnvironment,
+  fetch: HttpFetch,
+  accountId: string,
+  allocationMode: ProviderAllocationMode,
 ): SandboxProvider {
   const account = configuredProviderAccount(env, accountId)
   switch (account.kind) {

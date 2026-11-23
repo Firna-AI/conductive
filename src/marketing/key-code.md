@@ -54,12 +54,13 @@ Each path is relative to `src/marketing/` unless the link names another folder.
 - `links.ts`: the source repository address, the Mac app download
   addresses, `docsPath` for the docs, site paths, the section that the
   header marks, and `pageHrefs` for links from another origin.
-- `terms.ts`, `terms-work.ts`, `terms-org.ts`, `privacy.ts`,
-  `privacy-uses.ts`, `privacy-recipients.ts`, and `legal-text.ts`: legal
-  pages, the "Your work" and "Working in an org" sections of the Terms,
-  the "What Conductive uses, and why" and
-  "Who gets your data" sections of the Privacy page, and the shared text
-  model, titles, contact addresses, and sign-in agreement.
+- `terms.ts`, `terms-service.ts`, `terms-work.ts`, `terms-org.ts`, `privacy.ts`,
+  `privacy-uses.ts`, `privacy-recipients.ts`, `privacy-skills.ts`, and `legal-text.ts`: legal
+  pages, the "The service", "Your work", and "Working in an org" sections
+  of the Terms, the "What Conductive uses, and why" and
+  "Who gets your data" sections of the Privacy page, its org skills
+  disclosure, and the shared text model, titles, contact addresses, and
+  sign-in agreement.
 - `request-values.ts`: built-page markers, local Astro preview values,
   the sign-in address, and the links to the sections of the home page.
 - [`astro.config.ts`](../../astro.config.ts): build settings, generated
@@ -67,14 +68,15 @@ Each path is relative to `src/marketing/` unless the link names another folder.
   Prism and the hooks, and the file list writer.
 - [`site-build.ts`](../shared/site-build.ts): shared folder, list, page,
   icon, marker, and file-list names and types.
-- `tokens.ts`, `styles/`: design tokens from the mockups and bundled CSS.
+- `tokens.ts`, `styles/`: design tokens from the shared
+  [`src/ui/design/`](../ui/design/) and bundled CSS.
 - `icon-shapes.ts`: the lucide icons of the home page features, the
   actions, such as the Mac app downloads, and the docs, as shapes for the Astro pages.
 - `picture-urls.ts`, `picture-styles.ts`: picture file addresses, media
   queries, frame classes, and picture-size CSS.
-- [`marketingPictureList.ts`](../../docs/mockups/src/screens/marketingPictureList.ts):
+- [`marketingPictureList.ts`](../ui/screens/marketingPictureList.ts):
   the shared picture list.
-- [`marketingPictureCaptures.ts`](../../docs/mockups/src/screens/marketingPictureCaptures.ts):
+- [`marketingPictureCaptures.ts`](../ui/screens/marketingPictureCaptures.ts):
   capture pages, bounds, and file names.
 - [`tools/marketing-pictures/run.ts`](../../tools/marketing-pictures/run.ts):
   the capture command, build, and cleanup.

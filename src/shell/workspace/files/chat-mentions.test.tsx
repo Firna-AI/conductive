@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { expect, it, vi } from 'vitest'
 import type { ChatMentions } from '../../../chat/mentions/MentionsContext'
+import { FakeSkills } from '../../../chat/mentions/skills-test-kit'
 import { filesFor, testNavigation } from '../../../files/files-test-kit'
 import { pictureReply } from '../../../files/page/picture-reads.test-support'
 import { FakeApiServer } from '../../../test-support/fake-api'
@@ -24,6 +25,7 @@ it('offers one kept picture reader only while the sandbox runs', async () => {
     return null
   }
   const ready: Parameters<typeof useMentions>[0] = {
+    skills: new FakeSkills(),
     viewport: 'desktop',
     sandbox: 'ready',
     panel: null,

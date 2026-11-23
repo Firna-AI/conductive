@@ -45,10 +45,11 @@ A message from another member or a deferred model change keeps the
 active turn's context. Each new turn starts fresh tool processes.
 Closing the SDK or App Server also stops its workspace MCP child.
 
-The tools give 24 calls across the org. They manage workspaces,
+The tools give 27 Worker calls across the org. They manage workspaces,
 sessions, and messages, create and delete sections, and open, list, and
 close private port previews. They also list repositories, sections, and
 models, and ask to run Mac commands.
+They also list secrets and run commands with approved values.
 [Workspace tool calls](../tools/calls.md) gives each call with its
 options, defaults, transcript continuation, and retry IDs.
 
@@ -69,9 +70,20 @@ The runner puts this guidance in each new session's instructions.
 An existing session keeps its saved instructions after a restart. A new
 session gets the current guidance.
 
+## Local service tools
+
+The same server gives five [local service calls](../tools/services.md).
+They start, list, stop, and restart services, and read their retained output.
+They need no workspace token or active turn and reach only this computer.
+The runner owns the socket. Each separate service unit owns its process and log writer.
+Service processes and calls add no activity and hold no agent turn open.
+New session instructions have a separate Services section.
+[Agent guidance](../docs/protocol/services.md#agent-guidance) states the rules
+for temporary check servers and services.
+
 ## Sender IDs
 
-Each message to an agent starts with a sender line, as
+Each message to an agent ends with a sender line, as
 [Messages and files](agent-input.md#messages-and-files) says. The line
 gives the member who sent that message, with the member ID:
 
@@ -96,12 +108,15 @@ A member without a display name gets
 
 ## Key code
 
-- [message.ts](sdk-helper/src/providers/message.ts) gives `providerMessage`, which
-  puts the sender line with the member ID of each message before its
-  text. The stored message and the chat never hold that line.
+- [message.ts](sdk-helper/src/providers/message.ts) gives `senderLines`, the
+  sender line with the member ID of each message, which the input of each
+  agent puts at the end of the message. The stored message and the chat
+  never hold that line.
 - [instructions.rs](../crates/cnd-runner/src/engine/instructions.rs) builds the session instructions, which
-  holds the workspace tool guidance of each new session: the call names,
-  the access rules, and the choice of an owner ID.
+  hold the workspace tool and service guidance of each new session: the call names,
+  the access rules, server lifetime, and the choice of an owner ID.
+- [claude-background-note.ts](sdk-helper/src/providers/claude-background-note.ts)
+  gives Claude the server guidance in each note for new background work.
 - [provider.rs](../crates/cnd-runner/src/engine/provider.rs) derives the workspace tool
   context from the runner connection and the active turn.
   [environment.ts](sdk-helper/src/providers/environment.ts) puts that context in each agent environment.

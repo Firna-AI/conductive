@@ -1,6 +1,6 @@
 import { defineScreen } from '@mokly/mokly'
 import { GITHUB_SETUP_PATH } from '../../../../../../../src/shared/github-setup'
-import { appDomain } from '../../../../brand'
+import { appDomain } from '../../../../../../../src/shared/brand'
 import {
   GitHubSetupScreen,
   githubSetupSchema,

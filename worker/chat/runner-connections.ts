@@ -1,4 +1,3 @@
-import type { RunnerProtocolVersion } from '../../src/shared/generated/RunnerProtocolVersion'
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import {
   isSupportedRunnerVersion,
@@ -11,10 +10,8 @@ import type {
 import { CONNECTION_CHECK_MS } from '../security/connection-access'
 import { AuthenticatedRunner } from './authenticated-runner'
 import { warnRunnerConnection } from './runner-diagnostics'
-import {
-  RunnerConnectionStore,
-  type StoredRunnerConnection,
-} from './runner-connection-store'
+import { RunnerConnectionStore } from './runner-connection-store'
+import type { RunnerConnectionState } from './runner-connection-state'
 import type { ChatStore } from './store'
 import { failUnsupportedRunner } from './runner-unsupported'
 import type {
@@ -31,9 +28,11 @@ interface NativeRunnerConnections {
 
 export class RunnerConnections {
   current: ActiveRunner | null = null
-  private record: StoredRunnerConnection | null = null
+  /** Memory only. A physical socket enables durable state and native alarms. */
   private retained = false
+  /** Memory only. Restore rebuilds the socket-to-peer handles. */
   private readonly peers = new WeakMap<WebSocket, RunnerPeer>()
+  /** Memory only. Restore derives this warning marker from the saved stream. */
   private readonly connected = new WeakSet<ActiveRunner>()
   private readonly store: ChatStore
   private readonly dependencies: ChatDependencies
@@ -87,7 +86,7 @@ export class RunnerConnections {
       await this.store.read(workspace.id, async () => undefined)
       this.close()
       this.retained = socket !== undefined
-      const record = {
+      let state: RunnerConnectionState = {
         id: this.dependencies.randomConnectionId(),
         generation: 1,
         workspace,
@@ -101,40 +100,27 @@ export class RunnerConnections {
       if (socket) {
         if (!this.native || !this.saved)
           throw new Error('The native runner transport is missing.')
-        this.record = await this.saved.replace(record)
+        state = await this.saved.replace(state)
         this.native.sockets.accept(socket, {
           version: 1,
           role: 'runner',
-          id: this.record.id,
-          generation: this.record.generation,
+          id: state.id,
+          generation: state.generation,
         })
         this.peers.set(socket, peer)
-      } else this.record = record
-      this.activate(peer, this.record, null)
+      }
+      this.activate(peer, state)
       await this.arm()
     })
   }
 
-  private activate(
-    source: RunnerPeer,
-    record: StoredRunnerConnection,
-    protocolVersion: RunnerProtocolVersion | null,
-  ): void {
-    this.record = record
+  private activate(source: RunnerPeer, state: RunnerConnectionState): void {
     const saved = this.retained ? this.saved : undefined
     const active: ActiveRunner = {
-      id: record.id,
-      workspace: record.workspace,
-      streamId: record.streamId,
-      processStartId: record.processStartId,
-      protocolVersion,
-      loginKinds: record.loginKinds,
-      repositoryFolder: record.repositoryFolder,
-      fileServer: record.fileServer,
-      ready: record.ready,
+      state,
       peer: new AuthenticatedRunner(
         source,
-        record.workspace,
+        state.workspace,
         {
           ...this.dependencies,
           scheduleRunnerCheck: this.retained
@@ -143,25 +129,26 @@ export class RunnerConnections {
         },
         () => {
           if (this.current !== active) return
+          const at = this.dependencies.now()
           this.reportConnected(active)
-          warnRunnerConnection('runner_disconnected', active)
+          warnRunnerConnection('runner_disconnected', active.state)
           this.current = null
-          this.record = null
-          this.dependencies.runnerDetached(active.id)
+          this.dependencies.runnerDetached(active.state.id)
           this.dependencies.waitUntil(
             Promise.all([
-              saved?.save(null, record.generation),
+              saved?.save(null, state.generation),
               this.arm(),
               this.store.run(() =>
                 this.dependencies.runnerDisconnected(
-                  active.workspace.id,
+                  active.state.workspace.id,
                   async (event, occurredAt) => {
                     await this.store.change(
-                      active.workspace.id,
+                      active.state.workspace.id,
                       (transaction) => transaction.emit(event, occurredAt),
                       this.publish,
                     )
                   },
+                  at,
                 ),
               ),
             ]),
@@ -170,14 +157,14 @@ export class RunnerConnections {
       ),
     }
     this.current = active
-    if (record.streamId !== null) this.connected.add(active)
-    if (active.ready) this.attachFiles(active)
+    if (state.streamId !== null) this.connected.add(active)
+    if (state.ready) this.attachFiles(active)
   }
 
   reportConnected(active: ActiveRunner): void {
     if (this.connected.has(active)) return
     this.connected.add(active)
-    warnRunnerConnection('runner_connected', active)
+    warnRunnerConnection('runner_connected', active.state)
   }
 
   private async restore(
@@ -217,7 +204,7 @@ export class RunnerConnections {
     }
     this.peers.set(socket, peer)
     this.retained = true
-    this.activate(peer, record, protocolVersion)
+    this.activate(peer, record)
     await this.arm()
     return true
   }
@@ -230,22 +217,14 @@ export class RunnerConnections {
   }
 
   async persist(active: ActiveRunner): Promise<void> {
-    const record = this.record
-    if (this.current !== active || !record) return
-    record.streamId = active.streamId
-    record.processStartId = active.processStartId
-    record.protocolVersion = active.protocolVersion
-    record.loginKinds = active.loginKinds
-    record.repositoryFolder = active.repositoryFolder
-    record.fileServer = active.fileServer
-    record.ready = active.ready
-    if (this.retained) await this.saved?.save(record, record.generation)
+    if (this.current !== active || !this.retained) return
+    await this.saved?.save(active.state, active.state.generation)
   }
 
   attachFiles(active: ActiveRunner): void {
     this.dependencies.runnerAttached(
-      active.workspace.id,
-      active.id,
+      active.state.workspace.id,
+      active.state.id,
       (command) =>
         this.store.run(async () => {
           if (this.current !== active) return false
@@ -263,17 +242,17 @@ export class RunnerConnections {
   async alarm(): Promise<void> {
     if (!this.retained) return
     const active = this.current
-    const record = this.record
-    if (!active || !record) {
+    if (!active) {
       await this.arm()
       return
     }
-    if (record.checkAt > this.dependencies.now()) {
+    const state = active.state
+    if (state.checkAt > this.dependencies.now()) {
       await this.arm()
       return
     }
-    record.checkAt = this.dependencies.now() + CONNECTION_CHECK_MS
-    if (this.retained) await this.saved?.save(record, record.generation)
+    state.checkAt = this.dependencies.now() + CONNECTION_CHECK_MS
+    await this.persist(active)
     await active.peer.authorize()
     await this.arm()
   }
@@ -281,7 +260,7 @@ export class RunnerConnections {
   private arm(): Promise<void> {
     if (!this.retained) return Promise.resolve()
     return (
-      this.dependencies.runnerAlarm?.(this.record?.checkAt ?? null) ??
+      this.dependencies.runnerAlarm?.(this.current?.state.checkAt ?? null) ??
       Promise.resolve()
     )
   }

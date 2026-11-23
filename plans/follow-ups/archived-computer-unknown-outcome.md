@@ -1,0 +1,65 @@
+# Unknown computer outcome keeps the deletion claim
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-20, from branch `calummoore/follow-up-archived-computer-certainty-irrm`. That branch fixed the known computer states of the follow-up item "Archived bar claims an unconfirmed computer delete", with its option B. It kept the earlier notices for the case of this item.
+- **Location:** `src/ui/components/workspace/sandboxNoticeState.ts:132-164` (`archiveStage`, and `restoreStage` with the comment that names this item), `docs/mockups/src/components/workspace/SandboxNotice.tsx:144-150` (the words of the stage `removed`), `src/shell/workspace/notice-copy.ts:75-120` (`archivedProblem`, the same words in the app), `src/shell/workspace/sandbox-view.ts:75-85` and `:109-116` (`archivedRestore`, which reads Restore from the legacy `Workspace.restoreUntil`, and the `computer` input with the comment that names this item), `src/chat/components/SandboxState.tsx:131-177` (`archivedProblem` and `legacyArchivedProblem` of the chat's own bar, with the comment that names this item), `docs/protocol/workspace-life.md:151-158` and `:270-273` (the bar rules), `docs/mockups/src/entries/app/archive/removed/index.mockup.tsx` (the drawn Removed bar), and `src/marketing/docs/workspaces.md:474` (the guide sentence on the Removed text).
+- **Reason:** Each option adds a Removed notice state that no requirement covers, so the words wait for the user.
+
+- **Source:** Design. **Category:** Product bug.
+- **Terms:**
+  - **Archive:** the action that stops the cloud computer of a workspace, keeps it for 14 days, and makes the chat read-only.
+  - **Restore:** the action that brings an archived workspace back, stopped, during those 14 days.
+  - **Removed workspace:** an archived workspace whose 14 days ended, which left the list and opens only through a link, with read-only chat.
+  - **Computer ledger:** the D1 table `computer_ledger`, with one row for each create request of a cloud computer, its ID, its delete date, and its refusal flag.
+  - **`archivedComputer`:** the optional field of each workspace reply that says what the app knows of the cloud computer of an archived workspace.
+- **Background:**
+  - Each workspace reply carries the legacy field `Workspace.restoreUntil`, the last time of Restore. It is null while the workspace row has no computer ID.
+  - Older copies of the app hide Restore when the legacy `Workspace.restoreUntil` is null. So that field stays unchanged.
+  - Each reply for an archived workspace also carries `archivedComputer`, with the shape `{ state: 'may-exist' | 'deleted' | 'unknown'; restoreUntil: number }`.
+  - The nested cutoff `archivedComputer.restoreUntil` is always present. It is always the time of the Archive plus 14 days, also while Restore is unavailable.
+  - Rust owns `ArchivedComputer` and `ArchivedComputerState` in `crates/cnd-runner-interface/src/tools/workspace_types.rs`. `ts-rs` writes them into `src/shared/generated/`.
+  - `archivedComputerColumn` in `worker/data/archived-computer.ts` finds the state in D1 each time that the Worker reads a workspace. `archivedComputerFields` in the same file builds the field. A ledger row counts only when it has the org of the workspace, the purpose `workspace`, and the workspace ID.
+    - `may-exist`: the workspace row has a computer ID, or a ledger row has no deleted date and no refused create.
+    - `deleted`: not `may-exist`, and a ledger row with a known computer ID has a deleted date.
+    - `unknown`: neither of these.
+  - The state `unknown` comes after a refused create. It also comes for a workspace that had no computer record when the ledger began, such as one whose computer the app deleted before then. It also comes when Archive stops a start before the ledger write of its create.
+  - `unknown` always comes with a null legacy `Workspace.restoreUntil`, because a workspace row with a computer ID gives `may-exist`.
+  - The notice maps the known states to words that the mockup catalogue already draws:
+    - `may-exist` with Restore: "Restore it until <day> to bring back its files and sessions. It leaves the list on that day.", with the action Restore.
+    - `may-exist` without Restore, before the last day: "Your chat history is available. It leaves the list on <day>." The panels say "Your chat history is available."
+    - `may-exist` after the last day: the title "Removed on <day>", and "It left the list. Its cloud computer is being deleted, and the chat is read-only."
+    - `deleted` before the last day: "Its cloud computer is deleted, and the chat is read-only. It leaves the list on <day>."
+    - `deleted` after the last day: the title "Removed on <day>", and "It left the list. Its cloud computer is deleted, and the chat is read-only."
+    - The panels of `deleted` say "The files and the tools went with the cloud computer."
+  - The state `unknown` keeps the legacy reading of the notice: Restore from the legacy `Workspace.restoreUntil` alone. With a null legacy `Workspace.restoreUntil`, that reading gives the words of `deleted`, before and after the last day.
+  - A reply without `archivedComputer` keeps the same legacy reading. It comes from the previous Worker during a deploy, and from a record that the app saved before the field existed.
+  - The standalone chat bar has no Restore action. For `unknown` and a missing field, it keeps its own deletion words, regardless of the legacy `Workspace.restoreUntil`.
+  - For such a reply, a set legacy `Workspace.restoreUntil` gives the words of `may-exist`. A null legacy `Workspace.restoreUntil` gives the words of `deleted`.
+  - `readArchivedComputer` in `src/shared/archived-computer-read.ts` drops a malformed `archivedComputer`, or one with a state that it does not know. The deserializer of the Rust type also drops a null, malformed, or future value. Each reader then reads the reply as one without the field, and rejects no reply for that value.
+  - The Archive section of `docs/protocol/workspace-life.md` says: "The bar says that the cloud computer is deleted only after the delete. Before that, the bar of a removed workspace says that the cloud computer is being deleted."
+  - Its section "Removed workspaces" says that the Removed bar gives the state of the cloud computer.
+  - The same doc says that the bar gives the day when the workspace leaves the list also without Restore. A workspace without a kept sandbox offers no Restore, and the app refuses such a Restore with HTTP 409.
+  - The branch that added `archivedComputer` kept this legacy reading for `unknown` and for a reply without the field, before and after the last day.
+  - The root question below concerns only the Removed notice, after the last day.
+  - Before the last day, the legacy reading also says "Its cloud computer is deleted" for these records. That claim is remaining work of this item, outside the root question. The catalogue already draws the chat-history words that claim no delete.
+  - Both options keep the removal date, the read-only chat, and the unavailable Restore, as `docs/protocol/workspace-life.md` requires.
+- **Problem:** The state `unknown`, and a reply without the field whose legacy `Workspace.restoreUntil` is null, still say "Its cloud computer is deleted", before and after the last day. The app recorded no delete for them. Neither existing Removed notice can describe such a record without an unsupported claim about its cloud computer. This includes refused creates, records from before the ledger, and replies from the previous Worker.
+- **Impact if no action:** The bar of these rare records keeps a deletion claim that the app did not record, before and after the last day. A fix without an answer could replace that claim with an unconfirmed claim that the delete is in progress. No data is lost, and Restore stays unavailable.
+- **Root question:** What should a removed workspace say when its computer outcome is unknown?
+- **Options:**
+  - **A.** Show only known chat facts. Keep "Removed on <day>". Use "It left the list. Your chat history is available. The chat is read-only." The panels use "Your chat history is available." Add this neutral state to the catalogue and protocol. Effort: Medium.
+  - **B.** State the uncertainty. Keep "Removed on <day>". Use "It left the list. The state of its cloud computer is unknown, and the chat is read-only." The panels promise only chat history. Add this explicit unknown state to the catalogue and protocol. Effort: Medium.
+- **Left out:** "Deleted" needs positive deletion evidence. "Being deleted" claims a process that a refused create might never need. A provider lookup cannot recover missing historical identity from no record. Removing the notice would lose the required removal date. Only two notice policies remain: omit an unknown computer claim, or state the uncertainty.
+- **Wider fix:** None, because the wider fix is already in force: the typed field `archivedComputer` and the one exhaustive mapping of `archiveStage`. The recommended option A supplies the words of its `unknown` branch.
+- **Previous examples:** Commit `d78a9f26995df063dd4439f5eba27674906851f3` uses chat-history words when files cannot be promised. Commit `1909ae3516107d18346b30be3dc7886aa09adb04` already draws the confirmed-delete and deletion-retry states of a removed workspace.
+- **Related:**
+  - Every option of `plans/follow-ups/unresolved-computer-request-ownership.md` keeps the ledger row of an unresolved create live until a confirmed delete or a refusal. The state `may-exist` reads that row, so a fix there must keep its meaning. That fix can also leave fewer records with the state `unknown`. Neither item waits for the other.
+  - `plans/follow-ups/archived-computer-cleanup-publication.md` covers the same notice mapping after a cleanup changes the evidence. Its fix publishes a move to `unknown` but keeps this item's words. Neither item waits for the other.
+- **Recommendation:** A. It reports the useful facts without a computer claim that the recorded evidence cannot support.
+- **Action:** ask the user, because each option adds a Removed notice state that no requirement covers, and A also drops the state of the cloud computer from that bar.
+  - The work after the answer: draw the chosen state on `app/archive/removed`, and add its line to the section "Removed workspaces" of `docs/protocol/workspace-life.md`. Use the state for the Removed notice of `unknown`. Use it also for a reply without the field whose legacy `Workspace.restoreUntil` is null.
+  - The later work must also resolve the recorded deletion claim of these records before the last day, with the chat-history words that the catalogue already draws: "Your chat history is available. It leaves the list on <day>." If it does not, record that claim in a new follow-up item before it deletes this item.
+  - Update or remove each comment that names this item, in `restoreStage`, `sandboxView`, and `legacyArchivedProblem`.
+  - Read both legal pages and every public guide in full, as `AGENTS.md` says. The guide sentence at `src/marketing/docs/workspaces.md:474` says: "Its text says that the cloud computer is deleted or is being deleted." Either option makes that sentence wrong.
+  - Checks for that work: regression cases for `unknown` and for a reply without the field, before and after the last day. Then the mockup and app checks of that change.

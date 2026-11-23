@@ -24,9 +24,10 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   [mockups](../mockups/README.md) (decision 15).
 - For an operator, it also shows the operator section at `/operator`. The
   section gives counts across every org. It finds any org or user, and it
-  suspends or lifts it. It also approves people who wait, makes and
-  disables codes, pauses sign-ups, turns the waitlist off and on, and sets
-  the weights of new orgs.
+  suspends or lifts it. It switches an org to another provider account.
+  It also approves people who wait, makes and disables codes, pauses
+  sign-ups, turns the waitlist off and on, and sets the weights of new
+  orgs.
   [Operator section](../protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
 - The browser stores only the panel sizes and the last workspaces. The
@@ -64,8 +65,10 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It calls each sandbox and each saved snapshot through the client of its
   provider account. It takes that account from its own records, as it
   takes the sandbox or the saved snapshot.
-- It sets the provider account of each new org once, from the choice of an
-  operator or from a draw by the weights.
+- It sets the first provider account of each new org, from the choice of
+  an operator or from a draw by the weights. After a switch by an
+  operator, it changes the account of the org when the switch build
+  succeeds, as [Switch account](../protocol/switch-account.md) says.
 - It runs one gate for each hostname before every route and every
   WebSocket upgrade. [Access and security](../protocol/access-and-security.md)
   states the gates.
@@ -76,6 +79,13 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It keeps the secrets of each org and their grants. It returns the value
   of a secret only to a run of the agent tools that a grant allows, and to
   an admin who reveals it, as [Secrets](../protocol/secrets.md) says.
+- It gives the app the services of each workspace, their controls, and
+  their logs through app routes, with no new socket message. The workspace
+  Durable Object keeps only the filtered report and the output-free control
+  records of the running sandbox, apart from its chat. It joins a raw log
+  in memory, filters it, and stores none of it. It names the session that
+  started a service from its own records, and that source grants no right,
+  as [Service reports](../protocol/service-reports.md) says.
 
 - Two Cron Triggers run the timed work. One runs every 15 minutes for
   deleted orgs, lifecycle repairs, and pending approval emails. One runs
@@ -101,8 +111,9 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   records of attached files, and the records of the secrets, their grants,
   and their reveals. D1 also holds app access, codes and their uses,
   the sign-up pause, the waitlist switch, and the state of approval emails.
-- D1 also holds the provider account of each org, and the weights of new
-  orgs with the record of each change.
+- D1 also holds the provider account of each org with the record of each
+  switch. It also holds the weights of new orgs with the record of each
+  change.
 - The record of each workspace holds a copy of its
   [GitHub state](../protocol/github-banner.md#the-github-state).
   A list read takes this copy from D1. The GitHub summary adds no Durable
@@ -113,10 +124,10 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 ## Workspace Durable Object
 
 - One Durable Object for each workspace. It runs in Western Europe, near
-  Boat's machines and E2B's EU cluster. Each runner message passes between
-  the object and the sandbox. Every workspace object gets the Western
-  Europe hint, whatever its account. Today every account runs in the EU,
-  so each object is near its sandbox.
+  Boat's machines. Each runner message passes between the object and the
+  sandbox. Every workspace object gets the Western Europe hint, whatever
+  its account. The `e2b` account runs in the United States, so each runner
+  message of a workspace on `e2b` crosses the Atlantic.
   [Regions](../protocol/provider-accounts.md#regions) says that an account
   can run in another region.
 - It holds the open tabs, the connection of the agent runner, and the
@@ -171,29 +182,36 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   URLs, desktop streams, and environments.
 - E2B is the second provider, so that a Boat outage does not stop every
   org (e2b decision 222).
-- Each org runs in one provider account for its whole life (decision 80,
-  and e2b decision 222). That account holds the org image and every sandbox
-  of the org.
+- Each org runs in one provider account at a time (decision 80, and e2b
+  decision 222). That account holds the org image and the sandboxes of the
+  new workspaces of the org.
   Its plan limits apply to its orgs together.
 - A new org gets its account from the choice of an operator or from the
-  weights. No org moves to another account.
+  weights. An operator can later switch the org to another account. The
+  switch builds the org image on that account, and new workspaces start
+  there when that build succeeds.
+- Each workspace keeps its sandbox on the account that it started on. So
+  after a switch, one org can have sandboxes on two accounts, and an older
+  org image on the old account.
 - The records name the account of each org, each sandbox, and each saved
   snapshot.
 - The app does not depend on provider webhooks. The agent runner reports
   when a sandbox is ready. The Worker reads the state of a sandbox from the
   API of its provider when it needs it.
 - A stop ends every process. Each provider keeps the disk and the enabled
-  system services, and starts those services again after each resume.
-- E2B runs in its EU cluster, in an E2B project that holds only the app's
-  work. Each E2B sandbox has private traffic.
+  system services, and starts those services again after each resume. The
+  [services](../protocol/services.md) of a workspace run in transient
+  units, not enabled ones, so no resume starts them.
+- E2B runs in its default cluster, in the United States, in an E2B project
+  that holds only the app's work. Each E2B sandbox has private traffic.
 - On E2B, the template gives the agents the same computer tools as on
   Boat (e2b decision 216). An E2B sandbox has no desktop stream.
 
 ## Sandbox software
 
 The [sandbox software page](sandbox-software.md) describes the app's own
-software in each sandbox: its two programs, its releases and updates, and
-the software image.
+software in each sandbox: its programs, its releases and updates, the
+services that it runs, and the software image.
 
 ## External services
 

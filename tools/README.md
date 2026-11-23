@@ -1,13 +1,15 @@
 # Workspace CLI and MCP server
 
-The Rust program `conductive` provides 26 workspace tools as CLI commands
-and as a stdio MCP server. It manages workspaces, sessions, messages,
-sections, and private port previews. It lists repositories and models.
+The Rust program `conductive` provides 27 Worker tools and five local service
+tools as CLI commands and as a stdio MCP server. It manages workspaces,
+sessions, messages, sections, and private port previews. It lists repositories and models.
 It can ask to run a command on the active turn sender's connected Mac.
 It lists org secrets and runs a command with approved values in its environment.
 [Workspace tool calls](calls.md) gives each call with its options and replies.
 
-Both adapters use the fixed machine routes under `/v1/tools/`.
+The Worker calls use fixed machine routes under `/v1/tools/`.
+The [local service calls](services.md) use the runner's private Unix socket.
+They need no workspace token or active turn.
 The [Worker handler](../worker/tools/README.md) verifies the workspace token
 and the calling turn. Rust owns the shared runner request and reply types in
 [cnd-runner-interface](../crates/cnd-runner-interface/README.md).
@@ -98,7 +100,7 @@ Every read needs only the workspace token.
 
 ## MCP
 
-The stdio server exposes the 26 calls of [the call table](calls.md#the-calls).
+The stdio server exposes the 27 Worker calls of [the call table](calls.md#the-calls).
 Their fields take the values of the CLI options.
 Their optional `workspaceId` defaults to the caller.
 The ID fields name the calls or links that supply their values.
@@ -123,7 +125,28 @@ It must stop the process when the turn ends.
 A process with an old turn ID cannot serve another turn or a concurrent session.
 The Worker rejects stale turn context.
 
+## Session watches
+
+```sh
+conductive sessions watch --workspace workspace-id --session session-id --turn-id turn-id
+```
+
+`sessions watch` and `watch_session` ask for one wake when one turn finishes, fails, or stops.
+Use the actual session and exact `turnId` returned with the work, when available.
+The call returns at once. Set the watch, then end the reply when only that watched work remains.
+After a wake, use `read_session` for the result.
+An idle or ended reply sets no watch, so read it at once.
+A turn end does not mean the whole delegated task is complete.
+Explicit Stop drops older pending wakes of the calling session.
+Automatic idle computer stops keep watches.
+[Session watches](calls.md#session-watches) gives the options and typed replies.
+
 ## Secrets
+
+Call `secrets list` or `list_secrets` before you ask a member for an API key,
+a token, or another credential. Use `secrets run` or `run_with_secrets` for
+each command that needs a secret. Read each value through its
+`environmentVariable`.
 
 `secrets list` and `list_secrets` return each org secret's name, description,
 availability, and `environmentVariable`. They never return values. A running
@@ -135,7 +158,8 @@ name. The Worker's list reply has no variable names.
 two requested names that need one environment key. That refusal is a local
 failure before any Worker call. It names both secrets and the shared
 variable, and never a value. Otherwise the tools send the names, command
-text, and optional reason to the Worker. A missing grant makes a request
+text, and optional reason to the Worker. Grants that cover each name allow
+the command with no request. A missing grant makes a request
 that waits up to 90 seconds. A pending result starts no command. After a
 notice of a late answer, the agent calls run again.
 
@@ -167,6 +191,11 @@ See [Secret variables](../docs/protocol/secret-variables.md) and
 [Secret requests](../docs/protocol/secret-requests.md).
 
 ## Mac commands
+
+Use `mac run` or `run_mac_command` when the task needs the member's Mac.
+The call needs an active calling turn.
+The request goes to the Mac of the member whose message started the turn.
+The Mac app asks before each command, unless a permission that its user chose there covers it.
 
 Mac commands use the same runtime token and active turn context.
 The Worker selects the stored sender, not the workspace owner or a caller-supplied user.

@@ -61,6 +61,9 @@ describe('NewWorkspaceModel', () => {
     draft.setText('Let shoppers save their cart.')
     draft.setRepository('billing-service')
     draft.setChoice(choice)
+    // The switch of this Mac is a choice of the draft, which the create
+    // does not send and the next draft does not keep.
+    draft.setAllowThisMac(true)
     await pickWorkspaceFiles(draft, [
       new File(['Cart notes'], 'notes.txt', { type: 'text/plain' }),
     ])
@@ -107,7 +110,7 @@ describe('NewWorkspaceModel', () => {
     expect(await server.requests.at(-1)?.json()).toEqual({
       repositoryId: 'billing-service',
       sectionId: 'checkout',
-      capabilities: { preapprovedSecretIds: [], macAccess: false },
+      capabilities: { preapprovedSecretIds: [] },
       firstMessage: {
         id: 'client-1',
         text: `Let shoppers save their cart. ${mentionText(await attachmentPath({ id: 'draft-attachment-1', name: 'postcode-overlap.png' }), false)}  `,
@@ -129,6 +132,7 @@ describe('NewWorkspaceModel', () => {
     expect(draft.draft.get()).toMatchObject({
       text: 'A newer draft',
       files: [],
+      allowThisMac: false,
     })
     expect(draft.draft.get().messageId).not.toBe('client-1')
   })

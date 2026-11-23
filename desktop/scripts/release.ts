@@ -1,7 +1,7 @@
 import { mkdir, readdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-import { macDmgNames, productName } from '../../docs/mockups/src/brand.ts'
+import { macDmgNames, productName } from '../../src/shared/brand.ts'
 import { runReleaseCommand } from './release-command.ts'
 import { withReleaseKeychain } from './release-keychain.ts'
 import { retryAfterTimeLimit } from './release-retry.ts'

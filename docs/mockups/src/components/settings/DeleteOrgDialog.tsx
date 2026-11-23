@@ -1,13 +1,15 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { Input } from '@firna/ui/input'
-import { Trash2 } from 'lucide-react'
 import { deletedOrg, orgs } from '../../fixtures/orgs'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import {
+  confirmDialog,
+  dialogText,
+} from '../../entries/components/common/ConfirmDialog.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 
 /**
  * An admin confirms Delete org by typing the name of the org. The dialog
@@ -19,31 +21,38 @@ export function DeleteOrgDialog(props: { viewport: Viewport }) {
   const { field } = useControlSizes()
   const org = orgs[deletedOrg.org]
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           <ScreenLink asChild to={paths.orgSettings}>
-            <ActionButton>Cancel</ActionButton>
+            <actionButton.Component moklyInstance="dialog-cancel">
+              Cancel
+            </actionButton.Component>
           </ScreenLink>
-          <ActionButton icon={Trash2} tone="danger">
+          <actionButton.Component
+            icon="trash-2"
+            moklyInstance="dialog-delete-org"
+            tone="danger"
+          >
             Delete org
-          </ActionButton>
+          </actionButton.Component>
         </>
       }
+      moklyInstance="delete-org-dialog"
       title={`Delete ${org.name}?`}
       viewport={props.viewport}
     >
-      <DialogText>
+      <dialogText.Component>
         Every cloud computer of {org.name} stops now, and its members can no
         longer open it. Everything is deleted on {deletedOrg.deletes}, unless an
         admin restores {org.name} from Account settings before then.
-      </DialogText>
+      </dialogText.Component>
       <Input
         label={`Type ${org.name} to confirm`}
         onChangeText={noop}
         size={field}
         value={org.name}
       />
-    </ConfirmDialog>
+    </confirmDialog.Component>
   )
 }

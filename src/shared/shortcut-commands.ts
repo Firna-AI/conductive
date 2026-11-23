@@ -63,6 +63,7 @@ export const shortcutCommandIds = [
   'stop-agent',
   'copy-concise-transcript',
   'copy-full-transcript',
+  'explain-selection',
 ] as const
 
 export type ShortcutCommandId = (typeof shortcutCommandIds)[number]

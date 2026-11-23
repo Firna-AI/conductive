@@ -1,5 +1,5 @@
 import type { Workspace } from '../../shared/generated/Workspace'
-import { workspaceLabel } from '../../../docs/mockups/src/components/workspaces/label'
+import { workspaceLabel } from '../../ui/components/workspaces/label'
 import type { OrgSummary } from '../../shared/orgs'
 import type { ShortcutCommandId } from '../../shared/shortcut-commands'
 
@@ -221,7 +221,7 @@ export function orgSettingRows(
 /** The tab of the Account page that holds a section, or that a row is. */
 function accountTabOf(id: AccountSettingId): AccountTab {
   if (id === 'agents') return 'agents'
-  if (id === 'new-workspaces') return 'preferences'
+  if (id === 'favourites' || id === 'new-workspaces') return 'preferences'
   if (id === 'keyboard-shortcuts') return 'shortcuts'
   if (id === 'this-mac') return 'this-mac'
   return 'general'

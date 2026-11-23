@@ -1,10 +1,11 @@
 import { readEndpointAddress } from '../../src/shared/endpoint-address'
 import type { AppDependencies } from '../env'
-import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
+import { chatGptSignInCopy } from '../../src/ui/components/settings/chatGptSignInCopy'
 import { scheduleConnectionCheck } from '../security/connection-access'
 import type { CodexTokens } from '../codex-auth/tokens'
 import type { CodexRotation } from '../codex-auth/rotation'
 import type { CodexTaskOwner } from '../codex-auth/tasks'
+import { codexLongWait } from './codex-long-wait'
 import { gatewayCodexAuth } from './codex-request-auth'
 import { codexTokenUpstream } from './codex-upstream'
 import {
@@ -164,6 +165,17 @@ export async function routeModelGateway(
       lifetime.signal.throwIfAborted()
       const redactions = [...secrets, ...(auth?.secrets ?? [])]
       const headers = downstreamHeaders(upstream.headers, redactions, chatgpt)
+      const longWait = codexLongWait(
+        agent,
+        suffix,
+        upstream.status,
+        headers,
+        runtime.dependencies.now(),
+      )
+      if (longWait) {
+        lifetime.cancel(new Error('The upstream asked for a long wait.'))
+        return longWait
+      }
       if (!upstream.body) {
         lifetime.complete()
         return new Response(null, { status: upstream.status, headers })

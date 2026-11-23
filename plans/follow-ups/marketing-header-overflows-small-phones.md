@@ -11,7 +11,7 @@
 - **Terms:**
   - **Marketing mockup:** A visual specification of the public site in `docs/mockups/`.
   - **Site header:** The shared lockup and navigation above each marketing page and each marketing mockup.
-  - **Lockup:** The brand tile and the name "Conductive" in one image. Its height is the `lockupHeight` token in `docs/mockups/src/design/metrics.ts`, 25 px.
+  - **Lockup:** The brand tile and the name "Conductive" in one image. Its height is the `lockupHeight` token in `src/ui/design/metrics.ts`, 25 px.
 - **Background:**
   - The phone header shows the lockup, GitHub, and Sign in on one line. Every marketing mockup uses this header.
   - The production site has matching navigation in `src/marketing/components/SiteHeader.astro` and `src/marketing/styles/chrome.css`.

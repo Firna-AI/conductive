@@ -24,16 +24,22 @@ This page lists each protocol doc and what it covers.
       turn that cannot run fast.
     - [Dropped answers](../protocol/dropped-answers.md): the continue
       message of a Claude turn after its model answer drops.
+  - [The scroll of the chat](../protocol/chat-scroll.md): the row that
+    stays in view, the scroll after a send, and the place that each tab
+    keeps.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
     composer, the chips of files and folders, Add to chat, the sent chips
     of attached files, and the removal of each chip of the composer.
     - [File mentions: files in answers](../protocol/file-mentions-answers.md):
       the file chips, the file links, and the pictures in the answers of
       the agents, and their line targets.
+  - [Skill mentions](../protocol/skill-mentions.md): the list of `/` in the
+    composer, the skill chips and their text, and the skills report of the
+    runner that fills the list.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
     its events and their limits, its turns, what an out-of-memory kill ends,
     the background work of Claude turns with its note and its time limit,
-    its port reports, and the repair of lost workspace updates.
+    its port reports, its skills report, and the repair of lost workspace updates.
     - [Background work of Claude turns](../protocol/background-work.md):
       the wait of a Claude turn for background work, its note, and its time
       limit.
@@ -45,6 +51,10 @@ This page lists each protocol doc and what it covers.
     - [Runner warnings](../protocol/runner-warnings.md): the warnings of the
       Worker for runner connections and for turn ends with no Stop request,
       and the process-start ID of the runner.
+    - [Services](../protocol/services.md): the named programs outside every
+      turn, with [Service calls](../protocol/service-calls.md),
+      [Services in the app](../protocol/services-in-the-app.md), and
+      [Service reports](../protocol/service-reports.md).
   - [Session transcripts](../protocol/session-transcripts.md): copying a
     session as concise or full Markdown, and the text of a copy.
     - [Transcript routes](../protocol/transcript-routes.md): the route of
@@ -79,8 +89,15 @@ This page lists each protocol doc and what it covers.
       use in one command, their storage, the Secrets tab, the rights,
       Reveal, the mark for all agents, the grants, and their risks.
       - [Capabilities](../protocol/capabilities.md): the control of New
-        workspace and of each workspace, with its secrets part and Mac
-        access.
+        workspace, of each workspace, and of an automation, with its
+        secrets part.
+        - [Mac access](../protocol/mac-access.md): the requests that agents
+          can always send to a Mac, the Mac access switch of the Mac app,
+          the grant that it starts on this Mac, and the risks.
+        - [Capabilities: what agents learn](../protocol/capabilities-agents.md):
+          the facts of a session that its agent learns, the change note of
+          each change, where the note goes, what the chat shows, and older
+          runners.
       - [Secret variables](../protocol/secret-variables.md): the names of
         new secrets, the variable name of each secret, the command
         environment, conflicting variable names, and older tools.
@@ -98,16 +115,23 @@ This page lists each protocol doc and what it covers.
     an attached file in parts, with the gate rules and the body limit of
     its routes.
   - [Step timing](../protocol/step-timing.md): the `Server-Timing` header of
-    the preview replies and of the create reply, and what it may hold.
+    the preview replies and of the create reply, and what it may hold, and
+    the job step records of builds and starts.
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
   Worker routes that add the agent login to each model request.
   - [Model gateway: requests and answers](../protocol/model-gateway-requests.md):
     the upstream of each login, what passes to it and back, the own
     endpoints, the streams, and the risks.
+  - [Model gateway: long waits](../protocol/model-gateway-long-waits.md):
+    the error that ends a Codex turn when the upstream asks for a long
+    wait.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar, its
   actions, Merge, and its events.
   - [The GitHub state](../protocol/github-summary.md): the four summary
     values for workspace list marks and their order.
+  - [GitHub banner: checks and layouts](../protocol/github-banner-layouts.md):
+    the Checks tab, and where the bar and its parts show on desktop and on
+    a phone.
   - [Repository changes on GitHub](../protocol/repository-changes-on-github.md):
     a new name or default branch of a repository, the saved values, and the
     build that the change starts.
@@ -119,10 +143,17 @@ This page lists each protocol doc and what it covers.
     create, list, get, rename, move, and archive workspaces.
     - [Repository, section, and model lists](../protocol/create-call-lists.md):
       the lists that a create call takes.
+    - [Workspace management](../protocol/workspace-management.md): the
+      calls that rename, move, and archive one workspace.
   - [Session calls](../protocol/session-calls.md): the calls that start,
     list, message, and read the sessions of the org.
     - [Session management](../protocol/session-management.md): the calls
       that get, rename, close, and stop a session, and get a message.
+    - [Session watches](../protocol/session-watches.md): the call that
+      watches one turn of a session, and the wake that tells the calling
+      session of its end.
+    - [The `Sent by:` line](../protocol/sent-by-line.md): the line that ends
+      the text of each tool message.
   - [Section and preview calls](../protocol/section-and-preview-calls.md):
     the calls that create and delete sections, and list, open, and close
     port previews.
@@ -135,6 +166,9 @@ This page lists each protocol doc and what it covers.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
     in the rail that each person keeps, how the person changes it, what a
     tile opens, and the workspace list of a hidden sidebar.
+  - [Repository order](../protocol/repository-order.md): the order of the
+    chosen repositories of an org, its default repository, and the moves
+    of an admin.
   - [Get started](../protocol/get-started.md): the first run, its steps,
     the agent step, the state of the first build in its org step, and its
     finish.
@@ -196,26 +230,46 @@ This page lists each protocol doc and what it covers.
   - [Workspace and session names](../protocol/workspace-and-session-names.md):
     the missing and the automatic names of workspaces and sessions, and
     the title that a small model gives a new workspace.
+  - [Explain](../protocol/explain.md): Explain on a selection of chat
+    text, its key, the written prompt, the explanation and its anchor, the
+    marks in the parent chat, the popover, a closed explanation, and
+    read-only workspaces.
+- [Model favourites](../protocol/model-favourites.md): the favourites of
+  each member, the rows and the marks of the model menu, All models, the
+  hidden favourites, and the Favourites section of Preferences.
+  - [Model favourites: the account](../protocol/model-favourites-account.md):
+    the starting favourites and the account routes.
 - [Workspace links](../protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent
-  messages in the chat, with their headings and lists, and their lines in
-  the work of a turn.
+  messages in the chat, with their headings, lists, quotes, and line
+  breaks.
   - [Chat tables](../protocol/chat-tables.md): the tables of agent
     messages, their short rows and wide tables, and the table rules that
     they share with the file preview.
   - [Chat links](../protocol/chat-links.md): the links of agent messages
-    and of sent messages, the labels of Markdown links, local addresses,
-    and links in code.
+    and of sent messages, the labels of Markdown links, the images of
+    agent messages, local addresses, and links in code.
+  - [Chat message lines](../protocol/chat-message-lines.md): how each agent
+    message shows as one line in the work of a turn, closed and open, with
+    its tables, headings, quotes, rules, and line breaks.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
-  scope of a cloud computer, the author of each commit in a sandbox, and the
-  GitHub actions of the Worker as a member, and the GitHub tokens that an
-  image job uses to copy the repositories.
+  scope of a cloud computer, the author of each commit in a sandbox, the copy
+  and lookup of the skills repository, and the GitHub actions of the
+  Worker as a member.
+  - [GitHub tokens: image builds](../protocol/github-tokens-image-builds.md):
+    the GitHub tokens that an image job uses to copy the repositories.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
-  agent session gets.
+  agent session gets, and the skills of a message.
+  - [Session instructions](../protocol/session-instructions.md): the same
+    instructions for the life of a session, and how each agent gets them.
   - [Message lines](../protocol/message-lines.md): the sender line, the
-    repository line, and the branch line of each message, and the access
-    of a turn, which does not depend on the sender line.
+    repository line, and the branch line of each message, the app header
+    of a change note, and the access of a turn, which does not depend on
+    the sender line.
+  - [Agent instructions: facts that change](../protocol/agent-instructions-changes.md):
+    the parent, the depth, and the capabilities, which can change during a
+    session.
   - [Base prompts](../protocol/base-prompts.md): the base prompt of Claude
     agents and the base instructions of Codex agents.
   - [Agent instructions: how each agent gets them](../protocol/agent-instructions-delivery.md):
@@ -229,7 +283,8 @@ This page lists each protocol doc and what it covers.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.
-- [Automations](../protocol/automations.md): automations and their schedules, with the
-  linked pages [Automation runs](../protocol/automation-runs.md),
+- [Automations](../protocol/automations.md): automations, their chosen
+  secrets, and their schedules, with the linked pages
+  [Automation runs](../protocol/automation-runs.md),
   [Pull request runs](../protocol/pull-request-runs.md), and
-  [Base branches](../protocol/base-branches.md).
+  [Automation risks](../protocol/automation-risks.md).

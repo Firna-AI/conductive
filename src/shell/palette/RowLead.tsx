@@ -26,10 +26,11 @@ import {
   SlidersHorizontal,
   SquarePlus,
   SquareTerminal,
+  Star,
   Users,
 } from 'lucide-react'
-import { GitHubMark } from '../../../docs/mockups/src/components/common/GitHubMark'
-import styles from '../../../docs/mockups/src/components/palette/CommandPalette.module.css'
+import { GitHubMark } from '../../ui/components/common/GitHubMark'
+import styles from '../../ui/components/palette/CommandPalette.module.css'
 import type {
   AccountSettingId,
   OfferedActionId,
@@ -78,6 +79,7 @@ const accountIcons: Readonly<
 > = {
   'sign-in': LogIn,
   agents: Bot,
+  favourites: Star,
   'new-workspaces': SlidersHorizontal,
   'this-mac': Laptop,
   'keyboard-shortcuts': Keyboard,

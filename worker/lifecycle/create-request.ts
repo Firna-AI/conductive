@@ -6,6 +6,7 @@ import { workspaceBranch } from './workspace-branch'
 import { readCreationImage } from './published-image-data'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import type { WorkspaceStartJob } from './start-types'
+import { creationBranches } from './create-branches'
 import { readCreationCapabilities } from '../secrets/capabilities-input'
 import { requireOrgSecrets } from '../secrets/capabilities-data'
 
@@ -45,6 +46,16 @@ export async function prepareCreationRequest(
     providerAccount,
   )
   const { repository } = image
+  const branches = base
+    ? { startBranch: base.branch, baseBranch: base.branch }
+    : await creationBranches(
+        env,
+        dependencies,
+        orgId,
+        sender.id,
+        input,
+        repository.defaultBranch,
+      )
   const id = reservedId ?? dependencies.randomToken()
   const sessionId = dependencies.randomToken()
   const turnId = dependencies.randomToken()
@@ -62,7 +73,7 @@ export async function prepareCreationRequest(
     startupScript: image.startupScript,
     environmentCiphertext: image.environmentCiphertext,
     defaultBranch: repository.defaultBranch,
-    baseBranch: base?.branch,
+    ...branches,
     startSha: base?.startSha,
     repositoryLocations: image.repositoryLocations,
     turnId,
@@ -79,6 +90,12 @@ export async function prepareCreationRequest(
       branch,
       sessionId,
       firstSessionTitle: input.firstSessionTitle,
+      ...(!base && {
+        branches: {
+          startBranch: input.startBranch,
+          baseBranch: input.baseBranch,
+        },
+      }),
       request: {
         ...input.firstMessage,
         choice: modelChoice(env, input.firstMessage.choice),

@@ -59,7 +59,7 @@ draft moves, the login of each session, and the linked sessions.
 - Without a login that serves the reader, the Connect notice shows in
   place of the notice of the new session, and Send is off. A login with an
   `unusableCause` of the account, such as a ChatGPT sign-in that OpenAI
-  did not renew, counts as none. `linkedCopy.ts` of the mockups holds the
+  did not renew, counts as none. The shared `linkedCopy.ts` holds the
   words of the notice.
 - The model picker of the composer follows the model list of the login
   that a message runs on: the list of the reader's own endpoint, or the
@@ -70,7 +70,11 @@ draft moves, the login of each session, and the linked sessions.
   opens a new session on the default login of the reader, so it follows
   the list of that login. The picker keeps the current model of the
   session. `composerModels` in `state/session-login.ts` decides, with
-  `offeredModels` of the app.
+  `offeredModels` of the app. The menu shows a favourite of the account
+  only when the picker offers its model, so it leaves out each favourite
+  that All models leaves out, as
+  [Hidden favourites](../../docs/protocol/model-favourites.md#hidden-favourites)
+  says. The favourite stays saved.
 - An empty session of another member takes the default login of that
   member at its first message. Its record names that login in
   `defaultLogin` until then, while a login serves that member. So the
@@ -89,9 +93,14 @@ draft moves, the login of each session, and the linked sessions.
   [record order rule](loads-and-sends.md#record-order).
   The message waits as pending there until the stream or the history shows
   it, and a second reply with the same message adds nothing.
-- Only the tab that sent moves to the linked session, and only while it
-  still shows the session of the request. A user who opened another tab
-  during the send keeps that tab.
+- Only the view that sent moves to the linked session: the tab that sent,
+  or the popover of an explanation, for a follow-up and for Try again. It
+  moves only while it still shows the session of the request. A user who
+  opened another tab, or the popover of another explanation, during the
+  send keeps it. The popover moves no tab, as
+  [Explain](explain/README.md) says. `showTarget` in
+  `state/linked-replies.ts` takes the view that sent: the shown tab by
+  default, or a `SendingView`, such as the popover.
 - The draft of the request moves with the view, in the same snapshot, with
   its identity, its text, its files, and its uploads. So a user who typed
   more during the send types on in the same box, and the next message goes
