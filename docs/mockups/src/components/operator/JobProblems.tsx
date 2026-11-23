@@ -12,7 +12,7 @@ import {
   problemWords,
   skipLabels,
 } from './jobProblemsCopy'
-import type { JobFailure, JobProblems, SkipReason } from './migrationModel'
+import type { JobFailure, JobProblems, SkipReason } from './jobProblemsModel'
 import styles from './JobProblems.module.css'
 import rows from '../../../../../src/ui/components/operator/WorkspaceStates.module.css'
 

@@ -2,7 +2,6 @@ import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { defined } from '../../defined'
 import type { ArchiveDays } from '../../fixtures/archive'
-import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
@@ -26,36 +25,31 @@ type RecoverableNotice = Extract<
 >
 
 /**
+ * The page that the one way forward opens, when the catalogue draws it:
+ * Resume, Try again, or Restore. The workspace screen chooses it from the
+ * state of the workspace. A registered part takes it as a prop.
+ */
+type Recovery = { recoverTo?: string }
+
+/**
  * A notice as the mockups draw it: the notice of the contract, for an
- * archived workspace the days that its bar gives, and for a stop or a
- * failed start the page that Resume or Try again opens, when the catalogue
- * draws the next state of the same workspace.
+ * archived workspace the days that its bar gives, and the page that its
+ * one way forward opens.
  */
 export type BarNotice =
   | Extract<SandboxNoticeState, { problem: 'refused' }>
-  | (RecoverableNotice & { recoverTo?: string })
-  | (ArchivedNotice & { days: ArchiveDays })
+  | (RecoverableNotice & Recovery)
+  | (ArchivedNotice & Recovery & { days: ArchiveDays })
 
 /** What a panel shows: the notice of the bar, or the wait of a start. */
 export type PanelNotice = BarNotice | { problem: 'starting' }
 
 /**
- * The screen that the one way forward leads to, when the mockups draw it.
- * A Restore and the retry of the one failed first start that they draw
- * open fixed pages. Resume and the other Try again open the page that the
- * notice names: the next state of the same workspace.
+ * The screen that the one way forward leads to: the page that the notice
+ * names. A refused start has no way forward.
  */
 function recoveryPath(state: BarNotice): string | undefined {
-  switch (state.problem) {
-    case 'archived':
-      return paths.restored
-    case 'error':
-      return state.firstStart === true ? paths.retrying : state.recoverTo
-    case 'stopped':
-      return state.recoverTo
-    case 'refused':
-      return undefined
-  }
+  return state.problem === 'refused' ? undefined : state.recoverTo
 }
 
 /** The one way forward, as a link where the mockups draw its screen. */

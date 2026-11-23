@@ -597,16 +597,24 @@ mockups of Milestone 8a showed.
   then starts machines at the default pace. Pause job and Limit to one org
   work while it counts. Reason: the deploy starts the job, and no rule
   makes it wait.
-- The job states are Counting, Running, Waiting, Paused, and Done. Each
-  account shows Running, Waiting until a time of day, Paused, Waiting for
-  the limit, or Done, each with a glyph. After a refusal of the provider,
-  an amber line names the cause. Reason: no state depends on colour alone,
+- The job states are Counting, Running, Waiting, Pausing with its count of
+  running steps, Paused, and Done. Each account shows Running, Waiting
+  until a time of day, Pausing with its count, Paused, Waiting for the
+  limit, or Done, each with a glyph. After a refusal of the provider, an
+  amber line names the cause. Reason: no state depends on colour alone,
   and the operator sees when the starts go on.
 - Pause job, Continue job, and Remove limit act at once. Limit to one org
   opens a field for the org ID, with Cancel. No control asks a
   confirmation question. Reason: Pause job and Continue job undo each
   other, and so do Limit to one org and Remove limit. The limit needs an
   org ID, so its control opens a field for it.
+- After Pause job, the job starts no new step, and each running step goes
+  on to its end. While steps still run, the Migration job box shows
+  Pausing with the count of running steps. Each account shows its own
+  count, and the job shows the sum. An account or the job with no running
+  step shows Paused. This is an agent call of the orchestrator of the
+  primary branch, not a decision of Cal. Reason: the operator then knows
+  when no machine of the job still runs, and no step ends half done.
 - The limit takes an org ID, and the hint names the org that the ID finds.
   A limited job keeps the counts of the whole job, with one line for the
   progress of that org. When that org is done, the job waits for Remove
@@ -623,6 +631,11 @@ mockups of Milestone 8a showed.
   it asks no question. The mockups draw a default of 30 in each hour and 3
   at once. Milestone 9 sets the real low default. Reason: the app knows no
   limit of an account, so it has no choices to offer.
+- The app records the time and the operator of the last change of the
+  pace, and the Pace box names them. This is an agent call of the
+  orchestrator of the primary branch, not a decision of Cal. Reason: the
+  boxes of the weights of new orgs and of the stop time already name the
+  operator and the time of their last change.
 - Each failed step shows the org, the workspace number, and the cloud
   computer ID with Copy, then the step, its cause, and the time. The cause
   is typed, with fixed words for each cause and neutral words for an
@@ -659,7 +672,7 @@ mockups of Milestone 8a showed.
   nothing on a removed computer, and every archived workspace leaves the
   list after its 14 days.
 - The notice contract in
-  `docs/mockups/src/components/workspace/sandboxNoticeState.ts` gets two
+  `src/ui/components/workspace/sandboxNoticeState.ts` gets two
   optional fields: `message` on a stopped notice, and `removedComputer` on
   an archived notice, whose words take the place of the words of the
   archive stage. `archiveStage` stays the same. Reason: the app imports
@@ -903,6 +916,20 @@ The second options check gave most of these TODOs. Its report is in
       gives the progress of that org by state and kind, restarts included.
       Add the routes that pause and continue the job, and that limit it to
       one org. Milestone 9b builds the screens.
+- [ ] Build the Pausing state and the record of the last change of the
+      pace, as the design calls say. After a pause, the job starts no new
+      step, and each running step goes on to its end. The operator route
+      gives the count of running steps of each account. A step is a
+      restart, a brief start, or a refresh. At each save of the pace, the
+      app records the time and the operator of the save, and the route
+      gives this last change.
+- [ ] The orchestrator of the primary branch adds three rules to "Pace and
+      control" in `docs/protocol/host-connection-migration.md`. They cover
+      Pausing with its count of running steps, the record of the last
+      change of the pace, and the cause of each failed step. In the same
+      change, it reads both legal pages and each public guide in full, as
+      `CLAUDE.md` says. It updates each sentence of them that restates a
+      changed fact.
 - [ ] Refresh each org image once on the current account of its org, as
       the daily timer does. Skip an image that is already new. Report each
       org with no active admin. Do not refresh an image on an old account.
@@ -996,7 +1023,9 @@ Depends on: 1, 12
       form.
 - [ ] Build the workspace states and the operator counts.
 - [ ] Build the bar of a removed workspace on a removed own computer, as
-      Milestone 8a draws it.
+      Milestone 8a draws it. Whether such a workspace offers Restore waits
+      for Cal's answer, which the orchestrator of the primary branch tracks
+      as its item 14. Until then, the mockups draw no Restore there.
 
 ## Milestone 14: Agent tools and guides
 

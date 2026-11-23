@@ -8,11 +8,11 @@ import type {
   JobFailure,
   JobProblems,
   SkipReason,
-} from '../components/operator/migrationModel'
-import type { JobRecord } from './migrationRecord'
+} from '../components/operator/jobProblemsModel'
+import type { JobFacts } from './migrationRecord'
 
 /**
- * The steps that failed by 24 Nov at 11:40, newest first, each with its
+ * The steps that failed by 24 Nov at 11:46, newest first, each with its
  * cause. The job knows no cause for the brief start of Blue Harbor.
  */
 const midwayFailures: readonly JobFailure[] = [
@@ -63,15 +63,15 @@ const noSkips: Readonly<Record<SkipReason, number>> = {
 const noAdmin = ['Lumen Works']
 
 /**
- * The failures and the skips in a state of the page: none during and just
- * after the count, those of 24 Nov at 11:40 in the later job, and the last
- * ones when the job is done.
+ * The failures and the skips at the time of a page: none during and just
+ * after the count, those of 24 Nov at 11:46 in the later job and its next
+ * hour, and the last ones when the job is done. They read only the facts.
  */
-export function jobProblems(record: JobRecord): JobProblems {
-  if (record.run !== 'done' && record.progress !== 'later') {
+export function jobProblems(facts: JobFacts): JobProblems {
+  if (facts.at === 'counting' || facts.at === 'counted') {
     return { failures: [], skips: noSkips, noAdmin: [] }
   }
-  if (record.run !== 'done') {
+  if (facts.at !== 'done') {
     const skips = {
       ...noSkips,
       suspended: 23,

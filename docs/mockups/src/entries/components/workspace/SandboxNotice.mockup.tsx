@@ -5,14 +5,27 @@ import {
 } from '../../../components/workspace/SandboxNotice'
 import { orgSuspendedReason } from '../../../../../../src/ui/components/orgs/suspension'
 import { archivedNow } from '../../../fixtures/archive'
+import { paths } from '../../../paths'
 import { sandboxNoticeSchema, sandboxPanelSchema } from './sandboxSchemas'
+
+/**
+ * An archived workspace on the cloud computer, with Restore until its last
+ * day. A part takes the page of its one way forward as a prop, as the
+ * workspace screen passes it.
+ */
+const archivedWithRestore = {
+  problem: 'archived',
+  restore: 'available',
+  days: archivedNow,
+  recoverTo: paths.restored,
+} as const
 
 /** The bar under the chat of a sandbox that is not running, registered with Mokly. */
 export const sandboxBar = defineComponent({
   slug: 'sandbox-bar',
   title: 'Sandbox bar',
   description:
-    'The bar under the chat while the sandbox is not running. It takes the place of the composer, except after a failed first start. A refused start shows the words of the refusal and no action, because the start stays refused until its cause changes. A start that failed shows the message that the app saved for it, and so does a stop that has one. An archived workspace offers Restore until the app deletes its cloud computer, and gives the day when it leaves the list. A removed workspace gives the day of its removal. Its own page shows a stopped sandbox with Resume.',
+    'The bar under the chat while the sandbox is not running. It takes the place of the composer, except after a failed first start. A refused start shows the words of the refusal and no action, because the start stays refused until its cause changes. A start that failed shows the message that the app saved for it, and so does a stop that has one. An archived workspace offers Restore until the app deletes its cloud computer, and gives the day when it leaves the list. Resume, Try again, and Restore open the page that the notice names, and have no link without one. A removed workspace gives the day of its removal. Its own page shows a stopped sandbox with Resume.',
   relatedDocs: ['docs/mockups/design-workspace.md'],
   propSchema: {
     type: 'object',
@@ -38,10 +51,9 @@ export const sandboxBar = defineComponent({
     {
       slug: 'archived',
       title: 'Archived',
-      description: 'An archived workspace with Restore until its last day.',
-      props: {
-        state: { problem: 'archived', restore: 'available', days: archivedNow },
-      },
+      description:
+        'An archived workspace with Restore until its last day. Restore opens the restored workspace.',
+      props: { state: archivedWithRestore },
     },
   ],
 })
@@ -98,10 +110,8 @@ export const sandboxPanel = defineComponent({
       slug: 'archived',
       title: 'Archived',
       description:
-        'The files of an archived workspace, with Restore on a phone.',
-      props: {
-        state: { problem: 'archived', restore: 'available', days: archivedNow },
-      },
+        'The files of an archived workspace, with Restore on a phone. Restore opens the restored workspace.',
+      props: { state: archivedWithRestore },
     },
   ],
 })

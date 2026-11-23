@@ -3,8 +3,10 @@
  * job that installs the host program on each machine when the host
  * connection deploys (own computer decision 7 D). The shapes follow what
  * the operator route of the job gives: the counts of each provider account
- * by state and kind, the progress, the pace, and the failures and skips.
- * This module imports no fixture, so the app can use it too.
+ * by state and kind, the running steps, the waits, the progress, and the
+ * pace, with the rules of what the job and each account show.
+ * `jobProblemsModel.ts` holds the failures and the skips. This module
+ * imports no fixture, so the app can use it too.
  */
 
 /**
@@ -31,53 +33,69 @@ type RowProgress = { count: number; handled: number }
 /** The pace of one account: the starts in each hour, and the machines at once. */
 export type Pace = { perHour: number; atOnce: number }
 
+/** The rows of the job on one account or on one org, by state and kind. */
+export type JobRows = Readonly<Record<JobRow, RowProgress>>
+
+/** The wait of an account after a refusal of its provider. */
+type AccountWait = { until: string; reason: 'rate-limit' | 'capacity' }
+
 /**
- * Where the job stands on one account: it runs, it waits after a refusal
- * of the provider for its rate limit or its capacity, it is paused, it
- * waits while a limit to one org holds its other orgs, or it is done.
+ * The job on one provider account, which the settings of the Worker name:
+ * its rows, the steps that run there now, its wait after a refusal of its
+ * provider while it holds, and its saved pace. A running step is a
+ * restart, a brief start, or a refresh.
+ */
+export type JobAccount = {
+  id: string
+  rows: JobRows
+  running: number
+  wait?: AccountWait
+  pace: Pace
+}
+
+/**
+ * What one account shows: it runs, it waits after a refusal of its
+ * provider, it pauses while steps still run, it is paused, it waits while
+ * a limit to one org holds its work, or it is done.
  */
 export type AccountStage =
   | { kind: 'running' }
-  | { kind: 'refused'; until: string; reason: 'rate-limit' | 'capacity' }
+  | ({ kind: 'refused' } & AccountWait)
+  | { kind: 'pausing'; steps: number }
   | { kind: 'paused' }
   | { kind: 'limited' }
   | { kind: 'done' }
 
-/** The rows of the job on one account or on one org, by state and kind. */
-export type JobRows = Readonly<Record<JobRow, RowProgress>>
-
-/** The job on one provider account, which the settings of the Worker name. */
-export type JobAccount = {
-  id: string
-  stage: AccountStage
-  rows: JobRows
-  /** The saved pace of the account. */
-  pace: Pace
-}
-
-/** The state of the whole job. */
-export type JobState = 'counting' | 'running' | 'waiting' | 'paused' | 'done'
-
 /**
- * The one org that the job is limited to, with its machines and its org
- * image by state and kind, in the rows of an account, restarts included.
- * While the job counts, the org has no rows yet.
+ * The one org that the job is limited to, its account, and its machines
+ * and its org image by state and kind, in the rows of an account,
+ * restarts included. While the job counts, the org has no rows yet.
  */
-type JobLimit = { org: string; rows?: JobRows }
+type JobLimit = { org: string; account: string; rows?: JobRows }
 
 /**
- * The job: its state, when it started, when and by whom it was paused, when
- * it finished, its limit to one org, and its accounts. While the job counts,
- * it has no account yet.
+ * The job: when it started, whether its count goes on, the pause that an
+ * operator asked for, with its time and its operator, when it finished,
+ * its limit to one org, and its accounts. While the job counts, it has no
+ * account yet.
  */
 export type MigrationJob = {
-  state: JobState
   started: string
-  paused?: { at: string; by: string }
+  counting: boolean
+  pause?: { at: string; by: string }
   done?: string
   limit?: JobLimit
   accounts: readonly JobAccount[]
 }
+
+/** What the whole job shows, as the rule of `jobState` derives it. */
+export type JobState =
+  | { kind: 'counting' }
+  | { kind: 'running' }
+  | { kind: 'waiting' }
+  | { kind: 'pausing'; steps: number }
+  | { kind: 'paused' }
+  | { kind: 'done' }
 
 /** The rows that start a machine: the brief starts and the refreshes. */
 const startRows: readonly JobRow[] = ['stopped', 'error', 'archived', 'images']
@@ -112,57 +130,52 @@ export function workLeft(rows: JobRows): number {
   }, 0)
 }
 
-/** The step of the job that failed on a machine. */
-type FailedStep = 'restart' | 'brief-start' | 'refresh'
-
 /**
- * The causes that the job tells apart for each step, from the rules of
- * that step, and `unknown` when the job has no cause:
- * - A restart downloads the release of the Worker, then restarts the
- *   runner, which must be ready within 3 minutes, as Restart does.
- * - A brief start installs the release, as the bootstrap does, and ends
- *   when the host program connects within its 30 minutes.
- * - A refresh has the 60-minute limit of each refresh of an org image.
+ * Whether the limit to one org holds the work of an account: the work of
+ * that org on the account ended, or the org has no work there. Until the
+ * count ends, the limit has no rows and holds nothing yet.
  */
-type StepCauses = {
-  restart: 'download' | 'restart' | 'not-ready' | 'unknown'
-  'brief-start': 'download' | 'no-connection' | 'unknown'
-  refresh: 'time-limit' | 'unknown'
+function heldByLimit(account: JobAccount, limit: JobLimit | undefined) {
+  if (limit?.rows === undefined) return false
+  return account.id !== limit.account || workLeft(limit.rows) === 0
 }
 
-/** A failed step with one cause of that step. */
-export type StepFailure = {
-  [Step in FailedStep]: { step: Step; cause: StepCauses[Step] }
-}[FailedStep]
-
 /**
- * A step that failed: its org, the workspace number and the cloud computer
- * ID of its machine, which an org image has none of, its step with its
- * cause, and when.
+ * The one rule of what an account shows. Its work ended: Done. After Pause
+ * job, the job starts no new step there, and each running step goes on to
+ * its end: Pausing with the count of those steps, then Paused when none
+ * runs. Else a wait after a refusal of its provider, then a limit that
+ * holds its work, and else Running. A pause keeps the wait and the limit.
  */
-export type JobFailure = StepFailure & {
-  org: string
-  number?: number
-  computer?: string
-  at: string
+export function accountStage(
+  account: JobAccount,
+  job: Pick<MigrationJob, 'pause' | 'limit'>,
+): AccountStage {
+  if (workLeft(account.rows) === 0) return { kind: 'done' }
+  if (job.pause !== undefined) {
+    const steps = account.running
+    return steps > 0 ? { kind: 'pausing', steps } : { kind: 'paused' }
+  }
+  if (account.wait !== undefined) return { kind: 'refused', ...account.wait }
+  if (heldByLimit(account, job.limit)) return { kind: 'limited' }
+  return { kind: 'running' }
 }
 
-/** Why the job skipped a machine, as the job reports it. */
-export type SkipReason =
-  | 'suspended'
-  | 'deleted-org'
-  | 'restore-ends'
-  | 'no-sandbox'
-  | 'provider-error'
-  | 'creating'
-  | 'not-configured'
-
 /**
- * What went wrong so far: each failed step, the skips of each reason, and
- * the orgs with no active admin, whose org images get no refresh.
+ * The one rule of what the whole job shows. After Pause job, it shows
+ * Pausing with the sum of the running steps of every account, then Paused
+ * when none runs, also while the count goes on. Else Counting while the
+ * count goes on, Running while an account runs, and else Waiting.
  */
-export type JobProblems = {
-  failures: readonly JobFailure[]
-  skips: Readonly<Record<SkipReason, number>>
-  noAdmin: readonly string[]
+export function jobState(job: MigrationJob): JobState {
+  if (job.done !== undefined) return { kind: 'done' }
+  if (job.pause !== undefined) {
+    const steps = job.accounts.reduce((sum, item) => sum + item.running, 0)
+    return steps > 0 ? { kind: 'pausing', steps } : { kind: 'paused' }
+  }
+  if (job.counting) return { kind: 'counting' }
+  const runs = job.accounts.some(
+    (item) => accountStage(item, job).kind === 'running',
+  )
+  return runs ? { kind: 'running' } : { kind: 'waiting' }
 }

@@ -15,10 +15,13 @@ export const jobWords = {
   line: 'Installs the host program on each machine that runs or that a workspace keeps, and refreshes each org image once. Its restart of a running machine ends each turn that runs there.',
   counting:
     'The job counts the machines of each account before its first start.',
+  pausing:
+    'The job starts no new step, and each running step goes on to its end.',
   started: 'Started',
   orgs: 'Orgs',
   everyOrg: 'Every org',
   paused: 'Paused',
+  pauseAsked: 'Pause asked',
   done: 'Done',
   accountsLabel: 'The job on each account',
   pause: 'Pause job',
@@ -28,13 +31,27 @@ export const jobWords = {
   notLoaded: "The migration job didn't load",
 } as const
 
-/** The word of each state of the whole job. */
-export const jobStateLabels: Readonly<Record<JobState, string>> = {
-  counting: 'Counting',
-  running: 'Running',
-  waiting: 'Waiting',
-  paused: 'Paused',
-  done: 'Done',
+/** Pausing, with the count of the steps that still run, such as 3. */
+function pausingLabel(steps: number): string {
+  return `Pausing · ${counted(steps, 'running step')}`
+}
+
+/** The words of each state of the whole job. */
+export function jobStateLabel(state: JobState): string {
+  switch (state.kind) {
+    case 'counting':
+      return 'Counting'
+    case 'running':
+      return 'Running'
+    case 'waiting':
+      return 'Waiting'
+    case 'pausing':
+      return pausingLabel(state.steps)
+    case 'paused':
+      return 'Paused'
+    case 'done':
+      return 'Done'
+  }
 }
 
 /** The state and the kind of work of each row of an account. */
@@ -95,6 +112,8 @@ export function accountStageLabel(stage: AccountStage): string {
       return 'Running'
     case 'refused':
       return `Waiting until ${stage.until}`
+    case 'pausing':
+      return pausingLabel(stage.steps)
     case 'paused':
       return 'Paused'
     case 'limited':

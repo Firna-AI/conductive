@@ -22,7 +22,9 @@ list on that day. Its child pages:
   last 14 days, so it has no row for Postcode lookup for the shipping and
   billing forms.
 - `app/archive/restored` has the workspace back in its section, stopped,
-  where each Restore leads.
+  where Restore leads from each archived workspace on the cloud computer.
+  The catalogue draws no restored workspace on an own computer, so Restore
+  there has no link.
 - `app/archive/pending` has the archived workspace while an unresolved
   create request, or a delete that tries again, can still hold a cloud
   computer that the workspace does not name, as after Archive during a

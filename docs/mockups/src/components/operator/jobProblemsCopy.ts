@@ -1,4 +1,4 @@
-import type { SkipReason, StepFailure } from './migrationModel'
+import type { SkipReason, StepFailure } from './jobProblemsModel'
 
 /**
  * The words of the box of the failures and the skips of the migration job

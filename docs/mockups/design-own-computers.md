@@ -113,8 +113,14 @@ pages.
     `recoveryPage` in `src/screens/ownComputerPages.ts` finds the page that
     draws that state, from the props that the entries read there too. The
     notice of the bar and the panels carries that page. With no such page,
-    the button has no link. Restore and the retry of a failed first start
-    keep their fixed pages.
+    the button has no link.
+  - Try again after a failed first start and Restore open fixed pages
+    only on the cloud computer, where the catalogue draws them. A
+    workspace never moves to another computer. So on an own computer, the
+    retry opens the next state of the same workspace when the catalogue
+    draws it. Restore has no link there, because the catalogue draws no
+    restored workspace on an own computer. `workspaceRecovery.ts` in
+    `src/screens/` chooses these pages from the state of the workspace.
   - The bar of an archived workspace on a removed own computer says that
     the files stay on that computer, and gives no day of a delete, because
     the app deletes nothing there. Nothing offers Restore: not the bar, not

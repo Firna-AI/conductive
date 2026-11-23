@@ -171,40 +171,61 @@ account choice of an operator on Create org.
   - `MigrationJobSection` in `src/components/operator/MigrationJob.tsx`
     draws the Migration job box: its state with its glyph beside the
     title, what the job does, and its facts in `DetailList`: Started,
-    Orgs, and Paused or Done when they apply. A limit to one org adds a
+    Orgs, and Paused or Done when they apply. Paused gives the time and
+    the operator of the pause. While steps still run, the same row is
+    named Pause asked. A limit to one org adds a
     line with the work that is left of that org: each restart, brief
     start, and refresh, over its rows by state and kind, as `workLeft`
     counts them. The line says that the org is done only when that work
     ended. While the job counts, the org has no rows yet, and the line
-    says that the job works only on that org after the count.
+    says that the job works only on that org after the count. Until the
+    count ends, a line says so in place of the accounts, in each state,
+    also after a pause.
+  - One rule in `migrationModel.ts` derives what the job and each account
+    show, from the facts that the route gives and the settings. After
+    Pause job, the job starts no new step, and each running step goes on
+    to its end. An account with running steps shows Pausing with their
+    count, and the job shows Pausing with the sum. With no running step,
+    both show Paused. A line in the box then says what Pausing means. A
+    pause keeps a wait after a refusal and a limit. `accountStage` and
+    `jobState` hold the rule, so the app can import it.
   - `JobAccounts` beside it gives each account by its ID, with the state
-    of the job there as `StatusText` draws it: a spinner while it runs,
-    an hourglass while it waits after a refusal of the provider or for the
-    limit, and a check when it is done. A row for each state and kind of
+    of the job there as `StatusText` draws it: a spinner while it runs or
+    pauses, an hourglass while it waits after a refusal of the provider or
+    for the limit, a pause mark when it is paused, and a check when it is
+    done. A row for each state and kind of
     machine gives how many of the count the job handled. The rows look
     like the rows of the workspaces by state. A row with no machine does
     not show, and a row that the job handled whole takes the muted colour.
   - A line under the rows of an account gives the expected starts before
     the first start, or the starts that are left, with their time at the
     pace of the account. A refusal adds a line in the deep amber of a
-    warning, which names the account by its ID.
+    warning, which names the account by its ID. The line stays while the
+    job pauses, because a pause keeps the wait.
   - The actions sit at the bottom of the box: Limit to one org, or Remove
     limit, then Pause job, or Continue job in the primary colour. None asks
     first, because each one undoes the other. A finished job has none.
     `LimitDialog` asks for the ID of the org with `ConfirmDialog`, and its
     hint names the org that the ID finds.
-  - Each page of the job has one state, in `src/fixtures/migrationRecord.ts`.
-    Its parts are the progress, the run, the limit with the question
-    before it, the saved pace, and the typed pace. Each control changes
-    only its own part, so a pause keeps the limit and the saved pace:
-    - Pause job and Continue job change the run.
+  - Each page of the job has one state, in `src/fixtures/migrationRecord.ts`,
+    in two groups. The settings are the pause request, the limit with its
+    question, the saved pace, and the typed pace. Only a control changes
+    them:
+    - Pause job and Continue job change the pause request.
     - Limit to one org, Remove limit, Cancel, and Limit job change the
       limit.
     - Save pace turns the typed pace into the saved pace.
+  - The facts are what the time of the page decides. They are the work
+    done, a wait after a refusal, the running steps of each account, and
+    the times of the actions before it. No control changes them, so each
+    action takes the time of its page. A pause after Save pace then cannot
+    show an earlier time than the save. The helpers of the counts, the waits, and
+    the times read only the facts. `src/fixtures/migrationMoments.ts` gives
+    the time of each moment.
   - A control links only to the page whose state equals its result, from
     `migrationPages` in `src/screens/migrationPages.ts`, which the entries
     also read. With no such page, `Linked` draws the control with no link,
-    as Pause job and Limit to one org during the count.
+    as Continue job on the paused job, whose result comes at a later time.
   - The Pace of the job box gives each account a row with two fields of
     whole numbers, the starts in each hour and the machines at once, from
     `PaceFields`. A narrow box puts the fields under the ID. Its line gives
@@ -226,9 +247,10 @@ account choice of an operator on Create org.
     counts the skips. The skips show as a count for each reason that has
     one. A line names each org with no active admin. The box says that
     each such machine gets the host program at its next start.
-  - `migrationCopy.ts` and `jobProblemsCopy.ts` hold the words, and
-    `migrationModel.ts` holds the data of the job and the rules of its
-    counts. Each count takes its singular or plural word from `counted` in
+  - `migrationCopy.ts` and `jobProblemsCopy.ts` hold the words.
+    `migrationModel.ts` holds the data of the job, the rules of its
+    counts, and the rule of what it shows. `jobProblemsModel.ts` holds the
+    data of the failures and the skips. Each count takes its singular or plural word from `counted` in
     `src/components/common/counted.ts`. They import no fixture, and
     neither do the parts other than `LimitDialog`, so the app can share
     them.

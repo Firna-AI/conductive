@@ -24,7 +24,7 @@ const archiveDaysSchema = {
 /**
  * The states of a sandbox that is not running, as `BarNotice`: the states
  * of `SandboxNoticeState`, with the days of an archived workspace, and the
- * page that Resume or Try again opens.
+ * page that Resume, Try again, or Restore opens.
  */
 const noticeStates = [
   {
@@ -64,6 +64,8 @@ const noticeStates = [
        * files then stay on that server.
        */
       removedComputer: { type: 'string' },
+      /** The page that Restore opens: the restored workspace. */
+      recoverTo: { type: 'string' },
     },
   },
   {

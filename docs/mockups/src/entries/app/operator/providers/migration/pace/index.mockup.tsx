@@ -26,9 +26,9 @@ export const operatorMigrationPace = defineScreen({
       slug: 'saved',
       title: 'Pace saved',
       description:
-        'After Save pace, the fields keep the new pace of boat. A line under them says when and by which operator it changed, and Save pace is off again. boat now has about 20 hours left. Pause job leads to the paused job with this pace.',
+        'After Save pace, the fields keep the new pace of boat. A line under them says when and by which operator it changed, and Save pace is off again. boat now has about 20 hours left. Pause job leads to Pausing with this pace.',
       rationale:
-        'The line of the last change follows the boxes of the weights and the stop time, so an operator can tell who set the pace. Cal has not chosen yet whether the app records each change of the pace. This page draws the recommendation: the app records it, and the line shows it.',
+        'The app records the time and the operator of the last change of the pace. The Pace box names them (agent call of 23 November 2026). This line is an example of that call, as the boxes of the weights and the stop time name their last change. Save pace takes the time of its page.',
       props: { job: migrationPages[migrationPaths.paceSaved] },
     },
     {

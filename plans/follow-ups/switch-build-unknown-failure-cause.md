@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-23, from PR #658, round 1 finding checks.
-- **Location:** `worker/lifecycle/provider-switch-end.ts:20-33` and `:61`, `worker/lifecycle/image-build-failure.ts:82-107`, `worker/lifecycle/provider-switch-repair-data.ts:70-86`, `src/shell/operator/account-switch.ts:82-97`, `docs/mockups/src/components/operator/switchCopy.ts:32-37` and `:143-153`, `docs/protocol/switch-account.md:216-225`, and `migrations/202611201600_org_provider_switches.sql:17`.
+- **Location:** `worker/lifecycle/provider-switch-end.ts:20-33` and `:61`, `worker/lifecycle/image-build-failure.ts:82-107`, `worker/lifecycle/provider-switch-repair-data.ts:70-86`, `src/shell/operator/account-switch.ts:82-97`, `src/ui/components/operator/switchCopy.ts:32-37` and `:143-153`, `docs/protocol/switch-account.md:216-225`, and `migrations/202611201600_org_provider_switches.sql:17`.
 - **Reason:** The recommended fix changes a closed list of causes in a protocol doc, so it waits for the user.
 
 - **Source:** Review. **Category:** Product bug.
@@ -34,7 +34,7 @@
     - Every other message gives `script`.
   - `handleImageBuildFailure` saves the text of the error only for an `HttpError`, at `image-build-failure.ts:82-85`, and neither provider error is one. So the repair also reads each provider failure as `script`.
   - No failed switch has a missing cause today, because both writers fall back to `script`. Only a switch that waits has no cause.
-  - The app maps the cause to words in `failureOf` at `src/shell/operator/account-switch.ts:82-97`. `provider` gives `account`, and both `script` and a missing cause give `script`. `failureLine` at `docs/mockups/src/components/operator/switchCopy.ts:143-153` gives the words. The app imports them in `src/shell/operator/AccountBox.tsx`.
+  - The app maps the cause to words in `failureOf` at `src/shell/operator/account-switch.ts:82-97`. `provider` gives `account`, and both `script` and a missing cause give `script`. `failureLine` at `src/ui/components/operator/switchCopy.ts:143-153` gives the words. The app imports them in `src/shell/operator/AccountBox.tsx`.
   - For `script`, the box says "The install script failed on <account>."
   - The column `failure_cause` allows only `provider`, `script`, `time-limit`, or NULL, through a check at `migrations/202611201600_org_provider_switches.sql:17`. SQLite cannot change such a check without a rebuild of the table.
   - `readProviderSwitch` in `src/app/api/read-operator-switch.ts` reads `failure` with `maybeChoice`. It reads `null` as no cause. It rejects any other unknown value with a `ParseError` from `choice` at `src/app/api/parse.ts:55-64`, so an older open tab cannot read a new value.

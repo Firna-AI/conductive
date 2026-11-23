@@ -188,36 +188,58 @@ decisions 7 D and 8 A of 22 November 2026. At the deploy that adds the
 host connection, the job installs the host program on each running machine
 and on each machine that a workspace keeps. It also refreshes each org
 image once. `app/operator/providers/migration` has the Providers tab while the
-job runs on every org, with its three boxes before New orgs. The counts are
-those of the Overview, so every workspace runs on `boat`, and `e2b` has
-only the org image of Acme Labs. Each control changes one part of the job
-and keeps the others. It links only to a page that draws its result, and
-else it has no link. Its child pages:
+job runs on every org, on 24 November at 11:46, with its three boxes before
+New orgs. The counts are those of the Overview, so every workspace runs on
+`boat`, and `e2b` has only the org image of Acme Labs.
 
-- `counted` has the job before its first start, while it restarts the
+Each page has settings and facts. The settings are the pause request, the
+limit with its question, and the pace, and only a control changes them.
+The facts are what the time of the page decides. They are the work done,
+a wait after a refusal, the running steps, and the times of the actions. A
+control keeps the facts. So it links only to a page that draws the job
+just after its action, and else it has no link. After Pause job, the job
+starts no new step, and each running step goes on to its end. While steps
+still run, the box shows Pausing with their count, and then Paused. This
+is an agent call of 23 November 2026. Its child pages:
+
+- `counted` has the job just after its count, while it restarts the
   running machines, with the expected starts and their time on each
-  account. Its `counting` variant has the count itself. Pause job and
-  Limit to one org have no link there, because the catalogue draws no
-  pause and no limit during the count.
-- `paused` has the job that an operator paused, with Continue job. Its
-  `limited` variant keeps the limit to Hexwave. Its `limit-question`
-  variant has the question over the paused job. Its `saved-pace` variant
-  keeps the saved pace of `boat`. Cal has not chosen yet what the box
-  shows while steps still run after a pause, so it shows Paused at once.
+  account. Pause job and Limit to one org have no link there, because the
+  catalogue draws no Pausing and no limit question at that moment. Its
+  `counting` variant has the count itself. Its `counting-limit`,
+  `counting-limited`, and `counting-paused` variants have the limit
+  question, the limit, and a pause during the count.
+- `pausing` has the job just after Pause job, while 3 steps still run on
+  `boat`, with Continue job. Its `limited` variant keeps the limit to
+  Hexwave, and its `saved-pace` variant keeps the saved pace of `boat`.
+  Its `rate-limit` and `capacity` variants keep the wait after each
+  refusal.
+- `paused` has the job after Pausing, when no step runs. Continue job has
+  no link there, because the catalogue draws no running job of that later
+  time. Its `limited` variant keeps the limit to Hexwave. Its
+  `limit-question` variant has the question over the paused job. Its
+  `saved-pace` variant keeps the saved pace of `boat`.
 - `refused` has `boat` waiting until 11:52 after a refusal for its rate
   limit. Its `capacity` variant has a refusal for its capacity.
 - `one-org` has the question before the limit to one org, with the ID of
   Hexwave. Its `limited` variant has the job limited to Hexwave, with the
   steps of Hexwave that are left, restarts included. Its `limited-done`
-  variant has Hexwave done while the other orgs wait.
+  variant has Hexwave done while the other orgs wait. Its `every-org`
+  variant has the job on every org after Remove limit there, with the work
+  of Hexwave done.
 - `pace` has a faster pace of `boat` that the operator typed and has not
   saved. Its `saved` variant has it after Save pace, with the time and the
-  operator, and its `not-saved` variant has a save that failed. Cal has
-  not chosen yet whether the app records each change of the pace, or
-  which values an operator can save. So `saved` draws the recommended
-  line of the last change, and no field shows a refusal.
+  operator, and its `not-saved` variant has a save that failed. The app
+  records the time and the operator of the last change of the pace, and
+  the Pace box names them. This is an agent call of 23 November 2026, and
+  the line of `saved` is an example of it. Cal has not chosen yet which
+  values an operator can save, so no field shows a refusal.
 - `done` has the finished job, with its saved pace as text and its
   failures and skips as a record.
+
+The flow `user-flows/pause-the-migration-job` goes from the running job,
+through Pausing, to the paused job when its steps end, which no link can
+show.
 
 The child pages of `app/operator/user` follow. The first two were variants
 of `app/operator/user` and kept their paths:

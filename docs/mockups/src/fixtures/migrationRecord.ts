@@ -1,28 +1,20 @@
 /**
  * The state of a page of the migration job on the Providers tab of the
- * operator, in five parts (own computer decision 7 D). Each control of the
- * job changes one part only: Pause job and Continue job change the run,
- * Limit to one org and Remove limit change the limit, and Save pace turns
- * the typed pace into the saved pace. The pages and the fixtures of the
- * job read the same parts.
+ * operator (own computer decision 7 D), in two groups. The settings are
+ * what the controls of the job set, and only a control changes them. The
+ * facts are what the time of the page decides, and no control changes
+ * them: a control keeps the facts of its page, so its action takes the
+ * time of that page. The pages and the fixtures of the job read the same
+ * groups.
  */
-export const jobRecordValues = {
+export const jobSettingValues = {
+  /** No pause, or a pause that an operator asked for with Pause job. */
+  pause: ['none', 'asked'],
   /**
-   * The count of the job, the moment just after it, or the later job. The
-   * progress tells only these apart, so a page of the later job keeps its
-   * progress when a control changes another part.
+   * No limit, the question before the limit, or the limit to Hexwave.
+   * Whether the work of Hexwave ended is a fact.
    */
-  progress: ['counting', 'counted', 'later'],
-  /**
-   * The job runs, an operator paused it, it waits after a refusal of boat
-   * for its rate limit or for its capacity, or it is done.
-   */
-  run: ['running', 'paused', 'refused', 'capacity', 'done'],
-  /**
-   * No limit, the question before the limit, the limit to Hexwave, or that
-   * limit after the work of Hexwave ended.
-   */
-  limit: ['none', 'question', 'hexwave', 'hexwave-done'],
+  limit: ['none', 'question', 'hexwave'],
   /** The saved pace: the default on each account, or a faster pace of boat. */
   savedPace: ['default', 'faster'],
   /**
@@ -32,9 +24,56 @@ export const jobRecordValues = {
   typedPace: ['none', 'faster', 'save-failed'],
 } as const
 
-type RecordValues = typeof jobRecordValues
+export const jobFactValues = {
+  /**
+   * The time of the page, which decides the work that the job completed
+   * and the times of the actions before it: the count, just after it, the
+   * later job, the end of the steps that ran at the pause of the later
+   * job, the end of the work of Hexwave under its limit, or the end of the
+   * job.
+   */
+  at: ['counting', 'counted', 'later', 'drained', 'hexwave-done', 'done'],
+  /** No wait, or the wait of boat after a refusal of its provider. */
+  wait: ['none', 'rate-limit', 'capacity'],
+} as const
 
-/** The state of a page of the job: one value for each part. */
+type Values<Group> = {
+  readonly [Part in keyof Group]: Group[Part] extends readonly (infer V)[]
+    ? V
+    : never
+}
+
+/** What the controls set: the pause request, the limit, and the pace. */
+export type JobSettings = Values<typeof jobSettingValues>
+
+/**
+ * The steps that run now on each account: its restarts, its brief starts,
+ * and its refreshes.
+ */
+type RunningSteps = { readonly boat: number; readonly e2b: number }
+
+/**
+ * What the time of the page decides: the time and its completed work, the
+ * wait after a refusal, and the steps that run on each account.
+ */
+export type JobFacts = Values<typeof jobFactValues> & {
+  readonly running: RunningSteps
+}
+
+/** The state of a page of the job: its settings and its facts. */
 export type JobRecord = {
-  [Part in keyof RecordValues]: RecordValues[Part][number]
+  readonly settings: JobSettings
+  readonly facts: JobFacts
+}
+
+/**
+ * The result of a control: the record with the settings that the control
+ * changes, and the same facts. Each control of the job makes its result
+ * here, so no control changes a fact.
+ */
+export function withSettings(
+  record: JobRecord,
+  settings: Partial<JobSettings>,
+): JobRecord {
+  return { settings: { ...record.settings, ...settings }, facts: record.facts }
 }

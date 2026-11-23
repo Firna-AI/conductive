@@ -26,7 +26,7 @@ export const operatorMigrationOneOrg = defineScreen({
       slug: 'limited',
       title: 'Limited to Hexwave',
       description:
-        'The job works only on Hexwave, which has 5 steps left: brief starts of 4 stopped workspaces and the refresh of its org image. Orgs says Hexwave only. A line says that the other orgs wait until Remove limit, which takes the place of Limit to one org. The accounts keep the counts of the whole job.',
+        'The job works only on Hexwave, which has 5 steps left: brief starts of 4 stopped workspaces and the refresh of its org image. Orgs says Hexwave only. A line says that the other orgs wait until Remove limit, which takes the place of Limit to one org. The 3 steps that run on boat started before the limit, and they go on to their end. The accounts keep the counts of the whole job. Pause job leads to Pausing with the limit.',
       rationale:
         'The counts of the whole job stay, so the operator still sees what is left after the limit. The line counts the work left in every row of Hexwave, restarts included. So it says that Hexwave is done only after its last step (review finding 4, 23 November 2026).',
       props: { job: migrationPages[migrationPaths.limited] },
@@ -35,10 +35,19 @@ export const operatorMigrationOneOrg = defineScreen({
       slug: 'limited-done',
       title: 'Hexwave done',
       description:
-        'Each step of Hexwave ended, so the job waits. Its state is Waiting, and boat says Waiting for the limit. The line says that Hexwave is done, and that Remove limit goes on with every org. Remove limit leads to the running job.',
+        'By 24 November at 12:52, each step of Hexwave ended, so the job waits. Its state is Waiting, and boat says Waiting for the limit. boat has 1,221 starts left. The line says that Hexwave is done, and that Remove limit goes on with every org. Remove limit leads to the job on every org at this time. Pause job has no link here.',
       rationale:
         'The job does not go on with the other orgs by itself, because the operator set the limit. The line names the one action that goes on.',
       props: { job: migrationPages[migrationPaths.limitedDone] },
+    },
+    {
+      slug: 'every-org',
+      title: 'Every org after Hexwave',
+      description:
+        'Remove limit on Hexwave done. The job works on every org again, at the same time, with the work of Hexwave done. boat has 1,221 starts left, as on Hexwave done. Orgs says Every org, and the line of the limit is gone. Pause job and Limit to one org have no link, because the catalogue draws no pause and no question at this time.',
+      rationale:
+        'Remove limit changes only the limit, and it keeps the work that the job did under the limit (review finding 7, 23 November 2026). When the org of the limit is done, the job waits for Remove limit, as the design calls of the plan say.',
+      props: { job: migrationPages[migrationPaths.everyOrg] },
     },
   ],
 })

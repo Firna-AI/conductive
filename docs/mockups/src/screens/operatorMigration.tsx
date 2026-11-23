@@ -15,24 +15,25 @@ import {
   SectionText,
 } from '../../../../src/ui/components/settings/Section'
 import { migrationJob } from '../fixtures/migrationJob'
-import {
-  defaultPace,
-  paceFields,
-  paceSavedAt,
-  savedPaces,
-} from '../fixtures/migrationPace'
+import { paceSaveTime } from '../fixtures/migrationMoments'
+import { defaultPace, paceFields, savedPaces } from '../fixtures/migrationPace'
 import { jobProblems } from '../fixtures/migrationProblems'
 import type { JobRecord } from '../fixtures/migrationRecord'
 import { account } from '../fixtures/orgs'
 import { jobControls, savePaceTo } from './migrationControls'
 import styles from '../../../../src/ui/screens/OperatorProvidersScreen.module.css'
 
-/** The line of the last change of the pace, once an operator saved one. */
+/**
+ * The line of the last change of the pace, once an operator saved one: the
+ * time of that save, which is a fact of the page, and its operator. The
+ * app records both, and the Pace box names them.
+ */
 function ChangedLine(props: { record: JobRecord }) {
-  if (props.record.savedPace === 'default') return null
+  const { settings, facts } = props.record
+  if (settings.savedPace === 'default') return null
   return (
     <SectionText muted>
-      {paceChangedLine(paceSavedAt, account.login)}
+      {paceChangedLine(paceSaveTime(facts), account.login)}
     </SectionText>
   )
 }
@@ -46,11 +47,12 @@ function ChangedLine(props: { record: JobRecord }) {
  */
 function PaceForm(props: { record: JobRecord }) {
   const { record } = props
+  const { settings } = record
   return (
     <Section
       actions={
         <Linked to={savePaceTo(record)}>
-          <ActionButton disabled={record.typedPace === 'none'} tone="primary">
+          <ActionButton disabled={settings.typedPace === 'none'} tone="primary">
             {paceWords.save}
           </ActionButton>
         </Linked>
@@ -58,8 +60,8 @@ function PaceForm(props: { record: JobRecord }) {
       description={paceWords.line(defaultPace.perHour, defaultPace.atOnce)}
       title={paceWords.title}
     >
-      <PaceFields fields={paceFields(record)} />
-      {record.typedPace === 'save-failed' ? (
+      <PaceFields fields={paceFields(settings)} />
+      {settings.typedPace === 'save-failed' ? (
         <span className={styles.error} role="alert">
           <CircleAlert aria-hidden className={styles.icon} size={13} />
           <span>{paceWords.notSaved}</span>
@@ -78,7 +80,7 @@ function PaceForm(props: { record: JobRecord }) {
 function PaceRecordSection(props: { record: JobRecord }) {
   return (
     <Section description={paceWords.record} title={paceWords.title}>
-      <PaceRecord paces={savedPaces(props.record)} />
+      <PaceRecord paces={savedPaces(props.record.settings)} />
       <ChangedLine record={props.record} />
     </Section>
   )
@@ -88,25 +90,24 @@ function PaceRecordSection(props: { record: JobRecord }) {
  * The boxes of the migration job at the top of the Providers tab, from the
  * state of the page: the job with its actions, its pace, and its failures
  * and skips, which show from the end of the count. The Pace box takes its
- * mode from the run of the job: a finished job shows its record. Without a
- * job, the tab draws none of them.
+ * mode from the job: a finished job shows its record. Without a job, the
+ * tab draws none of them.
  */
 export function MigrationSections(props: { record?: JobRecord }): ReactNode {
   const { record } = props
   if (record === undefined) return null
+  const job = migrationJob(record)
+  const done = job.done !== undefined
   return (
     <>
-      <MigrationJobSection
-        actions={jobControls(record)}
-        job={migrationJob(record)}
-      />
-      {record.run === 'done' ? (
+      <MigrationJobSection actions={jobControls(record, done)} job={job} />
+      {done ? (
         <PaceRecordSection record={record} />
       ) : (
         <PaceForm record={record} />
       )}
-      {record.progress === 'counting' && record.run !== 'done' ? null : (
-        <JobProblemsSection problems={jobProblems(record)} />
+      {job.counting ? null : (
+        <JobProblemsSection problems={jobProblems(record.facts)} />
       )}
     </>
   )

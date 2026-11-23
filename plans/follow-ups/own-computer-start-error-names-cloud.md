@@ -1,0 +1,48 @@
+# Failed start on build-01 names the cloud computer
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-23, from PR #658, round 2 finding checks, a new problem of the check of finding 9.
+- **Location:** `computerStartError` in `docs/mockups/src/screens/workspaceComputer.ts:66-76`. The case `error` of `sandboxNotice` in `docs/mockups/src/screens/workspaceSandbox.ts`. `startErrors` in `docs/mockups/src/fixtures/starting.ts:47-61`. `ownWorkspaceWords` in `docs/mockups/src/components/own-computers/computerChoiceCopy.ts:67-84`. The rule at `docs/protocol/own-computers-workspaces.md:114-117`.
+- **Reason:** The message is older than the change that found it: the base of that change gave the same message.
+
+- **Source:** Review. **Category:** Mockup.
+- **Terms:**
+  - **Own computer:** a Linux server that an org admin adds to Conductive, where each workspace runs in its own container.
+  - **Saved message:** the message that the app saves for a failed start. The bar under the chat shows it with Try again.
+  - **Workspace state:** the props of a workspace page of the mockup catalogue, `WorkspaceState` in `docs/mockups/src/screens/workspaceState.ts`. Its field `computer` is `cloud`, `own`, `full`, `offline`, `went-offline`, or `removed`. Its field `startError` is `failed`, `time-limit`, or `restart`.
+  - **Preview controls:** the controls of the catalogue that let a reader change the props of a drawn page, such as Computer.
+- **Background:**
+  - The mockup catalogue under `docs/mockups/` is the visual spec of Conductive. Mokly 0.21.0 builds it.
+  - `docs/protocol/own-computers-workspaces.md:114-117` says: "In a workspace on an own computer, each text that names the cloud computer of the workspace names its own computer in its place. Examples are the first step of a start, the saved message of a failed start, and the messages of a failed attachment transfer."
+  - `docs/protocol/workspace-life.md`, in "Time limits of builds and starts", says that each failed create or resume that passed its time limit says so.
+  - In the catalogue, the computer `own` is build-01, an own computer of Acme that is connected and has room. `full` is build-02, `offline` and `went-offline` are lab-server, and `removed` is old-runner.
+  - `computerStartError` gives a saved message only for an own computer that the app waited for:
+    - lab-server: "lab-server did not connect within the 20-minute limit of a start. Try again."
+    - build-02: "build-02 is full, and no place came free within the 20-minute limit of a start. Try again."
+    - For build-01, it gives none.
+  - The case `error` of `sandboxNotice` then takes the words of the cloud computer from `startErrors`:
+    - `failed`: "The cloud computer could not start. Try again."
+    - `time-limit`: "The cloud computer did not start within the 20-minute limit. Try again."
+    - `restart`: "The software didn't restart. Try again." These words name no computer.
+  - The same page names build-01 in its header. `headerComputer` in `docs/mockups/src/screens/workspaceComputer.ts` names build-01 in the menu of the header state. The first line of that menu says "Runs on build-01, an own computer of Acme." The first step of a start on build-01 says "Starting on build-01, an own computer of Acme".
+  - No drawn page shows a failed start on build-01. A reader gets it with the preview controls: Computer set to `own` on a page of a failed start, such as `app/shell/error` or `app/new-workspace/error`.
+  - `ownWorkspaceWords` holds the words of build-01, lab-server, and build-02. It has no message for a failed start on a connected own computer with room.
+  - The base of the change that found this gave the same message. Its `computerStartError` gave a message only for an offline own computer.
+  - The app runs no workspace on an own computer yet. The Worker saves the cloud messages at `worker/lifecycle/workspace-start.ts:13`, `worker/lifecycle/start-records.ts:62`, and `worker/lifecycle/job-time-limit.ts:12`. The words that the catalogue draws for build-01 are the spec for the message that the app saves on an own computer.
+- **Problem:** With Computer set to `own` on a failed start, the bar says "The cloud computer could not start. Try again." under a header that names build-01. A start that passed its time limit says that the cloud computer did not start. The protocol requires the name of the own computer in this message.
+- **Impact if no action:** The visual spec gives a message that names the wrong computer. A builder of the own computer screens can copy the cloud words, and a member then looks for the problem on the cloud computer.
+- **Root question:** How does the saved message of each failed start name the computer where the workspace runs?
+- **Options:**
+  - **A.** Add the two messages of a failed start on build-01 to `ownWorkspaceWords`, for `failed` and `time-limit`. Write them in the style of the messages of lab-server and build-02. Examples are "The workspace could not start on build-01. Try again." and "The workspace did not start on build-01 within the 20-minute limit. Try again." `computerStartError` returns them for `own`. The cloud words stay the fallback of every other case. Cost: a new computer value or a new start error can still fall back to the words of the cloud computer. Effort: Small.
+  - **B.** Give each failed start its message from one function with no fallback. `computerStartError` returns the saved message for each value of `computer` and of `startError`. It uses a switch over each value, as `computerName` in the same file does. The cloud keeps the words of `startErrors`, lab-server and build-02 keep theirs, and build-01 gets the words of A. `sandboxNotice` takes the message only from this function. Cost: a few more lines than A. Effort: Small.
+- **Left out:**
+  - Fewer than three approaches are real. The words of build-01 stand beside the fallback to the cloud words, or one function gives each message with no fallback.
+  - A message that names no computer, such as "The sandbox could not start. Try again.": it breaks the protocol rule that the message names the own computer.
+  - A Computer control that hides `own` on a failed start: it hides a state that the protocol defines, and a stricter validation needs the user.
+  - A new page that draws the failed start on build-01: it is not a separate approach. A or B can add it, but the protocol already gives the rule.
+  - Change nothing: it fails the goal, because the message names the wrong computer.
+- **Wider fix:** B. With no fallback to the cloud words, a new computer value or a new start error cannot show a message that names the wrong computer.
+- **Previous examples:** None found.
+- **Recommendation:** B. It costs as little as A. Each computer value then needs its own message, so no case falls back to the words of the cloud computer.
+- **Action:** fix after merge, apply B, because the message is older than the change that found it, and no drawn page shows it.

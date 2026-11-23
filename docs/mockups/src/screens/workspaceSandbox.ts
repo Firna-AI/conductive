@@ -30,6 +30,7 @@ import { explainActivity } from './explainModel'
 import { recoveryPage } from './ownComputerPages'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
+import { firstStartRetry, recovery, restorePage } from './workspaceRecovery'
 
 /**
  * The chats of a session whose turn ended while another session of the
@@ -163,25 +164,18 @@ function onRemovedComputer(name: string): {
 }
 
 /**
- * The page that Resume or Try again opens, as a part of the notice, when
- * the catalogue draws the next state of the same workspace.
- */
-function recovery(state: WorkspaceState): { recoverTo?: string } {
-  const page = recoveryPage(state)
-  return page ? { recoverTo: page } : {}
-}
-
-/**
  * The bar under the chat while the sandbox is not running. A refused start
  * shows the words of its cause: the org or the owner. A failed start
  * carries the message that the app saved for it, and so does a stop after
  * the own computer of the workspace went offline. A failed first start
- * keeps the composer under its bar. Resume and the Try again of a later
- * start open the next state of the same workspace, when the catalogue
- * draws it. An archived workspace says what it can get back, what the app
- * knows of its cloud computer, and when it leaves the list or when it left
- * it. On an own computer that an admin removed, it says that its files
- * stay on that server.
+ * keeps the composer under its bar. The notice names the page of its one
+ * way forward, from the state of the workspace: Resume and the Try again of
+ * a later start open the next state of the same workspace, the Try again
+ * of a failed first start opens its retry, and Restore opens the restored
+ * workspace, each when the catalogue draws it. An archived workspace says
+ * what it can get back, what the app knows of its cloud computer, and when
+ * it leaves the list or when it left it. On an own computer that an admin
+ * removed, it says that its files stay on that server.
  */
 export function sandboxNotice(state: WorkspaceState): BarNotice | undefined {
   switch (state.sandbox) {
@@ -199,7 +193,7 @@ export function sandboxNotice(state: WorkspaceState): BarNotice | undefined {
         problem: 'error',
         message: computerStartError(state) ?? startErrors[state.startError],
         firstStart,
-        ...(firstStart ? {} : recovery(state)),
+        ...recovery(firstStart ? firstStartRetry(state) : recoveryPage(state)),
       }
     }
     case 'stopped': {
@@ -207,7 +201,7 @@ export function sandboxNotice(state: WorkspaceState): BarNotice | undefined {
       return {
         problem: 'stopped',
         ...(message ? { message } : {}),
-        ...recovery(state),
+        ...recovery(recoveryPage(state)),
       }
     }
     case 'archived': {
@@ -219,6 +213,7 @@ export function sandboxNotice(state: WorkspaceState): BarNotice | undefined {
         computer: archivedComputer(state.archive),
         days: archiveDays[state.workspace],
         ...(removedComputer ? onRemovedComputer(removedComputer) : {}),
+        ...recovery(restorePage(state)),
       }
     }
     case 'ready':

@@ -12,12 +12,13 @@ import { migrationPaths } from '../../../../../../paths'
 export const operatorMigrationPaused = defineScreen({
   title: 'Paused',
   description:
-    '@calummoore paused the job on 24 November at 11:42, from Pause job. Its state is Paused, and its facts give the time and the operator of the pause. Each account that has work left shows Paused, with the starts that are left. Continue job takes the place of Pause job and leads back to the running job. Limit to one org opens its question over the paused job. The variants show a pause that keeps a limit, the question over the paused job, and a pause that keeps a saved pace.',
+    'The job after Pausing. By 24 November at 11:58, the 3 steps that ran at the pause ended, and no step runs. So the job and boat show Paused. The facts give the time and the operator of the pause, 11:46. boat has 1,226 starts left, because the 3 brief starts that ran count as handled. Continue job has no link, because the catalogue draws no running job of this later time. Limit to one org opens its question over the paused job. The variants show a pause that keeps a limit, the question over the paused job, and a pause that keeps a saved pace.',
   rationale:
-    'An operator can pause and continue the job (own computer decision 7 D). Pause job and Continue job ask no question, because each one undoes the other at once. The facts name the operator of the pause, so another operator knows whom to ask. Cal has not chosen yet what the box shows while steps of the job still run after a pause. This page draws the smallest choice: the box shows Paused at once.',
+    'After Pause job, the job starts no new step, and each running step goes on to its end. While steps still run, the box shows Pausing with the count of running steps. When none runs, it shows Paused (agent call of 23 November 2026). The steps that ended during Pausing stay done, so they never go back to the queue (review finding 8, 23 November 2026). The facts name the operator of the pause, so another operator knows whom to ask.',
   relatedDocs: [],
   propSchema: operatorProvidersSchema,
   props: migrationProps(migrationPaths.paused),
+  useCasePaths: ['user-flows/pause-the-migration-job'],
   render: (props, context) => (
     <OperatorProvidersScreen state={props} viewport={context.viewport} />
   ),
@@ -26,9 +27,9 @@ export const operatorMigrationPaused = defineScreen({
       slug: 'limited',
       title: 'Paused with a limit',
       description:
-        'A pause of the job limited to Hexwave. Orgs says Hexwave only, and the line still gives the 5 steps that Hexwave has left. Continue job leads to the job limited to Hexwave. Remove limit leads to the paused job on every org.',
+        'The job limited to Hexwave after Pausing. Orgs says Hexwave only. Hexwave still has 5 steps left, because the 3 steps that ran at the pause were not of Hexwave. Remove limit leads to the paused job on every org. Continue job has no link.',
       rationale:
-        'Pause job changes only the run of the job, so the pause keeps the limit. Remove limit changes only the limit, so the job stays paused (review finding 1, 23 November 2026).',
+        'Remove limit changes only the limit, so the job stays paused (review finding 1, 23 November 2026). A limit starts no step of another org, and the steps that run at the limit go on to their end, as at a pause.',
       props: { job: migrationPages[migrationPaths.pausedLimited] },
     },
     {
@@ -44,9 +45,9 @@ export const operatorMigrationPaused = defineScreen({
       slug: 'saved-pace',
       title: 'Paused with a saved pace',
       description:
-        'A pause of the job after Save pace. The Pace box keeps the saved pace of boat, 60 starts in each hour and 6 at once, with the line of its change. Continue job leads to the running job with that pace.',
+        'The job with the saved pace of boat after Pausing. The Pace box keeps that pace, 60 starts in each hour and 6 at once. The line of its change gives 11:46, the time of the pause. Continue job has no link.',
       rationale:
-        'Pause job changes only the run of the job, so the saved pace stays (review finding 1, 23 November 2026).',
+        'Pause job changes only the pause request, so the saved pace stays. The pause cannot show an earlier time than the save (review finding 7, 23 November 2026).',
       props: { job: migrationPages[migrationPaths.pausedPace] },
     },
   ],

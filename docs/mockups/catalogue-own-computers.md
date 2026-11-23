@@ -81,7 +81,9 @@ after an admin removed old-runner, the own computer of its runs.
 first step of the start names it. Its states moved into their own folders
 and kept their paths, so the page shows only its canonical screen. Resume
 and Try again on these pages open the next state of the same workspace,
-with every other part kept. Its child pages:
+with every other part kept. The catalogue draws no failed first start and
+no Restore on an own computer. So Try again after a failed first start
+and Restore have no link there. Its child pages:
 
 - `menu` has the menu of the header state, whose first line says that
   the workspace runs on build-01.

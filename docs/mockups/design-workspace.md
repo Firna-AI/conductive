@@ -189,6 +189,12 @@ link, and the bars of the cloud computer.
   workspace, which keeps what the app knows of the cloud computer apart
   from Restore. `sandboxProblems.ts` beside them holds the words of each
   state of the mockups, and the rules that pick them.
+  - Resume, Try again, and Restore link to the page that the notice names.
+    `sandboxNotice` in `src/screens/workspaceSandbox.ts` chooses that page
+    from the state of the workspace, and a registered part takes it as a
+    prop. With no such page, the button has no link. Try again after a
+    failed first start opens `app/new-workspace/retrying`, and Restore
+    opens `app/archive/restored`, only on the cloud computer.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`
     variant show.
@@ -196,9 +202,9 @@ link, and the bars of the cloud computer.
     after the computer went offline name the computer. On a removed own
     computer, the bar of an archived workspace says that the files stay
     there. It offers no Restore, as
-    [own computers](design-own-computers.md) gives. There, Resume and Try
-    again link to the page that the notice names: the next state of the
-    same workspace, when the catalogue draws it.
+    [own computers](design-own-computers.md) gives. On an own computer,
+    Resume and Try again link to the next state of the same workspace,
+    when the catalogue draws it.
   - For a suspended org, the words name the org and the abuse address, as
     `app/orgs/suspended/workspace` shows. The New workspace page of such an
     org shows the same bar in place of the composer.

@@ -19,30 +19,37 @@ import {
 } from '../../../../../src/ui/components/settings/Section'
 import { JobAccounts } from './JobAccounts'
 import {
-  jobStateLabels,
+  jobStateLabel,
   jobWords,
   limitLine,
   onlyOrg,
   pausedValue,
 } from './migrationCopy'
-import { workLeft, type JobState, type MigrationJob } from './migrationModel'
+import {
+  jobState,
+  workLeft,
+  type JobState,
+  type MigrationJob,
+} from './migrationModel'
 
 /** The glyph and the colour of each state, so no state is colour alone. */
 const stateLooks: Readonly<
-  Record<JobState, { tone: StatusTone; busy?: true; icon?: LucideIcon }>
+  Record<JobState['kind'], { tone: StatusTone; busy?: true; icon?: LucideIcon }>
 > = {
   counting: { tone: 'active', busy: true },
   running: { tone: 'active', busy: true },
   waiting: { tone: 'warning', icon: Hourglass },
+  pausing: { tone: 'neutral', busy: true },
   paused: { tone: 'neutral', icon: CirclePause },
   done: { tone: 'success', icon: CircleCheck },
 }
 
 /**
  * The facts of the job: when it started, the orgs that it works on, and
- * when and by whom it was paused, or when it finished.
+ * when and by whom an operator paused it, or when it finished. While steps
+ * still run after the pause, the pause shows as asked, not as done.
  */
-function jobDetails(job: MigrationJob): Detail[] {
+function jobDetails(job: MigrationJob, state: JobState): Detail[] {
   const details: Detail[] = [
     { term: jobWords.started, value: job.started },
     {
@@ -50,10 +57,10 @@ function jobDetails(job: MigrationJob): Detail[] {
       value: job.limit ? onlyOrg(job.limit.org) : jobWords.everyOrg,
     },
   ]
-  if (job.paused) {
+  if (job.pause) {
     details.push({
-      term: jobWords.paused,
-      value: pausedValue(job.paused.at, job.paused.by),
+      term: state.kind === 'pausing' ? jobWords.pauseAsked : jobWords.paused,
+      value: pausedValue(job.pause.at, job.pause.by),
     })
   }
   if (job.done) details.push({ term: jobWords.done, value: job.done })
@@ -62,12 +69,13 @@ function jobDetails(job: MigrationJob): Detail[] {
 
 /**
  * The box of the migration job on the Providers tab of the operator (own
- * computer decision 7 D): the state of the job with its glyph, what it
- * does, its facts, the line of its limit to one org, and the job on each
- * provider account. The line of the limit takes the work that is left in
- * every row of that org, restarts included, so it says Done only when
- * each step there ended. While the job counts, a line says so in place of
- * the accounts. The screen gives the actions, such as Pause job. It
+ * computer decision 7 D): the state of the job with its glyph, as the rule
+ * of `jobState` derives it, what it does, its facts, the line of Pausing,
+ * the line of its limit to one org, and the job on each provider account.
+ * The line of the limit takes the work that is left in every row of that
+ * org, restarts included, so it says Done only when each step there
+ * ended. While the count goes on, in each state, a line says so in place
+ * of the accounts. The screen gives the actions, such as Pause job. It
  * imports no fixture, so the app can use it too.
  */
 export function MigrationJobSection(props: {
@@ -75,7 +83,8 @@ export function MigrationJobSection(props: {
   actions?: ReactNode
 }) {
   const { job } = props
-  const look = stateLooks[job.state]
+  const state = jobState(job)
+  const look = stateLooks[state.kind]
   return (
     <Section
       actions={props.actions}
@@ -84,13 +93,16 @@ export function MigrationJobSection(props: {
         <StatusText
           busy={look.busy}
           icon={look.icon}
-          label={jobStateLabels[job.state]}
+          label={jobStateLabel(state)}
           tone={look.tone}
         />
       }
       title={jobWords.title}
     >
-      <DetailList rows={jobDetails(job)} />
+      <DetailList rows={jobDetails(job, state)} />
+      {state.kind === 'pausing' ? (
+        <SectionText muted>{jobWords.pausing}</SectionText>
+      ) : null}
       {job.limit ? (
         <SectionText>
           {limitLine(
@@ -99,10 +111,10 @@ export function MigrationJobSection(props: {
           )}
         </SectionText>
       ) : null}
-      {job.state === 'counting' ? (
+      {job.counting ? (
         <SectionText muted>{jobWords.counting}</SectionText>
       ) : (
-        <JobAccounts accounts={job.accounts} />
+        <JobAccounts job={job} />
       )}
     </Section>
   )

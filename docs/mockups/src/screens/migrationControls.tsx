@@ -5,23 +5,28 @@ import { ActionButton } from '../../../../src/ui/components/common/actions'
 import { Linked } from '../components/common/ScreenLink'
 import { LimitDialog } from '../components/operator/LimitDialog'
 import { jobWords } from '../components/operator/migrationCopy'
-import type { JobRecord } from '../fixtures/migrationRecord'
+import {
+  withSettings,
+  type JobRecord,
+  type JobSettings,
+} from '../fixtures/migrationRecord'
 import { migrationPageOf } from './migrationPages'
 
 /**
- * A control of the job. Its result is the state of its page with only the
- * part that the control changes. It links to the page that draws that
- * state, and with no such page it draws the control with no link, as
- * during the count, where the catalogue draws no pause.
+ * A control of the job. Its result is its page with the settings that it
+ * changes, and the same facts, so its action takes the time of the page.
+ * It links to the page that draws that result, and with no such page it
+ * draws the control with no link.
  */
 function Control(props: {
   label: string
-  next: JobRecord
+  record: JobRecord
+  change: Partial<JobSettings>
   icon?: LucideIcon
   primary?: boolean
 }) {
   return (
-    <Linked to={migrationPageOf(props.next)}>
+    <Linked to={migrationPageOf(withSettings(props.record, props.change))}>
       <ActionButton
         icon={props.icon}
         tone={props.primary ? 'primary' : 'secondary'}
@@ -34,41 +39,45 @@ function Control(props: {
 
 /**
  * The actions of the job: Limit to one org, or Remove limit while a limit
- * holds, then Pause job, or Continue job while it is paused. Limit to one
- * org and Remove limit change only the limit, and Pause job and Continue
- * job change only the run, so a pause keeps the limit and the pace. A
- * finished job has none. None of them asks first, because each one can be
- * undone.
+ * holds, then Pause job, or Continue job after a pause. Limit to one org
+ * and Remove limit change only the limit, and Pause job and Continue job
+ * change only the pause request, so a pause keeps the wait, the limit, and
+ * the pace. A finished job has none. None of them asks first, because each
+ * one can be undone.
  */
-export function jobControls(record: JobRecord): ReactNode {
-  if (record.run === 'done') return undefined
-  const limited = record.limit === 'hexwave' || record.limit === 'hexwave-done'
+export function jobControls(record: JobRecord, done: boolean): ReactNode {
+  if (done) return undefined
+  const { settings } = record
   return (
     <>
-      {limited ? (
+      {settings.limit === 'hexwave' ? (
         <Control
+          change={{ limit: 'none' }}
           label={jobWords.removeLimit}
-          next={{ ...record, limit: 'none' }}
+          record={record}
         />
       ) : (
         <Control
+          change={{ limit: 'question' }}
           icon={ListFilter}
           label={jobWords.limit}
-          next={{ ...record, limit: 'question' }}
+          record={record}
         />
       )}
-      {record.run === 'paused' ? (
+      {settings.pause === 'asked' ? (
         <Control
+          change={{ pause: 'none' }}
           icon={Play}
           label={jobWords.continue}
-          next={{ ...record, run: 'running' }}
           primary
+          record={record}
         />
       ) : (
         <Control
+          change={{ pause: 'asked' }}
           icon={Pause}
           label={jobWords.pause}
-          next={{ ...record, run: 'paused' }}
+          record={record}
         />
       )}
     </>
@@ -76,19 +85,19 @@ export function jobControls(record: JobRecord): ReactNode {
 }
 
 /**
- * The question before the limit to one org, over the job of its page:
- * running or paused. Cancel takes the limit back to none, and Limit job
- * sets the limit to Hexwave. Each keeps the run and the pace.
+ * The question before the limit to one org, over the job of its page.
+ * Cancel takes the limit back to none, and Limit job sets the limit to
+ * Hexwave. Each keeps the pause, the pace, and the facts.
  */
 export function limitQuestion(
   record: JobRecord | undefined,
   viewport: Viewport,
 ): ReactNode | undefined {
-  if (record?.limit !== 'question') return undefined
+  if (record?.settings.limit !== 'question') return undefined
   return (
     <LimitDialog
-      cancelTo={migrationPageOf({ ...record, limit: 'none' })}
-      limitTo={migrationPageOf({ ...record, limit: 'hexwave' })}
+      cancelTo={migrationPageOf(withSettings(record, { limit: 'none' }))}
+      limitTo={migrationPageOf(withSettings(record, { limit: 'hexwave' }))}
       viewport={viewport}
     />
   )
@@ -96,9 +105,11 @@ export function limitQuestion(
 
 /**
  * The page of Save pace: the typed pace becomes the saved pace, and the
- * other parts stay. With no typed pace, Save pace is off and has none.
+ * other settings and the facts stay. With no typed pace, Save pace is off
+ * and has none.
  */
 export function savePaceTo(record: JobRecord): string | undefined {
-  if (record.typedPace === 'none') return undefined
-  return migrationPageOf({ ...record, savedPace: 'faster', typedPace: 'none' })
+  if (record.settings.typedPace === 'none') return undefined
+  const saved = { savedPace: 'faster', typedPace: 'none' } as const
+  return migrationPageOf(withSettings(record, saved))
 }
