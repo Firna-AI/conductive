@@ -12,6 +12,10 @@ import {
 } from './storage'
 import { fileEntry, writeBucketProjection } from './test-support/bucket-builder'
 import {
+  compatibilityProjection,
+  compatibilityRecord,
+} from './test-support/bucket-record'
+import {
   createFilesStorage,
   type FilesStorageHarness,
 } from './test-support/storage'
@@ -196,27 +200,31 @@ it('keeps the bucket layout when a connection or snapshot is stale', async () =>
   await expect(loadFiles(storage)).resolves.toStrictEqual(projection)
 })
 
-it('rolls back the manifest and chunks when a conversion put fails', async () => {
+it('restores the bucket projection when the staged conversion fails at commit', async () => {
   const name = 'conversion-rollback'
   const storage = runtime.storage(name)
-  const stored = await writeBucketProjection(storage, projection)
-  const before = await runtime.inspect(name)
-  // Workerd allows SQLite rows up to 8 MiB plus serialization overhead.
-  const oversized = 'x'.repeat(9 * 1024 * 1024)
-  const write = vi.fn<FilesStorage['write']>((updates, removals) =>
-    storage.write(
-      { ...updates, [`${FILES_KEY}:test-oversized`]: oversized },
-      removals,
-    ),
-  )
-  await expect(
-    new FilesState({ ...storage, write }).beginConnection('new-stream'),
-  ).rejects.toThrow('Test storage write failed')
-  expect(write).toHaveBeenCalledTimes(1)
+  await storage.write(compatibilityRecord, [])
+  const expectedStaged = {
+    [FILES_KEY]: {
+      connectionId: 'new-stream',
+      hasSnapshot: false,
+      treeChunks: 1,
+      changesChunks: 1,
+    },
+    [`${FILES_KEY}:tree:0`]: JSON.stringify(compatibilityProjection.tree),
+    [`${FILES_KEY}:changes:0`]: JSON.stringify(compatibilityProjection.changes),
+  }
+
+  const state = new FilesState(runtime.storage(name, { failCommit: true }))
+  const conversion = state.beginConnection('new-stream')
+  await expect(conversion).rejects.toThrow('Test storage commit failed')
+  await expect(conversion).rejects.toHaveProperty('staged', expectedStaged)
+
   await runtime.evict(name)
-  await expect(storage.getMany(Object.keys(stored))).resolves.toStrictEqual(
-    new Map(Object.entries(stored)),
+  const original = new Map(Object.entries(compatibilityRecord))
+  const keys = new Set([...original.keys(), ...Object.keys(expectedStaged)])
+  await expect(storage.getMany([...keys])).resolves.toStrictEqual(original)
+  await expect(loadFiles(storage)).resolves.toStrictEqual(
+    compatibilityProjection,
   )
-  await expect(runtime.inspect(name)).resolves.toStrictEqual(before)
-  await expect(loadFiles(storage)).resolves.toStrictEqual(projection)
 })

@@ -8,6 +8,15 @@ interface StorageWorkerEnv {
   FILES: DurableObjectNamespace<StoredFiles>
 }
 
+class CommitFailure extends Error {
+  readonly staged: Record<string, unknown>
+
+  constructor(staged: Record<string, unknown>) {
+    super('Test storage commit failed')
+    this.staged = staged
+  }
+}
+
 export class StoredFiles extends DurableObject<StorageWorkerEnv> {
   private readonly files: FilesStorage
 
@@ -31,13 +40,39 @@ export class StoredFiles extends DurableObject<StorageWorkerEnv> {
       if (!isRecord(value) || !isRecord(value.updates)) {
         throw new Error('Invalid storage write request')
       }
-      await this.files.write(value.updates, readKeys(value.removals))
+      const removals = readKeys(value.removals)
+      if (url.searchParams.has('failCommit'))
+        return this.abortCommit(value.updates, removals)
+      await this.files.write(value.updates, removals)
       return new Response(null, { status: 204 })
     }
     const key = url.searchParams.get('key')
     if (key === null) throw new Error('Missing storage key')
     const value = await this.files.get(key)
     return Response.json(value === undefined ? {} : { value })
+  }
+
+  private async abortCommit(
+    updates: Readonly<Record<string, unknown>>,
+    removals: readonly string[],
+  ): Promise<Response> {
+    const storage = this.ctx.storage
+    const files = durableFilesStorage({
+      get: storage.get.bind(storage),
+      transaction: (operation) =>
+        storage.transaction(async (transaction) => {
+          await operation(transaction)
+          const staged = await transaction.list<unknown>({ prefix: FILES_KEY })
+          throw new CommitFailure(Object.fromEntries(staged))
+        }),
+    })
+    try {
+      await files.write(updates, removals)
+    } catch (error) {
+      if (!(error instanceof CommitFailure)) throw error
+      return Response.json(error.staged, { status: 409 })
+    }
+    throw new Error('Expected the storage transaction to fail')
   }
 
   private async inspect(): Promise<Response> {

@@ -194,6 +194,32 @@ it('rejects damaged bucket records with the old-layout read error', async () => 
   )
 })
 
+it.each(['bucket', 'order'] as const)(
+  'stops after one read batch when the first of many declared %s chunks is missing',
+  async (kind) => {
+    const storage = runtime.storage(`missing-first-${kind}-chunk`)
+    const missingKey = kind === 'order' ? treeOrder : treeBucket
+    await writeBucketProjection(storage, projection, {
+      bucketFor: () => 0,
+      corrupt({ tree }, updates) {
+        if (!tree) throw new Error('Expected a fixture tree')
+        if (kind === 'order') tree.orderChunks = 10_000
+        else tree.buckets[0].chunks = 10_000
+        delete updates[missingKey]
+      },
+    })
+
+    const getMany = vi.fn(storage.getMany)
+    await expect(loadFiles({ ...storage, getMany })).rejects.toMatchObject(
+      readError,
+    )
+    expect(getMany).toHaveBeenCalledTimes(1)
+    const [[keys]] = getMany.mock.calls
+    expect(keys).toContain(missingKey)
+    expect(keys.length).toBeLessThanOrEqual(64)
+  },
+)
+
 it('rejects a damaged bucket manifest before an old-layout write', async () => {
   const storage = runtime.storage('damaged-save')
   const original = await writeBucketProjection(storage, projection, {

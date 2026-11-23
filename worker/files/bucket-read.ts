@@ -1,8 +1,6 @@
 import {
   BUCKET_SYMBOLS,
-  bucketKey,
-  bucketListKeys,
-  orderKey,
+  bucketListChunkKeys,
   type BucketInfo,
   type BucketList,
   type ListKind,
@@ -10,30 +8,40 @@ import {
 import { invalidFileResponse } from './errors'
 import type { FilesStorage } from './storage'
 
-function joinChunks(
-  values: ReadonlyMap<string, unknown>,
-  count: number,
-  keyAt: (index: number) => string,
-): string {
-  const chunks: string[] = []
-  for (let index = 0; index < count; index++) {
-    const chunk = values.get(keyAt(index))
+const CHUNKS_PER_READ = 64
+
+async function appendChunks(
+  storage: FilesStorage,
+  keys: readonly string[],
+  chunks: string[],
+): Promise<void> {
+  const values = await storage.getMany(keys)
+  for (const key of keys) {
+    const chunk = values.get(key)
     if (typeof chunk !== 'string') throw invalidFileResponse()
     chunks.push(chunk)
   }
-  return chunks.join('')
 }
 
-function readBucket(
-  values: ReadonlyMap<string, unknown>,
-  kind: ListKind,
-  bucket: number,
-  info: BucketInfo,
-): unknown[] {
+async function readChunks(
+  storage: FilesStorage,
+  keys: Iterable<string>,
+): Promise<string[]> {
+  const chunks: string[] = []
+  let batch: string[] = []
+  for (const key of keys) {
+    batch.push(key)
+    if (batch.length === CHUNKS_PER_READ) {
+      await appendChunks(storage, batch, chunks)
+      batch = []
+    }
+  }
+  if (batch.length > 0) await appendChunks(storage, batch, chunks)
+  return chunks
+}
+
+function parseBucket(text: string, info: BucketInfo): unknown[] {
   if (info.count === 0 && info.chunks === 0) return []
-  const text = joinChunks(values, info.chunks, (index) =>
-    bucketKey(kind, bucket, index),
-  )
   let items: unknown
   try {
     items = JSON.parse(text)
@@ -50,15 +58,17 @@ export async function readBucketList(
   kind: ListKind,
   list: BucketList,
 ): Promise<unknown> {
-  const values = await storage.getMany(bucketListKeys(kind, list))
-  const order = joinChunks(values, list.orderChunks, (index) =>
-    orderKey(kind, index),
-  )
+  const chunks = await readChunks(storage, bucketListChunkKeys(kind, list))
+  const order = chunks.slice(0, list.orderChunks).join('')
   if (order.length !== list.count) throw invalidFileResponse()
 
-  const buckets = list.buckets.map((info, bucket) =>
-    readBucket(values, kind, bucket, info),
-  )
+  let chunkIndex = list.orderChunks
+  const buckets = list.buckets.map((info) => {
+    const end = chunkIndex + info.chunks
+    const text = chunks.slice(chunkIndex, end).join('')
+    chunkIndex = end
+    return parseBucket(text, info)
+  })
   const offsets = buckets.map(() => 0)
   const items: unknown[] = []
   for (const symbol of order) {

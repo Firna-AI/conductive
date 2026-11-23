@@ -8,6 +8,12 @@ import { FilesState } from './state'
 import { loadFiles, saveFiles, type StoredFiles } from './storage'
 import { fileEntry, writeBucketProjection } from './test-support/bucket-builder'
 import {
+  compatibilityChangesBuckets,
+  compatibilityProjection,
+  compatibilityRecord,
+  compatibilityTreeBuckets,
+} from './test-support/bucket-record'
+import {
   createFilesStorage,
   type FilesStorageHarness,
 } from './test-support/storage'
@@ -54,6 +60,28 @@ it('uses UTF-8 for bucket numbers and SHA-256 digests', async () => {
   await expect(bucketDigest('[]')).resolves.toBe(
     '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945',
   )
+})
+
+it('reads the literal record across all 64 buckets', async () => {
+  const storage = runtime.storage('literal-bucket-record')
+  await storage.write(compatibilityRecord, [])
+
+  await expect(loadFiles(storage)).resolves.toStrictEqual(
+    compatibilityProjection,
+  )
+  const state = new FilesState(storage)
+  await expect(state.tree()).resolves.toStrictEqual(
+    compatibilityProjection.tree,
+  )
+  await expect(state.changes()).resolves.toStrictEqual(
+    compatibilityProjection.changes,
+  )
+  expect(
+    compatibilityProjection.tree.entries.map(({ path }) => bucketOf(path)),
+  ).toEqual(compatibilityTreeBuckets)
+  expect(
+    compatibilityProjection.changes.files.map(({ path }) => bucketOf(path)),
+  ).toEqual(compatibilityChangesBuckets)
 })
 
 it('reads list order, split bucket JSON, and optional fields', async () => {

@@ -157,17 +157,22 @@ export function parseBucketManifest(
   }
 }
 
+export function* bucketListChunkKeys(
+  kind: ListKind,
+  list: BucketList | null,
+): Iterable<string> {
+  if (list === null) return
+  for (let index = 0; index < list.orderChunks; index++)
+    yield orderKey(kind, index)
+  for (const [bucket, { chunks }] of list.buckets.entries()) {
+    for (let index = 0; index < chunks; index++)
+      yield bucketKey(kind, bucket, index)
+  }
+}
+
 export function bucketListKeys(
   kind: ListKind,
   list: BucketList | null,
 ): string[] {
-  if (list === null) return []
-  const keys: string[] = []
-  for (let index = 0; index < list.orderChunks; index++)
-    keys.push(orderKey(kind, index))
-  for (const [bucket, { chunks }] of list.buckets.entries()) {
-    for (let index = 0; index < chunks; index++)
-      keys.push(bucketKey(kind, bucket, index))
-  }
-  return keys
+  return [...bucketListChunkKeys(kind, list)]
 }
