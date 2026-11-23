@@ -139,7 +139,8 @@ pages:
   has the `boat` account only, with no slider. Its child page
   `three-accounts` has a third account, `e2b-us`, with a field for each
   account and the total under them. Its `uneven` variant has a total of
-  110%, so Save weights stays off.
+  110%, so Save weights stays off. Its child page `migration` has the
+  migration job of the host connection, which a paragraph below gives.
 - `app/operator/settings` has the Settings tab: the Stop time box with
   the choices 15 min, 30 min, 1 hour, 1.5 hours, and 2 hours, at the
   default of 30 min. Its child page `changed` has 1 hour picked and not
@@ -181,6 +182,34 @@ build. The pages draw Hexwave, which switches from `boat` to `e2b`:
   build that an operator ended for the switch,
   `app/org-settings/cloud-computer/build-failed/ended`. Neither names the
   switch or a provider.
+
+The migration job of the host connection comes from own computer
+decisions 7 D and 8 A of 22 November 2026. At the deploy that adds the
+host connection, the job installs the host program on each running machine
+and on each machine that a workspace keeps. It also refreshes each org
+image once. `app/operator/providers/migration` has the Providers tab while the
+job runs on every org, with its three boxes before New orgs. The counts are
+those of the Overview, so every workspace runs on `boat`, and `e2b` has
+only the org image of Acme Labs. Its child pages:
+
+- `counted` has the job before its first start, while it restarts the
+  running machines, with the expected starts and their time on each
+  account. Its `counting` variant has the count itself.
+- `paused` has the job that an operator paused, with Continue job. Cal has
+  not chosen yet what the box shows while steps still run after a pause,
+  so it shows Paused at once.
+- `refused` has `boat` waiting until 11:52 after a refusal for its rate
+  limit. Its `capacity` variant has a refusal for its capacity.
+- `one-org` has the question before the limit to one org, with the ID of
+  Hexwave. Its `limited` variant has the job limited to Hexwave, and its
+  `limited-done` variant has Hexwave done while the other orgs wait.
+- `pace` has a faster pace of `boat` that the operator typed and has not
+  saved. Its `saved` variant has it after Save pace, with the time and the
+  operator, and its `not-saved` variant has a save that failed. Cal has
+  not chosen yet whether the app records each change of the pace, or
+  which values an operator can save. So `saved` draws the recommended
+  line of the last change, and no field shows a refusal.
+- `done` has the finished job, with its failures and skips as a record.
 
 The child pages of `app/operator/user` follow. The first two were variants
 of `app/operator/user` and kept their paths:

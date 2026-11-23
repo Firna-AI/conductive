@@ -27,24 +27,31 @@ export type ArchiveRestore = 'available' | 'refused' | 'ended'
  * What the bar of a sandbox that is not running shows. A refused start
  * carries the words of the app's refusal, so one notice serves every
  * reason. A start that failed can carry the message that the workspace
- * saved for it, such as the 20-minute limit of a start. `firstStart` marks
- * the failed first start of a new workspace. The workspace keeps its chat
- * and its queued messages, and it has no files yet. An archived workspace
- * says what it can get back, and what the app knows of its cloud computer
- * apart from Restore, as `archiveStage` reads them: `may-exist` while the
- * workspace names it or a create or a delete of one is still open,
- * `deleted` after a confirmed delete, and `unknown` when no record says
- * either. A reply of an older Worker has no `computer`. `removed` marks an
+ * saved for it, such as the 20-minute limit of a start. A stop can carry
+ * the message that the workspace saved for it too, such as an own computer
+ * that went offline. `firstStart` marks the failed first start of a new
+ * workspace. The workspace keeps its chat and its queued messages, and it
+ * has no files yet. An archived workspace says what it can get back, and
+ * what the app knows of its cloud computer apart from Restore, as
+ * `archiveStage` reads them: `may-exist` while the workspace names it or a
+ * create or a delete of one is still open, `deleted` after a confirmed
+ * delete, and `unknown` when no record says either. A reply of an older
+ * Worker has no `computer`. `removed` marks an
  * archived workspace whose 14 days ended: it left the list, and only a link
  * opens it. Until then, the notice gives the day when it leaves the list.
+ * `removedComputer` names the own computer of an archived workspace after
+ * an admin removed that computer. The app deletes no file there, so the
+ * notice says that the files stay on that server, in place of the words of
+ * its stage.
  */
 export type SandboxNoticeState =
-  | { problem: 'stopped' }
+  | { problem: 'stopped'; message?: string | null }
   | {
       problem: 'archived'
       restore?: ArchiveRestore
       removed?: boolean
       computer?: ArchivedComputerState
+      removedComputer?: string
     }
   | { problem: 'error'; message?: string | null; firstStart?: boolean }
   | { problem: 'refused'; reason: string }

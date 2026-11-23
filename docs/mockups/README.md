@@ -105,7 +105,8 @@ The [own computers](catalogue-own-computers.md) page gives the Own
 computers tab of the org settings with its child pages, the computer
 choice of New workspace and of the automation form, a workspace on an own
 computer, the own computers on the operator page of an org, and their
-flows.
+flows. The [Archive and Restore](catalogue-archive.md) page gives
+`app/archive` and its child pages.
 
 `app/attachments` shows each attached file as a chip at its place in the
 text of the message box. `app/attachments/drop` shows a drop of files into
@@ -151,7 +152,7 @@ a dropped folder that the browser cannot read. The app shares these words.
 | `src/design/`             | The design tokens: colours, type, density, sizes, radii, and fonts  |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
-| `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, `src/servicePaths.ts` for the services of the Preview tool, and `src/computerPaths.ts` for own computers |
+| `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, `src/servicePaths.ts` for the services of the Preview tool, `src/computerPaths.ts` for own computers, and `src/migrationPaths.ts` for the migration job of the operator |
 | `src/brand.ts`            | The name "Conductive", its domains, its repository, and DMG names   |
 | `src/defined.ts`, `src/instanceKey.ts` | Helpers for the wrappers of registered parts: props without undefined values, and instance names |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
@@ -190,7 +191,7 @@ a dropped folder that the browser cannot read. The app shares these words.
   what lies open over them, which `src/screens/workspaceServices.tsx`
   draws. `src/screens/computerState.ts` holds the computer of the
   workspace: the cloud computer, or an own computer, which
-  `src/screens/workspaceComputer.ts` names in the start and in the header. The pages of the services start from `servicesWorkspace` in
+  `src/screens/workspaceComputer.ts` names in the start, the stop, the archive, and the header. The pages of the services start from `servicesWorkspace` in
   `src/screens/servicesWorkspace.ts`.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.

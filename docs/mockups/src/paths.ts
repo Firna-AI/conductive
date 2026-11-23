@@ -294,3 +294,4 @@ export const paths = {
 export { barPaths, checksPaths } from './bannerPaths.ts'
 export { branchPaths } from './branchPaths.ts'
 export { computerPaths } from './computerPaths.ts'
+export { migrationPaths } from './migrationPaths.ts'

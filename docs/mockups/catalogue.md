@@ -14,7 +14,7 @@ how a screen is built, and links to the other pages.
 | `marketing/pictures` | One capture page for each picture of the home page, without a frame         |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
 | `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org, and its agent step done by an org login. The return page after a GitHub App install in the Mac app. |
-| `app/shell`         | The workspace list, and the sandbox starting, also with a diff tab open, stopped, with an error, with a refused start, and on an own computer |
+| `app/shell`         | The workspace list, and the sandbox starting, also with a diff tab open, stopped, with an error, with a refused start, and on an own computer that is offline, full, or removed |
 | `app/sections`      | The menu of a section with its move items, a workspace dragged to another section, and a section dragged to another place |
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Copy link, Archive from the list with its toast and Restore, and the menus of each role |
 | `app/sub-workspaces` | Sub-workspaces under their parents: two trees in one section, one down to depth 3, then an archived parent, the drag of a tree, and the menu of a nested row |
@@ -22,7 +22,7 @@ how a screen is built, and links to the other pages.
 | `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the toast after a send, a send over the limit, and the files that it does not add |
 | `app/orgs`          | The org switcher of a phone, Create org with the account choice of an operator, the first org, new orgs, deleted, suspended, and the order of the orgs |
 | `app/account`       | General with the GitHub sign-in, the GitHub App, and the invite code, then Agents with the agent logins, own endpoints, and the lines of an org login, Preferences with the favourites, the model, its menu with Fast on, and how New workspace opens, Keyboard shortcuts in a browser, Stats with the person's own counts, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
-| `app/operator`      | The operator's Overview with the long runs of cloud computers, the Orgs, Users, Waitlist, Invite codes, Providers, and Settings tabs, the page of an org and of a user with Suspend, Lift, and Approve, the switch of the provider account of an org, the own computers of an org, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
+| `app/operator`      | The operator's Overview with the long runs of cloud computers, the Orgs, Users, Waitlist, Invite codes, Providers, and Settings tabs, the page of an org and of a user with Suspend, Lift, and Approve, the switch of the provider account of an org, the own computers of an org, the migration job of the host connection with its pace on the Providers tab, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the Capabilities control, the model menu with Fast on and with All models open, the dialog, a start from another branch, the computer choice of an org with own computers, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/automations` | The automations of the org, an automation with the Capabilities of its runs and the computer of its runs, its triggers, its runs, and a run workspace |
@@ -34,7 +34,7 @@ how a screen is built, and links to the other pages.
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/repository-change` | The repository menu of the header, the question before a change, the change that runs, a change that stopped, and the workspace after it |
 | `app/restart`       | The menu of the header state with Restart, the question while an agent works, Starting after Restart, a failed update check, and a failed restart |
-| `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, an archive whose unresolved create request can still hold a cloud computer, an archive after the delete of its cloud computer, and a workspace that left the list after its 14 days |
+| `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, an archive whose unresolved create request can still hold a cloud computer, an archive after the delete of its cloud computer, a workspace that left the list after its 14 days, and an archived workspace whose own computer an admin removed |
 | `app/composer`      | Two uploaded files in a sentence, then the picker, a missing agent, another member's login, a login that is not shared, and the org login |
 | `app/capabilities`  | The Capabilities control of a workspace in a browser, with the approvals of the open session and its values, and no Mac access part |
 | `app/fast-mode`     | The Fast switch of the model menu on and off, with its key, the trigger with Fast, and a model without fast mode |
@@ -53,11 +53,11 @@ how a screen is built, and links to the other pages.
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
-`app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/sub-workspaces`, `app/command-palette`, `app/command-palette/search`, `app/feedback`, `app/orgs`,
+`app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/shell/own-computer`, `app/workspace-menu`, `app/sub-workspaces`, `app/command-palette`, `app/command-palette/search`, `app/feedback`, `app/orgs`,
 `app/orgs/new`, `app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/composer`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/new-workspace/start-branch`,
 `app/new-workspace/start-branch/missing`, `app/model-favourites`, `app/model-favourites/preferences`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/org-settings/cloud-computer/skills`, `app/org-settings/own-computers`, `app/org-settings/agents`, `app/org-settings/secrets`, `app/secret-requests`, `app/secret-requests/temporary`, `app/secret-requests/late`, `app/operator`, `app/operator/org`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/operator/providers`, `app/banner`, `app/chat`, `app/chat/tables`, `app/chat/explain`, `app/chat/explain/popover`, `app/archive`, `app/workspace-links`, `app/automations`, `app/automations/automation`,
+`app/org-settings/cloud-computer`, `app/org-settings/cloud-computer/skills`, `app/org-settings/own-computers`, `app/org-settings/agents`, `app/org-settings/secrets`, `app/secret-requests`, `app/secret-requests/temporary`, `app/secret-requests/late`, `app/operator`, `app/operator/org`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/operator/providers`, `app/operator/providers/migration`, `app/banner`, `app/chat`, `app/chat/tables`, `app/chat/explain`, `app/chat/explain/popover`, `app/archive`, `app/workspace-links`, `app/automations`, `app/automations/automation`,
 `app/automations/triggers`, `app/orgs/suspended/automations`, `app/orgs/suspended/settings`, `app/file-mentions`, `app/file-mentions/answers`, `app/skill-mentions`, `app/attachments`, `app/files`, `app/files/menu`, `app/tools`, `app/tools/services`, `app/account/shortcuts`, `mac-app/capabilities`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
@@ -67,7 +67,7 @@ from `app/archive/deleted`, and its `deleting` variant moved from
 `app/archive/restore-ended`, and both declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings/cloud-computer`,
-`app/org-settings/cloud-computer/skills`,
+`app/org-settings/cloud-computer/skills`, `app/shell/own-computer`,
 `app/operator/user/access`, `app/archive`, `app/command-palette/search`, `app/attachments`,
 `app/composer`, `app/model-favourites`, `app/model-favourites/preferences`, `app/files`, and `app/chat/tables` moved into their own folders and kept their paths. Each page
 shows only its canonical screen. `app/sign-in/get-started` moved into its
@@ -243,39 +243,9 @@ palette of the Mac app, `mac-app/command-palette`.
 workspace with its actions, its child pages, and the flow
 `user-flows/merge-and-continue`.
 
-`app/archive` draws Archive and Restore of Checkout address autocomplete,
-from decisions 1 and 2 of PR #138, and the removal of an archived workspace
-after its 14 days, from decisions 518 D, 519 B, and 520 A of 13 November
-2026. Its canonical screen has the archived workspace, whose bar gives the
-last day of Restore, with Restore, and says that the workspace leaves the
-list on that day. Its child pages:
-
-- `app/archive/just-archived` has the workspace just after Archive from the
-  pull request bar, with the toast, the day when the workspace leaves the
-  list, and Restore. Archive on a row and in the palette leads there too.
-- `app/archive/group` has the list with the Archived group open, and
-  Restore on the hover of a row. The group holds only the workspaces of the
-  last 14 days, so it has no row for Postcode lookup for the shipping and
-  billing forms.
-- `app/archive/restored` has the workspace back in its section, stopped,
-  where each Restore leads.
-- `app/archive/pending` has the archived workspace while an unresolved
-  create request, or a delete that tries again, can still hold a cloud
-  computer that the workspace does not name, as after Archive during a
-  first start. The bar promises only the chat history, offers no Restore,
-  and gives the day when the workspace leaves the list.
-- `app/archive/no-computer` has the archived workspace after the app
-  deleted its cloud computer, as after a failed first start. The bar offers
-  no Restore, and it still gives the day when the workspace leaves the
-  list.
-- `app/archive/removed` has Postcode lookup for the shipping and billing
-  forms, `W-372`, after its 14 days, as its chip in `app/workspace-links`
-  opens it. The list has no row for it, the bar gives the day of the
-  removal, and the cloud computer is deleted. Its `deleting` variant has the
-  same workspace on that day, while a failed delete of its cloud computer
-  tries again. The same bar shows while an unresolved create request can
-  still hold a cloud computer after the 14 days. The flow
-  `user-flows/open-a-removed-workspace` goes from the chip to this page.
+[Archive and Restore](catalogue-archive.md) gives `app/archive`, the
+archive of a workspace with Restore and its removal after 14 days, with
+its child pages, also on an own computer that an admin removed.
 
 `app/repository-change` draws the repository change of Checkout address
 autocomplete, from repository change decisions 1 to 4. Its canonical

@@ -160,7 +160,9 @@ link, and the bars of the cloud computer.
 - `SandboxNotice` in `src/components/workspace/` draws the states of the
   cloud computer: stopped, error, archived, and refused. A refused start
   shows "The sandbox can't start" with the words of its cause and no
-  action. The notice takes any refusal reason. An archived workspace
+  action. The notice takes any refusal reason. A failed start and a stop
+  show the message that the app saved for them before their words. An
+  example is the stop after an own computer went offline. An archived workspace
   offers Restore until its last day, and the bar gives that day and says
   that the workspace leaves the list then. A bar without Restore gives
   that day too. While an unresolved create request, or a delete that tries
@@ -174,12 +176,16 @@ link, and the bars of the cloud computer.
   `sandboxNoticeState.ts` beside it owns the types of the bar and the
   panels, which the app imports too. It also owns the stage of an archived
   workspace, which keeps what the app knows of the cloud computer apart
-  from Restore.
+  from Restore. `sandboxProblems.ts` beside them holds the words of each
+  state of the mockups, and the rules that pick them.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`
     variant show.
-  - On an own computer, a failed start and a refused start name the
-    computer, as [own computers](design-own-computers.md) gives.
+  - On an own computer, a failed start, a refused start, and the stop
+    after the computer went offline name the computer. On a removed own
+    computer, the bar of an archived workspace says that the files stay
+    there. It offers no Restore, as
+    [own computers](design-own-computers.md) gives.
   - For a suspended org, the words name the org and the abuse address, as
     `app/orgs/suspended/workspace` shows. The New workspace page of such an
     org shows the same bar in place of the composer.

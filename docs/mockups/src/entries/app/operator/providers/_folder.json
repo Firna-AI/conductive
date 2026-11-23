@@ -1,3 +1,10 @@
 {
-  "order": ["moved", "saved", "not-saved", "one-account", "three-accounts"]
+  "order": [
+    "moved",
+    "saved",
+    "not-saved",
+    "one-account",
+    "three-accounts",
+    "migration"
+  ]
 }

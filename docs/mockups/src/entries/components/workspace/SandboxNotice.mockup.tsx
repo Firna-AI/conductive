@@ -12,7 +12,7 @@ export const sandboxBar = defineComponent({
   slug: 'sandbox-bar',
   title: 'Sandbox bar',
   description:
-    'The bar under the chat while the sandbox is not running. It takes the place of the composer, except after a failed first start. A refused start shows the words of the refusal and no action, because the start stays refused until its cause changes. A start that failed shows the message that the app saved for it. An archived workspace offers Restore until the app deletes its cloud computer, and gives the day when it leaves the list. A removed workspace gives the day of its removal. Its own page shows a stopped sandbox with Resume.',
+    'The bar under the chat while the sandbox is not running. It takes the place of the composer, except after a failed first start. A refused start shows the words of the refusal and no action, because the start stays refused until its cause changes. A start that failed shows the message that the app saved for it, and so does a stop that has one. An archived workspace offers Restore until the app deletes its cloud computer, and gives the day when it leaves the list. A removed workspace gives the day of its removal. Its own page shows a stopped sandbox with Resume.',
   relatedDocs: ['docs/mockups/design-workspace.md'],
   propSchema: {
     type: 'object',

@@ -19,7 +19,12 @@ import { startErrors } from '../fixtures/starting'
 import { ownerSuspendedRefusal } from '../fixtures/startRefusals'
 import type { ActivityStatus, OpenableWorkspace } from '../fixtures/workspaces'
 import { isRunning } from './composerFor'
-import { computerRefusal, computerStartError } from './workspaceComputer'
+import {
+  computerRefusal,
+  computerStartError,
+  computerStopMessage,
+  removedArchiveComputer,
+} from './workspaceComputer'
 import { explainActivity } from './explainModel'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -68,12 +73,14 @@ export function drawnState(state: WorkspaceState): WorkspaceState {
  * every member, except in a suspended org, which refuses it. After that
  * day, Restore ended, also while the delete of the cloud computer tries
  * again. A workspace that is not archived, or that names no cloud computer,
- * has none.
+ * has none. Nor has a workspace whose own computer an admin removed,
+ * because the app cannot reach its files there.
  */
 export function archiveRestore(
   state: WorkspaceState,
 ): ArchiveRestore | undefined {
   if (state.sandbox !== 'archived') return undefined
+  if (removedArchiveComputer(state) !== undefined) return undefined
   switch (state.archive) {
     case 'pending':
     case 'none':
@@ -141,12 +148,27 @@ function beforeFirstStart(state: WorkspaceState): boolean {
 }
 
 /**
+ * The archived notice of a workspace whose own computer an admin removed:
+ * the container may still exist on that server, because the app deletes
+ * nothing there, and the notice names the computer. `archiveRestore` gives
+ * it no Restore.
+ */
+function onRemovedComputer(name: string): {
+  computer: ArchivedComputerState
+  removedComputer: string
+} {
+  return { computer: 'may-exist', removedComputer: name }
+}
+
+/**
  * The bar under the chat while the sandbox is not running. A refused start
  * shows the words of its cause: the org or the owner. A failed start
- * carries the message that the app saved for it. A failed first start
+ * carries the message that the app saved for it, and so does a stop after
+ * the own computer of the workspace went offline. A failed first start
  * keeps the composer under its bar. An archived workspace says what it can
  * get back, what the app knows of its cloud computer, and when it leaves
- * the list or when it left it.
+ * the list or when it left it. On an own computer that an admin removed,
+ * it says that its files stay on that server.
  */
 export function sandboxNotice(state: WorkspaceState): BarNotice | undefined {
   switch (state.sandbox) {
@@ -164,16 +186,21 @@ export function sandboxNotice(state: WorkspaceState): BarNotice | undefined {
         message: computerStartError(state) ?? startErrors[state.startError],
         firstStart: beforeFirstStart(state),
       }
-    case 'stopped':
-      return { problem: 'stopped' }
-    case 'archived':
+    case 'stopped': {
+      const message = computerStopMessage(state)
+      return message ? { problem: 'stopped', message } : { problem: 'stopped' }
+    }
+    case 'archived': {
+      const removedComputer = removedArchiveComputer(state)
       return {
         problem: 'archived',
         restore: archiveRestore(state),
         removed: isRemoved(state.archive),
         computer: archivedComputer(state.archive),
         days: archiveDays[state.workspace],
+        ...(removedComputer ? onRemovedComputer(removedComputer) : {}),
       }
+    }
     case 'ready':
     case 'starting':
       return undefined

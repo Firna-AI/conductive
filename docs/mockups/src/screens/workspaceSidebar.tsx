@@ -12,7 +12,7 @@ import { orgs } from '../fixtures/orgs'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { changedWorkspaces } from './orgWorkspaces'
-import { isRemoved } from './workspaceSandbox'
+import { archiveRestore, isRemoved } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 
 /**
@@ -20,7 +20,8 @@ import type { WorkspaceState } from './workspaceState'
  * current status. The rows that the state changed show their states of
  * then. The toast of an Archive shows at once, so the row of the workspace
  * shows that Archive. An archived workspace sits in the open Archived
- * group, with Restore while its last day has not passed. A removed
+ * group, with Restore while its last day has not passed, except on an own
+ * computer that an admin removed. A removed
  * workspace, which a link opened, has no row: the Archived group stays
  * closed, with its count, and no row is selected. In a suspended org every
  * row shows stopped, and nothing in the sidebar changes the org.
@@ -59,9 +60,15 @@ export function workspaceSidebar(props: {
     )
   }
   const removed = isRemoved(state.archive)
+  // The row keeps Restore while the workspace has one, as `archiveRestore`
+  // says. A suspended org reads it only.
   const list = removed
     ? removedSections(workspace, suspended)
-    : archivedSections(workspace, suspended, state.archive === 'kept')
+    : archivedSections(
+        workspace,
+        suspended,
+        archiveRestore(state) !== undefined,
+      )
   return (
     <sidebar.Component
       archived={plainData(list.archived)}

@@ -5,9 +5,9 @@ layouts, the design tokens, and the shared parts. This page gives the
 tabs, the tables, the long runs, the Waitlist tab, the codes, and the
 approval email of the operator section. It also gives Suspend, Lift, and
 Approve, the daily chart, the notice of a pause, the waitlist switch, the
-Providers tab, the account of each org, the switch of that account, the
-own computers of an org, and the account choice of an operator on Create
-org.
+Providers tab, the migration job of the host connection, the account of
+each org, the switch of that account, the own computers of an org, and the
+account choice of an operator on Create org.
 
 - The operator section has the tabs Overview, Orgs, Users, Waitlist,
   Invite codes, Providers, and Settings, from `OperatorPage` in
@@ -163,6 +163,48 @@ org.
   on them now, in the rows of the workspaces by state. A state with no
   computer stays quiet. The box names no computer and shows nothing of its
   work, and an org without own computers shows no box.
+- The migration job of the host connection has three boxes at the top of
+  the Providers tab, from own computer decision 7 D. They show only counts,
+  names, IDs, dates, states, and the pace, and nothing of the work in a
+  machine. Without a job, the tab shows none of them.
+  - `MigrationJobSection` in `src/components/operator/MigrationJob.tsx`
+    draws the Migration job box: its state with its glyph beside the
+    title, what the job does, and its facts in `DetailList`: Started,
+    Orgs, and Paused or Done when they apply. A limit to one org adds a
+    line with the progress of that org.
+  - `JobAccounts` beside it gives each account by its ID, with the state
+    of the job there as `StatusText` draws it: a spinner while it runs,
+    an hourglass while it waits after a refusal of the provider or for the
+    limit, and a check when it is done. A row for each state and kind of
+    machine gives how many of the count the job handled. The rows look
+    like the rows of the workspaces by state. A row with no machine does
+    not show, and a row that the job handled whole takes the muted colour.
+  - A line under the rows of an account gives the expected starts before
+    the first start, or the starts that are left, with their time at the
+    pace of the account. A refusal adds a line in the deep amber of a
+    warning, which names the account by its ID.
+  - The actions sit at the bottom of the box: Limit to one org, or Remove
+    limit, then Pause job, or Continue job in the primary colour. None asks
+    first, because each one undoes the other. A finished job has none.
+    `LimitDialog` asks for the ID of the org with `ConfirmDialog`, and its
+    hint names the org that the ID finds.
+  - The Pace of the job box gives each account a row with two fields of
+    whole numbers, the starts in each hour and the machines at once, from
+    `PaceFields`. A narrow box puts the fields under the ID. Its line gives
+    the low default. Save pace is on only after a change, and it asks no
+    question. A failed save keeps the typed pace and shows its error under
+    the fields. A line gives the last change, as the New orgs box does.
+  - The Failures and skips box, from `JobProblemsSection`, lists each step
+    that failed, newest first: the org, the workspace number, and the
+    cloud computer ID with Copy, then what failed and when, after the
+    alert glyph in red. A heading counts the failed steps, and another
+    counts the skips. The skips show as a count for each reason that has
+    one. A line names each org with no active admin. The box says that
+    each such machine gets the host program at its next start.
+  - `migrationCopy.ts` holds the words, and `migrationModel.ts` holds the
+    data of the job and the rules of its counts. They import no fixture,
+    and neither do the parts other than `LimitDialog`, so the app can
+    share them.
 - Operator screens name an account only by its ID, such as `boat`, from
   e2b decision 221. An e2b decision is a decision of the change that adds E2B as the second sandbox provider. The words of the tab, the account of an org, and the
   choice live in `providerCopy.ts`. It imports no fixture, so the app uses

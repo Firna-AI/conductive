@@ -96,6 +96,23 @@ pages.
   an admin removed shows a refused start that names the computer.
   `workspaceComputer.ts` in `src/screens/` gives these words to the
   workspace screen.
+  - A start on a full own computer shows the step "Waiting for a free
+    place on build-02" with its time (own computer decision 9 B). At the
+    20-minute limit of a start, it fails with Try again. Its saved message
+    says that the computer is full and names the limit. It gives no count
+    of workspaces, because the count can change.
+  - 2 minutes after an own computer went offline, its running workspaces
+    show the stopped bar with Resume (own computer decision 10 B). The
+    saved message of the stop comes before "Your files and chat are
+    saved." It says that the computer went offline, and that Resume starts
+    the workspace when the computer connects again. Resume waits for the
+    computer, as a start on an offline computer does.
+  - The bar of an archived workspace on a removed own computer says that
+    the files stay on that computer, and gives no day of a delete, because
+    the app deletes nothing there. Nothing offers Restore: not the bar, not
+    the row, and not the command palette. Until its 14 days end, the bar
+    gives the day when the workspace leaves the list. After them, its title
+    gives the day of the removal, and its panels say Removed.
 - `OwnComputerCounts` in `src/components/operator/` draws the Own
   computers box of the operator page of an org, after the Provider account
   box: the number of own computers, the count of each state with its glyph,
@@ -104,5 +121,7 @@ pages.
   without own computers shows no box.
 - `ownComputerCopy.ts`, `addComputerCopy.ts`, and `computerChoiceCopy.ts`
   in `src/components/own-computers/` hold the words, and `ownComputer.ts`
-  holds the data of a computer and the rule of its state. They import no
-  fixture, and neither do the parts, so the app can share them.
+  holds the data of a computer and the rule of its state. The words of a
+  workspace on an own computer, and of the archived bar on a removed one,
+  live in `computerChoiceCopy.ts`. They import no fixture, and neither do
+  the parts, so the app can share them.

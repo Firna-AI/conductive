@@ -1,0 +1,58 @@
+/* One row for each account, in a box with a full outline. */
+.list {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  list-style: none;
+}
+
+/* A narrow box puts the two fields on a line under the ID. */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  min-height: var(--ui-touch-min);
+  padding: 6px 12px;
+  box-sizing: border-box;
+}
+
+.row + .row {
+  border-top: 1px solid var(--ui-border);
+}
+
+/* An account shows by its ID, in the monospace font. */
+.account {
+  flex: 1 0 96px;
+  min-width: 0;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  overflow-wrap: anywhere;
+}
+
+.fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* A pace needs a few digits, so the field stays narrow. */
+.input {
+  flex-shrink: 0;
+  width: 64px;
+}
+
+.unit {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-md);
+  white-space: nowrap;
+}

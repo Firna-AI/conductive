@@ -5,6 +5,7 @@
     "restored",
     "pending",
     "no-computer",
-    "removed"
+    "removed",
+    "computer-removed"
   ]
 }

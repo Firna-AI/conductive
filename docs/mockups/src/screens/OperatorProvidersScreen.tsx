@@ -22,6 +22,11 @@ import {
   type ProviderSettings,
 } from '../fixtures/operatorProviders'
 import { paths } from '../paths'
+import {
+  migrationDialog,
+  MigrationSections,
+  migrationStateProperties,
+} from './operatorMigration'
 import styles from './OperatorProvidersScreen.module.css'
 
 export const operatorProvidersSchema = {
@@ -43,6 +48,11 @@ export const operatorProvidersSchema = {
     accounts: { enum: ['both', 'boat-only', 'three'] },
     /** Sign-ups are open, or an operator paused them. */
     signUps: { enum: ['open', 'paused'] },
+    /**
+     * The migration job of the host connection and its pace, as
+     * `operatorMigration.tsx` says. Without them, the tab draws no job.
+     */
+    ...migrationStateProperties,
   },
 } as const
 
@@ -166,20 +176,24 @@ function WeightsSection(props: {
  * for each of three or more accounts, and the number of orgs on each
  * account. Operator screens name each account by its ID. A change of the
  * weights moves no org. An operator switches an org to another account on
- * the page of the org.
+ * the page of the org. While the migration job of the host connection
+ * exists, its boxes come first.
  */
 export function OperatorProvidersScreen(props: {
   state: OperatorProvidersState
   viewport: Viewport
 }) {
   const settings = settingsOf(props.state)
+  const job = props.state.job ?? 'none'
   return (
     <OperatorPage
+      dialog={migrationDialog(job, props.viewport)}
       signUps={props.state.signUps}
       tab="providers"
       title="Operator"
       viewport={props.viewport}
     >
+      <MigrationSections job={job} pace={props.state.pace ?? 'default'} />
       <WeightsSection settings={settings} weights={props.state.weights} />
       <AccountCounts accounts={settings.accounts} />
     </OperatorPage>

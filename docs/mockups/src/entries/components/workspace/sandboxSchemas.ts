@@ -30,7 +30,11 @@ const noticeStates = [
     type: 'object',
     additionalProperties: false,
     required: ['problem'],
-    properties: { problem: { const: 'stopped' } },
+    properties: {
+      problem: { const: 'stopped' },
+      /** The message that the app saved for the stop. */
+      message: { type: ['string', 'null'] },
+    },
   },
   {
     type: 'object',
@@ -52,6 +56,11 @@ const noticeStates = [
       removed: { type: 'boolean' },
       /** The day of the Archive, and the day when it leaves the list. */
       days: archiveDaysSchema,
+      /**
+       * The own computer of the workspace, after an admin removed it. Its
+       * files then stay on that server.
+       */
+      removedComputer: { type: 'string' },
     },
   },
   {
