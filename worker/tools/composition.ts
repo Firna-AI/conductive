@@ -46,7 +46,7 @@ export function productionAgentTools(
             .getByName(workspaceId)
             .getAgentSession(orgId, workspaceId, sessionId, env.APP_ORIGIN),
         ),
-      getMessage: async (orgId, workspaceId, sessionId, messageId) =>
+      getMessage: async (orgId, workspaceId, sessionId, messageId, input) =>
         requireFeatureResult(
           await workspaceBinding(env)
             .getByName(workspaceId)
@@ -55,6 +55,7 @@ export function productionAgentTools(
               workspaceId,
               sessionId,
               messageId,
+              input,
               env.APP_ORIGIN,
             ),
         ),

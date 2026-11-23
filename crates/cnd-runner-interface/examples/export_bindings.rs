@@ -132,6 +132,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     tools::session_actions::AgentRenameSessionRequest::export_all(&cfg)?;
     tools::session_actions::AgentCloseSessionRequest::export_all(&cfg)?;
     tools::session_actions::AgentStopSessionResponse::export_all(&cfg)?;
+    tools::session_actions::AgentGetMessageRequest::export_all(&cfg)?;
     tools::session_actions::AgentGetMessageResponse::export_all(&cfg)?;
     tools::session_reads::AgentListSessionsRequest::export_all(&cfg)?;
     tools::session_reads::AgentListSessionsResponse::export_all(&cfg)?;

@@ -165,3 +165,27 @@ async fn lists_model_fast_marks_and_defaults_older_choices_to_standard() -> Resu
     );
     Ok(())
 }
+
+#[tokio::test]
+async fn reads_member_and_agent_message_replies() -> Result<()> {
+    let session = json!({"id":"session", "link":"https://app.conductive.test/session"});
+    for message in [
+        json!({"author":"member", "id":"ask", "sessionId":"session", "text":"Work",
+            "sender":{"id":"owner", "githubLogin":"member", "displayName":null, "avatarUrl":null},
+            "state":"sent", "createdAt":1000}),
+        json!({"author":"agent", "id":"answer", "sessionId":"session", "text":"Done",
+            "createdAt":2000}),
+    ] {
+        let raw = json!({"workspace":super::fixtures::workspace(), "session":session,
+            "message":message, "turnId":"turn"});
+        let reply = client(Ok(response(raw.clone())))?
+            .execute(Call::GetMessage(
+                "current".into(),
+                "session".into(),
+                "id".into(),
+            ))
+            .await?;
+        assert_eq!(serde_json::to_value(reply).internal()?, raw);
+    }
+    Ok(())
+}
