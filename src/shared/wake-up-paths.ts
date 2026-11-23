@@ -15,7 +15,7 @@ export const agentWakeUpPaths = {
     cancelFrom(agentSessionPath(workspaceId, sessionId), id),
 }
 
-/** @public Routes used by the chat. */
+/** Routes used by the chat. */
 export const sessionWakeUpPaths = {
   list: (orgId: string, workspaceId: string, sessionId: string) =>
     listFrom(sessionPath(orgId, workspaceId, sessionId)),

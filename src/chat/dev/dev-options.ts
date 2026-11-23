@@ -78,6 +78,12 @@ export const choices = {
     'wake-stopped',
     'wake-other-workspace',
     'wake-during-turn',
+    'wake-ups-pending',
+    'wake-up-long',
+    'wake-up-fired',
+    'wake-up-during-turn',
+    'wake-up-not-started',
+    'wake-up-cancelled',
   ],
   workspace: ['existing', 'new'],
   state: [

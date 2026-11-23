@@ -1,6 +1,7 @@
 import { chatHistoryPath } from '../../shared/events'
 import { sessionsPath } from '../../shared/sessions'
 import { SessionMarkdown } from '../../shared/transcript/session-markdown'
+import { fakePendingWakeUps } from '../../test-support/fake-wake-ups'
 import { createChatApi } from '../api/client'
 import { readNewestStoredEvents } from '../api/read-workspace'
 import type { DevBackend } from './dev-backend'
@@ -67,6 +68,7 @@ export async function handleTranscript(
     models,
     members,
     commands,
+    pendingWakeUps: fakePendingWakeUps(stream.events, workspaceId, session.id),
     ...(source ? { sourceTitle: source.title } : {}),
   })
   builder.merge(stored.envelopes)

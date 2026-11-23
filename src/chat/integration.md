@@ -171,7 +171,9 @@ mount the chat.
   `AppServices.now` in the app. Each live time, such as the time of a
   running turn, moves on each second while it shows, in each chat that
   shows it, such as the popover of an explanation. Without it, the chat
-  reads `Date.now`.
+  reads `Date.now`. Its `timeZone`, such as `AppServices.timeZone` in the
+  app, gives the time of day of a wake-up in the local time of the reader.
+  Without it, the chat takes the time zone of the browser.
 - The chat shows the result of a copy in a toast of `@firna/ui`: through
   the `ToastProvider` of the host, such as the one of the app's
   `ThemeRoot`, else through its own, at the bottom right of the window.

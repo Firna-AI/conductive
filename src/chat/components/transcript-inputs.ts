@@ -67,9 +67,10 @@ export function useTranscriptInputs(
     [source, commands, secrets],
   )
   const viewerId = snapshot.account?.user.id ?? null
+  const orgName = snapshot.org?.name ?? null
   const readers: ChatReaders = useMemo(
-    () => ({ viewerId, members: snapshot.members }),
-    [viewerId, snapshot.members],
+    () => ({ viewerId, members: snapshot.members, orgName }),
+    [viewerId, snapshot.members, orgName],
   )
   const onRetry = useCallback(
     (messageId: string) => {

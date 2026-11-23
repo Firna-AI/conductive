@@ -3,6 +3,12 @@ import { createContext, useState, useSyncExternalStore } from 'react'
 /** The time source of the chat. Tests and the dev page pass a fixed clock. */
 export interface Clock {
   now(): number
+  /**
+   * The time zone of the reader, for the words of a time of day, such as
+   * the time of a wake-up. Without it, the chat takes the time zone of the
+   * browser.
+   */
+  timeZone?: string
 }
 
 export const systemClock: Clock = { now: () => Date.now() }
@@ -16,15 +22,17 @@ export const systemClock: Clock = { now: () => Date.now() }
  */
 export const ChatClock = createContext<Clock>(systemClock)
 
-/** Reads a clock once a second while a part on screen needs the time. */
+/** Reads a clock once a period while a part on screen needs the time. */
 class Ticker {
   private readonly clock: Clock
+  private readonly period: number
   private readonly listeners = new Set<() => void>()
   private handle: ReturnType<typeof setInterval> | null = null
   private value: number
 
-  constructor(clock: Clock) {
+  constructor(clock: Clock, period: number) {
     this.clock = clock
+    this.period = period
     this.value = clock.now()
   }
 
@@ -36,7 +44,7 @@ class Ticker {
     this.handle ??= setInterval(() => {
       this.value = this.clock.now()
       for (const notify of this.listeners) notify()
-    }, 1_000)
+    }, this.period)
     return () => {
       this.listeners.delete(listener)
       if (this.listeners.size > 0 || this.handle === null) return
@@ -49,11 +57,11 @@ class Ticker {
 }
 
 /**
- * The time now, read again each second while `ticking` holds, such as while
- * a turn runs or a sandbox starts.
+ * The time now, read again each `period` of milliseconds while `ticking`
+ * holds, such as each second while a turn runs or a sandbox starts.
  */
-export function useNow(clock: Clock, ticking: boolean): number {
-  const [ticker] = useState(() => new Ticker(clock))
+export function useNow(clock: Clock, ticking: boolean, period = 1_000): number {
+  const [ticker] = useState(() => new Ticker(clock, period))
   return useSyncExternalStore(
     ticking ? ticker.subscribe : ticker.still,
     ticker.read,

@@ -112,6 +112,10 @@ the parts of the chat that draw the transcript.
   While no turn has taken the message, the items of the turn that runs go before the line, as before a message that waits.
   The line starts a new part of its turn and never folds. An answer to its hidden message moves after the line, as after a message.
   A copy gives the same words, with the link of the notice in place of the chip, under the heading of the turn of the line and with no heading of a sender.
+- Each `session.wake-up-fired` or `session.wake-up-ended` event of a session becomes one `wake-up` item at its place among the events, as [The wake-up line](../../docs/protocol/wake-ups-chat.md#the-wake-up-line) and [End lines](../../docs/protocol/wake-ups-chat.md#end-lines) say.
+  The item takes its ID from the wake-up, so a repeat of its event replaces it. A `session.wake-up-scheduled` event adds no item: the pending wake-up shows as a card in the footer, as [the wake-ups](wake-ups/README.md) say.
+  A fired item belongs to the turn that takes its hidden message, as a `wake` item does. It starts a new part of its turn and never folds.
+  An ended item belongs to no turn, so it stays in view at its place and ends a run of work. `WakeUpItemLine` of `wake-ups/` draws both, with the words of `wakeUpCopy.ts` of the mockups.
 - Ordered history folding preserves these fields and lines across completion and failure events.
 
 ## Key code

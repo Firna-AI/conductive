@@ -68,7 +68,7 @@ export function wakeNotice(
 const at = (turnId: string) => ({ sessionId: FAKE_IDS.session, turnId })
 
 /** A tool call of a turn, done unless `state` says otherwise. */
-function call(
+export function call(
   turnId: string,
   kind: ToolCall['kind'],
   id: string,
@@ -79,7 +79,8 @@ function call(
   return { ...at(turnId), type: 'tool.updated', tool }
 }
 
-function answered(
+/** The answer of a turn to the messages that it names. */
+export function answered(
   turnId: string,
   messageId: string,
   text: string,
@@ -94,7 +95,8 @@ function answered(
   }
 }
 
-function finished(
+/** The end of a finished turn, with no changed files. */
+export function finished(
   turnId: string,
   durationMs: number,
   userMessageIds: readonly string[],

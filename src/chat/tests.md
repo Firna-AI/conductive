@@ -559,6 +559,9 @@ order, also after the late copy of the first part.
 The tests of the secret requests are in the
 [README of the secret requests](secrets/README.md#tests).
 
+The tests of the wake-ups are in the
+[README of the wake-ups](wake-ups/README.md#tests).
+
 `components/ReadOnlyChat.dom.test.tsx` checks the read-only behavior of both hosts.
 A right click and Shift and F10 open a tab menu with only the copy items, with no line.
 It changes `readOnly` during a rename and archives a kept chat during a close question.

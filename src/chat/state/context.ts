@@ -3,6 +3,7 @@ import type { Delay } from '../../app/events'
 import type { ChatApi, WorkspaceTarget } from '../api/client'
 import type { DeviceChannel } from '../device/device-actions'
 import type { SecretApi } from '../secrets/secret-actions'
+import type { WakeUpApi } from '../wake-ups/wake-up-actions'
 import type { SessionReads } from '../links/session-reads'
 import type { WorkspaceStream } from '../stream/workspace-stream'
 import { withSession, type ChatSnapshot } from './chat-snapshot'
@@ -69,6 +70,8 @@ export interface ChatContext {
   readonly devices: DeviceChannel
   /** The route of the answers to secret requests. */
   readonly secrets: SecretApi
+  /** The routes of the pending wake-ups and their Cancel. */
+  readonly wakeUps: WakeUpApi
   /**
    * The one read of the sessions of each other workspace that a session
    * link names, for this run, as `SessionReads` says.

@@ -22,6 +22,7 @@ import {
 import { MarkedMessage } from '../explain/MarkedMessage'
 import { ActionButton } from '../ui/actions'
 import controls from '../ui/controls.module.css'
+import { WakeUpItemLine } from '../wake-ups/WakeUpItemLine'
 import { AgentText } from './AgentText'
 import { SentFiles } from './AttachmentChips'
 import { LostEventLine } from './LostEventLine'
@@ -182,5 +183,7 @@ export function ItemView(props: {
         />
       )
     }
+    case 'wake-up':
+      return <WakeUpItemLine item={item} readers={props.readers} />
   }
 }

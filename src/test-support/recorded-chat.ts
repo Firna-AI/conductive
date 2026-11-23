@@ -5,6 +5,10 @@ import { sessionLink } from '../shared/session-link'
 import type { TurnStopRequester } from '../shared/session-stop'
 import { FAKE_IDS, FAKE_ORIGIN, FAKE_TIME } from './fixtures/core'
 import { workspaceFixtures } from './fixtures/workspaces'
+import {
+  recordedWakeUps,
+  type RecordedWakeUpScenario,
+} from './recorded-wake-ups'
 import { recordedWakes, type RecordedWakeScenario } from './recorded-wakes'
 
 export type RecordedChatScenario =
@@ -20,6 +24,7 @@ export type RecordedChatScenario =
   | 'sent-by'
   | 'stopped-from'
   | RecordedWakeScenario
+  | RecordedWakeUpScenario
 
 const { message } = workspaceFixtures()
 const turn = { sessionId: FAKE_IDS.session, turnId: 'turn-1' }
@@ -133,6 +138,7 @@ function stoppedTurn(requester: TurnStopRequester): readonly ChatEvent[] {
 const records: Readonly<Record<RecordedChatScenario, readonly ChatEvent[]>> = {
   history: [...beginning, ...completed],
   ...recordedWakes([...beginning, ...completed], message),
+  ...recordedWakeUps([...beginning, ...completed], message),
   'sent-by': [...beginning, ...completed, sentBy],
   running: beginning,
   steer: [

@@ -5,6 +5,7 @@ import type { StreamEnvelope } from '../api/read-workspace'
 import { DeviceReads, refreshDevices } from '../device/device-actions'
 import { createDeviceApi } from '../device/device-api'
 import { createSecretApi } from '../secrets/secret-actions'
+import { createWakeUpApi } from '../wake-ups/wake-up-actions'
 import { SessionReads } from '../links/session-reads'
 import {
   browserTimers,
@@ -100,6 +101,7 @@ export function createChatContext(
       reads: new DeviceReads(),
     },
     secrets: createSecretApi(options.client),
+    wakeUps: createWakeUpApi(options.client),
     sessionReads: new SessionReads((workspaceId) =>
       createChatApi(options.client, { ...target, workspaceId }).sessions(),
     ),

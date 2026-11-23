@@ -143,9 +143,11 @@ export function chatFor(
       answer: (request: Request) => Promise<Response | null>
     }
     readOnly?: () => boolean
+    /** The fake of another chat, as a reload of the same tab reads it. */
+    server?: FakeApiServer
   } = {},
 ) {
-  const server = new FakeApiServer(options)
+  const server = options.server ?? new FakeApiServer(options)
   const held: (() => void)[] = []
   const fetch: FetchLike = async (input, init) => {
     const request = new Request(

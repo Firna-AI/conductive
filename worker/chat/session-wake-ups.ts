@@ -3,7 +3,7 @@ import type { AgentScheduleWakeUpResponse } from '../../src/shared/generated/Age
 import type { AgentListWakeUpsResponse } from '../../src/shared/generated/AgentListWakeUpsResponse'
 import type { AgentCancelWakeUpResponse } from '../../src/shared/generated/AgentCancelWakeUpResponse'
 import { sessionLink } from '../../src/shared/session-link'
-import { utcWakeUpTime } from '../../src/shared/wake-up-time'
+import { wakeUpTimeUtc } from '../../docs/mockups/src/components/chat/wakeUpCopy'
 import { activeStoredTurn } from '../devices/access'
 import { HttpError } from '../http'
 import type { LifecycleEnvironment } from '../lifecycle/runtime'
@@ -94,7 +94,7 @@ export class SessionWakeUps {
       const wakeUp = {
         id: crypto.randomUUID(),
         at,
-        atUtc: utcWakeUpTime(at),
+        atUtc: wakeUpTimeUtc(at),
         text: input.text,
       }
       await this.records.assertActive()

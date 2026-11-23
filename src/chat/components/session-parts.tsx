@@ -1,9 +1,11 @@
-import type { ReactNode } from 'react'
+import { useCallback, useMemo, type ReactNode } from 'react'
 import type { Session } from '../../shared/generated/Session'
 import { failedFirstStart } from '../../app/first-start'
 import { pendingCommandItems } from '../device/PendingCommands'
 import type { ChatSnapshot, SessionState } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
+import { PendingWakeUpCards } from '../wake-ups/PendingWakeUpCards'
+import { pendingWakeUps } from '../wake-ups/wake-up-state'
 import type { ComposerTool } from './ComposerTools'
 import { SandboxBar, StartingCard, workspaceProblemOf } from './SandboxState'
 import type { GitHubBranch } from './SessionStatus'
@@ -80,10 +82,11 @@ export function sandboxParts(props: {
  * The parts of the chat of one session that its tab and the popover of an
  * explanation share: the inputs of its transcript, as `useTranscriptInputs`
  * says, which are the lines and the cards at their places in the
- * transcript, its readers, and Try again, and the requests that wait for an
- * answer just above the field. The lines and the cards are the link of a
- * linked session to its source, the Mac commands, and the secret requests.
- * A read-only workspace takes no answer.
+ * transcript, its readers, and Try again, the requests that wait for an
+ * answer just above the field, and the pending wake-ups at the top of the
+ * footer. The lines and the cards are the link of a linked session to its
+ * source, the Mac commands, and the secret requests. A read-only workspace
+ * takes no answer and no Cancel.
  */
 export function useSessionParts(props: {
   snapshot: ChatSnapshot
@@ -110,6 +113,24 @@ export function useSessionParts(props: {
     props.onOpenSession,
   )
   const viewerId = snapshot.account?.user.id ?? null
+  const { sessionId } = props
+  const pending = useMemo(
+    () => (sessionId ? pendingWakeUps(snapshot.wakeUps, sessionId) : []),
+    [snapshot.wakeUps, sessionId],
+  )
+  const onCancel = useCallback(
+    (wakeUpId: string) => {
+      if (sessionId) void controller.cancelWakeUp(sessionId, wakeUpId)
+    },
+    [controller, sessionId],
+  )
+  const wakeUps = (
+    <PendingWakeUpCards
+      cancels={snapshot.wakeUps.cancels}
+      onCancel={readOnly ? undefined : onCancel}
+      wakeUps={pending}
+    />
+  )
   const waiting = (
     <WaitingRequests
       items={[
@@ -125,5 +146,5 @@ export function useSessionParts(props: {
       ]}
     />
   )
-  return { inserts, readers, onRetry, waiting }
+  return { inserts, readers, onRetry, waiting, wakeUps }
 }

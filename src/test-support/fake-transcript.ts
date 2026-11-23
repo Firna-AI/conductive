@@ -6,6 +6,7 @@ import { sessionsPath } from '../shared/sessions'
 import { SessionMarkdown } from '../shared/transcript/session-markdown'
 import { workspacePath } from '../shared/workspaces'
 import type { FakeApiServer } from './fake-api'
+import { fakePendingWakeUps } from './fake-wake-ups'
 import { FAKE_IDS, FAKE_ORIGIN } from './fixtures/core'
 
 const target = { orgId: FAKE_IDS.org, workspaceId: FAKE_IDS.workspace }
@@ -37,8 +38,9 @@ function copyOf(
  * The transcript copy of a session of the fake workspace, as the Worker
  * builds it: the real Markdown builder over the events of the fake stream,
  * which carry the labels that the Worker adds to each name, such as the
- * labels of a Continue note. Null for any other request, or for a session
- * that the fake does not list. Development only.
+ * labels of a Continue note. The copy ends with the pending wake-ups of the
+ * session, as the events of the fake give them. Null for any other
+ * request, or for a session that the fake does not list. Development only.
  */
 export async function fakeTranscript(
   server: FakeApiServer,
@@ -79,6 +81,7 @@ export async function fakeTranscript(
     models,
     members,
     commands: [],
+    pendingWakeUps: fakePendingWakeUps(history.events, workspaceId, session.id),
   })
   builder.merge(
     history.events.filter((envelope) => envelope.workspaceId === workspaceId),

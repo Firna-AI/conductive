@@ -134,6 +134,38 @@ export interface ReaderClock {
 
 const dayMs = 86_400_000
 
+/** The last time that a JavaScript date holds: 13 September 275760. */
+const dateLimit = 8_640_000_000_000_000
+
+/** 400 years of the Gregorian calendar, after which its days repeat. */
+const cycleMs = 146_097 * dayMs
+
+/** 1 January 2000, the start of the cycle that a far time moves to. */
+const cycleStart = Date.UTC(2000, 0, 1)
+
+/**
+ * A time for the words of `at` that a JavaScript date holds, and the years
+ * that the words add to its year. A wire time can be any safe integer, also
+ * past the dates of JavaScript, which end in the year 275760. Such a time
+ * moves by whole 400-year cycles into the years 2000 to 2399. The move
+ * keeps its day, its month, its weekday, and its time of day.
+ */
+function shownTime(at: number): { at: number; years: number } {
+  if (Math.abs(at) <= dateLimit) return { at, years: 0 }
+  const cycles = Math.floor((at - cycleStart) / cycleMs)
+  return { at: at - cycles * cycleMs, years: 400 * cycles }
+}
+
+/**
+ * The words of a part of a date, with the years that a move took away from
+ * its year. A year before the year 1 gives "BC", such as "283458 BC".
+ */
+function partWords(part: Intl.DateTimeFormatPart, years: number): string {
+  if (part.type !== 'year' || years === 0) return part.value
+  const year = Number(part.value) + years
+  return year > 0 ? String(year) : `${1 - year} BC`
+}
+
 /** The day of `at` in `timeZone`, counted from 1 January 1970, and its year. */
 function calendarDay(at: number, timeZone?: string) {
   const parts = new Intl.DateTimeFormat('en-GB', {
@@ -166,8 +198,15 @@ function nearDay(days: number): string | undefined {
   return undefined
 }
 
-/** The day of `at` as "Mon 30 Nov", with its year when asked. */
-function dayWords(at: number, withYear: boolean, timeZone?: string): string {
+/**
+ * The day of a shown time as "Mon 30 Nov", with its year when asked, and
+ * with the years that a move took away.
+ */
+function dayWords(
+  shown: { at: number; years: number },
+  withYear: boolean,
+  timeZone?: string,
+): string {
   return new Intl.DateTimeFormat('en-GB', {
     weekday: 'short',
     day: 'numeric',
@@ -175,9 +214,9 @@ function dayWords(at: number, withYear: boolean, timeZone?: string): string {
     year: withYear ? 'numeric' : undefined,
     timeZone,
   })
-    .formatToParts(at)
+    .formatToParts(shown.at)
     .filter((part) => part.type !== 'literal')
-    .map((part) => part.value)
+    .map((part) => partWords(part, shown.years))
     .join(' ')
 }
 
@@ -186,30 +225,39 @@ function dayWords(at: number, withYear: boolean, timeZone?: string): string {
  * clock: "today at 16:30", "tomorrow at 09:00", "yesterday at 09:00", or
  * its day, such as "Mon 30 Nov at 09:00". A day of another year adds the
  * year, such as "Mon 4 Jan 2027 at 09:00". The words never start a
- * sentence, so they start in lower case.
+ * sentence, so they start in lower case. Each safe integer time has words,
+ * also past the dates of JavaScript, as `shownTime` says.
  */
 export function wakeUpTime(at: number, clock: ReaderClock): string {
   const { timeZone } = clock
-  const day = calendarDay(at, timeZone)
+  const shown = shownTime(at)
+  const day = calendarDay(shown.at, timeZone)
   const today = calendarDay(clock.now, timeZone)
-  const near = nearDay(day.day - today.day)
-  const date = near ?? dayWords(at, day.year !== today.year, timeZone)
-  return `${date} at ${clockTime(at, timeZone)}`
+  const moved = shown.years !== 0
+  const near = moved ? undefined : nearDay(day.day - today.day)
+  const year = moved || day.year !== today.year
+  const date = near ?? dayWords(shown, year, timeZone)
+  return `${date} at ${clockTime(shown.at, timeZone)}`
 }
 
 /**
- * @public The time of a wake-up in UTC, for a text without a reader, such
- * as a copy and `read_session`, as a copy gives the time of the copy:
- * "24 November 2026, 09:00 UTC".
+ * The time of a wake-up in UTC, for a text without a reader, such as a
+ * copy and `read_session`, as a copy gives the time of the copy: "24
+ * November 2026, 09:00 UTC". Each safe integer time has words, also past
+ * the dates of JavaScript, as `shownTime` says.
  */
 export function wakeUpTimeUtc(at: number): string {
+  const shown = shownTime(at)
   const day = new Intl.DateTimeFormat('en-GB', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
     timeZone: 'UTC',
-  }).format(at)
-  return `${day}, ${clockTime(at, 'UTC')} UTC`
+  })
+    .formatToParts(shown.at)
+    .map((part) => partWords(part, shown.years))
+    .join('')
+  return `${day}, ${clockTime(shown.at, 'UTC')} UTC`
 }
 
 /**

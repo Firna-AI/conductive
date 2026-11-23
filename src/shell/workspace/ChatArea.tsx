@@ -75,7 +75,10 @@ function KeptChat(props: {
   const { context } = props
   const services = useServices()
   const go = useGo()
-  const clock = useMemo(() => ({ now: services.now }), [services])
+  const clock = useMemo(
+    () => ({ now: services.now, timeZone: services.timeZone }),
+    [services],
+  )
   const previews = usePreviewCentre(context)
   const content = props.content ?? previews.content
   const files = useChatFiles(context, content)

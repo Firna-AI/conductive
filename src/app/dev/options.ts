@@ -33,6 +33,12 @@ const CONVERSATIONS = [
   'wake-stopped',
   'wake-other-workspace',
   'wake-during-turn',
+  'wake-ups-pending',
+  'wake-up-long',
+  'wake-up-fired',
+  'wake-up-during-turn',
+  'wake-up-not-started',
+  'wake-up-cancelled',
 ] as const satisfies readonly RecordedChatScenario[]
 
 /** The run lists of Review pull requests that the mockups also draw. */

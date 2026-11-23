@@ -8,6 +8,7 @@ import type { AnswerSecretRequest } from '../../shared/secret-requests'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { answerCommand, refreshDevices } from '../device/device-actions'
 import { answerSecret } from '../secrets/secret-actions'
+import { cancelWakeUp } from '../wake-ups/wake-up-actions'
 import type { MentionTarget } from '../mentions/MentionsContext'
 import { copyTranscript, type CopyServices } from '../transcript-copy'
 import { showAddressSession } from './address-session'
@@ -157,6 +158,9 @@ export class ChatController extends ChatRuns {
   /** Sends the answer of a member to a secret request, as `answerSecret` says. */
   readonly answerSecret = (requestId: string, answer: AnswerSecretRequest) =>
     this.write(() => answerSecret(this.context, requestId, answer))
+  /** The Cancel of a member of a pending wake-up, as `cancelWakeUp` says. */
+  readonly cancelWakeUp = (sessionId: string, wakeUpId: string) =>
+    this.write(() => cancelWakeUp(this.context, sessionId, wakeUpId))
   /**
    * Changes the saved view with a change of the app, such as an open file
    * tab, through the one writer of the view. Until the load reads the view,

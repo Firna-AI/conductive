@@ -158,9 +158,11 @@ the pages of `app/chat/wake-ups`.
 - `wakeUpCopy.ts` beside them holds all these words and the words of a
   time. A copy and `read_session` give a time in UTC, from
   `wakeUpTimeUtc`, such as "24 November 2026, 09:00 UTC", because the
-  Worker does not know the time zone of the reader. The module draws
-  nothing and reads no fixtures, so the Worker can import it. The parts
-  take no fixtures either, so the app can use them.
+  Worker does not know the time zone of the reader. Each safe integer
+  time has words, also past the year 275760, where the dates of
+  JavaScript end. The module draws nothing and reads no fixtures, so the
+  Worker can import it. The parts take no fixtures either, so the app can
+  use them.
   - A copy and `read_session` give the line of a cancel through the tools
     with the session link in place of the chip, from `cancelledFromText`.
   - They end with the pending wake-ups of the session, from

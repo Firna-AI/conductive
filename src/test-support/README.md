@@ -110,7 +110,7 @@ runner without a file server, `failed` for the 502 `sandbox_unavailable`
 of a cloud computer that did not answer, or `not-ready` for the 409
 `sandbox_not_ready` of a cloud computer that does not run.
 
-Writes return recorded replies, except org moves, terminal list writes, and Mac permission starts.
+Writes return recorded replies, except org moves, terminal list writes, Mac permission starts, and the Cancel of a wake-up.
 A Mac permission start keeps its grant for later settings reads.
 `fake-org-order-routes.ts` serves `PUT /api/org-order` and saves its order for later org list reads.
 It validates the shared move request and returns 204, or the Worker's validation and visibility errors.
@@ -301,6 +301,8 @@ Replies, timers, and `waitFor` go on.
 - `fake-terminal-socket.ts` adapts a decoded fake shell to the app's browser socket interface and ttyd framing.
 - `recorded-chat.ts` supplies partial text, tools, queued messages, steer, stop, failure, omission counts, and refusal markers.
 - `recorded-wakes.ts` supplies the recorded chats of the wakes of a watch, as the mockups draw them at `app/chat/wakes`, and `wakeNotice`, which tests use for a wake at a chosen turn.
+- `recorded-wake-ups.ts` supplies the recorded chats of the wake-ups of an agent, as the mockups draw them at `app/chat/wake-ups`, their times around `FAKE_TIME`, and the events of a wake-up that an agent set, that fired, and that ended, which tests use at a chosen turn.
+- `fake-wake-ups.ts` answers the wake-up routes of the chat from the events of a fake, as the Worker does: the pending wake-ups of a session at the newest event number, and the Cancel of the signed-in member, which adds the end of a pending wake-up and gives the 404 of the Worker for a wake-up that the session does not have. `fake-api.ts` and the development page of the chat serve them. The copy of `fake-transcript.ts` ends with the pending wake-ups, as the Worker's does.
 - `recorded-files.ts` supplies complete browser reports, runner parts, consecutive tree deltas, reads, diffs, and a size error.
 - `recorded-repairs.ts` supplies the first losses, failed repairs, complete reports, and tree deltas of the data without a session, and stores failed repairs in the fake history.
 - `fake-services.ts` serves the services of the development page: a list in one of its states, Stop and Restart that answer as the Worker does, and the logs.

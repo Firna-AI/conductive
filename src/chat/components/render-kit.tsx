@@ -7,8 +7,11 @@ import { chatFor } from '../state/test-kit'
 import { ChatClock, type Clock } from '../ui/clock'
 import { SessionChat, type SessionChatProps } from './SessionChat'
 
-/** The clock of the render tests: 2m 41s after the recorded turn began. */
-const testClock: Clock = { now: () => FAKE_TIME + 161_000 }
+/**
+ * The clock of the render tests: 2m 41s after the recorded turn began, in
+ * UTC, so the words of a time of day do not follow the zone of the machine.
+ */
+const testClock: Clock = { now: () => FAKE_TIME + 161_000, timeZone: 'UTC' }
 
 /**
  * Gives the parts of the chat under it the clock of the render tests, as

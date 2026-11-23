@@ -3,6 +3,8 @@ import type { ChatContext, HistoryLoad } from './context'
 import type { StreamEnvelope } from '../api/read-workspace'
 import { chatEventsOf } from '../../shared/transcript/session-events'
 import { withSecretEvents } from '../secrets/secret-snapshot'
+import { readWakeUps } from '../wake-ups/wake-up-actions'
+import { withWakeUpEvents } from '../wake-ups/wake-up-state'
 import { replaySessionRecords } from './session-records'
 import type { SessionReplay } from './session-replay'
 
@@ -19,11 +21,14 @@ function merge(
     (envelope) => envelope.workspaceId === context.target.workspaceId,
   )
   const change = replay.merge(sessionId, chatEventsOf(sessionId, own))
-  // A page also holds the secret requests, runs, and late answers of the session.
+  // A page also holds the secret requests, runs, and late answers of the
+  // session, and its wake-ups.
   context.store.update((snapshot) => {
-    const next = change.apply(snapshot)
+    let next = change.apply(snapshot)
     const secrets = withSecretEvents(next.secrets, own)
-    return secrets === next.secrets ? next : { ...next, secrets }
+    if (secrets !== next.secrets) next = { ...next, secrets }
+    const wakeUps = withWakeUpEvents(next.wakeUps, own)
+    return wakeUps === next.wakeUps ? next : { ...next, wakeUps }
   })
 }
 
@@ -77,6 +82,8 @@ async function loadHistory(
   try {
     if (!context.live()) return null
     mark('loading')
+    // The pending wake-ups of the session load beside its history.
+    void readWakeUps(context, sessionId)
     const through = await readPages(context, sessionId, newest, replay)
     if (through === null || !context.live()) return null
     mark('ready')

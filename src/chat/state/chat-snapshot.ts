@@ -20,6 +20,7 @@ import {
   initialSecrets,
   type SecretsSnapshot,
 } from '../secrets/secret-snapshot'
+import { initialWakeUps, type WakeUpsState } from '../wake-ups/wake-up-state'
 import {
   emptyTranscript,
   type Transcript,
@@ -176,6 +177,8 @@ export interface ChatSnapshot {
   devices: DeviceSnapshot
   /** The secret requests, runs, and late answers, as `SecretsSnapshot` says. */
   secrets: SecretsSnapshot
+  /** The pending wake-ups of the sessions, as `WakeUpsState` says. */
+  wakeUps: WakeUpsState
 }
 
 /** A draft with nothing in it, and no work in flight. */
@@ -227,6 +230,7 @@ export const initialSnapshot: ChatSnapshot = {
   resuming: false,
   devices: initialDevices,
   secrets: initialSecrets,
+  wakeUps: initialWakeUps,
 }
 
 /**

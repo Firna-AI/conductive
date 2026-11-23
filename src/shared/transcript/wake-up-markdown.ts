@@ -3,17 +3,13 @@ import {
   cancelledUnnamed,
   memberCancelled,
   notStarted,
-  pendingWakeUpsCopy,
-  pendingWakeUpTitle,
   wakeUpText,
-  wakeUpWords,
+  wakeUpTimeUtc,
   type WakeUpMiss,
 } from '../../../docs/mockups/src/components/chat/wakeUpCopy'
 import type { SessionWakeUpEvent } from '../generated/SessionWakeUpEvent'
-import type { WakeUp } from '../generated/WakeUp'
 import type { WakeUpFailure } from '../generated/WakeUpFailure'
 import { sessionLink } from '../session-link'
-import { utcWakeUpTime } from '../wake-up-time'
 import { plainText } from './markdown-code'
 import type { ChatReaders } from './turn-words'
 
@@ -59,7 +55,7 @@ export function wakeUpMarkdown(
   orgName: string | null,
 ): string {
   if (event.type === 'session.wake-up-fired') return wakeUpText(event.text)
-  const at = utcWakeUpTime(event.at)
+  const at = wakeUpTimeUtc(event.at)
   const { outcome } = event
   if (outcome.kind === 'could-not-start')
     return `_${notStarted(at, miss(outcome.reason, readers, orgName))}_`
@@ -75,16 +71,4 @@ export function wakeUpMarkdown(
   }
   const name = memberName(source.memberId, readers)
   return `_${name ? memberCancelled(name, at) : cancelledUnnamed(at)}_`
-}
-
-export function pendingWakeUpsMarkdown(wakeUps: readonly WakeUp[]): string {
-  if (wakeUps.every(({ at }) => Number.isFinite(new Date(at).getTime())))
-    return pendingWakeUpsCopy(wakeUps)
-  return [
-    `## ${wakeUpWords.region}`,
-    ...wakeUps.flatMap(({ atUtc, text }) => [
-      `_${pendingWakeUpTitle(atUtc)}_`,
-      text,
-    ]),
-  ].join('\n\n')
 }

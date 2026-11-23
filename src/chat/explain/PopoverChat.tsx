@@ -128,6 +128,7 @@ export function PopoverChat(props: PopoverChatProps) {
     )
   const footer = (
     <>
+      {parts.wakeUps}
       {content && status === 'failed' ? (
         <HistoryFailure
           besideContent

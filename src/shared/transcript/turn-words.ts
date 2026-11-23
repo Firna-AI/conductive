@@ -35,6 +35,11 @@ export const turnCopy = {
 export interface ChatReaders {
   viewerId: string | null
   members: readonly Pick<User, 'id' | 'githubLogin' | 'displayName'>[]
+  /**
+   * The name of the org, which the line of a wake-up names when the org
+   * login is gone. Without it, the line says "the org".
+   */
+  orgName?: string | null
 }
 
 /**

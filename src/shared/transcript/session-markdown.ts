@@ -5,6 +5,7 @@ import type { TranscriptDetail } from '../generated/TranscriptDetail'
 import type { Workspace } from '../generated/Workspace'
 import type { AgentChoice } from '../generated/AgentChoice'
 import type { WakeUp } from '../generated/WakeUp'
+import { pendingWakeUpsCopy } from '../../../docs/mockups/src/components/chat/wakeUpCopy'
 import { effortLabels, modelLabel } from '../agents'
 
 import { nameLabel } from '../name-label'
@@ -27,7 +28,6 @@ import { SessionLog } from './session-log'
 import { transcriptLookups } from './transcript-lookups'
 import { groupEntries, workSummary } from './transcript-entries'
 import { turnCopy, type ChatReaders } from './turn-words'
-import { pendingWakeUpsMarkdown } from './wake-up-markdown'
 
 export interface TranscriptDocument {
   linkContext: { origin: string; orgId: string }
@@ -227,7 +227,7 @@ export class SessionMarkdown {
         .filter((request) => request.state === 'waiting')
         .map(commandMarkdown),
     )
-    blocks.push(pendingWakeUpsMarkdown(this.document.pendingWakeUps ?? []))
+    blocks.push(pendingWakeUpsCopy(this.document.pendingWakeUps ?? []))
     return blocks.filter((block) => block.length > 0).join('\n\n') + '\n'
   }
 }

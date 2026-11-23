@@ -115,7 +115,7 @@ export function readWakeUpEvent(
       }
 }
 
-/** @public Read the pending snapshot at its workspace event number. */
+/** Read the pending snapshot at its workspace event number. */
 export function readSessionWakeUps(value: unknown): SessionWakeUpsResponse {
   const source = record(value, 'pending wake-ups')
   return {
@@ -130,7 +130,7 @@ const cancelState = oneOf<WakeUpCancelState>({
   'already-ended': true,
 })
 
-/** @public Read the result of a cancel in chat. */
+/** Read the result of a cancel in chat. */
 export function readSessionWakeUpCancel(
   value: unknown,
 ): SessionCancelWakeUpResponse {

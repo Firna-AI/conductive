@@ -13,8 +13,9 @@ import { fakeDeviceRoutes } from './fake-device-routes'
 import { FakeWorkspaceEvents } from './fake-events'
 import { FakeTerminalRoutes } from './fake-terminal-routes'
 import { fakeToolRoutes } from './fake-tool-routes'
+import { fakeWakeUpRoute, type FakeWakeUpEvents } from './fake-wake-ups'
 import { fakeWorkspaceRoutes } from './fake-workspace-routes'
-import { FAKE_IDS, FAKE_ORIGIN } from './fixtures/core'
+import { coreFixtures, FAKE_IDS, FAKE_ORIGIN, FAKE_TIME } from './fixtures/core'
 import type { FakeMacScenario } from './fixtures/devices'
 import {
   maskedChangedFiles,
@@ -82,7 +83,8 @@ function routeKey(method: string, path: string): string {
 
 /**
  * Fetch-compatible, in-memory server for development and tests.
- * Org moves, terminal writes, and Mac permission starts keep their state.
+ * Org moves, terminal writes, Mac permission starts, and the Cancel of a
+ * wake-up keep their state.
  * Other writes return recorded replies.
  * Override a reply with json(), empty(), or response() for the next screen state.
  * This module is opt-in. The production Worker never imports it.
@@ -91,6 +93,22 @@ export class FakeApiServer implements FakeRouteWriter {
   readonly requests: Request[] = []
   readonly events: FakeWorkspaceEvents
   readonly terminals: FakeTerminalRoutes
+  /** The member signed in, whose Cancel of a wake-up the fake records. */
+  private member: string
+  /**
+   * The events of the fake, as its wake-up routes read them, and add the
+   * end of a wake-up that a member cancels, at the fake time.
+   */
+  private readonly wakeUpEvents: FakeWakeUpEvents = {
+    history: () => this.events.history(),
+    emit: (workspaceId, event) =>
+      this.events.emit({
+        workspaceId,
+        eventNumber: this.events.history().throughEventNumber + 1,
+        occurredAt: FAKE_TIME,
+        event,
+      }),
+  }
   private readonly replies = new Map<
     string,
     Response | Promise<Response> | ((request: Request) => Promise<Response>)
@@ -114,6 +132,7 @@ export class FakeApiServer implements FakeRouteWriter {
         : recordedFileEvents(FAKE_IDS.workspace, chat.length + 1, paths)),
     ])
     fakeCoreRoutes(this, options.role ?? 'admin')
+    this.member = coreFixtures(options.role).account.user.id
     const subWorkspaces = options.subWorkspaces ?? false
     fakeWorkspaceRoutes(
       this,
@@ -147,6 +166,7 @@ export class FakeApiServer implements FakeRouteWriter {
 
   /** Serves the session of `user`, with app access, as a sign-in of that person does. */
   signIn(user: User): void {
+    this.member = user.id
     this.json('GET', API_PATHS.session, {
       user,
       appAccess: true,
@@ -230,6 +250,12 @@ export class FakeApiServer implements FakeRouteWriter {
         throughEventNumber: through,
       })
     }
+    const wakeUps = fakeWakeUpRoute(
+      request,
+      this.wakeUpEvents,
+      () => this.member,
+    )
+    if (wakeUps) return wakeUps
     return Response.json(
       {
         error: {

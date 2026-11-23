@@ -5,6 +5,7 @@ import { attachmentFiles, readCopiedFile } from '../../app/dev/attachment-files'
 import { sessionsPath } from '../../shared/sessions'
 import { workspaceViewPath } from '../../shared/workspace-view'
 import { workspacePaths } from '../../shared/workspaces'
+import { fakeWakeUpRoute } from '../../test-support/fake-wake-ups'
 import { list, record, text } from '../api/json'
 import { readChoice } from '../api/read-chat'
 import type { DevBackend } from './dev-backend'
@@ -223,7 +224,8 @@ async function sessionWrite(
 
 /**
  * The writes that the development page makes stateful. Each one changes the
- * fake's records, and sends the events that the backend would send.
+ * fake's records, and sends the events that the backend would send. The
+ * pending wake-ups and their Cancel follow the events of the page.
  */
 export async function handleWrite(
   backend: DevBackend,
@@ -232,6 +234,15 @@ export async function handleWrite(
   const { orgId, workspaceId } = backend.target
   const path = new URL(request.url).pathname
   const { method } = request
+  const wakeUps = fakeWakeUpRoute(
+    request,
+    {
+      history: () => backend.stream.history(),
+      emit: (_workspaceId, event) => backend.stream.emit(event),
+    },
+    () => backend.viewer.id,
+  )
+  if (wakeUps) return wakeUps
   if (method === 'GET') return readCopiedFile(backend, backend.target, request)
   if (method === 'POST' && path === sessionsPath(orgId, workspaceId)) {
     const choice = readChoice((await bodyOf(request)).choice)

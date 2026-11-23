@@ -9,7 +9,14 @@ Without `?conversation=`, a working workspace has a running recorded chat.
 Other recorded workspaces have a finished chat. An explicit conversation
 option overrides this default, including queued chats that show no spinner.
 `dev/options.ts` lists the values. The `wake-` values give the wakes of a
-watch, as the mockups draw them at `app/chat/wakes`.
+watch, as the mockups draw them at `app/chat/wakes`. The `wake-up-` and
+`wake-ups-` values give the wake-ups of an agent, as the mockups draw them
+at `app/chat/wake-ups`: three pending wake-ups, a long text, a wake-up
+that starts a turn or joins the running turn, the lines of each cause of a
+wake-up that could not start, and the lines of each kind of Cancel beside
+one pending wake-up. The fake reads the pending wake-ups of a session from
+its events, and Cancel adds the end of the wake-up for the signed-in
+member, as `src/test-support/fake-wake-ups.ts` says.
 
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for

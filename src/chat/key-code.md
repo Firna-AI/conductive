@@ -273,6 +273,9 @@ is relative to `src/chat/`, the folder of this guide.
   their key code.
 - `secrets/`: the secret requests, their answers, the runs, and the line of
   a late answer. Their [README](secrets/README.md) names their key code.
+- `wake-ups/`: the pending wake-ups of a session with Cancel, and the lines
+  of a wake-up that fires or ends. Their [README](wake-ups/README.md)
+  names their key code.
 - `explain/`: Explain, the marks of explanations, and the popover. Its
   [README](explain/README.md) names its key code.
 - `components/WaitingRequests.tsx`: the region just above the composer of

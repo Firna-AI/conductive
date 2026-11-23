@@ -137,6 +137,7 @@ export function SessionChat(props: SessionChatProps) {
     ) : null
   const footer = (
     <>
+      {parts.wakeUps}
       {id && content && status === 'failed' ? (
         <HistoryFailure
           besideContent

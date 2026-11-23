@@ -88,6 +88,18 @@ message that carries the wake to the agent. The chat finds the turn of
 the line through that message, as
 [Transcript rules](../chat/transcript.md) says.
 
+`session.wake-up-scheduled`, `session.wake-up-fired`, and
+`session.wake-up-ended` are the wake-up events of one session, of the
+generated type `SessionWakeUpEvent`. They belong to `ChatEvent` in the same
+way, and only the Worker writes them. A fired event names the hidden
+message that carries the wake-up to the agent, as a watch notice does. An
+ended event carries the time of the wake-up and its outcome, so each tab
+gives the words of its end line in the local time of its reader.
+`wake-up-paths.ts` builds the routes of the pending wake-ups of a session
+and of Cancel. The words of a time, also past the dates of JavaScript, are
+`wakeUpTime` and `wakeUpTimeUtc` of the mockups' `wakeUpCopy.ts`. The
+Worker imports the UTC words from there too.
+
 ## The browser stream
 
 `events.ts` defines the browser stream. Its event numbers span all sessions

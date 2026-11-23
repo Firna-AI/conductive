@@ -308,10 +308,18 @@ Depends on: 1, 3
 
 Use the `ui implementor` action.
 
-- [ ] Render the pending wake-ups and Cancel from the chat events.
-- [ ] Render the wake-up line once, at its place, in the live chat, the loaded history, and a copy.
-- [ ] Check that older app tabs and the Mac app read the new events safely.
-- [ ] Check the screens in a browser on desktop and phone sizes. Save the screenshots in `.context/agent-wake/`.
+- [x] Render the pending wake-ups and Cancel from the chat events.
+- [x] Render the wake-up line once, at its place, in the live chat, the loaded history, and a copy.
+- [x] Check that older app tabs and the Mac app read the new events safely.
+- [x] Check the screens in a browser on desktop and phone sizes. Save the screenshots in `.context/agent-wake/`.
+
+The report is `.context/agent-wake/reports/m5-chat.md`. The screenshots are in `.context/agent-wake/m5-screenshots/`. Implementation calls on 23 November 2026:
+
+- The chat reads the pending wake-ups of a session each time its history loads, and the events keep them current. A fire or an end removes a wake-up for good. Reason: a wake-up can wait for days in a page of the history that has not loaded yet.
+- Cancel is busy until its reply, and the reply ends the card at once. A 404 `wake_up_not_found` ends the card with no notice. Another failure keeps the card and shows "The wake-up didn't cancel" with the cause. Reason: the end line follows with the event, and the session has no such wake-up.
+- The cards stand at the very top of the footer, above the notices of the app, and the popover of an explanation shows them too. Reason: the design puts them at the top of the footer, and the popover shows a session as its tab does.
+- The words of a time read the clock each minute, in the time zone of the app. Reason: "tomorrow" turns into "today" at midnight.
+- `wakeUpCopy.ts` moves a time past the dates of JavaScript by whole 400-year cycles for its words, and a year before the year 1 reads "BC". Reason: each caller gets the same words, with the same day and time.
 
 ## Milestone 6: Turn off the cron tools of Claude
 
