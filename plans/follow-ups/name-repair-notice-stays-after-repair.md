@@ -1,6 +1,6 @@
 # Name repair notice stays after its repair ends
 
-- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-23, from the plan refresh of `calummoore/object-memory-new-tab-state-reads-cesn`. The options check of that plan found it on 2026-11-20.
 - **Location:** `worker/chat/workspace-title.ts:29`, where `storeWorkspaceTitle` removes the repair record before it returns at line 30 without an event. `src/shell/workspace/header-notices.ts:93`, where `HeaderNotices` clears the name failure only on a `workspace.title` event of the stream.
@@ -22,11 +22,11 @@
 - **Root question:** How does each tab learn that a failed name repair ended when the workspace stores no name event?
 - **Options:**
   - **A.** When `storeWorkspaceTitle` removes a `failed` record and stores no event, store a small sessionless event that ends the repair of that kind, such as `report.repair-ended` with the kind. `HeaderNotices` and the stream readers of other kinds clear the failure on it. It adds a browser event type, so older Mac apps must ignore it safely, and the new tab state reads change must count it in its notice window. Effort: Medium.
-  - **B.** Show the name notice only while the workspace has no name. `HeaderNotices` or the header reads the name from the workspace detail, which `workspace.updated` keeps current in each open tab. A name report cannot change a named workspace, so nothing is out of date then. It adds no event, but it does not cover a title that only the stored history holds while D1 has no name. Effort: Small.
+  - **B.** Show the name notice only while the workspace has no name. `HeaderNotices` or the header reads the name from the workspace detail, which `workspace.updated` keeps current in each open tab. A name report cannot change a named workspace, so nothing is out of date then. It adds no event. It is a partial mitigation only: it does not cover the part of the trigger where only the stored history holds a title while D1 has no name. In that case the notice still stays. Effort: Small.
   - **C.** Keep the repair record when `storeWorkspaceTitle` stores no event. The notice then stays correct for the record, but it keeps saying that the name is out of date while the name is set, and the kind gets no further repair request. Effort: Small.
 - **Left out:** Store the `workspace.title` event even when the name stays: each caller projects the event into D1 with `projectWorkspaceTitle`, so the event would replace a member's name, unless each caller and each reader changes too.
 - **Wider fix:** A. It gives each report kind one event that ends a repair, so no other kind can repeat this defect when its report stores no event.
 - **Previous examples:** None found.
 - **Related:** `plans/follow-ups/workspace-title-from-sandbox-unchecked.md` asks which names the Worker accepts from a sandbox. Its option D removes the runner title path. That item and this one share `storeWorkspaceTitle`, but they ask different questions, so they stay apart.
-- **Recommendation:** B. It is the smallest change that clears the notice in every tab, and it matches the protocol rule that a report names only a workspace without a name. A best protects the codebase.
+- **Recommendation:** A. It is the only option that ends the notice in every tab for the whole trigger, because it signals the end of the repair itself. B is a smaller partial mitigation: it clears the notice when D1 has a name, but not when only the stored history holds a title.
 - **Action:** ask the user, because A adds a browser event type that older Mac apps receive, and B and C change when a notice that is on `main` shows, so each option changes behaviour that users see.
