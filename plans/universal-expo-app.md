@@ -144,11 +144,20 @@ Replaced ways:
   CSS. C, CSS Modules on the web and native styles on the phones. E, React
   Strict DOM.
 - **Recommendation:** D, after the options check. The first one was A.
-- **Asked again:** on 23 November 2026 the user asked whether a tool
-  converts CSS to React Native. Option F, added then, keeps the CSS
-  Modules and compiles them for the phones with `react-native-css`. The
-  options check added G, H, and I. D stays chosen until the user answers.
-  The decisions file gives the item.
+- **Asked again** on 23 November 2026, when the user asked whether a tool
+  converts CSS to React Native. The options check added F, G, H, and I.
+- **Chosen:** H, by the user on 23 November 2026. D stays, with a
+  converter script under `tools/`. In each port milestone, the script
+  writes a first draft of the React Native styles of the area from its CSS
+  Modules, with theme lookups for the tokens. It lists each rule that it
+  cannot convert, and a person ports those rules by hand.
+- **Other options of the second round:** F, the CSS Modules compiled for the
+  phones with `react-native-css`. G, our own converter at build time. I,
+  phone screens only at first.
+- **Risks that the user accepted:** the output can differ from the mockup
+  in layout, text styles, and class order. Screenshot comparisons of the
+  mockups find this. Layout rules, hover, focus, and container widths stay
+  work by hand.
 
 ### 10. Choose where the phone apps build
 
@@ -163,7 +172,7 @@ Replaced ways:
 - **Still open:** the check of each pull request on the phones, in
   decision 13.
 
-The open decisions 9 again, 11, 12, and 13 are in
+The open decisions 11, 12, and 13 are in
 [universal-expo-app-decisions.md](universal-expo-app-decisions.md).
 
 ## Design calls
@@ -347,11 +356,27 @@ Depends on: 1, 7
 - [ ] Add the list of requests to the operator section.
 - [ ] Add tests.
 
+## Milestone 27: The style converter
+
+Depends on: none
+
+This milestone comes before Milestone 9. It has the number 27, so that the
+other numbers stay.
+
+- [ ] Add the converter script of decision 9 H under `tools/`, with
+      Lightning CSS and `css-to-react-native` as development dependencies.
+- [ ] Write theme lookups for each `var()` token, not fixed values.
+- [ ] List each rule that the script cannot convert: grid, pseudo-elements,
+      combinators, element selectors, hover, focus, container queries,
+      `calc()`, `em`, `rem`, and each view that joins two classes on one
+      element.
+- [ ] Add tests for the script.
+
 ## Milestone 9: The base of the shared views
 
 Tags: ui
 
-Depends on: 4
+Depends on: 4, 27
 
 - [ ] Write the shared views on the primitives seam of `@firna/ui`, as
       decision 9 D says. On the web they draw through its DOM backend.
@@ -371,7 +396,9 @@ Depends on: 9
 
 Each area is its own milestone, so that each one ships alone. Each one
 ports the views of the area, their shared parts in `src/ui/`, their mockup
-screens, and their tests. The look of each mockup stays.
+screens, and their tests. The look of each mockup stays. Each one runs the
+converter of Milestone 27 first, and ports the listed rules by hand. Each
+one compares the screenshots of its mockups before and after the port.
 
 - [ ] Milestone 10: the org rail, the workspace list, and the sections.
 - [ ] Milestone 11: the workspace bar, the tab row, and the GitHub banner.
@@ -447,8 +474,9 @@ Depends on: 23
 
 Depends on: 24
 
-- [ ] Delete the CSS Modules, the old router, and the Vite web build, and
-      each part that existed only for them.
+- [ ] Delete the CSS Modules, the browser `Navigation`, the Vite web
+      build, the converter of Milestone 27, and each part that existed only
+      for them.
 - [ ] Update `CLAUDE.md`, `AGENTS.md`, and each README for the new
       commands.
 

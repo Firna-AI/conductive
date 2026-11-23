@@ -8,9 +8,10 @@ on the same day. Its report is in
 `.context/universal-expo-app/options-check.md`. It added option 11 C, and it
 moved the recommendation of decision 11 from B to C. The user chose
 decisions 7 to 10 on 23 November 2026. The plan records them. The user then
-asked about CSS converters, so decision 9 is here again. Decision 13 was
+asked about CSS converters. The plan records decision 9 H, which the user
+chose after that. Decision 13 was
 added on the same day, from the answer to decision 10. A second options
-check of the same day added 9 F to 9 I, 13 E, and 13 F. Its record is in
+check of the same day added 13 E and 13 F, and 9 F to 9 I. Its record is in
 `.context/universal-expo-app/options-check-2.md`.
 
 Terms:
@@ -24,7 +25,7 @@ Terms:
 - **Source:** Design.
 - **Category:** Process.
 - **Location:** `.github/workflows/ci.yml:6`.
-- **Background:** This plan has 27 milestones and takes months. Each merge
+- **Background:** This plan has 28 milestones and takes months. Each merge
   to `main` deploys to production. 176 of the 433 commits on `main` since
   10 November change views or CSS Modules under `src/`.
 - **Problem:** One branch for months conflicts with each change on `main`,
@@ -89,100 +90,6 @@ Terms:
   does.
 - **Action:** ask the user, because it adds a new lint rule, and the
   always-on rules reserve that choice for the user.
-
-## 9. Choose the style layer of the shared views, asked again
-
-- **Severity:** Medium. **Effort:** Medium.
-- **Source:** Design. The user chose 9 D on 23 November 2026, then asked:
-  "Is there nothing that converts CSS to react native?" The options check
-  of the same day added options F to I.
-- **Category:** Code structure.
-- **Location:** the 261 CSS Modules in `src/`, and
-  `futex-ai/ui/src/primitives/dom/View.tsx:57-59`.
-- **Terms:**
-  - **`react-native-css`:** the style engine under NativeWind 5. It reads
-    `.css` files in Metro and applies them to React Native views at run
-    time. Its stable release is 3.0.7.
-  - **Lightning CSS:** the CSS parser that Expo and `react-native-css` use.
-  - **`css-to-react-native`:** a library that turns CSS declarations into
-    React Native style objects. It reads no selectors.
-- **Background:**
-  - Decision 9 D writes the shared views with React Native styles, on the
-    primitives seam of `@firna/ui`.
-  - Expo supports CSS Modules on the web only. On the phones a CSS Module
-    import gives an empty object.
-  - The phones use Yoga, a flexbox layout engine, with no grid. React
-    Native starts each view as a column, and CSS starts it as a row.
-  - 161 of the 261 modules hold a rule that the phones drop, such as
-    `display: grid` or `block`, the `>` combinator, element selectors,
-    `::before`, or `position: sticky`.
-  - 409 of the 641 flex rules, in 177 files, rely on the CSS row default.
-- **Problem:** The CSS Modules hold a lot of style work. D writes all of it
-  again by hand.
-- **Impact if no action:** D stands, and each port milestone rewrites the
-  styles of its area by hand.
-- **Root question:** What is the one style source of the shared views, and
-  what turns it into the look on the web and on the phones?
-- **Options:**
-  - **D.** Chosen. Write React Native styles by hand with the tokens.
-    Effort: Large.
-  - **F.** Keep the CSS Modules as the source. On the phones,
-    `react-native-css` compiles them in Metro.
-    - It needs a `futex-ai/ui` change, because the DOM `View` drops the
-      class of the caller today.
-    - It needs a Metro step of our own, because `react-native-css` has no
-      CSS Modules support.
-    - It needs Lightning CSS pinned to 1.30.1. Newer versions throw on our
-      `var()` tokens (`react-native-css` issue #470, open).
-    - It needs a rewrite of the 161 modules to the subset that the phones
-      accept, and a check that fails on a dropped rule.
-    - One person maintains most of the engine, and it is not tested on
-      Expo SDK 58.
-    - The web keeps real CSS. Effort: Large.
-  - **G.** Keep the CSS Modules as the source, and convert them at build
-    time with a Metro step of our own, with Lightning CSS and
-    `css-to-react-native`. The build fails on each rule that it cannot
-    convert. It needs the same CSS rewrite and `futex-ai/ui` change as F,
-    and we keep a compiler. Effort: Large.
-  - **H.** Do D, with a converter script under `tools/`. In each port
-    milestone, the script turns the CSS Modules of the area into React
-    Native style modules with the tokens. It lists each rule that it
-    cannot convert, and a person ports those rules by hand. Nothing stays
-    at run time. Effort: Medium. Risks, added on 23 November 2026 when the
-    user asked:
-    - Output can look right and still differ: the column default, text
-      styles that no longer inherit, and the cascade of 16 views that join
-      two classes on one element. Mitigation: compare the screenshots of
-      each mockup before and after the port.
-    - 224 modules use `var()` tokens that change with the colour scheme.
-      The script must write theme lookups, not fixed values, or dark mode
-      breaks.
-    - 62 modules use `calc()` and 22 use `em` or `rem`. The script lists
-      them for a person.
-    - Layout rules, hover, focus, and container widths stay work by hand.
-      So the script saves the declarations, not the layout.
-    - The script is a development tool that goes with Milestone 25.
-  - **I.** Ship the phone apps for phone screens only at first. iPad runs
-    the iPhone app. The phone views then need no hover and no desktop
-    width rules. Tablets show the phone layout until a later change.
-    Effort: Small.
-- **Left out:**
-  - `react-native-css-modules`, because its last release is from 2023 and
-    it supports no variables. G is the same idea, kept current.
-  - `css-to-react-native` alone, because it is a part of G and H.
-  - Expo's own CSS Modules, because they work on the web only.
-- **Wider fix:** H. It uses the converters once, as a tool, and adds no
-  dependency at run time.
-- **Previous examples:** None found.
-- **Related:** Milestones 3 and 9 wait for the answer. Under F or G, the
-  CSS Modules stay, Milestone 3 adds the `className` change, and Milestone
-  25 keeps the CSS Modules.
-- **Recommendation:** H. It keeps D, which you chose, and uses a converter
-  for the mechanical part of each port. F keeps the CSS files, but most of
-  them change anyway, and it depends on an engine with no CSS Modules
-  support.
-- **Action:** ask the user, because it can change decision 9 D, which the
-  user chose.
 
 ## 13. Check each pull request on the phones
 
