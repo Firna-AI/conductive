@@ -105,8 +105,9 @@ These are my calls, from 2026-11-23.
   branches run it after they merge `main`. A follow-up item deletes the
   script when no open branch needs it.
 - Proof of no visual change: build the catalogue before and after the
-  move, strip the `mokly_<hash>_` prefix of each CSS Module class, and
-  compare the documents. Mokly hashes the repository path of a CSS
+  move, strip the `mokly_<hash>_` prefix of each CSS Module class and the
+  `props` hash of each registered instance, whose props can hold such a
+  class, and compare the documents. Mokly hashes the repository path of a CSS
   Module into its class names, so Changes lists each view that draws a
   moved module one time. Branches compare with their merge base, so they
   see no lasting noise.
@@ -191,12 +192,16 @@ Depends on: 1, 2. It does not wait for pull request #569 (decision 2).
 - [x] Update each relative link and each path mention in the Markdown
       files. Check each changed relative link.
 - [ ] Run `npm run typecheck`, `npm run mockups:check`, `npm run lint`,
-      and `npm run format:check`. Fix each error.
-- [ ] Compare the catalogue built before and after the move, without the
+      and `npm run format:check`. Fix each error. The typecheck, the lint,
+      the format check, and the strict catalogue build without the
+      comparison pass. The strict build with the comparison runs out of
+      memory on the 7 GB workspace machine, so the `Static checks` job of
+      CI runs it. Logs: `.context/shared-ui-in-the-app/*.log`.
+- [x] Compare the catalogue built before and after the move, without the
       `mokly_<hash>_` prefixes. Save the result under
-      `.context/shared-ui-in-the-app/`.
-- [ ] Smoke-test the app and the catalogue in a browser. Save a
-      screenshot of each.
+      `.context/shared-ui-in-the-app/`. Result: `compare.log`.
+- [x] Smoke-test the app and the catalogue in a browser. Save a
+      screenshot of each. Screenshots: `.context/shared-ui-in-the-app/shots/`.
 
 ## Milestone 4: The import lint
 
