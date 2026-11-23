@@ -33,22 +33,30 @@ export class Tree {
   readonly folders: Set<string>
   readonly folderMap: PathMap
 
+  /** The entries whose old and new paths both hold a file. */
+  readonly collisions: [string, string][]
+
   /**
-   * `files` are the repository paths on disk, with `/` separators. A path
-   * of the map counts as present at its old place and at its new place, so
-   * the same tree serves before and after `git mv`.
+   * `files` are the repository paths on disk, with `/` separators. An entry
+   * of the map applies only when its old file is gone, so a path that names
+   * its old place leads to its new place. When both paths hold a file, the
+   * entry does not apply and lands in `collisions`: the old path then keeps
+   * naming its own file.
    */
   constructor(files: Iterable<string>, map: PathMap) {
-    this.map = map
-    this.inverse = Object.fromEntries(
-      Object.entries(map).map(([from, to]) => [to, from]),
-    )
     this.files = new Set(files)
+    this.collisions = []
+    const active: PathMap = {}
     for (const [from, to] of Object.entries(map)) {
-      if (this.files.has(from) || this.files.has(to)) {
-        this.files.add(from)
-        this.files.add(to)
-      }
+      if (!this.files.has(from)) active[from] = to
+      else if (this.files.has(to)) this.collisions.push([from, to])
+    }
+    this.map = active
+    this.inverse = Object.fromEntries(
+      Object.entries(active).map(([from, to]) => [to, from]),
+    )
+    for (const [from, to] of Object.entries(active)) {
+      if (this.files.has(to)) this.files.add(from)
     }
     this.folders = new Set()
     for (const file of this.files) {
@@ -58,7 +66,7 @@ export class Tree {
         folder = path.posix.dirname(folder)
       }
     }
-    this.folderMap = movedFolders(this.files, map)
+    this.folderMap = movedFolders(this.files, active)
   }
 
   /** The path of a file after the move. */

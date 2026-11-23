@@ -2,6 +2,7 @@
 // each module that those modules import in turn.
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
+import { codeImports } from './refs.ts'
 import { relativePaths, TEXT_FILE } from './scan.ts'
 import { Tree, type PathMap } from './tree.ts'
 
@@ -70,10 +71,12 @@ export function plan(files: string[]): Plan {
   return { map, blocked }
 }
 
+/** A module that the app cannot run: its path, or an import of Mokly. */
 function mockupOnly(file: string): boolean {
   if (MOCKUP_ONLY.test(file)) return true
-  if (!/\.[cm]?[jt]sx?$/.test(file)) return false
-  return readFileSync(file, 'utf8').includes("'@mokly/mokly'")
+  return codeImports(file, readFileSync(file, 'utf8')).some(
+    (value) => value === '@mokly/mokly' || value.startsWith('@mokly/mokly/'),
+  )
 }
 
 /** The files that the relative paths of `file` name. */

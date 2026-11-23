@@ -1,4 +1,11 @@
 // Finds the paths in the text of a file and rewrites them for the move.
+import {
+  asRelative,
+  codeImports,
+  cssReferences,
+  CSS_REFERENCE,
+  isLocal,
+} from './refs.ts'
 import type { Tree } from './tree.ts'
 
 /** The files whose text the move reads, by their ending. */
@@ -10,8 +17,11 @@ const CODE_FILE = /\.(tsx?|mts|cts|jsx?|mjs|cjs|astro|rs)$/
 /** A quoted relative path in code, such as `'../ui/Menu.tsx'`. */
 const QUOTED = /(['"`])(\.{1,2}\/[^'"`\s$]*)\1/g
 
-/** A path in a CSS `url()` without quotes. */
-const CSS_URL = /url\(\s*(\.{1,2}\/[^'")\s]+)\s*\)/g
+/** A CSS reference, or a quoted relative path, such as one in a comment. */
+const CSS_PATH = new RegExp(
+  `${CSS_REFERENCE.source}|(['"])(\\.{1,2}\\/[^'"\\s]*)\\7`,
+  'g',
+)
 
 /** The destination of a Markdown link or a link reference. */
 const MARKDOWN_LINK =
@@ -20,20 +30,14 @@ const MARKDOWN_LINK =
 /** A path from the repository root, such as `docs/mockups/src/brand.ts`. */
 const ROOT_PATH = /(?<![\w.@/-])\/?(docs\/mockups\/src\/[\w.@/-]*[\w])\/?/g
 
-/** The relative paths in code and CSS, as the module graph sees them. */
+/** The relative paths that a file loads, as the module graph sees them. */
 export function relativePaths(file: string, text: string): string[] {
-  const found: string[] = []
-  if (CODE_FILE.test(file) || file.endsWith('.css'))
-    for (const match of text.matchAll(QUOTED)) found.push(match[2])
-  if (file.endsWith('.css'))
-    for (const match of text.matchAll(CSS_URL)) found.push(match[1])
-  return found
+  if (file.endsWith('.css')) return cssReferences(text)
+  return codeImports(file, text).filter((value) => value.startsWith('.'))
 }
 
 export type Scan = {
   text: string
-  /** The specifiers that point into the moved paths, before the move. */
-  targets: string[]
   /** The root paths that no rule can rewrite, for a person to check. */
   unsure: string[]
 }
@@ -43,24 +47,21 @@ export type Scan = {
  * it names a moved file or folder, or when `file` itself moves.
  */
 export function rewriteText(tree: Tree, file: string, text: string): Scan {
-  const targets: string[] = []
   const unsure: string[] = []
-  const relative = (value: string): string => {
-    const next = tree.rewrite(file, value)
-    if (next !== undefined) targets.push(value)
-    return next ?? value
-  }
   let next = text
-  if (CODE_FILE.test(file) || file.endsWith('.css')) {
+  if (CODE_FILE.test(file)) {
+    // Also a path in a comment or a string, so that it stays true.
     next = next.replace(
       QUOTED,
-      (_, quote: string, value: string) => `${quote}${relative(value)}${quote}`,
+      (_, quote: string, value: string) =>
+        `${quote}${tree.rewrite(file, value) ?? value}${quote}`,
     )
   }
   if (file.endsWith('.css')) {
-    next = next.replace(CSS_URL, (all, value: string) =>
-      all.replace(value, relative(value)),
-    )
+    next = next.replace(CSS_PATH, (all: string, ...groups: string[]) => {
+      const value = groups[1] ?? groups[3] ?? groups[5] ?? groups[7]
+      return all.replace(value, cssPath(tree, file, value))
+    })
   }
   if (file.endsWith('.md')) {
     next = next.replace(
@@ -86,7 +87,15 @@ export function rewriteText(tree: Tree, file: string, text: string): Scan {
     if (namesNothing(tree, value)) unsure.push(value)
     return all
   })
-  return { text: next, targets, unsure }
+  return { text: next, unsure }
+}
+
+/** The new form of a CSS path. A bare path such as `badge.svg` stays bare. */
+function cssPath(tree: Tree, file: string, value: string): string {
+  if (!isLocal(value)) return value
+  const next = tree.rewrite(file, asRelative(value))
+  if (next === undefined) return value
+  return !value.startsWith('.') && next.startsWith('./') ? next.slice(2) : next
 }
 
 function rootPath(tree: Tree, value: string): string | undefined {

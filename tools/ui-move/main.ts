@@ -68,10 +68,20 @@ function moveFiles(map: PathMap): number {
   return moved
 }
 
-/** Rewrites the paths of each text file, and collects the stale ones. */
-function rewriteFiles(map: PathMap, unsure: Map<string, Set<string>>) {
+type Report = {
+  /** The root paths that name no file or folder, with their files. */
+  unsure: Map<string, Set<string>>
+  /** The map entries whose old and new paths both hold a file. */
+  collisions: Set<string>
+}
+
+/** Rewrites the paths of each text file, and collects what needs a person. */
+function rewriteFiles(map: PathMap, report: Report) {
   const files = tracked()
   const tree = new Tree(files, map)
+  for (const [from, to] of tree.collisions)
+    report.collisions.add(`${from} and ${to}`)
+  const { unsure } = report
   let changed = 0
   for (const file of files) {
     if (!TEXT_FILE.test(file) || KEEP.test(file)) continue
@@ -101,20 +111,28 @@ function runPlan() {
  */
 function runApply() {
   let map = readMap()
-  const unsure = new Map<string, Set<string>>()
+  const report: Report = { unsure: new Map(), collisions: new Set() }
   let moved = moveFiles(map)
-  let changed = rewriteFiles(map, unsure)
+  let changed = rewriteFiles(map, report)
   const known = Object.keys(map).length
   const next = extendMap(map)
   if (next && Object.keys(next).length > known) {
     map = next
     moved += moveFiles(map)
-    changed += rewriteFiles(map, unsure)
+    changed += rewriteFiles(map, report)
   }
   console.log(`Moved ${moved} files. Rewrote ${changed} files.`)
-  if (unsure.size > 0) {
+  if (report.collisions.size > 0) {
+    console.error(
+      'These paths both hold a file, so their paths stay as they are:',
+    )
+    for (const pair of [...report.collisions].sort()) console.error(`  ${pair}`)
+    console.error('Keep one file in the new place, then run apply again.')
+    process.exitCode = 1
+  }
+  if (report.unsure.size > 0) {
     console.log('Check these paths by hand. They name no file or folder:')
-    for (const [value, where] of [...unsure].sort())
+    for (const [value, where] of [...report.unsure].sort())
       console.log(`  ${value}: ${[...where].sort().join(', ')}`)
   }
 }
