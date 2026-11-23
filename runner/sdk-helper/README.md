@@ -114,8 +114,8 @@ The skills scanner lists the same org skills. Each `skills` request can
 carry the `orgSkills` value with the leased current copy. The scanner makes
 the choice of an agent start, reads each chosen `SKILL.md` of the copy, and
 takes the name and the description from its safe view. It adds these skills
-after the skills of each agent's own folders. A failed read keeps the last
-org skills and warns. Each listed path is the `SKILL.md` of the copy. A
+after the skills of each agent's own folders. A failed read also fails an
+agent start, so the lists then hold no org skills, and the scanner warns. Each listed path is the `SKILL.md` of the copy. A
 Codex start gives an org skill of a message the path of the skill in its
 own view, by name, and leaves out an org skill that its view lacks.
 

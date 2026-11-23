@@ -68,7 +68,10 @@ export class SkillScanner {
     }
   }
 
-  /** A read of a copy can fail. The lists then keep their last org skills. */
+  /**
+   * A failed read also fails the agent starts, which then load no org
+   * skills. So the lists then hold no org skills either.
+   */
   private async scanOrg(
     orgSkills: OrgSkills | null,
     warn: (message: string) => void,
@@ -80,9 +83,8 @@ export class SkillScanner {
         codex: await listOrgSkills({ ...request, agent: 'codex' }),
       }
     } catch {
-      warn(
-        'The org skills could not be listed. The list keeps its last org skills.',
-      )
+      this.org = { claude: [], codex: [] }
+      warn('The org skills could not be listed. The list holds no org skills.')
     }
   }
 

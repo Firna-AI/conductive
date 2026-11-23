@@ -90,7 +90,8 @@ chat never shows the sender line.
   line and branch line first, then an empty line, the member's text, and the lines of the
   attached files. The provider reads the Claude skill folder at the send
   of such a message, as the skills report reads it, because the helper of
-  a session gets only the Codex paths. When it cannot read the folder,
+  a session gets only the Codex paths. It also takes the names of the org
+  skills in the view of the session as skills of the Claude list. When it cannot read the folder,
   the message takes this form too.
 - Codex gets the member's text as the first text item, and the sender
   line, with the repository and branch lines when due, as the last text item.

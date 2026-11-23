@@ -83,7 +83,7 @@ it('lists the org skills after the workspace skills, as an agent start loads the
   )
 })
 
-it('lists no org skills without a copy, and keeps the last org skills after a failed read', async () => {
+it('lists no org skills without a copy or after a failed read', async () => {
   const h = await scannerFixture()
   const org = await orgCopy(h.home)
   await org.write(
@@ -98,9 +98,9 @@ it('lists no org skills without a copy, and keeps the last org skills after a fa
   const listed = await h.scanner.scan(false, org.skills)
   expect(listed.claude.map((skill) => skill.name)).toEqual(['review'])
   const missing = { ...org.skills, directory: join(h.home, 'gone') }
-  expect(await h.scanner.scan(false, missing)).toEqual(listed)
+  expect(await h.scanner.scan(false, missing)).toEqual(empty)
   expect(h.warnings).toContain(
-    'The org skills could not be listed. The list keeps its last org skills.',
+    'The org skills could not be listed. The list holds no org skills.',
   )
 })
 
