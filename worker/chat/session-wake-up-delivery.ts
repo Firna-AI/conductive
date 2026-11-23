@@ -40,13 +40,11 @@ export async function deliverWakeUp(
       })
       return
     }
-    const { session, user } = admission
-    const messageId = `session-wake-up:${wakeUp.id}`
-    const turnId = await saveWakeMessage(
+    const { session } = admission
+    const { messageId, turnId } = await saveWakeMessage(
       view,
-      session,
-      user,
-      { id: messageId, text: wakeUpText(wakeUp.text) },
+      admission,
+      { text: wakeUpText(wakeUp.text) },
       () => crypto.randomUUID(),
     )
     await view.emit({

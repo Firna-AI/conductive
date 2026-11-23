@@ -15,14 +15,15 @@ export async function resumeSessionWatch(
   controller: WorkspaceController,
   now: () => number,
 ): Promise<Extract<WatchReceipt, { state: 'accepted' }>['resume']> {
-  return resumeWakeDelivery(
+  const resume = await resumeWakeDelivery(
     chat,
     operation,
     { messageId: receipt.messageId, orgId: receipt.watch.orgId },
-    async (senderId) =>
-      Boolean(await watchAdmission(operation, receipt.watch, env, senderId)),
+    async (turn) =>
+      Boolean(await watchAdmission(operation, receipt.watch, env, turn)),
     env,
     controller,
     now,
   )
+  return resume === 'settling' ? 'pending' : resume
 }

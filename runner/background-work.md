@@ -51,8 +51,8 @@ states the line of the chat at the limit. An automatic update gives existing wor
   scheduler cannot fire them.
 - The adapter sets `skillOverrides: { loop: 'off' }` at startup and
   keeps it on model changes. This disables the bundled `/loop` skill.
-- The root Stop hook still reads `session_crons`. It replaces the cron
-  snapshot for the note. Only tasks count as live work.
+- The root Stop hook passes the current `session_crons` directly to the
+  note. Only tasks count as live work.
 - Both agents use `schedule_wake_up` to continue later.
   [Wake-ups](../docs/protocol/wake-ups.md) gives the call and delivery rules.
 

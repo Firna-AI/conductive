@@ -1,24 +1,21 @@
-import type { Session } from '../../src/shared/generated/Session'
 import type { UserMessage } from '../../src/shared/generated/UserMessage'
-import type { User } from '../../src/shared/api'
+import { turnForNotice, type AdmittedNotice } from './notice-destination'
 import type { ChatTransaction } from './store'
-import { TurnLifecycle } from './turn-lifecycle'
 
 /** Store the ordinary runner message without adding a member bubble. */
 export async function saveWakeMessage(
   view: ChatTransaction,
-  session: Session,
-  user: User,
-  input: { id: string; text: string; watchId?: string },
+  admission: AdmittedNotice,
+  input: { text: string; watchId?: string },
   randomId: () => string,
-): Promise<string> {
-  const turn = await new TurnLifecycle(view, session).select(
-    user.id,
-    randomId,
-    input.watchId === undefined,
-  )
+): Promise<{ messageId: string; turnId: string }> {
+  const { session, user } = admission
+  const turn = await turnForNotice(view, admission, randomId)
+  let messageId = randomId()
+  while ((await view.message(messageId)) || (await view.messageTurn(messageId)))
+    messageId = randomId()
   const message: UserMessage = {
-    id: input.id,
+    id: messageId,
     sessionId: session.id,
     text: input.text,
     sender: {
@@ -37,7 +34,6 @@ export async function saveWakeMessage(
   turn.messageIds.push(message.id)
   await view.saveTurn(turn)
   await view.saveMessageTurn(message.id, turn.id)
-  await view.saveNewestTurn(session.id, turn.id)
   await view.saveCommand({
     type,
     commandId: randomId(),
@@ -48,5 +44,5 @@ export async function saveWakeMessage(
     ...(input.watchId === undefined ? {} : { sessionWatchId: input.watchId }),
     attachments: [],
   })
-  return turn.id
+  return { messageId, turnId: turn.id }
 }

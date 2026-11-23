@@ -22,19 +22,13 @@ export class TurnLifecycle {
   async select(
     senderId: string,
     randomId: () => string,
-    matchQueuedSender = false,
+    placement: 'join' | 'new' = 'join',
   ): Promise<StoredTurn> {
     let turn = this.session.activeTurnId
       ? await this.transaction.turn(this.session.activeTurnId)
       : undefined
     while (turn) {
-      if (
-        !turn.nextTurnId &&
-        turn.state !== 'stopping' &&
-        (!matchQueuedSender ||
-          turn.state === 'running' ||
-          turn.senderId === senderId)
-      )
+      if (placement === 'join' && !turn.nextTurnId && turn.state !== 'stopping')
         return turn
       const following = turn.nextTurnId
         ? await this.transaction.turn(turn.nextTurnId)

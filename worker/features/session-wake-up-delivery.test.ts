@@ -43,7 +43,10 @@ it('fires once at its deadline, joins the turn, and permits the same intent to s
   await actor.advanceStartAlarm(at - 1)
   expect(await wakeUpEvents(active)).toHaveLength(1)
   await actor.advanceStartAlarm(at)
-  const messageId = `session-wake-up:${wakeUp.id}`
+  const [, fired] = await wakeUpEvents(active)
+  if (fired?.type !== 'session.wake-up-fired')
+    throw new Error('The fired wake-up is missing.')
+  const { messageId } = fired
   expect(await active.sourceRunner.inbox.next()).toMatchObject({
     type: 'message',
     turnId: active.sourceTurnId,
@@ -51,7 +54,7 @@ it('fires once at its deadline, joins the turn, and permits the same intent to s
     message: {
       id: messageId,
       sender: { id: 'member' },
-      text: 'Wake-up: Check the result',
+      text: 'Wake-up:\n\nCheck the result',
     },
   })
   await actor.advanceStartAlarm(at + 1)
@@ -65,7 +68,7 @@ it('fires once at its deadline, joins the turn, and permits the same intent to s
     },
   ])
   expect(
-    (await wakeUpTranscript(active)).match(/Wake-up: Check the result/g),
+    (await wakeUpTranscript(active)).match(/Wake-up:\n\nCheck the result/g),
   ).toHaveLength(1)
   const cancel = agentWakeUpPaths.cancel(
     undefined,
@@ -79,7 +82,7 @@ it('fires once at its deadline, joins the turn, and permits the same intent to s
   await actor.advanceStartAlarm(at + 1)
   expect(await active.sourceRunner.inbox.next()).toMatchObject({
     type: 'message',
-    message: { text: 'Wake-up: Check the result' },
+    message: { text: 'Wake-up:\n\nCheck the result' },
   })
 })
 
@@ -184,7 +187,7 @@ it('keeps the sender of the turn that receives a wake-up set by an earlier sende
   expect(await active.sourceRunner.inbox.next()).toMatchObject({
     type: 'message',
     turnId,
-    message: { sender: { id: 'owner' }, text: 'Wake-up: Check the result' },
+    message: { sender: { id: 'owner' }, text: 'Wake-up:\n\nCheck the result' },
   })
 })
 

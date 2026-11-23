@@ -42,14 +42,11 @@ export async function acceptSessionWatchNotice(
   )
   return operation.change(async (view) => {
     await view.watches.assertActive(generation)
-    const { session, user } = admitted
-    const messageId = `session-watch:${watch.id}`
-    const turnId = await saveWakeMessage(
+    const { session } = admitted
+    const { messageId, turnId } = await saveWakeMessage(
       view,
-      session,
-      user,
+      admitted,
       {
-        id: messageId,
         text: wakeText(wakeWords(watch.state, watch.reason ?? undefined), link),
         watchId: watch.id,
       },

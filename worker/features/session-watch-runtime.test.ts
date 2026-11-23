@@ -27,8 +27,11 @@ import {
 } from './agent-session-writes.test-support'
 import type { Workspace } from './entry.test-support'
 import { readWorkspace } from '../lifecycle/workspace-data'
+import { DEVICE_TEST_NOW } from '../devices/clock.test-support'
+import { IDLE_MS } from '../lifecycle/durable-types'
 import type { WorkspaceStartResult } from '../lifecycle/start-types'
 import { providerForAccount } from '../sandbox/client'
+import { endCallingTurn, readyWakeCaller } from './session-wake-up.test-support'
 
 let bundle: string
 let fixture: AgentWriteFixture | undefined
@@ -122,55 +125,29 @@ async function notice(
   }
 }
 
+async function finishWatched() {
+  watched.runner.emit({
+    type: 'turn.completed',
+    sessionId: watched.sessionId,
+    turnId: watched.turnId,
+    state: 'finished',
+    durationMs: 1,
+    files: [],
+    omittedFileCount: 0,
+    userMessageIds: ['owner-starting-message'],
+  })
+  await watched.runner.inbox.next()
+  await watched.actor.advanceStartAlarm()
+}
+
 describe('normal watch resume', () => {
   let caller: DurableObjectStub<Workspace>
   beforeEach(async () => {
-    caller = await active.actor()
-    await active.env.DB.batch([
-      active.env.DB.prepare(
-        'UPDATE workspace_runtime SET created_by_user_id = ?, session_id = ?, first_turn_id = ?, first_message_id = ? WHERE workspace_id = ?',
-      ).bind(
-        'member',
-        active.sourceSessionId,
-        active.sourceTurnId,
-        'member-starting-message',
-        OUTER_WORKSPACE,
-      ),
-      active.env.DB.prepare(
-        'UPDATE workspaces SET sandbox_id = ? WHERE id = ?',
-      ).bind('bx_watch_caller', OUTER_WORKSPACE),
-    ])
-    active.boat.states.set('bx_watch_caller', 'running')
-    await caller.initializeLifecycle({
-      workspaceId: OUTER_WORKSPACE,
-      orgId: OUTER_ORG,
-      firstMessage: {
-        id: 'member-starting-message',
-        text: 'Start this turn',
-        choice: CLAUDE,
-        attachmentIds: [],
-      },
-      firstTurn: {
-        sessionId: active.sourceSessionId,
-        turnId: active.sourceTurnId,
-        senderUserId: 'member',
-      },
-    })
-    await caller.beginLifecycleStart('create')
-    await caller.lifecyclePrepared()
-    await caller.reportRunnerLifecycle({ type: 'runner.ready' })
-    await caller.acknowledgeLifecycleFirstMessage()
-    active.sourceRunner.emit({
-      type: 'turn.completed',
-      sessionId: active.sourceSessionId,
-      turnId: active.sourceTurnId,
-      state: 'finished',
-      durationMs: 1,
-      files: [],
-      omittedFileCount: 0,
-      userMessageIds: ['member-starting-message'],
-    })
-    await active.sourceRunner.inbox.next()
+    caller = await readyWakeCaller(active, 'bx_watch_caller')
+    await endCallingTurn(active)
+  })
+
+  it('resumes a stopped caller through normal admission and delivers ordinary runner text for the setter', async () => {
     const row = await readWorkspace(active.env.DB, OUTER_ORG, OUTER_WORKSPACE)
     if (!row.sandboxId) throw new Error('The caller computer is missing.')
     await providerForAccount(
@@ -180,21 +157,7 @@ describe('normal watch resume', () => {
     ).stop(row.sandboxId)
     await closeSockets(active.sourceRunner.socket)
     await caller.lifecycleStopped()
-  })
-
-  it('resumes a stopped caller through normal admission and delivers ordinary runner text for the setter', async () => {
-    watched.runner.emit({
-      type: 'turn.completed',
-      sessionId: watched.sessionId,
-      turnId: watched.turnId,
-      state: 'finished',
-      durationMs: 1,
-      files: [],
-      omittedFileCount: 0,
-      userMessageIds: ['owner-starting-message'],
-    })
-    await watched.runner.inbox.next()
-    await watched.actor.advanceStartAlarm()
+    await finishWatched()
     const accepted = await notice(active, caller, watched.watchId)
     expect(await caller.readLifecycle()).toMatchObject({
       state: 'starting',
@@ -236,6 +199,38 @@ describe('normal watch resume', () => {
     } finally {
       await closeSockets(connected.webSocket)
     }
+  })
+
+  it('keeps a watch receipt pending through an unconfirmed idle stop and resumes after it settles', async () => {
+    const idleAt = DEVICE_TEST_NOW + IDLE_MS
+    active.boat.stopReplyState = 'archiving'
+    await caller.advanceStartAlarm(idleAt)
+    await closeSockets(active.sourceRunner.socket)
+    await caller.inspectFeatureConnections()
+    expect(active.boat.stopIds).toEqual(['bx_watch_caller'])
+    expect(await caller.readLifecycle()).toMatchObject({
+      state: 'ready',
+      runnerConnected: false,
+    })
+
+    await finishWatched()
+    const accepted = await notice(active, caller, watched.watchId)
+    expect(accepted.receipt.resume).toBe('pending')
+    expect(active.boat.resumeIds).toEqual([])
+
+    active.boat.states.set('bx_watch_caller', 'archived')
+    active.boat.stopReplyState = 'archived'
+    await caller.advanceStartAlarm(idleAt + 30_000)
+    expect(await caller.readLifecycle()).toMatchObject({
+      state: 'starting',
+      start: { kind: 'resume' },
+    })
+    const resumed = await notice(active, caller, watched.watchId)
+    expect(resumed.receipt).toMatchObject({
+      resume: 'handed-off',
+      messageId: accepted.receipt.messageId,
+    })
+    expect(resumed.event).toEqual(accepted.event)
   })
 })
 

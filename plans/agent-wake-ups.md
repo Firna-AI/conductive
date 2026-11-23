@@ -176,7 +176,7 @@ The mockups made these calls on 23 November 2026. Each is a mockup call, not a u
 
 - The adapter sets `disallowedTools` for the four cron tools. It also sets `CLAUDE_CODE_DISABLE_CRON=1`, which stops the scheduler. A real SDK run checks both, because the SDK does not document the variable.
 - The adapter sets `skillOverrides: { loop: 'off' }`, so that neither the model nor a member gets `/loop`.
-- The Stop hook and its note stay for background tasks. The cron set and the `session_crons` read stay as the guard of decision 1 D. The note names each in-process wake-up once and asks the agent to set it again with the Conductive call. The runner logs a warning, and the turn does not wait for such a wake-up.
+- The Stop hook and its note stay for background tasks. The hook passes the current `session_crons` directly to the note as the guard of decision 1 D. The note names each in-process wake-up once and asks the agent to set it again with the Conductive call. The runner logs a warning, and the turn does not wait for such a wake-up.
 - Stored data: an older run can have left durable jobs in `.claude/scheduled_tasks.json` in the repository folder. The switches stop these jobs, and the program never fires them. The pull request names this as a breaking change.
 
 ## Recorded design calls

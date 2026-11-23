@@ -153,10 +153,10 @@ export function createClaudeFactory(
                       hook.hook_event_name === 'Stop' &&
                       !hook.agent_id
                     ) {
-                      background.stop(hook.session_crons ?? [])
+                      background.stop()
                       const context = note.context(
                         hook.background_tasks ?? [],
-                        background.sessionCrons,
+                        hook.session_crons ?? [],
                       )
                       if (context !== undefined) {
                         options.backgroundNotes?.([

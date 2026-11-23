@@ -223,17 +223,18 @@ export class SessionWakeUps {
   ): Promise<boolean> {
     if (!(await wakeUpOrgActive(this.env.DB, receipt.orgId))) return false
     const { chat, controller, now } = this.integration
-    await resumeWakeDelivery(
+    const resume = await resumeWakeDelivery(
       chat,
       operation,
       receipt,
-      async (senderId) =>
-        (await admitWake(operation, receipt, this.env, senderId)).kind ===
+      async (turn) =>
+        (await admitWake(operation, receipt, this.env, turn)).kind ===
         'admitted',
       this.env,
       controller,
       now,
     )
+    if (resume === 'settling') return false
     await operation.change(async (view) => {
       await view.wakeUps.assertActive(generation)
       await view.wakeUps.finishResume(receipt.id)

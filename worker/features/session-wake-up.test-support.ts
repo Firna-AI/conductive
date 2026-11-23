@@ -6,6 +6,7 @@ import { sessionTranscriptPath } from '../../src/shared/sessions'
 import { agentWakeUpPaths } from '../../src/shared/wake-up-paths'
 import { readNewestStoredEvents } from '../../src/chat/api/read-workspace'
 import { readSessionWakeUps } from '../../src/chat/api/read-wake-up'
+import { CLAUDE } from '../chat/harness.test-support'
 import { record } from '../chat/inputs'
 import { OUTER_MACHINE_ORIGIN } from '../chat/integration/outer-runtime.test-support'
 import {
@@ -14,6 +15,48 @@ import {
   OUTER_WORKSPACE,
 } from '../chat/integration/outer-seed.test-support'
 import type { AgentWriteFixture } from './agent-session-writes.test-support'
+
+export async function readyWakeCaller(
+  active: AgentWriteFixture,
+  sandbox: string,
+) {
+  const actor = await active.actor()
+  await active.env.DB.batch([
+    active.env.DB.prepare(
+      'UPDATE workspace_runtime SET created_by_user_id = ?, session_id = ?, first_turn_id = ?, first_message_id = ? WHERE workspace_id = ?',
+    ).bind(
+      'member',
+      active.sourceSessionId,
+      active.sourceTurnId,
+      'member-starting-message',
+      OUTER_WORKSPACE,
+    ),
+    active.env.DB.prepare(
+      'UPDATE workspaces SET sandbox_id = ? WHERE id = ?',
+    ).bind(sandbox, OUTER_WORKSPACE),
+  ])
+  active.boat.states.set(sandbox, 'running')
+  await actor.initializeLifecycle({
+    workspaceId: OUTER_WORKSPACE,
+    orgId: OUTER_ORG,
+    firstMessage: {
+      id: 'member-starting-message',
+      text: 'Start this turn',
+      choice: CLAUDE,
+      attachmentIds: [],
+    },
+    firstTurn: {
+      sessionId: active.sourceSessionId,
+      turnId: active.sourceTurnId,
+      senderUserId: 'member',
+    },
+  })
+  await actor.beginLifecycleStart('create')
+  await actor.lifecyclePrepared()
+  await actor.reportRunnerLifecycle({ type: 'runner.ready' })
+  await actor.acknowledgeLifecycleFirstMessage()
+  return actor
+}
 
 export function getTool(active: AgentWriteFixture, path: string) {
   return active.runtime.dispatchFetch(`${OUTER_MACHINE_ORIGIN}${path}`, {

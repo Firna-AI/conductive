@@ -97,7 +97,7 @@ it('retries the notice current message mapping after continuation moves it', asy
   await f.fire()
   expect(await f.receipt()).toMatchObject({
     state: 'accepted',
-    resume: 'waiting',
+    resume: 'pending',
   })
   expect(await f.notices()).toHaveLength(1)
 })

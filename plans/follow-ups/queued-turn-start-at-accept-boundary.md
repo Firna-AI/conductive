@@ -1,11 +1,12 @@
 # Each queued turn must start its computer itself
 
-- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-16, from branch `calummoore/quito-0ojg` (pull request #379), the wider fix of review finding 1.
 - **Updated:** 2026-11-20, from read-only watch-call research. The additional resume-recovery gap below has not been reproduced.
-- **Location:** `worker/chat/` (the paths that save a turn or a message command), `worker/tools/session-write-composition.ts`, and the late notice helper of `worker/secrets/`.
-- **Reason:** The fix reaches the shared message accept path outside the agent secrets change, and the direct fix already covers the late answers of secrets.
+- **Updated:** 2026-11-23, from the review of `calummoore/agent-scheduling-wake-future-nlp0`. The shared boundary also covers watch wakes and scheduled wake-ups.
+- **Location:** `worker/chat/session-watches.ts`, `worker/chat/session-wake-ups.ts`, `worker/chat/wake-resume.ts`, `worker/tools/session-write-composition.ts`, and `worker/secrets/notice-delivery.ts`.
+- **Reason:** The shared fix changes admission for every automatically queued turn. The direct wake-up and watch fixes keep their own retry.
 
 - **Terms:**
   - **Late notice:** the app line that tells an agent of a late answer to a secret request, and that starts or joins a turn.
@@ -19,14 +20,18 @@
   - `worker/secrets/runtime.ts` saves an accepted late notice before it calls `deliverSecretNotice`. That helper can then fail during the resume in `worker/secrets/notice-delivery.ts`.
   - Recovery in `worker/secrets/request-reconcile.ts` collects an allowed late answer only while its notice is null. A stored sent notice does not enter that retry path.
   - The secret scheduler tracks waiting requests and temporary value expiry. It does not keep a pending resume for an accepted notice. A transient resume failure can therefore leave no durable retry intent. This case needs reproduction.
+  - A scheduled wake-up commits its fired line and message with a resume record. A watch wake commits its line and message with an accepted receipt.
+  - The two paths use `worker/chat/wake-resume.ts` for the same runner check and start. Each path keeps its own pending record and alarm while a stop settles or the lifecycle refuses to start.
+  - The Worker hands work to a connected runner or to an accepted start. A failed first start waits for a member to press Try again.
 - **Problem:** A new server path that queues a turn can still forget the start, because each path must call a helper. A path can also lose its resume retry after it commits acceptance.
-- **Impact if no action:** A future path can queue a turn that never runs until a manual Resume, as the late notice did.
+- **Impact if no action:** A new path can leave an accepted turn waiting for a manual Resume. Each existing path must keep its own retry and lifecycle rules in sync.
 - **Root question:** How does each turn that the server queues reach a ready computer, without each path having to remember it?
 - **Options:**
   - **A.** Keep a helper for each path, and check each new path in review. Effort: Small.
-  - **B.** Make the start the default at the accept boundary. After an operation saves a turn or a message command, and the chat queue releases, one step flushes a connected runner, or else starts the computer in the cases of an open. Keep that start intent durable until dispatch, accepted start enqueue, or an intentional policy wait. The browser message path opts out, because the open in the app already starts the computer. The session-tool path reports the result of this step, so its `resume` reply stays the same. Effort: Medium.
+  - **B.** Make the start the default at the accept boundary. Save the start intent with each accepted automatic turn or message command. After the chat queue releases, flush a connected runner or start the computer in the cases of an open. Keep the intent until handoff, accepted start, or a deliberate wait such as Try again. Move scheduled wake-ups, watch wakes, late secret answers, and session-tool writes to this path. The browser message path opts out because the app open already starts the computer. Session-tool writes keep their `resume` reply. Effort: Large.
 - **Left out:** A computer that starts whenever any queued turn exists, because a turn that cannot dispatch would restart the computer after each idle stop.
 - **Wider fix:** B. It removes the class, because no path can skip the step.
-- **Previous examples:** Review finding 1 of `calummoore/quito-0ojg`, the late notice of a secret request. `plans/follow-ups/runner-liveness-after-provider-stop.md` records another stall of an accepted turn after a stop, with a different cause.
+- **Previous examples:** The late notice of a secret request first exposed the gap. The scheduled wake-up and watch resume tests also cover a stop that disconnects the runner before the workspace reports Stopped.
+- **Related:** `plans/follow-ups/runner-liveness-after-provider-stop.md` covers a stop where the runner connection still appears open.
 - **Recommendation:** B. It makes the right behaviour the default for every path.
-- **Action:** fix after merge, apply B, because it changes shared chat code outside the agent secrets change.
+- **Action:** fix after merge, apply B, because it changes the shared chat boundary across all the automatic inputs.

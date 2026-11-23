@@ -164,23 +164,39 @@ export class SessionMarkdown {
       if (entry.kind === 'item') {
         // The note of a Continue or of a repository change belongs to no
         // turn, so it has no heading.
-        const { kind } = entry.item
+        const { item } = entry
+        const { kind } = item
+        const watchFirstMessage =
+          kind === 'wake'
+            ? transcriptLookups(transcript).turns.get(item.notice.turnId)?.turn
+                .messageIds[0]
+            : undefined
+        const joinedWatch =
+          kind === 'wake' &&
+          watchFirstMessage !== undefined &&
+          watchFirstMessage !== item.notice.messageId
         if (
+          !joinedWatch &&
           kind !== 'continued' &&
           kind !== 'repository-changed' &&
           kind !== 'wake-up'
         ) {
-          heading(turnOf(transcript, entry.item))
+          heading(turnOf(transcript, item))
         }
         blocks.push(
           itemMarkdown(
-            entry.item,
+            item,
             transcript,
             readers,
             this.document.linkContext,
             orgName,
           ),
         )
+        if (
+          joinedWatch ||
+          (kind === 'wake-up' && item.notice.type === 'session.wake-up-fired')
+        )
+          headed = undefined
       } else if (entry.kind === 'insert') {
         heading(entry.insert.content.turnId)
         blocks.push(insertMarkdown(entry.insert.content))

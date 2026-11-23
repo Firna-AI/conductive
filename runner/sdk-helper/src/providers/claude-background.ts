@@ -1,12 +1,9 @@
-import type { SessionCronSummary } from '@anthropic-ai/claude-agent-sdk'
-
 import type { ProviderEvent } from '../generated/ProviderEvent'
 
 /** Process-local level signals. A removed task can still have a queued reply. */
 export class ClaudeBackground {
   private tasks = new Set<string>()
   private ambient = new Set<string>()
-  private crons: readonly SessionCronSummary[] = []
   private idle = false
   private observed = false
   private readonly emit: (event: ProviderEvent) => void
@@ -37,14 +34,9 @@ export class ClaudeBackground {
     return this.ambient.has(id)
   }
 
-  get sessionCrons(): readonly SessionCronSummary[] {
-    return this.crons
-  }
-
-  stop(crons: readonly SessionCronSummary[]): void {
+  stop(): void {
     this.idle = false
     this.emit({ type: 'activity', idle: false })
-    this.crons = crons
     this.publish()
   }
 

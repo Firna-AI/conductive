@@ -8,17 +8,18 @@ import { resumeWorkspace } from '../lifecycle/workspace-resume'
 import type { WorkspaceChat } from './backend'
 import type { ChatOperation } from './operation'
 import { watchEnd } from './session-watch-end'
+import type { StoredTurn } from './types'
 
 /** Follow the message if an unanswered command moved to a new turn. */
 export async function resumeWakeDelivery(
   chat: WorkspaceChat,
   operation: ChatOperation,
   delivery: { messageId: string; orgId: string },
-  authorize: (senderId: string) => Promise<boolean>,
+  authorize: (turn: StoredTurn) => Promise<boolean>,
   env: AppEnv,
   controller: WorkspaceController,
   now: () => number,
-): Promise<'cancelled' | 'handed-off' | 'waiting'> {
+): Promise<'cancelled' | 'handed-off' | 'settling' | 'waiting'> {
   const turnId = await operation.read((view) =>
     view.messageTurn(delivery.messageId),
   )
@@ -26,7 +27,7 @@ export async function resumeWakeDelivery(
     ? await operation.read((view) => view.turn(turnId))
     : undefined
   if (!turn || watchEnd(turn.state)) return 'cancelled'
-  if (!(await authorize(turn.senderId))) return 'cancelled'
+  if (!(await authorize(turn))) return 'cancelled'
   const commands = await operation.read((view) => view.pending())
   if (
     !commands.some(
@@ -51,9 +52,14 @@ export async function resumeWakeDelivery(
   }
   const detail = await workspaceResponse(runtime, delivery.orgId, workspaceId)
   if (resumesAtOpen(detail)) {
-    await resumeWorkspace(runtime, delivery.orgId, workspaceId, turn.senderId)
-    return 'handed-off'
+    const resumed = await resumeWorkspace(
+      runtime,
+      delivery.orgId,
+      workspaceId,
+      turn.senderId,
+    )
+    return resumed.workspace.state === 'starting' ? 'handed-off' : 'settling'
   }
   if (detail.workspace.state === 'starting') return 'handed-off'
-  return 'waiting'
+  return detail.workspace.state === 'error' ? 'waiting' : 'settling'
 }

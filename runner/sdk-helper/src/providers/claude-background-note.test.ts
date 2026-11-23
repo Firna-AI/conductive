@@ -1,7 +1,8 @@
 import type { StopHookInput } from '@anthropic-ai/claude-agent-sdk'
-import { expect, it } from 'vitest'
+import { expect, it, onTestFinished, vi } from 'vitest'
 
 import { backgroundFixture } from '../../test-support/background'
+import { ClaudeBackground } from './claude-background'
 
 async function fixture() {
   const h = await backgroundFixture()
@@ -190,6 +191,10 @@ it('ignores absent, completed, and ambient work without marking it as already na
 
 it('warns once for a cron-only stop and keeps the live work signal false', async () => {
   const h = await fixture()
+  const backgroundStop = vi.spyOn(ClaudeBackground.prototype, 'stop')
+  onTestFinished(() => {
+    backgroundStop.mockRestore()
+  })
   const input = {
     session_crons: [
       {
@@ -214,4 +219,5 @@ it('warns once for a cron-only stop and keeps the live work signal false', async
     { type: 'background', live: false, idle: false },
     { type: 'background', live: false, idle: false },
   ])
+  expect(backgroundStop.mock.calls).toEqual([[], []])
 })

@@ -1,12 +1,16 @@
-import type { Session } from '../../src/shared/generated/Session'
 import type { WakeUpFailure } from '../../src/shared/generated/WakeUpFailure'
-import type { User } from '../../src/shared/api'
 import { readUser } from '../data/users'
 import type { AppEnv } from '../env'
 import { memberSender } from '../tools/store'
 import { SenderAccessDenied } from './login-access'
+import {
+  resolveNoticeDestination,
+  type AdmittedNotice,
+  type NoticeDestination,
+} from './notice-destination'
 import type { ChatOperation } from './operation'
 import { findChatWorkspace } from './queries'
+import type { StoredTurn } from './types'
 
 interface WakeOrigin {
   orgId: string
@@ -14,15 +18,14 @@ interface WakeOrigin {
   senderUserId: string
 }
 
-type WakeAdmission =
-  { kind: 'admitted'; session: Session; user: User } | WakeUpFailure
+type WakeAdmission = ({ kind: 'admitted' } & AdmittedNotice) | WakeUpFailure
 
 /** The caller holds the chat queue. A running turn keeps its sender. */
 export async function admitWake(
   operation: ChatOperation,
   origin: WakeOrigin,
   env: AppEnv,
-  senderId?: string,
+  retryTurn?: Pick<StoredTurn, 'id' | 'senderId'>,
 ): Promise<WakeAdmission> {
   const workspace = await findChatWorkspace(
     env.DB,
@@ -32,15 +35,13 @@ export async function admitWake(
   if (!workspace || workspace.archivedAt !== null) return { kind: 'archived' }
   const source = await operation.read((view) => view.session(origin.sessionId))
   if (!source || source.closedAt !== null) return { kind: 'session-closed' }
-  const activeTurnId = source.activeTurnId
-  const active = activeTurnId
-    ? await operation.read((view) => view.turn(activeTurnId))
-    : undefined
-  const selectedSender =
-    senderId ??
-    (active?.state === 'running' ? active.senderId : origin.senderUserId)
-  const member = await memberSender(env.DB, origin.orgId, selectedSender)
-  const user = member ? await readUser(env.DB, selectedSender) : null
+  const destination: NoticeDestination = retryTurn
+    ? { kind: 'existing', turnId: retryTurn.id, senderId: retryTurn.senderId }
+    : await operation.read((view) =>
+        resolveNoticeDestination(view, source, origin.senderUserId),
+      )
+  const member = await memberSender(env.DB, origin.orgId, destination.senderId)
+  const user = member ? await readUser(env.DB, destination.senderId) : null
   if (!user) return { kind: 'sender-unavailable' }
   try {
     const observed = await operation.logins.observe(
@@ -49,7 +50,7 @@ export async function admitWake(
       user.id,
     )
     if (observed.login)
-      return { kind: 'admitted', session: observed.session, user }
+      return { kind: 'admitted', session: observed.session, user, destination }
     if (observed.session.loginAvailable && !observed.session.loginShared)
       return { kind: 'login-not-shared' }
     return {

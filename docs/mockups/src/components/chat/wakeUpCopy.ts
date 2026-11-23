@@ -20,11 +20,11 @@ export const wakeUpLead = 'Wake-up:'
 
 /**
  * @public The text of the wake-up line for the agent, a copy, and
- * `read_session`: the lead, then the text that the agent set. The agent
- * gets it as a message, with its `Sent by:` line.
+ * `read_session`: the lead in its own paragraph, then the agent's text.
+ * The agent gets it as a message, with its `Sent by:` line.
  */
 export function wakeUpText(text: string): string {
-  return `${wakeUpLead} ${text}`
+  return `${wakeUpLead}\n\n${text}`
 }
 
 /** The words of the pending wake-ups above the composer. */

@@ -2,12 +2,8 @@ import { afterEach, beforeAll, expect, it } from 'vitest'
 
 import { agentWakeUpPaths } from '../../src/shared/wake-up-paths'
 import { closeSockets } from '../chat/adapter-sockets.test-support'
-import { CLAUDE } from '../chat/harness.test-support'
 import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
-import {
-  OUTER_ORG,
-  OUTER_WORKSPACE,
-} from '../chat/integration/outer-seed.test-support'
+import { OUTER_WORKSPACE } from '../chat/integration/outer-seed.test-support'
 import {
   OuterFakeRunner,
   requestRunner,
@@ -17,6 +13,7 @@ import {
   prepareWorkspaceStart,
 } from '../chat/integration/workspace-start.test-support'
 import { DEVICE_TEST_NOW } from '../devices/clock.test-support'
+import { IDLE_MS, LIFECYCLE_STATE_KEY } from '../lifecycle/durable-types'
 import type { WorkspaceStartResult } from '../lifecycle/start-types'
 import {
   agentWriteFixture,
@@ -25,6 +22,7 @@ import {
 import {
   endCallingTurn,
   getTool,
+  readyWakeCaller,
   scheduleWakeUp,
   wakeUpEvents,
 } from './session-wake-up.test-support'
@@ -47,47 +45,10 @@ function setSandbox(active: AgentWriteFixture, id: string | null) {
     .run()
 }
 
-async function readyComputer(active: AgentWriteFixture, sandbox: string) {
-  const actor = await active.actor()
-  await active.env.DB.prepare(
-    'UPDATE workspace_runtime SET created_by_user_id = ?, session_id = ?, first_turn_id = ?, first_message_id = ? WHERE workspace_id = ?',
-  )
-    .bind(
-      'member',
-      active.sourceSessionId,
-      active.sourceTurnId,
-      'member-starting-message',
-      OUTER_WORKSPACE,
-    )
-    .run()
-  await setSandbox(active, sandbox)
-  active.boat.states.set(sandbox, 'running')
-  await actor.initializeLifecycle({
-    workspaceId: OUTER_WORKSPACE,
-    orgId: OUTER_ORG,
-    firstMessage: {
-      id: 'member-starting-message',
-      text: 'Start this turn',
-      choice: CLAUDE,
-      attachmentIds: [],
-    },
-    firstTurn: {
-      sessionId: active.sourceSessionId,
-      turnId: active.sourceTurnId,
-      senderUserId: 'member',
-    },
-  })
-  await actor.beginLifecycleStart('create')
-  await actor.lifecyclePrepared()
-  await actor.reportRunnerLifecycle({ type: 'runner.ready' })
-  await actor.acknowledgeLifecycleFirstMessage()
-  return actor
-}
-
 it('keeps the wake-up through an idle stop and retries one accepted message on resume', async () => {
   const active = (fixture = await agentWriteFixture(bundle))
   const sandbox = 'bx_wake_up'
-  const actor = await readyComputer(active, sandbox)
+  const actor = await readyWakeCaller(active, sandbox)
   const idleAt = DEVICE_TEST_NOW + 30 * 60_000
   const at = idleAt + 60_000
   const { wakeUp } = await scheduleWakeUp(active, {
@@ -109,8 +70,8 @@ it('keeps the wake-up through an idle stop and retries one accepted message on r
   const fired = (await wakeUpEvents(active)).find(
     (event) => event.type === 'session.wake-up-fired',
   )
-  const messageId = `session-wake-up:${wakeUp.id}`
-  expect(fired).toMatchObject({ wakeUpId: wakeUp.id, messageId })
+  if (!fired) throw new Error('The fired wake-up is missing.')
+  expect(fired.wakeUpId).toBe(wakeUp.id)
   expect(active.boat.resumeIds).toEqual([])
 
   await setSandbox(active, sandbox)
@@ -121,8 +82,7 @@ it('keeps the wake-up through an idle stop and retries one accepted message on r
   })
   await prepareWorkspaceStart(actor)
   const connected = await requestRunner(active)
-  if (!connected.webSocket || !fired)
-    throw new Error('The resumed turn is missing.')
+  if (!connected.webSocket) throw new Error('The resumed turn is missing.')
   try {
     const runner = new OuterFakeRunner(connected.webSocket, OUTER_WORKSPACE, {
       streamId: 'wake-up-resume',
@@ -145,8 +105,8 @@ it('keeps the wake-up through an idle stop and retries one accepted message on r
       sessionId: active.sourceSessionId,
       wakeUp: true,
       message: {
-        id: messageId,
-        text: 'Wake-up: Check the result after idle',
+        id: fired.messageId,
+        text: 'Wake-up:\n\nCheck the result after idle',
         sender: { id: 'member' },
       },
     })
@@ -162,4 +122,76 @@ it('keeps the wake-up through an idle stop and retries one accepted message on r
   } finally {
     await closeSockets(connected.webSocket)
   }
+})
+
+it('retries a scheduled wake-up after an unconfirmed idle stop settles', async () => {
+  const active = (fixture = await agentWriteFixture(bundle))
+  const sandbox = 'bx_wake_up'
+  const actor = await readyWakeCaller(active, sandbox)
+  const idleAt = DEVICE_TEST_NOW + IDLE_MS
+  const at = idleAt + 5_000
+  const { wakeUp } = await scheduleWakeUp(active, {
+    at,
+    text: 'Check after idle',
+  })
+  await endCallingTurn(active)
+  active.boat.stopReplyState = 'archiving'
+  await actor.advanceStartAlarm(idleAt)
+  await closeSockets(active.sourceRunner.socket)
+  await actor.inspectFeatureConnections()
+  expect(active.boat.stopIds).toEqual([sandbox])
+  expect(await actor.readLifecycle()).toMatchObject({
+    state: 'ready',
+    runnerConnected: false,
+  })
+  await actor.advanceStartAlarm(at)
+  const events = await wakeUpEvents(active)
+  expect(events).toMatchObject([
+    { type: 'session.wake-up-scheduled' },
+    { type: 'session.wake-up-fired', wakeUpId: wakeUp.id },
+  ])
+  expect(active.boat.resumeIds).toEqual([])
+
+  active.boat.states.set(sandbox, 'archived')
+  active.boat.stopReplyState = 'archived'
+  await actor.advanceStartAlarm(at + 30_000)
+  expect(await actor.readLifecycle()).toMatchObject({
+    state: 'starting',
+    start: { kind: 'resume' },
+  })
+  expect(await wakeUpEvents(active)).toEqual(events)
+})
+
+it('retains a scheduled wake-up after lifecycle admission refuses its resume', async () => {
+  const active = (fixture = await agentWriteFixture(bundle))
+  const sandbox = 'bx_wake_up'
+  const actor = await readyWakeCaller(active, sandbox)
+  const at = DEVICE_TEST_NOW + 60_000
+  await scheduleWakeUp(active, { at, text: 'Check after the pending stop' })
+  await endCallingTurn(active)
+  await closeSockets(active.sourceRunner.socket)
+  await actor.inspectFeatureConnections()
+  await actor.lifecycleStopped()
+  const stopped = await actor.readLifecycle()
+  if (!stopped) throw new Error('The lifecycle state is missing.')
+  active.boat.stopReplyState = 'archiving'
+  active.boat.states.set(sandbox, 'archiving')
+  await actor.seedFeatureState({
+    [LIFECYCLE_STATE_KEY]: { ...stopped, startStop: 'pending' },
+  })
+  await actor.advanceStartAlarm(at)
+  expect(await actor.readLifecycle()).toMatchObject({
+    state: 'stopped',
+    startStop: 'pending',
+  })
+  expect(active.boat.resumeIds).toEqual([])
+
+  active.boat.states.set(sandbox, 'archived')
+  active.boat.stopReplyState = 'archived'
+  await actor.lifecycleStopped()
+  await actor.advanceStartAlarm(at + 30_000)
+  expect(await actor.readLifecycle()).toMatchObject({
+    state: 'starting',
+    start: { kind: 'resume' },
+  })
 })

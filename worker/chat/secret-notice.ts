@@ -12,9 +12,9 @@ import { memberSender } from '../tools/store'
 import type { AppEnv } from '../env'
 import { SenderAccessDenied } from './login-access'
 import type { StoredSecretRequest } from '../secrets/request-records'
+import { resolveNoticeDestination, turnForNotice } from './notice-destination'
 import type { ChatOperation } from './operation'
 import type { ChatDependencies } from './types'
-import { TurnLifecycle } from './turn-lifecycle'
 
 function unavailable(
   reason: SecretNoticeFailure,
@@ -36,12 +36,10 @@ export async function acceptSecretNotice(
   const source = await operation.read((view) => view.session(request.sessionId))
   if (!source || source.closedAt !== null)
     return unavailable('login-unavailable')
-  const activeTurnId = source.activeTurnId
-  const active = activeTurnId
-    ? await operation.read((view) => view.turn(activeTurnId))
-    : undefined
-  const senderId =
-    active?.state === 'running' ? active.senderId : request.sender.id
+  const destination = await operation.read((view) =>
+    resolveNoticeDestination(view, source, request.sender.id),
+  )
+  const { senderId } = destination
   const member = await memberSender(env.DB, record.orgId, senderId)
   const user = member ? await readUser(env.DB, senderId) : null
   if (!user) return unavailable('sender-unavailable')
@@ -76,8 +74,9 @@ export async function acceptSecretNotice(
     const session = await view.session(source.id)
     if (!session || session.closedAt !== null)
       return unavailable('login-unavailable')
-    const turn = await new TurnLifecycle(view, session).select(
-      senderId,
+    const turn = await turnForNotice(
+      view,
+      { session, user, destination },
       dependencies.randomId,
     )
     const message: UserMessage = {
@@ -100,7 +99,6 @@ export async function acceptSecretNotice(
     turn.messageIds.push(id)
     await view.saveTurn(turn)
     await view.saveMessageTurn(id, turn.id)
-    await view.saveNewestTurn(session.id, turn.id)
     await view.saveCommand({
       type,
       commandId: dependencies.randomId(),
