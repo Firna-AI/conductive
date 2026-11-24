@@ -1,3 +1,4 @@
+import { OWN_COMPUTER_INSTALL_PATH } from '../../src/shared/own-computers'
 import {
   APP_HOST_PAGES,
   SITE_FOLDER,
@@ -5,6 +6,7 @@ import {
 } from '../../src/shared/site-build'
 import { isSiteAsset, siteAssetResponse } from './assets'
 import { readSiteFiles, type SiteAssets } from './files'
+import { installComputerResponse } from './install-computer'
 import { pageResponse, siteUnavailable } from './page'
 
 export async function siteResponse(
@@ -15,10 +17,12 @@ export async function siteResponse(
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return new Response(null, { status: 405, headers: { Allow: 'GET, HEAD' } })
   }
+  const path = new URL(request.url).pathname
+  if (path === OWN_COMPUTER_INSTALL_PATH)
+    return installComputerResponse(request)
   try {
     if (!site.assets) return siteUnavailable()
     const files = await readSiteFiles(site.assets)
-    const path = new URL(request.url).pathname
     const assetPath = path === '/favicon.ico' ? SITE_ICONS.faviconIco : path
     const prefix = `/${SITE_FOLDER}/`
     if (assetPath.startsWith(prefix)) {
