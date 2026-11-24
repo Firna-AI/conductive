@@ -1268,25 +1268,29 @@ Evidence and review reports: `.context/own-computers/m10/` and
 
 Depends on: 3, 10
 
-- [ ] Add the computer mode of `conductive`: the install command, the
+- [x] Add the computer mode of `conductive`: the install command, the
       rootless Podman check, the systemd user service, and the health
       report.
       Branch: calummoore/own-computers-milestone-11-host-program-3jbp
-- [ ] Publish the signed container base image with each deploy.
+- [x] Publish the signed container base image with each deploy.
       Branch: calummoore/own-computers-milestone-11-host-program-3jbp
-- [ ] Add the container operations, with the bootstrap operation.
+- [x] Add the container operations, with the bootstrap operation.
       Branch: calummoore/own-computers-milestone-11-host-program-3jbp
-- [ ] Report the vCPUs, the memory, and the system of the computer at each
+- [x] Report the vCPUs, the memory, and the system of the computer at each
       connection, for the Own computers tab.
       Branch: calummoore/own-computers-milestone-11-host-program-3jbp
-- [ ] Let the computer mode update itself with each release, after a check
+- [x] Let the computer mode update itself with each release, after a check
       of the signature, as
       [The computer connection](../docs/protocol/own-computers.md#the-computer-connection)
       says.
       Branch: calummoore/own-computers-milestone-11-host-program-3jbp
-- [ ] Test the computer mode against a local Worker and Podman without
+- [x] Test the computer mode against a local Worker and Podman without
       root. Save the results under `.context/own-computers/m11/`.
       Branch: calummoore/own-computers-milestone-11-host-program-3jbp
+
+Evidence and review reports: `.context/own-computers/m11/`, with the
+end-to-end check in `.context/own-computers/m11/e2e/summary.md`, and
+`.context/reviews/calummoore/own-computers-milestone-11-host-program-3jbp/`.
 
 ## Milestone 12: Workspaces on own computers
 
