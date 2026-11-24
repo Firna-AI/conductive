@@ -107,8 +107,9 @@ decision number names a dated record, as
 - Each part of a full report of a new runner carries its omitted totals,
   with zeros when the report omits nothing.
 - Omitted totals that a full report or a saved list does not carry are
-  unknown, not zero. A later full report sets both totals. A tree delta
-  with `omittedEntryCount` sets the tree count.
+  unknown, not zero. A later full tree sets the tree count. A later full
+  changes list sets the changes totals. A tree delta with
+  `omittedEntryCount` sets the tree count.
 - Every part of one report repeats the same omitted totals.
 - The workspace publishes the omitted totals only with the complete
   report. So a pending part changes no count of a panel.
@@ -179,18 +180,26 @@ decision number names a dated record, as
     with the old and the new path of each rename
   - the same paths after a change of the data of a row of the complete
     changes list, such as the pairing of a rename
-- The runner sends one full tree within the limit, in place of deltas, in
-  these cases:
-  - The tree omits entries before or after an update that changes which
-    entries it lists, and that update does not fit one delta.
-  - The refreshes of an update do not fit one delta.
-  - The scans behind the last tree and the last changes report differ, and
-    a changes list omits files. A repair of only one report kind can cause
-    this.
-- So a reader never sees a part of such an update. Each other large update
-  uses several deltas, as [Parts and revisions](#parts-and-revisions) says.
+- In these refreshes, a listed changes report is a changes report that the
+  runner sent, not the selection of a scan.
+- These rules decide when the runner sends one full tree within the limit,
+  in place of deltas:
+  - A limited tree that changes its listed entries keeps the whole update
+    in one delta or one full tree. Here a limited tree omits entries before
+    or after the update. So a reader never sees a part of such an update.
+  - The required refreshes of an update must fit one delta together, or
+    the runner sends one full tree.
+  - The scans behind the last tree and the last changes report differ, as
+    after a repair of only one report kind. The runner then sends one full
+    tree.
+- Every other edit still splits into several deltas when it does not fit
+  one, as [Parts and revisions](#parts-and-revisions) says.
 - Reason for a full tree when the two scans differ: it makes every reader
   read each open file and diff again, also an older reader.
+- In each scan that sends both reports, the runner sends every part of the
+  changes report before the tree update.
+- Reason: the workspace then stores the new base branch before a refresh
+  makes a diff read again.
 - The runner compares the complete changes scan before it cuts the list.
   So an edit of only omitted files still sends a new changes report.
 

@@ -34,7 +34,7 @@ async fn applies_growth_eviction_omitted_deletion_and_return_below_limit_as_delt
     );
     h.files.refresh(true, None, None).await.unwrap();
     assert!(
-        matches!(&h.take_reports()[0], RunnerFileEvent::FilesSnapshot { tree }
+        matches!(&h.take_reports()[1], RunnerFileEvent::FilesSnapshot { tree }
         if tree.entries.len() == 2 && tree.omitted_entry_count == Some(0))
     );
 
@@ -98,13 +98,13 @@ async fn an_edit_of_an_omitted_file_refreshes_the_path_and_resends_the_same_chan
     let reports = h.take_reports();
     assert_eq!(reports.len(), 2);
     let [
-        RunnerFileEvent::FilesChanged { delta },
         RunnerFileEvent::ChangesUpdated { changes },
+        RunnerFileEvent::FilesChanged { delta },
     ] = reports.as_slice()
     else {
-        panic!("expected an absent-path refresh and a changes report");
+        panic!("expected Changes followed by an absent-path refresh");
     };
-    let RunnerFileEvent::ChangesUpdated { changes: before } = &initial[1] else {
+    let RunnerFileEvent::ChangesUpdated { changes: before } = &initial[0] else {
         panic!("expected initial changes");
     };
     assert_eq!(operations(delta), [("remove", "z")]);

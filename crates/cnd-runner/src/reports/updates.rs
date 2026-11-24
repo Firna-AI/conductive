@@ -1,6 +1,7 @@
 //! Compare the last emitted tree, with full scans for content and diff refreshes.
 
 use std::collections::{HashMap, HashSet};
+use std::ops::Range;
 use std::ptr;
 use std::sync::Arc;
 
@@ -12,7 +13,7 @@ use cnd_runner_interface::file_tree::{
 use crate::error::Result;
 use crate::repository::service::RepositorySnapshot;
 
-use super::parts::{fits_one_delta, split};
+use super::parts::{Oversized, fits_one_delta, split, split_delta};
 use super::prepare::ReportFilter;
 use super::refreshes::{content_paths, listed_changes_paths, omitted_diff_paths};
 use super::selection::{ReportLimits, TreeSelection, select_tree};
@@ -22,6 +23,16 @@ pub(super) struct TreeHistory {
     source: Arc<RepositorySnapshot>,
     selection: TreeSelection,
     listed_changes: HashSet<String>,
+}
+
+enum TreeUpdate {
+    Full,
+    Unchanged,
+    LimitedMembership(FileTreeDelta),
+    Split {
+        delta: FileTreeDelta,
+        refreshes: Range<usize>,
+    },
 }
 
 impl TreeHistory {
@@ -40,18 +51,8 @@ impl TreeHistory {
         }
     }
 
-    /// A limited Changes list needs matching diff history for per-path refreshes.
-    pub(super) fn can_use_delta(
-        &self,
-        published_changes: &RepositorySnapshot,
-        current: &RepositorySnapshot,
-        changed_files_limit: usize,
-    ) -> bool {
-        if published_changes.changes.files.len() <= changed_files_limit
-            && current.changes.files.len() <= changed_files_limit
-        {
-            return true;
-        }
+    /// Per-path diff refreshes require matching tree and Changes histories.
+    fn can_use_delta(&self, published_changes: &RepositorySnapshot) -> bool {
         let tree = self.source.as_ref();
         ptr::eq(tree, published_changes)
             || (tree.base_commit == published_changes.base_commit
@@ -60,23 +61,36 @@ impl TreeHistory {
                 && tree.identities == published_changes.identities)
     }
 
-    /// Apply the whole update in one delta when its membership or refreshes require it.
+    /// Plan against the prior report histories. Pack each group after filtering.
     pub(super) fn parts(
         &self,
         previous: Option<&Self>,
+        published_changes: Option<&RepositorySnapshot>,
         revision: u64,
         filter: &dyn ReportFilter,
     ) -> Result<Option<Vec<RunnerFileEvent>>> {
-        if let Some(previous) = previous {
-            let Some((delta, atomic)) = self.delta(previous, revision) else {
-                return Ok(Some(vec![]));
-            };
-            let event = filter.file_report(RunnerFileEvent::FilesChanged { delta })?;
-            if !atomic {
-                return split(event);
+        let plan = previous
+            .filter(|tree| published_changes.is_none_or(|changes| tree.can_use_delta(changes)))
+            .map_or(TreeUpdate::Full, |previous| self.delta(previous, revision));
+        match plan {
+            TreeUpdate::Full => {}
+            TreeUpdate::Unchanged => return Ok(Some(vec![])),
+            TreeUpdate::LimitedMembership(delta) => {
+                let event = filter.file_report(RunnerFileEvent::FilesChanged { delta })?;
+                if fits_one_delta(&event)? {
+                    return Ok(Some(vec![event]));
+                }
             }
-            if fits_one_delta(&event)? {
-                return Ok(Some(vec![event]));
+            TreeUpdate::Split { delta, refreshes } => {
+                let event = filter.file_report(RunnerFileEvent::FilesChanged { delta })?;
+                let RunnerFileEvent::FilesChanged { delta } = event else {
+                    return split(event);
+                };
+                match split_delta(delta, refreshes)? {
+                    Ok(parts) => return Ok(Some(parts)),
+                    Err(Oversized::Entry) => return Ok(None),
+                    Err(Oversized::Refreshes) => {}
+                }
             }
         }
         split(filter.file_report(RunnerFileEvent::FilesSnapshot {
@@ -93,7 +107,7 @@ impl TreeHistory {
         })?)
     }
 
-    fn delta(&self, previous: &Self, revision: u64) -> Option<(FileTreeDelta, bool)> {
+    fn delta(&self, previous: &Self, revision: u64) -> TreeUpdate {
         let before: HashMap<_, _> = previous
             .selection
             .entries
@@ -130,6 +144,7 @@ impl TreeHistory {
             })
             .collect();
         let mut membership_changed = !changes.is_empty();
+        let refresh_start = changes.len();
         changes.extend(
             refreshes
                 .iter()
@@ -138,29 +153,38 @@ impl TreeHistory {
                     path: (*path).to_owned(),
                 }),
         );
+        let mut edits = vec![];
         for entry in &self.selection.entries {
             let path = entry.path.as_str();
             let old = before.get(path).copied();
             membership_changed |= old.is_none();
-            if old != Some(entry) || content.contains(path) || refreshes.contains(path) {
+            if old != Some(entry) || content.contains(path) {
+                edits.push(FileTreeChange::Upsert {
+                    entry: entry.clone(),
+                });
+            } else if refreshes.contains(path) {
                 changes.push(FileTreeChange::Upsert {
                     entry: entry.clone(),
                 });
             }
         }
+        let refreshes = refresh_start..changes.len();
+        changes.extend(edits);
 
         let old_count = previous.selection.omitted_entry_count;
         let new_count = self.selection.omitted_entry_count;
-        let atomic =
-            !refreshes.is_empty() || (membership_changed && (old_count > 0 || new_count > 0));
-        (!changes.is_empty() || old_count != new_count).then_some((
-            FileTreeDelta {
-                revision,
-                omitted_entry_count: Some(new_count),
-                changes,
-            },
-            atomic,
-        ))
+        let delta = FileTreeDelta {
+            revision,
+            omitted_entry_count: Some(new_count),
+            changes,
+        };
+        if delta.changes.is_empty() && old_count == new_count {
+            TreeUpdate::Unchanged
+        } else if membership_changed && (old_count > 0 || new_count > 0) {
+            TreeUpdate::LimitedMembership(delta)
+        } else {
+            TreeUpdate::Split { delta, refreshes }
+        }
     }
 }
 

@@ -230,7 +230,8 @@ Deleted files can appear in Changes without a tree entry.
 Worker and app parsers already accept an empty `changes` array in a tree delta.
 An absent-path remove leaves retained entries unchanged and invalidates that path in existing app readers.
 Milestone 2 states these requirements explicitly.
-Membership changes, omission counts, and path refreshes share one delta only when the complete update fits both budgets.
+When a limited tree changes its listed entries, the whole update and its omission count share one delta only when it fits both budgets.
+The required path refreshes of an update must fit one delta together. Other edits split into deltas as before.
 Otherwise send one full bounded tree, rather than a partially applied membership replacement.
 Preserve tree metadata while ordinary content deltas advance revisions.
 Measure omitted-only edits and large replacements before the final review.
@@ -399,6 +400,10 @@ The current-Worker compatibility check is in `.context/runner-file-report-limits
 - **Orchestrator call, 24 November 2026, review finding 15:** When the scans behind the last emitted tree and the last emitted changes report differ, such as after a repair of only one report kind, and a changes list omits files, the next tree update is one full bounded tree. A full tree makes every reader read each open file and diff again. A repair still sends only its own kind. Reason: the per-path refresh plan needs both histories from one scan, and a full tree is always a valid report.
 - **Orchestrator call, 24 November 2026, review finding 16:** The priority pass skips a listed change whose tree entry is an unmarked folder. Changed submodules and files on disk keep priority.
 - Review round 5 confirmed findings 15 to 19. The fix round applied 15, 16, 17, and 18. Finding 19 keeps the current exact sums.
+- **Orchestrator call, 24 November 2026, review finding 20:** The runner sends one full tree whenever the scans behind the last emitted tree and the last emitted changes report differ, also with complete lists. This replaces the omitted-files condition of the finding 15 call. A "listed changes report" in the refresh rule is a report that the runner sent.
+- **Orchestrator call, 24 November 2026, review finding 21:** In each scan that sends both reports, every changes part goes before the tree update. So the workspace stores the new base branch before a refresh makes a diff read again.
+- **Orchestrator call, 24 November 2026, review finding 22:** The tree update plan keeps three groups: a listed-entry swap of a limited tree in one delta or one full tree, the required refreshes in one delta or one full tree, and all other edits in split deltas.
+- Review round 6 confirmed findings 20 to 24. Fix round 2, the last, applies all five.
 
 ## Milestone 4: Worker metadata and compatibility
 

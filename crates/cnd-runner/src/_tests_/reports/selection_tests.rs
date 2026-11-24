@@ -6,10 +6,56 @@ use cnd_runner_interface::file_tree::{FileEntry, FileEntryKind, RunnerFileEvent}
 use crate::reports::files::FileReportKind;
 use crate::reports::selection::ReportLimits;
 
-use super::support::{Fixture, changed_file, named_snapshot};
+use super::support::{Fixture, changed_file, named_snapshot, snapshot};
 
 fn paths(entries: &[FileEntry]) -> Vec<&str> {
     entries.iter().map(|entry| entry.path.as_str()).collect()
+}
+
+#[tokio::test]
+async fn production_reporter_enforces_tree_changes_and_context_limits() {
+    let mut current = snapshot(
+        [".context".into()]
+            .into_iter()
+            .chain((0..5_000).map(|index| format!(".context/note-{index:04}")))
+            .chain((0..45_000).map(|index| format!("file-{index:05}")))
+            .collect(),
+    );
+    current.entries[0].kind = FileEntryKind::Directory;
+    current.context_only_paths = current.entries[..5_001]
+        .iter()
+        .map(|entry| entry.path.clone())
+        .collect();
+    current.changes.files = current.entries[5_001..6_002]
+        .iter()
+        .map(|entry| changed_file(&entry.path, 1, 0, true))
+        .collect();
+    let h = Fixture::new(current);
+    h.files.refresh(true, None, None).await.unwrap();
+
+    let mut tree_entries = 0;
+    let mut changed_files = 0;
+    let mut context_entries = 0;
+    for report in h.take_reports() {
+        match report {
+            RunnerFileEvent::FilesSnapshot { tree } => {
+                tree_entries += tree.entries.len();
+                context_entries += tree
+                    .entries
+                    .iter()
+                    .filter(|entry| entry.path == ".context" || entry.path.starts_with(".context/"))
+                    .count();
+            }
+            RunnerFileEvent::ChangesUpdated { changes } => {
+                changed_files += changes.changes_response.files.len();
+            }
+            _ => panic!("expected parts of a full report"),
+        }
+    }
+    assert_eq!(
+        (tree_entries, changed_files, context_entries),
+        (50_000, 1_000, 5_000)
+    );
 }
 
 #[tokio::test]
@@ -35,11 +81,11 @@ async fn keeps_uncommitted_changes_first_and_reports_exact_omitted_totals() {
     h.files.refresh(true, None, None).await.unwrap();
     let events = h.take_reports();
     let [
-        RunnerFileEvent::FilesSnapshot { tree },
         RunnerFileEvent::ChangesUpdated { changes },
+        RunnerFileEvent::FilesSnapshot { tree },
     ] = events.as_slice()
     else {
-        panic!("expected a complete tree and changes report");
+        panic!("expected Changes followed by a complete tree");
     };
     let report = &changes.changes_response;
     assert_eq!(

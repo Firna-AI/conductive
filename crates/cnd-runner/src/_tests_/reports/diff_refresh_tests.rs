@@ -8,6 +8,60 @@ use crate::reports::selection::ReportLimits;
 use super::support::{Fixture, changed_file, named_snapshot};
 
 #[tokio::test]
+async fn publishes_all_parts_of_a_new_base_before_refreshing_an_omitted_diff() {
+    let mut current = named_snapshot(&["live"]);
+    current.changes.files = (0..3)
+        .map(|index| changed_file(&format!("a{}{index}", "x".repeat(90_000)), 0, 1, false))
+        .chain([changed_file("z-omitted", 0, 1, false)])
+        .collect();
+    for file in &mut current.changes.files {
+        file.changed_file.change = ChangeKind::Deleted;
+    }
+    let h = Fixture::with_limits(
+        current.clone(),
+        ReportLimits {
+            changed_files: 3,
+            ..ReportLimits::default()
+        },
+    );
+    h.files.refresh(true, None, None).await.unwrap();
+    h.take();
+
+    current.base_commit = "new base commit".into();
+    current.changes.base_branch = "release".into();
+    *h.current.lock().unwrap() = Some(current);
+    h.files.refresh(false, None, None).await.unwrap();
+    let reports = h.take_reports();
+    assert_eq!(reports.len(), 3);
+    let changes_parts: Vec<_> = reports
+        .iter()
+        .enumerate()
+        .filter_map(|(index, event)| match event {
+            RunnerFileEvent::ChangesUpdated { changes } => {
+                let part = &changes.runner_file_revision_part;
+                Some((
+                    index,
+                    part.part_number,
+                    part.part_count,
+                    changes.changes_response.base_branch.as_str(),
+                ))
+            }
+            _ => None,
+        })
+        .collect();
+    assert_eq!(changes_parts, [(0, 1, 2, "release"), (1, 2, 2, "release")]);
+    let RunnerFileEvent::FilesChanged { delta } = &reports[2] else {
+        panic!("expected a delta after the complete Changes report");
+    };
+    assert_eq!(
+        delta.changes,
+        [FileTreeChange::Remove {
+            path: "z-omitted".into()
+        }]
+    );
+}
+
+#[tokio::test]
 async fn new_base_and_empty_diff_refresh_old_omitted_rename_paths_and_listed_tree_entry() {
     let mut current = named_snapshot(&["a", "b", "z"]);
     current.changes.files = vec![
@@ -45,11 +99,11 @@ async fn new_base_and_empty_diff_refresh_old_omitted_rename_paths_and_listed_tre
         let reports = h.take_reports();
         assert_eq!(reports.len(), 2, "{base}");
         let [
-            RunnerFileEvent::FilesChanged { delta },
             RunnerFileEvent::ChangesUpdated { changes },
+            RunnerFileEvent::FilesChanged { delta },
         ] = reports.as_slice()
         else {
-            panic!("expected a tree delta and changes report");
+            panic!("expected Changes followed by a tree delta");
         };
         assert_eq!(
             delta.changes,
@@ -108,11 +162,11 @@ async fn omitted_rename_pairing_changes_refresh_both_old_names_and_the_destinati
     let reports = h.take_reports();
     assert_eq!(reports.len(), 2);
     let [
-        RunnerFileEvent::FilesChanged { delta },
         RunnerFileEvent::ChangesUpdated { changes },
+        RunnerFileEvent::FilesChanged { delta },
     ] = reports.as_slice()
     else {
-        panic!("expected a tree delta and changes report");
+        panic!("expected Changes followed by a tree delta");
     };
     assert_eq!(
         delta.changes,
@@ -126,7 +180,7 @@ async fn omitted_rename_pairing_changes_refresh_both_old_names_and_the_destinati
             FileTreeChange::Remove { path: "z".into() },
         ]
     );
-    let RunnerFileEvent::ChangesUpdated { changes: before } = &initial[1] else {
+    let RunnerFileEvent::ChangesUpdated { changes: before } = &initial[0] else {
         panic!("expected initial changes");
     };
     assert_eq!(changes.runner_file_revision_part.revision, 2);
@@ -159,11 +213,11 @@ async fn too_many_diff_refreshes_replace_deltas_when_the_tree_omits_nothing() {
     let reports = h.take_reports();
     assert_eq!(reports.len(), 2);
     assert!(
-        matches!(&reports[0], RunnerFileEvent::FilesSnapshot { tree }
-        if tree.part.revision == 2 && tree.omitted_entry_count == Some(0) && tree.entries == [a])
+        matches!(&reports[0], RunnerFileEvent::ChangesUpdated { changes }
+        if changes.runner_file_revision_part.revision == 2 && changes.changes_response.files.is_empty())
     );
     assert!(
-        matches!(&reports[1], RunnerFileEvent::ChangesUpdated { changes }
-        if changes.runner_file_revision_part.revision == 2 && changes.changes_response.files.is_empty())
+        matches!(&reports[1], RunnerFileEvent::FilesSnapshot { tree }
+        if tree.part.revision == 2 && tree.omitted_entry_count == Some(0) && tree.entries == [a])
     );
 }

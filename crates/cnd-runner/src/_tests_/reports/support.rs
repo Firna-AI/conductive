@@ -87,7 +87,7 @@ impl Fixture {
     }
 
     pub(super) fn with_filter(current: RepositorySnapshot, filter: Arc<dyn ReportFilter>) -> Self {
-        Self::with_filter_and_limits(current, filter, ReportLimits::default())
+        Self::build(current, filter, None)
     }
 
     pub(super) fn with_limits(current: RepositorySnapshot, limits: ReportLimits) -> Self {
@@ -98,6 +98,14 @@ impl Fixture {
         current: RepositorySnapshot,
         filter: Arc<dyn ReportFilter>,
         limits: ReportLimits,
+    ) -> Self {
+        Self::build(current, filter, Some(limits))
+    }
+
+    fn build(
+        current: RepositorySnapshot,
+        filter: Arc<dyn ReportFilter>,
+        limits: Option<ReportLimits>,
     ) -> Self {
         let current = Arc::new(Mutex::new(Some(current)));
         let events = Arc::new(Mutex::new(vec![]));
@@ -132,7 +140,9 @@ impl Fixture {
             filter,
             FileRevisions::default(),
         );
-        reporter.limits = limits;
+        if let Some(limits) = limits {
+            reporter.limits = limits;
+        }
         let files: Arc<dyn FileReports> = Arc::new(reporter);
         Self {
             files,

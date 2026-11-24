@@ -5,6 +5,7 @@
 mod diff_refresh_tests;
 mod filter_tests;
 mod limited_updates_tests;
+mod multipart_tests;
 mod parts_tests;
 mod queue_tests;
 mod selection_tests;

@@ -60,7 +60,7 @@ fn full_tree(events: &[(RunnerEvent, Option<String>)]) -> (u64, Vec<&str>, Optio
 async fn requested_kind_preserves_other_history_and_failed_scans_require_full_recovery() {
     let h = Fixture::new(snapshot(vec![]));
     h.files.refresh(true, None, None).await.unwrap();
-    assert_eq!(kinds(&h.take()), ["tree", "changes"]);
+    assert_eq!(kinds(&h.take()), ["changes", "tree"]);
     let mut first = snapshot(vec!["first".into()]);
     first.changes.unpushed_commits = Some(7);
     *h.current.lock().unwrap() = Some(first);
@@ -91,7 +91,7 @@ async fn requested_kind_preserves_other_history_and_failed_scans_require_full_re
     assert_eq!(unavailable[0].1.as_deref(), Some("failed"));
     *h.current.lock().unwrap() = Some(snapshot(vec!["second".into()]));
     h.files.refresh(false, None, None).await.unwrap();
-    assert_eq!(kinds(&h.take()), ["tree", "changes"]);
+    assert_eq!(kinds(&h.take()), ["changes", "tree"]);
 }
 
 #[tokio::test]
@@ -133,7 +133,7 @@ async fn base_only_change_after_changes_repair_refreshes_the_omitted_diff_with_a
     *h.current.lock().unwrap() = Some(current);
     h.files.refresh(false, None, None).await.unwrap();
     let events = h.take();
-    assert_eq!(kinds(&events), ["tree", "changes"]);
+    assert_eq!(kinds(&events), ["changes", "tree"]);
     assert_eq!(full_tree(&events), (2, vec!["b-normal"], Some(2)));
     assert_eq!(listed_changes(&events), (vec!["a-deleted"], Some(0)));
 }
@@ -184,12 +184,53 @@ async fn base_change_and_new_uncommitted_file_after_tree_repair_refresh_the_omit
     *h.current.lock().unwrap() = Some(current);
     h.files.refresh(false, None, None).await.unwrap();
     let events = h.take();
-    assert_eq!(kinds(&events), ["tree", "changes"]);
+    assert_eq!(kinds(&events), ["changes", "tree"]);
     assert_eq!(
         full_tree(&events),
         (3, vec!["a-untracked", "m-published", "z"], Some(1))
     );
     assert_eq!(listed_changes(&events), (vec!["a-untracked"], Some(1)));
+}
+
+async fn check_return_to_original_base(deletions: usize) {
+    let original = named_snapshot(&["live"]);
+    let h = Fixture::new(original.clone());
+    h.files.refresh(true, None, None).await.unwrap();
+    assert_eq!(listed_changes(&h.take()), (vec![], Some(0)));
+
+    let mut other_base = original.clone();
+    other_base.base_commit = "base with deleted files".into();
+    other_base.changes.files = (0..deletions)
+        .map(|index| {
+            let mut row = changed_file(&format!("deleted-{index:04}"), 0, 1, false);
+            row.changed_file.change = ChangeKind::Deleted;
+            row
+        })
+        .collect();
+    *h.current.lock().unwrap() = Some(other_base);
+    h.files
+        .refresh(true, Some(FileReportKind::Tree), None)
+        .await
+        .unwrap();
+    let repair = h.take();
+    assert_eq!(kinds(&repair), ["tree"]);
+    assert_eq!(full_tree(&repair), (2, vec!["live"], Some(0)));
+
+    *h.current.lock().unwrap() = Some(original);
+    h.files.refresh(false, None, None).await.unwrap();
+    let events = h.take();
+    assert_eq!(kinds(&events), ["tree"]);
+    assert_eq!(full_tree(&events), (3, vec!["live"], Some(0)));
+}
+
+#[tokio::test]
+async fn restores_diffs_after_returning_from_a_tree_repair_with_capped_deletions() {
+    check_return_to_original_base(1_001).await;
+}
+
+#[tokio::test]
+async fn restores_diffs_after_returning_from_a_tree_repair_with_complete_changes() {
+    check_return_to_original_base(2).await;
 }
 
 #[tokio::test]
@@ -211,7 +252,7 @@ async fn raw_read_identity_changes_only_tree_and_git_or_base_changes_refresh_cha
     current.identities.insert("file".into(), "git-b".into());
     *h.current.lock().unwrap() = Some(current.clone());
     h.files.refresh(false, None, None).await.unwrap();
-    assert_eq!(kinds(&h.take()), ["delta", "changes"]);
+    assert_eq!(kinds(&h.take()), ["changes", "delta"]);
     current.base_commit = "new-base".into();
     *h.current.lock().unwrap() = Some(current.clone());
     h.files.refresh(false, None, None).await.unwrap();

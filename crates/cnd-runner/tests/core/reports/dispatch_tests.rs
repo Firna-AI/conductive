@@ -4,6 +4,8 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use cnd_runner::reports::files::FileReportKind;
+use cnd_runner_interface::file_tree::RunnerFileEvent;
+use cnd_runner_interface::runner::RunnerEvent;
 use cnd_runner_interface::runner_commands::{
     RunnerCommand, RunnerControlCommand, RunnerInterrupt, RunnerReportKind,
 };
@@ -175,18 +177,19 @@ async fn welcome_reserves_the_initial_scan_before_a_later_request_without_pollin
     assert_eq!(next_receipt(&mut receipts).await, "second");
     handler.shutdown().await.unwrap();
     let state = h.store.snapshot().await;
-    let mut requested = None;
-    let mut changes_revision = None;
-    for RunnerEventEnvelope::Event { event, .. } in &state.outbox {
-        let value = serde_json::to_value(event).unwrap();
-        if value["type"] == "files.snapshot" {
-            requested = value["tree"]["revision"].as_u64();
-        }
-        if value["type"] == "changes.updated" {
-            changes_revision = requested;
-        }
-    }
-    assert_eq!(changes_revision, Some(1));
-    assert_eq!(requested, Some(2));
+    let report_order: Vec<_> = state
+        .outbox
+        .iter()
+        .filter_map(|RunnerEventEnvelope::Event { event, .. }| match event {
+            RunnerEvent::RunnerFileEvent(RunnerFileEvent::FilesSnapshot { tree }) => {
+                Some(("tree", tree.part.revision))
+            }
+            RunnerEvent::RunnerFileEvent(RunnerFileEvent::ChangesUpdated { changes }) => {
+                Some(("changes", changes.runner_file_revision_part.revision))
+            }
+            _ => None,
+        })
+        .collect();
+    assert_eq!(report_order, [("changes", 1), ("tree", 1), ("tree", 2)]);
     assert_eq!(state.reports.commands, ["second"]);
 }
