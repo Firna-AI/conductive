@@ -231,22 +231,21 @@ command journal, a failure during publication retries after one second,
 and a suspension or a stop cancels the job. A failed change keeps the old
 repository and branch, and its error message is the reason of the toast.
 
-The repository change adds an end rule for the steps after the move, in
-[`repository-change-end.ts`](repository-change-end.ts). Continue does not
-have it.
+[`repository-change-end.ts`](repository-change-end.ts) applies the end rule
+to a started fetch or move and to publication.
 
-- A failed publication and a failed branch read of the new folder are the
-  steps after the move. The first such failure saves its time in
-  `failingSince` of the job. A job of an older deploy has no
-  `failingSince`, and its next failure saves it.
-- The time starts again when the move is done and the job goes to
-  `publish`.
+- The first failed advance of one of these phases saves its time in
+  `failingSince` of the job. This includes a failed status read, a failed
+  branch read, and a failed attempt to reattach to the command journal.
+- A status read that reports a running command clears the saved time.
+  Each new phase also clears the time.
 - While less than 10 minutes passed, the step retries after one second.
 - After 10 minutes, the job reads the record. When the record still names
   the old repository and the old branch, the job ends with its saved
-  error, or with "The repository change could not finish. Try again.". It
-  logs the warning `repository_change_ended` with the phase. The
-  reservation then ends, so turns, Continue, Restart, and Archive go on.
+  failure if it has one. Otherwise, it reports "The repository change
+  could not finish. Try again." It logs `repository_change_ended` with
+  the phase. The reservation ends, so turns, Continue, Restart, and
+  Archive go on.
 - When the record no longer names the old repository and the old branch,
   as after the publish write, the publication keeps the retry. The record
   already changed, so the chat must still get the change. A failed read
@@ -269,12 +268,13 @@ have it.
   does not say hello.
 - [`repository-change-recovery.test.ts`](repository-change-recovery.test.ts):
   the poll of a saved command on its own route across a reconstruction,
-  also of a saved move without a route,
-  a change that publishes after an admin unchose the new repository during
-  the move, the end after 10 minutes of a publication whose guard never
-  matches and of a failed branch read, the retry of a publication whose
-  record already changed, and the new time of the publication after a
-  failed branch read.
+  also of a saved move without a route, and a change that publishes after
+  an admin removes the new repository from the selection during the move.
+- [`repository-change-end.test.ts`](repository-change-end.test.ts) covers
+  the end rule for a failed branch read, a dropped host, and a publication
+  whose guard never matches. It checks that a running status clears the
+  failure time and a new phase gets its own limit. A publication whose
+  record already changed keeps the retry.
 - [`repository-change-concurrency.test.ts`](repository-change-concurrency.test.ts):
   the hold of turns, Continue, Restart, and Archive, and the runner move
   after publication.

@@ -82,6 +82,7 @@ it('keeps the stored catalogue on a failed header Restart and ends a pending con
     outcome: { state: 'unconfirmed' },
   })
   expect(await savedCatalogue(active)).toEqual(before)
+  expect(active.boat.commands).toEqual(restartCommands)
   expect(active.host.commands).toEqual(restartCommands)
 })
 
@@ -98,6 +99,7 @@ it('keeps service storage through header Restart and the automatic software rest
   )
   expect(header.status).toBe(200)
   expect(await savedCatalogue(active)).toEqual(before)
+  expect(active.boat.commands).toEqual(restartCommands)
   expect(active.host.commands).toEqual(restartCommands)
   const replacement = await active.connect()
   replacement.document('services.report.part', 'fresh', {
@@ -127,6 +129,7 @@ it('keeps service storage through header Restart and the automatic software rest
   expect(
     active.boat.commands.filter((command) => command === RESTART_COMMAND),
   ).toHaveLength(2)
+  expect(active.boat.commands).toEqual([...restartCommands, ...restartCommands])
   expect(active.host.commands).toEqual([...restartCommands, ...restartCommands])
   expect(await savedCatalogue(active)).toEqual(current)
 })

@@ -74,7 +74,7 @@ async function completeCommand(
     return
   }
   job.phase = job.phase === 'fetch' ? 'move' : 'publish'
-  // The publication gets its own time limit, after a branch read that failed.
+  // Each phase starts with its own failure limit.
   delete job.failingSince
   job.processId = null
   delete job.commandRoute
@@ -119,33 +119,30 @@ async function step(
       job.phase === 'fetch'
         ? repositoryChangeFetchCommand(job)
         : repositoryChangeMoveCommand(job)
-    try {
-      if (!recoverOnly && job.phase === 'fetch') progress.scope = job.fetchId
-      const started = await channel.startCommand(
-        lifecycleCommand(
-          {
-            kind: 'workspace',
-            id: job.binding.id,
-            attempt: `repository-change-${job.id}`,
-          },
-          job.phase === 'fetch' ? 'fetch' : 'branch',
-          command,
-          recoverOnly,
-        ),
-      )
-      job.processId = started.processId
-      job.commandRoute = started.route
-      await progress.save(job)
-    } catch {
-      progress.scope = null
-    }
+    if (!recoverOnly && job.phase === 'fetch') progress.scope = job.fetchId
+    const started = await channel.startCommand(
+      lifecycleCommand(
+        {
+          kind: 'workspace',
+          id: job.binding.id,
+          attempt: `repository-change-${job.id}`,
+        },
+        job.phase === 'fetch' ? 'fetch' : 'branch',
+        command,
+        recoverOnly,
+      ),
+    )
+    job.processId = started.processId
+    job.commandRoute = started.route
+    await progress.save(job)
     return false
   }
   const status = await channel.getCommandStatus(
     { processId: job.processId, route: job.commandRoute ?? 'provider' },
     { stdoutOffset: job.stdoutOffset, stderrOffset: job.stderrOffset },
   )
-  if (status.state !== 'running') progress.scope = null
+  if (status.state === 'running') delete job.failingSince
+  else progress.scope = null
   job.stdoutOffset = status.stdoutNextOffset
   job.stderrOffset = status.stderrNextOffset
   await progress.save(job)
@@ -174,8 +171,8 @@ async function step(
 /**
  * The new branch makes the move done, so publication runs with no second
  * checkout. Another branch, also no branch, keeps the old repository. A
- * failed read keeps the reservation, and the step retries until the end
- * rule of `endAfterMove` ends the job.
+ * failed read keeps the reservation while the step retries under the
+ * repository change end rule.
  */
 async function switchedBranch(
   channel: MachineChannel,

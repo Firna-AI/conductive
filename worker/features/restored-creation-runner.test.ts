@@ -58,7 +58,8 @@ it('rebuilds a restored runner-phase runtime after losing /run without repeating
   expect((await sandbox.run('rm -rf -- /run/conductive')).exitCode).toBe(0)
   expect(await sandbox.ready()).toBeNull()
   await deleteAndRestoreCreation(active)
-  const before = active.host.commandRequests.length
+  const before = active.boat.commandRequests.length
+  const hostBefore = active.host.commandRequests.length
   expect(
     (
       await active.request(workspacePaths.resume(OUTER_ORG, id), {
@@ -68,15 +69,20 @@ it('rebuilds a restored runner-phase runtime after losing /run without repeating
     ).status,
   ).toBe(200)
   await advanceRetainedCreation(active, id, 'runner')
-  expect(
-    active.host.commandRequests
-      .slice(before)
-      .filter((request) => request.detached)
-      .map((request) => request.command),
-  ).toEqual([
+  const commands = active.boat.commandRequests
+    .slice(before)
+    .filter((request) => request.detached)
+    .map((request) => request.command)
+  expect(commands).toEqual([
     expect.stringContaining('/run/conductive/startup.sh'),
     expect.stringContaining('systemctl start conductive-terminal.service'),
   ])
+  expect(
+    active.host.commandRequests
+      .slice(hostBefore)
+      .filter((request) => request.detached)
+      .map((request) => request.command),
+  ).toEqual(commands)
   expect(results.map((result) => result.exitCode)).toEqual([0, 0])
   expect(await sandbox.file('startup-calls')).toBe('startup\nstartup\n')
   expect(await sandbox.ready()).toBe('')

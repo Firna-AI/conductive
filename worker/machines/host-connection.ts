@@ -16,7 +16,7 @@ import {
   machineUnavailable,
 } from './errors'
 import { validateOperation } from './operations'
-import { PendingRequests } from './pending'
+import { HOST_REQUEST_LIMIT_MS, PendingRequests } from './pending'
 import { readHostMessage } from './protocol-reader'
 import { HostStream, type MachineStream } from './stream'
 import {
@@ -28,6 +28,33 @@ import { StreamClosePermits, type StreamCloseStorage } from './stream-close'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: false })
+
+/** A status read can wait for the machine's next welcomed connection. */
+export class HostWelcomeWait {
+  private readonly waiters = new Set<() => void>()
+
+  async deadline(connected: boolean): Promise<number> {
+    const deadline = Date.now() + HOST_REQUEST_LIMIT_MS
+    if (!connected)
+      await new Promise<void>((resolve, reject) => {
+        const ready = () => {
+          clearTimeout(timer)
+          resolve()
+        }
+        const timer = setTimeout(() => {
+          this.waiters.delete(ready)
+          reject(machineUnavailable())
+        }, HOST_REQUEST_LIMIT_MS)
+        this.waiters.add(ready)
+      })
+    return deadline
+  }
+
+  welcomed(): void {
+    for (const ready of this.waiters) ready()
+    this.waiters.clear()
+  }
+}
 
 export class HostConnection {
   readonly socket: MachineSocket
@@ -68,10 +95,10 @@ export class HostConnection {
       throw machineDisconnected()
     }
   }
-  request(operation: HostOperation) {
+  request(operation: HostOperation, deadline?: number) {
     validateOperation(operation)
     if (!this.connected()) throw machineUnavailable()
-    const request = this.pending.create(operation)
+    const request = this.pending.create(operation, deadline)
     const message: WorkerToHost = {
       type: 'request',
       requestId: request.id,

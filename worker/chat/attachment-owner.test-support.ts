@@ -69,6 +69,7 @@ export function attachmentOwnerCopy(harness: TestHarness, failFirst = false) {
     prepare,
     entered,
     release,
+    commands: transfer.commands,
     writes,
     requests,
     get metadataRequests() {

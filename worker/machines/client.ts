@@ -48,9 +48,20 @@ export function machineClient(env: AppEnv, owner: MachineOwner) {
       ),
     startCommand: (command: string) =>
       machineResult(env, owner, (stub) => stub.startCommand(owner, command)),
-    commandStatus: (processId: number, stdoutOffset = 0, stderrOffset = 0) =>
+    commandStatus: (
+      processId: number,
+      stdoutOffset = 0,
+      stderrOffset = 0,
+      waitForHost = false,
+    ) =>
       machineResult(env, owner, (stub) =>
-        stub.commandStatus(owner, processId, stdoutOffset, stderrOffset),
+        stub.commandStatus(
+          owner,
+          processId,
+          stdoutOffset,
+          stderrOffset,
+          waitForHost,
+        ),
       ),
     fileInfo: (path: string) =>
       machineResult(env, owner, (stub) => stub.fileInfo(owner, path)),

@@ -11,7 +11,7 @@ import { providerForAccount } from '../sandbox/client'
 import { ProviderError } from '../sandbox/errors'
 import { reserveRepositoryChange } from './repository-change-admission'
 import { authorizeRepositoryChange } from './repository-change-data'
-import { endAfterMove, failedAfterMove } from './repository-change-end'
+import { endAfterFailure } from './repository-change-end'
 import { repositoryChangeFailed } from './repository-change-errors'
 import {
   advanceRepositoryChange,
@@ -202,18 +202,18 @@ export class WorkspaceRepositoryChange implements RepositoryChangeProgress {
   }
 
   /**
-   * Whether a failed step retries after one second. A started fetch or move
-   * settles first. A step after the move retries until its end rule ends
-   * the job. Any other failure ends the job.
+   * A started fetch or move and publication retry failed steps until the
+   * end rule ends the job. Other failures end the job immediately.
    */
   private async retries(
     job: RepositoryChangeJob,
     error: unknown,
   ): Promise<boolean> {
-    if (failedAfterMove(job, error))
-      return !(await endAfterMove(this.options, this, job, error))
-    if (job.commandStarted && (job.phase === 'move' || job.phase === 'fetch'))
-      return true
+    if (
+      job.phase === 'publish' ||
+      (job.commandStarted && (job.phase === 'move' || job.phase === 'fetch'))
+    )
+      return !(await endAfterFailure(this.options, this, job, job.phase))
     const failure =
       error instanceof HttpError ? error : repositoryChangeFailed(job)
     await this.finish(job, {

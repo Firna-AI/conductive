@@ -1,11 +1,61 @@
 import { afterEach, expect, it, vi } from 'vitest'
 
 import { record, number } from '../chat/inputs'
+import { HostWelcomeWait } from './host-connection'
 import { hostConnectionFixture } from './host-connection.test-support'
 import { encodeHostFrame } from '../../src/shared/host-frames'
 import { HOST_REPLY_MAX_BYTES } from '../../src/shared/host'
 
 afterEach(() => vi.useRealTimers())
+
+it.each([
+  {
+    scenario: 'the host stays away',
+    reconnects: false,
+    code: 'machine_unavailable',
+  },
+  {
+    scenario: 'the host connects late',
+    reconnects: true,
+    code: 'machine_timeout',
+  },
+])(
+  'ends a status read at the shared deadline when $scenario',
+  async ({ reconnects, code }) => {
+    vi.useFakeTimers()
+    const welcome = new HostWelcomeWait()
+    const { connection, sent } = hostConnectionFixture()
+    const host = connection()
+    const status = {
+      kind: 'command.status',
+      processId: 7,
+      stdoutOffset: 5,
+      stderrOffset: 3,
+    } as const
+    const succeeded = vi.fn()
+    const failed = vi.fn()
+    void welcome
+      .deadline(false)
+      .then((deadline) => host.request(status, deadline))
+      .then(succeeded, failed)
+
+    await vi.advanceTimersByTimeAsync(29_000)
+    expect(sent).toEqual([])
+    expect(failed).not.toHaveBeenCalled()
+    if (reconnects) welcome.welcomed()
+    await vi.advanceTimersByTimeAsync(999)
+    expect(failed).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(1)
+    expect(failed).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ code }),
+    )
+    expect(succeeded).not.toHaveBeenCalled()
+    welcome.welcomed()
+    expect(sent).toEqual(
+      reconnects ? [{ type: 'request', requestId: 1, operation: status }] : [],
+    )
+  },
+)
 
 it('keeps request IDs across a wake and ignores a timed-out request reply', async () => {
   vi.useFakeTimers()

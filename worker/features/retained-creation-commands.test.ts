@@ -92,7 +92,8 @@ it('replays a saved branch after Restore with a new journal and preserves the ex
       )
     ).exitCode,
   ).toBe(0)
-  const commandsBefore = active.host.commandRequests.length
+  const commandsBefore = active.boat.commandRequests.length
+  const hostCommandsBefore = active.host.commandRequests.length
   await deleteAndRestoreCreation(active)
   expect(
     (
@@ -104,7 +105,7 @@ it('replays a saved branch after Restore with a new journal and preserves the ex
   ).toBe(200)
   expect(await completeRetainedCreation(active, id)).toEqual({ ok: true })
   expect(results.map((result) => result.exitCode)).toEqual([0, 0])
-  const commands = active.host.commandRequests
+  const commands = active.boat.commandRequests
     .slice(commandsBefore)
     .filter((request) => request.detached)
     .map((request) => request.command)
@@ -114,8 +115,14 @@ it('replays a saved branch after Restore with a new journal and preserves the ex
     expect.stringContaining('systemctl start conductive-terminal.service'),
   ])
   expect(commands[0]).not.toBe(
-    active.host.commandRequests[commandsBefore - 1]?.command,
+    active.boat.commandRequests[commandsBefore - 1]?.command,
   )
+  expect(
+    active.host.commandRequests
+      .slice(hostCommandsBefore)
+      .filter((request) => request.detached)
+      .map((request) => request.command),
+  ).toEqual(commands)
   expect(
     (
       await sandbox.run(
@@ -170,7 +177,8 @@ it('runs interrupted saved startup after Restore instead of following its dead j
     phase: 'startup',
     processId: expect.any(Number),
   })
-  const commandsBefore = active.host.commandRequests.length
+  const commandsBefore = active.boat.commandRequests.length
+  const hostCommandsBefore = active.host.commandRequests.length
   await deleteAndRestoreCreation(active)
   expect(
     (
@@ -185,7 +193,7 @@ it('runs interrupted saved startup after Restore instead of following its dead j
   expect(await sandbox.file('completed')).toBe('continued\n')
   expect(await sandbox.ready()).toBe('')
   expect(await sandbox.runnerCalls()).toBe('runner-restarted\n')
-  const commands = active.host.commandRequests
+  const commands = active.boat.commandRequests
     .slice(commandsBefore)
     .filter((request) => request.detached)
     .map((request) => request.command)
@@ -194,8 +202,14 @@ it('runs interrupted saved startup after Restore instead of following its dead j
     expect.stringContaining('systemctl start conductive-terminal.service'),
   ])
   expect(commands[0]).not.toBe(
-    active.host.commandRequests[commandsBefore - 1]?.command,
+    active.boat.commandRequests[commandsBefore - 1]?.command,
   )
+  expect(
+    active.host.commandRequests
+      .slice(hostCommandsBefore)
+      .filter((request) => request.detached)
+      .map((request) => request.command),
+  ).toEqual(commands)
   expect(active.boat.resumeIds).toEqual([original.allocatedSandboxId])
   expect(active.boat.deletedIds).toEqual([])
 })

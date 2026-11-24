@@ -46,7 +46,7 @@ export class AttachmentTransferFailed extends HttpError {
  */
 export async function retryUnanswered<T>(
   workspaceId: string,
-  run: () => Promise<T>,
+  run: (retry?: AttachmentTransferFailed) => Promise<T>,
 ): Promise<T> {
   try {
     return await run()
@@ -59,7 +59,7 @@ export async function retryUnanswered<T>(
       step: error.step,
       error: errorSummary(error.failure),
     })
-    return run()
+    return run(error)
   }
 }
 

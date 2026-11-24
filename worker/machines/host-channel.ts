@@ -32,12 +32,13 @@ export function hostChannel(env: AppEnv, owner: MachineOwner): MachineChannel {
         const { processId } = await client.startCommand(command)
         return { processId, route: 'host' }
       }),
-    getCommandStatus: ({ processId }, offsets) =>
+    getCommandStatus: ({ processId }, offsets, options) =>
       hostCall(async () => {
         const status = await client.commandStatus(
           processId,
           offsets.stdoutOffset,
           offsets.stderrOffset,
+          options?.waitForHost,
         )
         return {
           ...offsets,

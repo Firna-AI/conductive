@@ -70,9 +70,9 @@ export function timedHostChannel(
       timer.time('provider', 'host.startCommand', () =>
         host.startCommand(command),
       ),
-    getCommandStatus: (command, offsets) =>
+    getCommandStatus: (command, offsets, options) =>
       timer.time('poll', 'host.getCommandStatus', () =>
-        host.getCommandStatus(command, offsets),
+        host.getCommandStatus(command, offsets, options),
       ),
   }
 }

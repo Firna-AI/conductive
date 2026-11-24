@@ -51,8 +51,8 @@ it('restarts through the Worker route for a member, and refuses an outsider, a s
     )
     return { status: response.status, body: await response.json() }
   }
-  const restarts = () =>
-    active.host.commands.filter(
+  const restarts = (commands: readonly string[]) =>
+    commands.filter(
       (command) =>
         command === UPDATE_CHECK_COMMAND || command === RESTART_COMMAND,
     )
@@ -72,15 +72,22 @@ it('restarts through the Worker route for a member, and refuses an outsider, a s
   await db
     .prepare("UPDATE users SET suspended_at = NULL WHERE id = 'owner'")
     .run()
-  expect(restarts()).toEqual([])
+  expect(restarts(active.boat.commands)).toEqual([])
   expect(await restart(memberCookie)).toEqual({
     status: 200,
     body: { updateCheck: 'ok' },
   })
-  expect(restarts()).toEqual([UPDATE_CHECK_COMMAND, RESTART_COMMAND])
+  expect(restarts(active.boat.commands)).toEqual([
+    UPDATE_CHECK_COMMAND,
+    RESTART_COMMAND,
+  ])
+  expect(restarts(active.host.commands)).toEqual([
+    UPDATE_CHECK_COMMAND,
+    RESTART_COMMAND,
+  ])
   expect(await restart(memberCookie)).toMatchObject({
     status: 409,
     body: { error: { code: 'workspace_not_running' } },
   })
-  expect(restarts()).toHaveLength(2)
+  expect(restarts(active.boat.commands)).toHaveLength(2)
 })

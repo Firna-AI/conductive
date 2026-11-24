@@ -137,12 +137,16 @@ A status that the provider client does not list, such as 405, also has the kind 
 A transient host error of `isTransientHostError` in [errors.ts](../machines/errors.ts) also marks the error as unanswered.
 `retryUnanswered` runs a check or a download once more after an unanswered error, and logs `attachment_transfer_retried`.
 `attachmentDownloadProcess` keeps the started command and its output offsets in memory for that retry.
-When the host started the download, the retry waits, then reads the status of the same process again, from the offsets of the failed read. It starts no new download.
+When the host started the download, the retry reads the same process again from the offsets of the failed read.
+After an unavailable or disconnected status read, the retry waits for a welcomed host connection.
+The wait and the status read share the 30-second machine request limit.
+The retry uses the normal poll delay for other unanswered host errors.
 Otherwise the retry starts a new download. It creates its token inside the retried work, so the second run uses a new token.
 The first command can still run late with its own token, as after a restart, and the folder lock then orders the two commands.
 An unanswered error gives the text "The cloud computer did not answer, so the attached files did not arrive. Try again."
 Each other copy failure gives "The attached files could not reach the cloud computer. Try again."
-The helper checks the org, sandbox, and provider account of the workspace before each file, before each command start and status read, and after the last file.
+The helper checks the org, sandbox, and provider account of the workspace before each file, before each command start, and after the last file.
+The machine object checks the workspace owner record for each host status read.
 After a successful download, [attachment-transfer-data.ts](attachment-transfer-data.ts) records `transferred_sandbox_id` before the message proof.
 This update keeps the claim revision and the `claimed` state.
 The owner runs through `waitUntil` outside the chat queue.
@@ -280,7 +284,8 @@ The later-message test keeps a same-size edit and checks metadata without anothe
 The missing-file tests cover ordered names, changed sizes, a replacement sandbox, provider outages, and Try again after restoration.
 The retry tests let the fake provider run a download but answer its start with a server error, as with a late answer.
 They check the second download with a new token, and the failed turn after two unanswered starts.
-A host retry test fails one status read of a running download, and checks that the retry reads the same process from the offsets of the failed read, with no second download.
+The host retry tests fail one status read of a running download, with a host error or a socket drop.
+Each case checks that the retry reads the same process and offsets and that only one download starts.
 The retention and cleanup tests cover proof order, failed first starts, retryable byte deletion, and purge after byte deletion.
 The legacy-path tests store an old absolute or message-derived relative path with a proof, and check that the turn fails.
 The fixture never sends a request to a real provider.

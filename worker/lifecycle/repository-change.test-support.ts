@@ -284,7 +284,7 @@ export async function repositoryChangeFixture(harness: TestHarness) {
     later: (milliseconds: number) => {
       now += milliseconds
     },
-    detached: () => host.commandRequests.filter(({ detached }) => detached),
+    detached: () => boat.commandRequests.filter(({ detached }) => detached),
     result: (id: string, sender = member) =>
       coordinator.result(chat.org.id, WORKSPACE_ID, sender.id, id, TEST_ORIGIN),
   }

@@ -791,9 +791,14 @@ November 2026.
   still settles on its saved sandbox. Reason: the host connection of a
   workspace belongs to its current computer.
 - The restarts, the local-work read, and the attachment copy check the
-  workspace and its sandbox again before each command. Reason:
+  workspace and its sandbox in D1 again before each command that they
+  start. A status read of a host command relies on the owner check that
+  the machine object makes for each host operation. Reason:
   [Orgs and workspaces](../docs/protocol/isolation.md#orgs-and-workspaces)
-  asks for a check in the records before each sandbox call.
+  asks for a check in the records before each sandbox call, and a D1 read
+  before each poll of a long download could pass the D1 query limit of one
+  invocation. Review finding 102 of this milestone changed the first form
+  of this call, which also read D1 before each status read.
 
 ## Milestone 1: Mockups
 

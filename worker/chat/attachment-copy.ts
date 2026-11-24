@@ -64,10 +64,7 @@ export async function prepareMessageAttachments(
       await requireDestination()
       return channel.startCommand(command)
     },
-    async getCommandStatus(command, offsets) {
-      await requireDestination()
-      return channel.getCommandStatus(command, offsets)
-    },
+    getCommandStatus: channel.getCommandStatus,
   }
   const directory = await attachmentRepositoryDirectory(env.DB, workspace)
   const missing: string[] = []

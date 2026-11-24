@@ -27,6 +27,7 @@ it('restarts once after three minutes away and delivers the waiting message at r
   const before = f.actor.events.length
   await f.tick(180_000)
   expect(f.commands()).toEqual([UPDATE_CHECK_COMMAND, RESTART_COMMAND])
+  expect(f.hostCommands()).toEqual(f.commands())
   expect(await f.lifecycle()).toMatchObject({ state: 'starting' })
   expect(f.actor.events.slice(before)).toContainEqual(
     expect.objectContaining({
@@ -60,6 +61,7 @@ it('ends an automatic restart at its deadline if the replacement only says hello
   await f.send()
   await f.tick(180_000)
   expect(f.commands()).toEqual([UPDATE_CHECK_COMMAND, RESTART_COMMAND])
+  expect(f.hostCommands()).toEqual(f.commands())
   const replacement = await f.connect('replacement')
   const starting = {
     state: 'starting',
@@ -96,6 +98,7 @@ it('cancels the automatic restart when the runner recovers before command submis
     sentCommand('turn', 'waiting-message'),
   ])
   expect(f.commands()).toEqual([UPDATE_CHECK_COMMAND])
+  expect(f.hostCommands()).toEqual(f.commands())
   expect(await f.lifecycle()).toMatchObject({
     state: 'working',
     runnerConnected: true,
@@ -116,6 +119,7 @@ it('keeps the original turn running when readiness cancels the restart during ac
   })
   const { sessionId, turnId } = f.firstTurn
   expect(f.commands()).toEqual([UPDATE_CHECK_COMMAND])
+  expect(f.hostCommands()).toEqual(f.commands())
   expect(await f.originalTurnEnds()).toEqual([])
   expect(await f.lifecycle()).toMatchObject({
     state: 'working',
@@ -142,6 +146,7 @@ it('counts a saved disconnect with no time from the first alarm that sees it', a
   expect(f.commands()).toEqual([])
   await f.tick(360_000)
   expect(f.commands()).toEqual([UPDATE_CHECK_COMMAND, RESTART_COMMAND])
+  expect(f.hostCommands()).toEqual(f.commands())
 })
 
 it('restarts when a waiting message shares a running turn and delivers it in a new turn', async () => {
@@ -149,6 +154,7 @@ it('restarts when a waiting message shares a running turn and delivers it in a n
   await f.send()
   await f.tick(180_000)
   expect(f.commands()).toEqual([UPDATE_CHECK_COMMAND, RESTART_COMMAND])
+  expect(f.hostCommands()).toEqual(f.commands())
   const replacement = await f.connect('replacement')
   expect(await replacement.take()).toEqual([welcome(2)])
   const { sessionId, turnId, message } = f.firstTurn
@@ -262,6 +268,7 @@ it('shows a failed automatic restart and gives the same absence no second attemp
   }
   await f.tick(180_000)
   expect(f.commands()).toEqual([UPDATE_CHECK_COMMAND, RESTART_COMMAND])
+  expect(f.hostCommands()).toEqual(f.commands())
   await f.tick(360_000)
   expect(await f.lifecycle()).toMatchObject({
     state: 'error',
@@ -271,28 +278,4 @@ it('shows a failed automatic restart and gives the same absence no second attemp
     },
   })
   expect(f.commands()).toHaveLength(2)
-})
-
-it('handles chat and expires at the restart deadline while the provider command is held', async () => {
-  const f = await automaticRestartFixture(fixtureForTest())
-  await f.send()
-  let deadline: Promise<void> | undefined
-  await f
-    .duringRestart(f.holdCommand(RESTART_COMMAND, 1), async () => {
-      await expectSettled(f.send('during-restart'))
-      await expectSettled(f.connect('replacement'))
-      expect(await f.lifecycle()).toMatchObject({ state: 'starting' })
-      const expired = f.restartFailure()
-      await f.setOffset(360_000)
-      deadline = f.actor.native.api.controls.dispatchAlarm()
-      await expectSettled(expired)
-    })
-    .finally(async () => {
-      await deadline
-    })
-  expect(await f.lifecycle()).toMatchObject({
-    state: 'error',
-    error: { code: 'restart_failed' },
-  })
-  expect(f.commands()).toEqual([UPDATE_CHECK_COMMAND, RESTART_COMMAND])
 })

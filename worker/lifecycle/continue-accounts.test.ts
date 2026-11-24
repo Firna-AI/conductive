@@ -84,6 +84,7 @@ it('refuses a fetch credential when another account replaces the workspace with 
   await f.host.seed(f.org.id, WORKSPACE_ID, 'bx_continue')
   const requests = f.boat.server.requests.length
   const polls = f.host.statusRequests.length
+  const totalPolls = f.boat.statusRequests.length
   await expect(f.credential(job.fetchId)).rejects.toMatchObject({
     status: 409,
     code: 'sandbox_unavailable',
@@ -92,6 +93,7 @@ it('refuses a fetch credential when another account replaces the workspace with 
   expect(f.host.statusRequests).toHaveLength(polls)
   f.boat.commandRunning = false
   await f.finish()
+  expect(f.boat.statusRequests).toHaveLength(totalPolls)
   expect(f.host.statusRequests).toHaveLength(polls)
   expect(
     new Set(

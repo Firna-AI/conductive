@@ -67,6 +67,7 @@ it.each(['saved provider route', 'legacy job without a route'] as const)(
     await fixture.host.connect('bx_1')
     await start.restart()
     const previousPolls = fixture.boat.statusRequests.length
+    const previousCommands = fixture.boat.commandRequests.length
     await start.advance()
 
     expect(fixture.boat.statusRequests.slice(previousPolls)).toEqual([
@@ -76,6 +77,9 @@ it.each(['saved provider route', 'legacy job without a route'] as const)(
     expect(fixture.host.commandRequests).toMatchObject([
       { sandboxId: 'bx_1', detached: true },
     ])
+    expect(fixture.boat.commandRequests.slice(previousCommands)).toEqual(
+      fixture.host.commandRequests,
+    )
     expect(await start.job()).toMatchObject({
       phase: 'terminal',
       processId: 4,
@@ -95,7 +99,7 @@ it('retries the saved host status after reconstruction and reads it when the hos
   await start.restart()
   await fixture.host.disconnect('bx_1')
   const polls = fixture.boat.statusRequests.length
-  const commands = fixture.host.commandRequests.length
+  const commands = fixture.boat.commandRequests.length
   await start.advance()
 
   expect(await start.job()).toMatchObject({
@@ -113,7 +117,8 @@ it('retries the saved host status after reconstruction and reads it when the hos
     { processId: 3, stdoutOffset: 0, stderrOffset: 0 },
   ])
   expect(fixture.boat.statusRequests).toHaveLength(polls + 1)
-  expect(fixture.host.commandRequests).toHaveLength(commands + 1)
+  expect(fixture.boat.commandRequests).toHaveLength(commands + 1)
+  expect(fixture.host.commandRequests).toEqual(fixture.boat.commandRequests)
   expect(await start.job()).toMatchObject({
     phase: 'terminal',
     processId: 4,

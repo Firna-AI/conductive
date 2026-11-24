@@ -50,7 +50,8 @@ it('polls a retained never-ending maintenance script across reconstruction and s
     if (command.includes('/run/conductive/retention-startup.sh') && !detached)
       await held.wait()
   }
-  const commands = host.commandRequests.length
+  const commands = boat.commandRequests.length
+  const hostCommands = host.commandRequests.length
   const advancing = platform.endpoint().advance()
   try {
     const result = await Promise.race([
@@ -63,9 +64,9 @@ it('polls a retained never-ending maintenance script across reconstruction and s
     await advancing
   }
   expect(await fixture.progress()).toEqual({ phase: 'startup', error: null })
-  expect(host.commandRequests.slice(commands)).toEqual([
-    expect.objectContaining({ detached: true }),
-  ])
+  const started = boat.commandRequests.slice(commands)
+  expect(started).toEqual([expect.objectContaining({ detached: true })])
+  expect(host.commandRequests.slice(hostCommands)).toEqual(started)
   expect(await platform.storage.get(LIFECYCLE_STATE_KEY)).toMatchObject({
     diskRetentionCommand: { commandRoute: 'host', processId: 5 },
   })
@@ -78,7 +79,7 @@ it('polls a retained never-ending maintenance script across reconstruction and s
   await fixture.tick(DEADLINE - 1)
   expect(await fixture.progress()).toEqual({ phase: 'startup', error: null })
   expect(await platform.storage.getAlarm()).toBe(DEADLINE)
-  expect(host.commandRequests).toHaveLength(commands + 1)
+  expect(boat.commandRequests).toHaveLength(commands + 1)
   expect(host.statusRequests.at(-1)).toEqual({
     processId: 5,
     stdoutOffset: 0,
@@ -145,18 +146,18 @@ it('polls a retained legacy process on the provider after the host connects and 
 
 it('hands an active maintenance script to confirmed stop cleanup before accepting a user resume', async () => {
   const fixture = await retentionCommandFixture(await backendFixture())
-  const { boat, host, platform, runtime, org, user, id } = fixture
+  const { boat, platform, runtime, org, user, id } = fixture
   boat.commandRunning = true
   await platform.endpoint().advance()
   expect(await fixture.progress()).toEqual({ phase: 'startup', error: null })
-  const commands = host.commandRequests.length
+  const commands = boat.commandRequests.length
   boat.commandRunning = false
   await fixture.run(() => resumeWorkspace(runtime, org.id, id, user.id))
   expect(await fixture.progress()).toBeNull()
   expect(boat.stopIds).toEqual(['bx_1'])
   expect(boat.resumeIds).toEqual(['bx_1', 'bx_1'])
   expect(
-    host.commandRequests
+    boat.commandRequests
       .slice(commands)
       .filter((request) =>
         request.command.includes('/run/conductive/retention-startup.sh'),

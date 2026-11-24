@@ -100,9 +100,10 @@ of the stored account and the sandbox ID, for the provider path.
   the route with the process ID, and each status read uses that route. A
   saved process without a route reads as `provider`.
 - A synchronous host command gets 600 seconds, as on the provider. A
-  detached command keeps running when the host connection drops. A status
-  read of a host command without a connection fails with
-  `machine_unavailable`, and the caller reads again later.
+  detached command keeps running when the host connection drops. By default,
+  a host status read without a connection fails with `machine_unavailable`.
+  A caller can opt in to wait for a welcomed connection. The wait and the
+  status read share a 30-second request limit.
 - `isTransientHostError` in [errors.ts](errors.ts) names the transient host
   errors: `machine_unavailable`, `machine_disconnected`, `machine_timeout`,
   `machine_busy`, and `machine_error`. The start retry policy and the

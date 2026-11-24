@@ -47,6 +47,9 @@ it('keeps a known HTTP code and drops arbitrary codes, error names, and messages
   expect(
     errorSummary(new HttpError(502, 'workspace_start_failed', marker)),
   ).toEqual({ kind: 'http', status: 502, code: 'workspace_start_failed' })
+  expect(
+    errorSummary(new HttpError(503, 'machine_disconnected', marker)),
+  ).toEqual({ kind: 'http', status: 503, code: 'machine_disconnected' })
   expect(errorSummary(new HttpError(409, marker, marker))).toEqual({
     kind: 'http',
     status: 409,

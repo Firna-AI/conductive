@@ -1,9 +1,17 @@
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import type { ProviderWork } from '../sandbox/provider'
+import type { MachineHttpCode } from './errors'
 import { hostChannel } from './host-channel'
 import type { MachineOwner } from './identity'
 import { providerChannel } from './provider-channel'
+
+// These refusals occur before the machine object sends a request.
+const FALLBACK_CODES = [
+  'machine_unavailable',
+  'machine_not_found',
+  'service_unavailable',
+] as const satisfies readonly MachineHttpCode[]
 
 export interface CommandResult {
   exitCode: number | null
@@ -45,6 +53,7 @@ export interface MachineChannel {
   getCommandStatus(
     command: RoutedCommand,
     offsets: CommandOffsets,
+    options?: { waitForHost: boolean },
   ): Promise<CommandStatus>
 }
 
@@ -68,11 +77,10 @@ export function machineChannel(
         () => host.startCommand(command),
         () => fallback.startCommand(command),
       ),
-    getCommandStatus: (command, offsets) =>
-      (command.route === 'host' ? host : fallback).getCommandStatus(
-        command,
-        offsets,
-      ),
+    getCommandStatus: (command, offsets, options) =>
+      command.route === 'host'
+        ? host.getCommandStatus(command, offsets, options)
+        : fallback.getCommandStatus(command, offsets),
   }
 }
 
@@ -83,14 +91,9 @@ async function hostOrProvider<T>(
   try {
     return await host()
   } catch (error) {
-    // These refusals occur before the machine object sends a request.
     if (
       !(error instanceof HttpError) ||
-      ![
-        'machine_unavailable',
-        'machine_not_found',
-        'service_unavailable',
-      ].includes(error.code)
+      !FALLBACK_CODES.some((code) => code === error.code)
     )
       throw error
     return fallback()

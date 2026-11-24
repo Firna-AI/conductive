@@ -115,7 +115,8 @@ it('restores an interrupted replacement create with its pinned data and a fresh 
     allocatedSandboxId: 'bx_2',
     imageName: 'replacement-image',
   })
-  const commandsBefore = active.host.commandRequests.length
+  const commandsBefore = active.boat.commandRequests.length
+  const hostCommandsBefore = active.host.commandRequests.length
   await deleteAndRestoreCreation(active)
   expect(active.boat.stopIds).toEqual(['bx_2'])
   expect(active.boat.resumeIds).toEqual([])
@@ -146,7 +147,7 @@ it('restores an interrupted replacement create with its pinned data and a fresh 
   expect(await sandbox.file('completed')).toBe('continued\n')
   expect(await sandbox.ready()).toBe('')
   expect(await sandbox.runnerCalls()).toBe('runner-restarted\n')
-  const commands = active.host.commandRequests
+  const commands = active.boat.commandRequests
     .slice(commandsBefore)
     .filter((request) => request.detached)
     .map((request) => request.command)
@@ -155,8 +156,14 @@ it('restores an interrupted replacement create with its pinned data and a fresh 
     expect.stringContaining('systemctl start conductive-terminal.service'),
   ])
   expect(commands[0]).not.toBe(
-    active.host.commandRequests[commandsBefore - 1]?.command,
+    active.boat.commandRequests[commandsBefore - 1]?.command,
   )
+  expect(
+    active.host.commandRequests
+      .slice(hostCommandsBefore)
+      .filter((request) => request.detached)
+      .map((request) => request.command),
+  ).toEqual(commands)
   expect(active.boat.starts).toHaveLength(2)
   expect(active.boat.resumeIds).toEqual(['bx_2'])
   expect(active.boat.deletedIds).toEqual(['bx_1'])

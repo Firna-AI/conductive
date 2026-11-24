@@ -130,10 +130,7 @@ export function createAutomaticRestart(input: {
               }))
               if (current.runningSessions.length)
                 await chat.stopTurnsForRestart(workspaceId)
-              return turn.outside(async () => {
-                await verifyTarget(env, target, undefined, false)
-                return channel.runCommand(command)
-              })
+              return turn.outside(() => channel.runCommand(command))
             }
             return turn.outside(async () => {
               await verifyRestartTarget()
