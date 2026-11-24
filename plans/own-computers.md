@@ -912,8 +912,19 @@ Depends on: 4
 - [ ] Measure a dev server preview and a busy terminal through the machine
       object, against the provider path, on Boat and on E2B. Save the
       results under `.context/own-computers/`.
-- [ ] If the host connection is clearly slower, stop and bring the
+  - [x] Measure on a local test bed that runs the real machine object and
+        host session code, against a provider-like path, at four
+        round-trip times.
+        Branch: calummoore/own-computers-milestone-5-speed-of-lg7b
+  - [ ] Measure on real Boat and E2B computers. It waits for Cal's choice
+        of how to measure on real infrastructure.
+- [x] If the host connection is clearly slower, stop and bring the
       Cloudflare Tunnel fallback to Cal as a decision.
+      Branch: calummoore/own-computers-milestone-5-speed-of-lg7b
+
+The report, the bench, and the raw results are in
+`.context/own-computers/m5/` of the Milestone 5 workspace, W-581, and in the
+description of PR #678.
 
 ## Milestone 6: Commands over the host connection
 
@@ -938,6 +949,11 @@ Evidence and reports: `.context/own-computers/m6/`,
 
 Depends on: 5, 6
 
+- [ ] Set `TCP_NODELAY` on the host WebSocket of the host program
+      (`crates/cnd-host/src/socket/connect.rs`), with a test that the
+      socket has the option. Milestone 5 measured about one round trip of
+      delay per small message without it. This holds under every answer to
+      the speed decision of Milestone 5.
 - [ ] Move the terminal socket to a host stream to the terminal port.
 - [ ] Move the previews and the files preview to a host stream to the
       relay port. Let the relay accept a stream from the host program.
