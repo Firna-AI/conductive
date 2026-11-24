@@ -1480,6 +1480,10 @@ Depends on: 9, 13, 14
 
 Depends on: every other milestone
 
+- [ ] Before Cal makes the release signing key, move the signing of every
+      manifest out of each job that runs build code, as the answer to the
+      item on deploy build code and the signing key says
+      (`plans/follow-ups/deploy-build-code-reaches-signing-key.md`).
 - [ ] Before the merge, Cal makes the release signing key pair, sets the
       `CONDUCTIVE_RELEASE_SIGNING_KEY` secret of the `production`
       environment, and the public key replaces the placeholder
