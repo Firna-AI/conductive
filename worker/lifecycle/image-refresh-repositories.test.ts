@@ -19,13 +19,21 @@ type Fixture = ReturnType<typeof fixtureForTest>
 
 function recordSourceRepositories({ images }: Fixture) {
   const sources: SourceRepository[] = []
-  images.prepareSources = async ({ orgId, repositories }) => {
+  const folders: string[] = []
+  images.prepareSources = async ({
+    orgId,
+    repositories,
+    repositoryLocations,
+  }) => {
     const db = images.env.DB
     await readSourceRepositories(db, orgId, repositories)
     for (const repository of repositories)
       sources.push(await readSourceRepository(db, orgId, repository))
+    folders.push(
+      ...(repositoryLocations ?? []).map(({ directory }) => directory),
+    )
   }
-  return sources
+  return { sources, folders }
 }
 
 async function changeRepositoryAfterFailedBuild(
@@ -73,7 +81,7 @@ it('refreshes a renamed repository after a failed build and keeps its old folder
   const fixture = fixtureForTest()
   const { images, org, repositoryId } = fixture
   const db = images.env.DB
-  recordSourceRepositories(fixture)
+  const { folders } = recordSourceRepositories(fixture)
   await changeRepositoryAfterFailedBuild(
     fixture,
     'example/renamed',
@@ -103,13 +111,15 @@ it('refreshes a renamed repository after a failed build and keeps its old folder
   expect(await readOrgImage(db, org.id, 'boat')).toMatchObject({
     imageBuildId: refresh,
   })
+  // The source loader gets the old folder, not one from the new name.
+  expect(folders).toEqual(['/home/user/code/repository'])
 })
 
 it('refreshes a moved repository through its new installation after a failed build', async () => {
   const fixture = fixtureForTest()
   const { images, org, repositoryId } = fixture
   const db = images.env.DB
-  const sources = recordSourceRepositories(fixture)
+  const { sources } = recordSourceRepositories(fixture)
   await changeRepositoryAfterFailedBuild(
     fixture,
     'new-owner/repository',
@@ -147,7 +157,7 @@ it('fails a refresh and keeps the published image when a captured repository has
   const fixture = fixtureForTest()
   const { images, org, repositoryId } = fixture
   const db = images.env.DB
-  const sources = recordSourceRepositories(fixture)
+  const { sources } = recordSourceRepositories(fixture)
   await db
     .prepare('DELETE FROM repositories WHERE org_id = ? AND id = ?')
     .bind(org.id, repositoryId)

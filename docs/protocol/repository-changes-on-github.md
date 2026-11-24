@@ -102,11 +102,10 @@ folders that this doc uses. The terms are those of the
   the repository with its saved name, default branch, and install. The
   user chose this on 24 November 2026 (repository load decision 1).
 - Reason: a refresh then works after a rename or a move, also while the
-  newest build failed. Before, each refresh failed until a build ran, and
-  the app starts no build by itself after a failed build. So new
-  workspaces started with old commits for days.
-- The checks that guard each copy stay. They compare the values of the
-  job with the saved values, and the job now holds the saved values.
+  newest build failed. The app starts no build by itself after a failed
+  build, so new workspaces would otherwise get no new commits.
+- The checks that guard each copy compare the values of the job with the
+  saved values.
 - A repository that the org no longer saves keeps the values of the org
   image, so its copy fails as before.
 - While the org image holds a name or a default branch that differs from
@@ -129,11 +128,9 @@ folders that this doc uses. The terms are those of the
   [A missed repository webhook](#a-missed-repository-webhook) says.
 - A start only at the webhook was rejected. Reason: a start that failed, or
   a change during a job, then needed a manual build.
-- A refresh that finds the repository by its ID was rejected on
-  17 November 2026, and chosen on 24 November 2026. The first reasons were
-  these: the checks of each copy change, and the folder takes the new name
-  only at a later build. The checks stay as they are. The folder point
-  holds only while the newest build failed.
+- A refresh that copies the name and the default branch of the org image
+  was replaced. Reason: its copy fails after a rename or a move, so each
+  refresh failed until a build ran.
 - A refresh that skips its run while the org image holds old values was
   rejected. Reason: new workspaces then get no new commits until a build
   succeeds.
