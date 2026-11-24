@@ -182,6 +182,8 @@ adds terminal tabs to the Terminal tool, as [Terminal](terminal.md) says.
 - The preview proxy adds the files mark of the
   [file server](file-server.md) only to the requests
   of a files preview. It never forwards a files mark that a browser sends.
+  It adds the [preview origin](file-server.md#the-preview-origin) to the
+  same requests by the same rules.
 - Reason: the file server answers only a request with the files mark. So a
   port preview of its port gets no file, and the rules of the files
   preview hold for each request that the file server answers.

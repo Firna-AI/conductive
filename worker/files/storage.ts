@@ -1,6 +1,16 @@
 import type { ChangesResponse } from '../../src/shared/generated/ChangesResponse'
 import type { FileTreeResponse } from '../../src/shared/generated/FileTreeResponse'
 import { isRecord } from '../http'
+import {
+  BUCKET_LAYOUT,
+  CHUNK_CHARACTERS,
+  FILES_KEY,
+  bucketListKeys,
+  parseBucketManifest,
+  type BucketManifest,
+  type ListKind,
+} from './bucket-layout'
+import { readBucketList } from './bucket-read'
 import { invalidFileResponse } from './errors'
 import { natural, parseChanges, parseTree } from './parsers'
 
@@ -21,16 +31,15 @@ export interface StoredFiles {
   changes: ChangesResponse | null
 }
 
-interface Manifest {
+interface OldFilesManifest {
+  layout?: never
   connectionId: string | null
   hasSnapshot: boolean
   treeChunks: number
   changesChunks: number
 }
 
-const KEY = 'files:state:v1'
-// A chunk stays below the SQLite Durable Object value limit, including UTF-8 expansion.
-const CHUNK_CHARACTERS = 65_536
+export type FilesManifest = OldFilesManifest | BucketManifest
 
 export function durableFilesStorage(
   storage: Pick<DurableObjectStorage, 'get' | 'transaction'>,
@@ -54,8 +63,10 @@ export function durableFilesStorage(
   }
 }
 
-async function manifest(storage: FilesStorage): Promise<Manifest> {
-  const value = await storage.get(KEY)
+export async function readFilesManifest(
+  storage: FilesStorage,
+): Promise<FilesManifest> {
+  const value = await storage.get(FILES_KEY)
   if (value === undefined)
     return {
       connectionId: null,
@@ -63,8 +74,9 @@ async function manifest(storage: FilesStorage): Promise<Manifest> {
       treeChunks: 0,
       changesChunks: 0,
     }
+  if (!isRecord(value)) throw invalidFileResponse()
+  if (Object.hasOwn(value, 'layout')) return parseBucketManifest(value)
   if (
-    !isRecord(value) ||
     (value.connectionId !== null && typeof value.connectionId !== 'string') ||
     typeof value.hasSnapshot !== 'boolean' ||
     !natural(value.treeChunks) ||
@@ -81,13 +93,13 @@ async function manifest(storage: FilesStorage): Promise<Manifest> {
 
 async function readChunks(
   storage: FilesStorage,
-  kind: 'tree' | 'changes',
+  kind: ListKind,
   count: number,
 ): Promise<unknown> {
   const chunks: string[] = []
   const keys = Array.from(
     { length: count },
-    (_, index) => `${KEY}:${kind}:${index}`,
+    (_, index) => `${FILES_KEY}:${kind}:${index}`,
   )
   const values = await storage.getMany(keys)
   for (let index = 0; index < count; index++) {
@@ -102,21 +114,46 @@ async function readChunks(
   }
 }
 
+export function readFileList(
+  storage: FilesStorage,
+  manifest: FilesManifest,
+  kind: 'tree',
+): Promise<FileTreeResponse | null>
+export function readFileList(
+  storage: FilesStorage,
+  manifest: FilesManifest,
+  kind: 'changes',
+): Promise<ChangesResponse | null>
+export function readFileList(
+  storage: FilesStorage,
+  manifest: FilesManifest,
+  kind: ListKind,
+): Promise<FileTreeResponse | ChangesResponse | null>
+export async function readFileList(
+  storage: FilesStorage,
+  manifest: FilesManifest,
+  kind: ListKind,
+): Promise<FileTreeResponse | ChangesResponse | null> {
+  let value: unknown
+  if (manifest.layout === BUCKET_LAYOUT) {
+    const list = manifest[kind]
+    if (list === null) return null
+    value = await readBucketList(storage, kind, list)
+  } else {
+    const count = manifest[`${kind}Chunks`]
+    if (count === 0) return null
+    value = await readChunks(storage, kind, count)
+  }
+  return kind === 'tree' ? parseTree(value) : parseChanges(value)
+}
+
 export async function loadFiles(storage: FilesStorage): Promise<StoredFiles> {
-  const stored = await manifest(storage)
+  const stored = await readFilesManifest(storage)
   return {
     connectionId: stored.connectionId,
     hasSnapshot: stored.hasSnapshot,
-    tree:
-      stored.treeChunks === 0
-        ? null
-        : parseTree(await readChunks(storage, 'tree', stored.treeChunks)),
-    changes:
-      stored.changesChunks === 0
-        ? null
-        : parseChanges(
-            await readChunks(storage, 'changes', stored.changesChunks),
-          ),
+    tree: await readFileList(storage, stored, 'tree'),
+    changes: await readFileList(storage, stored, 'changes'),
   }
 }
 
@@ -124,7 +161,7 @@ export async function saveFiles(
   storage: FilesStorage,
   state: StoredFiles,
 ): Promise<void> {
-  const previous = await manifest(storage)
+  const previous = await readFilesManifest(storage)
   const updates: Record<string, unknown> = {}
   const removals: string[] = []
   const counts = { treeChunks: 0, changesChunks: 0 }
@@ -133,15 +170,18 @@ export async function saveFiles(
     const count = Math.ceil(text.length / CHUNK_CHARACTERS)
     counts[`${kind}Chunks`] = count
     for (let index = 0; index < count; index++) {
-      updates[`${KEY}:${kind}:${index}`] = text.slice(
+      updates[`${FILES_KEY}:${kind}:${index}`] = text.slice(
         index * CHUNK_CHARACTERS,
         (index + 1) * CHUNK_CHARACTERS,
       )
     }
     for (let index = count; index < previous[`${kind}Chunks`]; index++)
-      removals.push(`${KEY}:${kind}:${index}`)
+      removals.push(`${FILES_KEY}:${kind}:${index}`)
+    if (previous.layout === BUCKET_LAYOUT) {
+      for (const key of bucketListKeys(kind, previous[kind])) removals.push(key)
+    }
   }
-  updates[KEY] = {
+  updates[FILES_KEY] = {
     connectionId: state.connectionId,
     hasSnapshot: state.hasSnapshot,
     ...counts,
