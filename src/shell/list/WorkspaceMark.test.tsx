@@ -38,10 +38,11 @@ describe('WorkspaceMark', () => {
       const cells = cellClasses(github, 'starting')
       expect(count(cells, styles.chase)).toBe(8)
       expect(cells[4]).not.toContain(styles.chase)
-      // Without motion, every cell stays lit, so the start does not read as
-      // an agent that works: the ring is lit and the centre lights when still.
+      // Without motion, the start shows the ring of a working agent: the ring
+      // stays lit and the centre stays dim. So it does not match the full
+      // grid of a ready pull request or of a draft.
       expect(count(cells, styles.lit)).toBe(8)
-      expect(cells[4]).toContain(styles.litWhenStill)
+      expect(cells[4]).not.toContain(styles.litWhenStill)
     },
   )
 

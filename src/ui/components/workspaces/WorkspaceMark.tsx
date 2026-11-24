@@ -51,9 +51,9 @@ function chases(github: GitHubSummary | null, status: ActivityStatus) {
  * How one cell looks. While the agent works, the cloud computer starts, or
  * the checks run, a light runs around the ring and the centre stays dim.
  * While the agent needs input, the whole grid pulses in blue. Without
- * motion, the ring of a working agent or the middle column stays lit, and a
- * start or running checks light the whole grid. Every other state is still: lit in the colour of the GitHub state,
- * or dim.
+ * motion, the ring of a working agent or a start, or the middle column,
+ * stays lit, and running checks light the whole grid. Every other state is
+ * still: lit in the colour of the GitHub state, or dim.
  */
 function cellOf(
   github: GitHubSummary | null,
@@ -69,7 +69,9 @@ function cellOf(
       : {
           className: classes(
             styles.cell,
-            status !== 'working' && styles.litWhenStill,
+            status !== 'working' &&
+              status !== 'starting' &&
+              styles.litWhenStill,
           ),
         }
   }

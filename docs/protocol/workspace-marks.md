@@ -49,11 +49,16 @@ This page belongs to [Workspace life](workspace-life.md).
   November 2026). Reason: the start is activity, and a still mark made a
   workspace with a queued message look idle. A still mark while the
   workspace starts was rejected for the same reason.
-- With reduced motion, the ring stays lit while the agent works. The middle
-  column stays lit in blue while the agent needs input. The other cells
-  stay dim, so the state of the agent stays visible without motion. While
-  the workspace starts or only the checks run, every cell stays lit, so the
-  mark does not read as an agent that works.
+- With reduced motion, the ring stays lit while the agent works or the
+  workspace starts. The middle column stays lit in blue while the agent
+  needs input. The other cells stay dim, so the state of the agent stays
+  visible without motion. While only the checks run, every cell stays lit,
+  so the mark does not read as an agent that works.
+- With reduced motion, a starting workspace shows the ring of a working
+  agent (the user's decision of 24 November 2026). Reason: a full grid
+  matched a ready workspace with a pull request, so the start looked
+  idle, and it matched a draft when the workspace had no pull request.
+  A full grid and a new still shape for the start were rejected.
 - Bold text alone marks unread output. A green mark for unread output was
   rejected, because green means a pull request that is ready to merge.
 - An archived workspace shows a fainter grey mark, whatever its GitHub

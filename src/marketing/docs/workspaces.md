@@ -147,7 +147,7 @@ A light runs around the mark while the agent works, the workspace starts, or the
 The moving light means that you do not need to act.
 The mark turns blue and pulses when the agent needs input.
 The pull request bar still shows the state of the pull request.
-With reduced motion, a still ring means the agent works.
+With reduced motion, a still ring means the agent works or the workspace starts.
 A still blue middle column means it needs input.
 Bold workspace names mark unread output.
 
