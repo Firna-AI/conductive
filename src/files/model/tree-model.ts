@@ -35,15 +35,23 @@ function isInside(path: string, folder: string): boolean {
   return path.startsWith(`${folder}/`)
 }
 
+/**
+ * Removes an entry, and each entry inside it when it is a folder. A path
+ * that the tree does not hold, such as a path that its report leaves out,
+ * changes no entry: its remove only touches the path, so an open page of
+ * the path reads again. Entries under such a path stay, as in a folder that
+ * the tree lacks, and no remove of an absent path scans the tree.
+ */
 function removePath(
   entries: Map<string, FileEntry>,
   path: string,
   touched: Set<string>,
 ): void {
-  const entry = entries.get(path)
-  entries.delete(path)
   touched.add(path)
-  if (entry?.kind === 'file') return
+  const entry = entries.get(path)
+  if (!entry) return
+  entries.delete(path)
+  if (entry.kind === 'file') return
   for (const key of [...entries.keys()]) {
     if (!isInside(key, path)) continue
     entries.delete(key)

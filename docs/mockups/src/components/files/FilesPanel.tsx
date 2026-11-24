@@ -6,12 +6,9 @@ import {
   type TreeEntry,
 } from '../../fixtures/files'
 import { filesFor, type PathState } from '../../fixtures/maskedFiles'
-import {
-  limitedLists,
-  wholeChange,
-  type ListState,
-} from '../../fixtures/limitedFiles'
+import { limitedLists, type ListState } from '../../fixtures/limitedFiles'
 import type { BannerState } from '../../../../../src/ui/components/workspace/barModel'
+import { wholeChange } from '../../../../../src/ui/components/files/changeTotals'
 import { paths } from '../../paths'
 import { allFilesUnavailable } from '../../../../../src/ui/components/chat/lostCopy'
 import { lostUpdateRow } from '../../entries/components/chat/LostUpdate.mockup'
@@ -121,7 +118,9 @@ function withOpenFolder(
  * open menu of a row of the shown list. Limited `lists` show the lists of a
  * large branch: each list keeps a notice of what it leaves out, also beside
  * the notice of a list that is not the latest one, and the Changes tab
- * counts the whole change.
+ * counts the whole change. While `only` filters the changes, the rows are
+ * no longer the list of the large branch, so its totals and its notice of
+ * Changes stay out, and the tab counts the rows.
  */
 export function FilesPanel(props: {
   view: FileList
@@ -143,7 +142,7 @@ export function FilesPanel(props: {
   const changes = props.edited
     ? files.changes.filter((file) => !only || only.includes(file.path))
     : []
-  const totals = props.edited ? limited?.totals : undefined
+  const totals = props.edited && !only ? limited?.totals : undefined
   const names = new Set(changes.map((file) => splitPath(file.path).name))
   const treeOpen = treeTab(open)
   const shown = withOpenFolder(files.tree, treeOpen)
@@ -157,7 +156,11 @@ export function FilesPanel(props: {
     <div className={styles.files}>
       <FileTabs
         banner={props.banner}
-        changes={totals ? wholeChange(totals).files : changes.length}
+        changes={
+          totals
+            ? wholeChange(totals.listed, totals.omitted).files
+            : changes.length
+        }
         view={view}
       />
       {view === 'checks' ? props.checksTop : null}

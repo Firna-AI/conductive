@@ -21,19 +21,10 @@ export type ChangeTotals = { files: number; added: number; removed: number }
 /**
  * The totals of a list of changes that leaves out files: the totals of the
  * files that it lists, and the totals of the files that it leaves out.
- * Changes shows the sum of both.
+ * Changes shows the sum of both, as `wholeChange` of the shared UI adds
+ * them for the app too.
  */
 export type LimitedTotals = { listed: ChangeTotals; omitted: ChangeTotals }
-
-/** The sum of the listed and the omitted totals: the whole change. */
-export function wholeChange(totals: LimitedTotals): ChangeTotals {
-  const { listed, omitted } = totals
-  return {
-    files: listed.files + omitted.files,
-    added: listed.added + omitted.added,
-    removed: listed.removed + omitted.removed,
-  }
-}
 
 /** The root file that the tree leaves out, which a mention cannot find. */
 const omittedRootFile = 'tsconfig.json'

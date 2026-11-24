@@ -39,13 +39,15 @@ The old layout stores each list as one JSON text in chunks.
 The bucket layout splits each list into 64 buckets by a hash of the item path, with an order text for the list order.
 This module reads both layouts and writes list data in the bucket layout.
 The manifest keeps each list's omission metadata with its other fields.
+The tree manifest records the tree revision beside a known omitted entry count.
+Tree reads use that count only when the two revisions match. A previous Worker can advance the tree during rollback while keeping the earlier count and its revision.
 A full report replaces its list and that metadata together. A list without the field keeps it absent.
 A full report writes buckets with changed digests.
 It writes the order text when it changes or when it cannot read the stored order text.
 A tree delta reads buckets one at a time. A delta with one or more removes visits each tree bucket at most once because a folder's entries can be in any bucket.
 A delta of absent-path removes leaves the row and order chunks alone.
 An empty delta reads no row bucket. It can set the omitted entry count in the manifest.
-A delta without a count keeps the saved count.
+A delta without a count keeps a valid saved count and advances its revision with the tree.
 A connection reset updates the manifest. An unavailable-tree mark and a repository move update the manifest of a bucket projection without reading list items.
 The first list write or tree mark of an old projection converts retained lists one entry at a time.
 It reads the old chunks in bounded batches.
@@ -252,7 +254,7 @@ It checks that a part stored as one value stays readable, and that each removal 
 The API tests use local D1, the existing fake runner, and FakeBoat.
 `runner-part-checks.test.ts` checks the storage reads, changes fields, and older assembly state.
 The part joining and report repair tests run through the chat backend.
-Run `npm run test -- worker/chat/runner-file-parts.test.ts worker/chat/runner-files-durable.test.ts worker/chat/runner-repair-parts.test.ts worker/chat/runner-receipt-crash.test.ts worker/chat/runner-grown-reports.test.ts`.
+Run `npm run test -- worker/chat/runner-file worker/chat/runner-repair-parts.test.ts worker/chat/runner-receipt-crash.test.ts worker/chat/runner-grown-reports.test.ts`.
 `runner-grown-reports.test.ts` checks tree and changes parts that masking makes larger than one storage value.
 It runs on the production workspace object with the native SQLite value limit.
 File reports remain in Durable Object storage.

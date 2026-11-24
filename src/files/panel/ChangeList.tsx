@@ -2,8 +2,8 @@ import type { RefCallback } from 'react'
 import type { BranchChangedFile } from '../../shared/generated/BranchChangedFile'
 import type { ChangesResponse } from '../../shared/generated/ChangesResponse'
 import { formatCount } from '../../ui/components/common/counts'
+import { wholeChange } from '../../ui/components/files/changeTotals'
 import { ListNotice } from '../../ui/components/files/ListNotice'
-import { wholeChange } from '../model/change-list'
 import { hidesSecret, pathLabel } from '../model/file-labels'
 import { splitPath, type DiffTab, type FilesNavigation } from '../navigation'
 import { ChangeIcon, changeLabels } from '../ui/ChangeIcon'
@@ -90,7 +90,7 @@ export function ChangeList(props: {
 }) {
   const { changes } = props
   const { files } = changes
-  const totals = wholeChange(changes)
+  const totals = wholeChange(changes.summary, changes.omitted)
   const omitted = changes.omitted?.files ?? 0
   const menuRows = files.map(menuRowOf)
   const menu = useRowMenu(props.rowMenu, menuRows)

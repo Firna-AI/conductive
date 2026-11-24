@@ -180,8 +180,9 @@ decision number names a dated record, as
     with the old and the new path of each rename
   - the same paths after a change of the data of a row of the complete
     changes list, such as the pairing of a rename
-- In these refreshes, a listed changes report is a changes report that the
-  runner sent, not the selection of a scan.
+- The listed changes reports are the lists that readers hold before and
+  after the update. A scan with unchanged report data can reuse the
+  existing report.
 - These rules decide when the runner sends one full tree within the limit,
   in place of deltas:
   - A limited tree that changes its listed entries keeps the whole update
@@ -191,16 +192,16 @@ decision number names a dated record, as
     effect is to make readers read again. They remove absent paths or
     upsert unchanged entries. If they do not fit one delta, the runner
     sends one full tree.
-  - The scans behind the last tree and the last changes report differ, as
-    after a repair of only one report kind. The runner then sends one full
-    tree.
+  - After a repair of only one report kind, the next tree update is one
+    full tree unless the repair found the same data as the last scan of
+    the other kind.
 - An operation that also edits its entry goes with the other edits.
   Ordinary edits split across successive deltas when they exceed one
   delta's budget, unless a full-tree rule applies. Each edit refreshes
   its path in whichever delta carries it, so every affected path
   refreshes. See [Parts and revisions](#parts-and-revisions).
-- Reason for a full tree when the two scans differ: it makes every reader
-  read each open file and diff again, also an older reader.
+- A full tree after a repair makes every reader read each open file and
+  diff again, including older readers.
 - In each scan that sends both reports, the runner sends every part of the
   changes report before the tree update.
 - Reason: the workspace then stores the new base branch before a refresh

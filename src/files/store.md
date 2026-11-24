@@ -133,8 +133,11 @@ say. A missing total is unknown, so no notice shows.
 - The unavailable mark, a failed repair, and a repository move keep the
   saved tree with its count, so its notice stays. A move drops the
   changes with their totals.
-- A remove of a path that the tree does not hold changes no entry, and the
-  open page of that path still reads again. So a file or a diff of a path
-  that the report leaves out stays fresh.
-- `omitted-lists.test.ts` checks the totals and the refresh, and
-  `files-tree-repair.test.ts` checks the count of an update that waits.
+- A remove of a path that the tree does not hold changes no entry, also no
+  entry under that path, and the open page of that path still reads again.
+  So a file or a diff of a path that the report leaves out stays fresh, and
+  such a remove does not scan the tree.
+- `omitted-lists.test.ts` checks the totals and the refresh,
+  `files-tree-repair.test.ts` checks the count of an update that waits, and
+  `tree-model.test.ts` checks the entries and the touched path of a remove
+  of an absent path.

@@ -190,9 +190,12 @@ pages:
   one tree of All files, which leaves out `tsconfig.json`. So `@tsconfig`
   finds nothing, and the line says "Nothing matches “tsconfig”. Some files
   are not listed, so type the path or ask the agent." A typed path stays
-  text in the message. A path that the tree leaves out also stays text or
-  code in an answer, with no chip and no picture. An attached file keeps
-  its chip. `app/files/limited` draws the same tree in All files.
+  text in the message. In an answer, a path that the tree leaves out stays
+  text or code, with no chip. A Markdown link to it shows as the text that
+  the agent typed, and it opens nothing. An image of it shows only its
+  label, or nothing when the label is blank. An attached file keeps its
+  chip. Only a direct read of the path, such as the address of a file tab,
+  opens the file. `app/files/limited` draws the same tree in All files.
 - `app/file-mentions/chips` has a file chip and a folder chip in the
   message box. Its `pointer` variant has the pointer over the icon of the
   file chip, where a × takes the place of the icon. Its `sent` variant has

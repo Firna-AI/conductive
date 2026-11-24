@@ -335,7 +335,11 @@ While the cloud computer runs, an image of a listed PNG, JPEG, GIF, or WebP file
 Select the picture to open the file.
 A path can end with a line or a range of lines, such as `@src/app.ts:42` or `src/app.ts:42-50`.
 Its chip opens the file as text, with those lines in view and marked.
-Chat shows a path that **All files** leaves out as text or code.
+
+For paths that **All files** leaves out, `@` mentions and Markdown links show as typed text, and paths in code stay as code.
+A Markdown image that points to one of these paths shows only its label.
+If the label is blank, chat shows nothing for the image.
+
 To copy a code block, select **Copy code** in its top corner.
 With a mouse, the button shows when you point at the block.
 **Code copied** confirms the copy.

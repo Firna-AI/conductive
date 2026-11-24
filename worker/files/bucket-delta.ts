@@ -13,6 +13,7 @@ import { invalidFileResponse } from './errors'
 import { parseTree } from './parsers'
 import { chunkKeys, readStoredText } from './stored-chunks'
 import type { FilesReader, FilesTransaction } from './storage'
+import { treeFieldsForRevision, validTreeOmissionCount } from './tree-omission'
 
 type BucketEdit =
   | { type: 'delete'; path: string }
@@ -181,13 +182,11 @@ export async function writeTreeDelta(
   }
   return {
     ...tree,
-    fields: {
-      ...tree.fields,
-      revision: delta.revision,
-      ...(delta.omittedEntryCount === undefined
-        ? {}
-        : { omittedEntryCount: delta.omittedEntryCount }),
-    },
+    fields: treeFieldsForRevision(
+      tree.fields,
+      delta.revision,
+      delta.omittedEntryCount ?? validTreeOmissionCount(tree.fields),
+    ),
     count: buckets.reduce((count, bucket) => count + bucket.count, 0),
     orderChunks,
     buckets,

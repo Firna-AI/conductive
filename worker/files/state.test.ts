@@ -10,6 +10,7 @@ import {
   createFilesStorage,
   type FilesStorageHarness,
 } from './test-support/storage'
+import { readStoredTreeFields } from './test-support/storage-record'
 
 let runtime: FilesStorageHarness
 beforeAll(async () => {
@@ -161,12 +162,22 @@ it('keeps omission metadata with its list across reconnect, replacement, and a m
   await state.beginConnection('old')
   await state.apply('old', { type: 'files.snapshot', tree: limitedTree })
   await state.apply('old', { type: 'changes.updated', changes: limitedChanges })
+  await expect(readStoredTreeFields(storage)).resolves.toStrictEqual({
+    revision: 4,
+    omittedEntryCount: 12,
+    omittedEntryCountRevision: 4,
+  })
   await state.beginConnection('new')
   await expect(state.tree()).resolves.toStrictEqual(limitedTree)
   await expect(state.changes()).resolves.toStrictEqual(limitedChanges)
 
   const completeTree = { revision: 1, entries, omittedEntryCount: 0 }
   await state.apply('new', { type: 'files.snapshot', tree: completeTree })
+  await expect(readStoredTreeFields(storage)).resolves.toStrictEqual({
+    revision: 1,
+    omittedEntryCount: 0,
+    omittedEntryCountRevision: 1,
+  })
   await expect(state.tree()).resolves.toStrictEqual(completeTree)
   await expect(state.changes()).resolves.toStrictEqual(limitedChanges)
   const completeChanges = {
@@ -189,6 +200,9 @@ it('keeps omission metadata with its list across reconnect, replacement, and a m
   const legacyTree = { revision: 2, entries }
   await state.apply('new', { type: 'files.snapshot', tree: legacyTree })
   await state.apply('new', { type: 'changes.updated', changes: legacyChanges })
+  await expect(readStoredTreeFields(storage)).resolves.toStrictEqual({
+    revision: 2,
+  })
   await expect(state.tree()).resolves.toStrictEqual(legacyTree)
   await expect(state.changes()).resolves.toStrictEqual(legacyChanges)
 })

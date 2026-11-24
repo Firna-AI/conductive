@@ -56,7 +56,11 @@ pub trait FileReports: Send + Sync {
 
 struct History {
     revisions: FileRevisions,
+    /// Last scan whose tree data readers hold, including a scan that
+    /// reused the existing report because its tree data stayed the same.
     tree: Option<TreeHistory>,
+    /// Last scan whose Changes data readers hold, including a scan that
+    /// reused the existing report because its Changes data stayed the same.
     changes: Option<Arc<RepositorySnapshot>>,
     unavailable: bool,
 }

@@ -1,9 +1,5 @@
 import { splitPath, type ChangedFile } from '../../fixtures/files'
-import {
-  wholeChange,
-  type ChangeTotals,
-  type LimitedTotals,
-} from '../../fixtures/limitedFiles'
+import type { ChangeTotals, LimitedTotals } from '../../fixtures/limitedFiles'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { changeIcon } from '../../entries/components/files/ChangeIcon.mockup'
@@ -14,6 +10,10 @@ import { RowMenuItem, type FileRowMenu } from './FileRowMenu'
 import { paths } from '../../paths'
 import { classes } from '../../../../../src/ui/components/common/classes'
 import { formatCount } from '../../../../../src/ui/components/common/counts'
+import {
+  noChanges,
+  wholeChange,
+} from '../../../../../src/ui/components/files/changeTotals'
 import styles from './ChangeList.module.css'
 
 /**
@@ -96,7 +96,8 @@ function Summary(props: { totals: ChangeTotals }) {
  * `menu` is the open menu of a row, at the pointer or under a sheet.
  * `totals` belongs to a list that leaves out files: the summary then gives
  * the whole change, and a notice under it says how many files the rows do
- * not show.
+ * not show. As in the app, the list is empty only when the whole change has
+ * no file, so a list that leaves out every file still gives its totals.
  */
 export function ChangeList(props: {
   files: readonly ChangedFile[]
@@ -105,8 +106,9 @@ export function ChangeList(props: {
   menu?: FileRowMenu
   totals?: LimitedTotals
 }) {
-  const { totals } = props
-  if (props.files.length === 0) {
+  const listed = props.totals?.listed ?? totalsOf(props.files)
+  const omitted = props.totals?.omitted
+  if (noChanges(listed, omitted)) {
     return (
       <emptyState.Component
         body="Files that the agent edits appear as it works."
@@ -118,10 +120,10 @@ export function ChangeList(props: {
   }
   return (
     <>
-      <Summary totals={totals ? wholeChange(totals) : totalsOf(props.files)} />
-      {totals && totals.omitted.files > 0 ? (
+      <Summary totals={wholeChange(listed, omitted)} />
+      {omitted && omitted.files > 0 ? (
         <listNotice.Component
-          count={totals.omitted.files}
+          count={omitted.files}
           list="changes"
           moklyInstance="changes-omitted"
         />

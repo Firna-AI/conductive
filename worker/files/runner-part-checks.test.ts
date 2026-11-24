@@ -49,13 +49,18 @@ const changesMismatches = [
     field: 'explicit omitted totals that part one did not carry',
     patch: { omitted: { files: 0, added: 0, removed: 0 } },
   },
+  {
+    field: 'a different omitted added line count',
+    firstPatch: { omitted: { files: 4, added: 7, removed: 2 } },
+    patch: { omitted: { files: 4, added: 8, removed: 2 } },
+  },
 ]
 
 it.each([
-  ...changesMismatches.map(({ field, patch }) => ({
+  ...changesMismatches.map(({ field, firstPatch, patch }) => ({
     kind: 'changes' as const,
     field,
-    first: changesPart(1, 3),
+    first: changesPart(1, 3, firstPatch),
     middle: changesPart(2, 3, patch),
   })),
   {

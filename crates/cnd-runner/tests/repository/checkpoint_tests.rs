@@ -210,6 +210,8 @@ async fn submodule_commit_and_worktree_changes_leave_both_indexes_and_objects_un
             .path,
         "module"
     );
+    h.git(&["config", "color.ui", "always"]);
+    h.git(&["config", "color.diff", "always"]);
     assert_eq!(
         h.repository
             .diff("module".into(), "main".into())

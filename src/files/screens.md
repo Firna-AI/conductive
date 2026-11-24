@@ -66,9 +66,11 @@ screen, its props, and the services that the shell passes to it.
 - `DiffPage` shows the diff of one changed file. While Changes lists the
   path, its row gives the changed lines of the header and tells a deleted
   file. A path that Changes leaves out takes both from its own diff: the
-  lines from the rows of a text diff, and a deletion from a patch with a
-  `deleted file mode` line and no `new file mode` line, as a change of type
-  gives both.
+  lines from the rows of a text diff, and a deletion from a patch whose
+  section headers hold a `deleted file mode` line and no `new file mode`
+  line, as a change of type gives both. Each section of the patch starts at
+  its `diff --git` line, and only the whole header lines of a section, before
+  its first hunk, count, so no text of the file reads as a header.
 - The `placeholder` prop of `FilePage` and `DiffPage` replaces the content
   of the page, for example with a sandbox state. The page then reads
   nothing, and its header offers no Download. A diff keeps its changed

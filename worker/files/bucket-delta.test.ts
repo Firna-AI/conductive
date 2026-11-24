@@ -17,6 +17,7 @@ import {
   createFilesStorage,
   type FilesStorageHarness,
 } from './test-support/storage'
+import { readStoredTreeFields } from './test-support/storage-record'
 
 let runtime: FilesStorageHarness
 beforeAll(async () => {
@@ -37,6 +38,7 @@ async function treeProjection(name: string, entries: FileEntry[]) {
   const observed = observeFilesStorage(storage)
   const state = new FilesState(observed.storage)
   return {
+    storage,
     observed,
     apply: (
       changes: FileTreeChange[],
@@ -57,14 +59,22 @@ const z = fileEntry('z')
 const modifiedA: FileEntry = { ...a, change: 'modified' }
 const modifiedB: FileEntry = { ...b, displayPath: 'masked', change: 'renamed' }
 
-it('sets a count on a legacy tree with an empty delta and keeps it across uncounted deltas', async () => {
-  const { observed, apply, tree } = await treeProjection('count-only', [a, b])
+it('binds counted deltas including zero and advances the count revision on an uncounted delta', async () => {
+  const { storage, observed, apply, tree } = await treeProjection(
+    'count-only',
+    [a, b],
+  )
   await expect(tree()).resolves.toStrictEqual({ revision: 1, entries: [a, b] })
   await expect(apply([], 2, { omittedEntryCount: 29 })).resolves.toBe(true)
   expect(observed.reads).toStrictEqual([[FILES_KEY]])
   expect(observed.writes).toHaveLength(1)
   expect(Object.keys(observed.writes[0].updates)).toEqual([FILES_KEY])
   expect(observed.writes[0].removals).toEqual([])
+  await expect(readStoredTreeFields(storage)).resolves.toStrictEqual({
+    revision: 2,
+    omittedEntryCount: 29,
+    omittedEntryCountRevision: 2,
+  })
   await expect(tree()).resolves.toStrictEqual({
     revision: 2,
     omittedEntryCount: 29,
@@ -73,9 +83,25 @@ it('sets a count on a legacy tree with an empty delta and keeps it across uncoun
   await expect(
     apply([{ operation: 'upsert', entry: modifiedA }], 3),
   ).resolves.toBe(true)
+  await expect(readStoredTreeFields(storage)).resolves.toStrictEqual({
+    revision: 3,
+    omittedEntryCount: 29,
+    omittedEntryCountRevision: 3,
+  })
   await expect(tree()).resolves.toStrictEqual({
     revision: 3,
     omittedEntryCount: 29,
+    entries: [modifiedA, b],
+  })
+  await expect(apply([], 4, { omittedEntryCount: 0 })).resolves.toBe(true)
+  await expect(readStoredTreeFields(storage)).resolves.toStrictEqual({
+    revision: 4,
+    omittedEntryCount: 0,
+    omittedEntryCountRevision: 4,
+  })
+  await expect(tree()).resolves.toStrictEqual({
+    revision: 4,
+    omittedEntryCount: 0,
     entries: [modifiedA, b],
   })
 })

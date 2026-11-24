@@ -8,6 +8,7 @@ mod limited_updates_tests;
 mod multipart_tests;
 mod parts_tests;
 mod queue_tests;
+mod refresh_budget_tests;
 mod selection_tests;
 mod startup_tests;
 mod support;
