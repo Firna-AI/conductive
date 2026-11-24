@@ -848,54 +848,60 @@ Evidence: `.context/workspace-object-memory/m6-*.log` and
 
 Depends on: 2, 3, 4, 5, and 6
 
-- [ ] Merge `main`. CI runs the complete gate, `npm run check`, on the
+- [x] Merge `main`. CI runs the complete gate, `npm run check`, on the
       pull request, as Cal asked on 23 November 2026. Run the typecheck,
       the lint, and the format check locally.
-- [ ] Run the targeted tests of Milestones 3 to 6 on the combined tree.
-- [ ] From the orchestrator session, request a rerun of the measurement
+- [x] Run the targeted tests of Milestones 3 to 6 on the combined tree.
+- [x] From the orchestrator session, request a rerun of the measurement
       harness on this branch's tip with `send_message`. It runs in
       workspace `JpEDfCcy4nuFwTfD3g8tmfOJn6N6EwVRFT0y5elKX1Y`, session
       `nvF3pjtEyRe5SFVCLYTUYnJlc00B-lx6F6JDMknbDLs`. Ask for the same
       scenarios at 1x and 10x, and for option G as a whole.
-- [ ] Measure the current `main` baseline with the session index and
+- [x] Measure the current `main` baseline with the session index and
       PR #477, then the finished branch. Separate warm indexed pages,
       cold index preparation, and workspace replay. Do not attribute the
       session-index gain to the 4 KiB history stubs.
-- [ ] Include a single file delete and a folder delete at 10x. The current
+- [x] Include a single file delete and a folder delete at 10x. The current
       runner sends a remove for each deleted file. Compare their read cost
       when the Worker visits all buckets.
-- [ ] Run the cold conversion on a large old-layout projection with a small
+- [x] Run the cold conversion on a large old-layout projection with a small
       delta and a tree mark. Record the heap without a whole-list load.
       Inject a failed conversion and confirm that the old projection stays
       intact. Keep this one-time conversion proof under `.context/`.
-- [ ] Run the actual reader-release Worker against data from this writer.
+- [x] Run the actual reader-release Worker against data from this writer.
       Check reload, connection reset, delta, unavailable, and repository
       move paths. Keep this rollback-format proof under `.context/`.
-- [ ] In the same rollback proof, start a multipart changes report on one
+- [x] In the same rollback proof, start a multipart changes report on one
       Worker version and finish it on the other, in both directions.
       Include a middle part with another base branch, which each version
       must refuse. Source: the review of PR #672.
-- [ ] Run the rollback and conversion proofs again at the final head
+- [x] Run the rollback and conversion proofs again at the final head
       when a review fix changes stored writes, transaction paths, or a
       reader module. Name the proof head in the evidence. Source: the
       round 3 review checks and Cal's message of 24 November 2026.
-- [ ] Copy the evidence into `.context/workspace-object-memory/`. Compare
+- [x] Copy the evidence into `.context/workspace-object-memory/`. Compare
       the heap, the CPU, the storage rows, and the kept history with the
       figures of the recorded decisions. Add one line here that names the
       evidence file.
-- [ ] When a result is much worse than its recorded figure, add a decision
+- [x] When a result is much worse than its recorded figure, add a decision
       or a finding before the pull request.
+Evidence: `.context/workspace-object-memory/baseline-main-aeaf6234d.md`,
+`measurement-tip-8f25af325.md`, `proofs/rollback.md`, `proofs/conversion.md`
+(proof heads `8f25af325`, `ef9d2021b`, and `9ecd5f569`), and
+`final-targeted.log`. No result is much worse than its recorded figure.
 
 ## Milestone 8: Commit, review, and pull request
 
 Depends on: 7
 
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+      Evidence: `.context/reviews/calummoore/object-memory-history-and-files-state-14g5/`
+      (rounds 3 and 4, two fix rounds).
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
