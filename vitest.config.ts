@@ -8,6 +8,7 @@ export default defineConfig({
       'src/**/*.test.{ts,tsx}',
       'worker/**/*.test.ts',
       'tools/chatgpt-egress/**/*.test.ts',
+      'tools/style-converter/**/*.test.ts',
       'desktop/src/**/*.test.ts',
       'desktop/renderer/**/*.test.ts',
       'desktop/scripts/**/*.test.ts',
