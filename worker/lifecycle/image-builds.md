@@ -83,7 +83,10 @@ The added build uses the first admin who is not suspended. A failed start
 keeps the published image and writes one fixed warning. A failed build
 starts no added build. A refresh after a failed build gets none either.
 
-Each failed job writes the `image_build_failed` warning. When the job fails
+A job that fails while the image coordinator advances it writes the
+`image_build_failed` warning, in `handleImageBuildFailure` of
+[`image-build-failure.ts`](image-build-failure.ts). Other paths that fail a
+build, such as a job that could not be scheduled, write none. When the job fails
 in the `sources` phase, the warning adds `sourceStep`, the fixed step of the
 repository load that failed, and `githubStatus`, the HTTP status of a GitHub
 reply that was not OK, or null. [`image-sources/failure.ts`](image-sources/failure.ts)

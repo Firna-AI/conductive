@@ -11,6 +11,7 @@ import {
   type SourceRepository,
 } from './image-sources/data'
 import { finishImageBuild } from './image-test-support'
+import { refreshImagesForPush } from './image-timers'
 import { readOrgImage } from './org-image-data'
 
 const fixtureForTest = setupBackendTests()
@@ -162,4 +163,30 @@ it('fails a refresh and keeps the published image when a captured repository has
     imageBuildId: 'published-image',
   })
   expect(sources).toEqual([])
+})
+
+it('refreshes after a push to the saved default branch, not the branch of the image', async () => {
+  const fixture = fixtureForTest()
+  const { images, org } = fixture
+  recordSourceRepositories(fixture)
+  await changeRepositoryAfterFailedBuild(
+    fixture,
+    'example/repository',
+    'trunk',
+    91,
+  )
+  const push = (ref: string) =>
+    refreshImagesForPush(images, {
+      githubRepositoryId: 1,
+      ref,
+      software: SOFTWARE,
+    })
+
+  expect(await push('refs/heads/main')).toEqual([])
+  const [refresh] = await push('refs/heads/trunk')
+  const job = await readBuildJob(images.env.DB, org.id, refresh ?? '')
+  expect(job.kind).toBe('refresh')
+  expect(JSON.parse(job.repositoriesJson)).toMatchObject([
+    { fullName: 'example/repository', defaultBranch: 'trunk' },
+  ])
 })
