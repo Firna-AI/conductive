@@ -111,13 +111,16 @@ export function SectionList(props: {
     lifted && sections.drag?.place === index ? (
       <SectionDropLine name={lifted.section.name} place={index + 1} />
     ) : null
+  /** A row that `stays`, in a collapsed section, moves by no key. */
   const onKeyDown = (
     workspace: Workspace,
     event: KeyboardEvent<HTMLElement>,
+    stays: boolean,
   ) => {
     const move = workspaceRowMove(event.nativeEvent)
     if (move === null) return
     event.preventDefault()
+    if (stays) return
     const target = stepTarget(
       props.groups,
       workspace.id,
@@ -188,10 +191,12 @@ export function SectionList(props: {
                     const moving =
                       drag?.item.id === workspace.id ||
                       carried.has(workspace.id)
-                    // Only a top-level row drags. A nested row stays still.
+                    // Only a top-level row of an open section drags. A
+                    // nested row and the open row of a collapsed section,
+                    // whose places the list hides, stay still.
                     const surface = props.readOnly
                       ? undefined
-                      : row.parentId === null
+                      : row.parentId === null && !section.collapsed
                         ? bind(workspace, {
                             sectionId: section.id,
                             index: place,
@@ -217,7 +222,12 @@ export function SectionList(props: {
                             onKeyDown={
                               props.readOnly
                                 ? undefined
-                                : (event) => onKeyDown(workspace, event)
+                                : (event) =>
+                                    onKeyDown(
+                                      workspace,
+                                      event,
+                                      section.collapsed,
+                                    )
                             }
                             onBlur={rowFocus.blur}
                             onFocus={(event) =>

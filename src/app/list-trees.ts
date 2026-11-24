@@ -156,8 +156,9 @@ export function treeRows(rows: readonly ListRow[]): TreeRow[] {
  * shows each row. A collapsed section shows only the row of the open
  * workspace, when it holds that workspace, so the open workspace stays in
  * sight. That row shows as a top-level row, with no indent and no guide
- * lines, because the list shows no other row of its tree. It keeps its
- * tree and its place, so a drag of it counts the places of the section.
+ * lines, because the list shows no other row of its tree. The list hides
+ * the places of the section, so the list moves that row by no drag and no
+ * key.
  */
 export function shownTreeRows(
   rows: readonly ListRow[],

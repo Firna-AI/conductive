@@ -24,6 +24,10 @@ number names a dated record, as
   exception: when it holds the open workspace, it still shows the row of
   that workspace. Reason: the user asked on 24 November 2026 that the open
   workspace stay in sight when its section is closed.
+- That row of a collapsed section does not move by drag and drop or by
+  keys. Move to section in the menu of a top-level row still moves it.
+  Reason: the section hides the places of its other rows, so a move there
+  would land where the member cannot see it.
 - New section opens the New section dialog, which asks for the name of
   the section. New section in the menu of a section puts the new section
   directly below that section. New section in the command palette puts
