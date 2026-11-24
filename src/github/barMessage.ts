@@ -55,6 +55,12 @@ export function messageOf(
         tone: 'danger',
         href: null,
       }
+    case 'merge-stack-held':
+      return {
+        text: barMessageText(model.message, branches),
+        tone: 'info',
+        href: null,
+      }
     case 'base-moved':
       // The Worker moved a deleted base to the default branch, which the
       // banner names as its base, and it keeps the deleted name.

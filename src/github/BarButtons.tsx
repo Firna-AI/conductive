@@ -18,7 +18,7 @@ import {
 } from '../ui/components/workspace/barCopy'
 import { agentIcons } from '../ui/components/workspace/barIcons'
 import type { BarAction } from '../ui/components/workspace/barModel'
-import { queuedMergeLabel } from '../ui/components/workspace/queueCopy'
+import { mergeButtonLabel } from '../ui/components/workspace/queueCopy'
 import type { ButtonTint } from '../ui/components/common/tint'
 import { ActionButton } from './ActionButton'
 import { classes, GitHubLink } from './bannerParts'
@@ -67,7 +67,9 @@ function BarButton(props: {
           onPress={press}
           tint={tint}
           tooltip={
-            action.below !== undefined && !action.busy && !touch
+            (action.below !== undefined || action.stackCount !== undefined) &&
+            !action.busy &&
+            !touch
               ? mergeLabels[action.method]
               : undefined
           }
@@ -75,9 +77,7 @@ function BarButton(props: {
         >
           {action.busy
             ? barLabels.merging
-            : action.below === undefined
-              ? mergeLabels[action.method]
-              : queuedMergeLabel(action.method, action.below)}
+            : mergeButtonLabel(action.method, action.below, action.stackCount)}
         </ActionButton>
       )
     case 'ready':

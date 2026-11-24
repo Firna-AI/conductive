@@ -1,4 +1,5 @@
 import type { GitHubWorkspace } from '../github/contracts'
+import type { GitHubStackQueue } from '../../src/shared/generated/GitHubStackQueue'
 import type { QueueEntry, QueueRecord, QueueScope } from './contracts'
 import { queueId } from './contracts'
 
@@ -81,6 +82,24 @@ export async function otherOrgQueuesRepository(
       .bind(scope.githubRepositoryId, scope.orgId)
       .first()) !== null
   )
+}
+
+/** Another org takes priority if the landed set overlaps more than one queue. */
+export async function queueOfPulls(
+  db: D1Database,
+  scope: QueueScope,
+  pullNumbers: readonly number[],
+): Promise<GitHubStackQueue | null> {
+  const match = await db
+    .prepare(
+      `SELECT MAX(CASE WHEN q.org_id = ? THEN 1 ELSE 2 END) AS owner
+     FROM merge_queues q JOIN merge_queue_entries e ON e.queue_id = q.id
+     WHERE q.github_repository_id = ?
+       AND e.pull_number IN (SELECT value FROM json_each(?))`,
+    )
+    .bind(scope.orgId, scope.githubRepositoryId, JSON.stringify(pullNumbers))
+    .first<number>('owner')
+  return match === 2 ? 'other-org' : match === 1 ? 'same-org' : null
 }
 
 export async function stackOfAnotherQueue(

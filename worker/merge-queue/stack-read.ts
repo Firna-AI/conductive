@@ -3,6 +3,7 @@ import {
   getPullRequestStack,
   listPullRequestStacks,
 } from '../github/stack-client'
+import { githubFailure } from '../github/parsers'
 import type {
   GitHubStack,
   GitHubStackLayer,
@@ -18,6 +19,43 @@ export function openStackLayers<T extends GitHubStackLayer>(
   stack: GitHubStack<T>,
 ) {
   return stack.layers.filter((layer) => layer.state === 'open')
+}
+
+async function openPullStacks(
+  fetch: HttpFetch,
+  token: string,
+  fullName: string,
+  pullNumber: number,
+) {
+  return (
+    await listPullRequestStacks(fetch, token, fullName, pullNumber)
+  ).filter(
+    (stack) =>
+      stack.open &&
+      stack.layers.some(
+        (layer) => layer.state === 'open' && layer.number === pullNumber,
+      ),
+  )
+}
+
+/** The open layers up to the target, in the order GitHub lands them. */
+export async function readStackPrefix(
+  fetch: HttpFetch,
+  token: string,
+  fullName: string,
+  pullNumber: number,
+) {
+  const [stack, other] = await openPullStacks(
+    fetch,
+    token,
+    fullName,
+    pullNumber,
+  )
+  if (other) throw githubFailure()
+  if (!stack) return null
+  const open = openStackLayers(stack)
+  const end = open.findIndex((layer) => layer.number === pullNumber) + 1
+  return { number: stack.number, layers: open.slice(0, end) }
 }
 
 function matchesEntry(entry: QueueEntry | undefined, layer: GitHubStackLayer) {
@@ -106,13 +144,8 @@ export async function readOtherStack(
   token: string,
 ): Promise<OtherStack> {
   const stacks = (
-    await listPullRequestStacks(fetch, token, queue.fullName, entry.pullNumber)
-  ).filter(
-    (stack) =>
-      stack.open &&
-      stack.number !== queue.githubStackNumber &&
-      openStackLayers(stack).some(({ number }) => number === entry.pullNumber),
-  )
+    await openPullStacks(fetch, token, queue.fullName, entry.pullNumber)
+  ).filter((stack) => stack.number !== queue.githubStackNumber)
   const stack = stacks[0]
   if (!stack) return { kind: 'none' }
   if (stacks.length > 1 || (await stackOfAnotherQueue(db, queue, stack.number)))

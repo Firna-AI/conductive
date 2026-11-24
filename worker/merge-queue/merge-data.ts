@@ -86,7 +86,9 @@ export async function markMergeRefused(
   job: Extract<QueueMergeJob, { stage: 'settling' }>,
   now: number,
 ) {
-  const { queue, target, input } = job
+  const { queue, input } = job
+  const target = job.layers.at(-1)?.entry
+  if (job.stackPullNumbers || !target) return
   await db
     .prepare(
       `UPDATE merge_queue_entries SET state = 'waiting', wait_reason = 'merge-refused',

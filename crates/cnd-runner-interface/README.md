@@ -55,6 +55,9 @@ Its optional fields give the count of layers that can merge with it and
 the pull request that blocks it. The rebase input names the intended base
 from queue order and the checked old base commit. A queue merge request carries the shown
 count. A leave notice gives the base that remains after a failed reset.
+The bar can also report a member stack's merge count and which org's queue
+holds a lower layer. A request to merge an unqueued top through this org's
+queue carries the pull request number, its head, and the shown count.
 Workspace details give the parent entry, stored depth, and direct children.
 `Workspace.archivedComputer` is optional. It gives the `ArchivedComputerState`
 of an archived workspace and its original Restore cutoff. Its deserializer

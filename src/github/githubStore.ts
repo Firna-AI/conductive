@@ -253,13 +253,13 @@ export class GitHubStore {
   private readReply(reply: GitHubSnapshot, stream: Read['stream']): void {
     const shown = this.state.status === 'ready' ? this.state.snapshot : null
     if (stream === 'live' && shown) {
-      const { banner, checks } = shown
-      const queue = queueOnGitHubEvent(reply, banner)
+      const { banner, checks, ...previous } = shown
+      const fields = queueOnGitHubEvent(reply, banner)
       if (
-        queue &&
-        (shown.queue || shown.queueLeave || queue.queue || queue.queueLeave)
+        fields &&
+        (Object.keys(previous).length || Object.keys(fields).length)
       )
-        this.show({ banner, checks, ...queue }, false)
+        this.show({ banner, checks, ...fields }, false)
       return
     }
     if (stream === 'history' && shown && !sameGitHubState(shown, reply)) {

@@ -1,6 +1,7 @@
 import type { MergeQueueEntry } from '../../src/shared/generated/MergeQueueEntry'
 import type { MergeQueueWait } from '../../src/shared/generated/MergeQueueWait'
 import type { ReorderMergeQueue } from '../../src/shared/generated/ReorderMergeQueue'
+import type { RequestQueueStackMerge } from '../../src/shared/generated/RequestQueueStackMerge'
 import type { GitHubWorkspace } from '../github/contracts'
 
 export interface QueueScope {
@@ -60,7 +61,13 @@ export type QueueMemberAction =
   | { kind: 'add' }
   | { kind: 'remove' }
   | { kind: 'merge'; ahead: number }
+  | ({ kind: 'merge-stack' } & RequestQueueStackMerge)
   | ({ kind: 'reorder' } & ReorderMergeQueue)
+
+export type QueueMergeTarget = Pick<
+  QueueEntry,
+  'workspaceId' | 'branch' | 'pullNumber'
+>
 
 export interface QueueWriter {
   workspace: GitHubWorkspace

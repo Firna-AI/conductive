@@ -3,7 +3,7 @@ import { readQueueCapabilities } from '../github/merge-capabilities'
 import { readMergeWorkspace } from '../github/merge-access'
 import { repositoryMemberGitHub } from '../github/member-github'
 import { HttpError } from '../http'
-import type { QueueEntry, QueueRecord } from './contracts'
+import type { QueueEntry, QueueMergeTarget, QueueRecord } from './contracts'
 import type { QueuePullRead } from './merge-read'
 import type { QueueRuntime } from './step'
 
@@ -12,7 +12,7 @@ export type QueueMergeAccess = Awaited<ReturnType<typeof queueMergeAccess>>
 export async function queueMergeAccess(
   runtime: QueueRuntime,
   queue: QueueRecord,
-  entry: QueueEntry,
+  entry: QueueMergeTarget,
   userId: string,
 ) {
   const { env, dependencies } = runtime

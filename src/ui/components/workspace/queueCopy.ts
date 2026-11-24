@@ -28,7 +28,12 @@ export const defaultQueueBranchLabel: MergeQueueBranchLabel = {
  * the list, where place 1 shows first. The bottom layer lands alone, so its
  * label names the merge method, as Merge outside the queue does.
  */
-export function queuedMergeLabel(method: MergeMethod, below?: number): string {
+export function mergeButtonLabel(
+  method: MergeMethod,
+  below?: number,
+  stackCount?: number,
+): string {
+  if (stackCount !== undefined) return `Merge stack (${stackCount})`
   if (below === undefined || below === 0) return mergeLabels[method]
   return `Merge with ${below} ahead`
 }

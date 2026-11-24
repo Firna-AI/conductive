@@ -30,7 +30,10 @@ uses a workspace in the next unit as its anchor, or null for the end.
 When a member's stack has unqueued layers above a queued unit, the queue
 uses that stack to merge the unit when it reaches the front. The queue
 checks the live stack before it sends the merge. Other units wait in order.
-After this unit merges, the next unit restacks onto the trunk.
+After this unit merges, the next unit restacks onto the trunk. A member
+can also select Merge stack on an unqueued upper layer. The queue verifies
+the same ready prefix, the clicked head, the stack count, and local work
+before submitting the merge as that member.
 
 The leave step reads the lowest open pull request of each leaving unit
 and resets its base to the stored trunk. It uses the queuer's token when
@@ -130,6 +133,8 @@ check, and a merge through the app routes and a fake GitHub server.
   trunk up. [Stack changes](stack-changes.ts) manage membership and
   recover a stack creation after a retry.
 - [Merge selection](merges.ts) checks the ready layers and starts a merge.
+- [Member stack merges](merge-stack-top.ts) check the unqueued part of the
+  stack against the ready queue prefix and the clicked head.
 - [Merge jobs](merge-job.ts) start, poll, and resume a saved GitHub merge.
 - [Base resets](leave-base.ts) check member access and reset a base on leave.
 - [Fix turns](fix-turns.ts) save restack requests, waits, and turn results

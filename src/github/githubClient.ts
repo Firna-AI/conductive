@@ -27,7 +27,7 @@ export interface WorkspaceTarget {
  */
 export interface GitHubSnapshot extends Pick<
   GitHubBannerResponse,
-  'queue' | 'queueLeave'
+  'queue' | 'queueLeave' | 'mergeStack'
 > {
   banner: GitHubBanner
   checks: GitHubChecksResponse
@@ -137,7 +137,7 @@ export function queueOnGitHubEvent(
     banner.state === 'closed'
   )
     return undefined
-  const { queue, queueLeave } = shown
+  const { queue, queueLeave, mergeStack } = shown
   const sameHead =
     shown.banner.pullRequest.headSha === banner.pullRequest.headSha
   const sameBase = shown.banner.baseBranch === banner.baseBranch
@@ -153,5 +153,6 @@ export function queueOnGitHubEvent(
   return {
     ...(next && { queue: next }),
     ...(queueLeave && sameBase && { queueLeave }),
+    ...(mergeStack && sameBase && { mergeStack }),
   }
 }

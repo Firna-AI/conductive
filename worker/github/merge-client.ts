@@ -1,7 +1,5 @@
-import type {
-  GitHubMergeMethod,
-  GitHubMergeRequest,
-} from '../../src/shared/github'
+import type { GitHubMergeRequest } from '../../src/shared/generated/GitHubMergeRequest'
+import type { GitHubMergeMethod } from '../../src/shared/generated/GitHubMergeMethod'
 import type { HttpFetch } from '../env'
 import { readBoundedJson } from '../http/bounded-body'
 import { choice, githubFailure, object, text } from './parsers'

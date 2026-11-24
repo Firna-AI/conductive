@@ -210,6 +210,21 @@ question, reason, and prompt.
   of a layer without the layers below it. A question before the merge was
   left out, because decision 228 rejected it.
 
+## Merge stack
+
+- An unqueued workspace at a layer of a GitHub stack with open pull
+  requests below it shows Merge stack (N) in the place of Merge. The count
+  includes the target and each open layer below it (decision 324).
+- When a lower layer is queued in this org, the click goes through the
+  queue. The queued layers must be ready at the front of the queue. The
+  queue uses the clicker's GitHub account and method to merge the stack up
+  to the clicked layer.
+- When a lower layer is queued in another org, the bar offers no Merge.
+  It says "Another org's merge queue holds a pull request below this one."
+  It names no other org or entry.
+- When no lower layer is queued, the click starts a direct stack merge,
+  as [Merge](github-banner-merge.md#merge) says.
+
 ## The prompts of a queued workspace
 
 - GitHub merges a stack only with a linear history. So while a workspace

@@ -22,6 +22,10 @@ async function costOf(run: () => Promise<unknown>) {
   return {
     requests: harness.api.requests.length - requests,
     tokens: harness.tokens.length - tokens,
+    stacks: harness.api.requests
+      .slice(requests)
+      .filter((request) => new URL(request.url).pathname.endsWith('/stacks'))
+      .length,
   }
 }
 
@@ -39,7 +43,7 @@ it('reads GitHub once for the banner and the checks of one load', async () => {
     ])
   })
 
-  expect(one.requests).toBeGreaterThan(0)
+  expect(one.stacks).toBe(1)
   expect(load).toEqual(one)
   expect(replies.map((reply) => reply.status)).toEqual([200, 200])
   expect(await replies[0].json()).toMatchObject({
@@ -60,7 +64,8 @@ it('keeps a read without a member apart from a tab read', async () => {
     ]),
   )
 
-  expect(both.requests).toBe(one.requests * 2)
+  expect(both).toMatchObject({ requests: 3, stacks: 1 })
+  expect(one).toMatchObject({ requests: 2, stacks: 1 })
 })
 
 it('reads again after a shared read ends', async () => {

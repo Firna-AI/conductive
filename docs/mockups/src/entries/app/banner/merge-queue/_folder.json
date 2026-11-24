@@ -1,1 +1,1 @@
-{ "order": ["add", "queued", "merge", "cannot-merge", "remove"] }
+{ "order": ["add", "queued", "merge", "merge-stack", "cannot-merge", "remove"] }

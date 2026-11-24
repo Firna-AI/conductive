@@ -72,9 +72,15 @@ export type BarAction =
   | { kind: 'agent'; action: AgentAction }
   /**
    * `below`: the layers of the merge queue that land with a queued
-   * workspace (decision 316). Without it, a merge of the workspace alone.
+   * workspace. `stackCount` counts all pull requests in a member stack merge.
    */
-  | { kind: 'merge'; method: MergeMethod; busy: boolean; below?: number }
+  | {
+      kind: 'merge'
+      method: MergeMethod
+      busy: boolean
+      below?: number
+      stackCount?: number
+    }
   /** Ready for review of a draft. `busy`: the change runs. */
   | { kind: 'ready'; busy: boolean }
   /** `waiting`: a turn runs, so Continue is not available yet. */
@@ -126,6 +132,8 @@ export type BarFacts = {
    * the stack. Without it, the bar shows no part of the queue.
    */
   queue?: QueueFacts
+  /** Open pull requests landed by a stack merge, including the target. */
+  stack?: { count: number; held: boolean }
 }
 
 /** The fix of a state that the agent can act on, without local work. */
@@ -174,15 +182,7 @@ function localWorkAction(localWork: LocalWorkKind): AgentAction | undefined {
   }
 }
 
-/**
- * The one main action of a state before the merge. Local work comes first:
- * Commit and push, or Push, takes the place of Merge, of the fixes, and of
- * Ready for review. An agent action needs write access, or an access that
- * the Worker could not read. Ready for review needs write access that the
- * Worker read. Merge needs write access that the Worker read, and a merge
- * method. On a queued workspace, Merge goes through the queue, as
- * `queuedMerge` says.
- */
+/** Local work takes priority. Merge needs confirmed write access and a method. */
 function mainAction(facts: BarFacts): BarAction | undefined {
   const { banner, method } = facts
   const agent = (action: AgentAction): BarAction | undefined =>
@@ -216,7 +216,15 @@ function mainAction(facts: BarFacts): BarAction | undefined {
   const busy = facts.appAction === 'merging'
   const queued = queuedMerge(facts.queue)
   if (queued === null) return undefined
-  if (queued === undefined) return { kind: 'merge', method, busy }
+  if (queued === undefined) {
+    if (facts.stack?.held) return undefined
+    return {
+      kind: 'merge',
+      method,
+      busy,
+      ...(facts.stack && { stackCount: facts.stack.count }),
+    }
+  }
   const { below } = queued
   return { kind: 'merge', method, busy: busy || queued.busy, below }
 }
@@ -281,7 +289,10 @@ export function barModel(facts: BarFacts): BarModel {
   return {
     ...bar,
     actions: main ? [main] : [],
-    message: refusalMessage(facts) ?? baseMessage(facts),
+    message:
+      facts.stack?.held && isOpen(banner)
+        ? 'merge-stack-held'
+        : (refusalMessage(facts) ?? baseMessage(facts)),
     ...(queue ? { queue } : {}),
   }
 }

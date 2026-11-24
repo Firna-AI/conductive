@@ -218,6 +218,7 @@ export function barViewOf(input: BarInput): BarView {
   const { snapshot, outcome } = input
   const { banner } = snapshot
   const { access, method } = accessOf(input.capabilities)
+  const stack = snapshot.queue ? undefined : snapshot.mergeStack
   const model = barModel({
     banner: banner.state,
     localWork: input.localWork === 'unknown' ? 'none' : input.localWork,
@@ -233,6 +234,7 @@ export function barViewOf(input: BarInput): BarView {
     archiving: input.archiving,
     baseMoved: banner.baseMoved !== undefined,
     queue: queueFactsOf(snapshot.queue, input.queue),
+    stack: stack && { count: stack.count, held: stack.queue === 'other-org' },
   })
   const named = failingChecks(snapshot).length > 0
   const actions = model.actions.filter(

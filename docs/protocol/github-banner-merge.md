@@ -30,10 +30,10 @@ says.
   then sees a button that fails. Merge for the workspace owner and the
   admins only was rejected, because a reviewer with the right then must
   merge on GitHub.
-- The button names the merge method, such as "Squash and merge". The
-  method is the member's default merge method on GitHub when the
-  repository allows it, or else a method that the repository allows. The
-  bar has no menu of methods.
+- The button of a pull request that lands alone names the merge method,
+  such as "Squash and merge". The method is the member's default on GitHub
+  when the repository allows it, or else a method that the repository
+  allows. The bar has no menu of methods.
 - On a workspace in the merge queue, the label of Merge counts the layers
   ahead of it, as
   [Merge on a queued workspace](merge-queue-in-the-app.md#merge-on-a-queued-workspace)
@@ -57,11 +57,17 @@ says.
 - Auto-merge and a bypass of branch rules are not part of the bar. Neither
   is GitHub's own merge queue: a direct merge into a branch that needs a
   GitHub merge queue gets the refusal of GitHub.
-- Outside the [merge queue](merge-queue.md) of the app, the bar has no
-  action on a whole stack of pull requests. On a queued workspace, Merge
-  also lands each layer ahead of it (decisions 313 and 316).
-- A workspace that stacks on another branch shows the bar of its own pull
-  request only.
+- For an unqueued workspace with open pull requests below it in a GitHub
+  stack, the button says "Merge stack (N)". The count includes the target
+  and each open pull request below it (decision 324).
+- When no pull request below it is queued, the click starts a direct stack
+  merge with the member's token and merge method. If a lower pull request
+  is queued, [Merge stack](merge-queue-in-the-app.md#merge-stack) gives the
+  rule for its org.
+- Before each direct merge, the Worker checks the target and each open
+  layer below it in the repository. It gives one refusal if any of these
+  pull requests is queued in any org. A changed stack count also needs a
+  new review before a direct stack merge.
 
 ## Ready for review
 

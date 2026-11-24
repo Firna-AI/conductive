@@ -19,8 +19,9 @@ says.
   rebuilds the stack (decision 313).
 - A queued unit below unqueued pull requests in a member's GitHub stack
   keeps that stack (decision 322). The queue merges its ready layers
-  directly from the member's stack when the unit reaches place 1. GitHub
-  keeps control of the unqueued pull requests above the unit.
+  directly from the member's stack when the unit reaches place 1. A member
+  can include unqueued layers with
+  [Merge stack](merge-queue-in-the-app.md#merge-stack) (decision 324).
 - The queue merges the units ahead of that unit first. The units after it
   wait for it to merge. The next unit then restacks onto the trunk.
 - Breaking up the member's stack would remove GitHub's stack checks and

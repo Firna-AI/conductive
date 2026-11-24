@@ -1,14 +1,12 @@
-import {
-  githubPaths,
-  type GitHubMergeRequest,
-  type GitHubReadyRequest,
-} from '../shared/github'
+import { githubPaths, type GitHubReadyRequest } from '../shared/github'
+import type { GitHubMergeRequest } from '../shared/generated/GitHubMergeRequest'
 import {
   loadStoredGitHubState,
   type FetchLike,
   type WorkspaceTarget,
 } from './githubClient'
 import type { RequestQueueMerge } from '../shared/generated/RequestQueueMerge'
+import type { RequestQueueStackMerge } from '../shared/generated/RequestQueueStackMerge'
 import { mergeQueuePaths } from '../shared/merge-queue'
 import {
   actionRecord,
@@ -35,7 +33,11 @@ export function createGitHubActions(fetch: FetchLike, target: WorkspaceTarget) {
     path: string,
     parse: (value: unknown) => T | null,
     signal?: AbortSignal,
-    body?: GitHubMergeRequest | GitHubReadyRequest | RequestQueueMerge,
+    body?:
+      | GitHubMergeRequest
+      | GitHubReadyRequest
+      | RequestQueueMerge
+      | RequestQueueStackMerge,
   ): Promise<T> => {
     const response = await fetch(path, {
       method: body === undefined ? 'GET' : 'POST',
@@ -80,7 +82,10 @@ export function createGitHubActions(fetch: FetchLike, target: WorkspaceTarget) {
         readMergeResponse,
         signal,
       ),
-    mergeQueue: (body: RequestQueueMerge, signal?: AbortSignal) =>
+    mergeQueue: (
+      body: RequestQueueMerge | RequestQueueStackMerge,
+      signal?: AbortSignal,
+    ) =>
       request(
         mergeQueuePaths.merge(orgId, workspaceId),
         () => undefined,

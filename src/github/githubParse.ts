@@ -7,6 +7,7 @@ import type {
   GitHubStoredResponse,
   PullRequest,
 } from '../shared/github'
+import type { GitHubMergeStack } from '../shared/generated/GitHubMergeStack'
 import {
   readMergeQueueBarState,
   readMergeQueueLeaveNotice,
@@ -178,7 +179,25 @@ function readCheck(value: unknown): GitHubCheck | null {
 function queueOf(body: Record<string, unknown>) {
   const queue = readMergeQueueBarState(body.queue)
   const queueLeave = readMergeQueueLeaveNotice(body.queueLeave)
-  return { ...(queue && { queue }), ...(queueLeave && { queueLeave }) }
+  const mergeStack = readMergeStack(body.mergeStack)
+  return {
+    ...(queue && { queue }),
+    ...(queueLeave && { queueLeave }),
+    ...(mergeStack && { mergeStack }),
+  }
+}
+
+function readMergeStack(value: unknown): GitHubMergeStack | undefined {
+  if (!isRecord(value)) return undefined
+  const { count, queue } = value
+  if (
+    typeof count !== 'number' ||
+    !Number.isSafeInteger(count) ||
+    count < 2 ||
+    (queue !== null && queue !== 'same-org' && queue !== 'other-org')
+  )
+    return undefined
+  return { count, queue }
 }
 
 /** Narrows a banner reply. A reply outside the contract gives null. */

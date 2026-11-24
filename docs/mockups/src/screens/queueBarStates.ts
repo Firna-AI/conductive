@@ -42,6 +42,9 @@ export const workspaceQueueStates = [
   'token-failed',
   'merge-refused',
   'stack',
+  'direct-stack',
+  'stack-through-queue',
+  'stack-held',
 ] as const
 
 export type WorkspaceQueueState = (typeof workspaceQueueStates)[number]
@@ -88,51 +91,58 @@ const waitsOnTop = storefront(
   open('waiting'),
 )
 
-const specs: Readonly<Record<Exclude<WorkspaceQueueState, 'none'>, QueueSpec>> =
-  {
-    open: twoLayers,
-    upper: storefront(nextJs('ready'), applePay('waiting'), open('waiting')),
-    bottom: storefront(
-      open('waiting'),
-      nextJs('waiting'),
-      applePay('rebasing'),
-    ),
-    // The move onto #479 lasts while the one turn of the queue runs.
-    restack: storefront(nextJs('ready'), applePay('ready'), open('rebasing')),
-    rebase: waitsOnTop,
-    merge: storefront(nextJs('ready'), applePay('ready'), open('ready')),
-    merging: storefront(
-      nextJs('merging'),
-      applePay('merging'),
-      open('merging'),
-    ),
-    waits: storefront(nextJs('waiting'), applePay('ready'), open('ready')),
-    'bottom-merge': storefront(
-      open('ready'),
-      nextJs('waiting'),
-      applePay('rebasing'),
-    ),
-    // A layer whose cloud computer holds local work is not ready.
-    'local-work': waitsOnTop,
-    // The bar of the open workspace gives its own GitHub state.
-    'cannot-merge': storefront(
-      nextJs('ready'),
-      open('waiting'),
-      applePay('ready'),
-    ),
-    above: storefront(nextJs('ready'), failedLayer('apple-pay'), open('ready')),
-    'token-failed': storefront(
-      nextJs('ready'),
-      applePay('ready'),
-      unmerged('token-failed'),
-    ),
-    'merge-refused': storefront(
-      nextJs('ready'),
-      applePay('ready'),
-      unmerged('merge-refused'),
-    ),
-    stack: stackQueue,
-  }
+const specs: Readonly<
+  Record<Exclude<WorkspaceQueueState, 'none'>, QueueSpec | undefined>
+> = {
+  open: twoLayers,
+  upper: storefront(nextJs('ready'), applePay('waiting'), open('waiting')),
+  bottom: storefront(open('waiting'), nextJs('waiting'), applePay('rebasing')),
+  // The move onto #479 lasts while the one turn of the queue runs.
+  restack: storefront(nextJs('ready'), applePay('ready'), open('rebasing')),
+  rebase: waitsOnTop,
+  merge: storefront(nextJs('ready'), applePay('ready'), open('ready')),
+  merging: storefront(nextJs('merging'), applePay('merging'), open('merging')),
+  waits: storefront(nextJs('waiting'), applePay('ready'), open('ready')),
+  'bottom-merge': storefront(
+    open('ready'),
+    nextJs('waiting'),
+    applePay('rebasing'),
+  ),
+  // A layer whose cloud computer holds local work is not ready.
+  'local-work': waitsOnTop,
+  // The bar of the open workspace gives its own GitHub state.
+  'cannot-merge': storefront(
+    nextJs('ready'),
+    open('waiting'),
+    applePay('ready'),
+  ),
+  above: storefront(nextJs('ready'), failedLayer('apple-pay'), open('ready')),
+  'token-failed': storefront(
+    nextJs('ready'),
+    applePay('ready'),
+    unmerged('token-failed'),
+  ),
+  'merge-refused': storefront(
+    nextJs('ready'),
+    applePay('ready'),
+    unmerged('merge-refused'),
+  ),
+  stack: stackQueue,
+  'direct-stack': undefined,
+  'stack-through-queue': storefront(
+    { ...nextJs('ready'), unit: 'first' },
+    { ...applePay('ready'), unit: 'last' },
+  ),
+  'stack-held': undefined,
+}
+
+/** The open workspace is the top of a three-pull-request GitHub stack. */
+export function mergeStackOf(state: WorkspaceQueueState | undefined) {
+  if (state === 'stack-held') return { count: 3, held: true }
+  if (state === 'direct-stack' || state === 'stack-through-queue')
+    return { count: 3, held: false }
+  return undefined
+}
 
 /** The queues of a state of the workspace screen, if it draws them. */
 export function queueSpecOf(
@@ -160,6 +170,7 @@ export function openQueueFacts(
 export function queueBaseOf(
   state: WorkspaceQueueState | undefined,
 ): string | undefined {
+  if (mergeStackOf(state)) return queuedWorkspace('apple-pay').branch
   for (const block of queueSpecOf(state) ?? []) {
     const place = block.stack.findIndex((item) => item.key === openKey)
     const lower = block.stack[place - 1]

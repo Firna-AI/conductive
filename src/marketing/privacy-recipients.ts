@@ -100,7 +100,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         login serves its sender. The terms of that provider or endpoint apply.`,
       text`The members of your orgs see the workspaces of the org,
         their chats, and each Mac command request and result.
-        Members also see the org's merge queues. They can read
+        Members also see the org's merge queues. The pull request bar can
+        say that another org queues a lower pull request. It gives no
+        details of that org or its queue. Members can read
         the service lists and logs with workspace read access. They also
         see the automations of the org, with their prompts, chosen secret names, and
         their runs. Only the automation's owner changes its chosen secrets.

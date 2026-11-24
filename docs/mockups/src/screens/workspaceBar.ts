@@ -9,7 +9,7 @@ import { repositories, type RepositoryKey } from '../fixtures/repositories'
 import { movedBranch, movedRepository } from '../fixtures/repositoryMove'
 import type { Workspace } from '../fixtures/workspaces'
 import { isRunning } from './composerFor'
-import { openQueueFacts, queueBaseOf } from './queueBarStates'
+import { mergeStackOf, openQueueFacts, queueBaseOf } from './queueBarStates'
 import { serviceControls } from './serviceState'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -36,7 +36,10 @@ export function barOf(
     // busy state between.
     archiving: false,
     baseMoved: state.base === 'moved',
-    ...defined({ queue: openQueueFacts(state.queue) }),
+    ...defined({
+      queue: openQueueFacts(state.queue),
+      stack: mergeStackOf(state.queue),
+    }),
   })
 }
 

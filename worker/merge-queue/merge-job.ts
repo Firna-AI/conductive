@@ -1,11 +1,12 @@
-import type { GitHubMergeRequest } from '../../src/shared/github'
+import type { GitHubMergeRequest } from '../../src/shared/generated/GitHubMergeRequest'
 import { readMergeWorkspace } from '../github/merge-access'
 import { matchesDirectMerge, requestMerge } from '../github/merge-client'
 import { repositoryMemberGitHub } from '../github/member-github'
 import { githubFailure } from '../github/parsers'
 import { HttpError } from '../http'
 import { warnWorker } from '../warnings'
-import type { QueueEntry, QueueRecord } from './contracts'
+import type { QueueMergeTarget, QueueRecord } from './contracts'
+import { queueOfPulls } from './data'
 import { queueMergeAccess } from './merge-choice'
 import {
   clearMergeHeads,
@@ -23,10 +24,12 @@ import type { QueueRuntime } from './step'
 export type QueueMergeJob = {
   queue: QueueRecord
   layers: CheckedLayer[]
-  target: QueueEntry
+  target: QueueMergeTarget
   userId: string
   input: GitHubMergeRequest
   memberStackNumber?: number
+  /** The exact open prefix when the clicked pull request has no queue entry. */
+  stackPullNumbers?: readonly number[]
   nextAt: number
 } & (
   | { stage: 'starting'; sent?: boolean }
@@ -155,13 +158,7 @@ export async function prepareQueueMerge(
       !access.capabilities.allowedMethods.includes(input.method)
     )
       return null
-    return (await verifyMergePrefix(
-      runtime,
-      queue,
-      job.layers,
-      access.member,
-      job.memberStackNumber,
-    ))
+    return (await verifyMergePrefix(runtime, job, access.member))
       ? access.member
       : null
   } catch (error) {
@@ -225,7 +222,9 @@ async function sendQueueMerge(
   if (job.stage === 'starting') {
     const member = prepared ?? (await prepareQueueMerge(runtime, job))
     if (!member) return { ...job, stage: 'settling', outcome: 'refresh' }
-    for (const { entry } of job.layers) {
+    const prefix = job.layers.map(({ entry }) => entry)
+    const workspaces = job.stackPullNumbers ? [...prefix, target] : prefix
+    for (const entry of workspaces) {
       if (
         (await readMergeLocalWork(runtime, queue, entry, job.userId)) !==
         'clean'
@@ -233,11 +232,15 @@ async function sendQueueMerge(
         return null
     }
     if (
-      !(await liveMergePrefix(
-        runtime.env.DB,
-        queue,
-        job.layers.map(({ entry }) => entry),
-      ))
+      !(await liveMergePrefix(runtime.env.DB, queue, prefix)) ||
+      (job.stackPullNumbers &&
+        ((await queueOfPulls(runtime.env.DB, queue, job.stackPullNumbers)) !==
+          'same-org' ||
+          (await queueOfPulls(
+            runtime.env.DB,
+            queue,
+            job.stackPullNumbers.slice(prefix.length),
+          ))))
     )
       return { ...job, stage: 'settling', outcome: 'refresh' }
     await beforeSend(job)

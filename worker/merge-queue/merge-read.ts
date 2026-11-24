@@ -2,7 +2,7 @@ import type { MergeQueueWait } from '../../src/shared/generated/MergeQueueWait'
 import { workspaceBinding } from '../app-api/workspace-state'
 import type { GitHubReader } from '../github/client'
 import { HttpError } from '../http'
-import type { QueueEntry, QueueRecord } from './contracts'
+import type { QueueEntry, QueueMergeTarget, QueueRecord } from './contracts'
 import type { QueueLocalState } from './local-work'
 import { queueReader, queueReadToken, queueWorkspace } from './repository'
 import type { QueueRestackRead } from './restacks'
@@ -32,7 +32,7 @@ export interface QueuePullRead extends QueuePullSnapshot {
 export async function readMergeLocalWork(
   runtime: QueueRuntime,
   queue: QueueRecord,
-  entry: QueueEntry,
+  entry: QueueMergeTarget,
   userId: string,
 ): Promise<QueueLocalState> {
   try {

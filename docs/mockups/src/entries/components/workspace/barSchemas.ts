@@ -36,6 +36,7 @@ export const barMessageKinds = [
   'merge-moved-head',
   'merge-no-right',
   'merge-refused',
+  'merge-stack-held',
   'ready-no-right',
   'ready-pull-changed',
   'ready-refused',
@@ -63,6 +64,7 @@ const barActionSchema = {
         busy: { type: 'boolean' },
         /** The layers of the merge queue that land with it. */
         below: { type: 'integer', minimum: 0 },
+        stackCount: { type: 'integer', minimum: 2 },
       },
     },
     {

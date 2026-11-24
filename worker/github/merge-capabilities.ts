@@ -1,7 +1,5 @@
-import type {
-  GitHubCapabilities,
-  GitHubMergeMethod,
-} from '../../src/shared/github'
+import type { GitHubCapabilities } from '../../src/shared/github'
+import type { GitHubMergeMethod } from '../../src/shared/generated/GitHubMergeMethod'
 import type { HttpFetch } from '../env'
 import { readBoundedJson } from '../http/bounded-body'
 import { reconnectRequired } from '../security/github-tokens'

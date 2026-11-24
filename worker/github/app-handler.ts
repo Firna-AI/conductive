@@ -7,6 +7,7 @@ import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { gate } from '../security/gate'
 import { queueBarState, queueLeaveBase } from '../merge-queue/read'
+import { queueOfPulls } from '../merge-queue/data'
 import type {
   GitHubRefreshWorkspace,
   GitHubSnapshot,
@@ -83,12 +84,29 @@ async function readQueueBar(
   workspace: GitHubWorkspace,
   snapshot: GitHubSnapshot | undefined,
   labels: Awaited<ReturnType<typeof githubBranchLabels>>,
-) {
+): Promise<Pick<GitHubBannerResponse, 'queue' | 'queueLeave' | 'mergeStack'>> {
   const current =
     snapshot?.banner.branch === workspace.branch ? snapshot : undefined
-  const queue = await queueBarState(env.DB, workspace, current)
+  const below = current?.stackBelow
+  const [queue, stackQueue] = await Promise.all([
+    queueBarState(env.DB, workspace, current),
+    below?.length
+      ? queueOfPulls(
+          env.DB,
+          {
+            orgId: workspace.orgId,
+            githubRepositoryId: workspace.repositoryId,
+          },
+          below,
+        )
+      : null,
+  ])
+  const stack = below?.length
+    ? { mergeStack: { count: below.length + 1, queue: stackQueue } }
+    : {}
   if (queue)
     return {
+      ...stack,
       queue: {
         ...queue,
         trunkLabel: labels.branch(queue.trunk),
@@ -96,8 +114,8 @@ async function readQueueBar(
       },
     }
   const base = await queueLeaveBase(env.DB, workspace, current)
-  if (!base || !current) return {}
-  return { queueLeave: { baseBranch: labels.branch(base).text } }
+  if (!base || !current) return stack
+  return { ...stack, queueLeave: { baseBranch: labels.branch(base).text } }
 }
 
 /** App endpoint. This handler owns its gate. Do not gate the same request twice. */

@@ -354,6 +354,11 @@ The GitHub tests that store state run on the production workspace object in Mini
 - [stack-client.ts](stack-client.ts) lists stacks for one pull request and reads, creates, extends, and unstacks them.
   [stack-parsers.ts](stack-parsers.ts) reads layers from REST responses and stack membership from webhooks.
   An unstack returns the remaining stack or null when GitHub dissolves it.
+- A tab read of an open pull request lists its stacks once. The Worker
+  stores the numbers of the open pull requests below it. The bar gets
+  the count including the target and whether a lower layer is queued in
+  this org or another org. A direct merge reads the stack again with the
+  member's token before sending the request.
 - [pull-client.ts](pull-client.ts) changes the base of a pull request and asks GitHub to rebase its head onto its current base.
   Callers supply a member token and the expected head object ID for a rebase.
   The client maps GitHub refusals to fixed errors.

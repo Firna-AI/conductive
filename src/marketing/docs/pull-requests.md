@@ -132,7 +132,7 @@ GitHub also has the other pull request controls.
 ## Merge the pull request
 
 Review the changes before selecting the merge action.
-Outside the queue, the button shows **Merge**, **Squash and merge**, or **Rebase and merge**, according to the merge method.
+For a pull request that lands alone, the button shows **Merge**, **Squash and merge**, or **Rebase and merge**, according to the merge method.
 One selection starts the merge without a confirmation question.
 
 The merge uses your GitHub account.
@@ -148,6 +148,14 @@ The merge alone does not archive the workspace.
 If the branch has new commits, review them before merging again.
 If the error says your GitHub access does not allow the merge, ask a GitHub repository admin for access.
 For another refusal, use **Open on GitHub** to inspect the cause.
+
+### Merge a GitHub stack
+
+On a workspace outside the queue, **Merge stack (N)** counts your pull request and the open pull requests below it that will land together.
+When those lower pull requests are outside the queue, the merge uses your GitHub account and merge method directly.
+If a lower pull request is in this org's queue, the click goes through that queue.
+The queued layers must be ready at the front.
+If a lower pull request is queued in another org, the bar explains why you cannot merge the stack.
 
 ## Merge queue
 
@@ -166,8 +174,8 @@ A pull request that targets another branch, such as `develop`, cannot join on it
 If you already made a stack of pull requests, its first pull request must target the default branch.
 Adding a pull request from that stack also adds the earlier ones that are still outside the queue.
 You can queue the bottom part of your stack by adding a pull request in the middle.
-The queue merges those pull requests from your stack.
-The ones you left out stay open for you on GitHub.
+An automatic merge lands the queued pull requests from your stack.
+The ones you left out stay open. Use **Merge stack** on an upper pull request to include it in a merge through this org's queue.
 Later queue entries wait for those pull requests to merge, then rebase onto the default branch.
 The queue cannot accept pull requests if the default branch requires GitHub's own merge queue.
 It also cannot accept them while another org has entries or is creating its GitHub stack for the same repository.

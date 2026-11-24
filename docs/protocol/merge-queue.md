@@ -122,8 +122,8 @@ and the terms below. A decision number names a dated record, as
   request of the stack that is not queued yet, in stack order.
 - If a queued unit is the lowest part of a member's GitHub stack and the
   upper pull requests are outside the queue, the queue merges from that
-  stack (decision 322). The merge can land only the queued layers. The
-  queue leaves the upper pull requests in the member's stack.
+  stack (decision 322). An automatic merge lands only the queued layers
+  and leaves the upper pull requests in the member's stack.
 - The same rule applies if the member creates the stack after Add. Other
   units keep their queue order, as
   [The GitHub stack](merge-queue-stack.md#the-github-stack) says.
@@ -182,12 +182,18 @@ and the terms below. A decision number names a dated record, as
   layer as its next step, without that wait, as
   [Merge on a queued workspace](merge-queue-in-the-app.md#merge-on-a-queued-workspace)
   says (decision 316).
+- A click of [Merge stack](merge-queue-in-the-app.md#merge-stack) above a
+  queued member unit asks this org's queue to merge through the clicked
+  pull request (decision 324). The queue checks the ready prefix, the
+  shown stack count and head, and the local work of the clicked workspace
+  and each queued workspace before sending the merge. It uses the
+  clicker's GitHub token and merge method.
 - The merge is a direct merge under the rules of the branch, with no bypass
   of the rules. GitHub keeps the final say.
 - The merge carries the head of the highest layer that the queue last read
   and checked (decision 314). This changes decision 228 for queued merges,
   where a merge carries the head that a member saw.
-- The queue merges with the stored GitHub token and the merge method of the
+- An automatic merge uses the stored GitHub token and the merge method of the
   queuer of the highest layer, as
   [The merge queue](github-tokens-worker.md#the-merge-queue) says.
 - A layer whose cloud computer holds local work is not ready. The queue

@@ -1,4 +1,4 @@
-import type { GitHubMergeMethod } from '../../src/shared/github'
+import type { GitHubMergeMethod } from '../../src/shared/generated/GitHubMergeMethod'
 import type { GitHubWorkspace } from './contracts'
 import type { MergeStorage } from './merge-handler'
 import { choice, integer, object, text } from './parsers'

@@ -1,9 +1,11 @@
 import type { repositoryMemberGitHub } from '../github/member-github'
 import { readQueuePull } from '../github/queue-pulls'
 import type { GitHubStack } from '../github/stack-parsers'
-import type { QueueEntry, QueueRecord } from './contracts'
+import type { QueueEntry } from './contracts'
 import { readQueueEntries } from './data'
 import { liveMergePrefix } from './merge-data'
+import type { QueueMergeJob } from './merge-job'
+import { verifyStackTop } from './merge-stack-top'
 import { queueWorkspace } from './repository'
 import { layerAncestry } from './restack-ancestry'
 import {
@@ -22,11 +24,10 @@ export interface CheckedLayer {
 /** Check the default branch, open stack, and the saved prefix before sending a merge. */
 export async function verifyMergePrefix(
   runtime: QueueRuntime,
-  queue: QueueRecord,
-  layers: readonly CheckedLayer[],
+  job: QueueMergeJob,
   member: Awaited<ReturnType<typeof repositoryMemberGitHub>>,
-  memberStackNumber?: number,
 ) {
+  const { queue, layers, memberStackNumber } = job
   const bottom = layers[0]
   if (!bottom) return false
   const { fetch, token } = member
@@ -92,6 +93,11 @@ export async function verifyMergePrefix(
     )
       return false
   }
+  if (
+    job.stackPullNumbers &&
+    (!stack || !(await verifyStackTop(runtime, job, stack, member)))
+  )
+    return false
   let baseHead = live.refHead
   for (const { entry, headSha } of layers) {
     if (

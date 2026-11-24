@@ -1,4 +1,6 @@
 import type { GitHubSummary } from './generated/GitHubSummary'
+import type { GitHubMergeMethod } from './generated/GitHubMergeMethod'
+import type { GitHubMergeStack } from './generated/GitHubMergeStack'
 import type { MergeQueueBarState } from './generated/MergeQueueBarState'
 import type { MergeQueueLeaveNotice } from './generated/MergeQueueLeaveNotice'
 import type { Timestamp } from './generated/Timestamp'
@@ -26,14 +28,9 @@ export interface PullRequest {
   url: string
   headSha: string
 }
-export type GitHubMergeMethod = 'merge' | 'squash' | 'rebase'
 export interface GitHubCapabilities {
   canWrite: boolean
   mergeMethod: GitHubMergeMethod | null
-}
-export interface GitHubMergeRequest {
-  headSha: string
-  method: GitHubMergeMethod
 }
 export type GitHubMergeResponse =
   { state: 'pending'; mergeId: string } | { state: 'merged' }
@@ -140,6 +137,7 @@ export interface GitHubBannerResponse {
   banner: GitHubBanner
   queue?: MergeQueueBarState
   queueLeave?: MergeQueueLeaveNotice
+  mergeStack?: GitHubMergeStack
 }
 export interface GitHubChecksResponse {
   state: 'waiting-for-pull-request' | 'available'
@@ -154,4 +152,5 @@ export interface GitHubStoredResponse {
   state: { banner: GitHubBanner; checks: GitHubChecksResponse } | null
   queue?: MergeQueueBarState
   queueLeave?: MergeQueueLeaveNotice
+  mergeStack?: GitHubMergeStack
 }

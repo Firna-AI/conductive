@@ -1,4 +1,4 @@
-import type { GitHubMergeMethod } from '../../src/shared/github'
+import type { GitHubMergeMethod } from '../../src/shared/generated/GitHubMergeMethod'
 import { isRecord } from '../http'
 import type { RepositoryPull } from './fake-pull'
 import type { RepositoryPermission } from './merge-capabilities'

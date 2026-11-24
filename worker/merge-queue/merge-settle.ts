@@ -1,5 +1,6 @@
 import { workspaceBinding } from '../app-api/workspace-state'
 import { requireFeatureResult } from '../features/result'
+import { activeWorkspace } from '../github/data'
 import { recordPullRequestMerge } from '../github/merge-record-data'
 import { warnWorker } from '../warnings'
 import type { QueueEntry, QueueRecord } from './contracts'
@@ -10,6 +11,40 @@ import type { QueueMergeJob } from './merge-job'
 import { readMergeSnapshots, type QueuePullSnapshot } from './merge-read'
 import { queueWorkspace } from './repository'
 import { leaveQueue, type QueueRuntime } from './step'
+
+async function refreshStackTop(
+  runtime: QueueRuntime,
+  job: Extract<QueueMergeJob, { stage: 'settling' }>,
+) {
+  const { env } = runtime
+  const { queue, target, outcome } = job
+  const workspace = await activeWorkspace(
+    env.DB,
+    target.workspaceId,
+    queue.orgId,
+  )
+  if (
+    workspace?.branch !== target.branch ||
+    workspace.repositoryId !== queue.githubRepositoryId ||
+    workspace.installationId !== queue.installationId
+  )
+    return true
+  try {
+    const reply = requireFeatureResult(
+      await workspaceBinding(env)
+        .getByName(target.workspaceId)
+        .refreshGitHub(workspace, {}),
+    )
+    return (
+      outcome !== 'merged' ||
+      (reply?.banner.state === 'merged' &&
+        reply.banner.pullRequest.number === target.pullNumber)
+    )
+  } catch {
+    warnWorker({ kind: 'merge_queue_refresh_failed' })
+    return outcome !== 'merged'
+  }
+}
 
 export async function reconcileMergePulls(
   runtime: QueueRuntime,
@@ -92,8 +127,10 @@ export async function settleMergeJob(
     queue,
     entries,
     reads,
-    job.outcome === 'refresh' ? undefined : job,
+    job.outcome === 'refresh' && !job.stackPullNumbers ? undefined : job,
   )
+  if (job.stackPullNumbers && !(await refreshStackTop(runtime, job)))
+    return false
   const target = reads.find(
     ({ entry }) => entry.workspaceId === job.target.workspaceId,
   )

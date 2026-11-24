@@ -1,4 +1,5 @@
 import { mergeQueuePaths } from '../../src/shared/merge-queue'
+import { isGitCommitOid } from '../../src/shared/git-commit-oid'
 import type { AppEnv } from '../env'
 import { requireFeatureResult } from '../features/result'
 import { readMergeWorkspace } from '../github/merge-access'
@@ -25,14 +26,35 @@ function parseAction(
     path === mergeQueuePaths.merge(orgId, workspaceId) &&
     request.method === 'POST'
   ) {
-    const ahead = context.body?.ahead
-    if (typeof ahead !== 'number' || !Number.isSafeInteger(ahead) || ahead < 0)
-      throw new HttpError(
-        400,
-        'invalid_input',
-        'Review the merge queue and try again.',
-      )
-    return { kind: 'merge', ahead } satisfies QueueMemberAction
+    const { ahead, stackCount, headSha, pullNumber } = context.body ?? {}
+    if (
+      stackCount === undefined &&
+      typeof ahead === 'number' &&
+      Number.isSafeInteger(ahead) &&
+      ahead >= 0
+    )
+      return { kind: 'merge', ahead } satisfies QueueMemberAction
+    if (
+      ahead === undefined &&
+      typeof stackCount === 'number' &&
+      Number.isSafeInteger(stackCount) &&
+      stackCount >= 2 &&
+      typeof pullNumber === 'number' &&
+      Number.isSafeInteger(pullNumber) &&
+      pullNumber > 0 &&
+      isGitCommitOid(headSha)
+    )
+      return {
+        kind: 'merge-stack',
+        stackCount,
+        headSha,
+        pullNumber,
+      } satisfies QueueMemberAction
+    throw new HttpError(
+      400,
+      'invalid_input',
+      'Review the merge queue and try again.',
+    )
   }
   if (
     path === mergeQueuePaths.order(orgId, workspaceId) &&
@@ -80,5 +102,6 @@ export async function mergeQueueRoute(
       action,
     ),
   )
-  return new Response(null, { status: action.kind === 'merge' ? 202 : 204 })
+  const merging = action.kind === 'merge' || action.kind === 'merge-stack'
+  return new Response(null, { status: merging ? 202 : 204 })
 }

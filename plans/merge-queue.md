@@ -1071,6 +1071,8 @@ Depends on: 1, 4
       request, with `npm run marketing:pictures`.
 - [x] Tests for each state and each action.
 
+Decision 324 verification is in `.context/merge-queue/merge-stack/checks.md`.
+
 ## Milestone 10: Verification, commit, review, and pull request
 
 Depends on: every other milestone

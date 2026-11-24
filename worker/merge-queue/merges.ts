@@ -1,4 +1,6 @@
-import type { GitHubMergeMethod } from '../../src/shared/github'
+import type { GitHubMergeMethod } from '../../src/shared/generated/GitHubMergeMethod'
+import type { RequestQueueStackMerge } from '../../src/shared/generated/RequestQueueStackMerge'
+import type { GitHubWorkspace } from '../github/contracts'
 import type { QueueEntry, QueueRecord, QueueScope } from './contracts'
 import { readQueue, readQueueEntries } from './data'
 import { queueMergeNotReady, queueMerging, queueWriteRequired } from './errors'
@@ -10,14 +12,11 @@ import {
   type QueueMergeAccess,
 } from './merge-choice'
 import { clearMergeHeads, projectMerge } from './merge-data'
-import {
-  MERGE_RETRY_MS,
-  prepareQueueMerge,
-  QueueMergeJobs,
-  type QueueMergeJob,
-} from './merge-job'
+import { MERGE_RETRY_MS, prepareQueueMerge, QueueMergeJobs } from './merge-job'
+import { buildMergeJob, type MemberStackTop } from './merge-plan'
 import { readMergePulls, type QueuePullRead } from './merge-read'
 import { reconcileMergePulls } from './merge-settle'
+import { readStackMerge } from './merge-stack-top'
 import { saveQueueAlarm, saveQueueRetry } from './queue-alarm'
 import type { QueueRestackRead } from './restacks'
 import { leaveQueue, type QueueRuntime } from './step'
@@ -118,11 +117,54 @@ export class QueueMerges {
     if (actor.kind === 'lost') throw queueWriteRequired()
     if (actor.kind === 'token') throw actor.error
     if (!actor.capabilities.mergeMethod) throw queueMergeNotReady()
+    const prefix = await this.manualPrefix(queue, entries, userId, ahead + 1)
+    if (
+      !(await this.start(queue, prefix, userId, actor.capabilities.mergeMethod))
+    )
+      throw queueMergeNotReady()
+  }
+
+  async manualStack(
+    queue: QueueRecord,
+    entries: QueueEntry[],
+    workspace: GitHubWorkspace,
+    userId: string,
+    input: RequestQueueStackMerge,
+  ) {
+    if (await this.jobs.active()) throw queueMerging()
+    if (queue.trunk !== queue.defaultBranch) throw queueMergeNotReady()
+    const stack = await readStackMerge(
+      this.runtime,
+      queue,
+      entries,
+      workspace,
+      userId,
+      input,
+    )
+    const prefix = await this.manualPrefix(
+      queue,
+      entries,
+      userId,
+      stack.queuedCount,
+    )
+    if (
+      prefix[0].stackNumber !== stack.stackNumber ||
+      !(await this.start(queue, prefix, userId, stack.method, stack))
+    )
+      throw queueMergeNotReady()
+  }
+
+  private async manualPrefix(
+    queue: QueueRecord,
+    entries: QueueEntry[],
+    userId: string,
+    count: number,
+  ) {
     const read = await this.read(queue, entries, userId)
-    const prefix = read?.reads.slice(0, ahead + 1)
+    const prefix = read?.reads.slice(0, count)
     if (
       !prefix ||
-      prefix.length !== ahead + 1 ||
+      prefix.length !== count ||
       prefix.some(
         (layer) => layer.stackNumber === null || layerWait(layer) !== null,
       )
@@ -130,10 +172,7 @@ export class QueueMerges {
       await this.schedule(queue, this.runtime.dependencies.now())
       throw queueMergeNotReady()
     }
-    if (
-      !(await this.start(queue, prefix, userId, actor.capabilities.mergeMethod))
-    )
-      throw queueMergeNotReady()
+    return prefix
   }
 
   private async waitsForChecks(
@@ -227,28 +266,11 @@ export class QueueMerges {
     prefix: QueuePullRead[],
     userId: string,
     method: GitHubMergeMethod,
+    top?: MemberStackTop,
   ) {
-    const layers = []
-    for (const { entry, snapshot } of prefix) {
-      if (!snapshot?.headSha) return false
-      layers.push({ entry, headSha: snapshot.headSha })
-    }
-    const last = layers.at(-1)
-    if (!last) return false
-    const stackNumber = prefix[0].stackNumber
     const now = this.runtime.dependencies.now()
-    const job: Extract<QueueMergeJob, { stage: 'starting' }> = {
-      queue,
-      target: last.entry,
-      layers,
-      userId,
-      input: { method, headSha: last.headSha },
-      ...(queue.githubStackNumber === null &&
-        stackNumber !== null && { memberStackNumber: stackNumber }),
-      stage: 'starting',
-      sent: false,
-      nextAt: now,
-    }
+    const job = buildMergeJob(queue, prefix, userId, method, now, top)
+    if (!job) return false
     const member = await prepareQueueMerge(this.runtime, job)
     if (!member) {
       await clearMergeHeads(this.runtime.env.DB, queue)

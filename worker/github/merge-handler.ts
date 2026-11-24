@@ -100,6 +100,10 @@ export async function handleGitHubMerge(
       !body ||
       typeof body.headSha !== 'string' ||
       !body.headSha ||
+      (body.stackCount !== undefined &&
+        (typeof body.stackCount !== 'number' ||
+          !Number.isSafeInteger(body.stackCount) ||
+          body.stackCount < 2)) ||
       (body.method !== 'merge' &&
         body.method !== 'squash' &&
         body.method !== 'rebase')
@@ -112,6 +116,7 @@ export async function handleGitHubMerge(
     const result = await merge.start(workspace, context.user.id, {
       headSha: body.headSha,
       method: body.method,
+      ...(body.stackCount !== undefined && { stackCount: body.stackCount }),
     })
     return privateResponse(
       Response.json(result, { status: result.state === 'pending' ? 202 : 200 }),

@@ -60,7 +60,10 @@ export class WorkspaceGitHubState {
           await prepare?.(transaction, snapshot)
           const stored = await transaction.get<GitHubSnapshot>(GITHUB_STATE_KEY)
           if (stored && sameGitHubState(stored, snapshot)) {
-            if (stored.baseChange && !snapshot.baseChange)
+            if (
+              (stored.baseChange && !snapshot.baseChange) ||
+              stored.stackBelow?.join() !== snapshot.stackBelow?.join()
+            )
               await transaction.put(GITHUB_STATE_KEY, snapshot)
             if (key !== null)
               await transaction.put(key, {

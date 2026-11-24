@@ -70,6 +70,7 @@ export type BarMessageKind =
   | 'merge-moved-head'
   | 'merge-no-right'
   | 'merge-refused'
+  | 'merge-stack-held'
   | 'ready-no-right'
   | 'ready-pull-changed'
   | 'ready-refused'
@@ -100,6 +101,8 @@ export function barMessageText(
       return `Not merged: your GitHub access doesn't allow merges into ${branches.base}.`
     case 'merge-refused':
       return 'GitHub refused the merge.'
+    case 'merge-stack-held':
+      return "Another org's merge queue holds a pull request below this one."
     case 'ready-no-right':
       return "Not marked ready: your GitHub access doesn't allow changes to this pull request."
     case 'ready-pull-changed':

@@ -88,5 +88,5 @@ export const queueMergeRequired = () =>
   new HttpError(
     409,
     'merge_queue_required',
-    'Use the merge queue to merge this pull request.',
+    'The merge queue holds a pull request in this merge.',
   )

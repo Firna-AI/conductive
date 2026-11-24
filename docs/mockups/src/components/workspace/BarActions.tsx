@@ -26,7 +26,7 @@ import type {
   BarAction,
   BarModel,
 } from '../../../../../src/ui/components/workspace/barModel'
-import { queuedMergeLabel } from '../../../../../src/ui/components/workspace/queueCopy'
+import { mergeButtonLabel } from '../../../../../src/ui/components/workspace/queueCopy'
 import { QueueAddButton } from './QueueBarParts'
 import { githubLink } from '../../entries/components/workspace/barParts.mockup'
 import { barTint } from './prStatus'
@@ -77,7 +77,11 @@ function BarButton(props: {
         </shortcutTip.Component>
       )
     case 'merge': {
-      const label = queuedMergeLabel(action.method, action.below)
+      const label = mergeButtonLabel(
+        action.method,
+        action.below,
+        action.stackCount,
+      )
       const to =
         action.below === undefined ? barPaths.merging : queuePaths.merging
       return (
@@ -239,6 +243,7 @@ export function BarButtons(props: { bar: BarModel }) {
 const statusIcons: Partial<Record<BarMessageKind, LucideIcon>> = {
   'continue-waits': Clock,
   'base-moved': Info,
+  'merge-stack-held': Info,
 }
 
 /**

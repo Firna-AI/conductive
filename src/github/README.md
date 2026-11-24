@@ -118,6 +118,10 @@ store. `BarActions` calls it, as [The actions of the bar](actions.md) says.
   so it stays out of the shared GitHub store and its events.
 - `merge` starts a merge of the head that the member saw. It returns a
   pending app job with its `mergeId`, or a completed merge.
+- The bar reads the count of open pull requests that land in a stack
+  merge and whether a lower pull request is queued. `mergeQueue` sends the
+  checked count and head when a member merges an unqueued top through the
+  queue of this org.
 - `mergeResult` reads that job once. Only the member who started the job
   can read it.
 - A refusal throws `GitHubActionError` with the app's error `code` and its

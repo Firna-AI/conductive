@@ -111,6 +111,16 @@ export class QueueCoordinator {
         if (!queue || !entry) throw queueMissing()
         return this.merges.manual(queue, entries, entry, userId, action.ahead)
       }
+      if (action.kind === 'merge-stack') {
+        if (!queue || entry) throw queueMissing()
+        return this.merges.manualStack(
+          queue,
+          entries,
+          workspace,
+          userId,
+          action,
+        )
+      }
       const member = await repositoryMemberGitHub(
         env,
         dependencies,

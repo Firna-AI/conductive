@@ -2,12 +2,12 @@ import { GitHubReader } from '../github/client'
 import type { GitHubWorkspace } from '../github/contracts'
 import { installationTokenProvider } from '../github/credentials'
 import { githubFailure } from '../github/parsers'
-import type { QueueEntry, QueueRecord } from './contracts'
+import type { QueueMergeTarget, QueueRecord } from './contracts'
 import type { QueueRuntime } from './step'
 
 export function queueWorkspace(
   queue: QueueRecord,
-  entry: QueueEntry,
+  entry: QueueMergeTarget,
 ): GitHubWorkspace {
   return {
     id: entry.workspaceId,

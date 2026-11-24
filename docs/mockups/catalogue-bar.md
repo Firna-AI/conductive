@@ -114,6 +114,10 @@ from `src/screens/queueBarStates.ts`, draws the pages. Its child pages:
   and its `merge-refused` variant a merge that GitHub refused, with Open on
   GitHub. Both keep Merge with 2 ahead, which merges with the token of the
   member who clicks.
+- `app/banner/merge-queue/merge-stack` shows Merge stack (3) for a pull
+  request with two open layers below it. The `through-queue` variant has
+  both lower layers in this org’s queue. The `another-org` variant shows
+  the message for a lower layer held by another org (decision 324).
 - `app/banner/merge-queue/remove` names the planned base before Remove
   from queue. Its `stack` variant also names the entry that leaves with
   the selected lower entry of a member stack.
