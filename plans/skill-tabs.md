@@ -372,28 +372,28 @@ Depends on: 2
 
 Add the command that reads one skill by its agent and its name.
 
-- [ ] In `crates/cnd-runner-interface/`, add the `skill.read` command with
+- [x] In `crates/cnd-runner-interface/`, add the `skill.read` command with
       a request ID, the agent, the name, and the byte limit. Add its
       result `skill.read.result`: the text, or an error of
       `skill_not_found`, `skill_unavailable`, or `skill_too_large`. Add
       the optional `hello` field `skill_reads`. Changed on 2026-11-24,
       found by the mockups: the result has no description, because the
       header takes it from the skills list, as The view says.
-- [ ] Run the generator of the shared runner types, and commit
+- [x] Run the generator of the shared runner types, and commit
       `src/shared/generated/`.
-- [ ] In `crates/cnd-runner/`, answer the command. For a skill of the
+- [x] In `crates/cnd-runner/`, answer the command. For a skill of the
       agent's own folders, find the path in the lists of the latest scan.
       For an org skill, take a lease on the current copy and let the
       helper choose the named skill in it again.
-- [ ] In `runner/sdk-helper/`, read the file with the limit of the scan,
+- [x] In `runner/sdk-helper/`, read the file with the limit of the scan,
       and give the safe view of an org skill, as an agent start does.
-- [ ] Add a runner test: an org skill read after a newer copy publishes
+- [x] Add a runner test: an org skill read after a newer copy publishes
       reads the newer copy.
-- [ ] Send `skill_reads: true` in `hello`.
-- [ ] Add Rust tests and helper tests: a repository skill of each agent,
+- [x] Send `skill_reads: true` in `hello`.
+- [x] Add Rust tests and helper tests: a repository skill of each agent,
       an org skill with its safe view, an unknown name, a name of the
       other agent, a file that left the disk, and a file over the limit.
-- [ ] Run the Rust checks and `npm run test --prefix runner`.
+- [x] Run the Rust checks and `npm run test --prefix runner`.
 
 ## Milestone 4: The skill read and the saved view in the Worker
 
@@ -405,6 +405,10 @@ Give the browser the skill text, and save skill tabs.
       its name. It checks the member's access to the workspace, as the
       file content route does. It sends the command only on the runner
       connection, and it calls no provider route.
+- [ ] Remove `#[ts(skip)]` from `RunnerReadSkill` in `RunnerControlCommand`
+      (`crates/cnd-runner-interface/src/runner_commands.rs`), run the
+      generator, and send the command through the generated
+      `RunnerCommand` type. Milestone 3 hid it until the Worker sends it.
 - [ ] Check the agent and the name: the agent is `claude` or `codex`, and
       the name holds 1 to 256 characters without white space or control
       characters.

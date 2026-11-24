@@ -17,7 +17,7 @@ async fn retains_events_across_gaps_wrong_confirms_reconnect_and_restart() {
     h.connected().await;
     assert_eq!(
         serde_json::to_value(&h.endpoint.state.lock().await.received[0]).unwrap(),
-        json!({"type":"hello","protocolVersion":2,"workspaceId":"workspace","streamId":"stream","processStartId":"abcdef01-2345-4678-89ab-cdef01234567","completeToolDetails":true,"capabilityNotices":true,"loginKinds":[{"agent":"claude","kind":"token"},{"agent":"claude","kind":"api-key"},{"agent":"codex","kind":"token"},{"agent":"codex","kind":"api-key"}]})
+        json!({"type":"hello","protocolVersion":2,"workspaceId":"workspace","streamId":"stream","processStartId":"abcdef01-2345-4678-89ab-cdef01234567","completeToolDetails":true,"capabilityNotices":true,"skillReads":true,"loginKinds":[{"agent":"claude","kind":"token"},{"agent":"claude","kind":"api-key"},{"agent":"codex","kind":"token"},{"agent":"codex","kind":"api-key"}]})
     );
     h.link.emit(title("First"), None).await.unwrap();
     h.link.emit(title("Second"), None).await.unwrap();

@@ -12,7 +12,9 @@ use cnd_runner::runtime::CommandHandler;
 use cnd_runner::skills::boundary::SkillReports;
 use cnd_runner::watcher::boundary::{RepositoryWatch, WatchDriver};
 use cnd_runner::watcher::service::ReportWatchService;
+use cnd_runner_interface::agents::Agent;
 use cnd_runner_interface::runner_commands::RunnerReportKind;
+use cnd_runner_interface::runner_skills::SkillReadOutcome;
 use futures_util::future::BoxFuture;
 use tokio::sync::{Mutex, mpsc};
 use tokio::time::timeout;
@@ -60,6 +62,9 @@ impl SkillReports for Scheduled {
         Box::pin(async { Ok(()) })
     }
 
+    async fn read(&self, _: Agent, _: String, _: u64) -> SkillReadOutcome {
+        unreachable!("watch-only reporter")
+    }
     async fn close(&self) {}
 }
 

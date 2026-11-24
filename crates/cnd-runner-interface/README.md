@@ -21,6 +21,9 @@ complete tool-detail source. Only the first part carries the turn and the
 tool metadata.
 The hello has an optional `fileServer` capability. A listening file server
 sets it to true. Older runners omit it. The protocol version stays 2.
+`runner_skills` holds `skill.read` and `skill.read.result`. A runner with
+`skillReads: true` in its hello accepts reads by agent and skill name.
+The result stays outside the numbered outbox.
 The hello and welcome also have optional `services` support fields.
 Both must be true before a connection carries services. The runner advertises
 support when its native effects are composed, and the Worker accepts it after negotiation.
@@ -69,8 +72,8 @@ when the request gives a target.
 Create and workspace write replies can carry an optional notice.
 Dependent types include workspace and session records, messages, attachments,
 model choices, file reports, port reports, skill reports, startup reports, and commit authors.
-Skill metadata has no private path. Only helper scan results and explicit
-Codex input carry the absolute path of a skill file.
+Skill metadata has no private path. Only private helper messages carry
+the absolute path of a skill file.
 `SessionLogin` names a personal owner or org without a credential.
 `Session.login` is optional for older clients and stored records.
 `Session.anchor` is optional. It names the parent session and message, and keeps the selected rendered text with its surrounding text.
@@ -106,6 +109,8 @@ let hello = RunnerHello::Hello {
     repository_folder: Some("/home/user/code/storefront".into()),
     complete_tool_details: Some(true),
     file_server: None,
+    skill_reads: Some(true),
+    capability_notices: None,
     services: None,
 };
 ```

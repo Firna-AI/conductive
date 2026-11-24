@@ -58,11 +58,13 @@ it('lists the org skills after the workspace skills, as an agent start loads the
         description: 'Commit and push.',
         manualOnly: true,
         path: join(path('finish-work'), 'SKILL.md'),
+        org: true,
       },
       {
         name: 'no-description',
         description: 'Only a heading',
         path: join(path('no-description'), 'SKILL.md'),
+        org: true,
       },
     ],
     codex: [
@@ -70,11 +72,13 @@ it('lists the org skills after the workspace skills, as an agent start loads the
         name: 'finish-work',
         description: 'Commit and push.',
         path: join(path('finish-work'), 'SKILL.md'),
+        org: true,
       },
       {
         name: 'plans',
         description: 'Org plans.',
         path: join(path('plans'), 'SKILL.md'),
+        org: true,
       },
     ],
   })

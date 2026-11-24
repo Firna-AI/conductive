@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-use crate::wire::ReadonlyVec;
+use crate::wire::{ReadonlyVec, WireTrue};
 
 /// Most skills reported for each agent.
 pub const SKILL_REPORT_MAX_SKILLS: usize = 200;
@@ -77,6 +77,10 @@ pub struct SkillEntry {
     pub skill: AgentSkill,
     /// Absolute input path, never saved in a public report.
     pub path: String,
+    /// Present for a skill from the org copy.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub org: Option<WireTrue>,
 }
 
 /// Scanner result kept only in runner memory and private helper pipes.

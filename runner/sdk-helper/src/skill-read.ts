@@ -1,14 +1,11 @@
 import type { SkillEntry } from './generated/SkillEntry'
-import { readFile } from 'node:fs/promises'
 
+import { readSkillContent, SKILL_FILE_MAX_BYTES } from './skill-content'
 import { readFrontMatter, type FrontMatterValue } from './skill-front-matter'
 import type { SkillFile } from './skill-files'
 
 /** The path of one `SKILL.md`, and the name of the folder that the agent sees. */
 type SkillPlace = Pick<SkillFile, 'path' | 'folder'>
-
-/** A larger `SKILL.md` warns and leaves out its skill. */
-const SKILL_FILE_MAX_BYTES = 1_048_576
 
 /**
  * Claude names a skill after the front matter `name`, else its folder. Its
@@ -87,16 +84,12 @@ export async function readSkillFile(
   path: string,
   warn: (message: string) => void,
 ): Promise<string | null> {
-  try {
-    const bytes = await readFile(path)
-    if (bytes.length > SKILL_FILE_MAX_BYTES) throw new Error('Too large.')
-    return bytes.toString('utf8')
-  } catch {
-    warn(
-      `The skill file ${path} could not be read. The list leaves out its skill.`,
-    )
-    return null
-  }
+  const result = await readSkillContent(path, SKILL_FILE_MAX_BYTES)
+  if (result.ok) return result.text
+  warn(
+    `The skill file ${path} could not be read. The list leaves out its skill.`,
+  )
+  return null
 }
 
 function text(value: FrontMatterValue | undefined): string {

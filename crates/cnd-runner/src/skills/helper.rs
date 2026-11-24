@@ -3,9 +3,11 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use cnd_runner_interface::sdk_helper::{HelperOutput, HelperRequest};
+use cnd_runner_interface::agents::Agent;
+use cnd_runner_interface::runner_skills::SkillReadOutcome;
+use cnd_runner_interface::sdk_helper::{HelperOutput, HelperRequest, HelperSkillSource};
 use cnd_runner_interface::sdk_helper_options::OrgSkills as HelperOrgSkills;
-use cnd_runner_interface::skills::HelperSkillLists;
+use cnd_runner_interface::skills::{HelperSkillLists, SkillEntry};
 use tokio::sync::{Mutex, watch};
 
 use crate::error::{Error, Result};
@@ -14,6 +16,11 @@ use crate::helper::boundary::{Helper, HelperEvents, HelperFactory, HelperPort, H
 use crate::helper::driver::HelperConnection;
 
 use super::boundary::{OrgSkills, SkillInputs, SkillScanner};
+use super::lease::SkillsLease;
+use super::read;
+
+const SCAN_ID: &str = "skills";
+const READ_ID: &str = "skill.read";
 
 /// Configured org source whose current copy joins each scan.
 pub struct ScannedOrgSkills {
@@ -23,6 +30,16 @@ pub struct ScannedOrgSkills {
     pub repository: String,
     /// Trusted repository identity, absent when no matching grant exists.
     pub trusted_repository: Option<String>,
+}
+
+impl ScannedOrgSkills {
+    fn options(&self, lease: Option<&SkillsLease>) -> HelperOrgSkills {
+        HelperOrgSkills {
+            repository: self.repository.clone(),
+            trusted_repository: self.trusted_repository.clone(),
+            directory: lease.map(|lease| lease.path().to_string_lossy().into_owned()),
+        }
+    }
 }
 
 /// Scanner keeps SDK caches in one credential-free helper process.
@@ -61,34 +78,42 @@ impl NodeSkillScanner {
         self
     }
 
-    async fn receive(&self, port: &dyn HelperPort) -> Result<HelperSkillLists> {
+    async fn receive(&self, port: &dyn HelperPort, scan: bool) -> Result<HelperOutput> {
         loop {
-            match port.read().await? {
-                Some(HelperOutput::Skills { request_id, skills }) if request_id == "skills" => {
-                    return Ok(skills);
+            let output = port.read().await?.ok_or(Error::HelperResponse)?;
+            match &output {
+                HelperOutput::Skills { request_id, .. } if scan && request_id == SCAN_ID => {
+                    return Ok(output);
                 }
-                Some(HelperOutput::Warning { message }) => {
-                    let message = self.credentials.text(&message)?;
-                    tracing::warn!("{message}");
+                HelperOutput::SkillRead { request_id, .. } if !scan && request_id == READ_ID => {
+                    return Ok(output);
                 }
-                Some(HelperOutput::Error { code, message, .. }) => {
-                    return Err(Error::Agent { code, message });
+                HelperOutput::Warning { message } => {
+                    if scan {
+                        let message = self.credentials.text(message)?;
+                        tracing::warn!("{message}");
+                    }
+                }
+                HelperOutput::Error { code, message, .. } if scan => {
+                    return Err(Error::Agent {
+                        code: code.clone(),
+                        message: message.clone(),
+                    });
                 }
                 _ => return Err(Error::HelperResponse),
             }
         }
     }
-}
-
-#[async_trait]
-impl SkillScanner for NodeSkillScanner {
-    async fn scan(&self, reload: bool) -> Result<HelperSkillLists> {
-        let mut state = self.port.lock().await;
+    async fn request(
+        &self,
+        state: &mut Option<Arc<dyn HelperPort>>,
+        request: HelperRequest,
+    ) -> Result<HelperOutput> {
         let mut stopped = self.stopped.subscribe();
         if *stopped.borrow() {
             return Err(Error::Canceled);
         }
-        let port = match &*state {
+        let port = match state {
             Some(port) => port.clone(),
             None => {
                 let port = self.ports.port()?;
@@ -96,37 +121,81 @@ impl SkillScanner for NodeSkillScanner {
                 port
             }
         };
-        // The lease keeps the copy on disk until the helper has read it.
-        let lease = self.org.as_ref().and_then(|org| org.copy.current());
-        let org_skills = self.org.as_ref().map(|org| HelperOrgSkills {
-            repository: org.repository.clone(),
-            trusted_repository: org.trusted_repository.clone(),
-            directory: lease
-                .as_ref()
-                .map(|lease| lease.path().to_string_lossy().into_owned()),
-        });
-        let request = async {
-            port.write(HelperRequest::Skills {
-                request_id: "skills".into(),
-                repository: self.repository.clone(),
-                home: self.home.clone(),
-                reload,
-                org_skills,
-            })
-            .await?;
-            self.receive(port.as_ref()).await
+        let scan = matches!(request, HelperRequest::Skills { .. });
+        let action = async {
+            port.write(request).await?;
+            self.receive(port.as_ref(), scan).await
         };
         let result = tokio::select! {
             biased;
             _ = stopped.wait_for(|value| *value) => Err(Error::Canceled),
-            result = request => result,
+            result = action => result,
         };
         if result.is_err() {
             let _ = port.terminate().await;
             *state = None;
         }
-        drop(lease);
         result
+    }
+}
+
+#[async_trait]
+impl SkillScanner for NodeSkillScanner {
+    async fn scan(&self, reload: bool) -> Result<HelperSkillLists> {
+        let mut port = self.port.lock().await;
+        let lease = self.org.as_ref().and_then(|org| org.copy.current());
+        let response = self
+            .request(
+                &mut port,
+                HelperRequest::Skills {
+                    request_id: SCAN_ID.into(),
+                    repository: self.repository.clone(),
+                    home: self.home.clone(),
+                    reload,
+                    org_skills: self.org.as_ref().map(|org| org.options(lease.as_ref())),
+                },
+            )
+            .await?;
+        match response {
+            HelperOutput::Skills { skills, .. } => Ok(skills),
+            _ => Err(Error::HelperResponse),
+        }
+    }
+
+    async fn read(&self, agent: Agent, skill: SkillEntry, max_bytes: u64) -> SkillReadOutcome {
+        let mut port = self.port.lock().await;
+        let lease;
+        let source = if skill.org.is_some() {
+            let Some(org) = &self.org else {
+                return read::not_found();
+            };
+            let Some(current) = org.copy.current() else {
+                return read::not_found();
+            };
+            lease = current;
+            HelperSkillSource::Org {
+                repository: self.repository.clone(),
+                org_skills: org.options(Some(&lease)),
+                agent,
+                name: skill.skill.name,
+            }
+        } else {
+            HelperSkillSource::File { path: skill.path }
+        };
+        match self
+            .request(
+                &mut port,
+                HelperRequest::SkillRead {
+                    request_id: READ_ID.into(),
+                    max_bytes,
+                    source,
+                },
+            )
+            .await
+        {
+            Ok(HelperOutput::SkillRead { result, .. }) => result,
+            _ => read::unavailable(),
+        }
     }
 
     async fn close(&self) {
@@ -156,3 +225,7 @@ impl HelperFactory for SkillHelpers {
 #[cfg(test)]
 #[path = "_tests_/helper_tests.rs"]
 mod helper_tests;
+
+#[cfg(test)]
+#[path = "_tests_/helper_read_tests.rs"]
+mod helper_read_tests;

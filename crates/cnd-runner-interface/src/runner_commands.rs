@@ -9,6 +9,7 @@ use crate::messages::UserMessage;
 use crate::runner_credentials::RunnerTurnCredential;
 use crate::runner_files::RunnerFileCommand;
 use crate::runner_repository::{RunnerRepository, RunnerRepositoryMove};
+use crate::runner_skills::RunnerReadSkill;
 use crate::wire::ReadonlyVec;
 
 /// RunnerCommand wire alternatives.
@@ -162,6 +163,9 @@ pub enum RunnerControlCommand {
     RunnerChangeModel(RunnerChangeModel),
     /// RunnerFileCommand.
     RunnerFileCommand(RunnerFileCommand),
+    /// Direct skill read. Exported separately until the Worker sends it.
+    #[ts(skip)]
+    RunnerReadSkill(RunnerReadSkill),
     /// RunnerReportRefresh.
     RunnerReportRefresh(RunnerReportRefresh),
     /// RunnerRepositoryMove.

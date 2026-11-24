@@ -48,7 +48,7 @@ pub trait RunnerLink: Send + Sync {
     async fn emit(&self, event: RunnerEvent, report_command_id: Option<String>) -> Result<()>;
     /// Save all pending state and replay only committed events.
     async fn persist(&self) -> Result<()>;
-    /// Send a file response or a move refusal outside the numbered outbox after welcome.
+    /// Send a read result or a move refusal outside the numbered outbox after welcome.
     async fn reply(&self, response: RunnerToWorkspace) -> Result<()>;
     /// Capture accepted service support. Embeddings without it return None.
     async fn service_connection(&self) -> Option<ServiceConnection> {

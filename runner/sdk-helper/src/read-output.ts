@@ -2,6 +2,7 @@ import { readTurnSpeed } from '../../../src/shared/chat-events'
 import type { HelperOutput } from './generated/HelperOutput'
 import type { ProviderEvent } from './generated/ProviderEvent'
 import type { SkillEntry } from './generated/SkillEntry'
+import type { SkillReadOutcome } from './generated/SkillReadOutcome'
 import {
   array,
   boolean,
@@ -98,9 +99,39 @@ function skillEntry(value: unknown): SkillEntry {
     name: string(skill.name),
     description: string(skill.description),
     path: string(skill.path),
+    ...(skill.org === undefined ? {} : { org: skillOrigin(skill.org) }),
     ...(skill.manualOnly === undefined
       ? {}
       : { manualOnly: boolean(skill.manualOnly) }),
+  }
+}
+
+function skillOrigin(value: unknown): true {
+  if (value !== true) throw new Error('The helper skill origin is invalid.')
+  return value
+}
+
+function skillResult(value: unknown): SkillReadOutcome {
+  const input = object(value)
+  if (boolean(input.ok)) return { ok: true, text: string(input.text) }
+  const error = object(input.error)
+  const code = oneOf(error.code, [
+    'skill_not_found',
+    'skill_unavailable',
+    'skill_too_large',
+  ])
+  const message = string(error.message)
+  return {
+    ok: false,
+    error:
+      code === 'skill_too_large'
+        ? {
+            code,
+            message,
+            sizeBytes: integer(error.sizeBytes),
+            limitBytes: integer(error.limitBytes),
+          }
+        : { code, message },
   }
 }
 
@@ -118,6 +149,12 @@ export function readOutput(value: unknown): HelperOutput {
         },
       }
     }
+    case 'skill.read.result':
+      return {
+        type: input.type,
+        requestId: string(input.requestId),
+        result: skillResult(input.result),
+      }
     case 'event':
       return { type: input.type, event: event(input.event) }
     case 'response':
