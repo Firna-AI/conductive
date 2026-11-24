@@ -1,6 +1,7 @@
 import type { GitHubSummary } from '../shared/generated/GitHubSummary'
 import type { WorkspaceState } from '../shared/generated/WorkspaceState'
 import type { PathState } from '../../docs/mockups/src/fixtures/maskedFiles'
+import { workspaceAfterEvent } from '../app/workspace-detail'
 import { chatHistoryPath } from '../shared/events'
 
 import { workspaceOwnerPath } from '../shared/members'
@@ -24,8 +25,11 @@ import {
   workspacePath,
   workspacePaths,
   workspacesPath,
+  type OrderedWorkspaceResponse,
+  type WorkspaceResponse,
 } from '../shared/workspaces'
 import type { FakeRouteWriter } from './fake-api-routes'
+import type { FakeWorkspaceEvents } from './fake-events'
 import { FAKE_IDS, FAKE_TIME } from './fixtures/core'
 import { withSubWorkspaces } from './fixtures/sub-workspaces'
 import { workspaceFixtures } from './fixtures/workspaces'
@@ -46,10 +50,27 @@ const runningAtEnd: ReadonlySet<RecordedChatScenario> = new Set([
 ])
 
 /**
- * The event number of each recorded reply and read. The recorded state
- * holds before the events that a test sends, so each sent event is newer.
+ * The event number of each recorded session reply. The recorded session
+ * state holds before the events that a test sends.
  */
 const eventNumber = 0
+
+function recordedDetail(
+  detail: WorkspaceResponse,
+  events: FakeWorkspaceEvents,
+): WorkspaceResponse {
+  const history = events.history(0, detail.workspace.id)
+  return history.events.reduce((current, { event }) => {
+    switch (event.type) {
+      case 'workspace.updated':
+      case 'workspace.title':
+      case 'start.updated':
+        return workspaceAfterEvent(current, event)
+      default:
+        return current
+    }
+  }, detail)
+}
 
 export function fakeWorkspaceRoutes(
   routes: FakeRouteWriter,
@@ -61,6 +82,7 @@ export function fakeWorkspaceRoutes(
   workspaceStates?: ReadonlyMap<string, WorkspaceState>,
   /** The list has the sub-workspaces of the mockups too. */
   subWorkspaces = false,
+  events?: FakeWorkspaceEvents,
 ) {
   const data = workspaceFixtures(state, github)
   const org = FAKE_IDS.org
@@ -118,10 +140,20 @@ export function fakeWorkspaceRoutes(
       start: detail.start,
       error: detail.error,
     }
-    const ordered = { ...reply, eventNumber }
-    routes.json('GET', workspacePath(org, id), ordered)
+    const ordered = (seed: boolean): OrderedWorkspaceResponse => {
+      if (!events) return { ...reply, eventNumber }
+      const current = recordedDetail(reply, events)
+      return seed
+        ? { ...current, ...events.stateRead(id) }
+        : { ...current, eventNumber: events.last(id) }
+    }
+    routes.handle('GET', workspacePath(org, id), async () =>
+      Response.json(ordered(true)),
+    )
     routes.json('PATCH', workspacePath(org, id), reply)
-    routes.json('POST', workspacePaths.resume(org, id), ordered)
+    routes.handle('POST', workspacePaths.resume(org, id), async () =>
+      Response.json(ordered(false)),
+    )
     routes.json('POST', workspacePaths.restart(org, id), { updateCheck: 'ok' })
     routes.empty('POST', workspacePaths.activity(org, id))
     routes.empty('PUT', workspacePaths.read(org, id))

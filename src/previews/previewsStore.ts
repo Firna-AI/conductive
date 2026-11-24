@@ -1,7 +1,9 @@
+import type { Readable } from '../app/store'
 import type { WorkspaceIdentity } from '../app/workspace-store'
 import {
   ToolStore,
   type ToolDefinition,
+  type ToolSource,
 } from '../terminal/tool-parts/toolStore'
 import { listPreviews } from './previewsApi'
 import {
@@ -11,8 +13,9 @@ import {
   type PreviewsState,
 } from './previewsState'
 
-/** The store of the Preview tool of one workspace. */
-export type PreviewsStore = ToolStore<PreviewsState, PreviewsAction>
+interface PreviewSource extends ToolSource {
+  seeded?: Readable<boolean>
+}
 
 /**
  * The previews, their revoke events, the reports of the listening ports, and
@@ -40,9 +43,34 @@ const previewsTool: ToolDefinition<PreviewsState, PreviewsAction> = {
   },
 }
 
+/** The store of the Preview tool of one workspace. */
+export class PreviewsStore extends ToolStore<PreviewsState, PreviewsAction> {
+  private sawSeed = false
+
+  constructor(workspace: WorkspaceIdentity) {
+    super(previewsTool, workspace)
+  }
+
+  override connect(source: PreviewSource): () => void {
+    const afterSeed = () => {
+      if (this.sawSeed || !source.seeded?.get()) return
+      this.sawSeed = true
+      // A pre-seed list may contain revokes that the seed lets us skip.
+      this.dispatch({ type: 'workspace-seeded' })
+    }
+    const unwatch = source.seeded?.subscribe(afterSeed)
+    afterSeed()
+    const stop = super.connect(source)
+    return () => {
+      unwatch?.()
+      stop()
+    }
+  }
+}
+
 /** Makes the store of the Preview tool of one workspace. It starts nothing. */
 export function createPreviewsStore(
   workspace: WorkspaceIdentity,
 ): PreviewsStore {
-  return new ToolStore(previewsTool, workspace)
+  return new PreviewsStore(workspace)
 }

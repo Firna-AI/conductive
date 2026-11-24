@@ -55,9 +55,9 @@ export class WorkspaceView
   /**
    * Shows the workspace in this view, after its render. The notices, the
    * tool events, and the skill lists follow the stream before the model
-   * opens it, so that a first show also reads the stored history. The
-   * result closes the model, ends each follow, and hides the chat. A workspace that the tab forgot never
-   * opens again.
+   * opens it, so that a first show takes the seed or the stored history.
+   * The result closes the model, ends each follow, and hides the chat.
+   * A workspace that the tab forgot never opens again.
    */
   readonly connect = (): (() => void) => {
     if (!this.start()) return () => undefined

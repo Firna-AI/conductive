@@ -26,7 +26,7 @@ import { ChatWorkspaceBinding } from './workspace-binding'
 import type { ChatWorkspaceSummary } from './workspace-summary'
 import { ChatOperation } from './operation'
 import { RunnerChannel } from './runner-channel'
-import type { ChatStore, ChatTransaction } from './store'
+import type { ChatStore, ChatTransaction, QueuedWorkspaceRead } from './store'
 import type { QueueTurn } from './queue-turn'
 import { createWorkspaceChatStore } from './workspace-store'
 import { workspaceOperationRunner } from './workspace-operation'
@@ -241,10 +241,10 @@ export class WorkspaceChat {
 
   readWorkspace<T>(
     workspaceId: string,
-    work: (view: ChatTransaction) => Promise<T>,
+    work: QueuedWorkspaceRead<T>,
   ): Promise<T> {
     this.binding.bind(workspaceId)
-    return this.store.run(() => this.store.read(workspaceId, work))
+    return this.store.readQueued(workspaceId, work)
   }
 
   /** Keep feature records, events, and publication in one serial task. */

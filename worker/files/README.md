@@ -57,7 +57,7 @@ The standalone integration takes only complete reports.
 
 ### Combined integration with the chat backend
 
-The [chat backend](../chat/integration/README.md#milestone-9-files) owns the runner stream, its cursor, and its confirmations.
+The [chat backend](../chat/integration/README.md#files) owns the runner stream, its cursor, and its confirmations.
 It creates `RunnerFileReports` on `ChatTransaction.files`.
 That adapter runs the files transaction callback in the chat transaction of the runner message.
 So the assembly state, the projection, the history event, and the cursor commit together before the confirm.
@@ -106,8 +106,8 @@ The last complete tree and changes stay in the projection while parts are pendin
 The chat backend's `runnerEventStored` hook is a notification after the commit and the confirm.
 It must not apply a file report again.
 
-On this path, `files` serves the API from the same Durable Object storage.
-Its `tree` and `changes` methods each read only their own list of the projection.
+On this path, the tree and changes routes read the projection in the chat queue.
+The `WorkspaceFiles` port serves file and diff requests and reads the cached changes report for the diff base.
 For each accepted runner socket, call `files.runner.attach(physicalConnectionId, send)` with a fresh ID.
 A ready runner socket that the workspace object restores after a wake attaches again with the same ID.
 Call `files.runner.detach(physicalConnectionId)` when that socket closes.
@@ -122,6 +122,7 @@ After the owner accepts and authenticates a runner connection, call `files.conne
 Use a fresh `connectionId` for each physical connection, including a reconnect of the same runner stream.
 Call `files.disconnect(connectionId)` when that socket closes.
 The instance serializes the file updates and reads of this integration.
+Its `tree` and `changes` methods each read their own list of the projection.
 
 The workspace owner keeps the shared handshake, stream cursor, event numbers, confirmations, and resend rules.
 It passes each accepted file event to `await files.state.apply(connectionId, event)` in event order.
@@ -160,12 +161,21 @@ It checks sign-in, host, Origin, org membership, workspace ownership, and archiv
 Each org member can read its active workspaces.
 The handler serves the shared tree, content, download, changes, and diff paths.
 It returns the last stored lists while the sandbox sleeps.
-Before the first tree report or unavailable-tree mark, it returns `file_unavailable` for the tree.
+
+The list routes load the output filter after the request gates.
+They wait for the shared read-state recovery when it must run.
+One chat-queued view gives the list and its `stateRead`.
+This field gives the event number, the first open repair failure of that list, and the repository ID at that event number.
+The handler filters the list after the queued read.
+A missing list gives HTTP 503 `file_unavailable` with `stateRead`.
+For the tree, this can occur before the first tree report or unavailable-tree mark.
+See [The state of a new tab](../../docs/protocol/workspace-events.md#the-state-of-a-new-tab).
 
 Required options:
 
 - `maxFileBytes`: the backend file size limit in bytes. Production uses `FILE_READ_MAX_BYTES`, which is 5,242,880 bytes. It applies to each file version and each patch field.
-- `workspaceFiles`: a resolver for the authorized workspace's `WorkspaceFilesPort`.
+- `fileLists`: the tree and changes readers that supply the list and `stateRead`.
+- `workspaceFiles`: a resolver for the authorized workspace's `WorkspaceFilesPort` for content, downloads, and diffs.
 - `repositoryRoot`: the absolute checkout directory in the sandbox for that workspace.
 - `fetch`: the server's provider transport.
 - `now`: the clock for the existing request gate.
@@ -244,6 +254,7 @@ The D1 workspace schema holds the base branch.
 - [Production composition](../features/workspace.ts) mounts the gated handler and resolves the captured checkout folder.
 - [workspace.ts](workspace.ts) exposes the workspace integration object and RPC port.
 - [handlers.ts](handlers.ts) exposes the gated HTTP handler and its required options.
+- [list-reads.ts](list-reads.ts) reads each list and its cutoff from the same chat view.
 - [state.ts](state.ts) applies snapshots and tree updates and keeps branch changes.
 - [runner-reports.ts](runner-reports.ts) checks runner report parts on arrival and applies each complete report in the caller's transaction.
 - [report-storage.ts](report-storage.ts) keeps the assembly state with the fields of part 1 of a changes report.

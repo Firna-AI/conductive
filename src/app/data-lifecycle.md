@@ -216,9 +216,13 @@ of the data that the screens read and write.
   says. A return opens the model again, and its stream starts after the
   event number that it reached. A sign-out, or a sign-in of another user,
   closes and forgets every kept model.
-- An open reads the workspace detail, shows it, and starts the read marks
-  and the event stream. Only then does a stopped workspace, or one whose
-  later start failed, get its Resume. A failed first start waits for Try
+- An open reads and shows the workspace detail. On the first open, the
+  model gives a valid seed to its stream before it starts the read marks
+  and the socket. The read marks and the socket use the seed's cutoff.
+  After a read without a seed, a new stream starts at event 0. A return
+  opens the stream at the cursor that it kept. The model starts the
+  stream before it resumes a stopped workspace or a later start that
+  failed. A failed first start waits for Try
   again. So a refused or failed start keeps the detail and the stream, and
   `startError` of `WorkspaceModel` holds the error. A manual Resume still
   rejects for its caller.
@@ -321,6 +325,9 @@ of the data that the screens read and write.
   - After the replay, the newest live event.
 - A live event during an unfinished replay moves no number. The store holds
   that event until the final page.
+- `WorkspaceStream.applyBaseline` gives the first read's seed to the
+  subscribers that take it. It advances `last` and replay progress to the
+  cutoff and publishes `seeded`. The seed adds no stream event or reconnect.
 - `WorkspaceStream.subscribe` gives each event of the workspace once, in
   order, both from the replay and live. It also tells a replayed event
   from a live one. Its optional `replayEnded` runs after the final page of

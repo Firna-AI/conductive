@@ -3,6 +3,7 @@ import type { DiffResponse } from '../../shared/generated/DiffResponse'
 import type { FileResponse } from '../../shared/generated/FileResponse'
 import type { FileTreeResponse } from '../../shared/generated/FileTreeResponse'
 import { filePaths } from '../../shared/files'
+import type { FilesStateRead } from '../../shared/workspace-state-read'
 import {
   errorFromBody,
   errorFromThrown,
@@ -14,15 +15,19 @@ import {
   parseDiffResponse,
   parseFileResponse,
 } from './parse-changes'
+import type { FileReportKind } from './parse-events'
+import { parseFilesStateRead } from './parse-state-read'
 import { parseFileTree } from './parse-tree'
 
 /** The fetch of the browser, or a fake with the same shape. */
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>
 
+export type FilesListResult<T> = FilesResult<T> & { stateRead?: FilesStateRead }
+
 /** The file reads and the download address of one workspace. No method throws. */
 export interface FilesClient {
-  readTree(signal?: AbortSignal): Promise<FilesResult<FileTreeResponse>>
-  readChanges(signal?: AbortSignal): Promise<FilesResult<ChangesResponse>>
+  readTree(signal?: AbortSignal): Promise<FilesListResult<FileTreeResponse>>
+  readChanges(signal?: AbortSignal): Promise<FilesListResult<ChangesResponse>>
   readFile(
     path: string,
     signal?: AbortSignal,
@@ -44,41 +49,44 @@ export interface FilesClientOptions {
   workspaceId: string
 }
 
-async function send(
-  fetch: FetchLike,
-  path: string,
-  signal: AbortSignal | undefined,
-): Promise<FilesResult<Response>> {
-  try {
-    const response = await fetch(path, {
-      headers: { Accept: 'application/json' },
-      signal,
-    })
-    if (response.ok) return { ok: true, value: response }
-    const body: unknown = await response.json().catch(() => null)
-    return failure(errorFromBody(response.status, body))
-  } catch (thrown) {
-    return failure(errorFromThrown(thrown))
-  }
-}
-
 async function readJson<T>(
   fetch: FetchLike,
   path: string,
   parse: (value: unknown) => T | null,
   signal: AbortSignal | undefined,
-): Promise<FilesResult<T>> {
-  const sent = await send(fetch, path, signal)
-  if (!sent.ok) return sent
+  report?: FileReportKind,
+): Promise<FilesListResult<T>> {
   try {
-    const body: unknown = await sent.value.json()
+    signal?.throwIfAborted()
+    const response = await fetch(path, {
+      headers: { Accept: 'application/json' },
+      signal,
+    })
+    const body: unknown = await response.json().catch((error: unknown) => {
+      if (errorFromThrown(error).kind === 'aborted') throw error
+      return null
+    })
+    signal?.throwIfAborted()
+    if (!response.ok) {
+      const error = errorFromBody(response.status, body)
+      const stateRead =
+        report &&
+        error.kind === 'failed' &&
+        error.status === 503 &&
+        error.code === 'file_unavailable'
+          ? parseFilesStateRead(body, report)
+          : undefined
+      return stateRead ? { ok: false, error, stateRead } : failure(error)
+    }
     const value = parse(body)
-    if (value !== null) return { ok: true, value }
-    return failure({ kind: 'failed', status: 200, code: 'invalid_response' })
+    if (value === null)
+      return failure({ kind: 'failed', status: 200, code: 'invalid_response' })
+    const stateRead = report && parseFilesStateRead(body, report)
+    return stateRead ? { ok: true, value, stateRead } : { ok: true, value }
   } catch (thrown) {
-    const error = errorFromThrown(thrown)
-    if (error.kind === 'aborted') return failure(error)
-    return failure({ kind: 'failed', status: 200, code: 'invalid_response' })
+    return failure(
+      signal?.aborted ? { kind: 'aborted' } : errorFromThrown(thrown),
+    )
   }
 }
 
@@ -92,6 +100,7 @@ export function createFilesClient(options: FilesClientOptions): FilesClient {
         filePaths.tree(orgId, workspaceId),
         parseFileTree,
         signal,
+        'files.snapshot',
       ),
     readChanges: (signal) =>
       readJson(
@@ -99,6 +108,7 @@ export function createFilesClient(options: FilesClientOptions): FilesClient {
         filePaths.changes(orgId, workspaceId),
         parseChanges,
         signal,
+        'changes.updated',
       ),
     readFile: (path, signal) =>
       readJson(

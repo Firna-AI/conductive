@@ -10,7 +10,7 @@ export interface FilesSnapshot {
   treeError: FilesError | null
   /**
    * The cloud computer could not read the files. `tree` is the saved tree,
-   * or empty when none was saved. Only a full tree of the stream clears it.
+   * or empty when none was saved. A newer full report or cutoff can clear it.
    */
   treeUnavailable: boolean
   changes: ChangesResponse | null
@@ -22,8 +22,8 @@ export interface FilesSnapshot {
   /** Grows for each path whose content an event may have changed. */
   versions: ReadonlyMap<string, number>
   /**
-   * The file lists whose fresh full report was lost too. Only a newer full
-   * report of the same list in the stream clears one.
+   * The file lists whose fresh full report was lost too. Each repair stays
+   * until a full report or a read with a newer cutoff ends it.
    */
   failedRepairs: FailedRepairs
   /**

@@ -74,14 +74,18 @@ const { store: files } = useWorkspaceStore(
 )
 ```
 
-The kept store reads the file routes with the `fetch` of the org's
-`ApiClient`, so the Mac app reads them from its own Worker, and a refusal
-of a suspended org marks the org. Its stream is
-the event source of the app, after the last event number of the store.
-When the connection drops, the stream opens again as
-[Data lifecycle](../app/README.md#data-lifecycle) says. So a return shows
-the lists at once, and the socket asks only for the events after the last
-complete point. Give `files` to the screens.
+The store reads the file routes with the `fetch` of the org's `ApiClient`.
+The Mac app reads from its own Worker. A refusal of a suspended org marks
+the org. A new store starts both list reads. When both give cutoffs, the
+stream starts after the smaller cutoff. A cutoff is the last workspace
+event that a read includes. As soon as either read gives no cutoff, the
+stream starts after event 0. See
+[The state of a new tab](../../docs/protocol/workspace-events.md#the-state-of-a-new-tab).
+
+A return to a kept store shows its lists at once. The socket starts after
+the last complete point of that store's stream. A dropped connection also
+resumes from its own progress. See
+[Data lifecycle](../app/README.md#data-lifecycle).
 
 [Store rules](store.md) gives the rules of the stream of the store, the
 open pages, the failed repairs of the lists, and a tree that the cloud

@@ -30,7 +30,8 @@ says.
   over the composer of a new workspace whose grant of this Mac did not
   start after the create, with Try again. A read-only workspace shows no
   such notice.
-- An open reads the workspace, shows it, and starts the stream. Only then
+- An open reads and shows the workspace. A new model applies the seed
+  before it starts the stream after the read's cutoff. Only then
   does a stopped or failed workspace resume. A Resume answers when the
   server queued the start, with the state `starting`. The stored chat
   shows during the start, and the stream brings the start steps and the
@@ -255,7 +256,9 @@ row and the Checks tab of the Files part. It reads with the `fetch` of
 the org, waits with the timer of the app, and takes the GitHub events of
 the ordered stream of the workspace. Of the old GitHub states that a replay
 of the stream holds, it takes only the newest, so the bar does not flicker
-through them while the workspace loads.
+through them while the workspace loads. On a seeded stream, a new GitHub
+subscription gets one empty history at the stream's current number. Its
+own reads give the current state.
 
 - The screen keeps one action state for the bar on desktop and the top of
   the Checks tab on a phone, as

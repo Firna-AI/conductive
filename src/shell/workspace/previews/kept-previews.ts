@@ -43,11 +43,12 @@ export function usePreviewsConnection(context: WorkspaceContext): void {
   const store = useKeptPreviews(context)
   const fetch = useOrgServices(context.org.id).api.fetch
   const subscribe = context.toolEvents
+  const { seeded } = context.stream
   const runs = context.sandbox === 'ready'
   useEffect(() => {
     if (!runs) return undefined
-    return connectPreviews(store, { fetch, subscribe })
-  }, [store, fetch, subscribe, runs])
+    return connectPreviews(store, { fetch, subscribe, seeded })
+  }, [store, fetch, subscribe, seeded, runs])
 }
 
 /**

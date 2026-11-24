@@ -13,8 +13,8 @@ The address holds the state of the page:
 | `theme`    | `dark`, or `light`                                            |
 | `list`     | `all`, `changes`, or `checks`                                 |
 | `tab`      | `file:preview:<path>`, `file:source:<path>`, or `diff:<path>` |
-| `scenario` | `mockup`, the mockup data, or `live`, which replays the updates |
-| `repair`   | `all-files`, `changes`, or both, as `all-files,changes`: the failed repairs of the stored history |
+| `scenario` | `mockup`, the mockup data, or `live`, which includes the recorded updates |
+| `repair`   | `all-files`, `changes`, or both, as `all-files,changes`, with failed repairs from the list reads |
 | `tree`     | `saved`, or `none`: the cloud computer could not read the files, and All files keeps the saved tree, or no tree was saved |
 | `preview`  | What the Preview of an HTML file shows: `page`, the default, or `opening`, `failed`, or `older-software` |
 | `controls` | `off` hides the development controls                         |
@@ -34,6 +34,11 @@ as the Worker does. Download saves the reply of the fake API, through
 `dev/dev-targets.ts`. The controls play
 the recorded updates, edit the open file, and switch the layout, the
 theme, and the data. The product build does not include the page.
+
+The fake list routes give the cutoff of the current workspace history.
+The mockup routes start with the sample lists. The live routes give the
+lists after the recorded updates. Both include the failed repairs at the
+cutoff. The stream starts after the list reads, as it does in the app.
 
 `?tab=file:preview:.context/report.html` shows the page of an HTML report
 with a style file, as `app/files/html` of the mockups draws it.
@@ -68,5 +73,6 @@ controls also have these buttons:
 - "Fail a read of the files", for All files only, sends the mark of a
   failed read. "Send a full report" clears it.
 
-`?tree=saved` and `?tree=none` store the mark in the history, and the tree
-route marks its tree, as the Worker does. Use them with the mockup data.
+`?tree=saved` and `?tree=none` store the mark in the history. The tree
+read gives the marked saved tree or the marked empty tree together with
+its cutoff. Use these settings with the mockup data.

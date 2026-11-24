@@ -61,8 +61,11 @@ export function reply(workspace: Workspace) {
 }
 
 /** A stopped workspace on the fake API, before its open. */
-export async function stoppedWorkspace() {
-  const server = new FakeApiServer({ workspaceState: 'stopped' })
+export async function stoppedWorkspace(afterEventNumber = 0) {
+  const server = new FakeApiServer({
+    workspaceState: 'stopped',
+    legacyWorkspaceRead: true,
+  })
   const held = new HeldRequests(server)
   const events = new RecordingEvents()
   const org = new OrgModel(
@@ -71,7 +74,7 @@ export async function stoppedWorkspace() {
   )
   const workspace = new WorkspaceModel(org, workspaceId)
   await org.reload('list')
-  let eventNumber = 0
+  let eventNumber = afterEventNumber
   /** The next stored event of the workspace, with the next number. */
   const envelope = (record: Workspace) => {
     const event: WorkspaceEvent = {

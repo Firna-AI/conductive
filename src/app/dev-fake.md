@@ -11,6 +11,10 @@ option overrides this default, including queued chats that show no spinner.
 `dev/options.ts` lists the values. The `wake-` values give the wakes of a
 watch, as the mockups draw them at `app/chat/wakes`.
 
+`dev/workspace-routes.ts` gives the detail and seed of a workspace with
+the cutoff of its own event log. Resume gives its event number. Each
+socket takes the events of its workspace after its own cursor.
+
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,

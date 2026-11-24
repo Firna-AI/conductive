@@ -25,6 +25,9 @@ window and person, which `useThisMac` gives. So a start from the switch or
 from a create shows on the bar at once. In a browser, `useThisMac` gives
 `null`, so the bar and the notice draw nothing, the control shows no Mac
 access part, and none of them sends a request.
+`WorkspaceMacBar` opens this controller for its first read of the
+settings. That read also gives the current grant after a seeded workspace
+stream opens at its cutoff.
 `WorkspaceMacBar` calls `refresh` after the `workspace.updated` events of
 the workspace stream, which follow each change of a Mac command, so the bar
 shows the grant that an answer started. One burst of events, such as

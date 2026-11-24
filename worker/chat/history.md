@@ -12,8 +12,11 @@ streams, and the order of the runner commands.
   task runs one call outside the queue. In production code, the start
   guard of a sandbox start calls `outside`, as
   [Creates and resumes](../lifecycle/workspace-object.md#creates-and-resumes)
-  says. A session read also calls it between the batches of a
-  [session index](#the-session-index) build.
+  says. A session read calls it between batches of a
+  [session index](#the-session-index) build. The workspace GET calls it
+  while it waits for [read-state recovery](#the-workspace-read-state).
+  The Files list reads also wait outside the queue through
+  `ChatStore.readQueued`.
 - `outside` first gives the committed turn ends to the
   [`turnEnded`](integration/workspace-lifecycle.md#hooks-and-events) hook.
   Then the task gives the queue up and runs the call. When the call ends,
@@ -238,3 +241,28 @@ with the session filter and the forward page limits. Reads without a
 session, such as the events socket, the workspace summary, and Continue,
 list the stored events of the workspace and build no session index.
 Workspace compaction preparation also reads up to four records per list.
+
+## The workspace read state
+
+[`workspace-read-state.ts`](workspace-read-state.ts) keeps the latest port
+and skills events, the latest workspace repository ID, and the first
+failure of each open [report repair](report-repairs.md). It updates the
+state in the transaction of an event or repair removal. The versioned
+mark in `chat:v1:meta` records whether the state is complete. A write from
+an older Worker drops the mark, even when it adds no event.
+
+[`workspace-read-recovery.ts`](workspace-read-recovery.ts) shares one
+recovery across waiting reads. The recovery fixes a cutoff and saves its
+progress after each page in a separate chat queue task. Each page uses
+one reverse list of at most four stored events. It skips file descriptors
+by reading their metadata alone. The cause of each failed repair bounds
+its notice scan. A later full report ends that scan for its kind.
+
+A page commits the next position and the reports and failures found so
+far. A read resumes there after an eviction. A write that drops the mark
+starts a new recovery at the latest event number. The last task checks
+the cutoff and repair records, then joins the recovered state with the
+changes that committed after the cutoff. A full report or removal after
+the cutoff takes precedence for its notice window. A repeated refusal
+keeps the first failure of an open window. The GET then reads the detail,
+seed, and event number in one chat queue task.

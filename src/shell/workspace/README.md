@@ -163,13 +163,13 @@ const { store: shown, snapshot: detail } = useWorkspaceStore(
   { orgId, workspaceId },
   { create, connect: connectView },
 )
-const { model, notices, chat, toolEvents } = shown
+const { model, notices, chat, toolEvents, skills } = shown
 ```
 
 A new `create` makes a new view, so keep `app` and `viewer` stable.
 
-- `view` gives a `WorkspaceView` over the kept model, notices, chat, and
-  tool events. The first view of a workspace makes these parts. `create`
+- `view` gives a `WorkspaceView` over the kept model, notices, chat,
+  tool events, and skill lists. The first view makes these parts. `create`
   starts no read and no subscription, and stops nothing, so a render can
   call it.
 - The snapshot is the `detail` of the model, or `loading` while a kept
@@ -177,13 +177,12 @@ A new `create` makes a new view, so keep `app` and `viewer` stable.
 - The hook connects the view after the render. The first connect of a
   workspace reads the members when they are not ready. The first connect
   in the tab makes the memory follow the sign-in.
-- Each connect calls `notices.newView()`, makes the notices and the tool
-  events follow the stream of the model, and calls `model.open()` and
-  `chat.show()`, in this order. The follows come before the open. So at a
-  first show, the notices and the tool events get the stored history of
-  the workspace from its first event, then the live events, in event
+- Each connect calls `notices.newView()`. The notices, tool events, and
+  skill lists follow the model's stream before `model.open()` and
+  `chat.show()`. On a first show they get the workspace seed, or the
+  stored history if the read gave no seed. They then take newer events in
   order.
-- The stop of a connect calls `model.close()`, ends both follows, and
+- The stop of a connect calls `model.close()`, ends the follows, and
   calls `chat.hide()`. A connect starts nothing for a workspace that the
   tab no longer keeps.
 

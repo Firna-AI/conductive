@@ -93,6 +93,10 @@ the line through that message, as
 `events.ts` defines the browser stream. Its event numbers span all sessions
 and runner connections of one workspace. A reconnect uses the last stored number.
 The history response gives the point after which live events continue.
+`WorkspaceSeed` in [workspace-state-read.ts](workspace-state-read.ts)
+gives the current reports and failed repairs for a workspace GET. Its
+cutoff is `OrderedWorkspaceResponse.eventNumber` in
+[workspaces.ts](workspaces.ts).
 The optional `error` of `workspace.updated` carries only the saved public
 code and message. A null error clears the previous error. An older event
 without this field keeps the previous error.

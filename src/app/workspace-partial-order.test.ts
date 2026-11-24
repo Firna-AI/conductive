@@ -24,7 +24,10 @@ const listPath = workspacesPath(orgId)
 
 async function opened(state: WorkspaceState = 'ready') {
   const initial = workspaceFixtures(state).detail.workspace
-  const server = new FakeApiServer({ workspaceState: state })
+  const server = new FakeApiServer({
+    workspaceState: state,
+    legacyWorkspaceRead: true,
+  })
   server.json('GET', listPath, { workspaces: [initial] })
   const held = new HeldRequests(server)
   const events = new RecordingEvents()
