@@ -17,7 +17,7 @@
   - The copies have intended differences: the branch read after a lost result, the exit codes of the move, the runner move at the end, the file-report reset at publication, and the repeat check in `start`.
   - In Continue, a step after the move that fails for good retries every second with no end. An example is a branch read that keeps failing because the folder was removed. The reservation then holds the workspace forever.
   - PR #423 added an end rule only to the repository change job: after 10 minutes of a failed publication or a failed branch read after the move, the job ends with a failure and a warning, while the D1 row still names the old repository and branch.
-  - Neither job ends when a started move command keeps failing at the provider, for example when the cloud computer is gone and each status read fails. The repository change end rule does not cover these errors.
+  - Continue does not end when a started move command keeps failing, for example when the cloud computer is gone and each status read fails. Since the own computers change, the repository change counts each failed step of a started fetch or move under its 10-minute end rule, so it ends.
 - **Problem:** A fix of the reservation, the credential scope, the command recovery, or the publication replay must be made in two places. Continue still has no end rule after the move, so it can hold a workspace forever.
 - **Impact if no action:** A fix in one job can miss the other, and a Continue whose branch read keeps failing blocks Continue, Restart, Archive, and every new message of its workspace.
 - **Root question:** How do Continue and the repository change share one durable branch-move job, so that each fix of its recovery, including an end rule after the move, reaches both?

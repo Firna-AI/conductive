@@ -1047,6 +1047,10 @@ Depends on: 5, 6
       relay port. Let the relay accept a stream from the host program.
 - [ ] Move the fallback file read to the channel.
 - [ ] Keep the proxies' header and cookie rules on the preview domain.
+- [ ] Move the provider-path callers that Milestone 6 left, each to the
+      host connection: the terminal close command, the Restore marker, the
+      preview relay probe, the attachment metadata read, and the terminal
+      file reads.
 
 ## Milestone 8: Builds over the host connection
 
@@ -1186,6 +1190,15 @@ The second options check gave most of these TODOs. Its report is in
 - [ ] Test a running, a stopped, an archived, a suspended, and an
       error-state computer, a failed step, and an open, an Archive, and a
       Restore while the job runs.
+- [ ] Move the moved-base job in `worker/lifecycle/workspace-base.ts` to
+      the host connection.
+- [ ] Give the bootstrap its own provider method before the deletion, so
+      that the compiler names each caller of the provider path that the
+      deletion misses.
+- [ ] Delete the provider path only after Continue has another bounded
+      recovery for a command that the host started. Today its reattach
+      after 2 minutes uses the provider path (finding 8 of the Milestone 6
+      review).
 - [ ] Delete each provider command, file read, and port method, and each
       converter, except what decision 7 D keeps: the bootstrap command, the
       E2B env write, and the desktop route (`worker/sandbox/boat.ts:96-100`).
