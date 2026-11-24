@@ -1,6 +1,9 @@
 import { expect, it } from 'vitest'
 
 import { MACHINE_TOKEN_PATTERN } from '../machines/authorization'
+import { productionMembersHooks } from '../members/composition'
+import { deleteOrg } from '../members/deletion'
+import { restoreOrg } from '../members/restore'
 import { TEST_TIME } from '../test-support/harness'
 import { setupBackendTests } from './backend-test-hooks'
 import { updateBuildJob } from './build-data'
@@ -64,4 +67,36 @@ it('advances a recorded allocation without replaying its cleared token', async (
     sandboxId: 'bx_1',
     machineTokenCiphertext: null,
   })
+})
+
+it('clears the saved allocation token when Delete org ends a build before Restore', async () => {
+  const fixture = fixtureForTest()
+  const { boat, runtime, org, user } = fixture
+  const image = await imageRetryFixture(fixture, { steps: 0 })
+  boat.lostCreateReplies = 1
+  await image.tick(TEST_TIME)
+  expect(await image.job()).toMatchObject({
+    state: 'running',
+    phase: 'allocating',
+    machineTokenCiphertext: expect.stringMatching(/^v1\./u),
+    sandboxId: null,
+  })
+
+  const { env, dependencies } = runtime
+  const hooks = productionMembersHooks(env, dependencies)
+  const deleted = await deleteOrg(
+    env,
+    org.id,
+    user.id,
+    org.name,
+    dependencies,
+    hooks,
+  )
+  expect(deleted.deletion).toMatchObject({ deletedAt: TEST_TIME })
+  const ended = { state: 'failed', phase: 'done', machineTokenCiphertext: null }
+  expect(await image.job()).toMatchObject(ended)
+
+  const restored = await restoreOrg(env, org.id, user.id, dependencies, hooks)
+  expect(restored.deletion).toBeUndefined()
+  expect(await image.job()).toMatchObject(ended)
 })

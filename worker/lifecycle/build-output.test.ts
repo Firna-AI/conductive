@@ -39,8 +39,7 @@ it('hides machine tokens in build logs without changing command offsets', async 
   ).toEqual(
     expect.arrayContaining([
       'heading [hidden]\n',
-      'stdout [hidden]\n',
-      'stderr [hidden]\n',
+      'stdout [hidden]\nstderr [hidden]\n',
     ]),
   )
   expect(await readBuildJob(runtime.env.DB, org.id, id)).toMatchObject({
@@ -75,7 +74,7 @@ it('masks a token split across build status replies and releases the final text'
   boat.statusChunkSize = 130
 
   expect(await advanceImageBuild(images, org.id, id)).toBe(false)
-  expect(await newLog()).toEqual([prefix, 'note [hidden]\n'])
+  expect(await newLog()).toEqual([`${prefix}note [hidden]\n`])
   expect(await readBuildJob(db, org.id, id)).toMatchObject({
     phase: 'software',
     stdoutOffset: 110,
@@ -90,8 +89,7 @@ it('masks a token split across build status replies and releases the final text'
   const completed = await readBuild(db, org.id, id)
   expect(completed.build.state).toBe('failed')
   expect(await newLog()).toEqual([
-    prefix,
-    'note [hidden]\n',
+    `${prefix}note [hidden]\n`,
     '[hidden]\ncndm1.abc',
     completed.build.error,
   ])
@@ -105,6 +103,30 @@ it('masks a token split across build status replies and releases the final text'
   const reply = await response.text()
   expect(reply).toContain(JSON.stringify('[hidden]\ncndm1.abc'))
   expect(reply).not.toContain(token)
+})
+
+it('masks a token across stdout and stderr of a finished build reply', async () => {
+  const { images, org, user, boat } = backendFixture()
+  const { DB: db } = images.env
+  const id = await startImageBuild(images, {
+    orgId: org.id,
+    userId: user.id,
+    kind: 'build',
+    software: SOFTWARE,
+  })
+  for (let step = 0; step < 3; step++)
+    await advanceImageBuild(images, org.id, id)
+  const before = await readBuild(db, org.id, id)
+  const token = `cndm1.${'a'.repeat(64)}.${'b'.repeat(43)}`
+  boat.commandOutput = `result ${token.slice(0, 70)}`
+  boat.commandStderr = `${token.slice(70)} done\n`
+
+  await advanceImageBuild(images, org.id, id)
+
+  const { log } = await readBuild(db, org.id, id)
+  expect(log.slice(before.log.length).map(({ text }) => text)).toEqual([
+    'result [hidden] done\n',
+  ])
 })
 
 it('stores a detached status reply above two million output bytes in bounded rows without losing output', async () => {
@@ -202,13 +224,13 @@ it('keeps UTF-8 characters and event order across all build log writers', async 
   const completed = await readBuild(runtime.env.DB, org.id, id)
   expect(completed.build).toMatchObject({ state: 'failed', error: message })
   expect(completed.log.map((event) => event.eventNumber)).toEqual([
-    1, 2, 3, 4, 5, 6, 7,
+    1, 2, 3, 4, 5, 6,
   ])
   expect(
     completed.log.map(
       (event) => new TextEncoder().encode(event.text).byteLength,
     ),
-  ).toEqual([262_143, 8, 262_144, 2, 4, 262_142, 10])
+  ).toEqual([262_143, 8, 262_144, 6, 262_142, 10])
   expect(completed.log.map((event) => event.text).join('')).toBe(
     `${heading}${stdout}err\n${message}`,
   )

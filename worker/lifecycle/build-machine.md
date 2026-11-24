@@ -17,10 +17,10 @@ that object for its host connection.
 - `buildSandboxIntent` in [`resource-intents.ts`](resource-intents.ts) adds
   the token and the machine origin to the env of the create. Each replay of
   the create, also a replay in cleanup, sends the same token.
-- The build code clears the saved token when it saves the sandbox ID and
-  when its own cleanup reaches `done`. A job that Delete org ends keeps
-  its saved token until the purge deletes the job's row. A job that holds
-  its sandbox ID makes no new create.
+- The build code clears the saved token when it saves the sandbox ID.
+  A database trigger also clears it when any writer sets the job phase
+  to `done`, including Delete org. A job that holds its sandbox ID makes
+  no new create.
 - A create that the previous Worker began has no saved token. Its replay
   sends no token, so that build keeps the provider path.
 - `advanceBuildStep` in [`image-build-steps.ts`](image-build-steps.ts) sends
@@ -35,10 +35,15 @@ that object for its host connection.
   and origin. So the install script gets only the folder variables, as
   [Repository folders](../../docs/protocol/repository-folders.md#folder-variables)
   says.
-- Each write to the build log hides each machine token as `[hidden]`. The
-  saved output offsets still count the bytes of the raw output.
+- [`build-output-redaction.ts`](build-output-redaction.ts) holds a possible
+  token start at the end of each stream while the command runs or more output
+  remains. It saves the raw byte offset before the held part so the next
+  read returns it. It masks machine tokens as `[hidden]` in the joined text
+  of stdout and stderr in each reply.
 - A failed job that ends with no build computer and no provider client
-  revokes the token before it ends. Each other job revokes it in its
-  cleanup, as [Build jobs](image-builds.md#build-jobs) says.
+  revokes the token before it ends. Each other job revokes it in cleanup
+  before it deletes any sandbox. A failed revoke keeps sandbox deletion
+  pending while snapshot cleanup can continue, as
+  [Build jobs](image-builds.md#build-jobs) says.
 - The revoke through the computer ledger also finds a build machine. So the
   stop of a deleted org also revokes the token of a build machine.

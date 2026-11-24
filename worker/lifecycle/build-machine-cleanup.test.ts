@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 
+import { record, string } from '../chat/inputs'
 import {
   buildMachineOwner,
   issueMachineToken,
@@ -52,10 +53,12 @@ it('revokes the build machine before deleting its computer', async () => {
   )
 })
 
-it('keeps cleanup scheduled after failed revocation and still deletes the computer', async () => {
+it('keeps cleanup scheduled and the computer present until revocation succeeds', async () => {
   const fixture = fixtureForTest()
-  const { images, org, boat } = fixture
+  const { images, org, boat, harness } = fixture
   const image = await failedBuild(fixture)
+  const owner = buildMachineOwner(org.id, image.id)
+  const token = string(record(boat.starts[0].env).CONDUCTIVE_MACHINE_TOKEN)
   const machines = images.env.MACHINES
   if (!machines) throw new Error('Missing test machine binding')
   const unavailable = new Proxy(machines, {
@@ -71,13 +74,15 @@ it('keeps cleanup scheduled after failed revocation and still deletes the comput
       image.id,
     ),
   ).rejects.toThrow('Machine revocation unavailable')
-  expect(boat.deletedIds).toEqual(['bx_1'])
+  expect(boat.deletedIds).toEqual([])
   expect(await pendingImageCleanup(images.env.DB, org.id)).toBe(image.id)
   expect(await image.job()).toMatchObject({ phase: 'cleanup' })
+  expect(await machineTokenStatus(harness.env, owner, token)).toBe(101)
   await image.restart()
   await image.tick(TEST_TIME)
   expect(await image.job()).toMatchObject({ phase: 'done' })
   expect(boat.deletedIds).toEqual(['bx_1'])
+  expect(await machineTokenStatus(harness.env, owner, token)).toBe(401)
 })
 
 it('finds and revokes a build machine through the computer ledger', async () => {
@@ -144,6 +149,7 @@ it('keeps a failed build without a provider pending until it can revoke its toke
   ).rejects.toThrow('Machine revoke unavailable.')
   expect(await image.job()).toMatchObject({ state: 'failed', phase: 'cleanup' })
   expect(await pendingImageCleanup(images.env.DB, org.id)).toBe(image.id)
+  expect(boat.deletedIds).toEqual([])
   expect(await machineTokenStatus(harness.env, owner, token)).toBe(101)
 
   expect(await advanceImageBuild(images, org.id, image.id)).toBe(true)

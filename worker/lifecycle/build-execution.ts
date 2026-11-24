@@ -139,11 +139,11 @@ export async function cleanupBuild(
   } catch (error) {
     failures.push(error)
   }
-  for (const computer of await liveBuildComputers(
-    runtime.env.DB,
-    job.orgId,
-    job.buildId,
-  )) {
+  const computers =
+    failures.length === 0
+      ? await liveBuildComputers(runtime.env.DB, job.orgId, job.buildId)
+      : []
+  for (const computer of computers) {
     try {
       await deleteSandboxIfPresent(
         runtime.env.DB,

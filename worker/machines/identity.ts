@@ -57,22 +57,11 @@ function nonempty(value: unknown): value is string {
 }
 
 export function sameOwner(left: MachineOwner, right: MachineOwner): boolean {
-  switch (left.kind) {
-    case 'workspace':
-      return (
-        right.kind === left.kind &&
-        right.orgId === left.orgId &&
-        right.workspaceId === left.workspaceId
-      )
-    case 'build':
-      return (
-        right.kind === left.kind &&
-        right.orgId === left.orgId &&
-        right.buildId === left.buildId
-      )
-    case 'software-image':
-      return right.kind === left.kind && right.imageId === left.imageId
-  }
+  const leftOrg = 'orgId' in left ? left.orgId : undefined
+  const rightOrg = 'orgId' in right ? right.orgId : undefined
+  return (
+    leftOrg === rightOrg && machineObjectName(left) === machineObjectName(right)
+  )
 }
 
 export function readMachineRecord(value: unknown): MachineRecord | null {

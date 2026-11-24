@@ -149,10 +149,10 @@ step saved.
 - The org image changes only when the new snapshot is ready. Each job
   revokes the machine token of its build. Then it deletes every live ledger
   computer of that org and build, and keeps its history and log.
-  A failed revoke or Delete keeps cleanup scheduled until the revoke
-  succeeds and each computer is removed.
-  Cleanup attempts every live computer even when the revoke or another Delete fails.
-  It reports that failure after the independent Deletes finish.
+  A failed revoke leaves each sandbox in place and keeps cleanup scheduled.
+  After revocation succeeds, cleanup attempts every live computer even
+  if another Delete fails. Snapshot cleanup can proceed after a failed
+  revoke or Delete. Cleanup reports the first failure after these attempts.
   Missing computers count as removed.
   Confirmed ledger deletions keep later retries from repeating finished work.
 - A creation claim captures a published image and its repository's default

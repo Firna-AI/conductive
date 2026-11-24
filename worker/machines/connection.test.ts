@@ -5,6 +5,7 @@ import { HOST_PATH } from '../../src/shared/host'
 import { OUTER_MACHINE_ORIGIN } from '../chat/integration/outer-runtime.test-support'
 import { routeHost } from './route'
 import {
+  buildMachineOwner,
   issueMachineToken,
   machineClient,
   workspaceMachineOwner,
@@ -145,25 +146,34 @@ it('replaces a connection, fails pending work on drop, and revokes old tokens', 
   await disconnected
 })
 
-it('refuses another owner before token changes and every operation', async () => {
-  const f = await fixture()
-  const other = machineClient(f.env, { ...f.owner, orgId: 'another-org' })
-  const calls = [
-    () => other.issue('a'.repeat(43)),
-    () => other.revoke(),
-    () => other.connection(),
-    () => other.runCommand('true', 1),
-    () => other.startCommand('true'),
-    () => other.commandStatus(1),
-    () => other.fileInfo('/tmp/file'),
-    () => other.readFile('/tmp/file', 10),
-    () => other.openStream(7681),
-  ]
-  for (const call of calls)
-    await expect(call()).rejects.toMatchObject({
-      status: 404,
-      code: 'machine_not_found',
-    })
-  await f.open()
-  expect((await f.client.connection()).connected).toBe(true)
-})
+it.each(['workspace', 'build'] as const)(
+  'refuses another org of a %s machine before token changes and every operation',
+  async (kind) => {
+    const f = await fixture()
+    const owner =
+      kind === 'build' ? buildMachineOwner(f.owner.orgId, 'build-one') : f.owner
+    const token =
+      kind === 'build' ? await issueMachineToken(f.env, owner) : f.token
+    const other = machineClient(f.env, { ...owner, orgId: 'another-org' })
+    const calls = [
+      () => other.issue('a'.repeat(43)),
+      () => other.revoke(),
+      () => other.connection(),
+      () => other.runCommand('true', 1),
+      () => other.startCommand('true'),
+      () => other.commandStatus(1),
+      () => other.fileInfo('/tmp/file'),
+      () => other.readFile('/tmp/file', 10),
+      () => other.openStream(7681),
+    ]
+    for (const call of calls)
+      await expect(call()).rejects.toMatchObject({
+        status: 404,
+        code: 'machine_not_found',
+      })
+    await f.open(token)
+    expect((await testMachineClient(f, owner).connection()).connected).toBe(
+      true,
+    )
+  },
+)

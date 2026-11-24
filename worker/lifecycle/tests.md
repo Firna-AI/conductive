@@ -123,6 +123,7 @@ Each create and each resume of `LifecycleBoat` gives it the machine token of tha
 It then opens a real host WebSocket to the production `Machine` object.
 A fixture that seeds a workspace in D1 calls `seed`, which issues the token with `issueMachineToken`.
 The fake host answers each command and status read from the scenario state of `LifecycleBoat`: its hooks, output, exit codes, and process IDs.
+The large build output case in [`build-output.test.ts`](build-output.test.ts) runs on the host path, and [`transport-command-status.test.ts`](../sandbox/transport-command-status.test.ts) checks the provider reader with the same size.
 The captures of `LifecycleBoat` hold the commands and status reads of both paths.
 The `commandRequests` and `statusRequests` of `LifecycleHost` hold only the requests that crossed the socket.
 With `autoConnect` set to false, a computer stays on the provider path until the test calls `connect`.
@@ -146,7 +147,7 @@ They confirm retry after failed Delete and after suspension blocks initial provi
 `build-machine-allocation.test.ts` checks that a replayed build create sends the same machine token.
 It also checks that a create of the previous Worker sends none.
 `build-machine-cleanup.test.ts` checks that a build cleanup revokes the machine token before the Delete.
-A failed revoke keeps the cleanup scheduled, and the Delete still runs.
+A failed revoke keeps cleanup scheduled and leaves the computer in place until revocation succeeds.
 It also checks the revoke through the computer ledger, and the revoke of a failed job with no provider client.
 `build-host.test.ts` runs the source, software, install, and journal commands of a build on the host path, across alarms and an object restart.
 It keeps a build without a host connection, and a saved process without a route, on the provider path.

@@ -16,6 +16,7 @@
   - A command can print a machine token, because each process in the machine can read it.
   - Review findings 1 and 102 found that the org build log and the software image output masked each status read alone, so a token split across two reads reached the log. The fix gave both build readers one shared redactor. It hides each whole token, holds back a trailing part that could start a token while the command runs, and saves the offset before that part.
   - The start log masks the joined text itself (`worker/lifecycle/start-logs.ts:41`).
+  - Review finding 108 added a joint mask: the build redactor masks the joined text of stdout and stderr of each reply, because readers join the two streams. A mask in the leaf channels sees each stream alone, so the build log writer must keep that joint mask.
   - Each other reader of command output, now and in later changes, must call a redactor itself.
 - **Problem:** The protection lives in each reader, not at the one place where command output enters the Worker. A reader that a later change adds can store or show a split token again.
 - **Impact if no action:** A new reader of command output can put a machine token in a log or a reply.

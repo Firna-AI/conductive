@@ -114,7 +114,7 @@ export async function runningBuild(
   return row?.id ?? null
 }
 
-/** The one statement of a phase change. It resets the command of the job. */
+/** Changes the job phase and resets its saved command. */
 export function buildPhaseStatement(
   db: D1Database,
   buildId: string,

@@ -151,8 +151,8 @@ provider calls.
 - The saved output and the kept output hide each machine token as
   `[hidden]`. The saved offsets still count the bytes of the raw output.
 - The cleanup of an attempt before its `done` phase revokes the token
-  before it deletes the sandbox. A failed revoke keeps the attempt for a
-  later cleanup, and the deletes still run.
+  before it deletes the sandbox. A failed revoke leaves the sandbox in
+  place and keeps cleanup scheduled. Snapshot cleanup can still proceed.
 
 ## Cron work
 

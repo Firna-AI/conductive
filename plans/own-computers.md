@@ -917,8 +917,10 @@ November 2026.
   when the job leaves its `create` phase. The job keeps the token encrypted
   in its D1 row until the create completes or the cleanup ends. Each
   replayed create sends the same token. Reason: a replay must send the
-  body of the first request. A job that Delete org ends keeps the token
-  until the purge deletes its row, as review round 1 of Milestone 8 found.
+  body of the first request. A trigger of the migration clears the saved
+  token when a build job reaches `done` by any writer, also the Delete org
+  write. Review finding 154 of Milestone 8 added the trigger on 24 November
+  2026, after review round 1 found that Delete org kept the token.
 - A software image build registers the digest of its token just before
   each create request, after its revision check. A repeated registration
   of the same digest changes nothing. Reason: two polls can advance one
@@ -933,8 +935,11 @@ November 2026.
   job keeps the route of its command.
 - The cleanup of a build revokes its machine token before it deletes the
   build computers. A failed revoke keeps the cleanup scheduled, as a failed
-  Delete does, and the deletes still run. Reason: the delete is the stop of
-  a build machine (own computer decision 11 B).
+  Delete does, and the deletes wait for a successful revoke. Reason: the
+  delete is the stop of a build machine (own computer decision 11 B), and
+  the token stops working at that delete. Review finding 151 of Milestone 8
+  changed the first form of this call on 24 November 2026, which let the
+  deletes run after a failed revoke.
 - The revoke through the computer ledger also finds the machine of a
   build, so the org purge revokes it too. Reason: the purge deletes build
   computers through the same ledger.
@@ -942,8 +947,12 @@ November 2026.
   machine token and origin after it loads the build env, as the runner
   start does. Reason: the install script and its packages need no token,
   and its env stays as it was.
-- The build log and the output of the software image hide each match of
-  the machine token pattern in each write, as the start log does. Reason:
+- The build log and the output of the software image hide each machine
+  token, as the start log does. While a command runs, each output stream
+  holds back a possible token start, and each reply is masked as one
+  joined text. Review findings 1 and 108 of Milestone 8 changed the first
+  form of this call on 24 November 2026, which masked each write alone.
+  Reason:
   [The machine token](../docs/protocol/host-connection.md#the-machine-token)
   says that no log holds a machine token, and members read the build log.
 - After the answer of a software image poll, the work sends no new host

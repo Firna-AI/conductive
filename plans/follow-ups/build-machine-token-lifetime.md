@@ -2,7 +2,7 @@
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-8-builds-over-ef32` (pull request #686), review round 1, findings 101, 2, and 103, and two problems that their checks found.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-8-builds-over-ef32` (pull request #686), review round 1, findings 101, 2, and 103, and two problems that their checks found. Review round 2, finding 151, added the cleanup order on the same day.
 - **Location:** `worker/machines/machine.ts:68-100` (`issueToken` and `revokeToken`), `worker/software-image/resources.ts:42-49` (the digest registration before each create request), `worker/software-image/cleanup.ts:53-66`, `worker/lifecycle/build-execution.ts:113-140` (`cleanupBuild`), `worker/lifecycle/image-build-failure.ts:88-110`, and `worker/members/composition-data.ts:43` (`stopOrgLifecycleRecords`).
 - **Reason:** No path leaks a command, an output, or data, the cases need a rare timing, and the best fix changes the machine object, which the branch that found it did not change.
 
@@ -17,6 +17,8 @@
   - An org build makes its token when its job leaves `create`, and keeps it encrypted in `image_build_jobs.machine_token_ciphertext` until it saves its sandbox ID. Each replayed create sends the same token. The build cleanup revokes the token before its deletes.
   - A software image build saves its token with its move to `allocating`, and registers its digest before each create request, also the create replay of its cleanup recovery. Deploy polls and the Cron work can advance one attempt at the same time.
   - After a build ends, no code sends a command, a stream, or a file read to its machine object. A build ID and an image ID are never used again.
+  - Since review finding 151, both build cleanups delete their sandboxes only after a successful revoke, and keep the cleanup scheduled after a failed one. A trigger of the Milestone 8 migration clears the saved token when a build job reaches `done` by any writer.
+  - The stop of a deleted org (`worker/members/deletion.ts:124-137`) revokes each listed build computer in warn mode, stops it, then revokes again in retry mode. It reaches only build computers with a saved sandbox ID.
 - **Problem:** Four paths leave a valid digest in the machine object after the build ended:
   - **A late registration.** A software image poll passes its revision check, then its registration reaches the machine object after another poll's cleanup revoked the token. The revoke cleared the digest, so the registration stores it again.
   - **Delete org after a lost create reply.** `stopOrgLifecycleRecords` sets each running build to `done` with its own SQL. A build with no saved sandbox ID has no ledger row with a sandbox ID, so the stop of the deleted org revokes nothing. The suspension deletes the image alarm, so no build cleanup runs again. The digest stays with no end.

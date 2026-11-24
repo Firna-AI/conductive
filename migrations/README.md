@@ -638,3 +638,6 @@ to `image_build_jobs`, `image_source_jobs`, `image_source_runs`, and
 It also adds nullable encrypted machine token columns to `image_build_jobs`
 and `software_images` so a replay can send the original create request.
 Existing rows and previous Worker inserts get null in all six columns.
+A trigger clears `image_build_jobs.machine_token_ciphertext` when any
+writer sets the job phase to `done`, including Delete org. The previous
+Worker can keep writing the same columns.

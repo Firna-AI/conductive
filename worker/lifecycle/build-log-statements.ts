@@ -77,7 +77,5 @@ export function buildCommandLogStatements(
   output: RedactedCommandOutput,
   now: number,
 ): D1PreparedStatement[] {
-  return output.parts
-    .filter(Boolean)
-    .flatMap((text) => logStatements(db, buildId, text, now))
+  return output.text ? logStatements(db, buildId, output.text, now) : []
 }

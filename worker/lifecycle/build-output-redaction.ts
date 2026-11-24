@@ -27,16 +27,16 @@ function redactStream(text: string, nextOffset: number, waiting: boolean) {
 
 /** The redactor alone supplies command text and the offsets to save with it. */
 export class RedactedCommandOutput {
-  private readonly streams: readonly [string, string]
+  private readonly value: string
   readonly stdoutOffset: number
   readonly stderrOffset: number
 
   private constructor(
-    streams: readonly [string, string],
+    text: string,
     stdoutOffset: number,
     stderrOffset: number,
   ) {
-    this.streams = streams
+    this.value = text
     this.stdoutOffset = stdoutOffset
     this.stderrOffset = stderrOffset
   }
@@ -46,17 +46,13 @@ export class RedactedCommandOutput {
     const stdout = redactStream(status.stdout, status.stdoutNextOffset, waiting)
     const stderr = redactStream(status.stderr, status.stderrNextOffset, waiting)
     return new RedactedCommandOutput(
-      [stdout.text, stderr.text],
+      hideMachineTokens(stdout.text + stderr.text),
       stdout.offset,
       stderr.offset,
     )
   }
 
-  get parts(): readonly string[] {
-    return this.streams
-  }
-
   get text(): string {
-    return this.streams.join('')
+    return this.value
   }
 }

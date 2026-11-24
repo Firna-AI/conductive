@@ -1,4 +1,3 @@
-import { hideMachineTokens } from '../lifecycle/build-machine-token'
 import type { RedactedCommandOutput } from '../lifecycle/build-output-redaction'
 import type { SoftwareImage } from './types'
 
@@ -11,7 +10,7 @@ export function softwareImageOutputStatements(
   image: SoftwareImage,
   output: RedactedCommandOutput,
 ): D1PreparedStatement[] {
-  const bytes = new TextEncoder().encode(hideMachineTokens(output.text))
+  const bytes = new TextEncoder().encode(output.text)
   const parts: string[] = []
   for (let start = 0; start < bytes.length;) {
     let end = Math.min(start + OUTPUT_PART_BYTES, bytes.length)

@@ -144,7 +144,7 @@ it('keeps late command output pending so a later poll returns it once', async ()
     held.release()
     await poll.tasks.drain()
     expect((await softwareImages(images.env.DB, 'boat'))[0]).toMatchObject({
-      stdoutOffset: 80_031,
+      stdoutOffset: 160_031,
     })
     expect(await (await poll.request()).json()).toMatchObject({
       state: 'building',

@@ -64,7 +64,7 @@ async function cleanupSoftwareImage(
       failures.push(error)
     }
   }
-  if (image.sandboxId) {
+  if (image.sandboxId && failures.length === 0) {
     try {
       await deleteSandboxIfPresent(
         env.DB,

@@ -70,7 +70,7 @@ it('sends only machine environment and resumes host commands with saved offsets'
   expect(boat.starts).toHaveLength(1)
 })
 
-it('deletes the software image sandbox after a failed revoke and retries revocation in repair', async () => {
+it('keeps the software image sandbox until repair can revoke its token', async () => {
   const { images, boat, harness } = fixtureForTest()
   expect(
     await requestSoftwareImage(
@@ -79,7 +79,7 @@ it('deletes the software image sandbox after a failed revoke and retries revocat
       digest,
     ),
   ).toMatchObject({ state: 'ready', phase: 'cleanup' })
-  expect(boat.deletedIds).toEqual(['bx_1'])
+  expect(boat.deletedIds).toEqual([])
   const [pending] = await softwareImages(images.env.DB, 'boat')
   expect(pending).toMatchObject({ phase: 'cleanup', sandboxId: 'bx_1' })
   const owner = softwareImageMachineOwner(pending.id)
@@ -94,6 +94,7 @@ it('deletes the software image sandbox after a failed revoke and retries revocat
     phase: 'done',
     sandboxId: null,
   })
+  expect(boat.deletedIds).toEqual(['bx_1'])
   expect(await machineTokenStatus(harness.env, owner, token)).toBe(401)
 })
 
@@ -120,34 +121,34 @@ it('masks split tokens in software image replies and kept output across stderr',
   const { images, boat, host } = fixtureForTest()
   const token = `cndm1.${'a'.repeat(64)}.${'b'.repeat(43)}`
   boat.commandRunning = true
-  boat.commandOutput = `stdout\n${token.slice(0, 70)}`
+  boat.commandOutput = `stdout🙂\n${token.slice(0, 70)}`
   boat.commandStderr = `stderr ${token}\n`
   expect(await requestSoftwareImage(images, SOFTWARE, digest)).toMatchObject({
     state: 'building',
-    output: 'stdout\nstderr [hidden]\n',
+    output: 'stdout🙂\nstderr [hidden]\n',
   })
   expect((await softwareImages(images.env.DB, 'boat'))[0]).toMatchObject({
-    output: 'stdout\nstderr [hidden]\n',
-    stdoutOffset: 7,
+    output: 'stdout🙂\nstderr [hidden]\n',
+    stdoutOffset: 11,
     stderrOffset: 122,
   })
 
-  boat.commandOutput = `stdout\n${token}\ncndm1.abc`
+  boat.commandOutput = `stdout🙂\n${token}\ncndm1.abc`
   boat.commandRunning = false
   boat.commandExitCode = 1
   expect(await requestSoftwareImage(images, SOFTWARE, digest)).toMatchObject({
     state: 'failed',
     output: '[hidden]\ncndm1.abc',
-    keptOutput: 'stdout\nstderr [hidden]\n[hidden]\ncndm1.abc',
+    keptOutput: 'stdout🙂\nstderr [hidden]\n[hidden]\ncndm1.abc',
   })
   expect((await softwareImages(images.env.DB, 'boat'))[0]).toMatchObject({
-    output: 'stdout\nstderr [hidden]\n[hidden]\ncndm1.abc',
-    stdoutOffset: 131,
+    output: 'stdout🙂\nstderr [hidden]\n[hidden]\ncndm1.abc',
+    stdoutOffset: 135,
     stderrOffset: 122,
   })
   expect(host.statusRequests).toEqual([
     { processId: 1, stdoutOffset: 0, stderrOffset: 0 },
-    { processId: 1, stdoutOffset: 7, stderrOffset: 122 },
+    { processId: 1, stdoutOffset: 11, stderrOffset: 122 },
   ])
 })
 
