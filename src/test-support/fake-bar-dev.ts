@@ -195,20 +195,19 @@ export function scenarioFetch(
       }
       emit(event)
     }
-    const last = server.events.history(
-      Number.MAX_SAFE_INTEGER,
-    ).throughEventNumber
     const workspace = {
       ...detail.workspace,
       branch: names.branch,
       github: null,
     }
-    server.json('GET', workspacePath(org, id), {
-      ...detail,
-      workspace,
-      eventNumber: last,
-    })
-    continuedReply(server, workspace, last)
+    server.handle('GET', workspacePath(org, id), async () =>
+      Response.json({
+        ...detail,
+        workspace,
+        ...server.events.stateRead(id),
+      }),
+    )
+    continuedReply(server, workspace, server.events.last(id))
     continues = false
   }
   const echo = async (path: string, init: RequestInit | undefined) => {
@@ -228,9 +227,7 @@ export function scenarioFetch(
       state: 'sent',
     }
     emit({ type: 'message.accepted', message })
-    const eventNumber = server.events.history(
-      Number.MAX_SAFE_INTEGER,
-    ).throughEventNumber
+    const eventNumber = server.events.last(id)
     return Response.json(
       { eventNumber, message, turnId: null, session },
       { status: 202 },

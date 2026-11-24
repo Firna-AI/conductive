@@ -16,7 +16,7 @@ use crate::error::Result;
 
 use super::build;
 
-fn settings() -> BTreeMap<String, String> {
+pub(super) fn settings() -> BTreeMap<String, String> {
     BTreeMap::from([
         ("CONDUCTIVE_WORKSPACE_ID".into(), "workspace".into()),
         ("CONDUCTIVE_WORKSPACE_TOKEN".into(), "token".into()),
@@ -54,7 +54,7 @@ fn configured(depth: &str) -> BTreeMap<String, String> {
 
 fn instructions(env: &BTreeMap<String, String>, agent: &Agent) -> Result<Vec<String>> {
     let config = Configuration::parse(env, Path::new("/repo"), Path::new("/home/user"))?;
-    let (text, _) = build(&config, None, agent)?;
+    let (text, _) = build(&config, None, None, agent)?;
     Ok(text
         .split("\n\n")
         .skip_while(|line| !line.starts_with("Keep the workspace branch name"))
@@ -72,7 +72,7 @@ fn gives_screenshot_guidance_after_computer_tools() -> Result<()> {
         Path::new("/home/user"),
     )?;
     for agent in [Agent::Claude, Agent::Codex] {
-        let (text, _) = build(&config, None, &agent)?;
+        let (text, _) = build(&config, None, None, &agent)?;
         assert_eq!(
             text.split("\n\n")
                 .skip_while(|line| !line.starts_with("When computer tools are available"))

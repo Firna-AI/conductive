@@ -12,6 +12,10 @@ include the page. From the repository root:
 npx vite --config src/shell/workspace/dev/vite.config.js --port 5182
 ```
 
+The fake gives a workspace seed and cutoff from the recorded log of the
+workspace. Its socket sends the events after the cursor of each caller.
+The first-start page stores its queued messages in that workspace's log.
+
 Then open `http://localhost:5182/src/shell/workspace/dev/`. The root of
 this server is the repository root, so it also serves the
 [Files development page](../../files/README.md#development) at

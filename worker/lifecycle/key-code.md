@@ -133,6 +133,8 @@ points of each part.
   [`retry-creation-data.ts`](retry-creation-data.ts) pins the replacement image.
 - [`start-admission.ts`](start-admission.ts): `enqueueWorkspaceStart` admits
   initial starts, replacements, and resumes in the queue task of its caller.
+  [`start-after-stop.ts`](start-after-stop.ts) holds a resume or a Try again
+  that comes during a pending stop, and queues it when that stop ends.
 - [`durable.ts`](durable.ts): `DurableLifecycle`, the state and timers of a
   workspace. [`durable-types.ts`](durable-types.ts) holds the times.
 - [`durable-turns.ts`](durable-turns.ts): `applyLifecycleTurn`, the turn

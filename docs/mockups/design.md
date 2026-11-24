@@ -432,6 +432,16 @@ sessions as tabs above the chat, and four tabs at the bottom.
   computer stopped this build. Try again.", as
   `app/org-settings/cloud-computer/build-failed/ended` shows. Neither text
   names the switch or a provider.
+- The install script and the startup script show as code, with line
+  numbers and the shell colours of a file tab. `CodeField` in
+  `src/files/code/CodeField.tsx` of the repository draws the field of an
+  admin, and `CodeBlock` beside it draws the script that another member
+  reads, in the tinted block. The mockups and the app share both, as
+  `components/files/code-field` and `components/files/code-block` show.
+  The field grows with its lines and shows at least three. A long line
+  wraps beside its number. Tab and Shift+Tab indent and outdent, Enter
+  keeps the indent, and Escape, then Tab, moves the focus on. A screen
+  reader reads these keys with the field.
 - A new org has no image until its first build succeeds. Until then New
   workspace keeps Send off under a notice with the state of that build, as
   `app/new-workspace/first-build` shows. A notice of work that runs, such

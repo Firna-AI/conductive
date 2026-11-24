@@ -14,6 +14,7 @@ use cnd_cli::update::presence::SDK_HELPER_PART;
 use cnd_cli::update::staging::NODE_PART;
 use cnd_runner::config::Configuration;
 use cnd_runner::file_server::files::RepositoryFiles;
+use cnd_runner::file_server::font_files::{PreviewFiles, SYSTEM_FONT_FOLDERS};
 use cnd_runner::file_server::listener::LoopbackListener;
 use cnd_runner::file_server::policy::FilePolicy;
 use cnd_runner::file_server::server::{FileServer, HttpFileServer};
@@ -101,7 +102,10 @@ pub(crate) async fn execute() -> Result<()> {
             let server: Arc<dyn FileServer> = Arc::new(HttpFileServer {
                 listener: Arc::new(listener),
                 requests: Arc::new(FilePolicy {
-                    files: Arc::new(RepositoryFiles { root: served_root }),
+                    files: Arc::new(PreviewFiles::new(
+                        Arc::new(RepositoryFiles { root: served_root }),
+                        SYSTEM_FONT_FOLDERS.map(PathBuf::from),
+                    )),
                 }),
             });
             let stopped = shutdown.clone();

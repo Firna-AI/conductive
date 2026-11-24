@@ -1,182 +1,30 @@
-import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
-import {
-  FIRST_MESSAGE_ADMISSION_KEY,
-  type FirstWorkspaceMessage,
-} from '../lifecycle/workspace-runtime'
-import { chatFilesStorage } from './files-storage'
-import { saveHistoryEvent } from './history-storage'
-import { HistoryPages, type ReadScope } from './history-pages'
+import type { WorkspaceEventEnvelope } from './workspace-events'
 import { prepareSessionHistory } from './history-session-preparation'
-import { ChatRecords } from './chat-records'
-import type { FilesStorage } from '../files/storage'
-import type { GitHubStateTransaction } from '../github/contracts'
-import { ReportRepairs } from './report-repairs'
-import { WorkspaceSkills } from './skill-state'
-import { WorkspaceSummaryProjection } from './workspace-summary'
-import { PreviewRevocations } from '../previews/revocation-events'
-import { TerminalList } from '../terminal/list-store'
-import { RunnerOutputState } from './runner-output-state'
-import {
-  CHAT_META as META,
-  chatKey as key,
-  chatEventKey as eventKey,
-} from './storage-keys'
-import type { ChatData, ChatStorage, StoredTurn } from './types'
-import type { PendingCommand } from './pending-command'
-import { TurnEndReports, type TurnEndReport } from './turn-end-reports'
+import { CHAT_META } from './storage-keys'
+import type { ChatStorage } from './types'
+import { TurnEndReports } from './turn-end-reports'
 import { ChatQueue, type QueueTurn } from './queue-turn'
 import { readChatMetadata, type ChatMetadata } from './store-metadata'
-import { SecretRequestRecords } from '../secrets/request-records'
 import type { RunnerDiagnosticIdentity } from './runner-diagnostics'
-import { SessionWatchRecords } from './session-watch-records'
+import { ChatTransaction } from './chat-transaction'
+import { WorkspaceReadRecovery } from './workspace-read-recovery'
 import {
   WorkspaceEventLabelPreparation,
   WorkspaceEventLabels,
 } from './workspace-event-labels'
 
-export class ChatTransaction extends ChatRecords {
-  readonly workspaceId: string
-  readonly now: number
-  readonly emitted: WorkspaceEventEnvelope[] = []
-  readonly endedTurns: TurnEndReport[] = []
-  readonly files: FilesStorage
-  readonly github: GitHubStateTransaction
-  readonly repairs: ReportRepairs
-  readonly skills: WorkspaceSkills
-  readonly previews: PreviewRevocations
-  readonly terminals: TerminalList
-  readonly output: RunnerOutputState
-  readonly secrets: SecretRequestRecords
-  readonly watches: SessionWatchRecords
-  private readonly summary: WorkspaceSummaryProjection
-  private readonly pages: HistoryPages
-  private readonly labels: WorkspaceEventLabelPreparation | undefined
-  private readonly prepareSession:
-    ((through: number) => Promise<void>) | undefined
-  private through: number
-  private commandThrough: number
+export { ChatTransaction } from './chat-transaction'
 
-  constructor(
-    data: ChatData,
-    metadata: ChatMetadata,
-    now: number,
-    prepareSession?: (through: number) => Promise<void>,
-    labels?: WorkspaceEventLabelPreparation,
-  ) {
-    super(data)
-    this.labels = labels
-    this.prepareSession = prepareSession
-    this.pages = new HistoryPages(data, prepareSession)
-    this.secrets = new SecretRequestRecords(data)
-    this.watches = new SessionWatchRecords(data)
-    this.output = new RunnerOutputState(data)
-    this.files = chatFilesStorage(data)
-    this.github = {
-      get: (key) => data.get(key),
-      put: (key, value) => data.put(key, value),
-      emit: (event) => this.emit(event),
-    }
-    this.repairs = new ReportRepairs(data)
-    this.skills = new WorkspaceSkills(data, (event, occurredAt) =>
-      this.emit(event, occurredAt),
-    )
-    this.previews = new PreviewRevocations(data, (event) => this.emit(event))
-    this.terminals = new TerminalList(data, (event) => this.emit(event))
-    this.summary = new WorkspaceSummaryProjection(
-      data,
-      () => this.turns(),
-      (after, through) => this.history(after, through),
-    )
-    this.workspaceId = metadata.workspaceId
-    this.through = metadata.through
-    this.commandThrough = metadata.commandThrough
-    this.now = now
-  }
+type WorkspaceRead<T> = (view: ChatTransaction) => Promise<T>
 
-  saveFirstMessageAdmission(first: FirstWorkspaceMessage): Promise<void> {
-    return this.data.put(FIRST_MESSAGE_ADMISSION_KEY, first)
-  }
-  saveTurn(turn: StoredTurn): Promise<void> {
-    return this.summary
-      .turn(turn, this.now)
-      .then(() => this.data.put(key('turn', turn.id), turn))
-  }
-  workspaceSummary() {
-    return this.summary.read(this.through)
-  }
-  async lifecycleRecovery() {
-    const { activeTurnIds, lastTurnEndedAt, title } =
-      await this.summary.recovery()
-    const runningTurns: StoredTurn[] = []
-    for (const id of activeTurnIds) {
-      const turn = await this.turn(id)
-      if (turn?.state === 'running' || turn?.state === 'stopping')
-        runningTurns.push(turn)
-    }
-    return { runningTurns, lastTurnEndedAt, title }
-  }
-  get eventNumber(): number {
-    return this.through
-  }
-  saveMessageTurn(messageId: string, turnId: string): Promise<void> {
-    return this.data.put(key('message-turn', messageId), turnId)
-  }
-  saveNewestTurn(sessionId: string, turnId: string): Promise<void> {
-    return this.data.put(key('newest-turn', sessionId), turnId)
-  }
-  saveCommand(command: PendingCommand): Promise<void> {
-    return this.data.put(key('command', command.commandId), {
-      command,
-      order: ++this.commandThrough,
-    })
-  }
-  history(after: number, through = this.through, scope?: ReadScope) {
-    return this.pages.read(
-      after,
-      Math.min(through, this.through),
-      scope,
-      this.prepareSession !== undefined,
-    )
-  }
-  newestHistory(sessionId: string, before?: number, through = this.through) {
-    through = Math.min(through, this.through)
-    return this.pages.readNewest(before, through, { sessionId })
-  }
-
-  async emit(
-    event: WorkspaceEvent,
-    occurredAt = this.now,
-    late?: true,
-  ): Promise<WorkspaceEventEnvelope> {
-    const labeled = this.labels ? await this.labels.event(event) : event
-    await this.pages.prepare(this.through)
-    const envelope: WorkspaceEventEnvelope = {
-      workspaceId: this.workspaceId,
-      eventNumber: ++this.through,
-      occurredAt,
-      event: structuredClone(labeled),
-      ...(late ? { late } : {}),
-    }
-    await this.summary.event(envelope)
-    await saveHistoryEvent(this.data, eventKey(envelope.eventNumber), envelope)
-    await this.pages.index(envelope)
-    this.emitted.push(envelope)
-    return envelope
-  }
-
-  async finish(): Promise<void> {
-    await this.data.put(META, {
-      workspaceId: this.workspaceId,
-      through: this.through,
-      commandThrough: this.commandThrough,
-    })
-  }
-}
+export type QueuedWorkspaceRead<T> =
+  WorkspaceRead<T> | { withReadState: WorkspaceRead<T> }
 
 /** Transactions commit each event with its cursor and affected records. */
 export class ChatStore {
   private readonly queue = new ChatQueue(() => this.reportTurnEnds())
   private readonly storage: ChatStorage
+  private readonly readState: WorkspaceReadRecovery
   private readonly now: () => number
   private readonly changed: (workspaceId: string) => Promise<void>
   private readonly turnEnds: TurnEndReports
@@ -198,6 +46,9 @@ export class ChatStore {
   ) {
     this.readLabels = readLabels
     this.storage = storage
+    this.readState = new WorkspaceReadRecovery(storage, (work) =>
+      this.run(work),
+    )
     this.now = now
     this.turnEnds = new TurnEndReports(turnEnded, runner)
     this.changed = changed
@@ -234,13 +85,25 @@ export class ChatStore {
   }
 
   async workspaceId(): Promise<string | undefined> {
-    return (await this.storage.get<ChatMetadata>(META))?.workspaceId
+    return (await this.storage.get<ChatMetadata>(CHAT_META))?.workspaceId
   }
 
-  async read<T>(
+  prepareWorkspaceReadState(
     workspaceId: string,
-    work: (view: ChatTransaction) => Promise<T>,
-  ): Promise<T> {
+    turn: QueueTurn,
+  ): Promise<boolean> {
+    return this.readState.prepare(workspaceId, turn)
+  }
+
+  readQueued<T>(workspaceId: string, work: QueuedWorkspaceRead<T>): Promise<T> {
+    return this.run(async (turn) => {
+      if (typeof work === 'function') return this.read(workspaceId, work)
+      await this.prepareWorkspaceReadState(workspaceId, turn)
+      return this.read(workspaceId, work.withReadState)
+    })
+  }
+
+  async read<T>(workspaceId: string, work: WorkspaceRead<T>): Promise<T> {
     return work(
       new ChatTransaction(
         this.storage,

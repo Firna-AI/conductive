@@ -1,0 +1,31 @@
+# A copy from a diff holds its annotations
+
+- **Severity:** High. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-23, from the branch `calummoore/selecting-code-context-jlro`, review finding 1.
+- **Location:** `src/files/diff/DiffView.tsx`, `src/files/code/CodeBox.tsx`, `src/files/code/code-selection.ts`, `src/files/code/code.module.css` (`.sign`, `.hunk`, `.note`), `docs/protocol/workspace-tools.md` (the select-all and copy bullets under "Files and changes").
+- **Reason:** What a copy from a diff holds is a product choice, and each option changes a behaviour that members have today.
+
+- **Terms:**
+  - **Diff annotations:** the `@@` hunk headers, the `+`, `−`, and space signs, and the notes such as "\ No newline at end of file" of the diff view.
+  - **Code box:** `CodeBox` of `src/files/code/CodeBox.tsx`, the focusable scroll region of the text view and the diff view. With a list of source lines, it builds the copied text itself.
+- **Background:**
+  - Since 23 November 2026, Cmd+A or Ctrl+A in the diff of a file tab selects only the diff, not the whole app.
+  - The text view of a file gives the code box its source lines. So a copy there gives the source text of the selection, with its empty lines.
+  - The diff gives the code box no lines. So the browser builds its copy from the rows.
+  - In Chrome, that copy holds each `@@` header and each note. It puts each sign on a line of its own, and the sign `−` is U+2212, not `-`. It leaves out empty lines. A drag across rows on `main` before 23 November 2026 did the same.
+  - A diff row keeps U+FEFF in the text of line 1 of a file with a byte order mark (`src/files/diff/parse-patch.ts`). The text view leaves the mark out of its copy.
+  - The header's Copy gives the new file. Its line numbers cannot be selected.
+- **Problem:** Select all and copy in a diff gives the code mixed with headers, signs on separate lines, and notes. The empty lines are lost.
+- **Impact if no action:** A pasted diff is neither valid code nor a valid patch.
+- **Root question:** Which text must a copy from a diff give, after select all or after a drag, and how does the view give exactly that text?
+- **Options:**
+  - **A.** Give the diff's code rows to the code box as its lines, and keep the annotations selectable. A copy then gives the source text of the selected code rows, and also the text of each selected header and note. Select all then still copies the headers and the notes. Effort: Medium.
+  - **B.** As A, and give the signs, the hunk rows, and the note rows `user-select: none`, as the line numbers have. Select all and a drag then highlight and copy only the code rows, old and new lines together. A drag can no longer copy a header or a note. Effort: Medium.
+  - **C.** Copy a diff as a patch. Each selected row gives a patch line: each `@@` header, each code line after an ASCII sign (`-` for U+2212), and each note. A paste into code then needs the signs removed. Effort: Medium.
+  - **D.** Draw the code of all rows as one text with real line ends, and draw the numbers, the signs, the headers, and the notes beside it. The browser's own copy is then exact, with no copy handler. Effort: Large.
+- **Left out:** A copy of only the new lines, because the diff shows only the hunks, so the lines paste as pieces with gaps. A filter that removes sign and header lines from the browser's copy, because it also removes real code lines such as a single `+`. An editor component with a diff view, because `src/files/README.md` keeps file text as React text. Removing select all from the diff, because select all would then select the whole app again.
+- **Wider fix:** B. The marker of the line numbers keeps every annotation out of each selection, and the copy reads the source rows.
+- **Previous examples:** Commit `20d9700b3` separated the text copied from a Mac command from the marks shown around it, in `src/chat/device/LiteralText.tsx`.
+- **Recommendation:** B. The highlight then shows exactly the text that the copy gives, as in the text view, and GitHub's diff copy also leaves the signs out.
+- **Action:** ask the user, because B changes what a drag copies today, C is a product choice, and A copies the headers after select all, so no option is clearly best.

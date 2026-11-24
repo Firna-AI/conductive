@@ -3,8 +3,9 @@ import { expect, it } from 'vitest'
 import { CodeView } from './CodeView'
 import styles from './code.module.css'
 
+/** The HTML of each row, after the start tag of the row. */
 function lines(html: string): string[] {
-  return html.split(`<div class="${styles.line}">`).slice(1)
+  return html.split(new RegExp(`<div class="${styles.line}"[^>]*>`)).slice(1)
 }
 
 it('numbers each line and colours keywords, strings, comments, numbers, and types', () => {

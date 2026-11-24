@@ -1,4 +1,7 @@
-import { readChatWorkspaceResponse } from './chat/workspace-response'
+import {
+  readChatWorkspaceResponse,
+  type WorkspaceReadRequest,
+} from './chat/workspace-response'
 import type { WorkspaceCompositionEnv } from './chat/workspace-integration'
 import type { WorkspaceChatResolvers } from './chat/workspace-resolvers'
 import { MergeQueueWorkspace } from './merge-queue/workspace'
@@ -167,18 +170,13 @@ export class Workspace extends MergeQueueWorkspace {
     )
   }
 
-  readChatWorkspaceResponse(
-    orgId: string,
-    workspaceId: string,
-    origin: string,
-  ) {
-    return this.chat.runLifecycle(() =>
+  readChatWorkspaceResponse(...request: WorkspaceReadRequest) {
+    return this.chat.runLifecycle((turn) =>
       readChatWorkspaceResponse(
         this.env,
         this.chat.store,
-        orgId,
-        workspaceId,
-        origin,
+        turn,
+        request,
         () => this.controller.readLifecycle(),
         () => this.controller.readLifecycleStartLog(),
       ),

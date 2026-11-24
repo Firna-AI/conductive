@@ -5,7 +5,9 @@ use std::sync::atomic::Ordering;
 
 use cnd_runner_interface::agents::Agent;
 use cnd_runner_interface::provider_events::ProviderEvent;
-use cnd_runner_interface::runner_commands::{RunnerCommand, RunnerMessageDuringTurn, RunnerTurn};
+use cnd_runner_interface::runner_commands::{
+    RunnerBranches, RunnerCapabilities, RunnerCommand, RunnerMessageDuringTurn, RunnerTurn,
+};
 use serde_json::json;
 
 use super::builders::{input_ids, message, turn};
@@ -70,6 +72,7 @@ async fn defers_input_in_order_with_original_token_author_and_turn_context() -> 
     second.event(ProviderEvent::Failed {
         code: "provider_failed".into(),
         message: "The provider failed.".into(),
+        notice_ids: vec![],
     });
     h.engine.idle().await?;
     assert_eq!(
@@ -118,10 +121,18 @@ async fn keeps_exact_instructions_and_legacy_branches_and_folder_across_configur
 -> TestResult {
     let h = Fixture::new().await?;
     let mut command = turn("session", "first")?;
-    if let RunnerCommand::RunnerTurn(RunnerTurn::Turn { branches, .. }) = &mut command {
-        *branches = Some(cnd_runner_interface::runner_commands::RunnerBranches {
+    if let RunnerCommand::RunnerTurn(RunnerTurn::Turn {
+        branches,
+        capabilities,
+        ..
+    }) = &mut command
+    {
+        *branches = Some(RunnerBranches {
             workspace_branch: "continue/branch".into(),
             target_branch: "develop".into(),
+        });
+        *capabilities = Some(RunnerCapabilities {
+            secrets: vec!["API_TOKEN".into()],
         });
     }
     h.command(command).await?;
@@ -138,10 +149,19 @@ async fn keeps_exact_instructions_and_legacy_branches_and_folder_across_configur
             .contains("Workspace branch: \"continue/branch\"")
     );
     assert!(first.instructions.contains("Target branch: \"develop\""));
+    assert!(first.instructions.contains(
+        "Use run_with_secrets to use these secrets with no request: \"API_TOKEN\". Members can change these capabilities."
+    ));
     assert_eq!(first.instruction_folder.as_deref(), Some("/repo"));
     h.latest()?.result(&[]);
     h.engine.idle().await?;
-    h.command(turn("session", "next")?).await?;
+    let mut next_command = turn("session", "next")?;
+    if let RunnerCommand::RunnerTurn(RunnerTurn::Turn { capabilities, .. }) = &mut next_command {
+        *capabilities = Some(RunnerCapabilities {
+            secrets: vec!["OTHER_TOKEN".into()],
+        });
+    }
+    h.command(next_command).await?;
     let next = h
         .latest()?
         .options

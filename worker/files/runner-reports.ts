@@ -1,7 +1,7 @@
 import type { RunnerFileEvent } from '../../src/shared/generated/RunnerFileEvent'
-import type { RunnerFileRevisionPart } from '../../src/shared/generated/RunnerFileRevisionPart'
 import type { FileEvent } from '../../src/shared/files'
 import {
+  changesPartFields,
   emptySequence,
   loadReportState,
   reportPartUpdates,
@@ -9,56 +9,44 @@ import {
   storedPart,
   storedParts,
   storedReportKeys,
+  type ChangesPartFields,
   type ReportKind,
   type ReportState,
 } from './report-storage'
-import { FilesState } from './state'
-import type { FilesStorage } from './storage'
+import { applyFilesEvent, beginFilesConnection } from './state'
+import type { FilesReader, FilesStorage, FilesTransaction } from './storage'
 
 export class InvalidRunnerReport extends Error {}
 const invalid = (): never => {
   throw new InvalidRunnerReport('The runner report is invalid.')
 }
 
-function revisionPart(event: RunnerFileEvent): RunnerFileRevisionPart {
-  if (event.type === 'files.snapshot') return event.tree
-  if (event.type === 'changes.updated') return event.changes
-  return invalid()
+function checkPaths(entries: readonly { path: string }[], partCount: number) {
+  if (entries.length === 0 && partCount !== 1) invalid()
+  const paths = new Set<string>()
+  for (const { path } of entries) {
+    if (paths.has(path)) invalid()
+    paths.add(path)
+  }
 }
 
-function joinReport(
-  parts: readonly RunnerFileEvent[],
-  complete: boolean,
-): FileEvent {
+function joinReport(parts: readonly RunnerFileEvent[]): FileEvent {
   const first = parts[0]
   if (first?.type === 'files.snapshot') {
     const entries = parts.flatMap((part) =>
       part.type === 'files.snapshot' ? part.tree.entries : invalid(),
     )
-    if (
-      new Set(entries.map((entry) => entry.path)).size !== entries.length ||
-      (complete && entries.length === 0 && first.tree.partCount !== 1)
-    )
-      invalid()
+    checkPaths(entries, first.tree.partCount)
     return {
       type: first.type,
       tree: { revision: first.tree.revision, entries },
     }
   }
   if (first?.type !== 'changes.updated') return invalid()
-  const files = parts.flatMap((part) => {
-    if (
-      part.type !== 'changes.updated' ||
-      part.changes.baseBranch !== first.changes.baseBranch ||
-      part.changes.unpushedCommits !== first.changes.unpushedCommits ||
-      part.changes.uncommittedFileCount !==
-        first.changes.uncommittedFileCount ||
-      JSON.stringify(part.changes.summary) !==
-        JSON.stringify(first.changes.summary)
-    )
-      return invalid()
-    return part.changes.files
-  })
+  const files = parts.flatMap((part) =>
+    part.type === 'changes.updated' ? part.changes.files : invalid(),
+  )
+  checkPaths(files, first.changes.partCount)
   const summary = { files: files.length, added: 0, removed: 0 }
   for (const file of files) {
     summary.added += file.added
@@ -66,12 +54,9 @@ function joinReport(
   }
   const reported = first.changes.summary
   if (
-    new Set(files.map((entry) => entry.path)).size !== files.length ||
-    (complete &&
-      (reported.files !== summary.files ||
-        reported.added !== summary.added ||
-        reported.removed !== summary.removed ||
-        (files.length === 0 && first.changes.partCount !== 1)))
+    reported.files !== summary.files ||
+    reported.added !== summary.added ||
+    reported.removed !== summary.removed
   )
     invalid()
   return {
@@ -93,6 +78,21 @@ function joinReport(
   }
 }
 
+async function applyReport(
+  transaction: FilesTransaction,
+  streamId: string,
+  event: FileEvent,
+): Promise<void> {
+  if (!(await applyFilesEvent(transaction, streamId, event)))
+    throw new Error('The complete runner report could not be stored.')
+}
+
+async function requireReportState(storage: FilesReader): Promise<ReportState> {
+  const state = await loadReportState(storage)
+  if (!state) throw new Error('Start the runner stream before its reports.')
+  return state
+}
+
 /** All writes use the owner's receipt transaction, including the last projection. */
 export class RunnerFileReports {
   private readonly storage: FilesStorage
@@ -101,32 +101,28 @@ export class RunnerFileReports {
     this.storage = storage
   }
 
-  async beginStream(streamId: string): Promise<void> {
-    const previous = await loadReportState(this.storage)
-    if (previous?.streamId === streamId) return
-    const state: ReportState = {
-      streamId,
-      tree: emptySequence(),
-      changes: emptySequence(),
-    }
-    await new FilesState(this.storage).beginConnection(streamId)
-    await this.storage.write(
-      { [REPORT_KEY]: state },
-      previous
-        ? [
-            ...(await storedReportKeys(
-              this.storage,
-              'tree',
-              previous.tree.report,
-            )),
-            ...(await storedReportKeys(
-              this.storage,
-              'changes',
-              previous.changes.report,
-            )),
-          ]
-        : [],
-    )
+  beginStream(streamId: string): Promise<void> {
+    return this.storage.transaction(async (transaction) => {
+      const previous = await loadReportState(transaction)
+      if (previous?.streamId === streamId) return
+      const state: ReportState = {
+        streamId,
+        tree: emptySequence(),
+        changes: emptySequence(),
+      }
+      await beginFilesConnection(transaction, streamId)
+      await transaction.put(REPORT_KEY, state)
+      if (previous) {
+        for (const kind of ['tree', 'changes'] as const) {
+          for (const key of await storedReportKeys(
+            transaction,
+            kind,
+            previous[kind].report,
+          ))
+            await transaction.delete(key)
+        }
+      }
+    })
   }
 
   async refuse(type: string): Promise<void> {
@@ -137,46 +133,62 @@ export class RunnerFileReports {
           ? 'tree'
           : null
     if (!kind) return
-    const state = await this.state()
-    const sequence = state[kind]
-    const report = sequence.report
-    const removals =
-      report && report.through < report.partCount
-        ? await storedReportKeys(this.storage, kind, report)
-        : []
-    if (removals.length) sequence.report = null
-    sequence.seen = true
-    await this.storage.write({ [REPORT_KEY]: state }, removals)
+    await this.storage.transaction(async (transaction) => {
+      const state = await requireReportState(transaction)
+      const sequence = state[kind]
+      const report = sequence.report
+      const removals =
+        report && report.through < report.partCount
+          ? await storedReportKeys(transaction, kind, report)
+          : []
+      if (removals.length) sequence.report = null
+      sequence.seen = true
+      await transaction.put(REPORT_KEY, state)
+      for (const key of removals) await transaction.delete(key)
+    })
   }
 
-  async accept(event: RunnerFileEvent): Promise<FileEvent | null> {
-    const state = await this.state()
-    if (event.type === 'files.unavailable') {
-      await this.apply(state, event)
+  accept(event: RunnerFileEvent): Promise<FileEvent | null> {
+    return this.storage.transaction(async (transaction) => {
+      const state = await requireReportState(transaction)
+      if (event.type === 'files.snapshot' || event.type === 'changes.updated')
+        return this.acceptPart(transaction, state, event)
+
+      if (event.type === 'files.changed') {
+        const sequence = state.tree
+        if (
+          !sequence.appliedRevision ||
+          event.delta.revision !== sequence.appliedRevision + 1 ||
+          (sequence.report &&
+            sequence.report.through < sequence.report.partCount)
+        )
+          invalid()
+        sequence.appliedRevision = event.delta.revision
+      }
+      await applyReport(transaction, state.streamId, event)
+      await transaction.put(REPORT_KEY, state)
       return event
-    }
-    if (event.type === 'files.changed') {
-      const sequence = state.tree
-      if (
-        !sequence.appliedRevision ||
-        event.delta.revision !== sequence.appliedRevision + 1 ||
-        (sequence.report && sequence.report.through < sequence.report.partCount)
-      )
-        invalid()
-      sequence.appliedRevision = event.delta.revision
-      await this.apply(state, event)
-      return event
-    }
+    })
+  }
+
+  private async acceptPart(
+    transaction: FilesTransaction,
+    state: ReportState,
+    event: Extract<
+      RunnerFileEvent,
+      { type: 'files.snapshot' | 'changes.updated' }
+    >,
+  ): Promise<FileEvent | null> {
     const kind: ReportKind =
       event.type === 'files.snapshot' ? 'tree' : 'changes'
     const sequence = state[kind]
-    const part = revisionPart(event)
+    const part = event.type === 'files.snapshot' ? event.tree : event.changes
     const previous = sequence.report
     const sameRevision = previous?.revision === part.revision
     if (sameRevision && previous) {
       if (previous.partCount !== part.partCount) invalid()
       if (part.partNumber <= previous.through) {
-        const stored = await storedPart(this.storage, kind, part.partNumber)
+        const stored = await storedPart(transaction, kind, part.partNumber)
         if (JSON.stringify(stored) !== JSON.stringify(event)) invalid()
         return null
       }
@@ -188,19 +200,37 @@ export class RunnerFileReports {
       (previous && part.revision <= previous.revision)
     )
       invalid()
-    const parts =
-      sameRevision && previous
-        ? await storedParts(this.storage, kind, previous)
-        : []
-    parts.push(event)
-    // Validate metadata and path uniqueness as each part arrives, before any write.
-    const joined = joinReport(parts, part.partNumber === part.partCount)
-    const complete = part.partNumber === part.partCount ? joined : null
+    let fields: ChangesPartFields | undefined
+    let firstPart: RunnerFileEvent | undefined
+    if (event.type === 'changes.updated') {
+      const incoming = changesPartFields(event.changes)
+      if (sameRevision && previous) {
+        fields = previous.fields
+        if (!fields) {
+          firstPart = await storedPart(transaction, 'changes', 1)
+          if (firstPart.type !== 'changes.updated') return invalid()
+          fields = changesPartFields(firstPart.changes)
+        }
+        if (JSON.stringify(incoming) !== JSON.stringify(fields)) invalid()
+      } else {
+        fields = incoming
+      }
+    }
+    let complete: FileEvent | null = null
+    if (part.partNumber === part.partCount) {
+      const parts =
+        sameRevision && previous
+          ? await storedParts(transaction, kind, previous, firstPart)
+          : []
+      parts.push(event)
+      complete = joinReport(parts)
+    }
     sequence.seen = true
     sequence.report = {
       revision: part.revision,
       partCount: part.partCount,
       through: part.partNumber,
+      ...(fields ? { fields } : {}),
     }
     if (complete) sequence.appliedRevision = part.revision
     const updates = {
@@ -209,27 +239,13 @@ export class RunnerFileReports {
     }
     const removals = sameRevision
       ? []
-      : (await storedReportKeys(this.storage, kind, previous)).filter(
+      : (await storedReportKeys(transaction, kind, previous)).filter(
           (key) => !(key in updates),
         )
-    await this.storage.write(updates, removals)
-    if (complete) await this.apply(state, complete)
+    for (const [key, value] of Object.entries(updates))
+      await transaction.put(key, value)
+    for (const key of removals) await transaction.delete(key)
+    if (complete) await applyReport(transaction, state.streamId, complete)
     return complete
-  }
-
-  private async state(): Promise<ReportState> {
-    const state = await loadReportState(this.storage)
-    if (!state) throw new Error('Start the runner stream before its reports.')
-    return state
-  }
-
-  private async apply(state: ReportState, event: FileEvent): Promise<void> {
-    const accepted = await new FilesState(this.storage).apply(
-      state.streamId,
-      event,
-    )
-    if (!accepted)
-      throw new Error('The complete runner report could not be stored.')
-    await this.storage.write({ [REPORT_KEY]: state }, [])
   }
 }

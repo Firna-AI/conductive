@@ -25,6 +25,7 @@ import {
   text,
 } from './parse'
 import { readChoice, readSender } from './read-core'
+import { readWorkspaceSeed } from './read-workspace-seed'
 
 export const readWorkspace = createWorkspaceReader({
   record,
@@ -83,9 +84,13 @@ export function readOrderedWorkspaceResponse(
   value: unknown,
 ): OrderedWorkspaceResponse {
   const body = record(value, 'workspace response')
+  const detail = readWorkspaceResponse(body)
+  const eventNumber = count(body, 'eventNumber')
+  const seed = readWorkspaceSeed(body.seed, eventNumber)
   return {
-    ...readWorkspaceResponse(body),
-    eventNumber: count(body, 'eventNumber'),
+    ...detail,
+    eventNumber,
+    ...(seed === undefined ? {} : { seed }),
   }
 }
 

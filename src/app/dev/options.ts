@@ -9,6 +9,10 @@ import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { getStartedOrder } from '../get-started'
 import type { DevUploadMode } from './attachment-routes'
 import {
+  CAPABILITY_SCENARIOS,
+  type CapabilityScenario,
+} from './capability-note-seed'
+import {
   DEV_BRANCH_CHECKS,
   DEV_BRANCH_LISTS,
   type DevBranchCheck,
@@ -158,6 +162,8 @@ export interface DevOptions {
   secrets: SecretScenario | null
   /** The merge queue of Acme, or null for none, as `seedMergeQueue` says. */
   mergeQueue: DevQueue | null
+  /** The notes of capability changes in `checkout-autocomplete`, or null. */
+  capabilities: CapabilityScenario | null
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -225,6 +231,7 @@ export function readDevOptions(search: string): DevOptions {
     switchSaveFails: params.get('switchSave') === 'fail',
     secrets: pick(params, 'secrets', SECRET_SCENARIOS) ?? null,
     mergeQueue: pick(params, 'mergeQueue', MERGE_QUEUES) ?? null,
+    capabilities: pick(params, 'capabilities', CAPABILITY_SCENARIOS) ?? null,
   }
 }
 

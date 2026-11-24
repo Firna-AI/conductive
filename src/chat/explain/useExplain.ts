@@ -71,8 +71,9 @@ function useSameList<T>(list: readonly T[]): readonly T[] {
  * Explain in the chat of the shown session tab: the marks of the
  * explanations of that session, the finished selection with Explain by it,
  * its key, and the popover and the menu that lie open. At most one popover
- * is open: a press on another mark or on Explain closes it first. A change
- * of the shown session closes both.
+ * is open: the popover of another mark replaces it, and a press on Explain
+ * closes it first. It stays while the menu of overlapping marks shows. A
+ * change of the shown session closes both.
  */
 export function useExplain(props: ExplainProps): ExplainState {
   const { snapshot, controller, sessionId, readOnly } = props

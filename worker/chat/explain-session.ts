@@ -10,6 +10,7 @@ import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import type { RequestContext } from '../security/gate'
 import { ownerPreference } from '../tools/store'
+import { finishedAgentMessage } from './agent-message'
 import { explanationPrompt } from './explain-prompt'
 import { choice, identifier, invalidInput, record, string } from './inputs'
 import { acceptMessage } from './messages'
@@ -53,20 +54,7 @@ async function requireMessage(
   messageId: string,
 ): Promise<void> {
   if ((await view.message(messageId))?.sessionId === sessionId) return
-  let before: number | undefined
-  const through = view.eventNumber
-  while (true) {
-    const page = await view.newestHistory(sessionId, before, through)
-    if (
-      page.events.some(
-        ({ event }) =>
-          event.type === 'assistant.completed' && event.messageId === messageId,
-      )
-    )
-      return
-    if (!page.hasMore) break
-    before = page.nextBeforeEventNumber
-  }
+  if (await finishedAgentMessage(view, sessionId, messageId)) return
   throw new HttpError(404, 'message_not_found', 'The message is not available.')
 }
 

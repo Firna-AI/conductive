@@ -2,9 +2,14 @@ import { expect, it } from 'vitest'
 import type { FileResponse } from '../../shared/generated/FileResponse'
 import { filePaths } from '../../shared/files'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import {
+  nextEnvelope,
+  refusedReport,
+} from '../../test-support/recorded-repairs'
 import { errorFromBody } from '../api/files-errors'
 import { parseFileResponse } from '../api/parse-changes'
+import { clientFor } from '../files-test-kit'
 import { registerDevFiles } from './dev-fixtures'
 
 const org = FAKE_IDS.org
@@ -56,4 +61,46 @@ it('serves each development file on its content and download routes with one rea
     const sent = [...new Uint8Array(await download.arrayBuffer())]
     expect(sent, path).toEqual(bytesOf(file))
   }
+})
+
+it('serves the development samples and the seeded repair through the same cutoff', async () => {
+  const server = new FakeApiServer()
+  registerDevFiles(server)
+  const marker = refusedReport('files.snapshot', true)
+  const failure = nextEnvelope(server.events, marker, FAKE_TIME)
+  server.events.store(failure)
+  const client = clientFor(server.fetch)
+  const tree = await client.readTree()
+  const changes = await client.readChanges()
+
+  expect(tree).toMatchObject({
+    ok: true,
+    value: {
+      entries: expect.arrayContaining([
+        {
+          path: 'public/hero.png',
+          name: 'hero.png',
+          kind: 'file',
+          change: null,
+        },
+      ]),
+    },
+    stateRead: {
+      eventNumber: failure.eventNumber,
+      repositoryId: null,
+      failure: {
+        eventNumber: failure.eventNumber,
+        occurredAt: FAKE_TIME,
+        event: marker,
+      },
+    },
+  })
+  expect(changes).toMatchObject({
+    ok: true,
+    stateRead: {
+      eventNumber: failure.eventNumber,
+      repositoryId: null,
+      failure: null,
+    },
+  })
 })

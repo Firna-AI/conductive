@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { workspacePaths } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
+import { emptyWorkspaceSeed } from '../test-support/fixtures/workspace-seed'
 import type { StreamEnvelope } from './api/read-events'
 import { WorkspaceStream } from './events'
 import { OrgModel } from './org-model'
@@ -159,10 +160,41 @@ describe('WorkspaceStream', () => {
     expect(seen).toEqual([2, 7])
     expect(stream.last.get()).toBe(9)
   })
+
+  test('pages, a drop, and a gap after a seed keep every newer event in order', async () => {
+    const source = new RecordingEvents()
+    const delay = new ManualDelay()
+    const stream = new WorkspaceStream(source, target, delay.delay)
+    const seen: number[] = []
+    stream.subscribe((event) => seen.push(event.eventNumber))
+    stream.applyBaseline(10, emptyWorkspaceSeed)
+    stream.start()
+
+    source.send(page([envelope(10), envelope(11)], 13, 12))
+    expect(stream.last.get()).toBe(10)
+    source.drop()
+    await delay.runAll()
+    source.send(page([envelope(13)], 13))
+    source.send({ type: 'event', envelope: envelope(15) })
+    source.send(page([envelope(14), envelope(15)], 15))
+    source.send({ type: 'event', envelope: envelope(15) })
+    source.send({ type: 'event', envelope: envelope(16) })
+
+    expect(source.opened.map((item) => item.afterEventNumber)).toEqual([
+      10, 12, 13,
+    ])
+    expect(seen).toEqual([11, 13, 14, 15, 16])
+    expect(stream.last.get()).toBe(16)
+    expect(stream.reconnects.get()).toBe(2)
+    stream.stop()
+  })
 })
 
 test('sends no read mark through a replay that has more pages to come', async () => {
-  const server = new FakeApiServer({ workspaceState: 'ready' })
+  const server = new FakeApiServer({
+    workspaceState: 'ready',
+    legacyWorkspaceRead: true,
+  })
   const events = new RecordingEvents()
   const org = new OrgModel(testServices(server, { events }), FAKE_IDS.org)
   const workspace = new WorkspaceModel(org, FAKE_IDS.workspace)

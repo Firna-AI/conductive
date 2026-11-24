@@ -26,13 +26,10 @@ pull request bar, and the owner picker. A host can give its own parts, as
   message its own text and files. In a workspace that runs, the sent chips
   of those files open copies of their bytes in the file tab, as
   [The development fake](dev-fake.md) says.
-- One counter numbers the events of all workspaces of the dev fake, and its
-  event source ignores the workspace. So an event of another workspace
-  leaves a gap in the event numbers of the chat. At the next event of the
-  open workspace, the chat opens its stream again, and the history fills
-  the gap. Each such event costs one more connection, and the chat still
-  applies the later events. Use `npm run dev` for the chat load and the
-  kept chat. The
+- The dev fake numbers the events of each workspace separately. The
+  workspace read gives the seed and cutoff for that workspace. Each socket
+  takes its history from the same log and starts after the caller's cursor.
+  Use `npm run dev` for the chat load and the kept chat. The
   [chat development page](../chat/dev/README.md) has a fake with state for
   live events and writes.
 - The production build uses `createLiveServices` of `live-services.ts`.
@@ -154,10 +151,10 @@ the Help row of the palette opens.
 
 - A screen reads data only through a model and `useStore`. A model sends the
   request, parses the answer with the readers in `api/`, and keeps the
-  result. An answer of an unknown shape is an `ApiError`, not a guess.
-  One field is the exception. A missing or unknown `github` summary of a
-  workspace reads as null, so an older reply still reads. The
-  [shared contracts](../shared/README.md) give that reader.
+  result. An answer of an unknown shape is an `ApiError`. A missing or
+  unknown `github` summary reads as null, as the
+  [shared contracts](../shared/README.md) say. An absent or unreadable seed
+  keeps the workspace detail and uses the stream's replay.
 - A screen never sets a value of an org. The stores of `OrgModel` are
   read-only for screens, and writes go through the actions and models.
 - A secret goes out once, through `SecretForm`, and the field is empty after

@@ -10,6 +10,7 @@ import { readStartJob, serializeStartJob } from './start-job-codec'
 import { START_ALLOCATION_CLEANUP_KEY } from './start-allocation-cleanup'
 import { startAlarmDeadline } from './start-provider-retry'
 import { readStartLog, START_LOG_PREFIX } from './start-log-storage'
+import { START_AFTER_STOP_KEY, startAfterStopStorage } from './start-after-stop'
 import type {
   StartJobStorage,
   WorkspaceStartResult,
@@ -85,6 +86,7 @@ export function durableStartStorage(
           return false
         for (const key of old.keys()) await transaction.delete(key)
         await transaction.delete(RESULT)
+        await transaction.delete(START_AFTER_STOP_KEY)
         if (intent && intent.kind !== 'continue') {
           await transaction.delete(CREATE_RESULT)
           await transaction.delete(PUBLICATION)
@@ -107,6 +109,7 @@ export function durableStartStorage(
         return true
       })
     },
+    ...startAfterStopStorage(rawStorage, now),
     update: async (job) => {
       await storage.transaction(async (transaction) => {
         const current = await transaction.get('job', JOB)

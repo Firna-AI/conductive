@@ -26,7 +26,14 @@ import { MacApp, type MacWindow, type MacWindowState } from '../mac/mac-app'
 import { Shell } from '../Shell'
 import { mountScreen, settle } from '../test-mount'
 import { startedApp, textOf } from '../test-render'
-import { emit, here, id, org, recordingSocket } from './kept-test-kit'
+import {
+  emit,
+  here,
+  id,
+  lastEvent,
+  org,
+  recordingSocket,
+} from './kept-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -54,7 +61,7 @@ async function openWorkspace(server: FakeApiServer, mac: boolean) {
   const page: ReactNode = mac ? <MacApp window={window}>{shell}</MacApp> : shell
   const view = mountScreen(app, page)
   await waitFor(() => view.querySelector('header h1'), 'the open workspace')
-  return view
+  return { view, socket }
 }
 
 /** The number of the requests so far that are this line. */
@@ -68,16 +75,20 @@ function settingsReads(server: FakeApiServer): number {
 }
 
 describe('the bar of the 15 minutes of the Mac app', () => {
-  test('shows the time left, and reads the Mac once again after a burst of workspace updates', async () => {
+  test('reads the Mac at a seeded start and once again after a burst of workspace updates', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer({ onMac: true })
-    const view = await openWorkspace(server, true)
+    const { view, socket } = await openWorkspace(server, true)
     const bar = await waitFor(
       () => queryByLabel(barLabel, view),
       'the bar of the 15 minutes',
     )
     const shown = textOf(bar.innerHTML)
     const before = settingsReads(server)
+    expect({ after: socket.opens[0], reads: before }).toEqual({
+      after: lastEvent(server),
+      reads: 1,
+    })
     // Another window stopped the 15 minutes. The Worker records a workspace
     // update with the change, here two in one burst.
     server.json(
@@ -103,7 +114,7 @@ describe('the bar of the 15 minutes of the Mac app', () => {
   test('a browser shows no bar and asks no Mac', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
-    const view = await openWorkspace(server, false)
+    const { view } = await openWorkspace(server, false)
     await settle()
     // The chat reads the pairing with each read of the Mac commands, so the
     // pairing reads beyond those would be the bar's.

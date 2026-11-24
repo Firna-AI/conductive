@@ -63,7 +63,7 @@ export function seedFirstStart(
   server.json('GET', workspacesPath(org), {
     workspaces: [workspace, ...workspaces.workspaces],
   })
-  server.json('GET', workspacePath(org, id), {
+  const detail = {
     workspace,
     start: startOf(start, failed),
     error: failed
@@ -73,8 +73,7 @@ export function seedFirstStart(
           log: null,
         }
       : null,
-    eventNumber: 0,
-  })
+  }
   const queued =
     newWorkspaceConversations[
       state === 'retrying' ? 'queued-retry' : 'queued-follow-up'
@@ -94,6 +93,10 @@ export function seedFirstStart(
       },
     },
   }))
+  for (const envelope of events) server.events.store(envelope)
+  server.handle('GET', workspacePath(org, id), async () =>
+    Response.json({ ...detail, ...server.events.stateRead(id) }),
+  )
   server.json('GET', chatHistoryPath(org, id, created.sessionId), {
     events,
     throughEventNumber: events.length,

@@ -35,10 +35,13 @@ from [`runtime.ts`](runtime.ts). The caller gives these options:
 
 For a read or a resume, the `projectWorkspace` of `chatLifecycleRoute`
 takes the reply from `readChatWorkspaceResponse` of the workspace object.
-That read runs in one task of the chat queue. That reply has the event
-number of its state. Its name comes from the latest committed agent title,
-when there is one. The state for the reader uses the chat summary of the
-same read.
+That read takes the workspace, start, error, and event number in one chat
+queue view. Its name comes from the latest committed agent title when
+there is one. The state for the reader uses the chat summary of the same
+read. Only GET asks for `seed`. It waits for any recovery outside the
+queue, then takes the seed in the same view as its event number.
+[The workspace read state](../chat/history.md#the-workspace-read-state)
+describes the recovery.
 
 [Creates and resumes](workspace-object.md#creates-and-resumes) says how the
 workspace object runs the start of each create and resume. It gives the

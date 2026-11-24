@@ -99,9 +99,20 @@ A chip with a line, such as `report.html:12`, opens **Source** with that line in
 A file whose path label hides a secret value shows only **Source**.
 
 The page loads other files of the repository by their addresses, such as `style.css`.
-An address that starts with `/` names a file from the top of the repository.
+An address that starts with `/` can name a file from the top of the repository.
+With current cloud computer software, the page can also load a file by its full path in the repository folder.
+The preview changes local `file:` addresses of files in the repository folder or the system font folders to addresses on the preview when it serves HTML, CSS, or SVG.
+If a script builds a local file address while the page runs, use a plain path.
 The page cannot load files whose names start with a dot, such as `.env`, or files in `.git`.
-Its scripts can read the other files of the repository and send them to another site.
+
+Outside the repository folder, the preview serves only font files under `/usr/share/fonts` and `/usr/local/share/fonts` on the cloud computer.
+It serves `.ttf`, `.otf`, `.woff`, and `.woff2` files there by their full paths.
+The preview adds a stylesheet for `.ttf` and `.otf` system fonts to HTML pages only.
+An HTML page can use these fonts by family name, such as `Nimbus Sans Narrow` when it is installed on the cloud computer.
+Generic families such as `sans-serif` use the browser's usual fonts.
+
+The page's scripts can read the files and the list of system fonts that the preview serves.
+They can send them to another site.
 
 The preview has no 5 MiB limit, but **Source** keeps it.
 It does not appear in **Preview** or in the previews that agents list.
@@ -220,6 +231,8 @@ Use `git status` in **Terminal** to inspect it.
 Use the copy action in a file header to copy its text.
 Use **Download** to save its original bytes on your computer.
 The header confirms a copy with **Copied**.
+To select only the text of a file or a diff, click in it and press **Cmd+A**, or **Ctrl+A** on Windows and Linux.
+A copy of selected file text keeps its blank lines.
 
 If copying or downloading fails, the header asks you to try again.
 Read the file successfully before you try its download action.

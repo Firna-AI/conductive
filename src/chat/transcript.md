@@ -102,6 +102,10 @@ the parts of the chat that draw the transcript.
   The line names the member who changed the repository, "You" to that member, the new repository, and the new branch, with the shared `RepositoryChangedLine`.
   The new branch shows by its label, also in a copy. A note without a label, such as a note of an older Worker, shows the real name.
   The item takes its ID from the new repository and the real new branch. A copy of the session gives the note with no heading.
+- Each `capabilities.changed` event of a session becomes one `capabilities-changed` item in the same way, as [Capabilities: what agents learn](../../docs/protocol/capabilities-agents.md#in-the-chat) says.
+  The line names the member who changed the capabilities, "You" to that member, and each change of the write, with the shared `CapabilityChangeLine`.
+  The item takes its ID from the note, so a repeat of the note replaces it. It shows at its place also inside a running turn, and it never folds into work.
+  The reader makes a note with a change of an unknown kind unreadable, so the chat skips the whole note and its cursor still moves.
 - Each `session.watch-notice` event of a session becomes one `wake` item at its place among the events.
   It is the line that wakes the session when a turn that it watched ends, as [The wake line](../../docs/protocol/session-watches.md#the-wake-line) says.
   The shared `WakeLine` draws it with the words of `wakeCopy.ts` and the chip that `SessionLinkText` gives the watched session.

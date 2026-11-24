@@ -115,7 +115,11 @@ Browser responses keep the plain string log of the shared contract.
 The `fetch` of the class opens the workspace event socket at
 `workspaceEventsPath` of `src/shared/events.ts`. Forward the browser's
 upgrade request without changes, because the object runs the browser gate
-itself. The socket sends the stored history first, then each new event.
+itself. The socket sends the stored history after the requested event
+number first, then each new event. The workspace GET gives a seed and its
+cutoff for a new workspace stream. Older apps can request a replay from
+event 0. [Workspace events](../../docs/protocol/workspace-events.md) gives
+the read and replay rules.
 
 An admitted failed create keeps its workspace and normal event socket.
 Every current member can read its chat, queued messages, and saved cause.
@@ -286,6 +290,15 @@ create and resume. The workspace object runs that start:
   stop, so Restore leaves a pending stop to the lifecycle. So no Archive
   or Restore step reads or changes the sandbox while a cancelled start
   call can still reach the provider.
+- No start begins while a pending stop runs, so that a start never
+  overlaps the old stop. A resume or a Try again in that time, such as the
+  open just after Archive and Restore, is held in
+  [`start-after-stop.ts`](start-after-stop.ts). The newest request
+  replaces an older one. While a start is held, the lifecycle checks the
+  stop at once and then every 5 seconds, not every 30 seconds. When the
+  stop ends, the next lifecycle run queues the held start with every
+  admission check again. An Archive after the request changes the stop
+  epoch and drops it. So does a wait past the start time limit.
 - The first lifecycle prepare of each create and resume also starts the
   restore watch. After a start from a saved snapshot, Boat downloads the
   file content in the background. The

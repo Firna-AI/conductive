@@ -9,11 +9,7 @@ function signal() {
   return { promise, resolve }
 }
 
-/**
- * Holds or fails one list of stored chat events. Each history page of a
- * replay reads one such list, so `hold(2)` lets the first page out and holds
- * the second one until `release`. `fail(2)` makes the second list throw.
- */
+/** Holds or fails the specified list call for stored chat events. */
 export function holdHistoryLists(storage: Pick<DurableObjectStorage, 'list'>) {
   const state = {
     remaining: 0,

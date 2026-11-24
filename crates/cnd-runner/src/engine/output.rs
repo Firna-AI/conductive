@@ -24,7 +24,11 @@ impl TurnOutput {
             due: None,
         }
     }
-    pub(super) fn accept(&mut self, event: &ProviderEvent) -> Vec<AgentChatEvent> {
+    pub(super) fn accept(
+        &mut self,
+        event: &ProviderEvent,
+        delivered_notice_ids: &[String],
+    ) -> Vec<AgentChatEvent> {
         if let ProviderEvent::Delta { message_id, text } = event {
             if let Some((_, value)) = self.deltas.iter_mut().find(|(id, _)| id == message_id) {
                 value.push_str(text);
@@ -48,11 +52,17 @@ impl TurnOutput {
                 message_id,
                 text,
                 user_message_ids,
+                notice_ids,
             } => events.push(AgentChatEvent::AssistantCompleted {
                 turn_event_context: context,
                 message_id: message_id.clone(),
                 text: text.clone(),
                 user_message_ids: user_message_ids.clone(),
+                notice_ids: notice_ids
+                    .iter()
+                    .filter(|id| delivered_notice_ids.contains(id))
+                    .cloned()
+                    .collect(),
             }),
             ProviderEvent::Tool { tool } => {
                 if let Some(saved) = self.tools.iter_mut().find(|t| t.id == tool.id) {

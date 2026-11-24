@@ -16,6 +16,9 @@ import type { GatewayRefusal } from './model-gateway/errors'
 import type { UnexpectedErrorFields } from './unexpected-error'
 
 export const SIMPLE_WARNINGS = {
+  capability_notes_failed: 'Capability notes could not be kept.',
+  capability_notes_unavailable:
+    'The workspace object is unavailable. The capability route uses the direct save path.',
   starting_favourite_skipped:
     'An entry of CONDUCTIVE_STARTING_FAVOURITES was skipped.',
   saved_favourites_unreadable:
@@ -38,6 +41,8 @@ export const SIMPLE_WARNINGS = {
     'A runner hello had an invalid file server announcement. It counts as no file server.',
   workspace_alarm_failed:
     'Workspace alarm work failed. Its durable deadline will retry.',
+  files_projection_chunks_discarded:
+    'A file projection write discarded damaged chunks.',
   start_record_failed:
     'A job step record of a start could not be saved. The start goes on without it.',
   start_record_send_failed:

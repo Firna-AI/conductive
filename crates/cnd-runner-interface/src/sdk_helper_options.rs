@@ -5,7 +5,7 @@ use ts_rs::TS;
 
 use crate::agents::AgentChoice;
 use crate::commit_author::CommitAuthor;
-use crate::runner_commands::{RunnerBranches, RunnerMessageDuringTurn, RunnerTurn};
+use crate::runner_commands::{RunnerBranches, RunnerMessageDuringTurn, RunnerNotice, RunnerTurn};
 use crate::runner_credentials::{RunnerLogin, RunnerTurnCredential};
 use crate::wire::ReadonlyVec;
 
@@ -46,6 +46,8 @@ pub enum ProviderInput {
     Turn(RunnerTurn),
     /// Later input of the same turn.
     Message(RunnerMessageDuringTurn),
+    /// App notes with no member message or sender.
+    Notice(RunnerNotice),
 }
 
 /// Configured org source and trust policy, independent of copy availability.

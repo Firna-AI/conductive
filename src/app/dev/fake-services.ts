@@ -4,7 +4,7 @@ import { devOrgOrderRoute } from '../../test-support/dev-org-order-route'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { API_PATHS } from '../../shared/api'
 import { createApiClient } from '../api/client'
-import { browserDelay, type WorkspaceEventSource } from '../events'
+import { browserDelay } from '../events'
 import {
   windowFocus,
   windowHost,
@@ -23,6 +23,7 @@ import { attachmentMessageFetch } from './attachment-message-routes'
 import { createBackend, guardScope } from './backend'
 import { branchRoutes } from './branch-routes'
 import { buildRoutes } from './build-routes'
+import { seedCapabilityNotes } from './capability-note-seed'
 import { createRoutes } from './create-routes'
 import { feedbackRoutes } from './feedback-routes'
 import { APP_VERSION } from '../version'
@@ -73,6 +74,7 @@ export function createFakeServices(search: string): AppServices {
   if (acme) seedMergeQueue(acme, options.mergeQueue)
   const backend = createBackend(state, server.events, now, newId)
   seedSecretRequests(backend, server.events, options.secrets)
+  seedCapabilityNotes(server.events, options.capabilities)
   const signedOut: Route[] = options.signedOut
     ? [
         {
@@ -117,13 +119,9 @@ export function createFakeServices(search: string): AppServices {
     },
     attachmentMessageFetch(backend, server.fetch),
   )
-  const events: WorkspaceEventSource = {
-    open: (target, handlers) =>
-      server.events.subscribe(target.afterEventNumber, handlers.message),
-  }
   return {
     api: createApiClient(fetch, devFileTransport(fetch, search)),
-    events,
+    events: server.events,
     now,
     delay: browserDelay,
     onFocus: windowFocus(window),

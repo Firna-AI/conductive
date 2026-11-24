@@ -166,17 +166,17 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         A stop through agent tools also records the sending session.
         This includes a close that stops a running turn. The chat and
         copied transcripts name that session with Stopped from and its link.
-        The chat history also records
-        who used Continue, the new branch, and the branch it starts from.
-        It also records who changed the repository of a workspace, the new
-        repository, and the new branch. It keeps
-        the last file list and the last summary of changes of each
-        workspace. With the chat history, it keeps each list of the
-        servers that run in the cloud computer of a workspace: the port,
-        a short program name, and the folder of each server. It also keeps
-        the latest list of the skills of each workspace, with the name and
-        the description of each skill. The files
-        that you attach to a message stay in the storage of
+        The chat history also records who used Continue, the new branch,
+        and the branch it starts from. It also records who changed the
+        repository of a workspace, the new repository, and the new branch.
+        It also records who changed the capabilities of a workspace, and
+        the names of the secrets that changed. It keeps the last file list
+        and the last summary of changes of each workspace. With the chat
+        history, it keeps each list of the servers that run in the cloud
+        computer of a workspace: the port, a short program name, and the
+        folder of each server. It also keeps the latest list of the skills
+        of each workspace, with the name and the description of each skill.
+        The files that you attach to a message stay in the storage of
         ${productName} at Cloudflare until the agent starts work on the
         message. The cloud computer of the workspace then downloads them.
         When the cloud computer has a file and its first start succeeded,

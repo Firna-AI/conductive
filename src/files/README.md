@@ -15,6 +15,11 @@ The visual spec is the `app/files` page of the
 tab of an HTML file, and `app/chat/unavailable-files` for a tree that the
 cloud computer could not read.
 
+`code/CodeField.tsx` shares the line numbers and the syntax colours of a
+file tab with other screens. `CodeField` is a field for code, and
+`CodeBlock` shows code to read. The Cloud computer tab uses them for the
+install script and the startup script.
+
 The screens render data from the Worker only. The workspace screen of the
 app shell mounts them, as
 [the Files part](../shell/workspace/README.md#the-files-part) says. The
@@ -69,14 +74,18 @@ const { store: files } = useWorkspaceStore(
 )
 ```
 
-The kept store reads the file routes with the `fetch` of the org's
-`ApiClient`, so the Mac app reads them from its own Worker, and a refusal
-of a suspended org marks the org. Its stream is
-the event source of the app, after the last event number of the store.
-When the connection drops, the stream opens again as
-[Data lifecycle](../app/README.md#data-lifecycle) says. So a return shows
-the lists at once, and the socket asks only for the events after the last
-complete point. Give `files` to the screens.
+The store reads the file routes with the `fetch` of the org's `ApiClient`.
+The Mac app reads from its own Worker. A refusal of a suspended org marks
+the org. A new store starts both list reads. When both give cutoffs, the
+stream starts after the smaller cutoff. A cutoff is the last workspace
+event that a read includes. As soon as either read gives no cutoff, the
+stream starts after event 0. See
+[The state of a new tab](../../docs/protocol/workspace-events.md#the-state-of-a-new-tab).
+
+A return to a kept store shows its lists at once. The socket starts after
+the last complete point of that store's stream. A dropped connection also
+resumes from its own progress. See
+[Data lifecycle](../app/README.md#data-lifecycle).
 
 [Store rules](store.md) gives the rules of the stream of the store, the
 open pages, the failed repairs of the lists, and a tree that the cloud
@@ -141,6 +150,30 @@ each list of the file and diff tabs through `useFollowTabs`.
 tests the hook, and `TabScroll.test.tsx` of the
 [workspace files](../shell/workspace/files/) tests the tabs of the
 workspace screen.
+
+### Select all in a file
+
+`CodeView` and `DiffView` draw their rows in `CodeBox` of
+`code/CodeBox.tsx`, a focusable region, so a press in the text gives it
+the focus. Its key handler turns Cmd+A or Ctrl+A into a selection of the
+box only. The browser would otherwise select the whole app. The line
+numbers cannot be selected, so a copy leaves them out.
+
+`CodeView` gives `CodeBox` the `copySource` of its text, from
+`code/code-selection.ts`: its lines, joined with line feeds, and the
+offset of the start of each line. Each row carries `data-copy-line`, the
+index of its line, and its text cell carries `data-copy-text`. A copy
+maps the two ends of each range of the selection to offsets in that
+text, and gives `copiedText`, the text between them. Only the rows of
+the two ends are read, so a copy costs the same in a long file. A browser
+can split one drag into several ranges, as Firefox does at each line
+number, so the copy joins every range. It keeps the empty lines, which
+the browser leaves out, and select all gives the whole text that the view
+shows. A caret, or a range that reaches out of the box, leaves the copy
+to the browser. The diff gives no source, so its copy stays the copy of
+the browser. `code/CodeBox.dom.test.tsx` tests select all, and
+`code/CodeCopy.dom.test.tsx` tests the copy, with the helpers of
+`code/code-box-test-kit.tsx`.
 
 ## Labels of paths
 

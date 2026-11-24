@@ -11,6 +11,10 @@ option overrides this default, including queued chats that show no spinner.
 `dev/options.ts` lists the values. The `wake-` values give the wakes of a
 watch, as the mockups draw them at `app/chat/wakes`.
 
+`dev/workspace-routes.ts` gives the detail and seed of a workspace with
+the cutoff of its own event log. Resume gives its event number. Each
+socket takes the events of its workspace after its own cursor.
+
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
@@ -296,6 +300,16 @@ watch, as the mockups draw them at `app/chat/wakes`.
   waits or is late gives the workspace the state `input`, so the header
   says Needs input. The last answer gives back the state from before
   (`followOpenRequests` of `dev/secret-store.ts`).
+- `?capabilities=<state>` puts the notes of changes of the capabilities
+  into the session of `checkout-autocomplete`, from
+  `dev/capability-note-seed.ts`, as the pages of `app/capabilities/changed`
+  of the mockups draw them. `changed` has the pre-approval of VERCEL_TOKEN
+  by Priya, `removed` has two notes of two members, and `several` has one
+  note with the changes of one edit. The notes follow
+  the recorded chat: in its running turn with `conversation=running`, and
+  after its end otherwise. With `role=member`, the reader is Priya, so her
+  notes say "You". The notes change no capability of the workspace, so the
+  Capabilities control keeps its seeded state.
 
 The development fake keeps each org's workspace number counter.
 A create gets the next number and a web link on the fake API origin.

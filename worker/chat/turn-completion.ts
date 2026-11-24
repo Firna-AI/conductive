@@ -59,6 +59,7 @@ export class TurnCompletion {
     if (end.state === 'failed') turn.error = end.error
     turn.nextTurnId = null
     await this.removeCommands(turn.id)
+    await this.transaction.capabilityNotes.release(turn.sessionId, turn.id)
     await this.transaction.saveTurn(turn)
     await this.transaction.queueFixes.end(
       turn,

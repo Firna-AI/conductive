@@ -110,6 +110,15 @@ The browser reader then keeps them absent, and New workspace takes the
 waiting repositories from the builds. An older copy of the app ignores the
 fields.
 
+`OrderedWorkspaceResponse` in [workspaces.ts](workspaces.ts) gives the
+workspace, start, error, and event number for GET and Resume. GET also
+gives `seed` from the same cutoff. The optional member supports older
+Workers. [The read types](workspace-state-read.ts) define its port and
+skills events and the first failure of each open notice. A null event
+means there is no stored report. A stored event can carry a null port or
+skills list. The file also defines `FilesStateRead`, with an event number,
+repository ID, and failed repair for a Files list.
+
 [Runner contracts](runner-contracts.md) gives the handshake, commands, events,
 confirmations, reports, and credentials.
 

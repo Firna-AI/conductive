@@ -15,6 +15,7 @@ const turnOf = (item: TranscriptItem): string | null =>
   item.kind === 'wake' ||
   item.kind === 'lost' ||
   item.kind === 'continued' ||
+  item.kind === 'capabilities-changed' ||
   item.kind === 'repository-changed'
     ? null
     : item.turnId

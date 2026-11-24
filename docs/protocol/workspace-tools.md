@@ -79,6 +79,17 @@ decision of the change that reads Markdown with one parser, as
   loads, because a picture at a web address makes the browser of each
   reader call a server that the file chose.
 - The header of a file tab can copy and download the file.
+- Select all, Cmd+A on a Mac or Ctrl+A, in the text or the diff of a file
+  tab selects only that text, without the line numbers. A press in the
+  text gives it the focus. Reason: Cal asked on 23 November 2026, because
+  select all selected the whole app, with its lists and tabs.
+- A copy of a selection in the text of a file gives the source text of
+  the selected part of each line, with its empty lines. Each line end
+  that the selection passes becomes a line feed. After select all, it
+  gives the whole text that the view shows. A copy at a caret, with no
+  text selected, leaves the clipboard as it is. The Copy of the header
+  stays the exact copy of the file. Reason: the browser left each empty
+  line out of such a copy.
 - Reading a file has a size limit of 5 MiB, or 5,242,880 bytes.
   Reason: Boat's file read stops at 5 MiB, so a file read that falls back
   to it cannot read more.
@@ -158,47 +169,8 @@ decision of the change that reads Markdown with one parser, as
   does not document it and can change it. A timer that compares the
   identity of the folder was rejected, because the app already has a
   documented signal for the end of the restore.
-- Runner file reports hold at most 256 KiB, or 262,144 bytes, of compact UTF-8 JSON per event.
-  This includes the event type, metadata, escapes, and delimiters. It excludes the runner envelope.
-- The complete runner envelope also meets the
-  [runner event limit](agent-runner.md#the-agent-runner).
-  Reason: paths have no fixed byte length, so an item count cannot bound an event.
-- Full trees and branch changes lists use numbered parts of one revision (decision 76).
-  Every path and entry stays whole. Each path appears once in the complete report.
-- Tree reports and branch changes reports have independent revision sequences within one runner stream.
-  A new stream starts both at revision 1 with full reports.
-- Each part gives its revision, part number, and total part count as positive safe integers.
-  Part numbers start at 1 and end at the fixed total part count.
-- The runner sends parts in order from one consistent captured state.
-  It does not interleave revisions of one report kind, including tree deltas.
-- A single-part or empty report uses part number 1 and total part count 1.
-  Each changes part repeats the full report's base branch and summary.
-- The summary counts the complete list, rather than one part.
-  The workspace joins entries in part order and uses the full report atomically.
-- A report becomes complete only after every part is stored.
-  The workspace keeps the last complete report while parts are pending.
-- Parts never join across streams, report kinds, or revisions.
-  A conflicting repeated part is invalid. An identical repeated part never counts twice.
-- A resend keeps its stream, runner event number, and payload.
-  A reconnect keeps pending parts. Confirmation of a part includes its durable assembly state.
-- A refused part, a newer full report, or a new stream discards the incomplete report.
-- A new full report has a newer revision than the last applied report of its kind.
-  It can skip unapplied revisions to recover missing or refused data.
-- After a refused tree report or tree delta, the workspace asks for one full file tree, as
-  [Lost workspace updates](agent-runner.md#lost-workspace-updates) says (decision 96).
-  After a refused changes report, it asks for one full changes list.
-- After the refused update, each part of that kind belongs to a replacement.
-  The only exception is a remaining part of the refused report or of an earlier report.
-- A stored new part 1 after the refused update starts a replacement, also at the revision of the refused report.
-- An invalid part counts as a replacement unless its stream, revision, and part number show a remaining part.
-  A tree delta is never a replacement, and it never ends or fails an open tree repair.
-- Each tree delta holds at most 512 changes and meets the same 256 KiB event budget.
-  A large update uses several deltas, each with the next consecutive tree revision.
-- Reason: the count cap also bounds the tree work of each event.
-- A delta applies only after its previous tree revision is complete.
-  The runner increases the branch changes revision by 1 for each new full changes report.
-- A browser file event and a browser file response contain complete reports.
-  They never expose a runner part as a full tree or changes list.
+- [File reports](file-reports.md) states the limits, the parts, the
+  revisions, and the repairs of the runner's reports of both lists.
 - The runner reads one file or one diff on request. When the runner is not
   connected, a file read falls back to the file read of the provider.
 - The Durable Object keeps the last tree and the last changes, so both tabs

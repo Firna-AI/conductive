@@ -48,12 +48,10 @@ const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly
   page. The fake API's `server.events.subscribe` has this shape. The
   workspace screen gives the GitHub events of the ordered stream of the
   workspace, each checked with the readers of the replies. A new event goes
-  as a live message. The stream replays the stored history of the
-  workspace each time that it opens, and that history can hold many old
-  GitHub states. So only the newest replayed GitHub state goes to the
-  store, as one `history` message at the end of each replay. The bar then
-  never steps through the old states, and they never cancel the read of
-  the current state.
+  as a live message. Each replay gives the store one `history` message
+  with the newest GitHub event of its pages. A new subscriber to a seeded
+  stream gets an empty history at the stream's current complete number.
+  The store starts its own stored and fresh reads in its usual order.
 - `delay` is `AppServices.delay`, the timer of the app. The store waits with
   it before each [backup read](#backup-reads). The development page gives
   `browserDelay`.

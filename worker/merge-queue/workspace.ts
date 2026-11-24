@@ -5,7 +5,7 @@ import { lifecycleDependencies } from '../lifecycle/runtime'
 import { pendingWorkspaceChange } from '../lifecycle/repository-change-types'
 import { saveQueueBaseChange } from '../lifecycle/queue-base-change'
 import { syncQueueHead } from '../lifecycle/queue-head-sync'
-import { AgentSessionWorkspace } from '../tools/workspace'
+import { CapabilityWorkspace } from '../secrets/capability-workspace'
 import { QueueCoordinator } from './coordinator'
 import type { QueueLeave, QueueMemberAction, QueueScope } from './contracts'
 import { queueFixSender } from './fix-access'
@@ -21,10 +21,10 @@ import {
   type QueueLocalWork,
 } from './local-work'
 
-export class MergeQueueWorkspace extends AgentSessionWorkspace {
+export class MergeQueueWorkspace extends CapabilityWorkspace {
   private readonly mergeQueue: QueueCoordinator
 
-  constructor(...args: ConstructorParameters<typeof AgentSessionWorkspace>) {
+  constructor(...args: ConstructorParameters<typeof CapabilityWorkspace>) {
     super(...args)
     this.mergeQueue = new QueueCoordinator(
       {

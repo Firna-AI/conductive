@@ -118,6 +118,8 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   one note at its place, with the member who changed the repository, the
   new repository, and the new branch. To that member it says "You". The
   note reaches no agent.
+- A change of the capabilities shows a change note in the sessions whose
+  facts it changes, as [In the chat](capabilities-agents.md#in-the-chat) says.
 - A wake of a watch shows as one line of the app at its place. It gives
   the end of the watched turn and the session chip of the watched session,
   as [The wake line](session-watches.md#the-wake-line) says. It shows no
@@ -185,6 +187,15 @@ view, the scroll after a send, and the place that each tab keeps.
   tools, is the name of that tool without its server, such as
   `get_window_state`. Its detail is the subject of the call, such as a
   query, a path, or an address.
+- A call to a tool of no known kind has the verb "Used". Its target is
+  the name of the tool, such as `WebFetch`. Its detail is the subject of
+  the call, or else its description, such as "Used `WebFetch`
+  https://example.com". The user chose this rule on 2026-11-23, over a
+  list of such tools in the runner.
+- The target of a call to the Claude `Skill` tool is `Skill`. Its detail
+  is the name of the skill, such as "Used `Skill` brainstorming". A call
+  that names no skill has no detail. Its other arguments never replace
+  the target or the detail.
 - Reason: a subject alone, such as `menu`, does not say which tool ran,
   and a full name, such as `mcp__computer__get_window_state`, is hard to
   read. Words of the app for each computer tool were rejected, because
@@ -198,38 +209,7 @@ view, the scroll after a send, and the place that each tab keeps.
 
 ## Events
 
-- The browser gets chat events only in the app's own event type. No SDK
-  event type and no provider event type reaches the browser.
-- Reason: one event type serves both agents, and the web app needs no
-  change when an SDK changes its events.
-- Every open tab of a workspace gets the same events in the same order.
-- A tab that shows a session gets the newest part of its stored history
-  first. The live events start after that part, and the earlier history
-  loads above it (decision 280).
-- Reason: the newest messages and the work of a running turn show after
-  one read, also in a long session. Live events after the full history
-  were rejected, because a long session then showed nothing new until its
-  whole history had loaded.
-- A connection opens before its stored history comes. One connection
-  sends at most about 8 MB of stored history. Then the workspace closes
-  it, and the tab connects again after the last part that it got.
-- Reason: the stored history of a connection waits in the memory of the
-  workspace until the tab reads it, and that memory has a fixed limit. A
-  replay of the whole history on one connection was rejected, because a
-  long history then stopped the workspace.
-- The chat shows each event of a session once and in event order, also
-  when earlier history arrives after newer events.
-- While the earlier history loads, the chat says so above the messages
-  that it shows.
-- The Durable Object of the workspace stores every event, so the chat
-  survives a stop of the sandbox.
-- A tab keeps the chat of each workspace that it showed in memory. A
-  return to that workspace shows the chat at once, then gets only the new
-  events (decision 87).
-- A reload or a new tab starts empty. No chat stays on the disk of the
-  device.
-- A cache on the disk was rejected, because the chat, with its code and
-  any secret that an agent printed, would stay on the device.
+[Workspace events](workspace-events.md) states the events that reach each tab, the reads that give a new tab the state of a workspace, and what a tab keeps.
 
 ## The agent runner
 

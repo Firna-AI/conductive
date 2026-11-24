@@ -63,6 +63,10 @@ View writes cannot change this branch.
 
 ## Rules
 
+- The workspace GET includes `seed` at its ordered `eventNumber`. The
+  workspace object waits for any recovery before it reads both fields.
+  Resume gives the workspace, start, error, and event number.
+  [Browser routes](../lifecycle/routes.md#browser-routes) gives the order.
 - [Model configuration dependencies](../../docs/deployment/models.md#configuration-failures)
   states which operations need `CONDUCTIVE_MODELS` and
   `CONDUCTIVE_DEFAULT_CHOICE`, and their failures.

@@ -9,6 +9,8 @@ export const PREVIEW_RELAY_MARK_HEADER = 'X-Conductive-Relay'
 export const PREVIEW_FILE_SERVER_PORT = 7683
 /** The Worker adds this header, the files mark, only to the requests of a files preview. */
 export const PREVIEW_FILES_MARK_HEADER = 'X-Conductive-Files'
+/** The Worker adds this header, with the origin of the files preview, to the same requests as the files mark. */
+export const PREVIEW_FILES_ORIGIN_HEADER = 'X-Conductive-Files-Origin'
 /** The error code of an open of the files preview whose runner announced no file server. */
 export const FILE_SERVER_UNAVAILABLE = 'file_server_unavailable'
 

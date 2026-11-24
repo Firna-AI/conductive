@@ -370,7 +370,10 @@ Your browser can still keep the preview files that it loaded, as the preview app
 
 The page of an HTML file can load the files of the workspace's repository.
 It cannot load files whose names start with a dot, such as `.env`, or files in `.git`.
-Its scripts can read the files that it can load and send them to another site.
+Outside the repository folder, the preview serves only font files under `/usr/share/fonts` and `/usr/local/share/fonts` on the cloud computer.
+The page's scripts can read the files and the list of system fonts that the preview serves.
+They can send them to another site.
+This includes any licensed fonts that the preview serves.
 A secret in a file with another name, such as `key.pem`, stays readable to those scripts.
 Preview only HTML files whose scripts you trust.
 

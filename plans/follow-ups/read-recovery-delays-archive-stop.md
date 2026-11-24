@@ -1,0 +1,34 @@
+# A read that waits for recovery delays an Archive stop
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from finding 5 of review round 3 of the branch `calummoore/object-memory-new-tab-state-reads-cesn`.
+- **Location:** `worker/chat/workspace-read-recovery.ts` (`WorkspaceReadRecovery.prepare`, which waits through `turn.outside`), `worker/chat/queue-turn.ts` (`outside` and `hasOutsideTurns`), `worker/lifecycle/archive-state.ts` (~:170, the guard that defers the stop), `worker/chat/workspace-response.ts`, and `worker/files/list-reads.ts` with `ChatStore.readQueued` in `worker/chat/store.ts`.
+- **Reason:** It is a Medium and Rare product bug, which the fix rule defers, and its fix changes the shared queue wait of reads.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Read-state recovery:** the Worker task that rebuilds the stored read state of an older workspace (no complete mark in `chat:v1:meta`) from its history, one page of at most four stored events in each chat queue task.
+  - **Chat queue:** the serial queue of one workspace Durable Object. It orders chat work, runner reports, and lifecycle work.
+  - **Outside turn:** a queue task that leaves the queue with `QueueTurn.outside` and comes back. `ChatQueue.hasOutsideTurns` is true while one waits.
+- **Background:**
+  - Since the new tab state reads change, the workspace GET and the Files tree and changes reads wait for the read-state recovery when the stored read state is not complete. That is once for each older workspace after the deploy, and again after a write of a previous Worker.
+  - The read holds its chat queue task and waits through `turn.outside`, so the recovery pages and other chat tasks can run between pages.
+  - Archive defers the stop of a running cloud computer while `hasOutsideTurns` is true. That guard protects a cloud computer call in flight, such as the start guard (`worker/lifecycle/start-guard.ts:44-46` through `start-run-timer.ts:96`) and automatic restart (`worker/lifecycle/automatic-restart.ts:117-127`). Commit `a82236777` added it for "Repeated Archive lets a cancelled resume win".
+  - `docs/protocol/workspace-life.md` (~:119) requires Archive to stop a running computer at once.
+- **Problem:**
+  - Archive stop: an Archive that runs between two recovery pages records the archive, but it defers the stop of the cloud computer until the waiting read returns to the queue. So the delay is the time of the remaining recovery pages. No Archive latency was measured. For scale only: the local stress proof of 24 November 2026 measured 846.70 ms for a full recovery of 1,382 pages over a history of 5,529 events, in Miniflare. Production histories and Durable Object speed can make a recovery longer.
+  - Alarm: while Archive waits, the lifecycle alarm (`archive-state.ts:170-172`) runs again at once on each pass, and recovery pages alternate with it, so the remaining recovery takes longer.
+  - Member suspension: the suspension (`worker/members/workspace-receiver.ts:71`) writes its suspended fence and closes the connections before it calls `ChatQueue.idle()`, so access ends at once. Only the completion of its drain waits in `idle()` for the remaining recovery.
+- **Impact if no action:** In the first read of an older workspace after the deploy, an Archive can leave a running cloud computer on until the remaining recovery ends, and a member suspension finishes its drain only then. A test that shows queue tasks run between pages does not prove an immediate stop.
+- **Root question:** How can a read wait for the recovery without making lifecycle work wait for the recovery too?
+- **Options:**
+  - **A.** Add a queue wait that does not set `hasOutsideTurns`, and use it for the read waits. It leaves `idle()` waiting, so the member suspension still waits. Effort: Small.
+  - **B.** A shared read helper: check readiness in a queue task; when not ready, end that task, run the recovery pages as their own queued tasks while no queue task of the read waits, then take the final view in a new task and check readiness again there. Use it for the workspace GET and the Files list reads. Update `worker/chat/history.md` (~:16-17) and the turn-based `readState` test helper. Test an Archive while a recovery page is held on native storage, and assert that the stop runs before the held page is released (`trackRecoveryPages` with `heldOperation` in `worker/chat/workspace-read-recovery.test.ts`, and the harness of `worker/lifecycle/start-outside-archive.test.ts`), and that a member suspension finishes its drain during a held recovery. Effort: Medium.
+  - **C.** Track the cloud computer calls in flight, and make Archive and Restore wait only for them. Only the start guard and automatic restart make such calls from outside the queue. Each later outside call must register, or the race of `a82236777` returns. Add an Archive test during a held restart call. Effort: Medium.
+  - **D.** A with the session index build too (`worker/chat/history-session-preparation.ts:16`), which already delays Archive the same way on `origin/main`. Effort: Small.
+- **Left out:** Holding the queue through the whole recovery: runner reports and chat would wait for the whole scan, against design call 6 of the change. A reply without the seed while the recovery runs: it breaks state read decision 1 B (Cal, 20 November 2026). Archive that stops at once with no start job: it reopens the race of `a82236777`.
+- **Wider fix:** C. It makes the stop guard independent of what else waits outside the queue, also the session index build.
+- **Previous examples:** Commit `a82236777`. `plans/follow-ups/chat-reads-wait-behind-start.md` and `plans/follow-ups/lifecycle-calls-hold-chat-queue.md` record other waits of reads and lifecycle work in the same queue.
+- **Recommendation:** B. It is the only option that removes the cause for the new reads, also for the member suspension. C best protects the codebase.
+- **Action:** fix after merge, apply B, because it is a Medium and Rare product bug, and the fix changes the shared queue wait of reads.
