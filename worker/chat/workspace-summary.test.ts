@@ -5,6 +5,7 @@ import {
   WORKSPACE_ID,
   type ChatFixture,
 } from './harness.test-support'
+import { seedHistory } from './history-memory.test-support'
 import { record, string } from './inputs'
 let harness: TestHarness
 beforeAll(async () => {
@@ -97,14 +98,19 @@ it('recovers a legacy summary title and original turn end beyond the first histo
   const command = runner.commands.find((entry) => entry.type === 'turn')
   if (!command || command.type !== 'turn')
     throw new Error('The turn command is missing.')
-  for (let part = 0; part < 40; part++)
-    runner.emit({
-      type: 'assistant.delta',
+  await seedHistory(fixture.storage, WORKSPACE_ID, fixture.clock.now(), [
+    ...Array.from({ length: 4_100 }, () => ({
+      type: 'workspace.title' as const,
+      name: 'Earlier title',
+    })),
+    ...Array.from({ length: 40 }, (_, part) => ({
+      type: 'assistant.delta' as const,
       sessionId: session.id,
       turnId: command.turnId,
       messageId: 'legacy-answer',
       text: `Answer part ${part}`,
-    })
+    })),
+  ])
   runner.emit({ type: 'workspace.title', name: 'Title on a later page' })
   runner.emit({
     type: 'turn.completed',
@@ -128,8 +134,8 @@ it('recovers a legacy summary title and original turn end beyond the first histo
     title: { name: 'Title on a later page', occurredAt: 1800000000000 },
   })
   expect(await fixture.chat.workspaceSummary(WORKSPACE_ID)).toEqual({
-    throughEventNumber: 48,
-    lastOutputEventNumber: 47,
+    throughEventNumber: 4_148,
+    lastOutputEventNumber: 4_147,
     working: false,
   })
 })

@@ -42,24 +42,47 @@ it('loads only the requested session records in bounded forward and newest batch
   expect(await storage.get(historySessionKey('null', 106))).toBeUndefined()
   const lists: DurableObjectListOptions[] = []
   const reads: string[] = []
+  let pendingBodies = 0
+  let parallelBodies = 0
   await setStorageHooks({
     afterList: async (options) => {
       lists.push(options)
     },
-    afterRead: async (key) => {
-      if (key.startsWith(CHAT_EVENT_PREFIX)) reads.push(key)
-    },
   })
-  const forward = await store.read('workspace', (view) =>
+  const readStore = new ChatStore(
+    {
+      async get<T>(key: string) {
+        if (!key.startsWith(CHAT_EVENT_PREFIX)) return storage.get<T>(key)
+        reads.push(key)
+        pendingBodies++
+        parallelBodies = Math.max(parallelBodies, pendingBodies)
+        try {
+          return await storage.get<T>(key)
+        } finally {
+          pendingBodies--
+        }
+      },
+      put: (key, value) => storage.put(key, value),
+      delete: (key) => storage.delete(key),
+      list: (options) => storage.list(options),
+      transaction: (work) => storage.transaction(work),
+    },
+    () => 25,
+  )
+  const forward = await readStore.read('workspace', (view) =>
     view.history(0, 105, { sessionId: 'session' }),
   )
+  expect(parallelBodies).toBe(4)
   expect(forward.events.map(({ eventNumber }) => eventNumber)).toEqual(
-    Array.from({ length: 32 }, (_, i) => 1 + i * 3),
+    Array.from({ length: 35 }, (_, i) => 1 + i * 3),
   )
-  expect(forward).toMatchObject({ hasMore: true, nextAfterEventNumber: 94 })
-  const newest = await store.read('workspace', (view) =>
+  expect(forward.throughEventNumber).toBe(105)
+  expect(forward).not.toHaveProperty('hasMore')
+  parallelBodies = 0
+  const newest = await readStore.read('workspace', (view) =>
     view.newestHistory('session', 103, 104),
   )
+  expect(parallelBodies).toBe(4)
   expect(newest.events.map(({ eventNumber }) => eventNumber)).toEqual(
     Array.from({ length: 34 }, (_, i) => 1 + i * 3),
   )
@@ -67,14 +90,12 @@ it('loads only the requested session records in bounded forward and newest batch
   expect(
     lists
       .filter(({ prefix }) => prefix === historySessionPrefix('session'))
-      .every(({ limit }) => (limit ?? Infinity) <= 32),
-  ).toBe(true)
+      .map(({ limit }) => limit),
+  ).toEqual(Array.from({ length: 18 }, () => 4))
   expect(reads.sort()).toEqual(
     [
-      ...Array.from({ length: 32 }, (_, i) => chatEventKey(1 + i * 3)),
-      ...Array.from({ length: 32 }, (_, i) => chatEventKey(100 - i * 3)),
-      chatEventKey(4),
-      chatEventKey(1),
+      ...Array.from({ length: 35 }, (_, i) => chatEventKey(1 + i * 3)),
+      ...Array.from({ length: 34 }, (_, i) => chatEventKey(100 - i * 3)),
     ].sort(),
   )
 })
@@ -114,7 +135,7 @@ it('resumes a stopped index build without committing progress past missing entri
   const { storage, setStorageHooks, clearFaults } = await nativeChatStore()
   await legacyHistory(
     storage,
-    Array.from({ length: 70 }, (_, i) => sessionAnswer(`answer-${i}`)),
+    Array.from({ length: 10 }, (_, i) => sessionAnswer(`answer-${i}`)),
   )
   const store = new ChatStore(storage, () => 25)
   let batches = 0
@@ -128,10 +149,10 @@ it('resumes a stopped index build without committing progress past missing entri
     store.read('workspace', (view) => view.newestHistory('session')),
   ).rejects.toThrow('Stopped before the second index batch commit')
   await clearFaults()
-  expect(await storage.get(SESSION_INDEX_THROUGH)).toBe(32)
+  expect(await storage.get(SESSION_INDEX_THROUGH)).toBe(4)
   expect(
     (await storage.list({ prefix: historySessionPrefix('session') })).size,
-  ).toBe(32)
+  ).toBe(4)
   const resumed: string[][] = []
   await setStorageHooks({
     afterCommit: async ({ writes }) => {
@@ -148,20 +169,20 @@ it('resumes a stopped index build without committing progress past missing entri
     view.newestHistory('session'),
   )
   expect(page.events.map(({ eventNumber }) => eventNumber)).toEqual(
-    Array.from({ length: 70 }, (_, i) => i + 1),
+    Array.from({ length: 10 }, (_, i) => i + 1),
   )
   expect(resumed).toEqual([
-    Array.from({ length: 32 }, (_, i) => historySessionKey('session', i + 33)),
-    Array.from({ length: 6 }, (_, i) => historySessionKey('session', i + 65)),
+    Array.from({ length: 4 }, (_, i) => historySessionKey('session', i + 5)),
+    Array.from({ length: 2 }, (_, i) => historySessionKey('session', i + 9)),
   ])
-  expect(await storage.get(SESSION_INDEX_THROUGH)).toBe(70)
+  expect(await storage.get(SESSION_INDEX_THROUGH)).toBe(10)
 })
 
 it('runs queued chat work between committed legacy index batches', async () => {
   const { storage, setStorageHooks, clearFaults } = await nativeChatStore()
   await legacyHistory(
     storage,
-    Array.from({ length: 70 }, (_, i) => sessionAnswer(`answer-${i}`)),
+    Array.from({ length: 10 }, (_, i) => sessionAnswer(`answer-${i}`)),
   )
   const store = new ChatStore(storage, () => 25)
   const held = heldOperation()
@@ -200,17 +221,17 @@ it('runs queued chat work between committed legacy index batches', async () => {
     })
     held.release()
     const page = await reading
-    expect(await queued).toBe(32)
+    expect(await queued).toBe(4)
     expect(page.events.map(({ eventNumber }) => eventNumber)).toEqual(
-      Array.from({ length: 70 }, (_, i) => i + 1),
+      Array.from({ length: 10 }, (_, i) => i + 1),
     )
-    expect(progress).toEqual([32, 64, 70])
-    expect(sizes).toEqual([32, 32, 6])
+    expect(progress).toEqual([4, 8, 10])
+    expect(sizes).toEqual([4, 4, 2])
     const next = await store.run(() =>
       store.read('workspace', (view) => view.newestHistory('session')),
     )
     expect(next.events.map(({ eventNumber }) => eventNumber)).toEqual(
-      Array.from({ length: 71 }, (_, i) => i + 1),
+      Array.from({ length: 11 }, (_, i) => i + 1),
     )
   } finally {
     held.release()

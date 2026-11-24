@@ -181,6 +181,9 @@ also gives the kept chat and queued messages of a failed admitted create.
 
 - The Durable Object joins file parts with `RunnerFileReports` on
   `ChatTransaction.files`. It stores each complete report before the confirm.
+- `chatFilesStorage` runs file writes in the current chat transaction.
+  A read of the projection uses `get` and `getMany` in the current queue
+  task. [files-storage.ts](../files-storage.ts)
 - `runnerEventStored` gets each complete file report and tree delta, never a
   part. It must not apply them to the files projection again.
 - Send each `file.read` and `file.diff` request with `sendFileCommand`. A
