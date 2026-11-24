@@ -1,5 +1,6 @@
 import { buildSnapshotStatement } from './build-data'
 import { buildLogStatements } from './build-log-statements'
+import type { RoutedCommand } from './command-intents'
 
 /** The log lines of the snapshot step of a build or refresh. */
 export const SNAPSHOT_START_LOG = 'Saving the cloud computer image.\n'
@@ -8,14 +9,16 @@ export const SNAPSHOT_DONE_LOG = 'Saved the cloud computer image.\n'
 export async function recordBuildCommand(
   db: D1Database,
   buildId: string,
-  processId: number,
+  command: RoutedCommand,
   heading: string,
   now: number,
 ): Promise<void> {
   await db.batch([
     db
-      .prepare('UPDATE image_build_jobs SET process_id = ? WHERE build_id = ?')
-      .bind(processId, buildId),
+      .prepare(
+        'UPDATE image_build_jobs SET process_id = ?, command_route = ? WHERE build_id = ?',
+      )
+      .bind(command.processId, command.route, buildId),
     ...buildLogStatements(db, buildId, heading, now),
   ])
 }

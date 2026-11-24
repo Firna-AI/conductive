@@ -72,6 +72,7 @@ it('ends a refresh whose computer never becomes ready after reconstruction', asy
 
 it('schedules and enforces the build deadline before a later provider retry', async () => {
   const fixture = await backendFixture()
+  fixture.host.autoConnect = false
   const image = await imageRetryFixture(fixture)
   const fault = statusFault(fixture)
   fault.fail('60')

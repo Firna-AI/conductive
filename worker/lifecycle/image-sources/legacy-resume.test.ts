@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, expect, it, vi } from 'vitest'
 
 import { encrypt, hash, randomToken } from '../../security/crypto'
 import {
@@ -80,14 +80,25 @@ async function legacyCopy(
       repository,
     }),
   )
-  await setSourcePhase(env.DB, input.buildId, 'fetch', started.processId, index)
+  await setSourcePhase(env.DB, input.buildId, 'fetch', started, index)
+  await env.DB.prepare(
+    'UPDATE image_source_jobs SET command_route = NULL WHERE build_id = ? AND source_index = ?',
+  )
+    .bind(input.buildId, index)
+    .run()
   return { token, ciphertext }
 }
 
 it('continues a confirmed legacy copy and upgrades the remaining repositories to parallel copies', async () => {
   const fixture = await parallelFixture(harness, { sizesKiB: [1, 1, 1, 1] })
   await legacyCopy(fixture, 1)
+  const status = vi.spyOn(fixture.input.commands, 'status')
   expect(await fixture.prepare()).toBe(false)
+  expect(status).toHaveBeenCalledWith(
+    { processId: 1, route: 'provider' },
+    expect.objectContaining({ stdoutOffset: 0, stderrOffset: 0 }),
+  )
+  status.mockRestore()
   expect(fixture.access.requests.map((request) => request.method)).toEqual([
     'POST',
   ])
@@ -128,7 +139,7 @@ it('waits for a confirmed legacy finalize before minting metadata or starting an
     fixture.env.DB,
     fixture.input.buildId,
     'finalize',
-    started.processId,
+    started,
   )
   expect(await fixture.prepare()).toBe(false)
   expect(fixture.access.requests.map((request) => request.method)).toEqual([

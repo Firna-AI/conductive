@@ -3,6 +3,8 @@ import {
   deleteSnapshotIfPresent,
 } from '../lifecycle/cleanup'
 import { providerForAccount } from '../sandbox/client'
+import { softwareImageMachineOwner } from '../machines/client'
+import { revokeMachineTokenOnStop } from '../machines/revoke'
 import { warnWorker } from '../warnings'
 import {
   claimSoftwareImageDeletion,
@@ -25,7 +27,7 @@ async function cleanupSoftwareImage(
     image.providerAccount,
   )
   if (image.phase === 'allocating' && image.sandboxId === null) {
-    const sandboxId = await allocateSoftwareImage(env.DB, provider, image)
+    const sandboxId = await allocateSoftwareImage(runtime, provider, image)
     const current = await readSoftwareImage(env.DB, image.id)
     if (
       !current ||
@@ -47,17 +49,45 @@ async function cleanupSoftwareImage(
       revision: current.revision + 1,
     }
   }
-  if (image.sandboxId)
-    await deleteSandboxIfPresent(
-      env.DB,
-      provider,
-      { providerAccount: image.providerAccount, sandboxId: image.sandboxId },
-      dependencies.now(),
-    )
-  if (image.state === 'failed' && image.snapshotRecorded)
-    await deleteSnapshotIfPresent(provider, image.snapshotName)
+  const failures: unknown[] = []
+  if (image.phase !== 'done') {
+    try {
+      const revoke = () =>
+        revokeMachineTokenOnStop(
+          env,
+          softwareImageMachineOwner(image.id),
+          'retry',
+        )
+      if (runtime.poll) await runtime.poll.runNetworkCall(revoke)
+      else await revoke()
+    } catch (error) {
+      failures.push(error)
+    }
+  }
+  if (image.sandboxId && failures.length === 0) {
+    try {
+      await deleteSandboxIfPresent(
+        env.DB,
+        provider,
+        { providerAccount: image.providerAccount, sandboxId: image.sandboxId },
+        dependencies.now(),
+      )
+    } catch (error) {
+      failures.push(error)
+    }
+  }
+  if (
+    image.state === 'deleting' ||
+    (image.state === 'failed' && image.snapshotRecorded)
+  ) {
+    try {
+      await deleteSnapshotIfPresent(provider, image.snapshotName)
+    } catch (error) {
+      failures.push(error)
+    }
+  }
+  if (failures.length > 0) throw failures[0]
   if (image.state === 'deleting') {
-    await deleteSnapshotIfPresent(provider, image.snapshotName)
     await deleteSoftwareImageRecord(env.DB, image)
   } else if (image.phase !== 'done') {
     await saveSoftwareImage(env.DB, image, { sandboxId: null, phase: 'done' })

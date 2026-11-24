@@ -34,11 +34,12 @@ The fake host, `LifecycleHost` in
 also opens a real host WebSocket to the production `Machine` object.
 It uses the machine token of each create and resume of the fake Boat, or a
 token that `issueMachineToken` issues for a seeded workspace through its
-`seed`. The lifecycle, Continue, repository change, restart, and attachment
-fixtures connect it. On the outer runtime, `connectHost` connects it at
-each create and resume, and a fixture can call `host.seed`, as the services
-fixture does. So the commands of a workspace cross that socket. A computer
-without a connected fake host gets the provider path of the fake provider.
+`seed`. The lifecycle, Continue, repository change, restart, attachment,
+image build, and software image fixtures connect it. On the outer runtime,
+`connectHost` connects it at each create and resume, and a fixture can call
+`host.seed`, as the services fixture does. So the commands of a workspace
+and of a build cross that socket. A computer without a connected fake host
+gets the provider path of the fake provider.
 The [lifecycle test guide](../lifecycle/tests.md#image-and-provider-boundaries)
 gives its captures and controls.
 

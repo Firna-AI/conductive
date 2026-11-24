@@ -1,5 +1,12 @@
-import { buildPhaseStatement, type BuildPhase } from './build-data'
+import type { AppEnv } from '../env'
+import { buildMachineOwner, issueMachineToken } from '../machines/client'
+import {
+  buildPhaseStatement,
+  type BuildJob,
+  type BuildPhase,
+} from './build-data'
 import { buildLogStatements } from './build-log-statements'
+import { encryptBuildMachineToken } from './build-machine-token'
 import { buildPhaseStepStatements } from './build-step-data'
 import { clearImageRetryStatement } from './image-retry-data'
 
@@ -24,12 +31,20 @@ export async function completeBuildPhase(
 
 /** A new job enters the allocating phase before its provider request. */
 export async function beginBuildAllocation(
-  db: D1Database,
-  buildId: string,
+  env: AppEnv,
+  job: BuildJob,
   now: number,
-): Promise<void> {
+): Promise<string> {
+  const { DB: db } = env
+  const owner = buildMachineOwner(job.orgId, job.buildId)
+  const ciphertext = await encryptBuildMachineToken(
+    env,
+    owner,
+    await issueMachineToken(env, owner),
+  )
   await db.batch([
-    buildPhaseStatement(db, buildId, 'allocating'),
-    ...buildPhaseStepStatements(db, buildId, 'allocating', now),
+    buildPhaseStatement(db, job.buildId, 'allocating', ciphertext),
+    ...buildPhaseStepStatements(db, job.buildId, 'allocating', now),
   ])
+  return ciphertext
 }

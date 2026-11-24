@@ -1,5 +1,6 @@
 import { activeOrgPredicate } from '../../data/org-access'
 import type { CommandStatus } from '../../machines/channel'
+import type { RoutedCommand } from '../command-intents'
 
 export type SourcePhase =
   | 'layout-starting'
@@ -24,6 +25,7 @@ export interface SourceJob {
   repositoryId: string | null
   phase: SourcePhase
   processId: number | null
+  commandRoute: string | null
   stdoutOffset: number
   stderrOffset: number
   grantHash: string | null
@@ -35,7 +37,7 @@ export interface SourceJob {
 const columns = `build_id AS buildId, org_id AS orgId, sandbox_id AS sandboxId,
   provider_account AS providerAccount,
   source_index AS sourceIndex, repository_id AS repositoryId, phase,
-  process_id AS processId, stdout_offset AS stdoutOffset, stderr_offset AS stderrOffset,
+  process_id AS processId, command_route AS commandRoute, stdout_offset AS stdoutOffset, stderr_offset AS stderrOffset,
   grant_hash AS grantHash, token_ciphertext AS tokenCiphertext, failed,
   estimate_bytes AS estimateBytes`
 
@@ -105,25 +107,22 @@ export async function setSourcePhase(
   db: D1Database,
   buildId: string,
   phase: SourcePhase,
-  processId: number | null = null,
+  command: RoutedCommand | null = null,
   sourceIndex = 0,
 ): Promise<void> {
-  await sourcePhaseStatement(db, buildId, phase, processId, sourceIndex).run()
-}
-
-function sourcePhaseStatement(
-  db: D1Database,
-  buildId: string,
-  phase: SourcePhase,
-  processId: number | null,
-  sourceIndex: number,
-) {
-  return db
+  await db
     .prepare(
-      `UPDATE image_source_jobs SET phase = ?, process_id = ?, stdout_offset = 0,
+      `UPDATE image_source_jobs SET phase = ?, process_id = ?, command_route = ?, stdout_offset = 0,
        stderr_offset = 0 WHERE build_id = ? AND source_index = ?`,
     )
-    .bind(phase, processId, buildId, sourceIndex)
+    .bind(
+      phase,
+      command?.processId ?? null,
+      command?.route ?? null,
+      buildId,
+      sourceIndex,
+    )
+    .run()
 }
 
 export async function saveSourceStatus(
@@ -155,7 +154,7 @@ export async function storeSourceGrant(
   const result = await db
     .prepare(
       `UPDATE image_source_jobs SET repository_id = ?, grant_hash = ?, token_ciphertext = ?,
-       phase = 'fetch-starting', process_id = NULL WHERE build_id = ? AND phase = 'ready'
+       phase = 'fetch-starting', process_id = NULL, command_route = NULL WHERE build_id = ? AND phase = 'ready'
        AND token_ciphertext IS NULL AND source_index = ? AND EXISTS (
          SELECT 1 FROM image_builds b JOIN orgs o ON o.id = b.org_id
          WHERE b.id = image_source_jobs.build_id AND b.org_id = image_source_jobs.org_id

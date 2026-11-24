@@ -2,6 +2,7 @@ import type { HttpFetch } from '../env'
 import { isRecord } from '../http'
 import type { SandboxState } from '../sandbox/provider'
 import { FakeBoat } from '../test-support/fake-boat'
+import { statusOutputSlice } from './lifecycle-boat-output.test-support'
 
 interface CommandRequest {
   sandboxId: string
@@ -256,16 +257,16 @@ export class LifecycleBoat {
     await this.beforeStatus?.()
     this.statusRequests.push(request)
     const { stdoutOffset, stderrOffset } = request
-    const stdout = this.commandOutput.slice(
+    const stdout = statusOutputSlice(
+      this.commandOutput,
       stdoutOffset,
-      stdoutOffset + this.statusChunkSize,
+      this.statusChunkSize,
     )
-    const stderr = this.commandStderr.slice(
+    const stderr = statusOutputSlice(
+      this.commandStderr,
       stderrOffset,
-      stderrOffset + this.statusChunkSize,
+      this.statusChunkSize,
     )
-    const stdoutNextOffset = stdoutOffset + stdout.length
-    const stderrNextOffset = stderrOffset + stderr.length
     return {
       processId: request.processId,
       kind: 'command.status' as const,
@@ -273,13 +274,11 @@ export class LifecycleBoat {
       running: this.commandRunning,
       exitCode: this.commandRunning ? null : this.commandExitCode,
       timedOut: false,
-      stdout,
-      stderr,
-      stdoutNextOffset,
-      stderrNextOffset,
-      more:
-        stdoutNextOffset < this.commandOutput.length ||
-        stderrNextOffset < this.commandStderr.length,
+      stdout: stdout.text,
+      stderr: stderr.text,
+      stdoutNextOffset: stdout.nextOffset,
+      stderrNextOffset: stderr.nextOffset,
+      more: stdout.more || stderr.more,
     }
   }
 

@@ -78,7 +78,7 @@ it('answers before a provider create deadline and recovers its saved allocation 
 })
 
 it('saves a late create reply without starting another provider call after yielding', async () => {
-  const { images, boat } = fixtureForTest()
+  const { images, boat, host } = fixtureForTest()
   const held = heldOperation()
   boat.afterCreate = () => held.wait()
   const poll = await softwareImagePoll(images)
@@ -100,6 +100,7 @@ it('saves a late create reply without starting another provider call after yield
     })
     expect(boat.sandboxReads).toEqual([])
     expect(boat.commands).toEqual([])
+    expect(host.commandRequests).toEqual([])
     expect(await (await poll.request()).json()).toMatchObject({
       state: 'ready',
       phase: 'done',
@@ -143,7 +144,7 @@ it('keeps late command output pending so a later poll returns it once', async ()
     held.release()
     await poll.tasks.drain()
     expect((await softwareImages(images.env.DB, 'boat'))[0]).toMatchObject({
-      stdoutOffset: 80_031,
+      stdoutOffset: 160_031,
     })
     expect(await (await poll.request()).json()).toMatchObject({
       state: 'building',
@@ -169,7 +170,8 @@ it('keeps late command output pending so a later poll returns it once', async ()
 })
 
 it('returns saved output before journal cleanup and bounds its long provider command', async () => {
-  const { images, boat } = fixtureForTest()
+  const { images, boat, host } = fixtureForTest()
+  host.autoConnect = false
   const fetch = images.dependencies.fetch
   const held = heldOperation()
   const events: string[] = []

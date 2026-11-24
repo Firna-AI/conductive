@@ -1,5 +1,5 @@
 import type { ComputerIdentity } from '../lifecycle/computer-ledger'
-import { workspaceMachineOwner } from './client'
+import { buildMachineOwner, workspaceMachineOwner } from './client'
 import type { MachineOwner } from './identity'
 
 export async function computerMachineOwner(
@@ -9,10 +9,14 @@ export async function computerMachineOwner(
 ): Promise<MachineOwner | null> {
   const row = await db
     .prepare(
-      `SELECT purpose_id AS workspaceId FROM computer_ledger WHERE org_id = ? AND provider_account = ?
-     AND sandbox_id = ? AND purpose = 'workspace' AND deleted_at IS NULL AND create_rejected = 0 ORDER BY id DESC LIMIT 1`,
+      `SELECT purpose, purpose_id AS purposeId FROM computer_ledger WHERE org_id = ? AND provider_account = ?
+     AND sandbox_id = ? AND purpose IN ('workspace', 'build') AND purpose_id IS NOT NULL
+     AND deleted_at IS NULL AND create_rejected = 0 ORDER BY id DESC LIMIT 1`,
     )
     .bind(orgId, computer.providerAccount, computer.sandboxId)
-    .first<{ workspaceId: string }>()
-  return row ? workspaceMachineOwner(orgId, row.workspaceId) : null
+    .first<{ purpose: 'workspace' | 'build'; purposeId: string }>()
+  if (!row) return null
+  return row.purpose === 'build'
+    ? buildMachineOwner(orgId, row.purposeId)
+    : workspaceMachineOwner(orgId, row.purposeId)
 }

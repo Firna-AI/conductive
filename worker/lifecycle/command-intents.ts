@@ -1,5 +1,5 @@
 import commandJournal from './command-journal.sh?raw'
-import type { SandboxProvider } from '../sandbox/provider'
+import type { CommandRoute, MachineChannel } from '../machines/channel'
 import { shellQuote } from './commands'
 
 type CommandOwner =
@@ -11,6 +11,14 @@ type CommandPhase =
   'software' | 'install' | 'fetch' | 'branch' | 'startup' | 'terminal'
 
 const COMMAND_ROOT = '/tmp/conductive-lifecycle'
+
+export type RoutedCommand = Awaited<ReturnType<MachineChannel['startCommand']>>
+
+export function readCommandRoute(value: unknown): CommandRoute {
+  if (value === null || value === 'provider') return 'provider'
+  if (value === 'host') return 'host'
+  throw new Error('Invalid saved build command route')
+}
 
 function commandDirectory(owner: CommandOwner): string {
   const parts = [owner.kind, owner.id]
@@ -37,11 +45,9 @@ export function lifecycleCommand(
  * an org image or a software image. Each image sandbox runs one image build.
  */
 export async function clearImageCommands(
-  provider: SandboxProvider,
-  sandboxId: string,
+  channel: Pick<MachineChannel, 'runCommand'>,
 ): Promise<void> {
-  const result = await provider.runCommand(
-    sandboxId,
+  const result = await channel.runCommand(
     `rm -rf -- ${shellQuote(COMMAND_ROOT)}`,
   )
   if (result.exitCode !== 0 || result.timedOut)

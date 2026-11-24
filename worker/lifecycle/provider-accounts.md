@@ -56,7 +56,10 @@ stores, through `providerForAccount` or `orgProviderForAccount` in
   the job allocated no sandbox, it uses the account of the workspace
   record. A record in `lifecycle_sandbox_cleanup` uses its own account.
 - A build reaches its build sandbox and its new snapshot through
-  `BuildJob.providerAccount`. Its cleanup checks the leases of the previous
+  `BuildJob.providerAccount`. Its commands go through the
+  [machine channel](../machines/README.md#the-machine-channel) of its
+  [build machine](build-machine.md). The provider path of that channel uses
+  the same account. Its cleanup checks the leases of the previous
   org image and deletes that image through `previousProviderAccount`.
 - An unknown account throws `ProviderAccountError` before any provider
   request. `deleteSandboxIfPresent` and `deleteSnapshotIfPresent` ignore

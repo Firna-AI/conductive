@@ -89,6 +89,7 @@ export async function parallelFixture(
   const revokeRefusals = new Set<string>()
   const statusFailures = new Map<number, ProviderError>()
   let refuseCopyStarts = 0
+  let startRefusal: Error = new ProviderError('rate_limited', 429, null, 7)
   let now = TEST_TIME
   const fetch: HttpFetch = async (request) => {
     if (
@@ -101,70 +102,65 @@ export async function parallelFixture(
     }
     return access.fetch(request)
   }
-  const commands = new SourceCommandPort(
-    {
-      startCommand: async (_sandboxId, command) => {
-        const kind = command.includes('clone --bare')
-          ? 'copy'
-          : command.includes('show-ref --verify')
-            ? 'finalize'
-            : 'layout'
-        if (kind === 'copy' && refuseCopyStarts-- > 0)
-          throw new ProviderError('rate_limited', 429, null, 7)
-        if (kind === 'copy') {
-          const grant = command.match(
-            /Authorization: Bearer ([A-Za-z0-9_-]+)/u,
-          )?.[1]
-          const response = await handleImageSourceCredential(
-            new Request(
-              `${env.MACHINE_ORIGIN}${IMAGE_SOURCE_CREDENTIAL_PATH}`,
-              { method: 'POST', headers: { Authorization: `Bearer ${grant}` } },
-            ),
-            env,
-          )
-          await response.text()
-        }
-        const processId = processes.length + 1
-        processes.push({
-          kind,
-          sourceIndex: repositories.findIndex((repository) =>
-            command.includes(sourceRepositoryUrl(repository.fullName)),
-          ),
-          processId,
-          command,
-          exitCode: kind === 'layout' ? 0 : null,
-        })
-        access.events.push(`start-${kind}`)
-        return { processId }
-      },
-      getCommandStatus: async (
-        _sandboxId,
+  const commands = new SourceCommandPort({
+    startCommand: async (command) => {
+      const kind = command.includes('clone --bare')
+        ? 'copy'
+        : command.includes('show-ref --verify')
+          ? 'finalize'
+          : 'layout'
+      if (kind === 'copy' && refuseCopyStarts-- > 0) throw startRefusal
+      if (kind === 'copy') {
+        const grant = command.match(
+          /Authorization: Bearer ([A-Za-z0-9_-]+)/u,
+        )?.[1]
+        const response = await handleImageSourceCredential(
+          new Request(`${env.MACHINE_ORIGIN}${IMAGE_SOURCE_CREDENTIAL_PATH}`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${grant}` },
+          }),
+          env,
+        )
+        await response.text()
+      }
+      const processId = processes.length + 1
+      processes.push({
+        kind,
+        sourceIndex: repositories.findIndex((repository) =>
+          command.includes(sourceRepositoryUrl(repository.fullName)),
+        ),
         processId,
-        offsets: CommandOffsets,
-      ): Promise<CommandStatus> => {
-        const failure = statusFailures.get(processId)
-        if (failure) throw failure
-        const process = processes[processId - 1]
-        return {
-          ...offsets,
-          processId,
-          running: process.exitCode === null,
-          state: process.exitCode === null ? 'running' : 'exited',
-          exitCode: process.exitCode,
-          timedOut: null,
-          stdout:
-            process.kind === 'layout'
-              ? `MemAvailable: ${(options.memoryMiB ?? 2048) * 1024} kB\n`
-              : '',
-          stderr: '',
-          stdoutNextOffset: 0,
-          stderrNextOffset: 0,
-          more: false,
-        }
-      },
+        command,
+        exitCode: kind === 'layout' ? 0 : null,
+      })
+      access.events.push(`start-${kind}`)
+      return { processId, route: 'provider' }
     },
-    'builder-one',
-  )
+    getCommandStatus: async (
+      { processId },
+      offsets: CommandOffsets,
+    ): Promise<CommandStatus> => {
+      const failure = statusFailures.get(processId)
+      if (failure) throw failure
+      const process = processes[processId - 1]
+      return {
+        ...offsets,
+        processId,
+        running: process.exitCode === null,
+        state: process.exitCode === null ? 'running' : 'exited',
+        exitCode: process.exitCode,
+        timedOut: null,
+        stdout:
+          process.kind === 'layout'
+            ? `MemAvailable: ${(options.memoryMiB ?? 2048) * 1024} kB\n`
+            : '',
+        stderr: '',
+        stdoutNextOffset: 0,
+        stderrNextOffset: 0,
+        more: false,
+      }
+    },
+  })
   const input = {
     orgId: org.id,
     buildId: 'parallel-build',
@@ -224,8 +220,9 @@ export async function parallelFixture(
     setTime: (value: number) => {
       now = value
     },
-    refuseStarts: (count: number) => {
+    refuseStarts: (count: number, error?: Error) => {
       refuseCopyStarts = count
+      if (error) startRefusal = error
     },
   }
 }

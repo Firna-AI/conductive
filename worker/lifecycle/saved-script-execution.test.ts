@@ -32,6 +32,14 @@ it('runs the saved image install script in Bash with its existing directory and 
   const local = await localSavedScriptFixture(fixture.repositoryId, 'build')
   try {
     await saveScripts(fixture)
+    await fixture.runtime.env.DB.prepare(
+      'UPDATE settings SET install_script = ? WHERE org_id = ?',
+    )
+      .bind(
+        `if [[ -v CONDUCTIVE_MACHINE_TOKEN || -v CONDUCTIVE_MACHINE_ORIGIN ]]; then exit 74; fi\n${SAVED_BASH_SCRIPT}`,
+        fixture.org.id,
+      )
+      .run()
     const results: CommandResult[] = []
     fixture.boat.beforeCommand = async (command) => {
       if (local.contains(command, 'install')) {
@@ -59,6 +67,11 @@ it('runs the saved image install script in Bash with its existing directory and 
       },
     ])
     expect(await local.script('install')).toBe(null)
+    expect(
+      fixture.host.commands.filter((command) =>
+        local.contains(command, 'install'),
+      ),
+    ).toHaveLength(1)
   } finally {
     await local.dispose()
   }

@@ -12,7 +12,7 @@ export async function upgradeLegacySources(
   await db.batch([
     db
       .prepare(
-        `UPDATE image_source_jobs SET phase = 'done', process_id = NULL
+        `UPDATE image_source_jobs SET phase = 'done', process_id = NULL, command_route = NULL
        WHERE build_id = ? AND source_index < ? AND token_ciphertext IS NULL AND grant_hash IS NULL`,
       )
       .bind(run.buildId, nextIndex),

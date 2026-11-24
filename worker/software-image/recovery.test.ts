@@ -2,16 +2,17 @@ import { expect, it } from 'vitest'
 
 import { setupBackendTests } from '../lifecycle/backend-test-hooks'
 import { isRecord } from '../http'
+import { LostHostReply } from '../lifecycle/lifecycle-host-test-support'
 import { SOFTWARE_RELEASE as SOFTWARE } from '../lifecycle/software-release-test-support'
 import { boatRoute } from '../sandbox/routes'
 import { heldOperation } from '../test-support/held-operation'
 import { requestSoftwareImage } from './build'
 import { softwareImages } from './data'
+import { saveSoftwareImageOperation } from './operation-data'
 
 const fixtureForTest = setupBackendTests()
 const digest = 'a'.repeat(64)
 const save = boatRoute({ operation: 'saveSnapshot' })
-const startCommand = boatRoute({ operation: 'startCommand', sandboxId: 'bx_1' })
 
 function isRoute(request: Request, route: { method: string; path: string }) {
   return (
@@ -21,29 +22,84 @@ function isRoute(request: Request, route: { method: string; path: string }) {
 }
 
 it('replays a lost command start through the same journal', async () => {
-  const { images, boat } = fixtureForTest()
-  const fetch = images.dependencies.fetch
+  const { images, boat, host } = fixtureForTest()
   let lose = true
-  images.dependencies.fetch = async (request) => {
-    const response = await fetch(request)
-    if (lose && isRoute(request, startCommand)) {
-      const body: unknown = await request.clone().json()
-      if (isRecord(body) && body.detached === true) {
-        lose = false
-        throw new Error('Lost command start reply')
-      }
+  host.commandReply = (request, reply) => {
+    if (lose && request.detached) {
+      lose = false
+      throw new LostHostReply('Lost command start reply')
     }
-    return response
+    return reply
   }
   expect((await requestSoftwareImage(images, SOFTWARE, digest)).state).toBe(
     'building',
   )
+  await host.connect('bx_1')
   expect((await requestSoftwareImage(images, SOFTWARE, digest)).state).toBe(
     'ready',
   )
   const starts = boat.commandRequests.filter((command) => command.detached)
   expect(starts).toHaveLength(2)
   expect(starts[1]).toEqual(starts[0])
+  expect(host.commandRequests.filter((request) => request.detached)).toEqual(
+    starts,
+  )
+})
+
+it('resumes a saved software image command after the host reconnects', async () => {
+  const { images, boat, host } = fixtureForTest()
+  const { DB: db } = images.env
+  boat.commandRunning = true
+  boat.commandOutput = 'saved software output\n'
+  boat.commandStderr = 'notice\n'
+  expect(await requestSoftwareImage(images, SOFTWARE, digest)).toMatchObject({
+    state: 'building',
+    output: 'saved software output\nnotice\n',
+  })
+  const [running] = await softwareImages(db, 'boat')
+  expect(await saveSoftwareImageOperation(db, running, 'auto-stop')).toBe(true)
+  const [checkpoint] = await softwareImages(db, 'boat')
+  expect(checkpoint).toMatchObject({
+    phase: 'software',
+    processId: 1,
+    commandRoute: 'host',
+    stdoutOffset: 22,
+    stderrOffset: 7,
+    operation: 'auto-stop',
+  })
+  const polls = [...host.statusRequests]
+  const commands = [...boat.commandRequests]
+  await host.disconnect('bx_1')
+
+  expect(await requestSoftwareImage(images, SOFTWARE, digest)).toMatchObject({
+    state: 'building',
+    phase: 'software',
+    output: '',
+  })
+  expect((await softwareImages(db, 'boat'))[0]).toEqual({
+    ...checkpoint,
+    operation: null,
+  })
+  expect(boat.commandRequests).toEqual(commands)
+  expect(boat.statusRequests).toEqual(polls)
+
+  await host.connect('bx_1')
+  boat.commandOutput += 'last\n'
+  boat.commandRunning = false
+  expect(await requestSoftwareImage(images, SOFTWARE, digest)).toMatchObject({
+    state: 'ready',
+    phase: 'done',
+    output: 'last\n',
+  })
+  expect(host.statusRequests).toEqual([
+    ...polls,
+    { processId: 1, stdoutOffset: 22, stderrOffset: 7 },
+  ])
+  expect(boat.statusRequests).toEqual(host.statusRequests)
+  expect(boat.starts).toHaveLength(1)
+  expect(boat.commandRequests.filter((request) => request.detached)).toEqual(
+    commands,
+  )
 })
 
 it('reads a recorded snapshot after its save reply is lost', async () => {

@@ -41,9 +41,11 @@ number names a dated record, as
   command of a later agent turn, and the startup script at the next start.
   A process that already runs keeps its value.
 - A repository change changes no folder variable of a repository.
-- The sandbox of a build or a refresh gets only the folder variables, which
-  hold no secret. Only the Git command that copies a repository gets a read
-  token, as [GitHub tokens](tokens-and-secrets.md#github-tokens) says.
+- The install script of a build gets only the folder variables, which hold
+  no secret. The sandbox of a build or a refresh also gets its machine
+  token, as [What a sandbox holds](isolation.md#what-a-sandbox-holds) says.
+  Only the Git command that copies a repository gets a read token, as
+  [GitHub tokens](tokens-and-secrets.md#github-tokens) says.
 
 ## Folders over time
 

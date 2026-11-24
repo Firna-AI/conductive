@@ -125,6 +125,8 @@ it('runs the sample install script in named image repositories and keeps install
       },
     })
     expect(Object.keys(boat.starts[0].env ?? {}).sort()).toEqual([
+      'CONDUCTIVE_MACHINE_ORIGIN',
+      'CONDUCTIVE_MACHINE_TOKEN',
       'CONDUCTIVE_REPOSITORY_BILLING_SERVICE_DIR',
       'CONDUCTIVE_REPOSITORY_MARKETING_SITE_DIR',
       'CONDUCTIVE_REPOSITORY_STOREFRONT_DIR',

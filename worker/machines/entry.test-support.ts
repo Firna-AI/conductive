@@ -5,7 +5,7 @@ import type { AppEnv } from '../env'
 import { number, record, string } from '../chat/inputs'
 import { errorResponse, HttpError } from '../http'
 import { issueMachineToken, machineClient } from './client'
-import { readOwner } from './identity'
+import { machineObjectName, readOwner } from './identity'
 
 export { Workspace } from '../workspace'
 export { Machine } from './machine'
@@ -134,6 +134,6 @@ export default {
       return app.fetch(request, env, execution)
     const owner = readOwner(record(await request.clone().json()).owner)
     if (!owner) throw new Error('Missing test owner.')
-    return env.MACHINE_PROBES.getByName(owner.workspaceId).fetch(request)
+    return env.MACHINE_PROBES.getByName(machineObjectName(owner)).fetch(request)
   },
 }

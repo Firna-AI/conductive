@@ -10,18 +10,11 @@ const fixtureForTest = setupBackendTests()
 afterEach(() => vi.useRealTimers())
 
 it('resumes slow successful prerequisites and returns late ended output on the next poll', async () => {
-  const { images, boat } = fixtureForTest()
+  const { images, boat, host } = fixtureForTest()
   const fetch = images.dependencies.fetch
   const operations = [
     boatRoute({ operation: 'get', sandboxId: 'bx_1' }),
     boatRoute({ operation: 'update', sandboxId: 'bx_1' }),
-    boatRoute({ operation: 'startCommand', sandboxId: 'bx_1' }),
-    boatRoute({
-      operation: 'commandStatus',
-      sandboxId: 'bx_1',
-      processId: 1,
-      offsets: { stdoutOffset: 0, stderrOffset: 0 },
-    }),
   ]
   const calls = [0, 0, 0, 0]
   let held = heldOperation()
@@ -37,6 +30,16 @@ it('resumes slow successful prerequisites and returns late ended output on the n
       await held.wait()
     }
     return response
+  }
+  boat.beforeCommand = async (_command, detached) => {
+    if (detached) {
+      calls[2]++
+      await held.wait()
+    }
+  }
+  boat.beforeStatus = async () => {
+    calls[3]++
+    await held.wait()
   }
   const poll = await softwareImagePoll(images)
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
@@ -70,7 +73,16 @@ it('resumes slow successful prerequisites and returns late ended output on the n
   }
   images.dependencies.fetch = fetch
   const [image] = await softwareImages(images.env.DB, 'boat')
-  expect(image).toMatchObject({ phase: 'journal', processId: 1 })
+  expect(image).toMatchObject({
+    phase: 'journal',
+    processId: 1,
+    commandRoute: 'host',
+  })
+  expect(host.statusRequests).toEqual([
+    { processId: 1, stdoutOffset: 0, stderrOffset: 0 },
+  ])
+  expect(boat.commandRequests).toEqual(host.commandRequests)
+  expect(boat.statusRequests).toEqual(host.statusRequests)
   expect(await (await poll.request()).json()).toMatchObject({
     state: 'ready',
     phase: 'done',

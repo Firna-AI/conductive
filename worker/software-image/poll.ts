@@ -38,6 +38,20 @@ export async function boundedSoftwareImagePoll(
     poll: {
       stopped: () => stopped,
       expired: () => controller.signal.aborted,
+      async runNetworkCall(call) {
+        if (stopped || controller.signal.aborted)
+          throw new ProviderError('unavailable', 503)
+        let stop: (() => void) | undefined
+        const abort = new Promise<never>((_, reject) => {
+          stop = () => reject(new ProviderError('unavailable', 503))
+          controller.signal.addEventListener('abort', stop, { once: true })
+        })
+        try {
+          return await Promise.race([call(), abort])
+        } finally {
+          if (stop) controller.signal.removeEventListener('abort', stop)
+        }
+      },
       checkpoint: (image, text) => {
         checkpoint = softwareImageResult(image, text)
       },
@@ -77,6 +91,7 @@ export async function boundedSoftwareImagePoll(
   try {
     return await Promise.race([work, deadline])
   } finally {
+    stopped = true
     clearTimeout(responseTimer)
   }
 }

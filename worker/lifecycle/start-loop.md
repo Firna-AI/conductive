@@ -32,7 +32,7 @@ provider auto-stop.
   pending [provider retry](provider-retries.md#the-retry-policy) waits
   until its retry time.
 - The `ready` phase and the command phases set the provider auto-stop, as
-  [The stop time](README.md#the-stop-time) says. They set it only when
+  [The stop time](stop-time.md) says. They set it only when
   `autoStopSetAt` in the start job is missing or 60 seconds old or more.
   Each set saves its time in `autoStopSetAt`. The `ready` phase sets it
   only after the provider reports the sandbox ready. So the run that sees

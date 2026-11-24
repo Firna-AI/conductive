@@ -97,7 +97,7 @@ function publicationStatements(
               FROM image_builds WHERE org_id = ? AND provider_account = ? AND kind = 'build'
               ORDER BY started_at DESC, id DESC LIMIT 1) = 'succeeded')
           ) THEN 'cleanup-build' ELSE 'cleanup' END,
-          process_id = NULL WHERE build_id = ? AND ${publishingBuild}`,
+          process_id = NULL, command_route = NULL WHERE build_id = ? AND ${publishingBuild}`,
       )
       .bind(
         job.buildId,

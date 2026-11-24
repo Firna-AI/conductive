@@ -1,5 +1,6 @@
 import type { AppDependencies, AppEnv } from '../../env'
 import type { CommandStatus } from '../../machines/channel'
+import { readCommandRoute } from '../command-intents'
 import type { PrepareImageSources } from '../image-builds'
 import { transientProviderError } from '../provider-retry'
 import {
@@ -47,7 +48,10 @@ async function pollSource(
     throw new Error('The source command failed')
   if (job.phase === 'fetch' || job.phase === 'finalize') {
     if (job.processId === null) throw new Error('Missing source process')
-    const status = await input.commands.status(job.processId, job)
+    const status = await input.commands.status(
+      { processId: job.processId, route: readCommandRoute(job.commandRoute) },
+      job,
+    )
     await saveSourceStatus(env.DB, job.buildId, status, job.sourceIndex)
     if (status.running) return
     if (job.phase === 'finalize') {
@@ -121,7 +125,7 @@ async function startFinalize(
       env.DB,
       job.buildId,
       'finalize',
-      started.processId,
+      started,
       job.sourceIndex,
     )
   } catch (error) {

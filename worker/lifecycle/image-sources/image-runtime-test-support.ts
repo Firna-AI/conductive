@@ -1,4 +1,5 @@
 import { withSoftwareRelease } from '../software-release-test-support'
+import { providerChannel } from '../../machines/provider-channel'
 import { TEST_TIME } from '../../test-support/harness'
 import { LifecycleBoat } from '../lifecycle-boat-test-support'
 import type { ImageRuntime } from '../image-builds'
@@ -29,7 +30,9 @@ export async function nativeImageRuntime(
         dependencies,
       )({
         ...input,
-        commands: new SourceCommandPort(fixture.provider, input.sandboxId),
+        commands: new SourceCommandPort(
+          providerChannel(fixture.provider, input.sandboxId),
+        ),
       }),
     scheduler: { schedule: async () => {} },
   }

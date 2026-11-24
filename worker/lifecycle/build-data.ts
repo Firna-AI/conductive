@@ -5,10 +5,13 @@ import type {
 } from '../../src/shared/org-settings'
 import { HttpError } from '../http'
 import { readOrgProviderAccount } from '../data/org-provider-account'
-import type { CommandStatus } from '../machines/channel'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
 import { readBuildSnapshot } from './build-log-reader'
-import { buildLogStatements } from './build-log-statements'
+import {
+  buildCommandLogStatements,
+  buildLogStatements,
+} from './build-log-statements'
+import type { RedactedCommandOutput } from './build-output-redaction'
 import { decodeBuildJob, type StoredBuildJob } from './build-job-codec'
 import type { ProviderRetryState } from './provider-retry'
 import type { SavedScript } from './saved-script'
@@ -46,6 +49,8 @@ export interface BuildJob {
   startedByUserId: string | null
   phase: BuildPhase
   processId: number | null
+  commandRoute: string | null
+  machineTokenCiphertext: string | null
   stdoutOffset: number
   stderrOffset: number
   installScript: SavedScript
@@ -65,7 +70,8 @@ const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state, b.start
   b.provider_account AS providerAccount,
   b.settings_revision AS settingsRevision, b.runner_protocol_version AS runnerProtocolVersion,
   b.started_by_user_id AS startedByUserId,
-  j.phase, j.process_id AS processId, j.stdout_offset AS stdoutOffset,
+  j.phase, j.process_id AS processId, j.command_route AS commandRoute,
+  j.machine_token_ciphertext AS machineTokenCiphertext, j.stdout_offset AS stdoutOffset,
   j.stderr_offset AS stderrOffset, j.install_script AS installScript,
   j.repositories_json AS repositoriesJson, j.software_json AS softwareJson,
   j.repository_locations_json AS repositoryLocationsJson,
@@ -108,27 +114,29 @@ export async function runningBuild(
   return row?.id ?? null
 }
 
-/** The one statement of a phase change. It resets the command of the job. */
+/** Changes the job phase and resets its saved command. */
 export function buildPhaseStatement(
   db: D1Database,
   buildId: string,
   phase: BuildPhase,
-  processId: number | null = null,
+  machineTokenCiphertext: string | null = null,
 ): D1PreparedStatement {
   return db
     .prepare(
-      'UPDATE image_build_jobs SET phase = ?, process_id = ?, stdout_offset = 0, stderr_offset = 0 WHERE build_id = ?',
+      `UPDATE image_build_jobs SET phase = ?, process_id = NULL, command_route = NULL,
+       stdout_offset = 0, stderr_offset = 0,
+       machine_token_ciphertext = CASE WHEN ? = 'done' THEN NULL ELSE COALESCE(?, machine_token_ciphertext) END
+       WHERE build_id = ?`,
     )
-    .bind(phase, processId, buildId)
+    .bind(phase, phase, machineTokenCiphertext, buildId)
 }
 
 export async function updateBuildJob(
   db: D1Database,
   buildId: string,
   phase: BuildPhase,
-  processId: number | null = null,
 ): Promise<void> {
-  await buildPhaseStatement(db, buildId, phase, processId).run()
+  await buildPhaseStatement(db, buildId, phase).run()
 }
 
 export async function assignBuildSandbox(
@@ -137,12 +145,18 @@ export async function assignBuildSandbox(
   sandboxId: string,
   providerAccount: string,
 ): Promise<void> {
-  await db
-    .prepare(
-      'UPDATE image_builds SET sandbox_id = ?, provider_account = ? WHERE id = ?',
-    )
-    .bind(sandboxId, providerAccount, buildId)
-    .run()
+  await db.batch([
+    db
+      .prepare(
+        'UPDATE image_builds SET sandbox_id = ?, provider_account = ? WHERE id = ?',
+      )
+      .bind(sandboxId, providerAccount, buildId),
+    db
+      .prepare(
+        'UPDATE image_build_jobs SET machine_token_ciphertext = NULL WHERE build_id = ?',
+      )
+      .bind(buildId),
+  ])
 }
 
 export function buildSnapshotStatement(
@@ -170,18 +184,16 @@ export async function assignBuildSnapshot(
 export async function saveBuildOutput(
   db: D1Database,
   buildId: string,
-  status: CommandStatus,
+  output: RedactedCommandOutput,
   now: number,
 ): Promise<void> {
   await db.batch([
-    ...[status.stdout, status.stderr]
-      .filter(Boolean)
-      .flatMap((text) => buildLogStatements(db, buildId, text, now)),
+    ...buildCommandLogStatements(db, buildId, output, now),
     db
       .prepare(
         'UPDATE image_build_jobs SET stdout_offset = ?, stderr_offset = ? WHERE build_id = ?',
       )
-      .bind(status.stdoutNextOffset, status.stderrNextOffset, buildId),
+      .bind(output.stdoutOffset, output.stderrOffset, buildId),
   ])
 }
 

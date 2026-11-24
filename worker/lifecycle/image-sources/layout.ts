@@ -1,4 +1,5 @@
 import type { AppEnv } from '../../env'
+import { readCommandRoute } from '../command-intents'
 import type { PrepareImageSources } from '../image-builds'
 import { legacyRepositoryLocations } from '../repository-locations'
 import { sourceLayoutCommand } from './layout-command'
@@ -35,7 +36,7 @@ export async function advanceSourceLayout(
           true,
         ),
       )
-      await setRunPhase(env.DB, run.buildId, 'layout', started.processId)
+      await setRunPhase(env.DB, run.buildId, 'layout', started)
     } catch (error) {
       if (refusedSourceStart(error))
         await setRunPhase(env.DB, run.buildId, 'layout-ready')
@@ -44,7 +45,10 @@ export async function advanceSourceLayout(
     return
   }
   if (run.processId === null) throw new Error('Missing source process')
-  const status = await input.commands.status(run.processId, run)
+  const status = await input.commands.status(
+    { processId: run.processId, route: readCommandRoute(run.commandRoute) },
+    run,
+  )
   const text = await saveMemoryStatus(env.DB, run, status)
   if (status.running || status.more) return
   if (!sourceCommandSucceeded(status))

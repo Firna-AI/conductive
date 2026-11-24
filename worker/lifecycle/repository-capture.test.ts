@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest'
 
 import { encrypt } from '../security/crypto'
+import { MACHINE_TOKEN_PATTERN } from '../machines/authorization'
 import { setupBackendTests } from './backend-test-hooks'
 import {
   SOFTWARE,
@@ -71,6 +72,10 @@ it('captures the published image folder map and environment for a created worksp
     }),
   )
   expect(boat.starts[0].env).toEqual({
+    CONDUCTIVE_MACHINE_ORIGIN: images.env.MACHINE_ORIGIN,
+    CONDUCTIVE_MACHINE_TOKEN: expect.stringMatching(
+      new RegExp(`^${MACHINE_TOKEN_PATTERN}$`),
+    ),
     CONDUCTIVE_REPOSITORY_STOREFRONT_DIR: '/home/user/code/storefront',
   })
   const created = await fixture.run(() =>

@@ -1,0 +1,40 @@
+# Build machine tokens can outlive their build
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-8-builds-over-ef32` (pull request #686), review round 1, findings 101, 2, and 103, and two problems that their checks found. Review round 2, finding 151, added the cleanup order on the same day.
+- **Location:** `worker/machines/machine.ts:68-100` (`issueToken` and `revokeToken`), `worker/software-image/resources.ts:42-49` (the digest registration before each create request), `worker/software-image/cleanup.ts:53-66`, `worker/lifecycle/build-execution.ts:113-140` (`cleanupBuild`), `worker/lifecycle/image-build-failure.ts:88-110`, and `worker/members/composition-data.ts:43` (`stopOrgLifecycleRecords`).
+- **Reason:** No path leaks a command, an output, or data, the cases need a rare timing, and the best fix changes the machine object, which the branch that found it did not change.
+
+- **Source:** Review.
+- **Category:** Security.
+- **Terms:**
+  - **Machine token:** the secret in the env of a sandbox that opens its host connection to its machine object. A build machine gets one token for its life.
+  - **Machine object:** the Durable Object `Machine` of one machine. It keeps the digest of the token. A build has the object `build:<buildId>`, and a software image build has `software-image:<imageId>`.
+  - **Digest registration:** the call `machineClient(env, owner).issue(digest)`. It stores the digest of a token in the machine object. A repeated call with the same digest changes nothing while the token is valid.
+- **Background:**
+  - Own computer decision 11 B, of 23 November 2026, says that a machine token stops working at each stop of its machine. `docs/protocol/host-connection.md`, "The machine token", states it. For a build, the delete of its sandbox is the stop.
+  - An org build makes its token when its job leaves `create`, and keeps it encrypted in `image_build_jobs.machine_token_ciphertext` until it saves its sandbox ID. Each replayed create sends the same token. The build cleanup revokes the token before its deletes.
+  - A software image build saves its token with its move to `allocating`, and registers its digest before each create request, also the create replay of its cleanup recovery. Deploy polls and the Cron work can advance one attempt at the same time.
+  - After a build ends, no code sends a command, a stream, or a file read to its machine object. A build ID and an image ID are never used again.
+  - Since review finding 151, both build cleanups delete their sandboxes only after a successful revoke, and keep the cleanup scheduled after a failed one. A trigger of the Milestone 8 migration clears the saved token when a build job reaches `done` by any writer.
+  - The stop of a deleted org (`worker/members/deletion.ts:124-137`) revokes each listed build computer in warn mode, stops it, then revokes again in retry mode. It reaches only build computers with a saved sandbox ID.
+- **Problem:** Four paths leave a valid digest in the machine object after the build ended:
+  - **A late registration.** A software image poll passes its revision check, then its registration reaches the machine object after another poll's cleanup revoked the token. The revoke cleared the digest, so the registration stores it again.
+  - **Delete org after a lost create reply.** `stopOrgLifecycleRecords` sets each running build to `done` with its own SQL. A build with no saved sandbox ID has no ledger row with a sandbox ID, so the stop of the deleted org revokes nothing. The suspension deletes the image alarm, so no build cleanup runs again. The digest stays with no end.
+  - **Delete org after a failed build whose create replay is still pending.** Its job keeps the phase `allocating`, and `stopOrgLifecycleRecords` changes only running builds.
+  - **A failing create replay in `cleanupBuild`.** The cleanup replays an unresolved create before it revokes. While the replay fails, the token stays valid, although the revoke needs no sandbox ID.
+- **Impact if no action:** A copy of the token can open the host connection of an ended build. That connection gets no work, so it gives no access, but the token-lifetime rule of decision 11 B breaks.
+- **Root question:** How does a build machine token stop working for good when its build ends, whatever path ends the build or registers the token?
+- **Options:**
+  - **A.** Revoke by build ID in Delete org, after the image coordinator drain, for each build that still holds `machine_token_ciphertext`. Fail the suspension until the revoke succeeds, as `withImageSourceCleanup` in `worker/lifecycle/image-sources/members.ts` does for the source tokens. Move the revoke of `cleanupBuild` before its replay. Covers only the Delete org paths and the replay order. Effort: Small.
+  - **B.** Give the build kinds a terminal revoked state in the machine object: after a revoke, refuse each later registration for that owner. Covers only the late registration. Effort: Medium.
+  - **C.** One step ends every credential of a build by its build ID: the source tokens, the machine token, and the saved token. The build cleanup, the failure path, and Delete org call it. Effort: Medium.
+  - **D.** The machine object accepts a connection with a build token only while D1 shows that its build still runs: the org build is `running`, or the software image attempt is `building`. It reads that row after the digest check, in the same serialized step as the accept, as `worker/own-computers/own-computer.ts:105` does. A late registration then opens nothing, and every end of a build ends its token. The explicit revokes stay, to close an open connection. Cost: one D1 read at each host connection of a build machine. Risk: a wrong end condition refuses a running build, so tests must reconnect during each build kind. Effort: Medium.
+  - **E.** The machine object arms an alarm at each registration of a build token. Each alarm reads the build in D1 and revokes the token when the build no longer runs. A token can outlive its build by one alarm period. Effort: Medium.
+- **Left out:** A fixed expiry: a copy works after the delete until the expiry. A revoke only at the purge: up to 7 days late, and never after a Restore. A fence number on each issue and revoke: B gives single-use build tokens the same protection with nothing to pass.
+- **Wider fix:** D. One check ends each build token at the end of its build, whatever path ends the build, also a later path that forgets the revoke.
+- **Previous examples:** Commit `86d421325` added a retryable revoke for archive maintenance when a computer stops by itself. `plans/follow-ups/lifecycle-calls-hold-chat-queue.md` records a late token write after Archive for workspaces.
+- **Related:** `plans/follow-ups/org-deletion-lost-build-allocation.md` holds the escaped physical sandbox of the lost create reply. Its option B replays the saved create and needs the saved token. `plans/follow-ups/machine-token-encrypted-copies.md` asks where the Worker may keep the saved token, and its answer can change option A.
+- **Recommendation:** D. It refuses only what decision 11 B already forbids, so it adds no rule, and it covers each path with one check.
+- **Action:** fix after merge, apply D, because no path leaks work or data, and D changes the machine object outside the branch that found it.

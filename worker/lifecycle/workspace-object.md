@@ -52,7 +52,8 @@ For an image coordinator, the alarm
 advances the running build or refresh by one step, or starts the daily
 refresh. A transient Boat error keeps the job step for the next alarm,
 within the [retry window](image-builds.md#provider-retries), except a source
-command start. For a workspace object, it:
+command start. A transient host error of a build does the same.
+For a workspace object, it:
 
 - runs the queued start of a create or a resume. One run can advance the
   start by more than one phase, as
@@ -67,7 +68,7 @@ command start. For a workspace object, it:
 - repairs the running turns from the committed chat before its deadline
   and idle decisions, as
   [Turn recovery](recovery-and-shown-state.md#turn-recovery) says
-- stops the sandbox after the [stop time](README.md#the-stop-time)
+- stops the sandbox after the [stop time](stop-time.md)
   without activity or a running turn
 - extends the Boat auto-stop deadline while a turn runs, unless the owner
   is suspended

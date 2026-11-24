@@ -58,7 +58,9 @@ the folder map:
 
 ## The variables of a sandbox
 
-- Build and refresh sandboxes get only `repositoryEnvironment` of the map.
+- Build and refresh sandboxes get only `repositoryEnvironment` of the map,
+  the machine token of their [build machine](build-machine.md), and the
+  machine origin.
 - A workspace start and a disk retention restart give the org env vars
   first, then the folder variables of the workspace map, and then the
   app's own variables, such as `WORKSPACE_TOKEN`. A later value wins on a
@@ -74,7 +76,13 @@ the folder map:
 loads the repositories into the folders of the job's map, as the required
 `prepareSources` of `ImageRuntime`. Each call reads its state from D1, and
 polls and starts commands through `input.commands`, a [`SourceCommandPort`](image-sources/source-commands.ts)
-with only `start` and `status`. One `image_source_jobs` row for each repository
+with only `start` and `status`. The build gives the port the
+[machine channel](../machines/README.md#the-machine-channel) of its build
+machine. A start returns the process ID with its route, `host` or
+`provider`. The source row saves both, and the run row saves those of the
+[layout command](#folder-moves). Each status read uses the saved route, and
+a saved process without a route reads as `provider`.
+One `image_source_jobs` row for each repository
 and one `image_source_runs` row for each job hold the state. Neither table
 has a cascading key, so each encrypted token stays owned until its revocation.
 
@@ -136,9 +144,10 @@ A command succeeds only with exit code 0 and no reported timeout. A missing
 timeout flag is not a timeout. Each start first saves a `-starting` phase.
 A saved `-starting` phase, a missing process, or a start with no confirmed
 reply fails closed, and the cleanup below revokes every token. A definite
-refusal, HTTP 429 or 409, returns the step to its earlier phase, and a
-refused copy also clears its grant and revokes its token. A refused start
-and a transient Boat error of a poll keep every row, and retry as
+refusal returns the step to its earlier phase: HTTP 429 or 409 from the
+provider, or `machine_busy` from the host. A refused copy also clears its
+grant and revokes its token. A refused start and a transient provider or
+host error of a poll keep every row, and retry as
 [Provider retries](image-builds.md#provider-retries) says. A job of an older
 Worker moves to this layout as the [migration catalogue](../../migrations/README.md) says.
 
@@ -159,7 +168,7 @@ The build cleanup runs it before it deletes the build sandbox, also when
 Boat refuses the app's Boat key. `cleanupOrgImageSources` does the same for
 each build of an org, and the image coordinator calls it before it stops
 for an org that is gone. Each terminal failure of the loader gives one
-fixed error, because Boat output and Git errors can hold a credential.
+fixed error, because command output and Git errors can hold a credential.
 
 The composition root passes the Members lifecycle hooks through
 `withImageSourceCleanup(env, fetch, hooks)` from [`members.ts`](image-sources/members.ts).

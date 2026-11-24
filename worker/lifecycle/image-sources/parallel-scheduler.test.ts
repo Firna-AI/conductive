@@ -44,7 +44,7 @@ it('polls both copies and starts both imports concurrently in one run', async ()
   try {
     await polls.entered
     expect(
-      pollCalls.mock.calls.map(([processId]) => processId).toSorted(),
+      pollCalls.mock.calls.map(([command]) => command.processId).toSorted(),
     ).toEqual([2, 3])
     polls.release()
     const outcome = await Promise.race([

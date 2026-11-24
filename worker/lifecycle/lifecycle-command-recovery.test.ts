@@ -38,7 +38,7 @@ it.each([0, 7])(
         results.push(await local.run(command))
         if (loseReply) {
           loseReply = false
-          throw new Error('Lost successful command start reply')
+          throw new LostHostReply('Lost successful command start reply')
         }
       }
       const id = await startImageBuild(images, {
@@ -56,10 +56,16 @@ it.each([0, 7])(
         processId: null,
       })
       const checkpointLog = (await readBuild(runtime.env.DB, org.id, id)).log
+      await fixture.host.connect('bx_1')
       await fixture.setTime(runtime.dependencies.now() + 1_000)
       const restarted = { ...images, dependencies: { ...images.dependencies } }
       await advanceImageBuild(restarted, org.id, id)
       expect(await local.file('effects')).toBe('once\n')
+      expect(
+        fixture.host.commands.filter((command) =>
+          local.contains(command, 'install'),
+        ),
+      ).toHaveLength(2)
       const recoveredLog = (await readBuild(runtime.env.DB, org.id, id)).log
       expect(recoveredLog.slice(0, checkpointLog.length)).toEqual(checkpointLog)
       expect(recoveredLog).toHaveLength(checkpointLog.length + 1)

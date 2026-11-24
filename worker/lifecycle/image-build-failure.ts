@@ -1,4 +1,6 @@
 import { HttpError } from '../http'
+import { buildMachineOwner } from '../machines/client'
+import { revokeMachineTokenOnStop } from '../machines/revoke'
 import { finishUnscheduledBuild } from './build-admission-data'
 import type { SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
@@ -115,6 +117,11 @@ export async function handleImageBuildFailure(
       (await liveBuildComputers(env.DB, job.orgId, job.buildId)).length > 0
     )
       return false
+    await revokeMachineTokenOnStop(
+      env,
+      buildMachineOwner(orgId, buildId),
+      'retry',
+    )
     await updateBuildJob(env.DB, buildId, 'done')
     await scheduleIdleImage(runtime, orgId, jobSoftware(job))
     return true

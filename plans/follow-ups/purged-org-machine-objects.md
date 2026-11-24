@@ -1,0 +1,33 @@
+# A purge leaves the machine objects of the org
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** Yes.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-8-builds-over-ef32` (pull request #686), from the check of review finding 2, round 1.
+- **Location:** `worker/members/purge-data.ts:3`, `worker/members/cleanup.ts`, `worker/machines/machine.ts`, `worker/lifecycle/start-machine.ts:93`, `worker/features/workspace.ts:197`, and `worker/members/workspace-receiver.ts:174-186`.
+- **Reason:** The workspace machine objects came before the branch that found this, and the fix changes the purge in `worker/members/`, outside that branch.
+
+- **Source:** Review.
+- **Category:** Security.
+- **Terms:**
+  - **Machine object:** the Durable Object `Machine` of one machine, in the binding `MACHINES`. It stores its owner (the org and the workspace, build, or software image), the digest of its token, a generation, and the last hello of its host program.
+  - **Purge:** the step that deletes all records of a deleted org, 7 days after Delete org.
+- **Background:**
+  - `docs/protocol/orgs-and-members.md`, "Delete org", says that the app deletes everything of the org 7 days after Delete org, unless an admin restores it.
+  - The comment at `worker/members/purge-data.ts:3` says that the caller removed all Durable Object resources of the org.
+  - The org has one machine object for each workspace (`workspace:<workspaceId>`), and, since the Milestone 8 change, one for each build (`build:<buildId>`).
+  - A workspace create issues its machine token before the provider call (`worker/lifecycle/start-machine.ts:93`). The Delete org suspension and the purge revoke no token by workspace ID. The stop of a deleted org revokes through the computer ledger, which needs a sandbox ID.
+- **Problem:**
+  - No code deletes the `MACHINES` objects of a purged org. Each keeps its owner, its org ID, its digest, and its hello.
+  - A workspace create whose reply was lost appears to keep a valid token after the purge. The check did not trace every path of a failed start.
+- **Impact if no action:** The identifiers of a purged org stay in the app's storage, against the deletion rule. A token of a lost create can still open an empty host connection.
+- **Root question:** How does the purge of an org end the tokens and delete the stored records of each of its machine objects?
+- **Options:**
+  - **A.** In the purge, for each workspace and each build of the org, revoke the token and delete the storage of its machine object by its name. The purge reads the IDs before it deletes the rows. Effort: Medium.
+  - **B.** Give the machine object a delete RPC that removes its storage after a revoke, and call it from each final cleanup: the purge of an org, the delete of a workspace, and the end of a build. Effort: Medium.
+  - **C.** Let each machine object delete its own storage when D1 shows that its owner is gone, at its next request or by an alarm. Effort: Medium.
+- **Left out:** Leaving the objects: it breaks the deletion rule.
+- **Wider fix:** B. Each final cleanup of an owner then also ends its machine object.
+- **Previous examples:** `plans/follow-ups/own-computer-token-authority-in-object.md` covers the computer token of own computers and the org purge.
+- **Related:** `plans/follow-ups/build-machine-token-lifetime.md` ends build tokens when their build ends.
+- **Recommendation:** B. The owner of each record removes it at its own end, so no later owner kind is missed.
+- **Action:** fix after merge, apply B, because the workspace objects came before this branch and the fix changes the purge.

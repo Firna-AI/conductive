@@ -1,4 +1,6 @@
 import { buildLogRetentionStatements } from './build-log-retention'
+import { hideMachineTokens } from './build-machine-token'
+import type { RedactedCommandOutput } from './build-output-redaction'
 
 const LOG_ROW_BYTES = 262_144
 
@@ -24,7 +26,7 @@ function splitLog(text: string): string[] {
   return chunks
 }
 
-export function buildLogStatements(
+function logStatements(
   db: D1Database,
   buildId: string,
   text: string,
@@ -51,4 +53,29 @@ export function buildLogStatements(
     ),
     ...buildLogRetentionStatements(db, buildId, now),
   ]
+}
+
+export function buildLogStatements(
+  db: D1Database,
+  buildId: string,
+  text: string,
+  now: number,
+  onlyWhileRunning = false,
+): D1PreparedStatement[] {
+  return logStatements(
+    db,
+    buildId,
+    hideMachineTokens(text),
+    now,
+    onlyWhileRunning,
+  )
+}
+
+export function buildCommandLogStatements(
+  db: D1Database,
+  buildId: string,
+  output: RedactedCommandOutput,
+  now: number,
+): D1PreparedStatement[] {
+  return output.text ? logStatements(db, buildId, output.text, now) : []
 }

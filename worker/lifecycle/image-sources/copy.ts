@@ -63,13 +63,7 @@ export async function startSourceCopy(
         repository,
       }),
     )
-    await setSourcePhase(
-      env.DB,
-      job.buildId,
-      'fetch',
-      started.processId,
-      job.sourceIndex,
-    )
+    await setSourcePhase(env.DB, job.buildId, 'fetch', started, job.sourceIndex)
   } catch (error) {
     if (refusedSourceStart(error)) {
       await refuseSourceCopy(env.DB, job)

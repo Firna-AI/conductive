@@ -1,12 +1,18 @@
-import type { CommandOffsets, CommandStatus } from '../../machines/channel'
-import type { SandboxProvider, StartedCommand } from '../../sandbox/provider'
+import { HttpError } from '../../http'
+import type {
+  CommandOffsets,
+  CommandStatus,
+  MachineChannel,
+} from '../../machines/channel'
 import { ProviderError } from '../../sandbox/errors'
+import type { RoutedCommand } from '../command-intents'
 
-export function refusedSourceStart(error: unknown): error is ProviderError {
+export function refusedSourceStart(error: unknown): boolean {
   return (
-    error instanceof ProviderError &&
-    ((error.kind === 'rate_limited' && error.status === 429) ||
-      (error.kind === 'conflict' && error.status === 409))
+    (error instanceof ProviderError &&
+      ((error.kind === 'rate_limited' && error.status === 429) ||
+        (error.kind === 'conflict' && error.status === 409))) ||
+    (error instanceof HttpError && error.code === 'machine_busy')
   )
 }
 
@@ -18,30 +24,30 @@ class UncertainSourceCommandStart extends Error {
 
 /** Only confirmed refusals can retry. Polls retain typed provider errors. */
 export class SourceCommandPort {
-  private readonly provider: Pick<
-    SandboxProvider,
+  private readonly channel: Pick<
+    MachineChannel,
     'startCommand' | 'getCommandStatus'
   >
-  private readonly sandboxId: string
 
   constructor(
-    provider: Pick<SandboxProvider, 'startCommand' | 'getCommandStatus'>,
-    sandboxId: string,
+    channel: Pick<MachineChannel, 'startCommand' | 'getCommandStatus'>,
   ) {
-    this.provider = provider
-    this.sandboxId = sandboxId
+    this.channel = channel
   }
 
-  async start(command: string): Promise<StartedCommand> {
+  async start(command: string): Promise<RoutedCommand> {
     try {
-      return await this.provider.startCommand(this.sandboxId, command)
+      return await this.channel.startCommand(command)
     } catch (error) {
       if (refusedSourceStart(error)) throw error
       throw new UncertainSourceCommandStart()
     }
   }
 
-  status(processId: number, offsets: CommandOffsets): Promise<CommandStatus> {
-    return this.provider.getCommandStatus(this.sandboxId, processId, offsets)
+  status(
+    command: RoutedCommand,
+    offsets: CommandOffsets,
+  ): Promise<CommandStatus> {
+    return this.channel.getCommandStatus(command, offsets)
   }
 }

@@ -1,0 +1,32 @@
+# Image docs omit the build machine token
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-8-builds-over-ef32` (pull request #686), review round 1, finding 107, and one problem that its check found.
+- **Location:** `image/start.md:8-27`, `image/start.md:125-127`, `image/start.md:46-48`, and `image/README.md:189-190`.
+- **Reason:** Another branch, Milestone 11 of the own computers plan, works in `image/` at the same time, so the orchestrator of the primary branch fixes these sentences after both branches merge.
+
+- **Source:** Review.
+- **Category:** Docs or spec.
+- **Terms:**
+  - **Folder variables:** the env vars that give a build script the local folder of each repository.
+  - **Machine token:** the secret in the env of a sandbox that opens its host connection to the Worker.
+- **Background:**
+  - Since the Milestone 8 change, each build and refresh sandbox, and each software image build sandbox, gets its machine token and `CONDUCTIVE_MACHINE_ORIGIN` in its env. The token stays in memory.
+  - The install command of a build loads the build env, then unsets `CONDUCTIVE_MACHINE_TOKEN` and `CONDUCTIVE_MACHINE_ORIGIN` before the install script runs (`worker/lifecycle/build-execution.ts:55`).
+  - `docs/protocol/isolation.md`, "What a sandbox holds", and `docs/protocol/repository-folders.md`, "Folder variables", state these rules.
+- **Problem:**
+  - `image/start.md:125-127` says that a build sandbox gets only the folder variables.
+  - `image/README.md:189-190` says that of the variables in the startup table, a build sandbox has only the folder variables.
+  - The startup table at `image/start.md:8-27` does not list `CONDUCTIVE_MACHINE_TOKEN`, which each workspace create and resume sets. This gap is older: commit `4e9528071` added the token.
+- **Impact if no action:** A maintainer can rely on the wrong credential boundary when adding a service that runs in a build.
+- **Root question:** Where do maintainers find which variables reach a build sandbox and which reach its install script?
+- **Options:**
+  - **A.** Correct the two sentences. Text for `image/start.md:125-127`: "A build sandbox starts with no org env vars and no workspace token. It gets the folder variables, which hold no secret, and its machine token, which stays in memory." Text for `image/README.md:189-190`: "Of the variables in the startup table, a build sandbox has only the folder variables and `CONDUCTIVE_MACHINE_ORIGIN`." Add the missing table row. Effort: Small.
+  - **B.** Replace the two restated rules with links to `docs/protocol/isolation.md#what-a-sandbox-holds` and `docs/protocol/repository-folders.md#folder-variables`. Keep the loading paragraph at `image/start.md:46-48`, and say there that the install command removes the machine token and origin before the install script runs. Add the missing table row. Effort: Small.
+  - **C.** Make `image/start.md` the one developer list of the variables of each kind of sandbox, with the missing row, and point both sentences at it. Risk: a longer hand-written list can drift again. Effort: Small.
+- **Left out:** Removing the machine variables from the build sandbox: it removes its host connection.
+- **Wider fix:** None. The `documentation` skill already gives each fact one home.
+- **Previous examples:** The Milestone 8 branch corrected the same kind of sentence in `docs/protocol/repository-folders.md`.
+- **Recommendation:** B. A link stays right when the build env changes again.
+- **Action:** fix after merge, apply B, because Milestone 11 changes `image/` at the same time.
