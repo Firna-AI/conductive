@@ -5,7 +5,7 @@ import {
   useRef,
   type RefObject,
 } from 'react'
-import { placeAt, showPlace, type PlaceMemory } from './chat-place'
+import { itemRowKey, placeAt, showPlace, type PlaceMemory } from './chat-place'
 
 /** What a part of the chat asks of the keeper of the reader's place. */
 export interface RowKeeper {
@@ -88,8 +88,7 @@ class ReadingPlace implements RowKeeper {
    */
   note(): void {
     if (heightOf(this.transcript) !== this.height) return
-    this.kept = atBottom(this.scroller) ? null : this.topRow()
-    this.memory?.write(placeAt(this.scroller, this.kept?.row ?? null))
+    this.notePlace()
   }
 
   keep(row: Element): void {
@@ -114,10 +113,33 @@ class ReadingPlace implements RowKeeper {
     this.memory?.write(placeAt(this.scroller, null))
   }
 
+  /**
+   * Shows the top of the agent message with the ID `id`, with the room of
+   * the transcript above it, while the chat is at the bottom. A message that
+   * fits in the box keeps the bottom. A reader higher up stays.
+   */
+  answerTop(id: string): void {
+    if (!atBottom(this.scroller)) return
+    const room = Number.parseFloat(getComputedStyle(this.transcript).paddingTop)
+    showPlace(this.scroller, this.transcript, {
+      kind: 'row',
+      row: itemRowKey(id),
+      offset: Number.isFinite(room) ? room : 0,
+    })
+    // The scroll keeps this place, also through a change of size that waits.
+    this.notePlace()
+  }
+
   /** A size changed: the transcript's, which settles, or the box's. */
   resized(): void {
     if (heightOf(this.transcript) !== this.height) this.settle()
     else this.note()
+  }
+
+  /** Keeps the top row in view, or no row at the bottom, as the place. */
+  private notePlace(): void {
+    this.kept = atBottom(this.scroller) ? null : this.topRow()
+    this.memory?.write(placeAt(this.scroller, this.kept?.row ?? null))
   }
 
   /** The first row of the transcript whose bottom shows in the box. */
@@ -160,6 +182,10 @@ class ReadingPlace implements RowKeeper {
  * `memory` keeps the place of the shown session while another tab shows. A
  * new `memory`, for another session, shows the place that it kept. The IDs
  * in `sent` that the session already had then move nothing.
+ *
+ * `answer` is the ID of the newest answer whose top the chat shows, or null.
+ * Each new ID shows the top of its message while the chat is at the bottom,
+ * also the first one after the transcript shows.
  */
 export function useReadingPlace(
   scroller: RefObject<HTMLElement | null>,
@@ -167,6 +193,7 @@ export function useReadingPlace(
   shown: boolean,
   sent: readonly string[],
   memory: PlaceMemory | null = null,
+  answer: string | null = null,
 ): PlaceKeeper {
   const place = useRef<ReadingPlace | null>(null)
   const seen = useRef<ReadonlySet<string>>(new Set(sent))
@@ -195,6 +222,14 @@ export function useReadingPlace(
     seenMemory.current = memory
     if (fresh && sameSession) place.current?.bottom()
   }, [sent, memory])
+  const shownAnswer = useRef<string | null>(null)
+  useLayoutEffect(() => {
+    const current = place.current
+    if (!current) return
+    const fresh = answer !== null && answer !== shownAnswer.current
+    shownAnswer.current = answer
+    if (fresh) current.answerTop(answer)
+  }, [answer, shown])
   return useMemo(
     () => ({
       keep: (row: Element) => place.current?.keep(row),

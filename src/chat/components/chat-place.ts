@@ -20,6 +20,9 @@ export type ChatPlaces = TabPlaces<ChatPlace>
 /** The attribute that holds the key of each row of the transcript. */
 export const rowKeyAttribute = 'data-row'
 
+/** The key of the row of the transcript item with the ID `id`. */
+export const itemRowKey = (id: string) => `item:${id}`
+
 const bottom: ChatPlace = { kind: 'bottom' }
 
 /** The memory of the place of `sessionId` in `places`. */

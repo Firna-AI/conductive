@@ -95,7 +95,11 @@ for the screens.
   phone it is a sheet, which stops at the top of the chat at full height.
 - The popover shows the chat of the explanation with the parts of a tab,
   through `useSessionParts` and `TranscriptView`, with `hide` for the
-  written prompt: its first message. Its follow-up field edits the draft of the
+  written prompt: its first message. When a turn ends, and when the
+  popover opens on an ended turn, its chat shows the top of the answer:
+  `newestAnswer` of `turn-work.ts` gives the first message of the answer
+  of the last part of the newest ended turn, and `ChatPane` shows its top
+  through `answer`, only while the chat is at the bottom. Its follow-up field edits the draft of the
   session, which its tab shows too. A follow-up of a closed explanation
   reopens it first, with no change of the shown tab. A follow-up or a Try
   again that the Worker puts in a linked session shows that session in the
@@ -137,7 +141,9 @@ for the screens.
   row opens its own popover. On a
   phone, the sheet stays open.
 - `PopoverChat.dom.test.tsx` shows the bar of a stopped cloud computer in
-  place of the follow-up field, and moves the time of a running
+  place of the follow-up field, shows the top of a long answer when the
+  popover opens on an ended turn and when the turn ends, with the layout
+  of `layOutChat`, and moves the time of a running
   explanation on with a fake clock while its parent session is idle.
 - `PopoverLinked.dom.test.tsx` follows a linked session with the text that
   the member typed while the reply waited, follows the linked session of
