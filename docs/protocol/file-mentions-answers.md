@@ -4,7 +4,9 @@ This page belongs to [File mentions](file-mentions.md), which states the
 list of `@`, the chips of files and folders, and the text of a mention.
 It states the file chips, the file links, and the pictures in the answers
 of the agents, and their line targets. The tree is the file tree of the
-workspace, as [The list](file-mentions.md#the-list) says.
+workspace, as [The list](file-mentions.md#the-list) says. It holds only
+the entries that its report lists. So a path that the report omits names
+no entry, and it shows as the rules below give for such a path.
 [Chat Markdown](chat-markdown.md) states the other Markdown of agent
 messages. The terms are those of the
 [architecture doc](../architecture.md#terms). The

@@ -1,6 +1,6 @@
 # Runner file report limits
 
-Status: Active. On branch `calummoore/object-memory-runner-report-limits-0m1g`, no pull request yet. Cal approved implementation on 23 November 2026. Milestone 1 is complete. Milestones 2 and 3 are in progress. Milestone 4 waits for the tab-state pull request to merge into `main`, and Cal releases it. The pull request that completes the work deletes this plan.
+Status: Active. On branch `calummoore/object-memory-runner-report-limits-0m1g`, no pull request yet. Cal approved implementation on 23 November 2026. Milestone 1 is complete. Milestone 2 is complete. Milestone 3 is in progress. Milestone 4 waits for the tab-state pull request to merge into `main`, and Cal releases it. The pull request that completes the work deletes this plan.
 
 Conductive keeps the latest file tree and branch changes in each workspace's Durable Object.
 One object has a 128 MB memory limit.
@@ -352,19 +352,25 @@ Depends on: Milestone 1, and the memory plan's final pull request merged into `m
 
 State the chosen limits, omitted totals, selection, mention coverage, and compatible report rules before the implementation starts.
 
-- [ ] Update `docs/protocol/file-reports.md` with the new meaning of complete reports and summaries, tree updates, and selection rules. Update the Files and changes section of `docs/protocol/workspace-tools.md` for the panel totals and notices.
-- [ ] Keep part identity, revision, atomic replacement, refusal, reconnect, and repair rules intact.
-- [ ] State omission-count delta semantics, empty count-only deltas, absent-path refreshes, and omitted-diff refresh after a base change.
-- [ ] State the new-runner rollout boundary. Keep unlimited legacy trees and changes readable until their runner updates.
-- [ ] Keep report semantics in `docs/protocol/file-reports.md`. Split it into a linked child page only if it exceeds the documentation skill's length target. Create no second report page.
-- [ ] Update the context coverage statements in `repository-folders.md`, `file-mentions.md`, and `file-mentions-answers.md` for the approved selection.
-- [ ] Keep `file-row-menu.md` aligned with the approved mention coverage and Add to chat rule.
-- [ ] Update the full-report references in `agent-runner.md`, `runner/file-reports.md`, and `runner/event-limits.md`. Preserve the independent 200-file turn limit.
-- [ ] Update `src/marketing/docs/files-and-changes.md` with the two limits, totals, notices, and the terminal or agent as the route to omitted files.
-- [ ] Read both legal pages in full, including imported sections of `src/marketing/terms.ts` and `src/marketing/privacy.ts`. Update each sentence that restates a changed fact.
-- [ ] Read every guide under `src/marketing/docs/` in full. Update each sentence that restates a changed fact, including mention and attachment coverage.
-- [ ] Leave code-area READMEs and `src/files/store.md` to the milestone that changes their code, unless a useful new boundary fact needs one now. Keep requirements in protocol docs and mechanics in code.
-- [ ] Check every changed Markdown link. Save the reading checklist under `.context/runner-file-report-limits/docs-check.md`.
+- [x] Update `docs/protocol/file-reports.md` with the new meaning of complete reports and summaries, tree updates, and selection rules. Update the Files and changes section of `docs/protocol/workspace-tools.md` for the panel totals and notices.
+- [x] Keep part identity, revision, atomic replacement, refusal, reconnect, and repair rules intact.
+- [x] State omission-count delta semantics, empty count-only deltas, absent-path refreshes, and omitted-diff refresh after a base change.
+- [x] State the new-runner rollout boundary. Keep unlimited legacy trees and changes readable until their runner updates.
+- [x] Keep report semantics in `docs/protocol/file-reports.md`. Split it into a linked child page only if it exceeds the documentation skill's length target. Create no second report page.
+- [x] Update the context coverage statements in `repository-folders.md`, `file-mentions.md`, and `file-mentions-answers.md` for the approved selection.
+- [x] Keep `file-row-menu.md` aligned with the approved mention coverage and Add to chat rule.
+- [x] Update the full-report references in `agent-runner.md`, `runner/file-reports.md`, and `runner/event-limits.md`. Preserve the independent 200-file turn limit.
+- [x] Update `src/marketing/docs/files-and-changes.md` with the two limits, totals, notices, and the terminal or agent as the route to omitted files.
+- [x] Read both legal pages in full, including imported sections of `src/marketing/terms.ts` and `src/marketing/privacy.ts`. Update each sentence that restates a changed fact.
+- [x] Read every guide under `src/marketing/docs/` in full. Update each sentence that restates a changed fact, including mention and attachment coverage.
+- [x] Leave code-area READMEs and `src/files/store.md` to the milestone that changes their code, unless a useful new boundary fact needs one now. Keep requirements in protocol docs and mechanics in code.
+- [x] Check every changed Markdown link. Save the reading checklist under `.context/runner-file-report-limits/docs-check.md`.
+
+The reading checklists are `.context/runner-file-report-limits/docs-check.md` and `public-docs-check.md`.
+The legal pages restate no changed fact, so they did not change.
+
+- **Orchestrator call, 24 November 2026:** A full tree replaces split deltas only while the tree omits entries before or after an update that changes its listed entries, or when the refreshes of an update do not fit one delta. Every other large update still splits into deltas of at most 512 changes, as today. Reason: the plan keeps the existing split-delta behaviour for ordinary updates, and this still prevents a partly applied swap of listed entries.
+- `workspace-tools.md` passed its length target. `plans/follow-ups/workspace-tools-picture-rules-page.md` moves its picture rules later.
 
 ## Milestone 3: Runner limits and generated types
 

@@ -245,7 +245,7 @@ If the create request itself fails, **New workspace** keeps your draft with **Tr
 
 Read the agent's answer in chat.
 Ask a follow-up in the same session when you need more detail.
-Open **Changes** to inspect any edits the agent makes.
+Open **Changes** to inspect the listed edits.
 
 - [Continue in sessions and chat](/docs/sessions-and-chat)
 - [Review files and changes](/docs/files-and-changes)

@@ -15,10 +15,12 @@ the workspace repository. It keeps existing exclude rules and tracked
 files. It leaves a file or link named `.context` alone. A failed step
 warns and lets the runner continue.
 
-Each file report then adds the untracked files of `.context/` to the
-tree, also the files that Git ignores. the repository scanner lists them
-with `git ls-files --others` and no ignore rules. The changes report
-does not take them, so Changes leaves them out.
+Each scan then adds the untracked files of `.context/` to the tree, also
+the files that Git ignores. The repository scanner lists them with
+`git ls-files --others` and no ignore rules. The tree report keeps them
+within its limit, as
+[Which entries stay](../docs/protocol/file-reports.md#which-entries-stay)
+says. The changes report does not take them, so Changes leaves them out.
 
 [The context folder](../docs/protocol/repository-folders.md#the-context-folder)
 states its use and limits. The runner and its instruction text follow the

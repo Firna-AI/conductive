@@ -134,7 +134,8 @@ tells each agent the capabilities of its session, as
     [Tool descriptions and guidance](session-watches.md#tool-descriptions-and-guidance).
   - The agent names a file or a folder of the repository in a chat reply
     as `@` and its path inside the repository, such as `@src/app.ts` or
-    `@src/app.ts:42`. The chat shows each one as a file chip, as
+    `@src/app.ts:42`. The chat shows each one that names an entry of the
+    file tree as a file chip, as
     [Files in answers](file-mentions-answers.md#files-in-answers) says
     (answer chip decision 1).
   - In commits, pull requests, issues, and files, the agent writes paths

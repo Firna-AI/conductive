@@ -126,6 +126,9 @@ draws the row menu at `app/files/menu`, on desktop and on a phone.
   turns each other mention into text.
 - So a row of Changes for a deleted file has no Add to chat. Its chip would
   name a file that the branch does not hold.
+- A row of Changes for a file that the tree report omits has no Add to
+  chat either, because the list of `@` does not offer that file, as
+  [The list](file-mentions.md#the-list) says (Cal, 23 November 2026).
 - While a bar of the cloud computer takes the place of the message field,
   such as the stopped bar with Resume, no row has Add to chat. Reason: no
   field can take the chip, and Add to chat writes into the field, not into

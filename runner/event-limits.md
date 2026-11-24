@@ -21,11 +21,16 @@ complete tool details.
   of a long source fits the envelope limit of the outbox check below. Otherwise the runner
   keeps the prefix, as an older runner does. A turn summary keeps the first whole
   files within `TURN_COMPLETED_MAX_FILES` and `TURN_COMPLETED_FILES_MAX_BYTES`.
-  `omittedFileCount` counts the rest, and the Changes report lists every file.
+  `omittedFileCount` counts the rest. The Changes report has its own limit,
+  as [Report limits](../docs/protocol/file-reports.md#report-limits) says.
 - Each file event fits [`FILE_EVENT_MAX_BYTES`](../src/shared/files.ts). A
   full tree or changes report goes as numbered parts of one revision. A
   large tree update goes as deltas of at most `FILE_TREE_DELTA_MAX_CHANGES`
   changes, with consecutive revisions.
+- A full tree keeps at most 50,000 entries, and a full changes report at
+  most 1,000 changed files. Every part repeats the omitted totals of its
+  report. [Updates and refreshes](../docs/protocol/file-reports.md#updates-and-refreshes)
+  gives the tree updates that go as one delta or as a full tree.
 - Tree and changes reports have separate revision counters, which survive
   a reconnect or a restart. The refresh after each connect sends a full tree
   and a full changes report with newer revisions.

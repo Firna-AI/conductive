@@ -17,8 +17,9 @@ decision of the change that reads Markdown with one parser, as
 
 ## Files and changes
 
-- All files shows every file of the branch as a tree. A small mark shows
-  each added or changed file.
+- All files shows the files of the branch as a tree, up to the limit of
+  its report, as [Report limits](file-reports.md#report-limits) says. A
+  small mark shows each added or changed file.
 - All files also shows the files of the context folder that Git ignores,
   without a mark, as
   [The context folder](repository-folders.md#the-context-folder) says.
@@ -133,8 +134,12 @@ decision of the change that reads Markdown with one parser, as
   (decision 88).
 - Changes lists the files that the branch changes against its base branch,
   from the merge base of the two, as [Base branches](base-branches.md)
-  says. Its summary gives the number of changed files and the lines that
-  they add and remove.
+  says, up to the limit of its report.
+- The summary of Changes gives all changed files and the lines that they
+  add and remove, and the count of its tab gives all changed files. Each
+  adds the omitted totals to the `summary` of the report, which counts
+  only the listed files, as [Omitted totals](file-reports.md#omitted-totals)
+  says.
 - A press on a changed file opens its diff against the base branch. The
   diff opens in the temporary tab, as a file does. The diff shows the
   syntax colours of the file, as code does.
@@ -158,12 +163,31 @@ decision of the change that reads Markdown with one parser, as
   does not document it and can change it. A timer that compares the
   identity of the folder was rejected, because the app already has a
   documented signal for the end of the restore.
-- [File reports](file-reports.md) states the limits, the parts, the
-  revisions, and the repairs of the runner's reports of both lists.
+- [File reports](file-reports.md) states the limits, the omitted totals,
+  the parts, the revisions, and the repairs of the runner's reports of
+  both lists.
+- When the tree report omits entries, All files shows a notice with their
+  number. It names files and folders, because the limit counts folders
+  too: "18,412 files and folders are not listed. Find them in the
+  terminal, or ask the agent."
+- When the changes report omits files, Changes shows a notice with their
+  number: "The totals include 1,243 files that are not listed. Review them
+  in the terminal, or ask the agent."
+- Each count comes from the report, not from the limit. A report without
+  omitted totals shows no notice, and Changes then counts only its rows.
+  The [mockups](../mockups/catalogue-attachments-and-files.md) draw the
+  notices at `app/files/limited` and `app/files/changes/limited`.
+- A limited list is not a failed scan and not an empty repository. Each
+  new complete report replaces its counts at once, and a count of zero
+  removes its notice.
+- A member reaches an omitted file in the terminal, or through the agent.
+  A file tab and a diff tab read their path directly, so a link or an
+  open tab of an omitted path still works.
 - The runner reads one file or one diff on request. When the runner is not
   connected, a file read falls back to the file read of the provider.
-- The Durable Object keeps the last tree and the last changes, so both tabs
-  still show them while the sandbox sleeps and while it starts again.
+- The Durable Object keeps the last tree and the last changes, with their
+  omitted totals. So both tabs still show them and their notices while
+  the sandbox sleeps and while it starts again.
 - Reason: Boat's API can run `git` and read files only while the sandbox
   runs, one request at a time, and with no live updates.
 - While the sandbox does not run, a file or diff tab reads nothing. While
@@ -181,8 +205,8 @@ decision of the change that reads Markdown with one parser, as
 - The workspace then marks the file tree as unavailable, and each open tab
   gets the mark. The changes list keeps its last complete report.
 - The tree that the workspace serves then carries `unavailable: true`. It
-  keeps the entries and the revision of the last tree. Before the first
-  complete tree, it has revision 0 and no entries.
+  keeps the entries, the revision, and the omitted entry count of the last
+  tree. Before the first complete tree, it has revision 0 and no entries.
 - These empty entries mean an unknown tree, not an empty branch.
 - Only a complete full tree clears the mark. A tree delta and an incomplete
   full tree keep it.
@@ -191,6 +215,10 @@ decision of the change that reads Markdown with one parser, as
 - All files then keeps the last tree, and a notice says that the latest list
   is unavailable. Before the first complete tree, All files says that the
   list is unavailable, in place of the tree.
+- A limited list keeps its notice of omitted entries or files while its
+  latest list is unavailable, and after a
+  [failed repair](lost-workspace-updates.md) of the list. The notice of
+  that state shows too, each notice in its own place.
 - Reason: the user can tell an old or unknown tree from the latest one. A
   failed scan with no mark was rejected, because the tab then shows an old
   tree as the latest one.
