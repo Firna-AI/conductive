@@ -96,6 +96,9 @@ protocol docs.
     - [Files of an HTML page](../protocol/html-page-files.md): the files
       and the system fonts that a page can load, and the cases that do
       not show as the agent saw them.
+  - [Pictures in file tabs](../protocol/file-pictures.md): the PNG, JPEG,
+    GIF, and WebP files that a file tab shows as a picture, the zoom bar,
+    the expanded view, and the cases that show no picture.
   - [File reports](../protocol/file-reports.md): the limits, the listed
     entries and changes, the omitted totals, the parts, the revisions,
     the tree updates, the repairs, and the rollout of the runner's

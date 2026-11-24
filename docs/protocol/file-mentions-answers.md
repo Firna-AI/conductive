@@ -81,7 +81,7 @@ that shows the screenshots of agents as pictures in their answers.
 
 - A picture file is a PNG, JPEG, GIF, or WebP file. The file tab knows
   such a file by the extension of its name, and shows it as a picture, as
-  [Files and changes](workspace-tools.md#files-and-changes) says.
+  [Pictures in file tabs](file-pictures.md) says.
 - A Markdown image of an answer whose target is a picture file of the tree
   shows as a small picture (screenshot decision 2 B).
 - Reason: the agent knows which images show its result, and this is the

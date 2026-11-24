@@ -371,6 +371,7 @@ The legal pages restate no changed fact, so they did not change.
 
 - **Orchestrator call, 24 November 2026:** A full tree replaces split deltas only while the tree omits entries before or after an update that changes its listed entries, or when the refreshes of an update do not fit one delta. Every other large update still splits into deltas of at most 512 changes, as today. Reason: the plan keeps the existing split-delta behaviour for ordinary updates, and this still prevents a partly applied swap of listed entries.
 - `workspace-tools.md` passed its length target. `plans/follow-ups/workspace-tools-picture-rules-page.md` moves its picture rules later.
+- **Cal, 24 November 2026:** The documentation skill splits a touched doc past about 250 lines, and the earlier scope instruction forbade only a duplicate of the report rules. So the picture rules moved unchanged to `docs/protocol/file-pictures.md` in the same stage, and the follow-up item above is deleted.
 
 ## Milestone 3: Runner limits and generated types
 
