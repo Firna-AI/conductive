@@ -445,6 +445,10 @@ Depends on: 4, 27
 - [ ] Give the views React Native styles with the tokens of
       `src/ui/design/`. Give hover, width layouts, and container widths a
       rule that every view uses.
+- [ ] Type the drafts of the style converter from the `TextStyle` and
+      `ViewStyle` types of `@firna/ui/primitives`, in place of the local
+      `Tokens` unions. This is the wider fix of finding 5 of the Milestone
+      27 review.
 - [ ] Port the common parts of `src/ui/components/common/` and their
       mockups. Keep the look of each mockup.
 - [ ] Draw the ported parts in Mokly.
