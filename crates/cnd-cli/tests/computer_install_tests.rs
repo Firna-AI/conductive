@@ -70,6 +70,7 @@ case "${0##*/}" in
       test "$INSTALLER_UID" = 0
     fi
     test "$1 $2 $3" = '-u conductive --'
+    test "$(pwd)" = /
     shift 3
     test "$1 $2 $3 $4" = "env HOME=$FIXTURE/home XDG_RUNTIME_DIR=/run/user/942 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/942/bus"
     CALL_PREFIX="${0##*/} -u conductive " exec "$@"

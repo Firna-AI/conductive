@@ -277,6 +277,9 @@ show_result() {
 
 main() {
   read_options "$@"
+  # The user conductive cannot read the folder of each caller, and Podman
+  # stops when it cannot read its working folder.
+  cd / || fail 'Could not change to the root folder.'
   check_server
   installer_uid="$(id -u)" || fail 'Could not read your user ID.'
   if [ "$installer_uid" != 0 ] && ! command -v sudo >/dev/null 2>&1; then
