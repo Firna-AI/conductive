@@ -37,6 +37,12 @@ export function openFile(state: WorkspaceState): FileTabView | undefined {
     case 'preview':
     case 'preview-behind':
     case 'explanation':
+    case 'skill':
+    case 'skill-source':
+    case 'skill-loading':
+    case 'skill-gone':
+    case 'skill-too-large':
+    case 'skill-older-software':
       return undefined
   }
 }

@@ -4,10 +4,10 @@ This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
 messages that wait for the sandbox and the tab row of the centre column,
 with its temporary tab, the menu of a row of the Files panel, and the
-notices of the file lists of a large branch. It gives
-the page of an HTML file in its tab, the terminal tabs, and the services
-of the Preview tool. It also gives the number of a workspace with Copy
-link, and the bars of the cloud computer.
+notices of the file lists of a large branch. It gives the page of an HTML
+file in its tab, the skill tab, the terminal tabs, and the services of the
+Preview tool. It also gives the number of a workspace with Copy link, and
+the bars of the cloud computer.
 
 - While a sandbox starts, also for the first time, Send queues each
   message in the workspace, as `app/new-workspace/waiting` shows. A queued
@@ -32,7 +32,8 @@ link, and the bars of the cloud computer.
   kept file or diff tab has Copy path, a line, the moves, a line, and the
   two closes, from decision 3 B of the file row menu change. Copy path
   copies the path of the file, as in the menu of its row. A tab whose label can hide a secret value
-  leaves it out. In a read-only workspace, the menu of a session tab holds
+  leaves it out. A skill tab has no path, so its menu has only the moves
+  and the two closes. In a read-only workspace, the menu of a session tab holds
   only the three copy items, and the menu of a file or diff tab only Copy
   path. A copy keeps the shown tab, and a toast gives its result, as
   `app/transcripts` shows. The menu is the one way to rename a session, so
@@ -45,10 +46,12 @@ link, and the bars of the cloud computer.
   styles the row and its tabs. `TabScroll.module.css` beside it styles a
   full row, `TabDrag.module.css` a drag, and `TabRename.module.css` the
   rename field. The app shares these modules.
-- The temporary tab, from decisions 284 to 287, is the one file or diff tab
-  that the next press on a file or a diff replaces, as
-  `app/files/temporary` shows. A press on a row of All files or Changes, or
-  on a file chip, opens the file or the diff in the temporary tab. When the
+- The temporary tab, from decisions 284 to 287, is the one tab that the
+  next press on a file, a diff, or a skill replaces, as
+  `app/files/temporary` and `app/skill-mentions/tab/temporary` show. A
+  press on a row of All files or Changes, or on a file chip, opens the
+  file or the diff in the temporary tab, and a press on a skill chip opens
+  the skill there (skill tab decision 2 A). When the
   row has no temporary tab, it opens at the end of the row. Otherwise the
   press replaces its file in the same place, also when a later tab stands
   after it. A press on a file that has a tab shows that tab. The title of
@@ -131,6 +134,30 @@ link, and the bars of the cloud computer.
     "The preview couldn't open", the message of the server, and Try
     again, as a Preview tab shows it. The words live in
     [`src/ui/components/tools/previewCopy.ts`](../../src/ui/components/tools/previewCopy.ts).
+- `SkillPage` in `src/components/files/` draws the skill tab, from skill
+  tab decision 1 B, as `app/skill-mentions/tab` shows. The tab has the
+  skill icon and the name of the skill as its title. The page keeps the
+  look of the page of a file: the first line of its header holds the name
+  in the quiet chip of a path, with the skill icon, then the agent of the
+  skill, such as "Claude skill", and the switch between Preview and Source
+  at its end. The agent shows because two agents can hold skills with one
+  name and different texts, and the title of the tab is only the name.
+  The description of the skill follows, muted, in at most three lines, and
+  its title gives the whole text.
+  Preview shows the Markdown body without the front matter, with the
+  `MarkdownView` of a Markdown file. Source shows the whole text in the
+  `CodeView` of a file, and the header gives its line count, as for a
+  file. The header has no Copy and no Download.
+  - A notice takes the place of the text and keeps the header: the read
+    that runs, a skill that the list no longer holds, which shows no
+    description, a text over 1 MB, and older cloud computer software. A
+    cloud computer that is not ready shows the state of a sandbox, as in
+    a file tab.
+  - `skillTabCopy.ts` beside the page holds the words of the agent label
+    and of the notices. It imports no fixture, so it can move to the
+    shared UI with the page.
+  - On a phone the skill is a page of the Files tab, which leads back to
+    All files, as a file does.
 - `TerminalTabs` in `src/components/tools/` draws the terminals of a
   workspace as a row of tabs above the shown terminal, with + at its end,
   from decisions 1 to 3 of the terminal tabs change, as `app/tools` shows. Its tabs are

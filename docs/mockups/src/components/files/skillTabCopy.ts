@@ -1,0 +1,38 @@
+import type { Agent } from '../../../../../src/shared/generated/Agent'
+
+/**
+ * The words of the tab of a skill: the agent of the skill in the header,
+ * the line while the text loads, and the notices in place of the text.
+ * This module imports no fixture, so it can move to the shared UI when the
+ * app draws the tab.
+ */
+export const skillTabCopy = {
+  /**
+   * The label after the name in the header: the agent whose skill the tab
+   * shows. Two agents can hold skills with one name and different texts,
+   * and the title of the tab is only the name.
+   */
+  agent: {
+    claude: 'Claude skill',
+    codex: 'Codex skill',
+  } satisfies Readonly<Record<Agent, string>>,
+  /** The line beside the spinner while the read of the text runs. */
+  loading: 'Opening the skill',
+  /**
+   * The list of the agent no longer holds the skill, such as after a
+   * rename, or after its folder or its org skill went away.
+   */
+  goneTitle: 'This skill was removed or renamed',
+  goneBody: 'Type / in a message to see the current skills.',
+  /** The `SKILL.md` of the skill passes the read limit of the skills. */
+  tooLargeTitle: 'This skill is too large to show',
+  tooLargeBody: 'Skills up to 1 MB show here.',
+  /**
+   * The software of the cloud computer cannot read a skill yet. Restart in
+   * the workspace header installs the newest software, so the notice has no
+   * button of its own, as for the preview of an HTML file.
+   */
+  olderSoftwareTitle: 'Restart to open this skill',
+  olderSoftwareBody:
+    'Opening a skill needs newer cloud computer software. Select Restart in the workspace header.',
+} as const

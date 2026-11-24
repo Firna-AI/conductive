@@ -18,6 +18,7 @@ import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { explainTabs } from './explainModel'
 import { htmlTab } from './workspaceFileTab'
+import { skillTab } from './workspaceSkillTab'
 import type { WorkspaceState } from './workspaceState'
 import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
 import { withTemporaryTab } from './workspaceTemporaryTab'
@@ -146,10 +147,10 @@ function previewTabs(state: WorkspaceState): WorkspaceTab[] {
  * messages, or after an admin removed the org login of the session, the
  * first session leads to that view. After the second session sent its
  * messages, the second session can show, and each session tab leads to its
- * chat of that time. The file or the diff that the state opens can be the
- * temporary tab, as `withTemporaryTab` draws it. The Preview tabs show
- * after the code file. The tabs of the open explanations come last, as
- * `explainTabs` says.
+ * chat of that time. The file, the diff, or the skill that the state opens
+ * can be the temporary tab, as `withTemporaryTab` draws it. The Preview
+ * tabs show after the code file. The tabs of the open explanations come
+ * last, as `explainTabs` says.
  */
 export function tabsFor(
   state: WorkspaceState,
@@ -221,6 +222,8 @@ export function tabsFor(
   if (picture) tabs.push(picture)
   const html = htmlTab(state)
   if (html) tabs.push(html)
+  const skill = skillTab(state)
+  if (skill) tabs.push(skill)
   tabs.push(...previewTabs(state))
   if (state.tab === 'unnamed-file') {
     tabs.push({

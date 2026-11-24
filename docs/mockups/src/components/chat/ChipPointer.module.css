@@ -1,0 +1,21 @@
+/*
+ * The looks of a chip under the pointer, as a view cannot hover. Each rule
+ * repeats a hover rule of the shared chips in src/ui/components/chat/.
+ */
+
+/*
+ * The name of a chip in a message box, which a press opens, as
+ * `.open:hover` of FileChip.module.css draws it.
+ */
+.name {
+  text-decoration: underline;
+}
+
+/*
+ * A chip that opens its page, as `a.chip:hover` of InlineChip.module.css
+ * draws it. The element selector outranks the rest look of the chip.
+ */
+a.chip {
+  border-color: var(--ui-faint);
+  background: var(--ui-selected);
+}

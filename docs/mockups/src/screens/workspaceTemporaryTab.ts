@@ -2,14 +2,16 @@ import { nameLabel } from '../../../../src/shared/name-label'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { newSession } from '../fixtures/sessions'
 import { paths } from '../paths'
+import { keptSkillTab } from './workspaceSkillTab'
 import type { WorkspaceState } from './workspaceState'
 
 /**
  * The tabs of the centre column that a press opens at the end of the row:
  * a Markdown preview, a diff, a picture, an image that the browser cannot
  * draw, the copy of an attached screenshot, the screenshot of the agent, a
- * file whose name the app does not know, and the HTML report in each of its
- * views. The code file stays a kept tab.
+ * file whose name the app does not know, the HTML report in each of its
+ * views, and the skill tab in each of its views (skill tab decision 2 A).
+ * The code file stays a kept tab.
  */
 const pressedTabs: ReadonlySet<WorkspaceState['tab']> = new Set([
   'markdown',
@@ -24,9 +26,15 @@ const pressedTabs: ReadonlySet<WorkspaceState['tab']> = new Set([
   'html-opening',
   'html-older-software',
   'html-failed',
+  'skill',
+  'skill-source',
+  'skill-loading',
+  'skill-gone',
+  'skill-too-large',
+  'skill-older-software',
 ])
 
-/** The state draws a temporary tab: the file or the diff of its tab. */
+/** The state draws a temporary tab: the file, diff, or skill of its tab. */
 function hasTemporaryTab(state: WorkspaceState): boolean {
   return state.temporary !== 'none' && pressedTabs.has(state.tab)
 }
@@ -65,10 +73,11 @@ function keptTabOf(state: WorkspaceState): WorkspaceTab {
 
 /**
  * The row with the temporary tab of the state, from decisions 284 to 287:
- * the shown file or diff, with its title in italics. A replaced file keeps
- * the place of the file before it, so the tab of a session that opened
- * later stays after it. After a keep, the next press opens a new temporary
- * tab at the end of the row, as each new tab opens there.
+ * the shown file, diff, or skill, with its title in italics. A replaced
+ * tab keeps the place of the tab before it, so the tab of a session that
+ * opened later stays after it. After a keep, the next press opens a new
+ * temporary tab at the end of the row, as each new tab opens there. The
+ * kept tab can be a file or the skill tab of `plans`.
  */
 export function withTemporaryTab(
   state: WorkspaceState,
@@ -86,5 +95,7 @@ export function withTemporaryTab(
       return [...marked, laterSession]
     case 'kept':
       return marked.toSpliced(at, 0, keptTabOf(state))
+    case 'skill-kept':
+      return marked.toSpliced(at, 0, keptSkillTab)
   }
 }

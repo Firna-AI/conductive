@@ -77,6 +77,8 @@ export type ChatItem =
       queued?: boolean
       /** Sent while a turn runs: it joins that turn as a new part. */
       during?: true
+      /** The pointer is over its first skill chip, as a view cannot hover. */
+      pointer?: true
     }
   | {
       kind: 'agent'

@@ -5,16 +5,21 @@ import {
   type ChatPart,
 } from '../../../../../src/chat/links/chat-parts'
 import type { Attachment } from '../../fixtures/attachments'
+import { plansSkill } from '../../fixtures/skills'
 import { paths } from '../../paths'
+import { skillPaths } from '../../skillPaths'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import { appAttachment, findEntry, findSkill } from './chatReading'
 import { useChatWorkspaces } from './chatWorkspaces'
 import { ReadChip } from './LinkChip'
 import { MentionChip } from './MentionChip'
 import { SentFileChip } from '../../../../../src/ui/components/chat/SentFileChip'
+import { useNoHover } from '../../../../../src/ui/components/chat/ChipRemove'
 import { SkillChip } from '../../../../../src/ui/components/chat/SkillChip'
 import { CodeText, WebLinkText } from './WebLinkText'
 import { webLinkOf } from './workspaceLinks'
+import pointerStyles from './ChipPointer.module.css'
 
 /** The file tab of the copy of an attached file, when the mockups draw it. */
 const attachedTabs = { picture: paths.attachmentOpen } as const
@@ -43,11 +48,51 @@ function AttachedChip(props: {
   )
 }
 
+/** The skill tab that a press on a skill chip opens, when the mockups draw it. */
+const skillTabs: Readonly<Partial<Record<string, string>>> = {
+  [plansSkill.name]: skillPaths.preview,
+}
+
+/**
+ * The chip of a skill in a sent message. A press opens the skill in the
+ * temporary tab (skill tab decision 1 B), when the mockups draw its tab. A
+ * view cannot hover, so `pointer` draws the pointer over the chip, with
+ * the fill of a hover. Where no pointer hovers, as on a phone, it draws
+ * none.
+ */
+function SentSkillChip(props: {
+  part: Extract<ChatPart, { kind: 'skill' }>
+  pointer: boolean
+}) {
+  const { part } = props
+  const noHover = useNoHover()
+  const to = skillTabs[part.skill.name]
+  const hover = props.pointer && !noHover && pointerStyles.chip
+  return (
+    <SkillChip
+      mention={part.source}
+      opener={
+        to
+          ? (chip) => (
+              <ScreenLink
+                {...chip}
+                className={classes(chip.className, hover)}
+                to={to}
+              />
+            )
+          : undefined
+      }
+      skill={part.skill}
+    />
+  )
+}
+
 /** One part of a sent message, as `chatParts` of the app reads it. */
 function Part(props: {
   part: ChatPart
   files: readonly Attachment[]
   waits?: boolean
+  pointer: boolean
 }) {
   const { part } = props
   switch (part.kind) {
@@ -62,7 +107,7 @@ function Part(props: {
     case 'file':
       return <MentionChip part={part} />
     case 'skill':
-      return <SkillChip mention={part.source} skill={part.skill} />
+      return <SentSkillChip part={part} pointer={props.pointer} />
     case 'attachment':
       return (
         <AttachedChip files={props.files} part={part} waits={props.waits} />
@@ -98,20 +143,30 @@ export function useSentParts(
  * Each other `http` and `https` address is a link, and a Markdown link
  * shows as typed. Code that holds only an address shows it as a link in its
  * code box, and other code stays code. Each file chip opens its file, and
- * a skill chip opens nothing. `AnswerText` draws the text of an answer.
+ * each skill chip opens its skill tab. `AnswerText` draws the text of an
+ * answer.
  *
  * `files` are the attached files of the message. The chip of each opens
  * the file tab of its copy. While the message `waits` for the cloud
  * computer, its copies do not exist yet, so the chip of a file opens
- * nothing.
+ * nothing. A view cannot hover, so `pointer` draws the pointer over the
+ * first skill chip.
  */
 export function MessageText(props: {
   parts: readonly ChatPart[]
   files: readonly Attachment[]
   waits?: boolean
+  pointer?: boolean
 }) {
+  const firstSkill = props.parts.findIndex((part) => part.kind === 'skill')
   return props.parts.map((part, index) => (
-    <Part files={props.files} key={index} part={part} waits={props.waits} />
+    <Part
+      files={props.files}
+      key={index}
+      part={part}
+      pointer={props.pointer === true && index === firstSkill}
+      waits={props.waits}
+    />
   ))
 }
 

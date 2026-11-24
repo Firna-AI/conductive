@@ -51,6 +51,12 @@ function starterOf(state: WorkspaceState, workspace: Workspace): PersonKey {
     case 'html-failed':
     case 'preview':
     case 'preview-behind':
+    case 'skill':
+    case 'skill-source':
+    case 'skill-loading':
+    case 'skill-gone':
+    case 'skill-too-large':
+    case 'skill-older-software':
       return isNew(state) ? workspace.owner : workspaceSessions[0].starter
   }
 }

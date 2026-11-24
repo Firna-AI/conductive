@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { filePage } from '../entries/components/files/FilePage.mockup'
+import { skillPage } from '../entries/components/files/SkillPage.mockup'
 import { filesPanel } from '../entries/components/files/FilesPanel.mockup'
 import { desktopView } from '../entries/components/tools/DesktopView.mockup'
 import { previewTool } from '../entries/components/tools/PortPreview.mockup'
@@ -20,12 +21,14 @@ import {
 } from '../fixtures/starting'
 import { terminalSets } from '../fixtures/terminals'
 import { openPort } from '../fixtures/previews'
+import { plansAgent } from '../fixtures/skillFiles'
 import { paths } from '../paths'
 import { rowMenuOf } from './workspaceRowMenu'
 import { freshPromptFor, runStartingLog } from './workspaceRun'
 import { panelState } from './workspaceSandbox'
 import { previewServicesOf } from './workspaceServices'
 import { backFrom, openFile } from './workspaceFileTab'
+import { openSkill } from './workspaceSkillTab'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
@@ -101,9 +104,10 @@ function listsPlaceholder(state: WorkspaceState, phone: boolean): ReactNode {
  * saved. A new workspace has none, so the wait of its first start takes
  * their place, and so does the sandbox state of a refused start or a failed
  * first start. On a phone, an open file shows as a page of the Files tab,
- * with the sandbox state in place of its content, as on desktop. An
- * archived workspace has no file lists: its files went with the cloud
- * computer. A row of the lists can show its open menu.
+ * with the sandbox state in place of its content, as on desktop. An open
+ * skill shows there in the same way, and leads back to All files, as a
+ * file does. An archived workspace has no file lists: its files went with
+ * the cloud computer. A row of the lists can show its open menu.
  */
 export function FilesContent(props: {
   state: WorkspaceState
@@ -121,6 +125,18 @@ export function FilesContent(props: {
         phone={phone}
         place="files"
         state={plainData(panel)}
+      />
+    )
+  }
+  const skill = openSkill(state)
+  if (phone && skill) {
+    return (
+      <skillPage.Component
+        agent={plansAgent}
+        back={{ label: 'All files', to: paths.filesAll }}
+        moklyInstance="skill-page"
+        view={skill}
+        {...defined({ placeholder: filePlaceholder(state, true) })}
       />
     )
   }
