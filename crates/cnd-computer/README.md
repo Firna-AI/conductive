@@ -67,21 +67,26 @@ import. A pinned program download verifies the published manifest bytes and
 checks the requested release identity. The program caches verified executables
 by version and archive digest.
 
-Automatic updates check for a signed newer release one minute after
-startup, then every ten minutes. An update checks the candidate's
-`--version` output and waits for accepted requests and their replies.
-It records the candidate as a trial and exits. On restart, `current`
-still points to the last confirmed release. That release counts each
-trial attempt and starts the trial in the same process. A Worker welcome
-or 60 seconds of uptime confirms the trial. Confirmation atomically
+The updater polls one minute after startup, then every ten minutes.
+It reads the running executable, the current release, and the saved
+update state on each poll. When no trial needs work, it checks for a
+signed newer release. It checks the candidate's `--version` output and
+waits for accepted requests and their replies. It records the candidate
+as a trial and exits. On restart, `current` still points to the last
+confirmed release. That release counts each trial attempt and starts the
+trial in the same process. A Worker welcome or 60 seconds of uptime
+confirms the trial. Confirmation atomically
 switches `current` to the trial and records the old release as previous.
 After five unconfirmed attempts, the confirmed release records the trial
-as refused and runs the service itself.
+as refused and runs the service itself. If an update step fails, the
+service logs the failure and keeps running. A later poll can finish a
+promotion or retry a pending trial. A trial retry waits for accepted
+requests and their replies, then saves the update state before restarting.
 
 At startup and when it records a trial, the program prunes cached
 programs. It keeps the current, previous, and trial versions. Startup
 also removes temporary files from interrupted downloads and installs.
-Development builds skip automatic updates.
+Automatic updates run for release builds that run from the release store.
 
 ## Quick Start
 

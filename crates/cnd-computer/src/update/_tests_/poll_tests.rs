@@ -7,9 +7,11 @@
 
 use std::os::unix::process::ExitStatusExt;
 use std::path::PathBuf;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
+use futures_util::{FutureExt, poll};
 use tokio::sync::{Notify, watch};
 use unimock::{MockFn, Unimock, matching};
 
@@ -20,13 +22,13 @@ use crate::process::{Output, ProcessMock};
 use crate::releases::cache::ProgramCacheMock;
 use crate::releases::ports::ReleasesMock;
 use crate::settings::SettingsStoreMock;
-use crate::update::launch::Startup;
+use crate::update::launch::{Launch, Launcher, Startup};
 use crate::update::ports::UpdateFilesMock;
 use crate::update::state::UpdateState;
 
 use super::{Updater, Updates};
 
-use super::support::{latest, settings, updater};
+use super::support::{latest, settings, trial_state, updater};
 
 fn candidate() -> Updater {
     let mut updater = updater();
@@ -72,7 +74,8 @@ async fn activation_waits_for_requests_then_records_a_trial_beside_current() {
         })),
         UpdateFilesMock::install.some_call(matching!(("0.0.42", path) if path.to_str() == Some("/fixture/cache/conductive")))
             .returns(Ok(PathBuf::from("/fixture/versions/0.0.42/conductive"))),
-        UpdateFilesMock::current_version.some_call(matching!()).returns(Ok(Some("0.0.41".into()))),
+        UpdateFilesMock::current_version.each_call(matching!()).answers(&|_| Ok(Some("0.0.41".into()))),
+        UpdateFilesMock::runs_version.each_call(matching!("0.0.41")).answers(&|_, _| Ok(true)),
         UpdateFilesMock::save.next_call(matching!((state) if state.previous.as_deref() == Some("0.0.40")
             && state.trial.as_ref().is_some_and(|trial| trial.from == "0.0.41" && trial.version == "0.0.42" && trial.starts == 0)))
             .answers_arc(Arc::new(move |_, _| {
@@ -127,6 +130,96 @@ async fn activation_waits_for_requests_then_records_a_trial_beside_current() {
         "Staging a trial did not collect the program cache"
     );
     monitor.await.unwrap();
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_failed_start_save_retries_without_restarting_until_a_save_succeeds() {
+    let mut updater = updater();
+    updater.timer = virtual_timer();
+    let saves = Arc::new(Mutex::new(Vec::new()));
+    let writes = saves.clone();
+    updater.files = Arc::new(Unimock::new((
+        UpdateFilesMock::clear_temporary
+            .some_call(matching!())
+            .returns(Ok(())),
+        UpdateFilesMock::current_version
+            .each_call(matching!())
+            .answers(&|_| Ok(Some("0.0.41".into()))),
+        UpdateFilesMock::runs_version
+            .each_call(matching!("0.0.41"))
+            .answers(&|_, _| Ok(true)),
+        UpdateFilesMock::state
+            .each_call(matching!())
+            .answers(&|_| Ok(trial_state())),
+        UpdateFilesMock::save
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, state| {
+                let mut writes = writes.lock().unwrap();
+                writes.push(state.clone());
+                if writes.len() <= 2 {
+                    return Err(Error::NoSpace);
+                }
+                Ok(())
+            })),
+        UpdateFilesMock::collect
+            .some_call(matching!((keep) if *keep == ["0.0.41", "0.0.40", "0.0.42"]))
+            .returns(Ok(())),
+    )));
+    updater.cache = Arc::new(Unimock::new((
+        ProgramCacheMock::clear_temporary
+            .some_call(matching!())
+            .returns(Ok(())),
+        ProgramCacheMock::collect
+            .some_call(matching!((keep) if *keep == ["0.0.41", "0.0.40", "0.0.42"]))
+            .returns(Ok(())),
+    )));
+    updater.diagnostics = Arc::new(Unimock::new(
+        DiagnosticsMock::update_failed
+            .each_call(matching!())
+            .returns(()),
+    ));
+    let launcher = Launcher {
+        version: updater.version.clone(),
+        files: updater.files.clone(),
+        cache: updater.cache.clone(),
+        process: Arc::new(Unimock::new(())),
+        diagnostics: updater.diagnostics.clone(),
+    };
+    let startup = launcher.start();
+    assert_eq!(saves.lock().unwrap().len(), 1);
+
+    let (stop, stopped) = watch::channel(false);
+    let monitor = updater.monitor(startup, stop, stopped.clone()).fuse();
+    tokio::pin!(monitor);
+    let _ = poll!(&mut monitor);
+    tokio::time::advance(Duration::from_secs(60)).await;
+    assert!(poll!(&mut monitor).is_pending());
+    assert!(
+        !*stopped.borrow(),
+        "A failed poll write requested a restart"
+    );
+    assert_eq!(
+        saves.lock().unwrap().len(),
+        2,
+        "The monitor did not retry the save"
+    );
+
+    let request = updater.activity.request().await;
+    tokio::time::advance(Duration::from_secs(600)).await;
+    assert!(poll!(&mut monitor).is_pending());
+    assert!(
+        !*stopped.borrow(),
+        "The trial restarted with a pending request"
+    );
+    assert_eq!(saves.lock().unwrap().len(), 2);
+    drop(request);
+    let _ = poll!(&mut monitor);
+    assert!(
+        *stopped.borrow(),
+        "A successful poll write did not request a restart"
+    );
+    let saves = saves.lock().unwrap();
+    assert_eq!(&saves[1..], &[trial_state(), trial_state()]);
 }
 
 #[tokio::test(start_paused = true)]

@@ -24,9 +24,10 @@ async fn installs_a_complete_version_and_replaces_current_with_a_relative_link()
     }
     let current = root.path().join("current");
     symlink("versions/0.0.41", &current).unwrap();
+    let running = versions.join("0.0.41/conductive");
     let files = InstalledVersions {
         directory: root.path().to_owned(),
-        executable: Some(versions.join("0.0.41/conductive")),
+        executable: Box::new(move || Ok(running.clone())),
     };
     assert_eq!(files.current_version().unwrap().as_deref(), Some("0.0.41"));
     assert_eq!(files.state().unwrap(), UpdateState::default());

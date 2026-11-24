@@ -18,8 +18,8 @@ use super::state::UpdateState;
 pub struct InstalledVersions {
     /// Folder containing current, versions, and the state file.
     pub directory: PathBuf,
-    /// Actual path of the executable at process start.
-    pub executable: Option<PathBuf>,
+    /// Resolve the running executable path on each update check.
+    pub executable: Box<dyn Fn() -> io::Result<PathBuf> + Send + Sync>,
 }
 
 #[async_trait]
@@ -40,11 +40,9 @@ impl UpdateFiles for InstalledVersions {
     }
 
     fn runs_version(&self, version: &str) -> Result<bool> {
-        let Some(running) = self.executable.as_deref() else {
-            return Ok(false);
-        };
+        let running = fs::canonicalize((self.executable)()?)?;
         match fs::canonicalize(self.program(version)?) {
-            Ok(installed) => Ok(installed == fs::canonicalize(running)?),
+            Ok(installed) => Ok(installed == running),
             Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(false),
             Err(error) => Err(error.into()),
         }

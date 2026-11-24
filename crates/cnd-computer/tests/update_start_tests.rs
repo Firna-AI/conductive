@@ -51,6 +51,14 @@ fi
 exit 2
 "#;
 
+fn installation(data: PathBuf, version: &str) -> Arc<InstalledVersions> {
+    let executable = data.join("versions").join(version).join("conductive");
+    Arc::new(InstalledVersions {
+        directory: data,
+        executable: Box::new(move || Ok(executable.clone())),
+    })
+}
+
 fn layout(root: &Path) -> Arc<InstalledVersions> {
     let data = root.join("data");
     for version in [CURRENT, PREVIOUS, TRIAL] {
@@ -67,10 +75,7 @@ fn layout(root: &Path) -> Arc<InstalledVersions> {
         .unwrap();
     }
     symlink("versions/0.0.41", data.join("current")).unwrap();
-    let installed = Arc::new(InstalledVersions {
-        directory: data.clone(),
-        executable: Some(data.join("versions/0.0.41/conductive")),
-    });
+    let installed = installation(data, CURRENT);
     installed
         .save(&UpdateState {
             previous: Some(PREVIOUS.into()),
@@ -97,14 +102,29 @@ fn launcher(root: &Path, version: &str, files: Arc<InstalledVersions>) -> Launch
     }
 }
 
+fn updater(root: &Path, version: &str, files: Arc<InstalledVersions>) -> Updater {
+    let cache = root.join("cache");
+    Updater {
+        version: version.into(),
+        files,
+        cache: Arc::new(ProgramCache {
+            directory: cache.clone(),
+        }),
+        settings: Arc::new(SavedSettings {
+            path: root.join("computer.json"),
+        }),
+        releases: Arc::new(HttpReleases::new(RELEASE_PUBLIC_KEY, cache).unwrap()),
+        process: Arc::new(NativeProcess),
+        activity: Arc::new(Activity::default()),
+        timer: Arc::new(SystemClock),
+        diagnostics: Arc::new(TracingDiagnostics),
+    }
+}
+
 #[test]
 fn five_early_trial_exits_leave_current_in_place_and_refuse_the_candidate() {
     if let Some(root) = env::var_os(FIXTURE).map(PathBuf::from) {
-        let data = root.join("data");
-        let files = Arc::new(InstalledVersions {
-            executable: Some(data.join("versions/0.0.41/conductive")),
-            directory: data,
-        });
+        let files = installation(root.join("data"), CURRENT);
         assert_eq!(launcher(&root, CURRENT, files).start(), Startup::Current);
         return;
     }
@@ -152,14 +172,30 @@ fn five_early_trial_exits_leave_current_in_place_and_refuse_the_candidate() {
     assert!(files.state().unwrap().refused.contains(TRIAL));
 }
 
-#[test]
-fn an_exec_error_counts_a_try_and_keeps_the_confirmed_service() {
+#[tokio::test(start_paused = true)]
+async fn an_exec_error_counts_a_try_and_retries_the_trial_at_the_next_poll() {
     let root = tempfile::tempdir().unwrap();
     let files = layout(root.path());
     fs::remove_file(files.program(TRIAL).unwrap()).unwrap();
+    let startup = launcher(root.path(), CURRENT, files.clone()).start();
+    assert_eq!(startup, Startup::Current);
+    assert_eq!(files.current_version().unwrap().as_deref(), Some(CURRENT));
     assert_eq!(
-        launcher(root.path(), CURRENT, files.clone()).start(),
-        Startup::Current
+        files.state().unwrap().trial.map(|trial| trial.starts),
+        Some(1)
+    );
+
+    let updater = updater(root.path(), CURRENT, files.clone());
+    let (stop, shutdown) = watch::channel(false);
+    let monitor = updater.monitor(startup, stop, shutdown.clone());
+    tokio::pin!(monitor);
+    assert!(poll!(&mut monitor).is_pending());
+    assert!(!*shutdown.borrow());
+    tokio::time::advance(Duration::from_secs(60)).await;
+    let _ = poll!(&mut monitor);
+    assert!(
+        *shutdown.borrow(),
+        "The next poll did not retry the pending trial"
     );
     assert_eq!(files.current_version().unwrap().as_deref(), Some(CURRENT));
     assert_eq!(
@@ -176,28 +212,10 @@ async fn an_installed_trial_confirms_and_moves_the_current_link() {
     state.trial.as_mut().unwrap().starts = 1;
     current.save(&state).unwrap();
 
-    let files = Arc::new(InstalledVersions {
-        directory: current.directory.clone(),
-        executable: Some(current.program(TRIAL).unwrap()),
-    });
+    let files = installation(current.directory.clone(), TRIAL);
     let startup = launcher(root.path(), TRIAL, files.clone()).start();
     assert_eq!(startup, Startup::Trial);
-    let cache = root.path().join("cache");
-    let updater = Updater {
-        version: TRIAL.into(),
-        files,
-        cache: Arc::new(ProgramCache {
-            directory: cache.clone(),
-        }),
-        settings: Arc::new(SavedSettings {
-            path: root.path().join("computer.json"),
-        }),
-        releases: Arc::new(HttpReleases::new(RELEASE_PUBLIC_KEY, cache).unwrap()),
-        process: Arc::new(NativeProcess),
-        activity: Arc::new(Activity::default()),
-        timer: Arc::new(SystemClock),
-        diagnostics: Arc::new(TracingDiagnostics),
-    };
+    let updater = updater(root.path(), TRIAL, files);
     let (stop, shutdown) = watch::channel(false);
     let monitor = updater.monitor(startup, stop, shutdown);
     tokio::pin!(monitor);

@@ -3,14 +3,15 @@
 #![expect(clippy::unwrap_used, reason = "Fixture joins must succeed.")]
 
 use std::future;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 
 use cnd_runner_interface::computer::operations::{
     ComputerOperation, ContainerEnvVar, ContainerImage,
 };
 use cnd_runner_interface::computer::results::{ComputerErrorCode, ComputerResult, ContainerState};
-use tokio::sync::Notify;
+use futures_util::poll;
+use tokio::sync::{Notify, oneshot};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::connection_support::context;
@@ -162,13 +163,17 @@ async fn a_failure_after_create_removes_the_container_and_returns_the_failure() 
     );
 }
 
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_cancelled_create_holds_the_name_until_cleanup() {
     let writing = Arc::new(Notify::new());
     let begun = writing.clone();
+    let removing = Arc::new(Notify::new());
+    let removal_started = removing.clone();
+    let (release_removal, finish_removal) = oneshot::channel();
+    let finish_removal = Mutex::new(Some(finish_removal));
     let removed = Arc::new(AtomicBool::new(false));
     let cleaned = removed.clone();
-    let engine = Arc::new(Unimock::new((
+    let engine = Unimock::new((
         EngineMock::inspect.stub(|each| {
             each.call(matching!("box"))
                 .answers(&|_, _| Ok(ContainerStatus::Missing))
@@ -206,39 +211,41 @@ async fn a_cancelled_create_holds_the_name_until_cleanup() {
         EngineMock::remove
             .some_call(matching!("box"))
             .answers_arc(Arc::new(move |_, _| {
-                cleaned.store(true, Ordering::SeqCst);
+                let finish = finish_removal.lock().unwrap().take().unwrap();
+                removal_started.notify_one();
+                if tokio::task::block_in_place(|| finish.blocking_recv()).is_ok() {
+                    cleaned.store(true, Ordering::SeqCst);
+                }
                 Ok(())
             })),
-    )));
-    let diagnostics = Arc::new(Unimock::new(
+    ));
+    let diagnostics = Unimock::new(
         DiagnosticsMock::environment_omitted
             .some_call(matching!(1))
             .returns(()),
-    ));
+    );
     let dispatcher = Arc::new(Dispatcher::new(
-        engine,
+        Arc::new(engine.clone()),
         Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(())),
-        diagnostics,
+        Arc::new(diagnostics.clone()),
     ));
     let first = dispatcher.clone();
     let request = tokio::spawn(async move { first.execute(create(), Arc::new(context())).await });
     writing.notified().await;
-    let second = dispatcher.clone();
-    let next = tokio::spawn(async move {
-        second
-            .execute(
-                ComputerOperation::ContainerGet {
-                    container: BOX.into(),
-                },
-                Arc::new(context()),
-            )
-            .await
-    });
-    tokio::task::yield_now().await;
-    assert!(!next.is_finished());
+    let next = dispatcher.execute(
+        ComputerOperation::ContainerGet {
+            container: BOX.into(),
+        },
+        Arc::new(context()),
+    );
+    tokio::pin!(next);
+    assert!(poll!(&mut next).is_pending());
     request.abort();
     assert!(request.await.unwrap_err().is_cancelled());
-    assert_eq!(next.await.unwrap(), state(ContainerState::Missing));
+    removing.notified().await;
+    assert!(poll!(&mut next).is_pending(), "Get finished during removal");
+    release_removal.send(()).unwrap();
+    assert_eq!(next.await, state(ContainerState::Missing));
     dispatcher.drain().await;
 }

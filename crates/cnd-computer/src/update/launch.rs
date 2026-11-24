@@ -9,7 +9,7 @@ use std::sync::Arc;
 use cnd_release::version::DEVELOPMENT_VERSION;
 
 use crate::diagnostics::Diagnostics;
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::releases::cache::ProgramCacheFiles;
 
 use super::ports::UpdateFiles;
@@ -24,6 +24,8 @@ pub enum Startup {
     Current,
     /// A trial release runs the service and waits for confirmation.
     Trial,
+    /// A startup step failed. Read the release layout again on the first poll.
+    Retry,
 }
 
 /// Check the update state before starting the service.
@@ -33,6 +35,7 @@ pub trait Launch: Send + Sync {
 }
 
 /// Replace the current process with its installed trial program.
+#[cfg_attr(test, unimock::unimock(api = TrialExecMock))]
 pub trait TrialExec: Send + Sync {
     /// Execute computer run with the existing process ID.
     fn exec(&self, program: &Path) -> Result<Infallible>;
@@ -76,7 +79,7 @@ impl Launch for Launcher {
             Ok(startup) => startup,
             Err(_) => {
                 self.diagnostics.update_failed();
-                Startup::Disabled
+                Startup::Retry
             }
         }
     }
@@ -84,98 +87,95 @@ impl Launch for Launcher {
 
 impl Launcher {
     fn start_inner(&self) -> Result<Startup> {
-        let mut state = self.files.state()?;
-        let current = self.files.current_version()?;
-        let active = current.as_deref().unwrap_or(&self.version);
-        let startup = self.role(current.as_deref(), &state)?;
-        match startup {
-            Startup::Disabled => {
-                if self.cache.collect(&state.retained(active)).is_err() {
-                    self.diagnostics.update_failed();
-                }
-                if self.version != DEVELOPMENT_VERSION {
-                    self.diagnostics.update_location();
-                }
+        if self.version == DEVELOPMENT_VERSION || !self.files.runs_version(&self.version)? {
+            if self.collect_cache().is_err() {
+                self.diagnostics.update_failed();
             }
-            Startup::Current => self.start_from_current(active, &mut state)?,
-            Startup::Trial => self.collect(active, &state),
+            if self.version != DEVELOPMENT_VERSION {
+                self.diagnostics.update_location();
+            }
+            return Ok(Startup::Disabled);
         }
-        Ok(startup)
+        let current = self.files.current_version()?.ok_or(Error::UpdateLocation)?;
+        let mut state = self.files.state()?;
+        if current == self.version {
+            self.start_from_current(&current, &mut state)?;
+            Ok(Startup::Current)
+        } else if state.is_running_trial(&current, &self.version) {
+            self.collect(&current, &state);
+            Ok(Startup::Trial)
+        } else {
+            Err(Error::UpdateLocation)
+        }
     }
 
-    fn role(&self, current: Option<&str>, state: &UpdateState) -> Result<Startup> {
-        if self.version == DEVELOPMENT_VERSION {
-            return Ok(Startup::Disabled);
-        }
-        let Some(current) = current else {
-            return Ok(Startup::Disabled);
-        };
-        if !self.files.runs_version(&self.version)? {
-            return Ok(Startup::Disabled);
-        }
-        Ok(if current == self.version {
-            Startup::Current
-        } else if state.trial.as_ref().is_some_and(|trial| {
-            trial.from == current && trial.version == self.version && trial.starts > 0
-        }) {
-            Startup::Trial
-        } else {
-            Startup::Disabled
-        })
+    fn collect_cache(&self) -> Result<()> {
+        let current = self.files.current_version()?;
+        let active = current.as_deref().unwrap_or(&self.version);
+        let state = self.files.state()?;
+        self.cache.collect(&state.retained(active))
     }
 
     fn start_from_current(&self, current: &str, state: &mut UpdateState) -> Result<()> {
-        if state.confirm(current) || state.discard_trial_from_other_release(current) {
-            self.files.save(state)?;
-        }
+        recover_current(&*self.files, &*self.diagnostics, current, state)?;
         let Some(trial) = &mut state.trial else {
             self.collect(current, state);
             return Ok(());
         };
+        trial.starts += 1;
         let target = trial.version.clone();
-        if trial.starts < MAX_TRIES {
-            trial.starts += 1;
-            let starts = trial.starts;
-            self.files.save(state)?;
-            self.collect(current, state);
-            let _ = self
-                .files
-                .program(&target)
-                .and_then(|program| self.process.exec(&program));
-            self.diagnostics.update_exec_failed();
-            if starts < MAX_TRIES {
-                return Ok(());
-            }
-        }
-        state.refuse_trial();
         self.files.save(state)?;
         self.collect(current, state);
-        self.diagnostics.update_refused();
+        let _ = self
+            .files
+            .program(&target)
+            .and_then(|program| self.process.exec(&program));
+        self.diagnostics.update_exec_failed();
+        if recover_current(&*self.files, &*self.diagnostics, current, state)? {
+            self.collect(current, state);
+        }
         Ok(())
     }
 
     fn collect(&self, current: &str, state: &UpdateState) {
-        collect_releases(
-            &*self.files,
-            &*self.cache,
-            &*self.diagnostics,
-            current,
-            state,
-        );
+        if collect_releases(&*self.files, &*self.cache, current, state).is_err() {
+            self.diagnostics.update_failed();
+        }
     }
+}
+
+/// Save unfinished promotion or trial refusal when the confirmed release runs.
+pub(super) fn recover_current(
+    files: &dyn UpdateFiles,
+    diagnostics: &dyn Diagnostics,
+    current: &str,
+    state: &mut UpdateState,
+) -> Result<bool> {
+    if state.confirm(current) || state.discard_trial_from_other_release(current) {
+        files.save(state)?;
+        return Ok(true);
+    }
+    if state
+        .trial
+        .as_ref()
+        .is_some_and(|trial| trial.starts >= MAX_TRIES)
+    {
+        state.refuse_trial();
+        files.save(state)?;
+        diagnostics.update_refused();
+        return Ok(true);
+    }
+    Ok(false)
 }
 
 pub(super) fn collect_releases(
     files: &dyn UpdateFiles,
     cache: &dyn ProgramCacheFiles,
-    diagnostics: &dyn Diagnostics,
     current: &str,
     state: &UpdateState,
-) {
+) -> Result<()> {
     let keep = state.retained(current);
     let installed = files.collect(&keep);
     let programs = cache.collect(&keep);
-    if installed.is_err() || programs.is_err() {
-        diagnostics.update_failed();
-    }
+    installed.and(programs)
 }

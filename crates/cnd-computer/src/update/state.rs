@@ -30,6 +30,12 @@ pub struct Trial {
 }
 
 impl UpdateState {
+    pub(super) fn is_running_trial(&self, current: &str, version: &str) -> bool {
+        self.trial.as_ref().is_some_and(|trial| {
+            trial.from == current && trial.version == version && trial.starts > 0
+        })
+    }
+
     pub(super) fn stage(&mut self, current: &str, next: &str) {
         self.trial = Some(Trial {
             from: current.to_owned(),

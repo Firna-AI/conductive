@@ -141,7 +141,7 @@ async fn run_service(paths: Paths) -> Result<bool> {
     let diagnostics: Arc<dyn Diagnostics> = Arc::new(TracingDiagnostics);
     let files: Arc<dyn UpdateFiles> = Arc::new(InstalledVersions {
         directory: paths.data,
-        executable: std::env::current_exe().ok(),
+        executable: Box::new(std::env::current_exe),
     });
     let cache: Arc<dyn ProgramCacheFiles> = Arc::new(ProgramCache {
         directory: paths.cache.clone(),

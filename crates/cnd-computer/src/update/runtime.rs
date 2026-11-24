@@ -15,12 +15,12 @@ use crate::process::{Invocation, Process};
 use crate::releases::cache::ProgramCacheFiles;
 use crate::releases::ports::Releases;
 use crate::settings::SettingsStore;
-use crate::timer::{Timer, Wait};
+use crate::timer::Timer;
 
-use super::launch::{Startup, collect_releases};
+use super::launch::{Startup, collect_releases, recover_current};
 use super::ports::UpdateFiles;
+use super::state::{MAX_TRIES, UpdateState};
 
-const CONFIRM_AFTER: Duration = Duration::from_secs(60);
 const FIRST_CHECK: Duration = Duration::from_secs(60);
 const CHECK_INTERVAL: Duration = Duration::from_secs(10 * 60);
 
@@ -72,54 +72,83 @@ impl Updates for Updater {
         tokio::select! {
             biased;
             _ = shutdown.changed() => {}
-            _ = async {
-                let first_check = self.timer.wait(FIRST_CHECK);
-                if startup == Startup::Trial && self.confirm().await.is_err() {
-                    self.diagnostics.update_failed();
-                    return;
-                }
-                self.poll(first_check, stop).await;
-            } => {}
+            _ = self.poll(startup, stop) => {}
         }
     }
 }
 
 impl Updater {
-    async fn confirm(&self) -> Result<()> {
-        tokio::select! {
-            _ = self.activity.first_welcome() => {}
-            _ = self.timer.wait(CONFIRM_AFTER) => {}
+    async fn wait_for_first_poll(&self, startup: Startup) {
+        let mut first_check = self.timer.wait(FIRST_CHECK);
+        if startup == Startup::Trial {
+            tokio::select! {
+                biased;
+                _ = &mut first_check => return,
+                _ = self.activity.first_welcome() => {
+                    let result = self.running_state().and_then(|(current, mut state)| {
+                        self.confirm(&current, &mut state)
+                    });
+                    if result.is_err() {
+                        self.diagnostics.update_failed();
+                    }
+                }
+            }
         }
-        let mut state = self.files.state()?;
-        let trial = state.trial.as_ref().ok_or(Error::UpdateLocation)?;
-        if trial.version != self.version
-            || self.files.current_version()?.as_deref() != Some(&trial.from)
-        {
-            return Err(Error::UpdateLocation);
-        }
-        self.files.switch(&self.version)?;
-        state.confirm(&self.version);
-        self.files.save(&state)
+        first_check.await;
     }
 
-    async fn poll(&self, first_check: Wait, stop: watch::Sender<bool>) {
-        first_check.await;
+    fn running_state(&self) -> Result<(String, UpdateState)> {
+        let current = self.files.current_version()?.ok_or(Error::UpdateLocation)?;
+        if !self.files.runs_version(&self.version)? {
+            return Err(Error::UpdateLocation);
+        }
+        Ok((current, self.files.state()?))
+    }
+
+    fn confirm(&self, current: &str, state: &mut UpdateState) -> Result<()> {
+        if current != self.version {
+            if !state.is_running_trial(current, &self.version) {
+                return Err(Error::UpdateLocation);
+            }
+            self.files.switch(&self.version)?;
+        }
+        if state.confirm(&self.version) {
+            self.files.save(state)?;
+        }
+        Ok(())
+    }
+
+    async fn poll(&self, startup: Startup, stop: watch::Sender<bool>) {
+        self.wait_for_first_poll(startup).await;
         loop {
-            match self.prepare().await {
-                Ok(Some(version)) => {
-                    let _idle = self.activity.idle().await;
-                    if self.activate(&version).is_ok() {
-                        self.diagnostics.update_trial_staged();
-                        stop.send_replace(true);
-                        return;
-                    }
-                    self.diagnostics.update_failed();
-                }
-                Ok(None) => {}
+            match self.poll_once(&stop).await {
+                Ok(true) => return,
+                Ok(false) => {}
                 Err(_) => self.diagnostics.update_failed(),
             }
             self.timer.wait(CHECK_INTERVAL).await;
         }
+    }
+
+    async fn poll_once(&self, stop: &watch::Sender<bool>) -> Result<bool> {
+        let (current, mut state) = self.running_state()?;
+        if current != self.version {
+            self.confirm(&current, &mut state)?;
+            return Ok(false);
+        }
+        if recover_current(&*self.files, &*self.diagnostics, &current, &mut state)? {
+            return Ok(false);
+        }
+        let candidate = if state.trial.is_some() {
+            None
+        } else {
+            let Some(version) = self.prepare().await? else {
+                return Ok(false);
+            };
+            Some(version)
+        };
+        let _idle = self.activity.idle().await;
+        self.restart_with_trial(candidate.as_deref(), stop)
     }
 
     async fn prepare(&self) -> Result<Option<String>> {
@@ -168,24 +197,34 @@ impl Updater {
         Ok(())
     }
 
-    fn activate(&self, version: &str) -> Result<()> {
-        if self.files.current_version()?.as_deref() != Some(&self.version) {
-            return Err(Error::UpdateLocation);
+    fn restart_with_trial(
+        &self,
+        candidate: Option<&str>,
+        stop: &watch::Sender<bool>,
+    ) -> Result<bool> {
+        let (current, mut state) = self.running_state()?;
+        if current != self.version {
+            return Ok(false);
         }
-        let mut state = self.files.state()?;
-        if state.trial.is_some() {
-            return Err(Error::UpdateLocation);
-        }
-        state.stage(&self.version, version);
+        let staged = match &state.trial {
+            Some(trial) if trial.from == current && trial.starts < MAX_TRIES => false,
+            Some(_) => return Ok(false),
+            None => {
+                let Some(version) = candidate.filter(|version| !state.refused.contains(*version))
+                else {
+                    return Ok(false);
+                };
+                state.stage(&current, version);
+                true
+            }
+        };
         self.files.save(&state)?;
-        collect_releases(
-            &*self.files,
-            &*self.cache,
-            &*self.diagnostics,
-            &self.version,
-            &state,
-        );
-        Ok(())
+        collect_releases(&*self.files, &*self.cache, &current, &state)?;
+        if staged {
+            self.diagnostics.update_trial_staged();
+        }
+        stop.send_replace(true);
+        Ok(true)
     }
 }
 
