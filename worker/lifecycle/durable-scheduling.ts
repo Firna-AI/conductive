@@ -70,7 +70,9 @@ export async function scheduleLifecycleState(
     return
   }
   if (state.startStop === 'pending') {
-    await storage.setAlarm(now() + 30_000)
+    // A held start waits for this stop, so the check comes sooner.
+    const held = (await hooks.startHeld?.()) ?? false
+    await storage.setAlarm(now() + (held ? 5_000 : 30_000))
     return
   }
   const startPending = (await hooks.startPending?.()) ?? false

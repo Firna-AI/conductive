@@ -12,6 +12,7 @@ import type { ReceiverStorage } from '../members/receiver-storage'
 import type { WorkspaceArchiveState } from './archive-types'
 import type { ComputerStopTaskState } from './computer-stop-task'
 import type { StartRecordEntry, StartRecordMeta } from './start-record-buffer'
+import type { StoredStartAfterStop } from './start-after-stop'
 
 export interface WorkspaceValues {
   archive: WorkspaceArchiveState
@@ -28,6 +29,7 @@ export interface WorkspaceValues {
   computerStops: ComputerStopTaskState
   startRecord: StartRecordEntry
   startRecordMeta: StartRecordMeta
+  startAfterStop: StoredStartAfterStop
 }
 
 export interface WorkspaceTransaction {

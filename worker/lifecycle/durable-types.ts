@@ -92,6 +92,8 @@ export interface LifecycleHooks {
   reconcile?(): Promise<LifecycleReconciliation>
   checkRestore?(): Promise<LifecycleRestoreResult>
   startPending?(): Promise<boolean>
+  /** Whether a start waits for the end of a pending stop. */
+  startHeld?(): Promise<boolean>
   recoverTurns?(workspaceId: string): Promise<LifecycleTurnRecovery | undefined>
   lastTurnEndedAt?(workspaceId: string): Promise<number | null>
 }

@@ -18,6 +18,7 @@ import {
 } from './workspace-actions'
 import { keepWorkspaceDisk } from './disk-retention'
 import { IdleStopTime } from './idle-stop'
+import { startHeldAfterStop } from './start-after-stop'
 import {
   taskWorkspaceStorage,
   workspaceTaskAlarms,
@@ -123,6 +124,7 @@ export function createWorkspaceLifecycle(
       },
       startPending: async () =>
         Boolean(await ctx.storage.get('job', 'lifecycle:start-job')),
+      startHeld: () => startHeldAfterStop(ctx.storage, dependencies.now()),
       lastTurnEndedAt: async (id) =>
         (await ctx.readChatRecovery?.(id))?.lastTurnEndedAt ?? null,
       recoverTurns: async (id) => {
