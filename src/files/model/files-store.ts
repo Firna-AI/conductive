@@ -233,6 +233,12 @@ export class WorkspaceFiles {
       list,
       result: { stateRead },
     } = read
+    const step = syncRead(this.sync, read)
+    if (!step) {
+      if (list === 'tree' && this.sync.treeStale) this.read('tree', false)
+      this.publish({})
+      return
+    }
     if (stateRead && stateRead.eventNumber > this.sync[list].floor) {
       this.repositories[list].seed(stateRead.repositoryId)
       const report = list === 'tree' ? 'files.snapshot' : 'changes.updated'
@@ -243,7 +249,7 @@ export class WorkspaceFiles {
       )
     }
     const invalidation = new FilesInvalidation()
-    this.apply(syncRead(this.sync, read), invalidation)
+    this.apply(step, invalidation)
     this.publish(invalidation.apply(this.snapshot))
   }
 }

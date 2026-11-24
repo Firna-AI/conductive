@@ -354,9 +354,8 @@ records the current code in calls 5 to 9, 13, and 14.
      events are stored as descriptors, and a descriptor has no event type.
      Markers, port reports, skill reports, and workspace records are
      always stored inline.
-   - The newest skills event can also come from the index key
-     `chat:v1:history-index:skills` when the history index is ready through
-     the cutoff. Otherwise the scan finds it.
+   - **Correction, 24 November 2026.** The backward scan finds the newest
+     `skills.updated` event through the cutoff.
    - Each item stops at its newest full report event. A failure also stops
      at the marker that started its repair. The cause of the record names
      that marker by stream and runner event number.
@@ -474,7 +473,8 @@ records the current code in calls 5 to 9, 13, and 14.
       the newest event that set it.
     - An event at or below the floor of a list changes nothing in that
       list. Each event still counts for the order of the stream.
-    - A reply replaces a list only when its cutoff is above the floor.
+    - A reply with a cutoff above the floor replaces the list. A tree
+      reply at the floor can also repair a revision gap.
     - The failed repairs and the repository start from each read.
     - A repository change between the two cutoffs marks only the list of
       the older read as a list of the old folder.

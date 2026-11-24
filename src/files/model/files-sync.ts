@@ -77,9 +77,7 @@ function fetchedTree(
   sync: FilesSync,
   response: FileTreeResponse,
   cutoff: number | undefined,
-): SyncStep {
-  if (cutoff === undefined && sync.tree.value && !sync.treeStale)
-    return unchanged(sync)
+): FilesSync {
   let value = treeFromSnapshot(response)
   let floor = cutoff ?? sync.tree.floor
   for (const { eventNumber, delta } of sync.pending) {
@@ -92,52 +90,43 @@ function fetchedTree(
     response.unavailable === true ||
     (cutoff === undefined && sync.treeUnavailable)
   return {
-    sync: {
-      ...sync,
-      tree: { value, floor, error: null },
-      treeUnavailable,
-      pending: [],
-      treeStale: false,
-    },
-    touched: none,
-    allTouched: sync.tree.value !== null,
+    ...sync,
+    tree: { value, floor, error: null },
+    treeUnavailable,
+    pending: [],
+    treeStale: false,
   }
 }
 
-function fetchedChanges(
-  sync: FilesSync,
-  changes: ChangesResponse,
-  cutoff: number | undefined,
-): SyncStep {
-  if (cutoff === undefined && sync.changes.value) return unchanged(sync)
-  return {
-    sync: {
-      ...sync,
-      changes: {
-        value: changes,
-        floor: cutoff ?? sync.changes.floor,
-        error: null,
-      },
-    },
-    // A read with a cutoff touches every path in syncRead instead.
-    touched: listedPaths(sync.changes.value, changes),
-    allTouched: false,
-  }
-}
-
-/** Accepts a cutoff above the list's floor. A legacy read can fill a gap. */
+/** Merges a list read, or returns null when its cutoff is obsolete. */
 export function syncRead(
   sync: FilesSync,
   { list, result }: FileListRead,
-): SyncStep {
+): SyncStep | null {
   const cutoff = result.stateRead?.eventNumber
-  if (cutoff !== undefined && cutoff <= sync[list].floor) return unchanged(sync)
+  const { floor, value } = sync[list]
+  const repairingTree = list === 'tree' && sync.treeStale
+  if (
+    cutoff !== undefined &&
+    (cutoff < floor || (cutoff === floor && !repairingTree))
+  )
+    return null
   if (result.ok) {
-    const step =
+    if (cutoff === undefined && value && !repairingTree) return unchanged(sync)
+    const next =
       list === 'tree'
         ? fetchedTree(sync, result.value, cutoff)
-        : fetchedChanges(sync, result.value, cutoff)
-    return cutoff === undefined ? step : unknownPaths(step.sync)
+        : {
+            ...sync,
+            changes: {
+              value: result.value,
+              floor: cutoff ?? floor,
+              error: null,
+            },
+          }
+    return cutoff !== undefined || repairingTree
+      ? unknownPaths(next)
+      : unchanged(next)
   }
   if (cutoff === undefined) {
     return unchanged({

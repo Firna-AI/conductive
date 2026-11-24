@@ -15,6 +15,8 @@ streams, and the order of the runner commands.
   says. A session read calls it between batches of a
   [session index](#the-session-index) build. The workspace GET calls it
   while it waits for [read-state recovery](#the-workspace-read-state).
+  The Files list reads also wait outside the queue through
+  `ChatStore.readQueued`.
 - `outside` first gives the committed turn ends to the
   [`turnEnded`](integration/workspace-lifecycle.md#hooks-and-events) hook.
   Then the task gives the queue up and runs the call. When the call ends,

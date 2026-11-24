@@ -11,15 +11,17 @@ repository. A 503 reply for an absent list can also carry `stateRead`.
 When both reads give cutoffs, the store opens its stream after the smaller
 cutoff. As soon as a read gives no readable cutoff, the store starts its
 stream after event 0. A stream report can fill the missing list while the
-other read is still pending. The store applies that reply if its cutoff
-is above the floor of its list.
+other read is still pending.
 
 Each list has an event floor. Its read cutoff sets the floor. An event
 that changes the list advances it. An event at or below a list's floor
 has no effect on that list. Each new event still counts for stream order.
-A later read replaces a list only if its cutoff is above the list's
-floor. A legacy read can still fill a missing list or repair a gap in
-the tree revisions.
+A read with a cutoff above the list's floor replaces the list. When a
+tree revision gap still needs repair, a tree reply at the floor also
+applies. It includes the event that set the floor. If the tree reply has
+a cutoff below the floor and the gap remains, the store reads the tree
+again after that reply. An error without a cutoff starts no retry. A
+legacy reply can fill a missing list or repair a gap in the tree revisions.
 
 The stream reads stored history in pages, then applies live events.
 The pages share one cutoff and can omit event numbers. Live events wait
@@ -44,9 +46,11 @@ After such an event, each open page reads its file or diff again. The
 store collects the changes of one message: a history page, or one live
 event. Then it applies them once.
 
-A list read with a cutoff above the list's floor also refreshes every open
-file, diff, and HTML page preview. This includes a 503 with a cutoff.
-The read cannot name the paths of the events it covers.
+An accepted list read with a cutoff also refreshes every open file, diff,
+and HTML page preview. This includes a 503 with a cutoff. The read cannot
+name the paths of the events it covers. A legacy tree read that repairs a
+revision gap also refreshes all open paths. A legacy read that fills a
+missing list leaves the open paths as they are.
 
 The workspace can refuse an update of a file list. After such a first
 loss, it asks the runner for a fresh full report of that list, and the
