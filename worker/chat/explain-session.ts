@@ -36,16 +36,17 @@ function explanationInput(body: unknown): ExplainSessionRequest {
   const quote = string(input.quote)
   if (!quote.trim()) return invalidInput()
   const before = string(input.before)
-  const selection = {
+  const request = {
     messageId: identifier(input.messageId),
     quote: quote.slice(0, quoteLimit),
     before: before.slice(Math.max(0, before.length - contextLimit)),
     after: string(input.after).slice(0, contextLimit),
-  }
-  return {
-    ...selection,
     ...(input.choice === undefined ? {} : { choice: choice(input.choice) }),
   }
+  if (input.question === undefined) return request
+  const question = string(input.question).trim()
+  if (!question) return invalidInput()
+  return { ...request, question }
 }
 
 async function requireMessage(

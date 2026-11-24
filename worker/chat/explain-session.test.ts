@@ -98,6 +98,36 @@ it('starts an open anchored session, writes its prompt and title, and dispatches
   ).toMatchObject({ anchor, title: 'Explain "Selected text"' })
 })
 
+it('uses the first line of the trimmed question as the session title', async () => {
+  const { parent, explain } = await explanationFixture(harness)
+  const response = await explain({
+    ...EXPLAIN_INPUT,
+    question: '\n \tWhy is this selected?\nGive an example. \t\n',
+  })
+  expect(response.status).toBe(201)
+  const reply: ExplainSessionResponse = await response.json()
+  expect(reply.session.title).toBe('Why is this selected?')
+  expect(reply.message.text.split('\n\n')[0]).toBe(
+    'Why is this selected?\nGive an example.',
+  )
+  expect(reply.session.anchor).toEqual({
+    parentSessionId: parent.id,
+    ...EXPLAIN_INPUT,
+  })
+})
+
+it.each([
+  ['blank', ' \r\n\t '],
+  ['non-string', 42],
+])('refuses a %s question', async (_, question) => {
+  const { explain } = await explanationFixture(harness)
+  const response = await explain({ ...EXPLAIN_INPUT, question })
+  expect(response.status).toBe(400)
+  expect(await response.json()).toMatchObject({
+    error: { code: 'invalid_input' },
+  })
+})
+
 it('prefers the body choice, then the sending member default, then the app default', async () => {
   const { fixture, path, explain } = await explanationFixture(harness)
   await saveAccountDefault(fixture.env.DB, fixture.member.id, CODEX, TEST_TIME)

@@ -30,6 +30,8 @@ export interface ExplainSessionRequest extends Omit<
   'parentSessionId'
 > {
   choice?: AgentChoice
+  /** The member's question at the start of the written prompt. */
+  question?: string
 }
 
 export type ExplainSessionResponse = SendMessageResponse
