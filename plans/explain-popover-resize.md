@@ -242,7 +242,10 @@ made on 24 November 2026.
 - `src/ui/components/explain/ExplainPopover.module.css`: the width and the
   height from the custom properties, and the look of the handles, which
   the mockups share. `.panel` reads `--explain-width` and
-  `--explain-height`, with 400 px and 420 px as defaults. `fixedHeight`
+  `--explain-height`. `popoverSizeStyle` of
+  `src/ui/components/explain/popoverSize.ts` sets them in the app and in
+  the mockups, with the default size where no size is given, so the CSS
+  holds no default size. `fixedHeight`
   holds the chosen height. `edge` with `edgeTop`, `edgeBottom`,
   `edgeLeft`, or `edgeRight` draws an edge handle. `corner` with
   `cornerTopLeft`, `cornerTopRight`, `cornerBottomLeft`, or

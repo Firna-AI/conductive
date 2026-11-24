@@ -5,27 +5,24 @@
  * opens below the mark, from the start of the mark, so it never covers the
  * marked text. Where the frame has more room above the mark, it opens
  * above it, and where it would pass the end of the frame, it ends at the
- * end of the mark. Its width and its highest height are the size that the
- * member chose with its handles, `--explain-width` and `--explain-height`,
- * or 400 px by 420 px, and its chat scrolls inside it. In a low frame it
- * takes only the room on its side of the mark, less the 12 px of its
- * margins, `--explain-gap`. It has the full hairline outline of every card
- * of the app and the shadow of a menu. It takes the focus as it opens, as a
- * dialog does, with no ring around the whole card. The app sets
- * `--explain-gap` and `--explain-area`, the side of the mark that the panel
- * tries first, for the places of its own, whatever the order of the style
- * sheets.
+ * end of the mark. Its width and its highest height are `--explain-width`
+ * and `--explain-height`, which each caller sets with `popoverSizeStyle`:
+ * the size that the member chose with its handles, or the default size. Its
+ * chat scrolls inside it. In a low frame it takes only the room on its side
+ * of the mark, less the 12 px of its margins, `--explain-gap`. It has the
+ * full hairline outline of every card of the app and the shadow of a menu.
+ * It takes the focus as it opens, as a dialog does, with no ring around the
+ * whole card. The app sets `--explain-gap` and `--explain-area`, the side of
+ * the mark that the panel tries first, for the places of its own, whatever
+ * the order of the style sheets.
  */
 .panel {
   display: flex;
   position: absolute;
   z-index: 20;
   flex-direction: column;
-  width: var(--explain-width, 400px);
-  max-height: min(
-    var(--explain-height, 420px),
-    calc(100% - var(--explain-gap, 12px))
-  );
+  width: var(--explain-width);
+  max-height: min(var(--explain-height), calc(100% - var(--explain-gap, 12px)));
   margin: 6px 0;
   overflow: hidden;
   border: 1px solid var(--ui-border2);
@@ -90,7 +87,7 @@
  * also over a short chat. The room on its side of the mark still caps it.
  */
 .fixedHeight {
-  height: var(--explain-height, 420px);
+  height: var(--explain-height);
 }
 
 /*

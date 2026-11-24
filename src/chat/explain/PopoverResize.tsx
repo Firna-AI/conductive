@@ -81,9 +81,9 @@ function CornerHandle(props: { handles: PopoverHandles }) {
  * The handles of the panel of a computer: one on its free edge above or
  * below the chat, which changes the height, one on its free edge at the
  * side, which changes the width, and their corner. They lie inside the
- * panel, so a press on one keeps the popover open, and Escape on one closes
- * the popover. Each takes the drag and the keys of `useResizeHandle`, as the
- * column handles do.
+ * panel, so a press on one keeps the popover open. Each edge handle takes
+ * the drag and the keys of `useResizeHandle`, as the column handles do, and
+ * Escape on it closes the popover. The corner takes only the drag.
  */
 export function PopoverResize(props: { handles: PopoverHandles }) {
   const { layout, width, height } = props.handles

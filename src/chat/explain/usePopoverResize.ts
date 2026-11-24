@@ -11,7 +11,7 @@ import {
   popoverSizeStyle,
   popoverWidth,
 } from '../../ui/components/explain/popoverSize'
-import type { PopoverLayout } from './popover-edges'
+import { footGap, type PopoverLayout } from './popover-edges'
 import { anchorsInCss, usePopoverLayout, type MarkSide } from './popover-place'
 
 /** The moves of one edge handle, and the value that it shows. */
@@ -46,7 +46,10 @@ export function usePopoverResize(
   chosen: ExplainSize,
   computer: boolean,
 ): {
-  /** The width and the highest height, as CSS custom properties. */
+  /**
+   * The width and the highest height, as CSS custom properties, and the
+   * space that a panel with no shown mark keeps under it.
+   */
   style: CSSProperties | undefined
   /** The panel keeps its moved height until it closes. */
   fixedHeight: boolean
@@ -82,7 +85,10 @@ export function usePopoverResize(
   }
   const shownWidth = layout ? Math.min(width, layout.widthCap) : width
   const panelStyle = {
-    style: popoverSizeStyle({ width: shownWidth, height }),
+    style: {
+      ...popoverSizeStyle({ width: shownWidth, height }),
+      '--explain-foot-gap': `${footGap}px`,
+    },
     fixedHeight: moved.height !== null,
     endFirst: side === 'end',
     refresh,

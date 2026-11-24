@@ -98,7 +98,7 @@ export function ExplainPopover(props: {
       aria-label={props.title}
       className={classes(styles.panel, resized && styles.fixedHeight)}
       role="dialog"
-      style={resized ? popoverSizeStyle(resized) : undefined}
+      style={popoverSizeStyle(resized)}
     >
       {header}
       {body}

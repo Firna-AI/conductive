@@ -57,6 +57,31 @@ function layOutPopover(boxes: {
   })
 }
 
+/**
+ * Lays the popover out as a browser without CSS anchor positioning does,
+ * until the test ends: `CSS.supports` denies `position-anchor`, so
+ * `placePanel` places the popover. The dialog is as wide as its
+ * `--explain-width`, as its CSS makes it, and each other element keeps a
+ * width of 0 px.
+ */
+function withoutAnchorPositioning() {
+  // happy-dom makes a new `CSS` at each read, so the change goes on the
+  // prototype that they share.
+  const shared = Reflect.getPrototypeOf(CSS)
+  if (!shared) throw new Error('CSS has no prototype.')
+  replace(shared, 'supports', {
+    value: (condition: string): boolean =>
+      !condition.startsWith('position-anchor'),
+  })
+  replace(HTMLElement.prototype, 'offsetWidth', {
+    get(this: HTMLElement): number {
+      return this.getAttribute('role') === 'dialog'
+        ? parseFloat(this.style.getPropertyValue('--explain-width'))
+        : 0
+    },
+  })
+}
+
 /** The chosen size that the next page load reads from the browser. */
 function kept(storage: KeyValueStorage) {
   const { explain } = new PanelLayout(storage)
@@ -147,6 +172,64 @@ describe('the handles of the popover of an explanation', () => {
     })
     await pressKey('Escape')
     expect(queryByRole('dialog', title)).toBeNull()
+  })
+
+  it('stops a move of the width at the room on its side of the mark, also where the other side has more room', async () => {
+    const storage = new MemoryStorage()
+    // The panel stands below the start of a mark in the middle of the
+    // frame. Its side has 534 px from the start of the mark to the end of
+    // the frame, less the margin of 6 px. The other side has 994 px, so the
+    // panel could show 720 px wide there.
+    layOutPopover({
+      frame: new DOMRect(0, 0, 1440, 900),
+      mark: new DOMRect(900, 100, 100, 18),
+      panel: new DOMRect(900, 124, 400, 300),
+    })
+    const { events } = explained('explain-1', quote)
+    await mountChat({ stored: events, panels: new PanelLayout(storage) })
+    const popover = await openFromMark(title, 'Ready')
+    const width = byRole('separator', resizeWidthLabel, popover)
+    const highest = width.getAttribute('aria-valuemax')
+    width.focus()
+    await pressKey('End')
+    expect({
+      highest,
+      shown: popover.style.getPropertyValue('--explain-width'),
+      value: width.getAttribute('aria-valuenow'),
+      kept: kept(storage).width,
+    }).toEqual({ highest: '534', shown: '534px', value: '534', kept: 534 })
+  })
+
+  it('in a browser without anchor positioning, keeps the panel to the chosen height and keeps it at the end of its mark as it narrows', async () => {
+    const storage = new MemoryStorage()
+    const { explain } = new PanelLayout(storage)
+    explain.width.choose(600)
+    explain.height.choose(600)
+    // From the start of the mark, the chosen 600 px pass the end of the
+    // frame, so the panel ends at the end of the mark, at x 1000. Below the
+    // mark the frame has 770 px of room, more than the chosen height.
+    layOutPopover({
+      frame: new DOMRect(0, 0, 1440, 900),
+      mark: new DOMRect(900, 100, 100, 18),
+      panel: new DOMRect(400, 124, 600, 300),
+    })
+    withoutAnchorPositioning()
+    const { events } = explained('explain-1', quote)
+    await mountChat({ stored: events, panels: new PanelLayout(storage) })
+    const popover = await openFromMark(title, 'Ready')
+    const opened = {
+      left: popover.style.left,
+      maxHeight: popover.style.maxHeight,
+    }
+    // Home narrows the panel to 320 px, which fit from the start of the mark
+    // again. The panel keeps the end of the mark: its left edge goes to
+    // 1000 - 320 = 680 px.
+    byRole('separator', resizeWidthLabel, popover).focus()
+    await pressKey('Home')
+    expect({ opened, narrowed: popover.style.left }).toEqual({
+      opened: { left: '400px', maxHeight: '600px' },
+      narrowed: '680px',
+    })
   })
 
   it('keeps the popover open at a press on a handle, which stores nothing, and a drag of the corner moves both free edges', async () => {

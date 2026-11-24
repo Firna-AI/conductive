@@ -104,13 +104,13 @@ for the screens.
   each change of the size of the panel or of the mark, each scroll, and
   each resize of the window, so no callback of a `ResizeObserver` changes
   the layout. It places the panel first through `placePanel` in a browser
-  without anchor positioning. Each move finds them at once. The handles
-  take the pointer drag and the keys from `useResizeHandle` in
-  `src/shell/layout/`, which the column handles and the split use too. So
-  a change of the steps, the keys, or the end of a drag reaches every
-  handle of the app. The handles lie inside the panel, so a press on one
-  is a press in the popover. The shared CSS of `ExplainPopover` draws
-  them, for the app and the mockups.
+  without anchor positioning. Each move finds them at once. The edge
+  handles take the pointer drag and the keys from `useResizeHandle` in
+  `src/shell/layout/`, which the column handles and the split use too, and
+  the corner takes only the drag from it. So a change of the steps, the
+  keys, or the end of a drag reaches every handle of the app. The handles
+  lie inside the panel, so a press on one is a press in the popover. The
+  shared CSS of `ExplainPopover` draws them, for the app and the mockups.
 - One store, `ExplainSize` in `src/app/explain-size.ts`, holds the chosen
   width and height of all popovers. The panel layout holds it as
   `PanelLayout.explain`, and `useExplainSize` gives it. A page without the
@@ -119,9 +119,12 @@ for the screens.
   through `StoredSize` of `src/app/stored-size.ts`, which the column widths
   and the split use too. `PopoverSize` holds the moves of one open
   popover. `usePopoverResize` sets the size on the panel as
-  `--explain-width` and `--explain-height`, with the width at most the
-  larger room beside the mark, and `placePanel` uses the chosen height in
-  place of a fixed one. Each move starts from the size that the panel
+  `--explain-width` and `--explain-height`, through `popoverSizeStyle`,
+  with the width at most the larger room beside the mark, and `placePanel`
+  uses the chosen height in place of a fixed one. It also sets
+  `--explain-foot-gap` from `footGap` of `popover-edges.ts`, so the CSS of
+  a panel with no shown mark and the room of its height handle keep one
+  space under the panel. Each move starts from the size that the panel
   shows, which is also the value of its handle. From the first move of the
   height until the popover closes, the class `fixedHeight` keeps the moved
   height. Each move of the width keeps the side of the mark that the panel
@@ -192,9 +195,12 @@ for the screens.
   shows the handles after the follow-up field on a computer and none on a
   phone. The keys move each free edge in the direction of its arrow, from
   the size that shows, up to the room by the mark, and the browser keeps
-  the size. Escape on a handle closes the popover. A press on a handle
-  keeps the popover open and stores nothing, and a drag of the corner
-  moves both free edges.
+  the size. Escape on a handle closes the popover. End stops the width at
+  the room on the side of the mark, also where the other side has more
+  room. A press on a handle keeps the popover open and stores nothing, and
+  a drag of the corner moves both free edges. In a browser without anchor
+  positioning, `placePanel` keeps the panel to the chosen height, and a
+  panel at the end of its mark stays there as it narrows.
 - `popover-edges.test.ts` finds the free edges and the rooms of each
   place of the panel by its mark, and of a panel with no shown mark.
   `../../app/explain-size.test.ts` holds the steps, the drags, the room

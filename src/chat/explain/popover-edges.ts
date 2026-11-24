@@ -9,8 +9,11 @@ interface Box {
 /** The space between the panel and its mark, and the edge of the frame. */
 export const margin = 6
 
-/** The space that a panel with no shown mark keeps under it. */
-const footGap = 12
+/**
+ * The space that a panel with no shown mark keeps under it. The CSS of the
+ * panel reads it as `--explain-foot-gap`, which `usePopoverResize` sets.
+ */
+export const footGap = 12
 
 /**
  * Where the panel of a computer stands, and the room that it has. Its free
@@ -43,7 +46,8 @@ const whole = (room: number): number => Math.max(0, Math.floor(room))
  * it the top edge. From the start of the mark the right edge is free, and
  * where the panel ends at the end of the mark the left edge. A panel with no
  * shown mark stands at the top right of the frame, so its bottom and left
- * edges are free, and its height stops 12 px above the bottom of the frame.
+ * edges are free, and its height stops `footGap` above the bottom of the
+ * frame.
  */
 export function popoverLayout(
   panel: Box,

@@ -93,12 +93,13 @@
 
 /*
  * A panel whose mark does not show stands at the top right of the frame.
- * Its height stops 12 px above the bottom of the frame, so its follow-up
- * field stays in view: it leaves 64 px above it, its top margin of 6 px,
- * and 12 px under it.
+ * Its height stops above the bottom of the frame, so its follow-up field
+ * stays in view: it leaves 64 px above it, its top margin of 6 px, and the
+ * space under it that the app sets as `--explain-foot-gap`. The room of its
+ * height handle keeps the same space.
  */
 .unanchored {
-  --explain-gap: 82px;
+  --explain-gap: calc(64px + 6px + var(--explain-foot-gap));
   top: 64px;
   right: 16px;
 }
