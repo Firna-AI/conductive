@@ -183,10 +183,15 @@ This page lists each protocol doc and what it covers.
   - [Workspace and session names](../protocol/workspace-and-session-names.md):
     the missing and the automatic names of workspaces and sessions, and
     the title that a small model gives a new workspace.
-  - [Explain](../protocol/explain.md): Explain on a selection of chat
-    text, its key, the written prompt, the explanation and its anchor, the
-    marks in the parent chat, the popover, a closed explanation, and
-    read-only workspaces.
+  - [Explain](../protocol/explain.md): Explain and Ask on a selection of
+    chat text, the key of Explain, the written prompt, and the explanation
+    and its anchor.
+    - [Explain: Ask](../protocol/explain-ask.md): Ask, the selection of an
+      Ask, the unsent popover of Ask, Send, and the written prompt of an
+      Ask.
+    - [Explain: the mark and the popover](../protocol/explain-popover.md):
+      the marks in the parent chat, the popover, a closed explanation, and
+      read-only workspaces.
 - [Model favourites](../protocol/model-favourites.md): the favourites of
   each member, the rows and the marks of the model menu, All models, the
   hidden favourites, and the Favourites section of Preferences.

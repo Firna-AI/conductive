@@ -46,7 +46,8 @@ org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
     [Messages](messages-and-attachments.md#messages) says
   - through a call of the agent tools in a turn that the member sent, as
     [The sender](session-calls.md#the-sender) says
-  - with Explain on a selection of chat text, as [Explain](explain.md) says
+  - with Explain or Ask on a selection of chat text, as
+    [Explain](explain.md) says
 - An automation run starts the first session of its workspace in the name of
   the automation owner, as
   [A run acts as its owner](automation-runs.md#a-run-acts-as-its-owner) says.
@@ -199,9 +200,12 @@ tab menu.
 
 ### Explain
 
-[Explain](explain.md) holds the requirements of the sessions that explain
-a selection of chat text, their marks in the parent chat, and their
-popover.
+[Explain](explain.md) holds the requirements of Explain and Ask on a
+selection of chat text and of the sessions that they start. With Explain,
+the app writes the prompt and sends it at once. With Ask, the member first
+writes a question in the popover, as [Explain: Ask](explain-ask.md) says.
+[Explain: the mark and the popover](explain-popover.md) gives their marks
+in the parent chat and their popover.
 
 ### Session links
 

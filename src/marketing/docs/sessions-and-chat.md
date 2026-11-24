@@ -340,11 +340,11 @@ In the folded work of a turn, open a message line to read its table or see its p
 
 ## Explain chat text
 
-Select text inside one agent answer or member message, then select **Explain**.
-On a computer, **Explain** shows above the selection.
-On a phone, it shows above the message box.
-You can also press **⌥⌘E** on a Mac or **Alt+Shift+E** on another computer.
-Tool lines, notices, and text that the agent still writes offer no **Explain**.
+Select text inside one agent answer or member message, then select **Explain** or **Ask**.
+On a computer, **Explain** and **Ask** show above the selection.
+On a phone, they show above the message box.
+To explain the selection, you can also press **⌥⌘E** on a Mac or **Alt+Shift+E** on another computer.
+Tool lines, notices, and text that the agent still writes offer no **Explain** and no **Ask**.
 
 **Explain** starts a new session.
 You write no message.
@@ -355,6 +355,12 @@ The agent still has the tools of any session, so it can change files.
 The new session uses your personal or org login, and the **Model and effort** of your **Preferences**.
 Its tab opens at the end of the tab row.
 The tab that you read stays shown.
+
+**Ask** works as **Explain** does, but you write a question first.
+It opens a small panel by the text at once, with an empty field.
+Write your question, then select **Send** to start the new session.
+Your question comes first in its first message, and the first line of the question becomes the title of its tab.
+Closing the panel before **Send** starts nothing and drops your question.
 
 The answer shows in a small panel by the text.
 On a phone, the panel is a sheet over half the screen.

@@ -86,10 +86,66 @@ Design calls of the agent, on 24 November 2026:
     takes the focus, so the keyboard of the phone opens with the sheet,
     and the chat scrolls the highlighted text into view above the sheet.
     Reason: the sheet and the mark of Explain behave in the same way.
+- Agent calls of the documentation milestone, on 24 November 2026:
+  - The Explain protocol doc has three pages: `explain.md`,
+    `explain-ask.md`, and `explain-popover.md`. Reason: one page passed
+    400 lines, and each section that other docs link to stays on
+    `explain.md`.
+  - The field of an Ask empties at Send and takes input while the start
+    waits. Text typed during the wait goes into the draft of the new
+    explanation, and a failed start puts the question back before that
+    text. Reason: the composer rule of
+    [Messages](../docs/protocol/messages-and-attachments.md#messages).
+  - Send stays busy while the start waits, so a second press starts no
+    second explanation. Reason: Explain is busy in the same way.
+  - A close while the start waits stops nothing. The reply opens the
+    popover of the new explanation, and a failed start opens the unsent
+    popover again with the question. Reason: the reply of Explain always
+    opens its popover, and the member loses no typed text. Call of the
+    orchestrator.
+  - White space alone counts as no text, so Send stays off. Reason: the
+    follow-up field does the same, and the Worker refuses a blank
+    question.
+  - The field of the unsent popover stays while the cloud computer does
+    not run, and no bar takes its place. Reason: Send starts the cloud
+    computer, as a press on Explain does.
+  - A press outside closes the unsent popover only on a computer. Reason:
+    the rule of 23 November 2026 for each popover keeps the sheet of a
+    phone open.
+  - The unsent popover counts as the one open popover, so another popover
+    that opens in its place drops the question. Reason: at most one
+    popover is open.
+  - The quote takes its mark when the explanation starts, not at the press
+    on Send. Reason: a failed start keeps the unsent popover and its
+    highlight.
+  - The docs say only that Ask has no key of its own, and nothing of a
+    command that a person can bind. Reason: the user's choice covers only
+    the key, and Milestone 4 adds no command.
+  - The protocol docs state the decision in force and keep no record of
+    the replaced decision of 20 November 2026. Reason: the
+    `documentation` skill keeps that record in this plan.
+  - The Privacy sections in `privacy-uses.ts` and `privacy-recipients.ts`
+    name Ask, and the Privacy effective date is 24 November 2026. Reason:
+    those files hold parts of the Privacy page, and the page promises a
+    new effective date for each change.
+  - The workspaces guide lists Explain and Ask among the actions that
+    start a stopped computer, as the overview does. Reason: the guide
+    already missed Explain.
+  - The guides describe Ask before Milestone 4 builds it. So the browser
+    check of Milestone 4 confirms each guide sentence on Ask, and the
+    branch does not merge without Milestone 4. Reason: a guide describes
+    only what the product offers.
+  - The heading "Explain chat text" of the sessions guide stays. Reason: a
+    new heading gives the section a new address.
+  - The Explain README says that the chat does not show Ask yet. Milestone
+    4 removes that sentence and adds Ask to its Key code and Tests.
+    Reason: a README marks nothing as built that is not built.
 
 Contract owners:
 
 - [Explain](../docs/protocol/explain.md).
+- [Explain: Ask](../docs/protocol/explain-ask.md).
+- [Explain: the mark and the popover](../docs/protocol/explain-popover.md).
 - The [Explain README](../src/chat/explain/README.md).
 
 ## Milestone 1: Mockups
@@ -122,15 +178,15 @@ The screenshots and the logs of the checks of this milestone are in
 
 Depends on: 1
 
-- [ ] Update `docs/protocol/explain.md`: Ask and its place, the unsent
+- [x] Update `docs/protocol/explain.md`: Ask and its place, the unsent
       popover, the written prompt of an Ask, the keyboard start by Tab,
       and the record of the replaced decision.
-- [ ] Update the Explain summary in `docs/protocol/agents-and-sessions.md`.
-- [ ] Read `src/marketing/terms.ts`, `src/marketing/privacy.ts`, and each
+- [x] Update the Explain summary in `docs/protocol/agents-and-sessions.md`.
+- [x] Read `src/marketing/terms.ts`, `src/marketing/privacy.ts`, and each
       guide in `src/marketing/docs/` in full. Update each sentence that
       restates a changed fact, such as the start of the cloud computer in
       `overview.md`.
-- [ ] Update `src/chat/explain/README.md`.
+- [x] Update `src/chat/explain/README.md`.
 
 ## Milestone 3: The Worker takes a question
 
@@ -163,6 +219,7 @@ Depends on: 3
       the question, then opens the popover of the new explanation.
 - [ ] Add DOM tests: Ask from a selection, Send off while empty, Escape
       and a press outside before Send, a failed start that keeps the text,
+      text typed while the start waits, a close while the start waits,
       and the phone.
 - [ ] Check the change in a browser and save screenshots under
       `.context/explain-ask/`.

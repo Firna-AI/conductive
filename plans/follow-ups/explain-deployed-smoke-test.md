@@ -19,4 +19,4 @@
   5. Stop the cloud computer, explain another passage, and check that the computer starts.
 - **Impact if no action:** A fault that only real agents or a real cloud computer show stays unseen until a member meets it.
 - **Needs:** The merged change, deployed to `conductive.build`.
-- **Done when:** Each step above behaves as `docs/protocol/explain.md` says, or a new follow-up item records each difference.
+- **Done when:** Each step above behaves as `docs/protocol/explain.md` and `docs/protocol/explain-popover.md` say, or a new follow-up item records each difference.

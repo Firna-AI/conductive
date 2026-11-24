@@ -16,8 +16,8 @@ The terms are those of the [architecture doc](../architecture.md#terms).
 - While the user reads higher up, a small round button shows above the
   right end of the composer. A press shows the bottom of the chat, with
   the newest message. The button hides at the bottom and near it, so a
-  small scroll shows no button. It stays clear of Explain, which a phone
-  shows above the middle of the composer.
+  small scroll shows no button. It stays clear of Explain and Ask, which a
+  phone shows above the middle of the composer.
 - Reason: on a phone, a long chat takes many swipes to get back to the
   newest message. The user asked for the button on 23 November 2026.
 - A message that the user sends from the chat goes to the bottom of the

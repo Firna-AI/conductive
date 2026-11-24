@@ -287,7 +287,7 @@ The stop ends every service and discards its saved command, settings, and logs.
 Start needed services again after **Resume**.
 
 Open a stopped workspace to start its computer again.
-If it stops while the workspace is open, select **Resume**, or open a file or a change.
+If it stops while the workspace is open, select **Resume**, open a file or a change, select **Explain** on chat text, or send a question with **Ask**.
 The history remains readable while the computer starts.
 A file or change that you open then waits for the computer, then opens.
 One that already shows stays.

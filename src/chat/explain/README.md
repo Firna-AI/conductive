@@ -3,9 +3,12 @@
 Explain in the chat: Explain by a finished selection of text, its key, the
 marks of the explanations in the chat of their parent session, the menu of
 overlapping marks, and the popover of an explanation with its follow-up
-field. See [the chat](../README.md) for the whole chat,
-[Explain](../../../docs/protocol/explain.md) for the requirements, and the
-`app/chat/explain` pages of the
+field. [Ask](#ask) gives the rules for the code of Ask, which the chat does
+not show yet. See [the chat](../README.md) for the whole chat,
+[Explain](../../../docs/protocol/explain.md) with its pages
+[Explain: Ask](../../../docs/protocol/explain-ask.md) and
+[Explain: the mark and the popover](../../../docs/protocol/explain-popover.md)
+for the requirements, and the `app/chat/explain` pages of the
 [mockup catalogue](../../../docs/mockups/catalogue-chat-and-automations.md)
 for the screens.
 
@@ -112,6 +115,56 @@ for the screens.
 - The time of a running turn in the popover moves on by itself, as in a
   tab, also while the parent session is idle: the row of the turn reads
   the clock of the chat, `ChatClock`, and keeps its own tick.
+
+### Ask
+
+The chat does not show Ask yet. The code of Ask follows these rules, and
+[Explain: Ask](../../../docs/protocol/explain-ask.md) gives its
+requirements.
+
+- Ask follows Explain in the bar of `FloatingExplain` and in `PhoneExplain`,
+  and it shows whenever Explain shows. It follows Explain in the order of
+  Tab. It offers no shortcut.
+- A press on Ask saves the selection that Explain reads: the message, the
+  quote, the text around it, and the range of the quote. The focus then
+  moves into the field, which ends the selection of the page. So the
+  unsent popover and Send use the saved selection, never the selection of
+  the page.
+- While the unsent popover is open, the saved range keeps a highlight in
+  the colours of a selection. It draws through the CSS Custom Highlight
+  API, as the fill of a mark does, so the text that React draws stays its
+  own. It is no mark, so it has no state button and takes no press.
+- The unsent popover lies where the popover of an explanation lies. On a
+  computer, it keeps to a box over the highlighted quote, drawn as the box
+  of the open mark is. On a phone, it is the sheet at half height. It
+  counts as the one open popover, so the rules of the open popover above
+  hold for it.
+- It uses `ExplainPopover` with the quote and Close, and no Expand. Its
+  chat is empty, and screen readers hear `askLabel` as its name. Its field
+  shows `askPlaceholder`, takes text only, and grows to four lines. Send
+  stays off while the text holds only white space.
+- While the cloud computer does not run, the field stays, and the bar of
+  `sandboxParts` takes no place there. Send starts the cloud computer, as
+  a press on Explain does.
+- Send calls `ChatController.explain` with the saved selection and the
+  question. Send is busy while the start waits, as Explain is, so a second
+  press starts nothing.
+- The field empties at Send and keeps the focus, and it takes input while
+  the start waits, as the composer clears at once after a send.
+- The reply shows the tab of the explanation through `takeReply`. The
+  popover of the new explanation then takes the place of the unsent
+  popover. Text typed while the start waited goes into the draft of the
+  new explanation, so its follow-up field shows that text, with the focus.
+- A failed start keeps the unsent popover open. The question goes back
+  into the field, before any text typed during the wait, as a refused
+  message goes back into the composer. The parent chat shows the notice
+  of a failed Explain, `explainFailedTitle`.
+- Before Send, Close, Escape, and on a computer a press outside drop the
+  unsent popover with its question, and they start nothing. The focus then
+  goes back to the chat of the parent session. Another popover that opens
+  in its place, and a change of the shown session, drop it in the same
+  way. A sheet on a phone stays open at a press outside.
+- A read-only workspace shows no Ask.
 
 ## Tests
 
