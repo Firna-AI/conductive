@@ -5,7 +5,7 @@ edition.workspace = true
 license.workspace = true
 authors.workspace = true
 rust-version.workspace = true
-description = "Conductive cloud computer commands"
+description = "Conductive commands for cloud computers and own computers"
 publish = false
 
 [[bin]]
@@ -13,6 +13,7 @@ name = "conductive"
 path = "src/main.rs"
 
 [dependencies]
+cnd-computer = { workspace = true }
 cnd-host = { workspace = true }
 cnd-runner = { workspace = true }
 cnd-services = { workspace = true }

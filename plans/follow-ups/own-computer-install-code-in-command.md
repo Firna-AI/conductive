@@ -1,0 +1,51 @@
+# The copied command exposes the one-time code
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 1, findings 2 and 53, with option E of their joint finding check. That branch fixed the part in the program.
+- **Location:** `docs/mockups/src/components/own-computers/addComputerCopy.ts:46`, `image/computer/README.md:23`, `read_options` in `image/computer/install.sh:28`, `crates/cnd-cli/tests/computer_install_tests.rs`
+- **Reason:** The task message and the mockup give the form of the copied command, and each option changes that form.
+
+- **Source:** Review. **Category:** Security.
+- **Terms:**
+  - **One-time code:** the code in the install command of an own computer, which works once, within 1 hour, and which the Worker exchanges for the computer token.
+  - **Computer token:** the lasting credential with which an own computer opens its computer connection and gets the work of the org.
+  - **Process arguments:** the command line of a running process, which every local account of a Linux server can read in `/proc/<pid>/cmdline`.
+  - **Add computer:** the dialog of the Own computers tab in which an admin names a new own computer and gets its install command.
+- **Background:**
+  - Add computer gives a one-line install command with a one-time code. The admin runs it on the server, as a user who can use `sudo` (`docs/protocol/own-computers.md:143-148`).
+  - The mockup `docs/mockups/src/components/own-computers/addComputerCopy.ts:46` and the installer README `image/computer/README.md:23` give this form: `curl -fsSL https://conductive.build/install-computer | sh -s -- --code <code>`. The task message that asked for the install script gives the same form.
+  - The app does not build this command yet. The work that builds the Own computers screens builds it.
+  - `read_options` in `image/computer/install.sh` reads the code from the arguments of the script.
+  - `conductive computer enroll` reads the code on standard input and has no code option (`crates/cnd-cli/src/computer_command.rs`). The installer pipes the code to it. The branch `calummoore/own-computers-milestone-11-host-program-3jbp` fixed this part.
+  - In `curl … | sh`, the shell reads the script itself on its standard input.
+  - Linux gives `/proc/<pid>/cmdline` the mode 0444, so every local account can read it. It gives `/proc/<pid>/environ` the mode 0400, so only the owner and root can read the environment of a process.
+  - A test run of `sh -s -- --code …` on a cloud computer of this project showed both modes, and its `cmdline` held the code. That computer mounts `/proc` with no `hidepid` option.
+- **Problem:** The copied command gives the code to the installer shell as an argument. So the code stays readable in `/proc/<pid>/cmdline` of that shell for the whole install, which can take minutes. Another local account can read it there before the installer exchanges it for the computer token.
+- **Impact if no action:** A local account that reads an unused code can enroll a false computer against the computer record of the org. That computer then gets the new workspaces and builds of that record, with their tokens and env vars, until an admin removes it (`docs/protocol/own-computers.md:256-258`).
+- **Root question:** How can an admin enroll a server without exposing the one-time code to other local accounts?
+- **Options:**
+  - **A.** Give the code to the installer on a private input pipe. The command cannot keep the `curl … | sh` form, because the script already uses the standard input of the shell. So A needs a new form, such as `printf '%s\n' <code> | sh -c "$(curl -fsSL …)"`. Effort: Medium.
+  - **B.** Give the installer the path of a private code file that only its owner can read, and remove the file after the exchange. An interrupted install needs a file cleanup. E is better on each point: the same protection, no file to remove, and a shorter command. Effort: Medium.
+  - **C.** Let the admin approve a pending enrollment in the browser, so that the admin copies no code into a server shell. This changes the enrollment protocol and the setup flow, with Worker and UI changes. Effort: Large.
+  - **D.** Read the code from a terminal prompt with echo off. This adds a paste step and removes the code from the one-line command that the protocol and the mockup give. It fails an install that has no terminal. Effort: Medium.
+  - **E.** Put the code in an environment variable of the copied command: `curl -fsSL https://conductive.build/install-computer | CONDUCTIVE_CODE=<code> sh`. The k3s agent install uses this form.
+    - The installer reads the variable and removes it with `unset` before it starts a child process. It pipes the code to `computer enroll`, as it does today. `read_options` loses `--code`.
+    - Only the owner and root can read the environment of the installer shell.
+    - These files change: the command in `docs/mockups/src/components/own-computers/addComputerCopy.ts`, the command and the option table in `image/computer/README.md`, `read_options` in `image/computer/install.sh`, and `crates/cnd-cli/tests/computer_install_tests.rs`.
+    - The form needs a POSIX-style shell: bash, zsh, dash, or fish 3.1 and later. In csh, the admin must use `env`, which puts the code back in an argument.
+    - No deploy serves the installer until the own computers change merges into `main`. A change before that merge needs no compatible path for `--code`.
+    - Effort: Medium.
+- **Left out:**
+  - Hiding the code from command logs, and a shorter life of the code: both leave the code readable before the exchange.
+  - A fix of `computer enroll` alone: the installer shell keeps the code in its arguments for the whole install. The branch already made that fix as a part.
+  - An exchange at the start of the install: it only makes the time shorter, and a poll of `/proc` still finds the code.
+  - A code in the download address: the code then goes into the arguments of `curl` and into address logs.
+  - The `hidepid` option of `/proc`: it is a setting of the whole server that the installer does not own, and a default server stays exposed.
+  - A Worker that serves a script with the code in it: E gives the same protection with no Worker change and no extra transfer of the code.
+  - A Worker check that flags a second exchange of a spent code: the false computer gets its first build at its first connection. It gets the tokens that clone the repositories of the org before a flag can act.
+- **Wider fix:** E. No process argument then carries the code at either boundary, and `computer enroll` has no code option that a later caller can fill. C is wider, because a leaked code then cannot enroll a server through any channel. But the protocol accepts a stolen command as a risk that the 1-hour life of the code limits (`docs/protocol/own-computers.md:146-148`).
+- **Previous examples:** The host program reads its machine token, the credential of its host connection, from a private file. It gives only the path of that file to its helper shell (`crates/cnd-host/src/config.rs:36`). The services protocol keeps command arguments in the cloud computer, because an argument can hold a token or a password (`docs/protocol/services-in-the-app.md:168-170`).
+- **Related:** `plans/follow-ups/own-computer-first-install-trust.md`: the same code, and work that waits for its answer. Under its options B or C, the admin gets the installer from another channel and takes only the code from the app. The copied command of A, B, D, and E then changes form. C fits those options best, because the admin then copies nothing from the app into a server shell. Answer that item first, or both together.
+- **Recommendation:** E. It closes the exposure as A does, and it keeps the `curl … | sh` form of the task message and the mockup, which A cannot keep. Add a test that the installer reads the code from `CONDUCTIVE_CODE`, and that no child process gets the code in its arguments or its environment.
+- **Action:** ask the user, because each option changes the copied command of the task message and the mockup, and no user decision chose a new form.

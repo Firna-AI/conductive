@@ -123,9 +123,25 @@ executable when the image has no program or its check fails:
 /opt/conductive/current/conductive update started
 ```
 
+To install a specific release, give its version and program archive digest
+to `update check --bootstrap`. Give the same version to `update apply`.
+
+```sh
+/path/to/conductive update check --bootstrap --release "$RELEASE_VERSION" --digest "$PROGRAM_SHA256"
+/path/to/conductive update apply --release "$RELEASE_VERSION"
+/opt/conductive/current/conductive update started
+```
+
+The updater uses the version and digest to fetch the immutable program
+manifest. It checks the signature over the fetched bytes. It checks the
+release identity before it fetches the archive. The check skips staging
+for complete and rejected versions and versions at or below the active
+release. Apply fails if the requested version is incomplete or rejected,
+or if a newer version is active.
+
 The check command logs a warning and returns failure after a failed
 download. Before it fetches a new program archive, the updater checks the
-Ed25519 signature of the newest-version JSON with its built-in public key.
+Ed25519 signature of the program manifest with its built-in public key.
 It fetches the signature from the release server. A missing or invalid
 signature leaves the running release in use. The updater checks the
 program archive and each part against their SHA-256 digests before use.

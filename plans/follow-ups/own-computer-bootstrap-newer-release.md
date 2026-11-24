@@ -1,0 +1,54 @@
+# A newer active release fails each bootstrap
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 1, findings 3 and 55, with option F of their joint finding check. That branch applied option B, the exact activation of the pin.
+- **Location:** `docs/protocol/host-connection.md:140`, `APPLY_BOOTSTRAP` in `crates/cnd-computer/src/engine/scripts.rs:26`, `check_requested_release` in `crates/cnd-cli/src/update/activation.rs:57`, `worker/own-computers/operations.ts:124`
+- **Reason:** The rule of option F changes the bootstrap requirement at `docs/protocol/host-connection.md:140`, and no user decision covers that change.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Bootstrap:** the fixed operation that installs the Worker's release and starts the host program in a machine with no timely host connection.
+  - **Pin:** the release that the running Worker names for a bootstrap, by its exact version and the digest of its program archive.
+  - **Active release:** the release that the link `/opt/conductive/current` selects in the machine.
+  - **Host program:** the program `conductive` in host mode in each machine, such as a container on an own computer, which opens the host connection to the Worker.
+  - **Staged release:** a newer release that the updater in the machine downloaded in the background, and that waits for its activation.
+- **Background:**
+  - The protocol says that the bootstrap installs the release of the Worker and starts the host program (`docs/protocol/host-connection.md:138-141`).
+  - The release of the Worker is the release that the deploy of the running Worker published. Reason: during a deploy, the newest release of the release address can still be the previous release (`docs/protocol/host-connection.md:151-154`).
+  - The updater never goes back. It installs only a release with a higher version than the release that the machine runs (`docs/protocol/sandbox-software.md:97-98`).
+  - A confirmation marks a new release as good. Until then, a failed start of that release goes back to the previous release, its fallback (`docs/protocol/sandbox-software.md:136-140`).
+  - A machine can get a release newer than the pin through the normal update paths. A start of the runner applies each staged release, as `docs/protocol/sandbox-software.md:107-108` says. An install at idle does too, as `docs/protocol/sandbox-software.md:163-165` says.
+  - One example is a rollback of the Worker with `npx wrangler rollback`. The newest-version JSON never goes back (`docs/protocol/sandbox-software.md:45-46`). So machines still update past the release of the live Worker.
+  - Since a fix on the branch `calummoore/own-computers-milestone-11-host-program-3jbp`, the bootstrap operation of an own computer stages the pin and then activates exactly the pin with `conductive update apply --release <version>`. It then confirms the pin with `update started` and restarts the host service.
+  - `update apply --release` refuses when a newer release is active. `check_requested_release` in `crates/cnd-cli/src/update/activation.rs` makes this check, and `image/install.md` states it. The bootstrap then fails, and the computer replies `internal`.
+  - The Worker refuses a `container.bootstrapped` reply whose version differs from the requested version (`worker/own-computers/operations.ts:124-130`).
+  - No Worker code sends `container.bootstrap` yet. The work that runs workspaces on own computers connects it.
+- **Problem:** When the active release in a running container is newer than the pin, no bootstrap can succeed. The updater never goes back, so each retry fails the same way until a later deploy gives a pin at that version or higher.
+- **Impact if no action:** A start that needs the bootstrap fails with `internal`, and each Try again fails the same way. The workspace on that own computer stays unusable until a later deploy.
+- **Root question:** Which active release completes a bootstrap: exactly the Worker's release, or that release or a newer one, as the updater never goes back?
+- **Options:**
+  - **B.** Keep the exact activation that the branch built. A bootstrap succeeds only when it can activate the pin. Each retry fails while a newer release is active. Effort: Small, because nothing changes.
+  - **F.** Accept the pin or a newer active release.
+    - When the active release is older than the pin, activate exactly the pin and confirm it, as today.
+    - When the active release is the pin or newer, change no release. Restart the host service, and reply with success.
+    - Confirm the pin only when it is the active release. Never confirm a newer release, because a confirmation removes the fallback of that release (`docs/protocol/sandbox-software.md:136-140`).
+    - A newer release passed its signature check when the updater in the container staged it.
+    - Compare releases by version. One version is one commit of `main`, because the deploy sets it to the commit count of `main` (`.github/workflows/deploy.yml:158`). So an equal version with another digest is a second signed build of the same commit.
+    - Give the reply a defined version. Keep it equal to the requested version, or let the Worker accept a higher version in `worker/own-computers/operations.ts`.
+    - Record the rule in `docs/protocol/host-connection.md`. Read both legal pages and each public guide in full, as `CLAUDE.md` says.
+    - Test a newer active release: no change of release, a restart of the host service, and success.
+    - Cost: one branch in the bootstrap, one test, and the protocol sentence. Effort: Small.
+  - **D.** Give the host program its own release store, so that the bootstrap can switch only the host program to the pin. This changes the release layout and its upgrade path. It also lets the host program go back to an older release. Effort: Large.
+- **Left out:**
+  - An acceptance of a newer release through the normal `update apply`: it activates the newest staged release. The bootstrap then confirms that release at once, so it loses its fallback. Its host protocol can also be one that the requesting Worker refuses. F gives the same acceptance without these costs.
+  - A separate activation path or a separate install root for the pin: both answer how to activate exactly the pin, which the branch already does.
+  - An install of the pin over a newer active release: it breaks `docs/protocol/sandbox-software.md:97-98` and `docs/protocol/sandbox-software.md:172-173`.
+  - An install from the newest-version JSON in place of the pin: it breaks `docs/protocol/host-connection.md:151-154`.
+  - A background check that stops at the release of the Worker: the protocol rejected a release that the Worker gives to each sandbox (`docs/protocol/sandbox-software.md:62-65`).
+  - A change in the Worker alone: the Worker serves only its current host protocol version (`docs/protocol/host-connection.md:129-132`).
+- **Wider fix:** F. One release identity goes through every bootstrap step, and success follows the rule of the updater that it never goes back. A newer release from any path then cannot make a bootstrap fail.
+- **Previous examples:** The pinned install already treats a newer active release as done. `update check --bootstrap --release` skips staging for versions at or below the active release, as `image/install.md` says. The test `pinned_install_skips_complete_rejected_and_active_versions` in `crates/cnd-cli/tests/update/pinned_tests.rs` covers it.
+- **Related:** `plans/follow-ups/own-computer-bootstrap-no-space.md` changes the same code. Under B, a newer active release stays a bootstrap failure, and that item sets its error code. Under F, that state succeeds. The two changes do not conflict.
+- **Recommendation:** F. It activates exactly the pin when it can. It also accepts the one state that the updater cannot leave, so no retry fails only for a newer release. The host protocol check at the connection stays the real compatibility check. The decision must come before the Worker sends its first `container.bootstrap`.
+- **Action:** ask the user, because F changes the bootstrap rule at `docs/protocol/host-connection.md:140`, and no user decision covers that change.

@@ -1,12 +1,13 @@
 # Developer scripts
 
 These scripts of the [sandbox software](README.md) run on a developer
-machine. The deploy workflow also runs the packager. No image build
-installs them.
+machine. The deploy workflow also runs the packager and the container base
+image builder. No image build installs them.
 
 - `package-system.sh` packages the system part.
 - `live-check.mjs` checks chat in a real sandbox and times the first agent start.
 - `e2b/build-template.mjs` builds the E2B base template from public inputs.
+- `computer/build-base.mjs` builds the container base image of own computers.
 
 Run commands from the repository root with Node 24. Run `npm ci --prefix runner`
 first. It installs the SDK helper packages and the live-check developer packages.
@@ -171,6 +172,18 @@ official CLI through `npm exec` and prints the actual template ID.
 [E2B base template](e2b/README.md) gives its software, output, private
 loopback relay, and required live checks.
 
+## Container base image builder
+
+`computer/build-base.mjs` loads esbuild from the root npm packages, so run
+`npm ci` first. Run `node image/computer/build-base.mjs --prepare` to copy
+the build files into a new folder under `.context/computer-base/`. It does
+not run Podman. Run it with `--tools` to build only the stage `tools` with
+Podman. Run it with `--version`, `--digest`, and `--archive` to build the
+whole image for a signed release. That build saves the image as an OCI
+archive and prints its Podman image ID. The deploy runs this release
+build. [Own computers](computer/README.md#build-and-test-locally) gives
+the stages, the options, and the checks.
+
 ## Development
 
 - `npm run typecheck` does not check these TypeScript files. Check them
@@ -197,3 +210,6 @@ loopback relay, and required live checks.
   the comparison.
 - [`e2b/live-main.ts`](e2b/live-main.ts): the E2B image chain, probes,
   persistent local provider state, and cleanup.
+- [`computer/build-base.mjs`](computer/build-base.mjs) and
+  [`computer/base-build.ts`](computer/base-build.ts): stage the container
+  base image files, run Podman, and save the OCI archive.

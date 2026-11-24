@@ -1,0 +1,55 @@
+FROM docker.io/library/ubuntu:24.04 AS tools
+
+RUN set -eu; \
+    apt-get update; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      systemd systemd-sysv sudo ca-certificates curl; \
+    if id ubuntu >/dev/null 2>&1; then userdel --remove ubuntu; fi; \
+    useradd --uid 1000 --user-group --create-home --home-dir /home/user --shell /bin/bash user; \
+    printf '%s\n' 'user ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/90-conductive-user; \
+    chmod 0440 /etc/sudoers.d/90-conductive-user; \
+    rm -rf /var/lib/apt/lists/*
+
+COPY . /opt/conductive-e2b-build/
+RUN set -eu; \
+    trap 'rm -f /usr/local/sbin/systemctl; rm -rf /opt/conductive-e2b-build' EXIT; \
+    install -m 755 /opt/conductive-e2b-build/systemctl-build.sh /usr/local/sbin/systemctl; \
+    export PATH="/usr/local/sbin:$PATH"; \
+    sh /opt/conductive-e2b-build/install-base.sh; \
+    rm -rf /var/lib/apt/lists/*
+
+STOPSIGNAL SIGRTMIN+3
+CMD ["/sbin/init"]
+
+FROM tools AS release
+
+ARG RELEASE_VERSION
+ARG RELEASE_DIGEST
+ARG RELEASE_SERVER=https://runner.conductive.build
+
+COPY systemctl-build.sh /tmp/systemctl-build.sh
+RUN set -eu; \
+    : "${RELEASE_VERSION:?}" "${RELEASE_DIGEST:?}"; \
+    umask 022; \
+    stage=$(mktemp -d); \
+    trap 'rm -f /usr/local/sbin/systemctl /tmp/systemctl-build.sh; rm -rf "$stage"' EXIT; \
+    install -m 755 /tmp/systemctl-build.sh /usr/local/sbin/systemctl; \
+    export PATH="/usr/local/sbin:$PATH"; \
+    apt-get update; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ttyd tmux; \
+    systemctl disable ttyd.service; \
+    systemctl mask ttyd.service; \
+    rm -rf /var/lib/apt/lists/*; \
+    server=${RELEASE_SERVER%/}; \
+    asset="conductive-$RELEASE_VERSION-x86_64-unknown-linux-musl.tar.gz"; \
+    archive="$stage/$asset"; \
+    curl --fail --silent --show-error --location --output "$archive" \
+      --url "$server/releases/download/conductive/$RELEASE_VERSION/$RELEASE_DIGEST/$asset"; \
+    printf '%s  %s\n' "$RELEASE_DIGEST" "$archive" | sha256sum --check --status; \
+    tar -xzf "$archive" -C "$stage" conductive; \
+    "$stage/conductive" update check --bootstrap \
+      --release "$RELEASE_VERSION" --digest "$RELEASE_DIGEST" --server "$server"; \
+    "$stage/conductive" update apply; \
+    /opt/conductive/current/conductive update started; \
+    test "$(readlink -f /opt/conductive/current)" = "/opt/conductive/versions/$RELEASE_VERSION"; \
+    test -f /opt/conductive/current/complete

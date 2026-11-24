@@ -1,13 +1,13 @@
 # cnd-cli
 
 This crate builds `conductive`, the command line program for Conductive
-cloud computers. Use the executable to access its commands. This crate
+cloud computers and own computers. Use the executable to access its commands. This crate
 also exposes the update engine through a library API.
 
 ## Responsibilities
 
 Provide one command entry point for the host program, agent runner, preview relay, MCP
-server, Git credential helper, software updates, and workspace tools.
+server, Git credential helper, software updates, own computers, and workspace tools.
 
 ## What This Crate Does
 
@@ -25,7 +25,7 @@ sorts below every release.
 At process start, every command installs `aws-lc-rs` as the Rustls crypto
 provider. The host and runner use this explicit process default for TLS.
 
-The commands are `host`, `runner`, `relay`, `mcp`, `git-credential`, `update`,
+The commands are `host`, `computer`, `runner`, `relay`, `mcp`, `git-credential`, `update`,
 `workspaces`, `sessions`, `messages`, `sections`, `repositories`, `models`,
 `previews`, `mac`, `secrets`, and `services`. The workspace commands and
 `mcp` run 27 Worker calls and five local service calls in
@@ -46,6 +46,16 @@ machine origin and token from the saved env file before each connection.
 It waits for missing values and reconnects after each drop or refusal.
 Its command children receive a clean environment. The system service runs
 it as `user`, independently of agent turns and the runner connection.
+The [own computer service](../cnd-computer/README.md) runs on x86_64 Linux
+with systemd and rootless Podman. `computer check` reports the server
+requirements and exits with status 1 if a requirement fails.
+`computer enroll` reads the one-time code as one line on standard input,
+exchanges it, and saves private settings. No process argument holds the
+code. Use `--origin URL` and `--release-server URL` to select other
+servers. `computer service` installs and restarts the systemd user unit.
+The unit runs `computer run`, which connects to the Worker and runs the
+fixed container operations. It also tries each signed update as a trial,
+and keeps the confirmed release until the trial confirms.
 `runner` starts the full [Rust runner](../cnd-runner/README.md). It uses the
 [runner configuration](../../runner/configuration.md), plus optional
 `CONDUCTIVE_NODE` and `CONDUCTIVE_SDK_HELPER` path overrides. Installed builds
@@ -86,11 +96,11 @@ start reads the start variables again.
 A shutdown received during activation prevents execution of the new release.
 Development builds disable idle swaps.
 
-`update check` uses the `cli-updater` HTTP client to read the release
-manifest. It compares versions and checks the manifest's detached Ed25519
-signature with the built-in release public key before it fetches a new
-program archive. A missing or invalid signature leaves the running release
-in use. It downloads into a private version folder. It checks the program
+By default, `update check` reads the newest-version JSON with the
+`cli-updater` HTTP client. It compares versions. It checks the detached
+Ed25519 signature with the built-in release public key before it fetches
+a new program archive. A missing or invalid signature leaves the running
+release in use. It downloads into a private version folder. It checks the program
 digest through `cli-updater` and checks every part digest before extraction.
 It reuses present parts with the same digest. A failed check logs a
 warning and returns failure. The independent background unit cannot block a start.
@@ -123,6 +133,14 @@ Collection runs after confirmation and retains current, previous, and the releas
 It reads that set under the download lock. It waits for no download.
 Collection defers when a check holds the download lock.
 
+`update apply --release VERSION` selects that complete release.
+It fails if the requested release is incomplete or rejected, or if a
+newer release is active. When the requested release is already active
+and confirmed, apply repairs its missing parts.
+If an older release is pending, apply restores the previous release
+before it activates the requested version. If the requested release
+itself is pending, apply uses the rollback rules and returns failure.
+
 All update operations accept `--root PATH` and `--server URL`.
 The defaults are `/opt/conductive` and `https://runner.conductive.build`.
 Checks, apply, and confirmation run as root in an installed sandbox.
@@ -132,7 +150,13 @@ Development builds keep their empty list. Older updaters use the new program's
 check and accept added JSON fields.
 `update check --bootstrap` stages the first release when the bootstrap
 program already has the newest version. An existing active release still
-prevents a downgrade. See [the install guide](../../image/install.md#release-installation)
+prevents a downgrade. Give both `--release VERSION` and `--digest SHA256`
+with `--bootstrap` to stage a specific release. Use the SHA-256 digest of
+the program archive. The updater fetches the immutable manifest at the
+key that the version and digest give. It checks the signature over the
+fetched bytes and verifies the release identity before it downloads the
+program archive. The updater skips complete or rejected versions and
+versions at or below the active release. See [the install guide](../../image/install.md#release-installation)
 for the image-build sequence and the folder layout.
 
 ### Session watches
@@ -153,6 +177,7 @@ Run these commands from the repository root:
 ```sh
 cargo run -p cnd-cli -- --help
 cargo run -p cnd-cli -- --version
+cargo run -p cnd-cli -- computer --help
 cargo run -p cnd-cli -- update --help
 cargo run -p cnd-cli -- update parts
 ```
@@ -193,7 +218,8 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [build.rs](build.rs) validates and embeds the release inputs.
 - [release.rs](src/release.rs) reads the embedded version and parts.
 - [update/download.rs](src/update/download.rs) verifies the release manifest and downloads its program and parts.
-- [update/engine.rs](src/update/engine.rs) owns activation and fallback policy.
+- [update/engine.rs](src/update/engine.rs) manages update checks and start confirmation.
+- [update/activation.rs](src/update/activation.rs) selects, activates, and restores releases.
 - [update/repair.rs](src/update/repair.rs) downloads the missing parts of the release that apply starts.
 - [update/presence.rs](src/update/presence.rs) says when an unpacked part counts as present.
 - [update/ports.rs](src/update/ports.rs) defines disk, process, release source, and updater boundaries.
@@ -201,6 +227,7 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.
 - [runner_command.rs](src/runner_command.rs) makes one `RunnerStart` before its reconstruction loop, and composes the full runner and graceful shutdown.
 - [host_command.rs](src/host_command.rs) composes the host runtime, native effects, and graceful service shutdown.
+- [computer_command.rs](src/computer_command.rs) composes enrollment, the health report, and the own computer service.
 - [runner_round.rs](src/runner_round.rs) composes each runner round, negotiates its private service transport, and updates display context without blocking a move on native work.
 - [runner_services.rs](src/runner_services.rs) composes the one native manager and private socket.
 - [service_command.rs](src/service_command.rs) runs the unit-owned execution and output helper.

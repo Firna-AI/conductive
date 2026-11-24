@@ -1,0 +1,38 @@
+[package]
+name = "cnd-computer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+description = "Own computer service and container operations for Conductive"
+publish = false
+
+[dependencies]
+cnd-host = { workspace = true }
+cnd-release = { workspace = true }
+cnd-runner-interface = { workspace = true }
+cli-release-interface = { workspace = true }
+internal-error = { workspace = true }
+async-trait = "0.1.92"
+futures-util = { version = "0.3.34", features = ["sink"] }
+flate2 = "1.1.11"
+sha2 = "0.11.1"
+tar = "0.4.46"
+thiserror = "2.0.21"
+tempfile = "3.27.0"
+tracing = "0.1.44"
+url = "2.5.9"
+tokio-tungstenite = { version = "0.30.0", default-features = false, features = ["connect", "rustls-tls-webpki-roots"] }
+tokio = { version = "1.54.1", features = ["fs", "io-util", "macros", "net", "process", "rt", "sync", "time"] }
+reqwest = { version = "0.13.5", default-features = false, features = ["rustls"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+tokio-util = { version = "0.7.20", features = ["rt"] }
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+unimock = "0.6.8"
+tokio = { version = "1.54.1", features = ["test-util", "rt-multi-thread"] }

@@ -1,0 +1,31 @@
+# A local write error reads as an invalid release
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 2, a new problem of the finding check of finding 66.
+- **Location:** `unpack` in `crates/cnd-computer/src/releases/program.rs:56`, `worker/own-computers/errors.ts:50`
+- **Reason:** The wrong reply needs a failing or read-only disk on the server, and the error codes that the fix needs already exist.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **`release_invalid`:** the error code of the computer connection for an absent or bad signature, a wrong digest, or a bad release archive.
+  - **`internal`:** the error code of the computer connection for each other failure of the computer that no other code names.
+- **Background:**
+  - `unpack` in `crates/cnd-computer/src/releases/program.rs` copies the program out of the verified archive into a temporary file, with one `io::copy`.
+  - A copy error of the kind `StorageFull` or `QuotaExceeded` returns `no_space`. Each other copy error, and a short copy, returns `release_invalid`.
+  - `io::copy` reports a read error of the archive and a write error of the file in the same way. So a read-only disk or a failing disk during the write also returns `release_invalid`.
+  - Elsewhere, a local I/O error of the computer that is not a full disk maps to `internal` (`impl From<io::Error> for Error` in `crates/cnd-computer/src/error.rs`).
+  - The Worker shows `release_invalid` as HTTP 502 with the text "The own computer could not verify the release." It shows `internal` as HTTP 502 with "The own computer request failed. Try again." (`worker/own-computers/errors.ts:50-52`).
+- **Problem:** A local write failure during the unpack, other than a full disk, reports a release that failed its check.
+- **Impact if no action:** The admin looks for a problem in the release, while the disk of the server fails.
+- **Root question:** Which error does the computer report when a local write fails during the unpack?
+- **Options:**
+  - **A.** Copy with a read and write loop of its own, so that a write error is known as one. Map a write error that is not a full disk to the local I/O error, which replies `internal`. Keep `release_invalid` for a read error and a short copy. Effort: Small.
+  - **B.** Keep `io::copy`, and map by error kind. Keep `InvalidData` and `UnexpectedEof` as `release_invalid`, and map each other kind to `internal`. Cost: a read error of another kind then reads as `internal`. Effort: Small.
+  - **C.** Change nothing. A local write failure stays rare, and the bootstrap or the update fails either way. Effort: Small.
+- **Left out:** A new error code for a local disk failure: it needs a change of the wire types, the generated TypeScript, and the Worker messages. `internal` already says that the request failed.
+- **Wider fix:** None. The other writers of the computer already keep read and write errors apart.
+- **Previous examples:** The download of a base archive keeps them apart. A failed read of the response returns `release_unavailable`, and a failed write returns the local error (`download` in `crates/cnd-computer/src/releases/archives.rs`).
+- **Related:** `plans/follow-ups/own-computer-startup-temporary-files.md` changes the same function `unpack`. One change can fix both.
+- **Recommendation:** A. It keeps `release_invalid` for a bad archive, and it reports a local failure as one.
+- **Action:** fix after merge, apply A, because the case needs a failing disk, the severity is Low, and the error codes exist.

@@ -1,0 +1,12 @@
+[Unit]
+Description=Conductive own computer
+
+[Service]
+Type=exec
+ExecStart=%h/.local/share/conductive/current/conductive computer run
+Restart=always
+RestartSec=5
+KillMode=process
+
+[Install]
+WantedBy=default.target

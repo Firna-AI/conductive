@@ -1,0 +1,55 @@
+# Startup misses partial files in subfolders
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 2, finding 66. The item uses the root question and options C to E of its finding check. It adds the new problems of the finding checks of findings 66 and 82.
+- **Location:** `collect_temporary` in `crates/cnd-computer/src/disk.rs:51`, `unpack` in `crates/cnd-computer/src/releases/program.rs:43`, `start` in `crates/cnd-computer/src/releases/journal.rs:37`, `install_release` in `image/computer/install.sh:197`, `crates/cnd-computer/tests/update_start_tests.rs:240`
+- **Reason:** The partial files cost only disk space after a rare hard stop, and a later change of the startup sweep can still reclaim them.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Data folder:** the release store `~/.local/share/conductive/` of the user `conductive`, with `versions/`, the link `current`, and the update state.
+  - **Cache folder:** `~/.cache/conductive/` of the user `conductive`, with the verified programs under `programs/<version>/<digest>/` and the base import markers under `base-loads/`.
+  - **Startup sweep:** the step at each start of the computer mode, before it serves requests, that removes the temporary files of interrupted writes.
+- **Background:**
+  - The computer mode is the program `conductive` that runs on an own computer, as a systemd user service of the user `conductive`.
+  - At each start, before the computer mode serves requests, the launcher clears temporary files in the data folder and in the cache folder (`crates/cnd-computer/src/update/launch.rs`). Both calls use `collect_temporary` in `crates/cnd-computer/src/disk.rs`.
+  - `collect_temporary` removes only the direct children of its folder whose name is a default `tempfile` name: `.tmp` and six letters or digits (`is_temporary`).
+  - `unpack` in `crates/cnd-computer/src/releases/program.rs` writes the unpacked program as a temporary file inside `programs/<version>/<digest>/`, and then renames it. A hard stop during the copy leaves that file in a subfolder.
+  - The base import marker is written with `atomic_write`, which stages a temporary file in `base-loads/` (`start` in `crates/cnd-computer/src/releases/journal.rs`). A hard stop there leaves an empty `.tmpXXXXXX` file in that subfolder.
+  - The install script stages the program in a folder `.install.XXXXXX` of the data folder, made with `mktemp -d` (`install_release` in `image/computer/install.sh`). A `SIGKILL` or a power cut during the copy leaves that folder with up to one full program of about 24 MB. The sweep does not match that name.
+  - `Restart=always` in the service unit starts the program again after each hard stop, so the sweep runs at the next start.
+  - The prune of `programs/` removes the folder of each version that the computer no longer keeps. So a partial program stays only in a retained version folder. An example is an interrupted bootstrap of the installed version, such as the first bootstrap after a fresh install.
+  - The startup test `startup_prunes_stale_programs_and_interrupted_work_with_updates_disabled` (`crates/cnd-computer/tests/update_start_tests.rs:240`) checks one temporary file in the cache root and one temporary folder in the data folder, both with default names.
+  - The README of the crate says: "Startup also removes temporary files from interrupted downloads and installs." (`crates/cnd-computer/README.md:87-88`).
+- **Problem:** A hard stop during an unpack, a write of an import marker, or an install leaves a partial file that no start removes. It stays in a retained digest folder, in `base-loads/`, or in an `.install.XXXXXX` folder.
+- **Impact if no action:** The partial files take disk space until their version is pruned, or for good in `base-loads/` and in the data folder. A retry can finish its work and still leave the old partial file.
+- **Root question:** After the next start, how does an interrupted write leave no partial file in the private folders of the computer, while the verified executables stay?
+- **Options:**
+  - **A.** Scan the digest folders of `programs/` for temporary unpack files at startup. This adds a walk of those folders only. Effort: Small.
+  - **B.** Stage unpacked files in the cache root, which startup already clears, and publish each finished file with a rename on the same filesystem. A test that fails without B must stop a real unpack midway. An example is a child process that gets `SIGKILL` after the temporary file appears. Effort: Medium. The review graded it Small.
+  - **C.** Make `collect_temporary` walk into each subfolder that is not a link and has no temporary name.
+    - Both callers then remove each temporary name at any depth of the cache folder and the data folder.
+    - The sweep keeps the cached programs and the import markers, because they have version or digest names.
+    - Give the staging folder of the install script a name that the sweep matches, such as `.tmpXXXXXX` with `mktemp -d`.
+    - Add one temporary file in a retained digest folder and one in `base-loads/` to the startup test.
+    - Cost: a walk of a few folders at each start. It still depends on the default names.
+    - Effort: Small.
+  - **D.** Write the unpacked program to a file with no name, with `O_TMPFILE`, and link it to its final name only after the copy and `sync_all`. A hard stop then leaves nothing, and the kernel frees the space at once.
+    - Cost: Linux-only code, and a direct `rustix` dependency for `linkat` through `/proc/self/fd`. `rustix` is already in `Cargo.lock` through `tempfile`.
+    - A filesystem with no `O_TMPFILE` needs a named fallback, and that fallback still needs A, B, or C. `linkat` refuses an existing name, so a concurrent unpack of the same release needs its own path.
+    - Effort: Medium.
+  - **E.** Keep no stored program copies. Unpack each verified program into a private temporary file in the cache root that the caller removes when it drops it. The download of a base archive already works so (`BaseArchive`).
+    - The updater copies that file into `versions/`, and a bootstrap copies it into the container. No program write then goes into a subfolder, and the prune of `programs/` goes away.
+    - Cost: one more download for each bootstrap. The `Releases` port and its mocks change. The design call on the program cache in `plans/own-computers.md` and the README of the crate change.
+    - Effort: Medium.
+- **Left out:**
+  - Cleanup at an ordinary exit: it cannot run after a hard stop.
+  - A sweep of the destination folder at the next unpack of the same release: two containers can unpack one release at the same time. Each lock covers one container, so such a sweep can delete a live file.
+  - A periodic sweep or a `systemd-tmpfiles` age rule: it runs while requests run. So it can delete the live temporary file of a download or an unpack.
+  - A change of only the README sentence: it fails the goal, because the file keeps its space.
+- **Wider fix:** C. B must know which writer leaves the file and where it writes, so it is a direct fix. C still removes the file when the folder of a writer changes, as for the import markers today.
+- **Previous examples:** Commit `3dcab6c79` of the same branch added the top-level sweep, for downloads that a crash cut short, and the prune of `programs/`.
+- **Related:** `plans/follow-ups/own-computer-unpack-write-error-code.md` changes the same function. `unpack` also replies `release_invalid` for a local write error. One change can fix both.
+- **Recommendation:** C. It has the effort of A, and it covers the unpack, the import markers, the install script, and each later writer under the two folders. Its test also fails without the fix. Under B, the startup test cannot fail without the fix, because it already checks a temporary file in the cache root.
+- **Action:** fix after merge, apply C, because the severity is Low and the likelihood is Rare.

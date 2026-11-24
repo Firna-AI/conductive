@@ -1,0 +1,64 @@
+# The first install trusts the deploy credential
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 1, finding 51, with the root question and options D and E of its finding check.
+- **Location:** `as_root` in `image/computer/install.sh:83`, `release_field` in `image/computer/install.sh:184`, `worker/marketing/install-computer.ts:1`, `docs/protocol/own-computers.md:143`, `docs/protocol/own-computers.md:193`
+- **Reason:** Each option changes the setup flow or its trust rule, and no decision says how the first install proves its program.
+
+- **Source:** Review. **Category:** Security.
+- **Terms:**
+  - **Deploy credential:** the Cloudflare API token `CLOUDFLARE_API_TOKEN` of the deploy, which deploys the Worker and writes the release files in the R2 bucket `conductive-runner`.
+  - **Release signing key:** the Ed25519 private key `CONDUCTIVE_RELEASE_SIGNING_KEY` that signs each release, a separate secret of the deploy.
+  - **Newest-version JSON:** the file `releases/latest/conductive/x86_64-unknown-linux-musl` of the release bucket, which gives the version and the SHA-256 digest of the newest program.
+  - **Add computer:** the dialog of the Own computers tab in which an admin names a new own computer and gets its install command.
+  - **One-time code:** the code in the install command, which works once, within 1 hour, and which the Worker exchanges for the computer token.
+- **Background:**
+  - Own computer decision 4 B, of 22 November 2026, signs each release. The program checks the signature before it installs a release or uses a container base image. Reason: a leak of the deploy credential must not reach the servers of the orgs (`docs/protocol/own-computers.md:193-197`).
+  - The Worker serves the install script `image/computer/install.sh` at `/install-computer` on the marketing site (`worker/marketing/install-computer.ts:1`). The Worker also serves the app and the public guides.
+  - Add computer gives a one-line install command. The admin runs it on the server, as a user who can use `sudo` (`docs/protocol/own-computers.md:143-145`).
+  - The script runs `sudo` on every run, before any program runs. With it, the script makes the user `conductive`, adds subordinate IDs, writes a cgroup drop-in, and turns on lingering. Rootless Podman needs these steps.
+  - Then the script reads the version and the digest from the newest-version JSON, downloads the program archive, and checks only its SHA-256 digest. It checks no signature.
+  - The program `conductive` checks the signature of each later release.
+  - A design call of 24 November 2026 gives the reason for no check in the script. The token that writes the release bucket also deploys the Worker that serves the script. So a signature check in the script stops no holder of that token.
+  - The protocol requires the Worker to check the release signature before it gives a digest to the bootstrap of a cloud computer (`docs/protocol/host-connection.md:155-157`). No Worker code makes that check yet.
+  - The repository `Firna-AI/conductive` is public on GitHub. The deploy credential cannot write it.
+- **Problem:** The deploy credential controls both the install script and the newest-version JSON. So the first install has no source of trust outside that credential. A party that can write only the bucket can also choose the first program. Examples are an account member or a token with R2 rights only. Another example is the S3 key pair of the uploads. The deploy derives it from the token: the token ID and the SHA-256 digest of the token.
+- **Impact if no action:** A leaked deploy credential can serve a changed script, which runs `sudo` on each server that installs. A bucket write alone can choose the first program, which runs as the user `conductive`. That program gets the computer token, the lasting credential of the computer connection. Neither needs the release signing key.
+- **Root question:** Must setup resist a leaked deploy credential, as each update does, and which source outside it then vouches for the installer and the first program?
+- **Options:**
+  - **A.** Accept the Worker as the source of trust for setup. Record the exception of the first install in the protocol and the guide. As written, A also trusts a party that can write only the bucket, and it gives the served script root. Effort: Small.
+  - **B.** Publish an installer through a channel that the deploy credential cannot write, such as the GitHub release assets of `Firna-AI/conductive`.
+    - The admin authenticates that installer and takes only the one-time code from the app. The installer checks the signature of the first release.
+    - B must name a reference outside the app and the guides that the Worker serves, such as the public repository. The admin checks the channel or the key against it.
+    - A leaked credential can change the text in the app that names the channel or the key. So B protects only an admin who checks that reference.
+    - The one-line command of `docs/protocol/own-computers.md:143-145`, the Add computer mockup, and the guide change.
+    - Effort: Medium.
+  - **C.** Distribute Conductive through signed Linux packages. Admins install the trusted package before the enrollment. This adds package distribution and its maintenance. Effort: Large.
+  - **D.** Keep the Worker as the source of trust, but keep it away from root.
+    - Move the root steps into a short, fixed command block that the admin reads before running it.
+    - Run the served script only as the user `conductive`, with `sudo -u conductive`. That user has no sudo rights.
+    - Record this smaller exception in the protocol and the guide.
+    - At setup, a leaked credential then reaches only the user `conductive` and its containers, not root. A changed root block is visible in the command.
+    - Setup becomes two steps. The one-line command of the protocol, the mockup, and the guide change.
+    - Effort: Medium.
+  - **E.** An addition to A or D: the first install trusts only what the release signing key vouches for.
+    - The served script checks the Ed25519 signature of the newest-version JSON with OpenSSL 3. The signature is at `releases/download/conductive/signatures/<manifest-sha256>.sig`.
+    - Or the Worker fills in a version and a digest whose signature it checked, as the protocol requires for the bootstrap of a cloud computer.
+    - Then a party that can write only the bucket cannot replace the first program.
+    - Cost: `openssl` becomes a need of the server, or the Worker needs the signature check that it does not have yet. The distributions that ship Podman 4 also ship OpenSSL 3.
+    - The script and `RELEASE_PUBLIC_KEY` in `crates/cnd-release/src/signature.rs` need one shared source for the key. The tests need signed fixtures.
+    - E adds a refusal, so the user must approve it.
+    - Effort: Medium.
+- **Left out:**
+  - A signature check only in the served script, as a fix on its own: a holder of the full token can replace the script. E keeps it only as an addition to A or D.
+  - A one-line command in the app that points to GitHub or another independent host: a leaked credential can change the app, and so the command.
+  - A split or a hardened deploy credential: the credential that deploys the Worker still controls the app that shows the setup text.
+  - A monitor that compares the served script with the repository: the Worker can serve the real script to the monitor and another script to admins.
+- **Wider fix:** B. It separates the authority to deploy the app from the authority to install software on the servers of the orgs.
+- **Previous examples:** In the bootstrap of a cloud computer, the Worker must check the release signature before it gives a digest to an older program (`docs/protocol/host-connection.md:155-157`).
+- **Related:**
+  - `plans/follow-ups/own-computer-install-code-in-command.md`: the same code, and work that waits for the answer. Under B or C, the admin gets the installer from another channel and takes only the code from the app. So the form of the copied command changes.
+  - `plans/follow-ups/deploy-build-code-reaches-signing-key.md`: the same rule. B, C, and E rely on the release signing key staying secret, and that item shows how a compromised deploy job can take the key.
+- **Recommendation:** B. It is the cheapest option that meets own computer decision 4 B at setup. It also restores the protocol reason that an attack through the Worker reaches only the containers (`docs/protocol/own-computers.md:170-172`). If the user keeps the Worker as the source of trust, choose D with E, not A alone. A also trusts the bucket and gives the served script root.
+- **Action:** ask the user, because B replaces the one-line install command that `docs/protocol/own-computers.md:143-145` requires, and no user decision covers that change.

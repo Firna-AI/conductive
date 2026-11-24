@@ -1,5 +1,6 @@
 //! Staged downloads and restart-time activation of sandbox releases.
 
+mod activation;
 pub mod disk;
 mod download;
 pub mod engine;

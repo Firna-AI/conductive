@@ -1,6 +1,8 @@
 import { orgPath } from './api'
 import type { ComputerResources } from './generated/ComputerResources'
 
+export const OWN_COMPUTER_INSTALL_PATH = '/install-computer'
+
 export function ownComputersPath(orgId: string): string {
   return `${orgPath(orgId)}/own-computers`
 }

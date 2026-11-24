@@ -112,6 +112,8 @@ jobs:
       SOFTWARE_IMAGE_URL: https://api.conductive.build/v1/deploy/software-image
     outputs:
       software_image: ${{ steps.software_image.outputs.result }}
+      release_version: ${{ steps.release.outputs.version }}
+      release_digest: ${{ steps.release_digest.outputs.digest }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -190,6 +192,18 @@ jobs:
           target/debug/cnd-release package --version "$RELEASE_VERSION" \
             --program target/x86_64-unknown-linux-musl/release/conductive \
             --parts .context/release-input/parts.json --output .context/release-artifact
+
+      - name: Record the Conductive release digest
+        id: release_digest
+        run: |
+          set -euo pipefail
+          digest=$(jq -er '.sha256 | strings' \
+            .context/release-artifact/releases/latest/conductive/x86_64-unknown-linux-musl)
+          if [[ ! "$digest" =~ ^[0-9a-f]{64}$ ]]; then
+            echo '::error::The Conductive release digest must have 64 lowercase hexadecimal characters.'
+            exit 1
+          fi
+          printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
 
       - name: Upload Conductive release files
         env:
@@ -525,6 +539,206 @@ jobs:
             echo "::error::The software image step ended with ${SOFTWARE_IMAGE_RESULT:-no result}. A ready software image is required. The Worker is already live. Re-run all jobs to retry."
             exit 1
           fi
+
+  container-base:
+    name: Publish the container base image
+    needs: deploy
+    if: >-
+      ${{ !cancelled() && github.ref == 'refs/heads/main' && needs.deploy.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    environment:
+      name: production
+      deployment: false
+    env:
+      RUNNER_BASE_URL: https://runner.conductive.build/
+      RUNNER_BUCKET: conductive-runner
+      RELEASE_VERSION: ${{ needs.deploy.outputs.release_version }}
+      RELEASE_DIGEST: ${{ needs.deploy.outputs.release_digest }}
+
+    steps:
+      - name: Check for the published container base image
+        id: existing
+        run: |
+          set -euo pipefail
+          url="${RUNNER_BASE_URL}releases/download/container-base/$RELEASE_VERSION/$RELEASE_DIGEST.json"
+          manifest="$RUNNER_TEMP/published-container-base.json"
+          status=$(curl -sS --retry 3 --max-time 30 --output "$manifest" --write-out '%{http_code}' \
+            "$url?check=$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT")
+          case "$status" in
+            200)
+              image_id=$(jq -er '.imageId | strings | select(test("^sha256:[0-9a-f]{64}$"))' "$manifest") || image_id=unavailable
+              size=$(jq -er '.archive.size | numbers | select(. > 0 and . == floor)' "$manifest") || size=unavailable
+              echo "::notice::The container base image of $RELEASE_VERSION already exists."
+              printf '### Container base image\n\n- Result skipped\n- Version %s\n- Image ID %s\n- Archive size in bytes %s\n' \
+                "$RELEASE_VERSION" "$image_id" "$size" >> "$GITHUB_STEP_SUMMARY"
+              echo 'exists=true' >> "$GITHUB_OUTPUT"
+              ;;
+            404) echo 'exists=false' >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "::error::The container base image check returned HTTP $status."
+              exit 1
+              ;;
+          esac
+
+      - name: Check out repository
+        if: steps.existing.outputs.exists == 'false'
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        if: steps.existing.outputs.exists == 'false'
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+
+      - name: Install dependencies
+        if: steps.existing.outputs.exists == 'false'
+        run: |
+          set -euo pipefail
+          npm ci
+          npm ci --prefix runner
+
+      - name: Set up Rust
+        if: steps.existing.outputs.exists == 'false'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo dependencies
+        if: steps.existing.outputs.exists == 'false'
+        uses: Swatinem/rust-cache@v2
+
+      - name: Prepare the runner for the image build
+        if: steps.existing.outputs.exists == 'false'
+        run: |
+          set -euo pipefail
+          available=$(df -Pk / | awk 'NR == 2 { print $4 }')
+          if (( available < 20 * 1024 * 1024 )); then
+            sudo rm -rf /usr/local/lib/android /usr/share/dotnet
+          fi
+          if ! command -v podman > /dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y podman
+          fi
+
+      - name: Build the release packager
+        if: steps.existing.outputs.exists == 'false'
+        run: cargo build --locked -p cnd-release
+
+      - name: Build and save the container base image
+        id: image
+        if: steps.existing.outputs.exists == 'false'
+        run: |
+          set -euo pipefail
+          bin="$RUNNER_TEMP/container-base-bin"
+          mkdir -p "$bin"
+          cat > "$bin/podman" <<'EOF'
+          #!/bin/sh
+          exec sudo podman "$@"
+          EOF
+          chmod +x "$bin/podman"
+          archive="$RUNNER_TEMP/container-base.tar"
+          image_id=$(PATH="$bin:$PATH" node image/computer/build-base.mjs \
+            --version "$RELEASE_VERSION" --digest "$RELEASE_DIGEST" --archive "$archive")
+          printf 'image_id=sha256:%s\n' "${image_id#sha256:}" >> "$GITHUB_OUTPUT"
+          sudo chown "$(id -u):$(id -g)" "$archive"
+          size=$(stat -c %s "$archive")
+          printf 'size=%s\n' "$size" >> "$GITHUB_OUTPUT"
+
+      - name: Sign the container base image
+        if: steps.existing.outputs.exists == 'false'
+        env:
+          CONDUCTIVE_RELEASE_SIGNING_KEY: ${{ secrets.CONDUCTIVE_RELEASE_SIGNING_KEY }}
+          IMAGE_ID: ${{ steps.image.outputs.image_id }}
+        run: |
+          set -euo pipefail
+          target/debug/cnd-release container-base --version "$RELEASE_VERSION" --digest "$RELEASE_DIGEST" \
+            --archive "$RUNNER_TEMP/container-base.tar" --image-id "$IMAGE_ID" --output .context/release-artifact
+
+      - name: Upload the container base image files
+        id: upload
+        if: steps.existing.outputs.exists == 'false'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          AWS_DEFAULT_REGION: auto
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+        run: |
+          set -euo pipefail
+          read_token_id() {
+            printf 'Authorization: Bearer %s\n' "$CLOUDFLARE_API_TOKEN" |
+              curl -fsS --header @- "$1" | jq -r '.result.id // empty'
+          }
+          token_id=$(read_token_id \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/tokens/verify") || token_id=''
+          if [[ -z "$token_id" ]]; then
+            token_id=$(read_token_id 'https://api.cloudflare.com/client/v4/user/tokens/verify') || token_id=''
+          fi
+          if [[ -z "$token_id" ]]; then
+            echo '::error::Could not read the Cloudflare token ID for the container base image upload.'
+            exit 1
+          fi
+          echo "::add-mask::$token_id"
+          secret_key=$(printf '%s' "$CLOUDFLARE_API_TOKEN" | sha256sum)
+          secret_key=${secret_key%% *}
+          echo "::add-mask::$secret_key"
+          export AWS_ACCESS_KEY_ID="$token_id" AWS_SECRET_ACCESS_KEY="$secret_key"
+          endpoint="https://$CLOUDFLARE_ACCOUNT_ID.r2.cloudflarestorage.com"
+          output=.context/release-artifact
+          prefix=releases/download/container-base
+          manifest_key="$prefix/$RELEASE_VERSION/$RELEASE_DIGEST.json"
+          archive_sha256=$(jq -er '.archive.sha256 | strings | select(test("^[0-9a-f]{64}$"))' \
+            "$output/$manifest_key")
+          manifest_sha256=$(sha256sum "$output/$manifest_key")
+          manifest_sha256=${manifest_sha256%% *}
+          publish_file() {
+            local key="$1" content_type="$2" file url objects exists headers remote_size local_size
+            file="$output/$key"
+            url="${RUNNER_BASE_URL}${key}?publish=$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+            objects=$(aws s3api list-objects-v2 --bucket "$RUNNER_BUCKET" --prefix "$key" \
+              --endpoint-url "$endpoint" --output json)
+            exists=$(jq -r --arg key "$key" 'any(.Contents[]?; .Key == $key)' <<< "$objects")
+            if [[ "$exists" == false ]]; then
+              aws s3 cp "$file" "s3://$RUNNER_BUCKET/$key" --endpoint-url "$endpoint" \
+                --content-type "$content_type" --cache-control 'public, max-age=31536000, immutable' \
+                --only-show-errors
+            fi
+            if [[ "$key" == *.sig ]]; then
+              if ! curl -fsS --retry 3 "$url" | cmp -s "$file" -; then
+                echo "::error::The public container base image signature does not match $url."
+                return 1
+              fi
+            else
+              headers=$(curl -fsSI --retry 3 "$url")
+              remote_size=$(printf '%s\n' "$headers" |
+                awk 'tolower($1) == "content-length:" {gsub("\r", "", $2); size=$2} END {print size}')
+              local_size=$(stat -c %s "$file")
+              if [[ "$remote_size" != "$local_size" ]]; then
+                echo "::error::The public container base image file size does not match $url."
+                return 1
+              fi
+            fi
+          }
+          publish_file "$prefix/$RELEASE_VERSION/$archive_sha256/container-base-$RELEASE_VERSION.tar" application/x-tar
+          publish_file "$prefix/signatures/$manifest_sha256.sig" application/octet-stream
+          publish_file "$manifest_key" application/json
+
+      - name: Write the container base image summary
+        if: ${{ !cancelled() && steps.existing.outputs.exists != 'true' }}
+        env:
+          UPLOAD_OUTCOME: ${{ steps.upload.outcome }}
+          IMAGE_ID: ${{ steps.image.outputs.image_id }}
+          ARCHIVE_SIZE: ${{ steps.image.outputs.size }}
+        run: |
+          set -euo pipefail
+          result=failed
+          if [[ "$UPLOAD_OUTCOME" == success ]]; then result=built; fi
+          printf '### Container base image\n\n- Result %s\n- Version %s\n- Image ID %s\n- Archive size in bytes %s\n' \
+            "$result" "$RELEASE_VERSION" "${IMAGE_ID:-unavailable}" "${ARCHIVE_SIZE:-unavailable}" >> "$GITHUB_STEP_SUMMARY"
 
   # Older commits and partial re-runs start a new run on main.
   # A re-run keeps the outputs of jobs that passed.
