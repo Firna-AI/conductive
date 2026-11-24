@@ -61,7 +61,7 @@ export function RightColumn(props: {
   tools?: ReactNode
 }) {
   const panels = usePanelLayout()
-  const width = useStore(panels.widths).right
+  const width = useStore(panels.chosenWidth.right)
   const shown = useStore(panels.rightShown)
   const share = useStore(panels.split.share)
   const aside = useRef<HTMLElement>(null)

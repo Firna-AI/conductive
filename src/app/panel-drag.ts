@@ -14,25 +14,45 @@ export interface PanelDrag {
 }
 
 /**
+ * Where Home and End go when the panel shows outside the range of its
+ * handle. Each caller of `moveInRange` gives one, because the panels need
+ * different ends:
+ *
+ * - `shown`: the range widens to hold the size that shows, and Home and End
+ *   go to the ends of that wider range. So Home keeps a column that the
+ *   layout shows narrower than its range. The columns take it.
+ * - `range`: Home goes to the smallest size of the range, and End to the
+ *   largest. `room` caps them and each grow, such as the room by the mark
+ *   of the Explain popover. A grow from under the range goes at least to
+ *   the smallest size, or to the room where the room is smaller. So Home
+ *   gives a popover over a short answer the smallest size. The popover
+ *   takes it.
+ */
+type RangePolicy =
+  { readonly ends: 'shown' } | { readonly ends: 'range'; readonly room: number }
+
+/**
  * The size in whole px after a move from `from`, the size that the panel
- * shows. The size stays in a range that holds `from`: the range of the
- * panel, widened to `from` when the layout shows the panel outside it. So a
- * shrink never grows the panel, and Home and End go to the ends of that
- * range. `top` stops a move under the top of the range, such as at the room
- * beside the mark of the Explain popover. The handles of the columns and of
- * the popover all use this one rule.
+ * shows, with the ends that `policy` gives. The size stays in a range that
+ * holds `from`, so a shrink never grows the panel and End never shrinks
+ * it. The handles of the columns and of the popover all use this one rule.
  */
 export function moveInRange(
   range: PanelWidth,
   from: number,
   move: PanelMove,
-  top = Infinity,
+  policy: RangePolicy,
 ): number {
   const shown = Math.round(from)
+  const room = policy.ends === 'range' ? Math.floor(policy.room) : Infinity
   const low = Math.min(range.min, shown)
-  const high = Math.max(Math.min(range.max, Math.floor(top)), shown)
-  const target = 'by' in move ? shown + move.by : move.to === 'min' ? low : high
-  return Math.min(high, Math.max(low, Math.round(target)))
+  const high = Math.max(Math.min(range.max, room), shown)
+  // The size of Home, and the least size of a grow.
+  const least = policy.ends === 'range' ? Math.min(range.min, room) : low
+  const target =
+    'by' in move ? shown + move.by : move.to === 'min' ? least : high
+  const size = Math.min(high, Math.max(low, Math.round(target)))
+  return size > shown ? Math.max(size, least) : size
 }
 
 /**

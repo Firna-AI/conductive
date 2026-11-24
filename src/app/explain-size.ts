@@ -78,15 +78,13 @@ export class PopoverSize {
   }
 
   /**
-   * The size after a move from `from`, in a range that holds `from`, up to
-   * `room`, as `moveInRange` says. A grow from a panel that shows smaller
-   * than its range, such as over a short answer, goes at least to the
-   * smallest size of the range, or to the room where the room is smaller.
+   * The size after a move from `from`, up to `room`, as `moveInRange` says
+   * with the ends of the range. So Home gives the smallest size of the
+   * range, also to a panel that shows smaller, such as over a short answer,
+   * and a grow from such a panel goes at least to that size.
    */
-  next(axis: PopoverAxis, from: number, move: PanelMove, room: number) {
-    const size = moveInRange(ranges[axis], from, move, room)
-    if (size <= Math.round(from)) return size
-    return Math.max(size, Math.min(ranges[axis].min, Math.floor(room)))
+  next(axis: PopoverAxis, from: number, move: PanelMove, room: number): number {
+    return moveInRange(ranges[axis], from, move, { ends: 'range', room })
   }
 
   /** One step of the keys. A step that ends at `from` changes and stores nothing. */

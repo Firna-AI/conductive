@@ -20,6 +20,20 @@ Contract owners:
 - The [chat design](../docs/mockups/design-chat.md) and the public
   [sessions guide](../src/marketing/docs/sessions-and-chat.md).
 
+Replaced ways:
+
+- The storage code of `PanelLayout` and of `ColumnSplit` → `StoredSize`
+  in `src/app/stored-size.ts`. Consumers: the column widths of
+  `PanelLayout` and the split of `ColumnSplit`. Moved in Milestone 3.
+  Deleted in Milestone 3.
+- The combined `widths` record of `PanelLayout`, with its type
+  `PanelState` → `PanelLayout.chosenWidth`, one read-only width store for
+  each column. Consumers: `SidebarPanel` in `src/shell/layout/frames.tsx`,
+  `ListPopoverSurface` in `src/shell/layout/ListPopover.tsx`,
+  `RightColumn` in `src/shell/workspace/WorkspaceColumns.tsx`,
+  `ResizeHandle` in `src/shell/layout/ResizeHandle.tsx`, and
+  `src/app/panels.test.ts`. Moved in Milestone 4. Deleted in Milestone 4.
+
 ## Terms
 
 - **Popover:** the panel by a mark that shows the chat of an
@@ -215,6 +229,15 @@ made on 24 November 2026.
   room where the room is smaller, and the browser keeps a size in the
   range. My call, on 24 November 2026, from Milestone 3. Reason: the
   protocol sets the range, and one key on a 150 px panel kept 158 px.
+- **End never makes the popover smaller.** The review in Milestone 4
+  found that Home kept a 150 px popover at 150 px. The fix gives each
+  caller of `moveInRange` its own ends. On the popover, Home goes to the
+  smallest size of the range and End to the largest, each capped by the
+  room by the mark. A move still stays in a range that holds the size
+  that shows, so End never makes the panel smaller, also where rounding
+  shows it 1 px past its room. My call, on 24 November 2026. Reason: End
+  at the room must keep the chosen height, and not store the room in its
+  place.
 - **Only a move of the height fixes the height.** The protocol sentence
   now says so. My call, on 24 November 2026, from Milestone 3. Reason:
   the reason of that rule, an edge that follows the pointer, applies only
@@ -351,6 +374,13 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+- [x] Move each reader of the combined `widths` record of `PanelLayout`
+      to `PanelLayout.chosenWidth`, the width store of its own column: the
+      sidebar in `frames.tsx`, the list popover, the right column, the
+      column handle, and `src/app/panels.test.ts` with each of its
+      assertions. Then delete the record and its type `PanelState`.
+      Milestone 3 kept the record as a converter, and the review of
+      24 November 2026 found it.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the

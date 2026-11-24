@@ -34,14 +34,14 @@ export function ResizeHandle(props: {
   panelRef: RefObject<HTMLElement | null>
 }) {
   const widths = usePanelLayout()
-  const state = useStore(widths.widths)
+  const chosen = useStore(widths.chosenWidth[props.panel])
   const range = panelRanges[props.panel]
   const shown = useShownWidth(props.panelRef)
   /** The handle on the left edge widens its panel as it moves left. */
   const sign: 1 | -1 = props.edge === 'right' ? 1 : -1
   const current = (): number =>
     props.panelRef.current?.clientWidth || widths.width(props.panel)
-  const value = Math.round(shown ?? state[props.panel] ?? range.value)
+  const value = Math.round(shown ?? chosen ?? range.value)
   const handle = useResizeHandle({
     x: {
       sign,

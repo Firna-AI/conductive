@@ -7,7 +7,7 @@ import { ColumnSplit } from './column-split'
 import { ExplainSize } from './explain-size'
 import { moveInRange, type PanelDrag, type PanelMove } from './panel-drag'
 import type { KeyValueStorage } from './services'
-import { derived, Store, type Readable } from './store'
+import { Store, type Readable } from './store'
 import { StoredSize, wholePx } from './stored-size'
 
 export type Panel = 'sidebar' | 'right'
@@ -23,9 +23,6 @@ const storageKeys: Readonly<Record<Panel, string>> = {
   right: 'conductive.right-width',
 }
 
-/** `null` means that the user has not chosen a width, so the layout's own applies. */
-export type PanelState = Readonly<Record<Panel, number | null>>
-
 /**
  * The layout of the panels that the user chooses: the widths of the
  * sidebar and the right column, the split of the right column between the
@@ -36,7 +33,12 @@ export type PanelState = Readonly<Record<Panel, number | null>>
  * sidebar and the right column show always lasts until the page closes.
  */
 export class PanelLayout {
-  readonly widths: Readable<PanelState>
+  /**
+   * The width that the user chose for each column, which each column and
+   * its handle follow on their own. `null` means that the user has not
+   * chosen a width, so the layout's own applies.
+   */
+  readonly chosenWidth: Readonly<Record<Panel, Readable<number | null>>>
   /**
    * The right column shows. The toggle at the end of the workspace header
    * hides it and shows it again, for every workspace of the tab.
@@ -59,11 +61,10 @@ export class PanelLayout {
     const stored = (panel: Panel) =>
       new StoredSize(storage, storageKeys[panel], wholePx(panelRanges[panel]))
     this.sizes = { sidebar: stored('sidebar'), right: stored('right') }
-    this.widths = derived(
-      this.sizes.sidebar.chosen,
-      this.sizes.right.chosen,
-      (sidebar, right) => ({ sidebar, right }),
-    )
+    this.chosenWidth = {
+      sidebar: this.sizes.sidebar.chosen,
+      right: this.sizes.right.chosen,
+    }
   }
 
   /** The width now: the user's, or the default of the panel. */
@@ -83,10 +84,12 @@ export class PanelLayout {
 
   /**
    * The width after a move from `from`, the width that the panel shows, as
-   * `moveInRange` says. The keys and the drag all use this one rule.
+   * `moveInRange` says with the ends that hold the shown width. So Home
+   * keeps a column that the layout shows narrower than its range. The keys
+   * and the drag all use this one rule.
    */
   next(panel: Panel, from: number, move: PanelMove): number {
-    return moveInRange(panelRanges[panel], from, move)
+    return moveInRange(panelRanges[panel], from, move, { ends: 'shown' })
   }
 
   /** One step of the keys. A step that ends at `from` changes and stores nothing. */

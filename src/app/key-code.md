@@ -186,7 +186,10 @@ Each path is relative to `src/app/`, the folder of this page.
   `stored-size.ts`: `StoredSize`, one size that the user chooses with a
   handle and that the browser keeps, which each of them uses.
   `panel-drag.ts`: `moveInRange`, the one rule of the steps of the
-  columns and of the popover, and `panelDrag`, the rule of one drag.
+  columns and of the popover, and `panelDrag`, the rule of one drag. Each
+  caller of `moveInRange` gives where Home and End go when its panel
+  shows outside its range: the columns keep the width that shows, and
+  the popover goes to the ends of its range, up to the room by its mark.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and
   its waiting writes, and the errors that prove that the value no longer
   exists. `refresh.ts`: `Refresher`, the shared reads of a part while

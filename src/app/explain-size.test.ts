@@ -104,18 +104,32 @@ describe('the size of the Explain popover', () => {
     })
   })
 
-  test('a grow from a panel lower than its range goes to the smallest size, and the chosen size stays in the range', () => {
+  test('Home or a grow from a panel lower than its range goes to the smallest size, and the chosen size stays in the range', () => {
     const storage = new MemoryStorage()
     const { explain } = new PanelLayout(storage)
+    // A short answer shows the panel 150 px high, with 500 px of room by
+    // the mark, so Home has room for the smallest size, 200 px.
+    const home = new PopoverSize(explain)
+    home.step('height', 150, { to: 'min' }, 500)
+    const homed = {
+      moved: home.moved.get().height,
+      kept: reloaded(storage).height,
+    }
     const short = new PopoverSize(explain)
     short.step('height', 150, { by: 8 }, 2000)
     const cramped = new PopoverSize(explain)
     cramped.step('height', 120, { by: 8 }, 180)
     expect({
+      homed,
       short: short.moved.get().height,
       cramped: cramped.moved.get().height,
       reloaded: reloaded(storage).height,
-    }).toEqual({ short: 200, cramped: 180, reloaded: 200 })
+    }).toEqual({
+      homed: { moved: 200, kept: 200 },
+      short: 200,
+      cramped: 180,
+      reloaded: 200,
+    })
   })
 
   test('a refused storage keeps the size while the page stays open', () => {
