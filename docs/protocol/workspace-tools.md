@@ -17,8 +17,9 @@ decision of the change that reads Markdown with one parser, as
 
 ## Files and changes
 
-- All files shows every file of the branch as a tree. A small mark shows
-  each added or changed file.
+- All files shows the files of the branch as a tree, up to the limit of
+  its report, as [Report limits](file-reports.md#report-limits) says. A
+  small mark shows each added or changed file.
 - All files also shows the files of the context folder that Git ignores,
   without a mark, as
   [The context folder](repository-folders.md#the-context-folder) says.
@@ -93,59 +94,19 @@ decision of the change that reads Markdown with one parser, as
 - Reading a file has a size limit of 5 MiB, or 5,242,880 bytes.
   Reason: Boat's file read stops at 5 MiB, so a file read that falls back
   to it cannot read more.
-- A PNG, JPEG, GIF, or WebP file up to the read limit shows as a picture
-  (decision 265 B). This holds for each image of the workspace, also one
-  that All files or the chip of a sent message opens.
-- The tab knows such a file by the extension of its name. Reason: the file
-  reads do not give the correct media type for each of these images.
-- The picture keeps its proportions, in the middle of the tab. It shows at
-  its own size, or smaller, so that it fits the width and the height of the
-  tab.
-- A zoom bar under the picture holds Zoom out, the zoom as a percentage of
-  the own size of the picture, Zoom in, Fit, and Expand. Zoom in and Zoom
-  out step through fixed scales. Fit shows the whole picture again. The
-  zoom goes from the fit up to eight times the own size of the picture.
-- The wheel and a pinch zoom the picture about the pointer. A drag moves a
-  zoomed picture, which always covers the tab on each side where it is
-  larger. A double press on a fitted picture zooms it to its own size
-  about the pointer, or to two times its size when it already fits at its
-  own size. A double press on a zoomed picture fits it again.
-- From two times its own size, the pixels of the picture show sharp, so the
-  detail of a screenshot stays clear.
-- On desktop, Expand shows the picture in a large window over the whole
-  app, on the dim layer of a dialog, as the window of
-  [an expanded Preview tab](port-previews.md). The header of the window
-  names the file and holds Close. The picture fits the window as it opens,
-  and it zooms as in the tab. Close, Escape, and a press on the dim layer
-  close the window. A phone has no Expand, because its file page fills the
-  screen already.
-- Reason: Cal asked on 22 November 2026 for a zoom with the wheel and with
-  a control, and for a way to expand the picture, because the detail of a
-  wide screenshot was too small to read. The wheel zooms without a
-  modifier key, because the tab has nothing else to scroll. These are
-  design calls of 22 November 2026.
-- When the browser cannot draw the bytes, the tab shows "Download this file
-  to open it", with Download, as for each other binary file.
-- An image over the read limit shows "Open this file in the terminal", as
-  each other file over the limit does.
-- The header keeps Copy and Download. Copy is off for a picture, as for
-  each other binary file.
-- An SVG file stays text with line numbers. Reason: its source is what a
-  member edits.
-- Reason: a press on a screenshot then shows its picture in the file tab,
-  for each image of the workspace, with no new route. A tab with only
-  Download was rejected, because a member then downloads each screenshot
-  to see it.
-- A read of a larger attached image from the storage of the app, and a
-  picture of each attached image in its message, were not chosen. Each
-  needs a new read route with its access checks, or many large reads.
+- [Pictures in file tabs](file-pictures.md) states how a file tab shows a
+  PNG, JPEG, GIF, or WebP file, with its zoom bar and its expanded view.
 - The Markdown preview fills short table rows only up to 65,536 empty
   cells in one file. Then it shows the rest of the file as text
   (decision 88).
 - Changes lists the files that the branch changes against its base branch,
   from the merge base of the two, as [Base branches](base-branches.md)
-  says. Its summary gives the number of changed files and the lines that
-  they add and remove.
+  says, up to the limit of its report.
+- The summary of Changes gives all changed files and the lines that they
+  add and remove, and the count of its tab gives all changed files. Each
+  adds the omitted totals to the `summary` of the report, which counts
+  only the listed files, as [Omitted totals](file-reports.md#omitted-totals)
+  says.
 - A press on a changed file opens its diff against the base branch. The
   diff opens in the temporary tab, as a file does. The diff shows the
   syntax colours of the file, as code does.
@@ -169,12 +130,31 @@ decision of the change that reads Markdown with one parser, as
   does not document it and can change it. A timer that compares the
   identity of the folder was rejected, because the app already has a
   documented signal for the end of the restore.
-- [File reports](file-reports.md) states the limits, the parts, the
-  revisions, and the repairs of the runner's reports of both lists.
+- [File reports](file-reports.md) states the limits, the omitted totals,
+  the parts, the revisions, and the repairs of the runner's reports of
+  both lists.
+- When the tree report omits entries, All files shows a notice with their
+  number. It names files and folders, because the limit counts folders
+  too: "18,412 files and folders are not listed. Find them in the
+  terminal, or ask the agent."
+- When the changes report omits files, Changes shows a notice with their
+  number: "The totals include 1,243 files that are not listed. Review them
+  in the terminal, or ask the agent."
+- Each count comes from the report, not from the limit. A report without
+  omitted totals shows no notice, and Changes then counts only its rows.
+  The [mockups](../mockups/catalogue-attachments-and-files.md) draw the
+  notices at `app/files/limited` and `app/files/changes/limited`.
+- A limited list is not a failed scan and not an empty repository. Each
+  new complete report replaces its counts at once, and a count of zero
+  removes its notice.
+- A member reaches an omitted file in the terminal, or through the agent.
+  A file tab and a diff tab read their path directly, so a link or an
+  open tab of an omitted path still works.
 - The runner reads one file or one diff on request. When the runner is not
   connected, a file read falls back to the file read of the provider.
-- The Durable Object keeps the last tree and the last changes, so both tabs
-  still show them while the sandbox sleeps and while it starts again.
+- The Durable Object keeps the last tree and the last changes, with their
+  omitted totals. So both tabs still show them and their notices while
+  the sandbox sleeps and while it starts again.
 - Reason: Boat's API can run `git` and read files only while the sandbox
   runs, one request at a time, and with no live updates.
 - While the sandbox does not run, a file or diff tab reads nothing. While
@@ -192,8 +172,8 @@ decision of the change that reads Markdown with one parser, as
 - The workspace then marks the file tree as unavailable, and each open tab
   gets the mark. The changes list keeps its last complete report.
 - The tree that the workspace serves then carries `unavailable: true`. It
-  keeps the entries and the revision of the last tree. Before the first
-  complete tree, it has revision 0 and no entries.
+  keeps the entries, the revision, and the omitted entry count of the last
+  tree. Before the first complete tree, it has revision 0 and no entries.
 - These empty entries mean an unknown tree, not an empty branch.
 - Only a complete full tree clears the mark. A tree delta and an incomplete
   full tree keep it.
@@ -202,6 +182,10 @@ decision of the change that reads Markdown with one parser, as
 - All files then keeps the last tree, and a notice says that the latest list
   is unavailable. Before the first complete tree, All files says that the
   list is unavailable, in place of the tree.
+- A limited list keeps its notice of omitted entries or files while its
+  latest list is unavailable, and after a
+  [failed repair](lost-workspace-updates.md) of the list. The notice of
+  that state shows too, each notice in its own place.
 - Reason: the user can tell an old or unknown tree from the latest one. A
   failed scan with no mark was rejected, because the tab then shows an old
   tree as the latest one.

@@ -22,6 +22,8 @@ export interface DevView {
   repair: readonly DevRepair[]
   /** The tree of All files before the page opened: `?tree=`. */
   tree: DevTree
+  /** Complete lists, or the limited lists of a large branch: `?lists=`. */
+  lists: DevLists
   /** What the Preview of an HTML file shows: `?preview=`. */
   preview: DevPreview
 }
@@ -52,6 +54,14 @@ const repairs: readonly DevRepair[] = ['all-files', 'changes']
 export type DevTree = 'latest' | 'saved' | 'none'
 
 const trees: readonly DevTree[] = ['latest', 'saved', 'none']
+
+/**
+ * The lists of the mockup data: complete, or limited, as a new runner
+ * reports a branch that passes the limits of its reports.
+ */
+type DevLists = 'complete' | 'limited'
+
+const listStates: readonly DevLists[] = ['complete', 'limited']
 
 const lists: readonly FileListKind[] = ['all', 'changes', 'checks']
 
@@ -84,6 +94,8 @@ export function readView(search: string): DevView {
       (query.get('repair') ?? '').split(',').includes(repair),
     ),
     tree: trees.find((tree) => tree === query.get('tree')) ?? 'latest',
+    lists:
+      listStates.find((lists) => lists === query.get('lists')) ?? 'complete',
     preview:
       devPreviews.find((preview) => preview === query.get('preview')) ?? 'page',
   }
@@ -99,6 +111,7 @@ export function viewQuery(view: DevView): string {
   if (!view.controls) query.set('controls', 'off')
   if (view.repair.length > 0) query.set('repair', view.repair.join(','))
   if (view.tree !== 'latest') query.set('tree', view.tree)
+  if (view.lists !== 'complete') query.set('lists', view.lists)
   if (view.preview !== 'page') query.set('preview', view.preview)
   return `?${query}`
 }

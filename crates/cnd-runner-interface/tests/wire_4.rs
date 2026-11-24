@@ -1,6 +1,9 @@
 //! JSON snapshots of the current runner protocol, including omitted and null fields.
 
+use cnd_runner_interface::file_tree::{FileTreeResponse, RunnerFileEvent};
 use cnd_runner_interface::runner_handshake::RunnerToWorkspace;
+use serde::{Serialize, de::DeserializeOwned};
+use serde_json::{Value, json};
 
 macro_rules! wire_message {
     ($name:ident, $ty:ty, $json:literal) => {
@@ -55,6 +58,39 @@ wire_message!(
     RunnerToWorkspace,
     r#"{"type":"event","streamId":"stream-1","eventNumber":9007199254740991,"occurredAt":1730000000000,"event":{"type":"changes.updated","changes":{"revision":1,"partNumber":1,"partCount":1,"baseBranch":"main","files":[{"path":"new.txt","displayPath":"masked.txt","previousPath":"old.txt","previousDisplayPath":"masked-old.txt","change":"renamed","added":2,"removed":1,"uncommitted":true}],"summary":{"files":1,"added":2,"removed":1}}}}"#
 );
+
+fn assert_round_trip<T: DeserializeOwned + Serialize>(value: Value) -> serde_json::Result<()> {
+    let message: T = serde_json::from_value(value.clone())?;
+    assert_eq!(serde_json::to_value(message)?, value);
+    Ok(())
+}
+
+#[test]
+fn file_report_omission_fields_round_trip_as_missing_zero_and_nonzero() -> serde_json::Result<()> {
+    for count in [None, Some(0), Some(25)] {
+        let mut tree = json!({"revision": 1, "entries": []});
+        let mut delta = json!({"revision": 2, "changes": []});
+        let mut changes = json!({
+            "revision": 1, "partNumber": 1, "partCount": 1,
+            "baseBranch": "main", "files": [],
+            "summary": {"files": 0, "added": 0, "removed": 0},
+        });
+        if let Some(count) = count {
+            tree["omittedEntryCount"] = json!(count);
+            delta["omittedEntryCount"] = json!(count);
+            changes["omitted"] = json!({"files": count, "added": count * 2, "removed": count * 3});
+        }
+        assert_round_trip::<FileTreeResponse>(tree.clone())?;
+        tree["partNumber"] = json!(1);
+        tree["partCount"] = json!(1);
+        assert_round_trip::<RunnerFileEvent>(json!({"type": "files.snapshot", "tree": tree}))?;
+        assert_round_trip::<RunnerFileEvent>(json!({"type": "files.changed", "delta": delta}))?;
+        assert_round_trip::<RunnerFileEvent>(
+            json!({"type": "changes.updated", "changes": changes}),
+        )?;
+    }
+    Ok(())
+}
 
 wire_message!(
     ports_updated,

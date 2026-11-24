@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { TableCell, type TableColumn } from '@firna/ui/table'
+import { formatCount } from '../../ui/components/common/counts'
 import { orgAccountWords } from '../../ui/components/operator/providerCopy'
 import { readOrgsPage } from '../../app/api/read-operator'
 import {
@@ -16,7 +17,7 @@ import {
 import { useApp } from '../context'
 import { useViewport, type Viewport } from '../ui/viewport'
 import { dayWidth, DirectoryList, type DirectoryKind } from './DirectoryList'
-import { counted, formatCount, formatShortDay } from './format'
+import { counted, formatShortDay } from './format'
 import { OperatorPage } from './OperatorPage'
 import { SearchField } from './SearchField'
 import {

@@ -4,7 +4,9 @@ This page belongs to [File mentions](file-mentions.md), which states the
 list of `@`, the chips of files and folders, and the text of a mention.
 It states the file chips, the file links, and the pictures in the answers
 of the agents, and their line targets. The tree is the file tree of the
-workspace, as [The list](file-mentions.md#the-list) says.
+workspace, as [The list](file-mentions.md#the-list) says. It holds only
+the entries that its report lists. So a path that the report omits names
+no entry, and it shows as the rules below give for such a path.
 [Chat Markdown](chat-markdown.md) states the other Markdown of agent
 messages. The terms are those of the
 [architecture doc](../architecture.md#terms). The
@@ -79,7 +81,7 @@ that shows the screenshots of agents as pictures in their answers.
 
 - A picture file is a PNG, JPEG, GIF, or WebP file. The file tab knows
   such a file by the extension of its name, and shows it as a picture, as
-  [Files and changes](workspace-tools.md#files-and-changes) says.
+  [Pictures in file tabs](file-pictures.md) says.
 - A Markdown image of an answer whose target is a picture file of the tree
   shows as a small picture (screenshot decision 2 B).
 - Reason: the agent knows which images show its result, and this is the

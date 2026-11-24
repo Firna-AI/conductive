@@ -2,7 +2,8 @@
 
 This guide belongs to [the Files screens](README.md). It gives the rules of
 the stream of the kept store, the open pages, the failed repairs of the
-lists, and a tree that the cloud computer could not read.
+lists, a tree that the cloud computer could not read, and the omitted
+totals of a limited list.
 [Integration](README.md#integration) shows how the app connects the store.
 
 On its first visit, `WorkspaceFiles` starts both list reads. Each reply
@@ -114,3 +115,29 @@ says. Each list starts with the repository from its read. Later
   report of the new folder. The next full tree and the next changes report
   of the stream replace both lists.
 - `files-moved.test.ts` checks these steps.
+
+## Omitted totals
+
+A limited report leaves out entries or changed files, and it gives their
+totals. The tree keeps the count of its report in
+`FileTree.omittedEntryCount`, and the changes keep theirs in
+`ChangesResponse.omitted`. Each report replaces or keeps them, as
+[Omitted totals](../../docs/protocol/file-reports.md#omitted-totals) and
+[Updates and refreshes](../../docs/protocol/file-reports.md#updates-and-refreshes)
+say. A missing total is unknown, so no notice shows.
+
+- The parsers keep a total that is a safe count. They drop any other
+  value, and they refuse no reply because of it.
+- A tree update that waits for a tree read applies its count over that
+  tree, as it applies its entries.
+- The unavailable mark, a failed repair, and a repository move keep the
+  saved tree with its count, so its notice stays. A move drops the
+  changes with their totals.
+- A remove of a path that the tree does not hold changes no entry, also no
+  entry under that path, and the open page of that path still reads again.
+  So a file or a diff of a path that the report leaves out stays fresh, and
+  such a remove does not scan the tree.
+- `omitted-lists.test.ts` checks the totals and the refresh,
+  `files-tree-repair.test.ts` checks the count of an update that waits, and
+  `tree-model.test.ts` checks the entries and the touched path of a remove
+  of an absent path.

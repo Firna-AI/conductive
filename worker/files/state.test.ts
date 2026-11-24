@@ -4,10 +4,13 @@ import type { FileEntry } from '../../src/shared/generated/FileEntry'
 import { parseChanges } from '../../src/files/api/parse-changes'
 import { recordedRunnerFileEvents } from '../../src/test-support/recorded-files'
 import { FilesState } from './state'
+import { markFilesMoved } from './storage'
+import { fileEntry } from './test-support/bucket-builder'
 import {
   createFilesStorage,
   type FilesStorageHarness,
 } from './test-support/storage'
+import { readStoredTreeFields } from './test-support/storage-record'
 
 let runtime: FilesStorageHarness
 beforeAll(async () => {
@@ -140,4 +143,66 @@ it('stores repository trees and changes larger than one Durable Object value', a
     'Large projection storage:',
     await runtime.inspect('large-projection'),
   )
+})
+
+it('keeps omission metadata with its list across reconnect, replacement, and a move', async () => {
+  const storage = runtime.storage('omission-replacement')
+  const state = new FilesState(storage)
+  const entries = [fileEntry('saved.txt')]
+  const legacyChanges = {
+    baseBranch: 'main',
+    files: [],
+    summary: { files: 0, added: 0, removed: 0 },
+  }
+  const limitedTree = { revision: 4, entries, omittedEntryCount: 12 }
+  const limitedChanges = {
+    ...legacyChanges,
+    omitted: { files: 6, added: 9, removed: 2 },
+  }
+  await state.beginConnection('old')
+  await state.apply('old', { type: 'files.snapshot', tree: limitedTree })
+  await state.apply('old', { type: 'changes.updated', changes: limitedChanges })
+  await expect(readStoredTreeFields(storage)).resolves.toStrictEqual({
+    revision: 4,
+    omittedEntryCount: 12,
+    omittedEntryCountRevision: 4,
+  })
+  await state.beginConnection('new')
+  await expect(state.tree()).resolves.toStrictEqual(limitedTree)
+  await expect(state.changes()).resolves.toStrictEqual(limitedChanges)
+
+  const completeTree = { revision: 1, entries, omittedEntryCount: 0 }
+  await state.apply('new', { type: 'files.snapshot', tree: completeTree })
+  await expect(readStoredTreeFields(storage)).resolves.toStrictEqual({
+    revision: 1,
+    omittedEntryCount: 0,
+    omittedEntryCountRevision: 1,
+  })
+  await expect(state.tree()).resolves.toStrictEqual(completeTree)
+  await expect(state.changes()).resolves.toStrictEqual(limitedChanges)
+  const completeChanges = {
+    ...legacyChanges,
+    omitted: { files: 0, added: 0, removed: 0 },
+  }
+  await state.apply('new', {
+    type: 'changes.updated',
+    changes: completeChanges,
+  })
+  await expect(state.changes()).resolves.toStrictEqual(completeChanges)
+  await expect(state.tree()).resolves.toStrictEqual(completeTree)
+
+  await markFilesMoved(storage)
+  await expect(state.tree()).resolves.toStrictEqual({
+    ...completeTree,
+    unavailable: true,
+  })
+  await expect(state.changes()).resolves.toBeNull()
+  const legacyTree = { revision: 2, entries }
+  await state.apply('new', { type: 'files.snapshot', tree: legacyTree })
+  await state.apply('new', { type: 'changes.updated', changes: legacyChanges })
+  await expect(readStoredTreeFields(storage)).resolves.toStrictEqual({
+    revision: 2,
+  })
+  await expect(state.tree()).resolves.toStrictEqual(legacyTree)
+  await expect(state.changes()).resolves.toStrictEqual(legacyChanges)
 })

@@ -1,6 +1,7 @@
 import { defineScreen } from '@mokly/mokly'
 import { WorkspaceScreen } from '../../../../screens/WorkspaceScreen'
 import {
+  largeBranchState,
   readyWorkspace,
   workspaceStateSchema,
 } from '../../../../screens/workspaceState'
@@ -44,6 +45,15 @@ export const fileMentionList = defineScreen({
       rationale:
         'The words follow All files, so the two places agree on the same state of the tree.',
       props: { composer: 'mention-unavailable', tree: 'none' },
+    },
+    {
+      slug: 'limited',
+      title: 'A file that the list leaves out',
+      description:
+        'The branch is large, so All files and this list leave out 18,412 files and folders, such as tsconfig.json at the root. Cal typed `@tsconfig`. One line says Nothing matches “tsconfig”, that some files are not listed, and that Cal can type the path or ask the agent. A typed path stays text in the message, and the agent reads it. The right column shows Changes of the same branch, with its notice, and the pull request bar shows its 2 failed checks, as each page of the large branch does.',
+      rationale:
+        'Runner file report limits: Cal chose item 3 A on 23 November 2026. The list of `@`, the chips of a message, and the chips, links, and pictures of an answer keep the one tree of All files. So a path that the tree leaves out stays text or code, with no chip. A Markdown link to such a path shows as the text that the agent typed, and it opens nothing. An image of such a path shows only its label, or nothing when the label is blank. A file that a message attaches keeps its chip. Only a direct read of the path, such as the address of a file tab, opens the file. A design call of 23 November 2026 adds the reason and the way on to the line of no match, so no one reads the file as deleted. A list with matches shows no such line, because the matches answer the query.',
+      props: { composer: 'mention-omitted', ...largeBranchState },
     },
   ],
 })

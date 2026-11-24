@@ -16,7 +16,12 @@ export type FileTreeResponse = {
    */
   unavailable?: WireTrue
   /**
-   * A full, flat list. Each path is relative to the repository root.
+   * Entries left out of the complete tree.
+   * Absent when the count is unknown, as from an older runner.
+   */
+  omittedEntryCount?: number
+  /**
+   * Listed entries as flat paths relative to the repository root.
    */
   entries: ReadonlyVec<FileEntry>
 }

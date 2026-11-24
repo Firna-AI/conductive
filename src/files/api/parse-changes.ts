@@ -9,7 +9,9 @@ import {
   readArray,
   readCount,
   readLabel,
+  readSafeCount,
   readString,
+  type JsonObject,
 } from './guards'
 
 const changeKinds: readonly ChangeKind[] = [
@@ -45,7 +47,26 @@ function parseChangedFile(value: unknown): BranchChangedFile | null {
   }
 }
 
-/** The changes of the branch. Files that do not parse are left out. */
+/**
+ * The omitted totals of a changes report, as a field to spread into it.
+ * Missing totals are unknown, as from an older runner, and so are totals
+ * that are not three safe counts: the field stays out, and the reader
+ * refuses nothing because of it.
+ */
+function readOmitted(value: JsonObject): Pick<ChangesResponse, 'omitted'> {
+  if (!isObject(value.omitted)) return {}
+  const files = readSafeCount(value.omitted, 'files')
+  const added = readSafeCount(value.omitted, 'added')
+  const removed = readSafeCount(value.omitted, 'removed')
+  if (files === null || added === null || removed === null) return {}
+  return { omitted: { files, added, removed } }
+}
+
+/**
+ * The changes of the branch. Files that do not parse are left out. The
+ * summary counts the listed files, and the omitted totals of the report,
+ * as `readOmitted` reads them, count the files that it leaves out.
+ */
 export function parseChanges(value: unknown): ChangesResponse | null {
   if (!isObject(value)) return null
   const baseBranch = readString(value, 'baseBranch')
@@ -69,6 +90,7 @@ export function parseChanges(value: unknown): ChangesResponse | null {
     ...readLabel(value, 'displayBaseBranch'),
     files: parseItems(files, parseChangedFile),
     summary: { files: count, added, removed },
+    ...readOmitted(value),
   }
 }
 

@@ -1,7 +1,7 @@
 //! Git comparisons, safe file access, and captured repository reports.
 
 mod access;
-mod changes;
+pub(crate) mod changes;
 mod checkpoint;
 mod context;
 mod diff;

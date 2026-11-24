@@ -37,6 +37,7 @@ this server is the repository root, so it also serves the
 | `branches` | The branch names: `plain`, the default, `masked`, `masked-continue`, or `masked-repository`. `masked-continue` gives each name of Continue a fake secret value and its label, as [the GitHub development page](../../github/README.md#development-page) says. `masked-repository` does the same for each name of a repository change. |
 | `repository` | The cloud computer holds each chosen repository, so the repository in the header opens its menu. The value says how a change ends: `changed`, `question`, `clash`, `outdated`, or `fetch-failed`. Without it, the repository shows as text. |
 | `services` | The Preview tool lists services above the servers of a stored report of the ports: `running`, `ended`, `empty`, or `load-failed`, a first read that fails. Stop and Restart of `web` change the list, a Restart of `storybook` fails, and a Stop of `worker` loses its reply, so each toast shows. Each control answers after 1.5 seconds. Without it, the cloud computer has no services, as older software. |
+| `lists`    | `limited` ends the stored history with the lists of a large branch, whose reports leave out entries, as `app/files/limited` draws them. The tree leaves out `tsconfig.json`, so `@tsconfig` in the message field shows the line of no match of a limited tree. |
 
 For example, `?viewport=phone&view=terminal&repair=name,start,all-files,changes`
 draws the bars of the name and the start steps on the Terminal tab of a

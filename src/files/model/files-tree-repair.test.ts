@@ -90,25 +90,47 @@ it.each([
   })
 })
 
-it('applies a pending tree delta above the gap repair cutoff', async () => {
-  const { files, tree, server, held } = await startTreeReads()
-  held.holdAnswer('GET', treePath)
-  const cutoff = emit(server, treeUpdate(4))
-  emit(server, treeUpdate(5))
-  expect(files.getSnapshot().tree?.revision).toBe(2)
-  expect(tree).toHaveLength(2)
+/** A tree update that gives the omitted entry count of its report, or none. */
+function countedUpdate(revision: number, count?: number): WorkspaceEvent {
+  const event = treeUpdate(revision)
+  if (event.type !== 'files.changed' || count === undefined) return event
+  return { ...event, delta: { ...event.delta, omittedEntryCount: count } }
+}
 
-  held.release('GET', treePath)
-  const reply = await tree[1]
-  const saved = files.getSnapshot().tree
-  expect({
-    cutoff: reply?.stateRead?.eventNumber,
-    revision: saved?.revision,
-    recovered: saved?.entries.has('notes-4.md'),
-    pending: saved?.entries.has('notes-5.md'),
-    reads: tree.length,
-  }).toEqual({ cutoff, revision: 5, recovered: true, pending: true, reads: 2 })
-})
+it.each([
+  { pending: 'with a new omitted count', count: 7, omitted: 7 },
+  { pending: 'that keeps the omitted count', count: undefined, omitted: 12 },
+])(
+  'applies a pending tree delta $pending above the gap repair cutoff',
+  async (test) => {
+    const { files, tree, server, held } = await startTreeReads()
+    held.holdAnswer('GET', treePath)
+    // The read at the cutoff gives the tree after this update, with its count.
+    const cutoff = emit(server, countedUpdate(4, 12))
+    emit(server, countedUpdate(5, test.count))
+    expect(files.getSnapshot().tree?.revision).toBe(2)
+    expect(tree).toHaveLength(2)
+
+    held.release('GET', treePath)
+    const reply = await tree[1]
+    const saved = files.getSnapshot().tree
+    expect({
+      cutoff: reply?.stateRead?.eventNumber,
+      revision: saved?.revision,
+      recovered: saved?.entries.has('notes-4.md'),
+      pending: saved?.entries.has('notes-5.md'),
+      omitted: saved?.omittedEntryCount,
+      reads: tree.length,
+    }).toEqual({
+      cutoff,
+      revision: 5,
+      recovered: true,
+      pending: true,
+      omitted: test.omitted,
+      reads: 2,
+    })
+  },
+)
 
 it('keeps a newer complete tree report when the gap repair read answers', async () => {
   const { files, tree, server, held } = await startTreeReads()

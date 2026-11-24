@@ -17,6 +17,7 @@ import {
   type FilesStorage,
   type FilesTransaction,
 } from './storage'
+import { treeFieldsForRevision } from './tree-omission'
 
 export async function beginFilesConnection(
   transaction: FilesTransaction,
@@ -98,7 +99,7 @@ export async function applyFilesEvent(
     manifest.tree = await writeBucketList(
       transaction,
       'tree',
-      fields,
+      treeFieldsForRevision(fields, fields.revision, fields.omittedEntryCount),
       entries,
       manifest.tree,
     )

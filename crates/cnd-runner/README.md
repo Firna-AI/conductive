@@ -171,10 +171,12 @@ A valid configured name
 sends the value also before the first copy completes, so its trust policy
 applies at once. Without a valid configured name, the start has no value.
 
-File reports keep separate tree and changes histories. Filtering runs on each
-complete report before splitting. Multipart reports keep whole entries and
-independent revisions. Report repair saves the answer and request receipt
-together. Retained reports select the newest pending state under the store lock.
+File reports keep separate tree and changes histories. The reporter selects
+bounded lists from complete scans and keeps the last emitted tree for delta
+comparisons. Filtering runs after selection and before splitting. Multipart
+reports keep whole entries and independent revisions. Report repair saves
+the answer and request receipt together. Retained reports select the newest
+pending state under the store lock.
 
 Port scans inspect Linux socket tables and process metadata. They never read
 process environments. Reports require two successful scans for additions and
@@ -340,6 +342,8 @@ and connection drops. It does not run the Worker.
 - [stylesheet.rs](src/file_server/stylesheet.rs), [font_face.rs](src/file_server/font_face.rs), and [font_tables.rs](src/file_server/font_tables.rs): build and cache the font stylesheet from bounded reads of each font's tables.
 - [setup.rs](src/repository/setup.rs): context setup adds the exclude rule once and creates attachment storage.
 - [files.rs](src/reports/files.rs): `FileReporter` serializes captured report parts and file requests.
+- [selection.rs](src/reports/selection.rs) selects the entries and changes to send and computes omission totals.
+- [updates.rs](src/reports/updates.rs) compares emitted trees and sends path refreshes from the complete scans.
 - [handler.rs](src/reports/handler.rs): `ReportCommandHandler` connects reports to commands and durable state.
 - [prepare.rs](src/reports/prepare.rs): `ReportFilter` receives complete sources before byte limits.
 - [reporter.rs](src/ports/reporter.rs): `PortReporter` keeps stable bounded port lists.

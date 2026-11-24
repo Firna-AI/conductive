@@ -2,7 +2,7 @@ import { useMemo, type ReactNode } from 'react'
 import { FileBox, FileDiff } from 'lucide-react'
 import type { FilesClient } from '../api/files-client'
 import { DiffView } from '../diff/DiffView'
-import { parsePatch } from '../diff/parse-patch'
+import { changedLines, deletesFile, parsePatch } from '../diff/parse-patch'
 import { labelName, pageLabel } from '../model/file-labels'
 import type { WorkspaceFiles } from '../model/files-store'
 import {
@@ -34,8 +34,10 @@ const readDiff = (client: FilesClient, path: string, signal: AbortSignal) =>
  *
  * A diff over the read limit offers no Download. A binary diff links to
  * the file tab in place of Download, and the file tab offers Download
- * when the file fits the limit. The header keeps the changed lines of the
- * list of changes while a placeholder shows.
+ * when the file fits the limit. A deleted file gets neither. While
+ * Changes lists the path, its row gives the changed lines of the header
+ * and the deletion, also while a placeholder shows. A path that Changes
+ * leaves out takes both from its own diff reply.
  */
 export function DiffPage(props: {
   files: WorkspaceFiles
@@ -67,9 +69,14 @@ export function DiffPage(props: {
   const label = pageLabel(snapshot, tab.path, 'diff', diff)
   const rows = useMemo(() => (diff ? parsePatch(diff.patch) : []), [diff])
   const failed = state?.status === 'failed' ? state.error.kind : null
+  // A binary diff has no new text for a file that exists either, so only
+  // its patch header tells a deletion when Changes does not list the path.
   const deleted =
-    changed?.change === 'deleted' ||
-    (diff !== null && diff.newContent === null && !diff.binary)
+    (diff !== null && !diff.binary && diff.newContent === null) ||
+    (changed
+      ? changed.change === 'deleted'
+      : diff?.binary === true && deletesFile(diff.patch))
+  const lines = changed ?? (diff && !diff.binary ? changedLines(rows) : null)
   const download =
     placeholder ||
     failed === 'not-found' ||
@@ -128,8 +135,8 @@ export function DiffPage(props: {
         downloading={actions.downloading}
         diff
         meta={
-          changed ? (
-            <DiffStat added={changed.added} removed={changed.removed} />
+          lines ? (
+            <DiffStat added={lines.added} removed={lines.removed} />
           ) : undefined
         }
         navigation={props.navigation}

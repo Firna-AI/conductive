@@ -2,10 +2,36 @@
 
 #![allow(clippy::unwrap_used)]
 
+use std::fs;
+
 use cnd_runner_interface::file_changes::ChangeKind;
 use cnd_runner_interface::files::FileResponseEncoding;
 
 use super::support::Fixture;
+
+#[tokio::test]
+async fn keeps_patch_headers_plain_when_git_forces_color() {
+    let h = Fixture::new().await;
+    h.git(&["config", "color.ui", "always"]);
+    h.git(&["config", "color.diff", "always"]);
+    fs::remove_file(h.root.join("README.md")).unwrap();
+
+    let diff = h
+        .repository
+        .diff("README.md".into(), "main".into())
+        .await
+        .unwrap();
+    assert_eq!(
+        (
+            diff.patch.contains('\x1b'),
+            diff.patch.lines().any(|line| line.starts_with("@@")),
+            diff.patch
+                .lines()
+                .any(|line| line.starts_with("deleted file mode ")),
+        ),
+        (false, true, true),
+    );
+}
 
 #[tokio::test]
 async fn reports_committed_staged_working_renamed_and_literal_untracked_files() {
