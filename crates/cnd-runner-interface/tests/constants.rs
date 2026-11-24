@@ -5,6 +5,7 @@
     reason = "Missing runtime constants must stop the test."
 )]
 
+use cnd_runner_interface::computer;
 use cnd_runner_interface::host::{limits, literals::HostStreamPort};
 use cnd_runner_interface::services::logs;
 use cnd_runner_interface::{chat_events, file_tree, files, ports, runner_handshake, skills};
@@ -173,6 +174,63 @@ fn typescript_and_rust_share_host_constants() {
     assert_eq!(
         limits::HOST_FILE_READ_MAX_BYTES as u64,
         files::FILE_READ_MAX_BYTES
+    );
+}
+
+#[test]
+fn typescript_and_rust_share_computer_constants() {
+    let source = include_str!("../../../src/shared/computer.ts");
+    let host = include_str!("../../../src/shared/host.ts");
+    let constants = [
+        (
+            "COMPUTER_PROTOCOL_VERSION",
+            u64::from(computer::limits::COMPUTER_PROTOCOL_VERSION),
+        ),
+        (
+            "COMPUTER_CLOSE_REPLACED",
+            u64::from(computer::limits::COMPUTER_CLOSE_REPLACED),
+        ),
+        (
+            "COMPUTER_CLOSE_REVOKED",
+            u64::from(computer::limits::COMPUTER_CLOSE_REVOKED),
+        ),
+        (
+            "COMPUTER_CLOSE_UNSUPPORTED_VERSION",
+            u64::from(computer::limits::COMPUTER_CLOSE_UNSUPPORTED_VERSION),
+        ),
+        (
+            "COMPUTER_REQUEST_MAX_BYTES",
+            computer::limits::COMPUTER_REQUEST_MAX_BYTES as u64,
+        ),
+        (
+            "COMPUTER_REPLY_MAX_BYTES",
+            computer::limits::COMPUTER_REPLY_MAX_BYTES as u64,
+        ),
+        (
+            "COMPUTER_MESSAGE_PART_BYTES",
+            computer::limits::COMPUTER_MESSAGE_PART_BYTES as u64,
+        ),
+        (
+            "COMPUTER_MAX_PENDING_REQUESTS",
+            computer::limits::COMPUTER_MAX_PENDING_REQUESTS as u64,
+        ),
+    ];
+    for (name, expected) in constants {
+        let value = constant_value(source, name);
+        let literal = if value.starts_with("HOST_") {
+            constant_value(host, value)
+        } else {
+            value
+        };
+        assert_eq!(
+            literal.replace('_', "").parse::<u64>().unwrap(),
+            expected,
+            "{name}"
+        );
+    }
+    assert_eq!(
+        constant_value(source, "COMPUTER_PATH").trim_matches('\''),
+        computer::limits::COMPUTER_PATH
     );
 }
 

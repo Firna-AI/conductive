@@ -100,6 +100,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Agent workspace calls | `202611111200`–`202611111259` |
 | Parallel image sources | `202611161200`–`202611161259` |
 | Sub-workspaces | `202611161700`–`202611161759` |
+| Own computers: records and connection | `202611241000`–`202611241059` |
 
 ## Key code
 
@@ -621,3 +622,11 @@ one account. Existing rows keep null. The migration changes no existing
 column, default, or constraint, so the previous Worker keeps working.
 [Model favourites](../docs/protocol/model-favourites-account.md#the-starting-favourites)
 gives the rules for an account without a saved list.
+
+`202611241000_own_computers.sql` adds `own_computers` for the records of
+each org. It stores the code digest and encrypted code, the token digest,
+and connection, limit, build request, and removal fields. Org purge
+deletes these records. Account deletion clears the three actor references.
+The migration adds a nullable `computer_id` to `workspaces`, `org_images`,
+and `automations`. Existing rows and previous Worker writes get null.
+The [own computer backend](../worker/own-computers/README.md) owns the new records.

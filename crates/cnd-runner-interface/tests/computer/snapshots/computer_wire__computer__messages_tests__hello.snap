@@ -1,0 +1,14 @@
+---
+source: crates/cnd-runner-interface/tests/computer/messages_tests.rs
+expression: message
+---
+{
+  "type": "hello",
+  "computerProtocolVersion": 1,
+  "programVersion": "0.0.42",
+  "resources": {
+    "cpus": 16,
+    "memoryBytes": 9007199254740991,
+    "system": "Linux x86_64"
+  }
+}

@@ -1,0 +1,9 @@
+---
+source: crates/cnd-runner-interface/tests/computer/results_tests.rs
+expression: message
+---
+{
+  "kind": "container.bootstrapped",
+  "container": "workspace-1",
+  "version": "0.0.42"
+}

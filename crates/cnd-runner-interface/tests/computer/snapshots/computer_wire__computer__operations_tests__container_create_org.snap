@@ -1,0 +1,15 @@
+---
+source: crates/cnd-runner-interface/tests/computer/operations_tests.rs
+expression: message
+---
+{
+  "kind": "container.create",
+  "container": "workspace-2",
+  "image": {
+    "kind": "org",
+    "name": "acme-image"
+  },
+  "env": [],
+  "cpus": 4,
+  "memoryBytes": 8589934592
+}

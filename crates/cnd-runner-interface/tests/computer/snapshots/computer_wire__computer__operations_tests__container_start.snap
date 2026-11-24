@@ -1,0 +1,14 @@
+---
+source: crates/cnd-runner-interface/tests/computer/operations_tests.rs
+expression: message
+---
+{
+  "kind": "container.start",
+  "container": "workspace-1",
+  "env": [
+    {
+      "name": "LANG",
+      "value": "C"
+    }
+  ]
+}

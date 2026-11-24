@@ -1118,17 +1118,25 @@ Depends on: 8a, 9
 
 Depends on: 4
 
-- [ ] Add a D1 migration for the own computers of each org, their token
+- [x] Add a D1 migration for the own computers of each org, their token
       hashes, and the computer ID of each workspace, org image, and
       automation. Keep the previous Worker working on the new schema.
-- [ ] Add the admin routes: add with a one-time code, list, set the limit,
+      Branch: calummoore/own-computers-milestone-10-own-computer-hena
+- [x] Add the admin routes: add with a one-time code, list, set the limit,
       and remove.
-- [ ] Add the admin routes that the mockups show: a new code for a
+      Branch: calummoore/own-computers-milestone-10-own-computer-hena
+- [x] Add the admin routes that the mockups show: a new code for a
       computer that waits, the removal of a computer that never connected,
       and a build of one computer.
-- [ ] Add the `/v1/computer` route and the computer object.
-- [ ] Test the org check, a stolen code, a removed computer, and a member
+      Branch: calummoore/own-computers-milestone-10-own-computer-hena
+- [x] Add the `/v1/computer` route and the computer object.
+      Branch: calummoore/own-computers-milestone-10-own-computer-hena
+- [x] Test the org check, a stolen code, a removed computer, and a member
       who is not an admin.
+      Branch: calummoore/own-computers-milestone-10-own-computer-hena
+
+Evidence and review reports: `.context/own-computers/m10/` and
+`.context/reviews/calummoore/own-computers-milestone-10-own-computer-hena/`.
 
 ## Milestone 11: The host program on an own computer
 
