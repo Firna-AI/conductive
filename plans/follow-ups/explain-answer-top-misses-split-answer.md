@@ -29,5 +29,5 @@
 - **Wider fix:** C. The renderer and the popover then use one answer boundary, also when the fold rule changes shape.
 - **Previous examples:** Commit `97f90da1b`, which made an insert end the answer.
 - **Related:** `plans/follow-ups/explain-answer-top-after-resize.md` changes the same placement, when it runs. One change can do both.
-- **Recommendation:** C. One calculation gives both the folds and the target. Add a popover test with a card between two agent messages and a long last message, in `src/chat/explain/PopoverAnswerTop.dom.test.tsx`.
+- **Recommendation:** C. One calculation gives both the folds and the target. Add a popover test with a card between two agent messages and a long last message, in `src/chat/explain/PopoverAnswerTop.dom.test.tsx`. Keep the existing test of an answer of two adjacent messages in that file, which checks that the popover shows the first of them: the new test of a split answer starts at the last message, so it cannot catch a selector that gives only the last message.
 - **Action:** fix after merge, apply C, because the defect needs an insert between two otherwise adjacent agent messages, which is rare.

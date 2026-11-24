@@ -224,7 +224,9 @@ is relative to `src/chat/`, the folder of this guide.
   press calls `bottom` of the keeper.
 - `components/chat-place.ts`: the place of a session tab, at the bottom or
   at a row by its `data-row` key, which `components/transcript-rows.tsx`
-  gives each row.
+  gives each row. `showPlace` shows a kept place exactly, and
+  `revealRowTop` shows the top of a row only when it is above the box, as
+  the answer of the popover needs.
   `ChatController.places` keeps the place of each session tab.
 - `components/useFold.ts`: `useFold` opens and closes a fold on a click on
   its line, and gives the line to the keeper, also at the bottom of the

@@ -87,3 +87,23 @@ export function showPlace(
   const top = scroller.getBoundingClientRect().top + place.offset
   scroller.scrollTop += row.getBoundingClientRect().top - top
 }
+
+/**
+ * Shows the top of the row of `transcript` with the key `key`, with `room`
+ * above it, only when that top is above `scroller`. A top that shows, such
+ * as of a row that fits at the bottom, moves nothing. A pixel of rounding
+ * still counts as shown.
+ */
+export function revealRowTop(
+  scroller: HTMLElement,
+  transcript: Element,
+  key: string,
+  room: number,
+): void {
+  const row = rowOf(transcript, key)
+  if (!row) return
+  const top = scroller.getBoundingClientRect().top
+  const rowTop = row.getBoundingClientRect().top
+  if (rowTop >= top - 1) return
+  scroller.scrollTop += rowTop - (top + room)
+}

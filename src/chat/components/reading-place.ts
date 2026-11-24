@@ -5,7 +5,13 @@ import {
   useRef,
   type RefObject,
 } from 'react'
-import { itemRowKey, placeAt, showPlace, type PlaceMemory } from './chat-place'
+import {
+  itemRowKey,
+  placeAt,
+  revealRowTop,
+  showPlace,
+  type PlaceMemory,
+} from './chat-place'
 
 /** What a part of the chat asks of the keeper of the reader's place. */
 export interface RowKeeper {
@@ -115,17 +121,18 @@ class ReadingPlace implements RowKeeper {
 
   /**
    * Shows the top of the agent message with the ID `id`, with the room of
-   * the transcript above it, while the chat is at the bottom. A message that
-   * fits in the box keeps the bottom. A reader higher up stays.
+   * the transcript above it, while the chat is at the bottom. A message
+   * whose top shows at the bottom keeps the bottom. A reader higher up stays.
    */
   answerTop(id: string): void {
     if (!atBottom(this.scroller)) return
     const room = Number.parseFloat(getComputedStyle(this.transcript).paddingTop)
-    showPlace(this.scroller, this.transcript, {
-      kind: 'row',
-      row: itemRowKey(id),
-      offset: Number.isFinite(room) ? room : 0,
-    })
+    revealRowTop(
+      this.scroller,
+      this.transcript,
+      itemRowKey(id),
+      Number.isFinite(room) ? room : 0,
+    )
     // The scroll keeps this place, also through a change of size that waits.
     this.notePlace()
   }

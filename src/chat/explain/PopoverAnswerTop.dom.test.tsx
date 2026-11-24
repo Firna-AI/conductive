@@ -3,7 +3,7 @@ import { act } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { WorkspaceEvent } from '../../shared/events'
 import type { FakeApiServer } from '../../test-support/fake-api'
-import { queryByText } from '../../test-support/dom-queries'
+import { queryByLabel, queryByText } from '../../test-support/dom-queries'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { MOUNTED_TEST_TIMEOUT, waitFor } from '../../test-support/mount'
@@ -26,17 +26,32 @@ afterEach(() => {
 const quote = 'Manual entry still works'
 const title = `Explain "${quote}"`
 const sessionId = 'explain-1'
+const shortAnswer = 'It keeps the typed address.'
 
 /**
- * Lays out the chat of the popover with an answer of 300 px, more than its
- * box of 120 px from 100 px down, and 40 px for each other row.
+ * Lays out the chat of the popover in its box of 120 px from 100 px down:
+ * the answer of 300 px, the short answer of a follow-up of 74 px, and 40 px
+ * for each other row.
  */
 const layOutLongAnswer = () =>
   layOutChat({
     label: popoverChatLabel,
-    rowHeight: (row) =>
-      row.textContent?.includes(explanationAnswer) ? 300 : 40,
+    rowHeight: (row) => {
+      if (row.textContent?.includes(explanationAnswer)) return 300
+      return row.textContent?.includes(shortAnswer) ? 74 : 40
+    },
   })
+
+/**
+ * Gives the transcript of the popover the room of 12 px above its rows that
+ * its CSS gives in a browser. The tests load no CSS.
+ */
+function giveRoom() {
+  const transcript =
+    queryByLabel(popoverChatLabel)?.firstElementChild?.firstElementChild
+  if (!(transcript instanceof HTMLElement)) throw new Error('No transcript')
+  transcript.style.paddingTop = '12px'
+}
 
 /** Sends a later event of the workspace. */
 const emit = (server: FakeApiServer, event: WorkspaceEvent) =>
@@ -94,16 +109,30 @@ function shortTurn(text: string): WorkspaceEvent[] {
 }
 
 describe('the answer in the popover of an explanation', () => {
-  it('shows the top of a long answer when the popover opens on an ended turn', async () => {
-    const { events } = explained(sessionId, quote)
-    await mountChat({ stored: events })
+  it('shows the top of the first message of a long answer when the popover opens on an ended turn', async () => {
+    const { events, prompt } = explained(sessionId, quote)
+    const lead: WorkspaceEvent = {
+      sessionId,
+      turnId: `turn-${sessionId}`,
+      type: 'assistant.completed',
+      messageId: 'answer-lead',
+      text: 'In short, the fields stay.',
+      userMessageIds: [prompt.id],
+    }
+    // The two messages of the answer follow each other, before its end.
+    await mountChat({
+      stored: [...events.slice(0, 2), lead, ...events.slice(2)],
+    })
     const chat = layOutLongAnswer()
     const popover = await openFromMark(title, 'Ready')
     await waitFor(
       () => queryByText(explanationAnswer, popover),
       'the answer of the explanation',
     )
-    expect(chat.topOf(chat.rowOf(explanationAnswer))).toBe(100)
+    expect([
+      chat.topOf(chat.rowOf('In short, the fields stay.')),
+      chat.topOf(chat.rowOf(explanationAnswer)),
+    ]).toEqual([100, 140])
   })
 
   it('shows the top of a long answer when its turn ends while the chat is at the bottom', async () => {
@@ -130,7 +159,7 @@ describe('the answer in the popover of an explanation', () => {
     expect(chat.topOf(answer)).toBe(50)
   })
 
-  it('keeps the bottom for a newer answer that fits, under an older long answer', async () => {
+  it('keeps the bottom for a newer answer whose top shows, under an older long answer', async () => {
     const { events } = explained(sessionId, quote)
     const { server } = await mountChat({ stored: events })
     const chat = layOutLongAnswer()
@@ -140,13 +169,12 @@ describe('the answer in the popover of an explanation', () => {
       'the answer of the explanation',
     )
     chat.readTheEnd()
-    for (const event of shortTurn('It keeps the typed address.')) {
-      await emit(server, event)
-    }
-    await waitFor(
-      () => queryByText('It keeps the typed address.', popover),
-      'the short answer',
-    )
+    giveRoom()
+    for (const event of shortTurn(shortAnswer)) await emit(server, event)
+    await waitFor(() => queryByText(shortAnswer, popover), 'the short answer')
+    // At the bottom, the short answer starts 6 px under the top of the box,
+    // within the room of 12 px.
+    expect(chat.topOf(chat.rowOf(shortAnswer))).toBe(106)
     await waitFor(() => queryByText('3s', popover), 'the end of the turn')
     expect(chat.scrollTop()).toBe(0)
   })
