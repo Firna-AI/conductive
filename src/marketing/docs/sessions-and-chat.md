@@ -405,7 +405,7 @@ On a phone, use a long press.
   With either close, if the shown tab closes, this tab shows.
 - Drag a tab to place it elsewhere in the row.
 
-File and diff tabs share the row on a computer.
+File, diff, and skill tabs share the row on a computer.
 A phone shows the session tabs there.
 
 Each tab in the row keeps your place when you open another tab or another workspace.

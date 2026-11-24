@@ -58,6 +58,7 @@ On a computer, a click opens a file in one temporary tab.
 Its title shows in italics.
 The next click on another file replaces it in the same place.
 This applies to **All files**, **Changes**, and file chips in chat.
+A skill that you select in a message also opens in that tab, with the text that the agent reads.
 If a file already has a tab, a click shows that tab.
 Press **Escape** to close the temporary tab while it shows.
 Escape first closes an open menu or dialog, and it does nothing in the message field.

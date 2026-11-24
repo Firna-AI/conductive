@@ -23,7 +23,9 @@ Short name of this change in decision numbers: skill tab decision.
 Contract owners:
 
 - [Skill mentions](../docs/protocol/skill-mentions.md), for the press on a
-  chip and the new section on skill tabs.
+  chip, and its linked page [Skill tabs](../docs/protocol/skill-tabs.md).
+- [Stop and resume](../docs/protocol/stop-and-resume.md), for the start of
+  a stopped cloud computer at the open of a skill tab.
 - [Temporary tabs](../docs/protocol/temporary-tabs.md) and
   [The tab row](../docs/protocol/tab-row.md).
 - [The agent runner](../docs/protocol/agent-runner.md), for the skill read
@@ -148,6 +150,13 @@ Each call below is my call, made on 2026-11-24 unless it says otherwise.
 - **The identity of a skill tab.** A skill tab names its agent and its
   skill name. Its title is the skill name, and its icon is the skill icon.
   Reason: two agents can hold skills with one name and different texts.
+  - The header names the agent of the skill in each skill tab, such as
+    "Claude skill" or "Codex skill", after the name. The title of the tab
+    stays the name. Reason: two open tabs of one name then show whose text
+    each holds, and the title rule of the row stays. Rejected: no agent
+    name, because a member can read the text of the wrong agent, and an
+    agent name in the title only when two titles clash, because it adds a
+    rule to the tab row. Found by the mockups on 2026-11-24.
 - **The text of the tab.** The runner sends the text that the agent
   reads. For an org skill, that is the safe view of
   `runner/sdk-helper/src/providers/skill-metadata.ts`, which the helper
@@ -167,18 +176,54 @@ Each call below is my call, made on 2026-11-24 unless it says otherwise.
 - **Size.** A `SKILL.md` over 1 MiB gets "too large", the limit of the
   scan in `runner/sdk-helper/src/skill-read.ts`. Reason: the scan already
   leaves out such a skill, so the list never holds it.
-- **Secrets.** The Worker hides each exact copy of a secret value and the
-  tokens in the text, as for the text of a file tab. Reason: a skill text
-  is text of a repository, as a description is.
+- **Secrets.** The Worker hides in the text what the workspace hides in a
+  runner event, as for a skill description, and also each exact copy of
+  the workspace token and of the turn tokens. Reason: a skill text is text
+  of a repository, as a description is. A file tab does not filter its
+  text, so the filter of a file tab is not the model. Corrected on
+  2026-11-24 after the docs milestone found that the first text pointed to
+  the file tab filter, which hides only the path label.
 - **The view.** The tab shows the name and the description in its header.
   The Preview view shows the Markdown body without the front matter. The
   Source view shows the whole text. Reason: the Markdown preview draws no
   front matter.
+  - The header has the look of the header of a file tab. Its first line
+    holds the skill icon and the name in the quiet chip of a path, and the
+    switch between Preview and Source at its end. The description follows
+    under that line, muted, in at most three lines, and its title gives
+    the whole text. Source adds the line count, as for a file. Found by
+    the mockups on 2026-11-24.
+  - The header takes the name and the description from the skills list of
+    the workspace, not from the read. Reason: the header then shows them
+    while the text loads and with each notice, and it does not move when
+    the text comes. A skill that the list no longer holds shows its name
+    only. So the read sends only the text. Found by the mockups on
+    2026-11-24.
+  - The header has no Copy and no Download, unlike the header of a file
+    tab. Reason: the tab is for reading the skill, and a selection copies
+    text from both views. Found by the mockups on 2026-11-24.
 - **Notices.** The tab shows one line in place of the text in these cases:
   the skill is no longer in the list, the text is too large, the cloud
   computer is stopped or starting, or the runner of the current start is
   older and has no skill read. No line names a sandbox provider. A
   stopped cloud computer acts as for a file tab.
+  - Each notice has the look of the empty state of a file tab: an icon, a
+    title, and one sentence. The read shows a spinner and one line. A
+    notice keeps the header. Found by the mockups on 2026-11-24. The words
+    are:
+    - "Opening the skill" while the read runs.
+    - "This skill was removed or renamed", with "Type / in a message to
+      see the current skills."
+    - "This skill is too large to show", with "Skills up to 1 MB show
+      here."
+    - "Restart to open this skill", with "Opening a skill needs newer
+      cloud computer software. Select Restart in the workspace header."
+      These words follow the notice of the HTML preview.
+  - As for a file tab (decision 247), the open of a skill tab starts a
+    stopped cloud computer. The tab then shows the wait of a start, with
+    no Resume. A tab that shows its text keeps it when the cloud computer
+    stops. A tab without text then shows the stopped state with Resume.
+    Found by the mockups on 2026-11-24.
 - **Fresh text.** The tab reads the text each time it shows, and again
   after each skills report while it shows. Reason: a change of a skill
   then shows without a reload, at the cost of one read per report. Cost:
@@ -212,10 +257,31 @@ Each call below is my call, made on 2026-11-24 unless it says otherwise.
   temporary file or diff, the stored temporary skill tab closes. Reason:
   the row holds at most one temporary tab. Added on 2026-11-24 after the
   options check.
-- **A phone.** A skill tab acts as a file tab does on a phone.
-- **The tab menu.** A skill tab gets the items that each tab gets, such as
-  Close and Close other tabs. It gets no Copy path, because it has no
-  path.
+- **A phone.** A skill tab acts as a file tab does on a phone. A press on
+  a skill chip opens the skill as a page of the Files tab, which leads
+  back to All files. The phone row shows no skill tab, so a phone opens no
+  tab menu for it. Found by the mockups on 2026-11-24.
+- **The press on a chip.** In the message box, a press on the name of a
+  skill chip opens the skill, as a press on the name of a file chip opens
+  its file. Under the pointer the name is underlined, and the press takes
+  no focus. In a sent message, the whole chip opens the skill, and under
+  the pointer it takes the fill of a hover, as each chip that opens a page
+  does. Reason: under the pointer, the icon of a chip of the message box
+  already removes the chip (decision 215). Found by the mockups on
+  2026-11-24.
+- **The tab menu.** A skill tab gets the items of the tab menu that each
+  tab gets: Keep open on the temporary tab, Move left, Move right, Close
+  other tabs, and Close tabs to the right. It gets no Copy path, because
+  it has no path. Corrected on 2026-11-24 after the docs milestone: the
+  first text named a Close item, which no tab menu has.
+- **A failed read.** When a read fails for a reason without its own
+  notice, such as `skill_unavailable`, a lost runner connection, or a
+  Worker error, the tab shows "This skill didn't open" with Try again, as
+  a file tab shows "This file didn't open". Reason: every tab has a
+  failure state, and Try again repeats the read. Rejected: the notice of a
+  removed skill for each failure, because it gives a wrong cause, and a
+  spinner that keeps reading, because a lasting failure never ends. Found
+  by the docs milestone on 2026-11-24.
 
 ## Milestone 1: Mockups
 
@@ -226,19 +292,20 @@ Depends on: none
 Draw the skill tab and the pressable chips before the code, so the design
 problems show first.
 
-- [ ] Add a mockup of the skill tab under `app/skill-mentions/tab`: the
+- [x] Add a mockup of the skill tab under `app/skill-mentions/tab`: the
       tab row with the temporary skill tab, the header with the name and
       the description, the Preview view, and the Source view.
-- [ ] Draw each notice of the skill tab: loading, no longer available, too
+- [x] Draw each notice of the skill tab: loading, no longer available, too
       large, cloud computer stopped, and older runner software.
-- [ ] Show the chip as pressable in a sent message and in the composer,
+- [x] Show the chip as pressable in a sent message and in the composer,
       with its hover state, in `app/skill-mentions/chips`.
-- [ ] Add the open of a skill tab to the flow `user-flows/use-a-skill`.
-- [ ] Draw the kept skill tab and the skill tab on a phone.
-- [ ] Update `docs/mockups/catalogue.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages at
+- [x] Add the open of a skill tab to the flow `user-flows/use-a-skill`.
+- [x] Draw the kept skill tab and the skill tab on a phone.
+- [x] Update `docs/mockups/catalogue.md`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages at
       `http://127.0.0.1:4173`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+      Evidence: `.context/skill-tabs/m1/`.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -248,24 +315,56 @@ Depends on: 1
 State the requirements and the decisions of this plan in the protocol
 docs, so that the milestones below build to them.
 
-- [ ] `docs/protocol/skill-mentions.md`: replace "A press on a skill chip
+- [x] `docs/protocol/skill-mentions.md`: replace "A press on a skill chip
       opens nothing" with the open of the skill tab. Add a section "Skill
       tabs" with the identity, the text, the view, the notices, and the
-      fresh text. Keep the rule that the report holds no path.
-- [ ] `docs/protocol/temporary-tabs.md`: a file, diff, or skill tab can be
-      temporary.
-- [ ] `docs/protocol/tab-row.md`: the row also shows skill tabs, and their
+      fresh text. Keep the rule that the report holds no path. In the
+      message box, a press on the name of the chip opens the skill, as for
+      a file chip. Found by the mockups on 2026-11-24. The section links
+      to the new page `docs/protocol/skill-tabs.md`, which holds the
+      details, because Skill mentions would pass the length target.
+- [x] `docs/protocol/temporary-tabs.md`: a file, diff, or skill tab can be
+      temporary. It also holds the skill tabs of the saved view.
+- [x] `docs/protocol/tab-row.md`: the row also shows skill tabs, and their
       tab menu.
-- [ ] `docs/protocol/workspace-links.md` or the doc that owns the tab
-      addresses: the address of a skill tab.
-- [ ] `docs/protocol/agent-runner.md`: the skill read command, its result,
-      its errors, and the `hello` field that announces it.
-- [ ] `docs/protocol/tokens-and-secrets.md`: the filter of the skill text.
-- [ ] Read the Privacy page, the Terms page, and each public guide in
+- [x] `docs/protocol/workspace-links.md` or the doc that owns the tab
+      addresses: the address of a skill tab. No protocol doc gives the
+      address of a file tab, so the address is in `skill-tabs.md`, and
+      its open in the temporary tab is in `temporary-tabs.md`.
+- [x] `docs/protocol/agent-runner.md`: the skill read command, its result,
+      its errors, and the `hello` field that announces it. The doc holds
+      the `hello` field and links the section "Skill reads" of
+      `skill-tabs.md` for the rest, because it already passes the length
+      target.
+- [x] `docs/protocol/tokens-and-secrets.md`: the filter of the skill text.
+- [x] `docs/protocol/stop-and-resume.md`: the open of a skill tab also
+      starts a stopped cloud computer, as the open of a file tab does
+      (decision 247). Found by the mockups on 2026-11-24.
+- [x] Read the Privacy page, the Terms page, and each public guide in
       full. Update each sentence that restates a changed fact, such as
       what the app shows of a skill.
-- [ ] Update the chat, Files, and UI READMEs for the new parts.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Update the chat, Files, and UI READMEs for the new parts. No change
+      in this milestone: no README states what a skill chip opens or lists
+      the kinds of tab. Each later milestone updates the README of the code
+      that it adds.
+- [x] Check each relative link of each changed Markdown file.
+
+## Milestone 2a: Mockup of a failed read
+
+Tags: mockup
+
+Depends on: 2
+
+The docs milestone found that a skill tab had no state for a failed read.
+Draw it before the app milestone builds it.
+
+- [ ] Add a `failed` variant to `app/skill-mentions/tab/notices`: "This
+      skill didn't open" with Try again, in the look of the failure state
+      of a file tab (`src/files/ui/FileStates.tsx`). Add the words to
+      `docs/mockups/src/components/files/skillTabCopy.ts`.
+- [ ] Update `docs/mockups/catalogue.md` and the catalogue pages that list
+      the notices.
+- [ ] Run `npm run mockups:check`. Smoke-test the changed page.
 
 ## Milestone 3: The skill read in the runner
 
@@ -275,9 +374,11 @@ Add the command that reads one skill by its agent and its name.
 
 - [ ] In `crates/cnd-runner-interface/`, add the `skill.read` command with
       a request ID, the agent, the name, and the byte limit. Add its
-      result `skill.read.result`: the text and the description, or an
-      error of `skill_not_found`, `skill_unavailable`, or
-      `skill_too_large`. Add the optional `hello` field `skill_reads`.
+      result `skill.read.result`: the text, or an error of
+      `skill_not_found`, `skill_unavailable`, or `skill_too_large`. Add
+      the optional `hello` field `skill_reads`. Changed on 2026-11-24,
+      found by the mockups: the result has no description, because the
+      header takes it from the skills list, as The view says.
 - [ ] Run the generator of the shared runner types, and commit
       `src/shared/generated/`.
 - [ ] In `crates/cnd-runner/`, answer the command. For a skill of the
@@ -307,8 +408,12 @@ Give the browser the skill text, and save skill tabs.
 - [ ] Check the agent and the name: the agent is `claude` or `codex`, and
       the name holds 1 to 256 characters without white space or control
       characters.
-- [ ] Hide secret values and tokens in the text and the description, as
-      for the text of a file tab.
+- [ ] Hide in the text what the workspace hides in a runner event, as
+      for a skill description, plus each exact copy of the workspace token
+      and the turn tokens, as `docs/protocol/skill-tabs.md` says under
+      "The read". Do not reuse `filterFileResponse`, which filters only
+      the path label. Changed on 2026-11-24: the read sends no
+      description, and the filter is not the file tab filter.
 - [ ] Answer a runner without `skill_reads` and a stopped cloud computer
       with error codes that the app shows as notices.
 - [ ] Save skill tabs in `skillTabs`, `activeSkill`, and `temporarySkill`
@@ -326,21 +431,37 @@ Give the browser the skill text, and save skill tabs.
 
 Tags: ui
 
-Depends on: 4
+Depends on: 2a, 4
 
 Make the chips pressable and show the skill tab.
 
 - [ ] Give `SkillChip` an opener in a sent message and in the composer
       field. A plain press opens the skill tab. The chip in the composer
-      stays one unit of the text.
+      stays one unit of the text. In the composer field, the name is the
+      part that opens, as `onOpen` of `FileChip` makes it. Then draw the
+      mockups with it, in place of their part `DraftSkillChip`. Found by
+      the mockups on 2026-11-24.
 - [ ] Add the skill tab kind to the view, the tab row, and the temporary
       tab, with a keep as for a file tab.
 - [ ] Add the address `skills/<agent>/<name>` of a skill tab to the
       router, so that Back, a reload, and a link open it.
 - [ ] Add the skill tab view: the header, the Preview view with the
-      Markdown view of the files, the Source view, and the notices.
+      Markdown view of the files, the Source view, and the notices. The
+      header takes the name and the description from the skills list.
+      Move the words of `skillTabCopy.ts` and the styles of
+      `SkillPage.module.css` from `docs/mockups/src/components/files/` to
+      `src/ui/components/files/`, so that the app and the mockups share
+      them. Found by the mockups on 2026-11-24.
+- [ ] Start a stopped cloud computer at the open of a skill tab, as at the
+      open of a file tab (decision 247). Found by the mockups on
+      2026-11-24.
 - [ ] Read the text each time the tab shows, and after each skills report
       while it shows.
+- [ ] Show "This skill didn't open" with Try again for a failed read, as
+      the mockup of Milestone 2a draws it. Add the notice to the Notices
+      section of `docs/protocol/skill-tabs.md` in the same change.
+- [ ] Update `src/chat/text-key-code.md` and `src/chat/integration.md`,
+      which say that a skill chip opens nothing.
 - [ ] Add DOM tests: a press in a sent message and in the composer, the
       agent choice, the temporary tab and its keep, each notice, and the
       tab menu.

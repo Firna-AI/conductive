@@ -3,15 +3,20 @@
 This doc holds the requirements and the decisions in force for the list
 of `/` in the composer of a workspace chat, the skill chips that it puts
 into a message, the text of a skill chip, and the skills report of the
-runner that fills the list.
+runner that fills the list. Its linked page [Skill tabs](skill-tabs.md)
+holds the skill tab that a press on a skill chip opens.
 [Skills of a message](agent-instructions.md#skills-of-a-message) states
 what each agent gets for a skill chip. The terms are those of the
 [architecture doc](../architecture.md#terms). A skill list decision
 number, such as skill list decision 1, names a decision of the change that
 adds the list of skills, as
-[Decision numbers](../architecture.md#decision-numbers) says. The
+[Decision numbers](../architecture.md#decision-numbers) says. A skill tab
+decision number, such as skill tab decision 1, names a decision of the
+change that adds the skill tabs. The
 [mockup catalogue](../mockups/catalogue.md) draws these screens at
-`app/skill-mentions` and in the flow `user-flows/use-a-skill`.
+`app/skill-mentions`, the chips that open a skill at
+`app/skill-mentions/chips`, the skill tab at `app/skill-mentions/tab`, and
+the flow `user-flows/use-a-skill`.
 
 ## Terms
 
@@ -109,6 +114,8 @@ order of the list.
 - Each skill of the report has its name and its description. The report
   holds no path. Reason: the app needs no path, and the paths of the cloud
   computer stay in it.
+- A skill tab asks for its skill by the agent and the name, as
+  [The read](skill-tabs.md#the-read) says.
 - The runner sends each description whole. It never cuts a description.
   It sends a description of more than 4096 characters as empty text, and
   it warns. Reason: a cut before the filter of secret values can split a
@@ -179,9 +186,25 @@ order of the list.
   chip is. Its removal is the removal of each chip of the composer, as
   [Remove a chip of the composer](file-mentions.md#remove-a-chip-of-the-composer)
   says.
-- A press on a skill chip opens nothing, in the message field and in a
-  sent message. Reason: a skill of the Codex home has no file of the
-  branch to open, and the title gives the description.
+- A press on a skill chip opens its skill in a skill tab (skill tab
+  decision 1 B), as [The open](skill-tabs.md#the-open) says. This holds in
+  the message field and in a sent message.
+- In the message field, a press on the name of the chip opens the skill,
+  as a press on the name of a file chip opens its file. While a pointer is
+  over the name, the name is underlined. The press takes no focus.
+- Reason: while a pointer is over the icon of a chip in the message field,
+  the icon removes the chip (decision 215).
+- In a sent message, a press on any part of the chip opens the skill.
+  While a pointer is over the chip, it takes the fill of a hover, as each
+  chip that opens a page does.
+- A chip names the skill of one agent. In a sent message, it is the agent
+  that the message went to. In the message field, it is the agent of the
+  model chosen now.
+- When only the other agent has a skill of that name, the chip names the
+  skill of the other agent.
+- The title of the chip and the skill tab that it opens follow that
+  choice. Reason: the chip then shows the skill that the agent of the
+  message ran.
 - A copy of a skill chip gives its skill text. A paste of a skill text
   gives a chip when the text names a skill of the list.
 - A draft keeps the skill text of each chip. When a draft comes back, its
@@ -208,3 +231,10 @@ order of the list.
   text.
 - The answers of the agents keep their text. Reason: only the composer
   writes skill chips.
+
+## Skill tabs
+
+[Skill tabs](skill-tabs.md) states the skill tab that a press on a skill
+chip opens. It covers the identity of the tab, the read of its text, its
+view, its notices, a stopped cloud computer, the fresh text, its address,
+and a phone.

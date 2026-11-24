@@ -58,10 +58,10 @@ says. A services decision number names a decision of the change that adds
   bar shows if that Resume fails.
 - The header of the workspace shows Starting from the open, before the
   reply of that Resume.
-- Meanwhile the tools, and a file or diff tab without content, show that
-  they wait for the sandbox, with no Resume, also on a phone. The file
-  lists keep their saved copy, as during the start that follows, which
-  [Start steps](workspace-life.md#start-steps) describes.
+- Meanwhile the tools, and a file, diff, or skill tab without content,
+  show that they wait for the sandbox, with no Resume, also on a phone.
+  The file lists keep their saved copy, as during the start that follows,
+  which [Start steps](workspace-life.md#start-steps) describes.
 - Reason: the open already resumes the sandbox, so a bar that offers
   Resume for a moment is noise, and so is a Stopped state. Cal asked for
   these on 12 November 2026. Cal chose to keep the saved lists. A wait in
@@ -71,14 +71,15 @@ says. A services decision number names a decision of the change that adds
   stopped state with Resume (decision 11).
 - A resume at once when the tab shows again was rejected. Resume avoids a
   start that the user did not ask for.
-- Opening a file tab or a diff tab also resumes the sandbox, in the same
-  cases as opening the workspace (decision 247). A click on a file, on its
-  tab, or on a link to it opens the tab. A move back or forward to its
-  address opens it too.
-- Reason: the tab can show its file only from a running sandbox, so the
-  open asks for the start. A tab that showed the stopped state, or an error
-  with Try again, until a member pressed Resume was rejected, because the
-  open of the tab already asks for the file.
+- Opening a file tab, a diff tab, or a [skill tab](skill-tabs.md) also
+  resumes the sandbox, in the same cases as opening the workspace
+  (decision 247). A click on a file or on a skill chip, on its tab, or on
+  a link to it opens the tab. A move back or forward to its address opens
+  it too.
+- Reason: the tab can show its file or its skill only from a running
+  sandbox, so the open asks for the start. A tab that showed the stopped
+  state, or an error with Try again, until a member pressed Resume was
+  rejected, because the open of the tab already asks for the file.
 - A message from `send_message` or `create_session` of the agent tools
   also starts the sandbox (decision 260). It does so in the same cases as
   an open, and with the same checks. These cases are a stopped workspace
