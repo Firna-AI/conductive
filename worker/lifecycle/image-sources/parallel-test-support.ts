@@ -2,7 +2,7 @@ import { generateKeyPairSync } from 'node:crypto'
 
 import type { HttpFetch } from '../../env'
 import { ProviderError } from '../../sandbox/errors'
-import type { CommandOffsets, CommandStatus } from '../../sandbox/provider'
+import type { CommandOffsets, CommandStatus } from '../../machines/channel'
 import { TEST_TIME, type TestHarness } from '../../test-support/harness'
 import { SOFTWARE } from '../backend-test-support'
 import { readBuildJob } from '../build-data'

@@ -11,6 +11,7 @@ import type { FeatureResult } from '../features/result'
 import type { BranchWork } from '../github/branch-work'
 import type { GitHubWorkspace } from '../github/contracts'
 import { HttpError } from '../http'
+import type { CommandRoute } from '../machines/channel'
 import { pendingContinue } from './continue-types'
 import type { DurableLifecycleState } from './durable-types'
 
@@ -62,6 +63,7 @@ export interface RepositoryChangeJob {
   /** When the job began to wait for a runner that can move. */
   runnerSince?: number
   processId: number | null
+  commandRoute?: CommandRoute
   commandStarted: boolean
   resumeQueued: boolean
   fetchId: string

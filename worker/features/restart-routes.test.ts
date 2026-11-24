@@ -28,6 +28,7 @@ it('restarts through the Worker route for a member, and refuses an outsider, a s
     .prepare("UPDATE workspaces SET sandbox_id = 'bx_restart' WHERE id = ?")
     .bind(OUTER_WORKSPACE)
     .run()
+  await active.host.seed(OUTER_ORG, OUTER_WORKSPACE, 'bx_restart')
   await active.actor().seedFeatureState({
     'lifecycle:state': {
       workspaceId: OUTER_WORKSPACE,
@@ -51,7 +52,7 @@ it('restarts through the Worker route for a member, and refuses an outsider, a s
     return { status: response.status, body: await response.json() }
   }
   const restarts = () =>
-    active.boat.commands.filter(
+    active.host.commands.filter(
       (command) =>
         command === UPDATE_CHECK_COMMAND || command === RESTART_COMMAND,
     )

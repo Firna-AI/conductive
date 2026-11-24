@@ -25,6 +25,7 @@ import {
 import { latestAttachmentFailure } from './attachment-transfer.test-support'
 import { selectAttachmentComputer } from './attachment-owner.test-support'
 import { messageCommands } from './turn-lifecycle.test-support'
+import { WORKSPACE_ID } from './harness.test-support'
 
 let harness: TestHarness
 beforeAll(async () => {
@@ -135,6 +136,64 @@ it('fails the turn with the unanswered text after the provider does not answer t
         error: UNANSWERED,
       }),
     ])
+  } finally {
+    runner.disconnect()
+  }
+})
+
+it('polls the same host download after an unanswered status without starting another download', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+  const provider = providerCopy(harness.env)
+  provider.host.statusReply = (request, reply) => {
+    if (reply.kind !== 'command.status') return reply
+    if (provider.host.statusRequests.length === 1)
+      return {
+        ...reply,
+        state: 'running',
+        running: true,
+        exitCode: null,
+        stdout: 'copy\n',
+        stdoutNextOffset: 5,
+      }
+    if (provider.host.statusRequests.length === 2)
+      return { kind: 'error', code: 'internal' }
+    return { ...reply, stdoutNextOffset: request.stdoutOffset }
+  }
+  const fixture = await attachmentFixture(harness, {
+    prepareAttachments: (...args) =>
+      prepareMessageAttachments(harness.env, ...args, provider.fetch),
+  })
+  await selectAttachmentComputer(harness, 'sandbox-retry')
+  await provider.host.seed(fixture.org.id, WORKSPACE_ID, 'sandbox-retry')
+  const file = await fixture.upload()
+  const session = await fixture.createSession()
+  const runner = await fixture.connect()
+  try {
+    runner.emit({ type: 'runner.ready' })
+    await fixture.drain()
+    expect(
+      (await fixture.sendAttachment(session.id, 'retried-file', [file.id]))
+        .status,
+    ).toBe(202)
+    await fixture.drainAttachments()
+    expect(provider.host.commandRequests).toEqual([
+      expect.objectContaining({ sandboxId: 'sandbox-retry', detached: true }),
+    ])
+    expect(provider.host.statusRequests).toEqual([
+      { processId: 10_001, stdoutOffset: 0, stderrOffset: 0 },
+      { processId: 10_001, stdoutOffset: 5, stderrOffset: 0 },
+      { processId: 10_001, stdoutOffset: 5, stderrOffset: 0 },
+    ])
+    expect(provider.copies).toEqual([ATTACHMENT_IGNORE_BYTES, FILE_BYTES])
+    expect(messageCommands(runner, 'retried-file')).toHaveLength(1)
+    expect(await latestAttachmentFailure(fixture)).toBeUndefined()
+    expect(warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: 'attachment_transfer_retried',
+        step: 'status',
+        error: { kind: 'http', status: 502, code: 'unknown' },
+      }),
+    )
   } finally {
     runner.disconnect()
   }

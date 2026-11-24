@@ -26,10 +26,15 @@ export async function automaticRestartFixture(
   fixture: Awaited<ReturnType<typeof backendFixture>>,
   initialTurn: 'finished' | 'running' | 'started' = 'finished',
 ) {
-  const { actor, id: workspaceId } = await seededCompletedWorkspace(fixture, {
+  const {
+    actor,
+    id: workspaceId,
+    sandboxId,
+  } = await seededCompletedWorkspace(fixture, {
     workspaceId: `automatic-restart-${++workspaceNumber}`,
   })
   const { org, runtime } = fixture
+  await fixture.host.seed(org.id, workspaceId, sandboxId)
   const { peers, controls } = actor.native.api
   const token = await readWorkspaceToken(runtime.env, workspaceId)
   const now = runtime.dependencies.now
@@ -104,7 +109,7 @@ export async function automaticRestartFixture(
     fixture,
     lifecycle: () => actor.endpoint().readLifecycle(),
     commands: () =>
-      fixture.boat.commands.filter(
+      fixture.host.commands.filter(
         (command) =>
           command === UPDATE_CHECK_COMMAND || command === RESTART_COMMAND,
       ),

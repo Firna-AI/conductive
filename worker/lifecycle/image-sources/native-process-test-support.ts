@@ -7,7 +7,7 @@ import type {
   CommandOffsets,
   CommandResult,
   CommandStatus,
-} from '../../sandbox/provider'
+} from '../../machines/channel'
 import { isolatedProcessEnvironment } from '../../test-support/process-environment'
 import { sourceRepositoryUrl } from './native-command'
 

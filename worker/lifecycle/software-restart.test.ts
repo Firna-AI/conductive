@@ -49,7 +49,9 @@ it('shows the error state with Try again when the restart command fails, and sti
     record(fixture.boat.starts[0].env).CONDUCTIVE_MACHINE_TOKEN,
   )
   const owner = workspaceMachineOwner(fixture.org.id, workspaceId)
+  await fixture.host.disconnect('bx_1')
   expect(await machineTokenStatus(fixture.harness.env, owner, token)).toBe(101)
+  await fixture.host.connect('bx_1')
   fixture.boat.synchronousExitCode = 1
   const error = await refusal(restart())
   expect([error.status, error.code]).toEqual([502, 'restart_failed'])

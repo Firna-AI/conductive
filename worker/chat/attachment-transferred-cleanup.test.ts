@@ -40,6 +40,7 @@ it('retries byte deletion after a lost completion without removing metadata and 
       .status,
   ).toBe(202)
   const provider = providerCopy(harness.env)
+  await provider.host.seed(fixture.org.id, WORKSPACE_ID, 'cleanup-sandbox')
   await prepareMessageAttachments(
     harness.env,
     WORKSPACE_ID,

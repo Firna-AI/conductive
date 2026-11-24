@@ -9,6 +9,10 @@ import {
 import { WarningId } from '../warning-values'
 import { repositoryChangeFixture } from './repository-change.test-support'
 import { AFTER_MOVE_LIMIT_MS } from './repository-change-end'
+import {
+  REPOSITORY_CHANGE_JOB_KEY,
+  repositoryChangeJobKey,
+} from './repository-change-types'
 import { readWorkspace } from './workspace-data'
 
 let harness: TestHarness
@@ -58,6 +62,42 @@ async function expectOldRecord(f: Fixture, changeId: string) {
   expect(f.refreshed).toEqual([])
   expect(f.controls.moves).toBe(1)
 }
+
+it('polls a saved repository change on its starting route across reconstruction, including a legacy move', async () => {
+  const f = await repositoryChangeFixture(harness)
+  const changeId = await startChange(f)
+  await f.advanceTo('fetch')
+  await f.coordinator.advance()
+  const fetch = await f.active()
+  expect(fetch).toMatchObject({
+    commandRoute: 'host',
+    processId: expect.any(Number),
+  })
+  f.reconstruct()
+  await f.coordinator.advance()
+  expect(f.host.statusRequests).toEqual([
+    { processId: fetch?.processId, stdoutOffset: 0, stderrOffset: 0 },
+  ])
+  await f.host.disconnect('bx_change')
+  await f.coordinator.advance()
+  const move = await f.active()
+  if (!move || move.processId === null) throw new Error('Expected a move.')
+  expect(move).toMatchObject({ phase: 'move', commandRoute: 'provider' })
+  delete move.commandRoute
+  await f.storage.put(repositoryChangeJobKey(changeId), move)
+  await f.storage.put(REPOSITORY_CHANGE_JOB_KEY, move)
+  await f.host.connect('bx_change')
+  f.reconstruct()
+  await f.coordinator.advance()
+  expect(f.host.statusRequests).toHaveLength(1)
+  expect(f.boat.statusRequests.at(-1)).toEqual({
+    processId: move.processId,
+    stdoutOffset: 0,
+    stderrOffset: 0,
+  })
+  await f.finish()
+  expect(await f.result(changeId)).toMatchObject({ state: 'changed' })
+})
 
 it('publishes the change when an admin unchose the new repository while the move ran', async () => {
   const f = await repositoryChangeFixture(harness)

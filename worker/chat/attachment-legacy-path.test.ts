@@ -30,6 +30,7 @@ it.each(['absolute', 'message-relative'] as const)(
         prepareMessageAttachments(harness.env, ...args, provider.fetch),
     })
     await selectAttachmentComputer(harness, 'sandbox-legacy')
+    await provider.host.seed(fixture.org.id, WORKSPACE_ID, 'sandbox-legacy')
     const file = await fixture.upload()
     const session = await fixture.createSession()
     expect(

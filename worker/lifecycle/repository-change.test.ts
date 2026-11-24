@@ -120,7 +120,7 @@ it('changes the repository as another member, keeps the workspace, and publishes
   expect(fetch.command).toContain('example/billing.git')
   expect(fetch.command).toContain('+refs/heads/trunk:refs/heads/continue-base')
   expect(move.command).toContain(NEW_FOLDER)
-  expect(f.boat.commandRequests.at(-1)?.command).toContain(
+  expect(f.host.commandRequests.at(-1)?.command).toContain(
     '/run/conductive/repository',
   )
   expect(f.controls.moves).toBe(1)

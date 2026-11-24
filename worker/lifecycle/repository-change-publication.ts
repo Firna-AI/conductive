@@ -13,6 +13,7 @@ import {
   type RepositoryChangeOptions,
 } from './repository-change-types'
 import { workspaceRecord } from './workspace-data'
+import { settlementCommandChannel } from './workspace-command-channel'
 
 /** The move is already durable. Publication repairs it without running Git again. */
 export async function publishRepositoryChange(
@@ -99,12 +100,14 @@ async function settle(
   options: RepositoryChangeOptions,
   job: RepositoryChangeJob,
 ): Promise<void> {
-  const settled = await providerForAccount(
+  const provider = providerForAccount(
     options.env,
     options.dependencies.fetch,
     job.providerAccount,
   )
-    .runCommand(job.sandboxId, repositoryChangeSettleCommand(job))
+  const channel = await settlementCommandChannel(options.env, job, provider)
+  const settled = await channel
+    ?.runCommand(repositoryChangeSettleCommand(job))
     .then(
       (result) => result.exitCode === 0 && !result.timedOut,
       () => false,

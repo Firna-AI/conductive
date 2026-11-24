@@ -35,6 +35,7 @@ it('copies attachments through the stored provider account', async () => {
   )
     .bind('attachment-account', WORKSPACE_ID)
     .run()
+  await copy.host.disconnect('sandbox-owner')
   try {
     expect(
       (await fixture.sendAttachment(session.id, 'account-file', [file.id]))
@@ -76,6 +77,7 @@ it('binds an owner to its selected computer while a new computer copies independ
     },
   })
   await selectAttachmentComputer(harness, 'sandbox-old')
+  await copy.host.seed(fixture.org.id, WORKSPACE_ID, 'sandbox-old')
   const file = await fixture.upload()
   const session = await fixture.createSession()
   const runner = await fixture.connect()
@@ -88,6 +90,7 @@ it('binds an owner to its selected computer while a new computer copies independ
     ).toBe(202)
     await entered.promise
     await selectAttachmentComputer(harness, 'sandbox-new')
+    await copy.host.seed(fixture.org.id, WORKSPACE_ID, 'sandbox-new')
     runner.emit({ type: 'runner.ready' })
     await fixture.drain()
     await copy.entered.promise
@@ -106,6 +109,7 @@ it('binds an owner to its selected computer while a new computer copies independ
     runner.disconnect()
     await fixture.restart()
     await selectAttachmentComputer(harness, 'sandbox-old')
+    await copy.host.seed(fixture.org.id, WORKSPACE_ID, 'sandbox-old')
     await fixture.connect(runner)
     await fixture.drainAttachments()
     expect.soft(copy.writes).toEqual([
@@ -113,6 +117,9 @@ it('binds an owner to its selected computer while a new computer copies independ
       { sandboxId: 'sandbox-old', path },
     ])
     expect.soft(copy.read('sandbox-old', path)).toEqual(FILE_BYTES)
+    expect(copy.host.commandRequests.map(({ sandboxId }) => sandboxId)).toEqual(
+      ['sandbox-new', 'sandbox-old'],
+    )
     expect(messageCommands(runner, messageId)).toHaveLength(2)
   } finally {
     release.resolve()

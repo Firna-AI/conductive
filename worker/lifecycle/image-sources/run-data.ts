@@ -1,5 +1,5 @@
 import { activeOrgPredicate } from '../../data/org-access'
-import type { CommandStatus } from '../../sandbox/provider'
+import type { CommandStatus } from '../../machines/channel'
 import type { SelectedRepository } from '../settings-data'
 import { clearImageRetryStatement } from '../image-retry-data'
 

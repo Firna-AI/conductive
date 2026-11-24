@@ -50,10 +50,11 @@ export const restart: ServiceControlRequest = {
 export async function servicesFixture(bundle: string) {
   const fixture = await featureFixture(bundle)
   const sockets: WebSocket[] = []
+  const sandboxId = 'bx_services'
   await fixture.env.DB.prepare(
-    "UPDATE workspaces SET sandbox_id = 'bx_services' WHERE id = ?",
+    'UPDATE workspaces SET sandbox_id = ? WHERE id = ?',
   )
-    .bind(OUTER_WORKSPACE)
+    .bind(sandboxId, OUTER_WORKSPACE)
     .run()
   await fixture.control('seed', {
     values: {
@@ -168,6 +169,7 @@ export async function servicesFixture(bundle: string) {
     ...fixture,
     paths,
     connect,
+    connectHost: () => fixture.host.seed(OUTER_ORG, OUTER_WORKSPACE, sandboxId),
     post,
     catalogue: async (cookie = fixture.cookies.memberCookie) => {
       const response = await fixture.request(paths.catalogue, {

@@ -1,4 +1,5 @@
 import { HttpError } from '../http'
+import type { MachineChannel } from '../machines/channel'
 import { providerForAccount } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { lifecycleCommand } from './command-intents'
@@ -18,6 +19,10 @@ import type {
   RepositoryChangeOptions,
 } from './repository-change-types'
 import { workspaceAutoStopSeconds } from './idle-stop'
+import {
+  settlementCommandChannel,
+  workspaceCommandChannel,
+} from './workspace-command-channel'
 
 /**
  * The fetch and the move run detached, as in Continue. Once a command
@@ -29,10 +34,12 @@ export async function advanceRepositoryChangeCommand(
   progress: RepositoryChangeProgress,
   job: RepositoryChangeJob,
 ): Promise<void> {
+  let authorized = true
   if (job.commandStarted) {
     try {
       await options.run(() => authorizeRepositoryChange(options, job))
     } catch (error) {
+      authorized = false
       progress.scope = null
       if (error instanceof HttpError)
         job.failure = {
@@ -49,7 +56,11 @@ export async function advanceRepositoryChangeCommand(
     options.dependencies.fetch,
     job.providerAccount,
   )
-  if (await step(provider, options, progress, job))
+  const channel = authorized
+    ? workspaceCommandChannel(options.env, job, provider)
+    : await settlementCommandChannel(options.env, job, provider)
+  if (!channel) return failCommand(progress, job)
+  if (await step(provider, channel, options, progress, job))
     await completeCommand(progress, job)
 }
 
@@ -59,25 +70,35 @@ async function completeCommand(
 ) {
   progress.scope = null
   if (job.phase === 'fetch' && (job.cancelled || job.failure)) {
-    const error = job.failure ?? repositoryChangeFailed(job)
-    await progress.finish(job, {
-      ok: false,
-      error: { status: error.status, code: error.code, message: error.message },
-    })
+    await failCommand(progress, job)
     return
   }
   job.phase = job.phase === 'fetch' ? 'move' : 'publish'
   // The publication gets its own time limit, after a branch read that failed.
   delete job.failingSince
   job.processId = null
+  delete job.commandRoute
   job.commandStarted = false
   job.stdoutOffset = 0
   job.stderrOffset = 0
   await progress.save(job)
 }
 
+function failCommand(
+  progress: RepositoryChangeProgress,
+  job: RepositoryChangeJob,
+  exitCode: number | null = null,
+) {
+  const error = job.failure ?? repositoryChangeFailed(job, exitCode)
+  return progress.finish(job, {
+    ok: false,
+    error: { status: error.status, code: error.code, message: error.message },
+  })
+}
+
 async function step(
   provider: SandboxProvider,
+  channel: MachineChannel,
   options: RepositoryChangeOptions,
   progress: RepositoryChangeProgress,
   job: RepositoryChangeJob,
@@ -100,8 +121,7 @@ async function step(
         : repositoryChangeMoveCommand(job)
     try {
       if (!recoverOnly && job.phase === 'fetch') progress.scope = job.fetchId
-      const started = await provider.startCommand(
-        job.sandboxId,
+      const started = await channel.startCommand(
         lifecycleCommand(
           {
             kind: 'workspace',
@@ -114,41 +134,38 @@ async function step(
         ),
       )
       job.processId = started.processId
+      job.commandRoute = started.route
       await progress.save(job)
     } catch {
       progress.scope = null
     }
     return false
   }
-  const status = await provider.getCommandStatus(job.sandboxId, job.processId, {
-    stdoutOffset: job.stdoutOffset,
-    stderrOffset: job.stderrOffset,
-  })
+  const status = await channel.getCommandStatus(
+    { processId: job.processId, route: job.commandRoute ?? 'provider' },
+    { stdoutOffset: job.stdoutOffset, stderrOffset: job.stderrOffset },
+  )
   if (status.state !== 'running') progress.scope = null
   job.stdoutOffset = status.stdoutNextOffset
   job.stderrOffset = status.stderrNextOffset
   await progress.save(job)
   if (status.more || status.running) return false
   if (status.state === 'lost') {
-    if (job.phase === 'move' && (await switchedBranch(provider, job)))
+    if (job.phase === 'move' && (await switchedBranch(channel, job)))
       return true
     job.processId = null
+    delete job.commandRoute
     await progress.save(job)
     return false
   }
   if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut) {
-    if (job.phase === 'move' && (await switchedBranch(provider, job)))
+    if (job.phase === 'move' && (await switchedBranch(channel, job)))
       return true
-    const error =
-      job.failure ??
-      repositoryChangeFailed(
-        job,
-        status.state === 'exited' && !status.timedOut ? status.exitCode : null,
-      )
-    await progress.finish(job, {
-      ok: false,
-      error: { status: error.status, code: error.code, message: error.message },
-    })
+    await failCommand(
+      progress,
+      job,
+      status.state === 'exited' && !status.timedOut ? status.exitCode : null,
+    )
     return false
   }
   return true
@@ -161,13 +178,10 @@ async function step(
  * rule of `endAfterMove` ends the job.
  */
 async function switchedBranch(
-  provider: SandboxProvider,
+  channel: MachineChannel,
   job: RepositoryChangeJob,
 ): Promise<boolean> {
-  const result = await provider.runCommand(
-    job.sandboxId,
-    repositoryChangeBranchCommand(job),
-  )
+  const result = await channel.runCommand(repositoryChangeBranchCommand(job))
   if (result.exitCode === 0 && !result.timedOut)
     return result.stdout === `${job.branch}\n`
   throw new BranchReadFailed()

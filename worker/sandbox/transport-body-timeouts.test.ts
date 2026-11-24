@@ -1,7 +1,8 @@
 import { afterEach, expect, it, vi } from 'vitest'
 
-import { runAttachmentDownload } from '../chat/attachment-download-process'
+import { attachmentDownloadProcess } from '../chat/attachment-download-process'
 import { retryUnanswered } from '../chat/attachment-transfer-failure'
+import { providerChannel } from '../machines/provider-channel'
 import { FakeBoat } from '../test-support/fake-boat'
 import { BoatClient } from './boat'
 import { BoatTransport } from './transport'
@@ -128,7 +129,12 @@ it.each([1, 2])(
         }),
     )
     const client = new BoatClient('boat-first', server.fetch, 'app-org')
-    const run = vi.fn(() => runAttachmentDownload(client, 'bx_one', 'download'))
+    const run = vi.fn(
+      attachmentDownloadProcess(
+        providerChannel(client, 'bx_one'),
+        () => 'download',
+      ),
+    )
     const pending = outcome(retryUnanswered('workspace', run))
     for (const [index, opened] of stalled.entries()) {
       expect(run).toHaveBeenCalledTimes(index + 1)

@@ -1,10 +1,11 @@
 import { afterEach, expect, it, vi } from 'vitest'
 
-import { runAttachmentDownload } from '../../chat/attachment-download-process'
+import { attachmentDownloadProcess } from '../../chat/attachment-download-process'
 import {
   AttachmentTransferFailed,
   retryUnanswered,
 } from '../../chat/attachment-transfer-failure'
+import { providerChannel } from '../../machines/provider-channel'
 import { fakeE2bJobPath } from '../../test-support/fake-e2b-envd'
 import {
   advanceBodyDeadline,
@@ -109,8 +110,11 @@ it.each(['meta.json', 'stdout'])(
     const { client, opened, requests } = stalledClient(target)
     fakeProviderTimers()
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
-    const download = vi.fn(() =>
-      runAttachmentDownload(client, sandboxId, 'download'),
+    const download = vi.fn(
+      attachmentDownloadProcess(
+        providerChannel(client, sandboxId),
+        () => 'download',
+      ),
     )
     const pending = outcome(retryUnanswered('workspace', download))
     await advanceBodyDeadline(await opened, pending.settled, 65_000)

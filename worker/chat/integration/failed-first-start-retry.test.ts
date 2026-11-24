@@ -62,7 +62,9 @@ afterEach(async () => {
 
 it('retries the same failed workspace with a fresh token and dispatches every stored message once in order', async () => {
   const transfer = firstStartAttachmentTransfer()
-  const active = (fixture = await createOuterRuntime(bundle))
+  const active = (fixture = await createOuterRuntime(bundle, {
+    connectHost: true,
+  }))
   transfer.connect(active)
   const saveSetup = async (script: string, value: string) => {
     const ciphertext = await encrypt(
@@ -202,7 +204,7 @@ it('retries the same failed workspace with a fresh token and dispatches every st
     now: Date.now(),
   })
   await saveSetup('echo repaired-startup', 'repaired-value')
-  const previousCommands = active.boat.commandRequests.length
+  const previousCommands = active.host.commandRequests.length
   active.boat.commandExitCode = 0
   const retry = () =>
     active.request(workspacePaths.resume(OUTER_ORG, id), {
@@ -223,7 +225,7 @@ it('retries the same failed workspace with a fresh token and dispatches every st
   expect(active.boat.starts[1]).toMatchObject({
     env: { RETRY_SETUP: 'repaired-value' },
   })
-  const replacementCommands = active.boat.commandRequests
+  const replacementCommands = active.host.commandRequests
     .slice(previousCommands)
     .map(({ command }) => lifecycleCommandBody(command))
     .join('\n')

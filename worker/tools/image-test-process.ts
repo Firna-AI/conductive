@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process'
 import { delimiter, dirname } from 'node:path'
 import process from 'node:process'
 
-import type { CommandResult } from '../sandbox/provider'
+import type { CommandResult } from '../machines/channel'
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
 
 /** Capture child failures as results so the integration test can assert them. */

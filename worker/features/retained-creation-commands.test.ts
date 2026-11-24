@@ -12,7 +12,7 @@ import {
   repositoryLocation,
 } from '../lifecycle/repository-locations'
 import { localSavedScriptFixture } from '../lifecycle/saved-script-test-support'
-import type { CommandResult } from '../sandbox/provider'
+import type { CommandResult } from '../machines/channel'
 import { featureFixture, type FeatureFixture } from './fixture.test-support'
 import {
   admitRetainedCreation,
@@ -41,6 +41,7 @@ afterEach(async () => {
 it('replays a saved branch after Restore with a new journal and preserves the existing branch and its files', async () => {
   const active = (fixture = await featureFixture(bundle, {
     configuration: RETAINED_CONFIGURATION,
+    connectHost: true,
   }))
   const sandbox = (local = await localSavedScriptFixture(OUTER_REPOSITORY))
   const { id, branch } = await admitRetainedCreation(active)
@@ -91,7 +92,7 @@ it('replays a saved branch after Restore with a new journal and preserves the ex
       )
     ).exitCode,
   ).toBe(0)
-  const commandsBefore = active.boat.commandRequests.length
+  const commandsBefore = active.host.commandRequests.length
   await deleteAndRestoreCreation(active)
   expect(
     (
@@ -103,7 +104,7 @@ it('replays a saved branch after Restore with a new journal and preserves the ex
   ).toBe(200)
   expect(await completeRetainedCreation(active, id)).toEqual({ ok: true })
   expect(results.map((result) => result.exitCode)).toEqual([0, 0])
-  const commands = active.boat.commandRequests
+  const commands = active.host.commandRequests
     .slice(commandsBefore)
     .filter((request) => request.detached)
     .map((request) => request.command)
@@ -113,7 +114,7 @@ it('replays a saved branch after Restore with a new journal and preserves the ex
     expect.stringContaining('systemctl start conductive-terminal.service'),
   ])
   expect(commands[0]).not.toBe(
-    active.boat.commandRequests[commandsBefore - 1]?.command,
+    active.host.commandRequests[commandsBefore - 1]?.command,
   )
   expect(
     (
@@ -134,6 +135,7 @@ it('replays a saved branch after Restore with a new journal and preserves the ex
 it('runs interrupted saved startup after Restore instead of following its dead journal owner', async () => {
   const active = (fixture = await featureFixture(bundle, {
     configuration: RETAINED_CONFIGURATION,
+    connectHost: true,
   }))
   const sandbox = (local = await localSavedScriptFixture(OUTER_REPOSITORY))
   const marker = shellQuote(`${sandbox.directory}/interrupted`)
@@ -168,7 +170,7 @@ it('runs interrupted saved startup after Restore instead of following its dead j
     phase: 'startup',
     processId: expect.any(Number),
   })
-  const commandsBefore = active.boat.commandRequests.length
+  const commandsBefore = active.host.commandRequests.length
   await deleteAndRestoreCreation(active)
   expect(
     (
@@ -183,7 +185,7 @@ it('runs interrupted saved startup after Restore instead of following its dead j
   expect(await sandbox.file('completed')).toBe('continued\n')
   expect(await sandbox.ready()).toBe('')
   expect(await sandbox.runnerCalls()).toBe('runner-restarted\n')
-  const commands = active.boat.commandRequests
+  const commands = active.host.commandRequests
     .slice(commandsBefore)
     .filter((request) => request.detached)
     .map((request) => request.command)
@@ -192,7 +194,7 @@ it('runs interrupted saved startup after Restore instead of following its dead j
     expect.stringContaining('systemctl start conductive-terminal.service'),
   ])
   expect(commands[0]).not.toBe(
-    active.boat.commandRequests[commandsBefore - 1]?.command,
+    active.host.commandRequests[commandsBefore - 1]?.command,
   )
   expect(active.boat.resumeIds).toEqual([original.allocatedSandboxId])
   expect(active.boat.deletedIds).toEqual([])

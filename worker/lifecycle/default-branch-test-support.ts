@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import process from 'node:process'
 
 import { TOOL_TURN_HEADER } from '../../src/shared/agent-tools'
-import type { CommandResult } from '../sandbox/provider'
+import type { CommandResult } from '../machines/channel'
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
 import { testDirectory } from '../test-support/test-directory'
 import type { backendFixture } from './backend-test-support'

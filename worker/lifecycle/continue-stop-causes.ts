@@ -1,4 +1,4 @@
-import type { CommandStatus } from '../sandbox/provider'
+import type { CommandStatus } from '../machines/channel'
 
 const STOP_CAUSES = [
   'unknown',

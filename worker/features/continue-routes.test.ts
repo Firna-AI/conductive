@@ -215,14 +215,14 @@ it('resumes Continue through real routes and socket wake, fences sends and Archi
         }),
       ]),
     )
-    const commands = f.boat.commandRequests.filter(
+    const commands = f.host.commandRequests.filter(
       ({ detached, command }) =>
         detached && command.includes('conductive-continue'),
     )
     expect(commands).toHaveLength(2)
     expect(await (await post()).json()).toEqual(result)
     expect(
-      f.boat.commandRequests.filter(
+      f.host.commandRequests.filter(
         ({ detached, command }) =>
           detached && command.includes('conductive-continue'),
       ),

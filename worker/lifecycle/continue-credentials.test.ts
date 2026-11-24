@@ -7,6 +7,7 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { continueFixture } from './continue.test-support'
+import { CONTINUE_JOB_KEY, continueJobKey } from './continue-types'
 
 let harness: TestHarness
 beforeAll(async () => {
@@ -106,6 +107,7 @@ it.each(['lost', 'missing'] as const)(
     const f = await continueFixture(harness)
     await f.start()
     const job = await f.advanceTo('fetch')
+    if (state === 'missing') await f.host.disconnect('bx_continue')
     f.boat.commandRunning = true
     await f.coordinator.advance()
     expect(await (await f.credential(job.fetchId)).json()).toEqual({
@@ -115,33 +117,26 @@ it.each(['lost', 'missing'] as const)(
     if (!active || active.processId === null)
       throw new Error('Expected an issued fetch.')
     const processId = active.processId
+    expect(active.commandRoute).toBe(state === 'lost' ? 'host' : 'provider')
+    if (state === 'missing') {
+      delete active.commandRoute
+      await f.storage.put(continueJobKey(active.id), active)
+      await f.storage.put(CONTINUE_JOB_KEY, active)
+      await f.host.connect('bx_continue')
+    }
+    f.reconstruct()
     const original = f.options.dependencies.fetch
-    let loseStatus = true
+    const hostPolls = f.host.statusRequests.length
+    let providerPolls = 0
+    if (state === 'lost')
+      f.host.statusReply = (_request, reply) =>
+        reply.kind === 'command.status'
+          ? { ...reply, state: 'lost', running: false, exitCode: null }
+          : reply
     f.options.dependencies.fetch = async (request) => {
-      if (
-        loseStatus &&
-        new URL(request.url).pathname.endsWith(`/commands/${processId}`)
-      ) {
-        loseStatus = false
-        return state === 'missing'
-          ? Response.json({ ok: false, code: 'not_found' }, { status: 404 })
-          : Response.json({
-              ok: true,
-              success: true,
-              type: 'command.status',
-              processId,
-              status: 'lost',
-              running: false,
-              exitCode: null,
-              timedOut: false,
-              more: false,
-              stdout: '',
-              stderr: '',
-              stdoutOffset: 0,
-              stderrOffset: 0,
-              stdoutNextOffset: 0,
-              stderrNextOffset: 0,
-            })
+      if (new URL(request.url).pathname.endsWith(`/commands/${processId}`)) {
+        providerPolls++
+        return Response.json({ ok: false, code: 'not_found' }, { status: 404 })
       }
       return original(request)
     }
@@ -152,9 +147,15 @@ it.each(['lost', 'missing'] as const)(
       processId: null,
       commandStarted: true,
     })
+    expect(await f.active()).not.toHaveProperty('commandRoute')
+    expect(f.host.statusRequests.slice(hostPolls)).toEqual(
+      state === 'lost' ? [{ processId, stdoutOffset: 0, stderrOffset: 0 }] : [],
+    )
+    expect(providerPolls).toBe(state === 'missing' ? 1 : 0)
     await expect(f.credential(job.fetchId)).rejects.toMatchObject({
       code: 'current_turn_required',
     })
+    delete f.host.statusReply
     f.boat.commandRunning = false
     await f.finish()
   },

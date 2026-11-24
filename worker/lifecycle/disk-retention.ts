@@ -29,6 +29,7 @@ import {
 } from './retention-command'
 import { stopRetention } from './retention-stop'
 import { machineEnvironment, workspaceMachineOwner } from '../machines/client'
+import { machineChannel } from '../machines/channel'
 import { revokeMachineTokenOnStop } from '../machines/revoke'
 
 /** The caller serializes this action with user starts in the workspace object. */
@@ -161,8 +162,12 @@ export async function keepWorkspaceDisk(
     if (status !== 'ready') return { done: false, error: null }
     return advanceRetentionCommand(
       context,
-      provider,
-      sandboxId,
+      machineChannel(
+        env,
+        workspaceMachineOwner(orgId, workspaceId),
+        provider,
+        sandboxId,
+      ),
       deadlineAt,
       command,
       row.ownerUserId,

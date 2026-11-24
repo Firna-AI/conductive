@@ -14,7 +14,7 @@ import { shellQuote } from '../../lifecycle/commands'
 import { seedPublishedImage } from '../../lifecycle/published-image-test-support'
 import { localSavedScriptFixture } from '../../lifecycle/saved-script-test-support'
 import type { WorkspaceStartResult } from '../../lifecycle/start-types'
-import type { CommandResult } from '../../sandbox/provider'
+import type { CommandResult } from '../../machines/channel'
 import { outerWorkerBundle } from './outer-runtime.test-support'
 import {
   OUTER_ORG,
@@ -115,7 +115,7 @@ it('restores an interrupted replacement create with its pinned data and a fresh 
     allocatedSandboxId: 'bx_2',
     imageName: 'replacement-image',
   })
-  const commandsBefore = active.boat.commandRequests.length
+  const commandsBefore = active.host.commandRequests.length
   await deleteAndRestoreCreation(active)
   expect(active.boat.stopIds).toEqual(['bx_2'])
   expect(active.boat.resumeIds).toEqual([])
@@ -146,7 +146,7 @@ it('restores an interrupted replacement create with its pinned data and a fresh 
   expect(await sandbox.file('completed')).toBe('continued\n')
   expect(await sandbox.ready()).toBe('')
   expect(await sandbox.runnerCalls()).toBe('runner-restarted\n')
-  const commands = active.boat.commandRequests
+  const commands = active.host.commandRequests
     .slice(commandsBefore)
     .filter((request) => request.detached)
     .map((request) => request.command)
@@ -155,7 +155,7 @@ it('restores an interrupted replacement create with its pinned data and a fresh 
     expect.stringContaining('systemctl start conductive-terminal.service'),
   ])
   expect(commands[0]).not.toBe(
-    active.boat.commandRequests[commandsBefore - 1]?.command,
+    active.host.commandRequests[commandsBefore - 1]?.command,
   )
   expect(active.boat.starts).toHaveLength(2)
   expect(active.boat.resumeIds).toEqual(['bx_2'])

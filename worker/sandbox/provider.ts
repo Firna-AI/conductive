@@ -4,12 +4,6 @@ import type {
   CommandStatus,
 } from '../machines/channel'
 
-export type {
-  CommandOffsets,
-  CommandResult,
-  CommandStatus,
-} from '../machines/channel'
-
 export const SANDBOX_STATES = [
   'init',
   'provisioning',

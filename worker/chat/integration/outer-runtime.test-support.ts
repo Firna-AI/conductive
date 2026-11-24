@@ -6,6 +6,7 @@ import {
 
 import type { AppEnv, HttpFetch } from '../../env'
 import { LifecycleBoat } from '../../lifecycle/lifecycle-boat-test-support'
+import { LifecycleHost } from '../../lifecycle/lifecycle-host-test-support'
 import { withSoftwareRelease } from '../../lifecycle/software-release-test-support'
 import { FakeGitHub } from '../../test-support/fake-github'
 import { TEST_ORIGIN } from '../../test-support/harness'
@@ -48,6 +49,7 @@ export async function createOuterRuntime(
     persistencePath?: string
     handleStructuredLogs?: StructuredLogsHandler
     machineProbe?: boolean
+    connectHost?: boolean
     outbound?: (
       request: Request,
       fallback: HttpFetch,
@@ -192,11 +194,13 @@ export async function createOuterRuntime(
   let runtime = createRuntime()
   try {
     const db = await runtime.getD1Database('DB')
+    const bindings = () =>
+      runtime.getBindings<Pick<AppEnv, 'CHAT_ATTACHMENTS' | 'MACHINES'>>()
+    const { CHAT_ATTACHMENTS, MACHINES } = await bindings()
     const env: AppEnv = {
       DB: db,
-      CHAT_ATTACHMENTS: (
-        await runtime.getBindings<{ CHAT_ATTACHMENTS: R2Bucket }>()
-      ).CHAT_ATTACHMENTS,
+      CHAT_ATTACHMENTS,
+      MACHINES,
       APP_ORIGIN: appOrigin,
       MACHINE_ORIGIN: OUTER_MACHINE_ORIGIN,
       GITHUB_CLIENT_ID: 'outer-client',
@@ -207,6 +211,8 @@ export async function createOuterRuntime(
       BOAT_ORG_ID: boat.server.orgId,
       ...options.configuration,
     }
+    const host = new LifecycleHost(env, boat)
+    if (options.connectHost) boat.computerStarted = host.computerStarted
     const cookies = await seedOuterRuntime(env)
     const headers = {
       Cookie: cookies.ownerCookie,
@@ -232,20 +238,23 @@ export async function createOuterRuntime(
       },
       env,
       boat,
+      host,
       github,
       requests,
       cookies,
       headers,
       request,
       restart: async () => {
+        await host.close()
         await runtime.dispose()
         runtime = createRuntime()
         env.DB = await runtime.getD1Database('DB')
-        env.CHAT_ATTACHMENTS = (
-          await runtime.getBindings<{ CHAT_ATTACHMENTS: R2Bucket }>()
-        ).CHAT_ATTACHMENTS
+        const next = await bindings()
+        env.CHAT_ATTACHMENTS = next.CHAT_ATTACHMENTS
+        env.MACHINES = next.MACHINES
       },
       dispose: async () => {
+        await host.close()
         await runtime.dispose()
         await removeStorage()
       },

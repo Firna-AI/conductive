@@ -72,6 +72,9 @@ export async function expectFirstStartCopies(
     `${directory}/${ATTACHMENTS_DIRECTORY}/.gitignore`,
     path,
   ])
+  expect(fixture.host.commands).toEqual(
+    expect.arrayContaining(transfer.commands),
+  )
   expect(command.attachments).toEqual([{ attachmentId, path }])
 }
 

@@ -1,5 +1,8 @@
+import { onTestFinished } from 'vitest'
+
 import type { AppEnv } from '../env'
 import { errorResponse } from '../http'
+import { LifecycleHost } from '../lifecycle/lifecycle-host-test-support'
 import { attachmentCommandTransfer } from '../test-support/attachment-command'
 import { FakeBoat } from '../test-support/fake-boat'
 import { handleAttachmentDownload } from './attachment-download'
@@ -29,8 +32,11 @@ export function providerCopy(
       }
     },
   })
+  const host = new LifecycleHost(env, transfer)
+  onTestFinished(() => host.close())
   return {
     ...transfer,
+    host,
     fetch: async (request: Request) => {
       const response = await transfer.fetch(request)
       return response ?? boat.fetch(request)

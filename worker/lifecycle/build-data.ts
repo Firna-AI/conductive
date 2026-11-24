@@ -5,7 +5,7 @@ import type {
 } from '../../src/shared/org-settings'
 import { HttpError } from '../http'
 import { readOrgProviderAccount } from '../data/org-provider-account'
-import type { CommandStatus } from '../sandbox/provider'
+import type { CommandStatus } from '../machines/channel'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
 import { readBuildSnapshot } from './build-log-reader'
 import { buildLogStatements } from './build-log-statements'

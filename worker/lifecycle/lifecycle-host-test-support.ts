@@ -16,7 +16,16 @@ import {
   machinesBinding,
 } from '../machines/authorization'
 import { HostInbox } from '../machines/host-inbox.test-support'
+import { issueMachineToken, workspaceMachineOwner } from '../machines/client'
 import type { LifecycleBoat } from './lifecycle-boat-test-support'
+
+type HostCommandRequest = LifecycleBoat['commandRequests'][number]
+type HostStatusRequest = LifecycleBoat['statusRequests'][number]
+
+interface HostCommandScenario {
+  command(request: HostCommandRequest): Promise<HostResult>
+  status(request: HostStatusRequest): Promise<HostResult>
+}
 
 interface HostComputer {
   token: string
@@ -37,13 +46,27 @@ export class LifecycleHost {
   readonly statusRequests: LifecycleBoat['statusRequests'] = []
   autoConnect = true
   statusError?: HostErrorCode
+  statusReply?: (request: HostStatusRequest, reply: HostResult) => HostResult
   private readonly computers = new Map<string, HostComputer>()
   private readonly env: AppEnv
-  private readonly scenario: LifecycleBoat
+  private readonly scenario: HostCommandScenario
 
-  constructor(env: AppEnv, scenario: LifecycleBoat) {
+  constructor(env: AppEnv, scenario: HostCommandScenario) {
     this.env = env
     this.scenario = scenario
+  }
+
+  async seed(
+    orgId: string,
+    workspaceId: string,
+    sandboxId: string,
+  ): Promise<void> {
+    await this.computerStarted(sandboxId, {
+      CONDUCTIVE_MACHINE_TOKEN: await issueMachineToken(
+        this.env,
+        workspaceMachineOwner(orgId, workspaceId),
+      ),
+    })
   }
 
   computerStarted = async (sandboxId: string, env: unknown): Promise<void> => {
@@ -119,16 +142,23 @@ export class LifecycleHost {
     for (;;) {
       const request = await Promise.race([inbox.request(), closed])
       if (!request) return
-      const { requestId, operation } = request
-      try {
-        const result = await this.perform(sandboxId, operation)
-        if (socket.readyState !== WebSocket.OPEN) return
+      void this.reply(sandboxId, socket, request)
+    }
+  }
+
+  private async reply(
+    sandboxId: string,
+    socket: WebSocket,
+    { requestId, operation }: Awaited<ReturnType<HostInbox['request']>>,
+  ): Promise<void> {
+    try {
+      const result = await this.perform(sandboxId, operation)
+      if (socket.readyState === WebSocket.OPEN)
         sendReply(socket, { type: 'reply', requestId, result })
-      } catch (error) {
-        if (!(error instanceof LostHostReply)) throw error
+    } catch (error) {
+      if (!(error instanceof LostHostReply)) throw error
+      if (socket.readyState === WebSocket.OPEN)
         socket.close(1000, 'The test host lost the reply.')
-        return
-      }
     }
   }
 
@@ -159,7 +189,7 @@ export class LifecycleHost {
       this.statusRequests.push(request)
       return this.statusError
         ? { kind: 'error', code: this.statusError }
-        : status
+        : (this.statusReply?.(request, status) ?? status)
     }
     throw new Error('Unexpected test host operation.')
   }

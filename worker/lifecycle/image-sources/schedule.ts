@@ -1,5 +1,5 @@
 import type { AppDependencies, AppEnv } from '../../env'
-import type { CommandStatus } from '../../sandbox/provider'
+import type { CommandStatus } from '../../machines/channel'
 import type { PrepareImageSources } from '../image-builds'
 import { transientProviderError } from '../provider-retry'
 import {

@@ -8,7 +8,7 @@ import {
 import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
 import { shellQuote } from '../lifecycle/commands'
 import { localSavedScriptFixture } from '../lifecycle/saved-script-test-support'
-import type { CommandResult } from '../sandbox/provider'
+import type { CommandResult } from '../machines/channel'
 import {
   admitRetainedCreation,
   advanceRetainedCreation,
@@ -58,7 +58,7 @@ it('rebuilds a restored runner-phase runtime after losing /run without repeating
   expect((await sandbox.run('rm -rf -- /run/conductive')).exitCode).toBe(0)
   expect(await sandbox.ready()).toBeNull()
   await deleteAndRestoreCreation(active)
-  const before = active.boat.commandRequests.length
+  const before = active.host.commandRequests.length
   expect(
     (
       await active.request(workspacePaths.resume(OUTER_ORG, id), {
@@ -69,7 +69,7 @@ it('rebuilds a restored runner-phase runtime after losing /run without repeating
   ).toBe(200)
   await advanceRetainedCreation(active, id, 'runner')
   expect(
-    active.boat.commandRequests
+    active.host.commandRequests
       .slice(before)
       .filter((request) => request.detached)
       .map((request) => request.command),

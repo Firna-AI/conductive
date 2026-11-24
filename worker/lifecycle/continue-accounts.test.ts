@@ -59,6 +59,9 @@ it('keeps Continue commands and its member credential on the stored account afte
     f.boat.commandRequests.filter(({ detached }) => detached),
   ).toHaveLength(2)
   expect(
+    f.host.commandRequests.filter(({ detached }) => detached),
+  ).toHaveLength(2)
+  expect(
     new Set(
       f.boat.server.requests.map((request) =>
         request.headers.get('X-Boat-Org'),
@@ -78,14 +81,18 @@ it('refuses a fetch credential when another account replaces the workspace with 
   )
     .bind(WORKSPACE_ID)
     .run()
+  await f.host.seed(f.org.id, WORKSPACE_ID, 'bx_continue')
   const requests = f.boat.server.requests.length
+  const polls = f.host.statusRequests.length
   await expect(f.credential(job.fetchId)).rejects.toMatchObject({
     status: 409,
     code: 'sandbox_unavailable',
   })
   expect(f.boat.server.requests).toHaveLength(requests)
+  expect(f.host.statusRequests).toHaveLength(polls)
   f.boat.commandRunning = false
   await f.finish()
+  expect(f.host.statusRequests).toHaveLength(polls)
   expect(
     new Set(
       f.boat.server.requests.map((request) =>

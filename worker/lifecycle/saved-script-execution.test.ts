@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 
-import type { CommandResult } from '../sandbox/provider'
+import type { CommandResult } from '../machines/channel'
 import { setupBackendTests } from './backend-test-hooks'
 import { SOFTWARE } from './backend-test-support'
 import { readBuildJob } from './build-data'

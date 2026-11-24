@@ -48,6 +48,7 @@ it('copies before delivery and preserves copy proof across reconnects while new 
   )
     .bind('sandbox-one', WORKSPACE_ID)
     .run()
+  await provider.host.seed(fixture.org.id, WORKSPACE_ID, 'sandbox-one')
   const upload = (id: string, name: string) =>
     uploadAttachment(
       harness.env,
@@ -87,6 +88,7 @@ it('copies before delivery and preserves copy proof across reconnects while new 
     ATTACHMENT_IGNORE_BYTES,
     FILE_BYTES,
   ])
+  expect(provider.host.commands).toEqual(provider.commands)
   expect(provider.paths[0]).toBe(
     `${ATTACHMENT_REPOSITORY_DIRECTORY}/${ATTACHMENTS_DIRECTORY}/.gitignore`,
   )
@@ -125,6 +127,7 @@ it('copies before delivery and preserves copy proof across reconnects while new 
   )
     .bind('sandbox-two', WORKSPACE_ID)
     .run()
+  await provider.host.seed(fixture.org.id, WORKSPACE_ID, 'sandbox-two')
   await fixture.connect(runner)
   await fixture.drainAttachments()
   expect(provider.copies).toEqual([
@@ -138,6 +141,7 @@ it('copies before delivery and preserves copy proof across reconnects while new 
     FILE_BYTES,
   ])
   expect(provider.paths.slice(4)).toEqual(provider.paths.slice(0, 4))
+  expect(provider.host.commands).toEqual(provider.commands)
   expect(
     (await fixture.sendAttachment(session.id, 'another-file-message', fileIds))
       .status,
