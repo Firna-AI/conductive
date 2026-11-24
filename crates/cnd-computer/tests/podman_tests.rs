@@ -15,9 +15,9 @@ use std::sync::Arc;
 use cnd_computer::engine::error::EngineError;
 use cnd_computer::engine::podman::Podman;
 use cnd_computer::engine::ports::Engine;
+use cnd_computer::engine::states::ContainerStatus;
 use cnd_computer::process::NativeProcess;
 use cnd_runner_interface::computer::operations::ComputerRelease;
-use cnd_runner_interface::computer::results::ContainerState;
 
 const FOLDER: &str = "CND_PODMAN_FIXTURE";
 const SECRET: &[u8] = b"export 'NAME=private body'\n";
@@ -82,15 +82,15 @@ async fn check_native(folder: &Path) {
     let engine = Podman::new(Arc::new(NativeProcess));
     assert_eq!(
         engine.inspect("box").await.unwrap(),
-        ContainerState::Running
+        ContainerStatus::Running
     );
     assert_eq!(
         engine.inspect("paused").await.unwrap(),
-        ContainerState::Stopped
+        ContainerStatus::Paused
     );
     assert_eq!(
         engine.inspect("absent").await.unwrap(),
-        ContainerState::Missing
+        ContainerStatus::Missing
     );
     assert!(engine.image_exists(IMAGE).await.unwrap());
     assert!(
@@ -196,7 +196,7 @@ async fn check_native(folder: &Path) {
     );
     assert_eq!(
         calls[10],
-        ["commit", "--pause=true", "conductive-box", IMAGE]
+        ["commit", "--pause=false", "conductive-box", IMAGE]
     );
     assert_eq!(calls[14], ["load", "--input", archive.to_str().unwrap()]);
     assert_eq!(
@@ -238,16 +238,23 @@ async fn check_native(folder: &Path) {
             server.as_str()
         ]
     );
-    assert!(
-        calls[20][7]
-            .contains(r#"update check --bootstrap --release "$1" --digest "$2" --server "$3""#)
+    let steps: Vec<_> = calls[20][7]
+        .lines()
+        .map(str::trim)
+        .filter(|line| {
+            line.contains(" update ") || line.contains("readlink") || line.starts_with("systemctl")
+        })
+        .collect();
+    assert_eq!(
+        steps,
+        [
+            r#""$program" update check --bootstrap --release "$1" --digest "$2" --server "$3""#,
+            r#""$program" update apply --release "$1""#,
+            "/opt/conductive/current/conductive update started",
+            r#"test "$(readlink -f /opt/conductive/current)" = "/opt/conductive/versions/$1""#,
+            "systemctl restart conductive-host.service",
+        ],
     );
-    assert!(calls[20][7].contains(r#""$program" update apply"#));
-    assert!(calls[20][7].contains(
-        r#"if [ "$(readlink -f /opt/conductive/current)" != "/opt/conductive/versions/$1" ]; then"#
-    ));
-    assert!(calls[20][7].contains("current/conductive update started"));
-    assert!(calls[20][7].contains("systemctl restart conductive-host.service"));
     assert_eq!(
         fs::read(folder.join("program-input")).unwrap(),
         b"checked program"

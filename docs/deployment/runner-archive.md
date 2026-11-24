@@ -36,13 +36,20 @@ The deploy writes these keys:
 
 - SDK helper: `releases/download/sdk-helper/sdk-helper-<sha256>.tar.gz`.
 - System: `releases/download/system/system-<sha256>.tar.gz`.
-- Program: `releases/download/conductive/<version>/<sha256>/conductive-<version>-x86_64-unknown-linux-musl.tar.gz`.
+- Program: `releases/download/conductive/<version>/<release-digest>/conductive-<version>-x86_64-unknown-linux-musl.tar.gz`.
+- Program manifest: `releases/download/conductive/<version>/<release-digest>/conductive-<version>-x86_64-unknown-linux-musl.json`.
+- Program signature: `releases/download/conductive/signatures/<manifest-sha256>.sig`.
 - Parts: `releases/download/conductive/<version>/<sha256>/parts-<version>-x86_64-unknown-linux-musl.json`.
 - Newest-version JSON: `releases/latest/conductive/x86_64-unknown-linux-musl`.
 
-Each `<sha256>` names the digest of that file's bytes. The program archive
-holds `conductive`. The parts JSON has schema version 1 and a `parts` array
-of `name`, `url`, and `sha256` objects. Immutable files have a one-year cache
+Each `<sha256>` names the digest of that file's bytes. The
+`<release-digest>` is the SHA-256 digest of the program archive.
+The `<manifest-sha256>` is the SHA-256 digest of the program manifest.
+The program manifest has the same bytes as the newest-version JSON for
+that release. The detached Ed25519 signature covers those bytes.
+The program archive holds `conductive`. The parts JSON has schema version
+1 and a `parts` array of `name`, `url`, and `sha256` objects.
+Immutable files have a one-year cache
 time. The newest-version JSON has content type `application/json` and
 `Cache-Control: max-age=60`.
 

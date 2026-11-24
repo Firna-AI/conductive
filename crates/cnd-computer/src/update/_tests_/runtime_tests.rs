@@ -1,111 +1,118 @@
-//! Update startup, rollback recovery, and first healthy start.
+//! Promotion waits for a welcome or 60 seconds of service uptime.
 
 #![expect(
     clippy::unwrap_used,
-    reason = "The update fixture must run to completion."
+    reason = "The tests must read back the stored startup state."
 )]
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use cnd_release::version::DEVELOPMENT_VERSION;
-use tokio::sync::{Notify, watch};
+use futures_util::poll;
+use tokio::sync::watch;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::connection_support::virtual_timer;
-use crate::diagnostics::DiagnosticsMock;
 use crate::settings::SettingsStoreMock;
 use crate::update::ports::UpdateFilesMock;
+use crate::update::state::UpdateState;
 
-use super::{Startup, Updates};
+use super::support::{trial_state, updater};
+use super::{Startup, Updater, Updates};
 
-use super::support::{pending, updater};
-
-#[test]
-fn development_and_other_program_locations_skip_automatic_updates() {
-    let mut updater = updater();
-    updater.version = DEVELOPMENT_VERSION.into();
-    assert_eq!(updater.start().ok(), Some(Startup::Disabled));
-    updater.version = "0.0.41".into();
-    updater.files = Arc::new(Unimock::new(
-        UpdateFilesMock::is_current
-            .some_call(matching!())
-            .returns(Ok(false)),
-    ));
-    updater.diagnostics = Arc::new(Unimock::new(
-        DiagnosticsMock::update_location
-            .some_call(matching!())
-            .returns(()),
-    ));
-    assert_eq!(updater.start().ok(), Some(Startup::Disabled));
+struct Observed {
+    current: Mutex<String>,
+    state: Mutex<UpdateState>,
 }
 
-#[test]
-fn startup_persists_the_failed_start_before_switching_to_the_previous_version() {
+impl Observed {
+    fn pending(&self) {
+        assert_eq!(
+            *self.current.lock().unwrap(),
+            "0.0.41",
+            "Trial became current early"
+        );
+        assert_eq!(
+            *self.state.lock().unwrap(),
+            trial_state(),
+            "Trial was confirmed early"
+        );
+    }
+
+    fn confirmed(&self) {
+        assert_eq!(*self.current.lock().unwrap(), "0.0.42");
+        let state = self.state.lock().unwrap();
+        assert_eq!(state.trial, None);
+        assert_eq!(state.previous.as_deref(), Some("0.0.41"));
+    }
+}
+
+fn fixture() -> (Updater, Arc<Observed>) {
     let mut updater = updater();
+    updater.version = "0.0.42".into();
+    updater.timer = virtual_timer();
+    let observed = Arc::new(Observed {
+        current: Mutex::new("0.0.41".into()),
+        state: Mutex::new(trial_state()),
+    });
+    let state = observed.clone();
+    let read = observed.clone();
+    let change = observed.clone();
+    let record = observed.clone();
     updater.files = Arc::new(Unimock::new((
-        UpdateFilesMock::is_current.some_call(matching!()).returns(Ok(true)),
-        UpdateFilesMock::state.some_call(matching!()).returns(Ok(pending(5))),
-        UpdateFilesMock::save.next_call(matching!((value) if value.starts == 6 && value.pending.as_deref() == Some("0.0.41")))
-            .returns(Ok(())),
-        UpdateFilesMock::switch.next_call(matching!("0.0.40")).returns(Ok(())),
-        UpdateFilesMock::save.next_call(matching!((value) if value.starts == 0 && value.pending.is_none()
-            && value.refused.contains("0.0.41"))).returns(Ok(())),
-        UpdateFilesMock::collect.some_call(matching!("0.0.40", None)).returns(Ok(())),
-    )));
-    updater.diagnostics = Arc::new(Unimock::new(
-        DiagnosticsMock::update_rolled_back
+        UpdateFilesMock::state
             .some_call(matching!())
-            .returns(()),
-    ));
-    assert_eq!(updater.start().unwrap(), Startup::RolledBack);
+            .answers_arc(Arc::new(move |_| Ok(state.state.lock().unwrap().clone()))),
+        UpdateFilesMock::current_version
+            .some_call(matching!())
+            .answers_arc(Arc::new(move |_| {
+                Ok(Some(read.current.lock().unwrap().clone()))
+            })),
+        UpdateFilesMock::switch
+            .next_call(matching!("0.0.42"))
+            .answers_arc(Arc::new(move |_, version| {
+                *change.current.lock().unwrap() = version.to_owned();
+                Ok(())
+            })),
+        UpdateFilesMock::save
+            .next_call(matching!(_))
+            .answers_arc(Arc::new(move |_, state| {
+                *record.state.lock().unwrap() = state.clone();
+                Ok(())
+            })),
+    )));
+    (updater, observed)
 }
 
 #[tokio::test(start_paused = true)]
-async fn welcome_or_sixty_seconds_alone_confirms_a_pending_start() {
-    for welcome in [true, false] {
-        let mut updater = updater();
-        updater.timer = virtual_timer();
-        let saved = Arc::new(Notify::new());
-        let capture = saved.clone();
-        updater.files = Arc::new(
-            Unimock::new((
-                UpdateFilesMock::state
-                    .some_call(matching!())
-                    .returns(Ok(pending(3))),
-                UpdateFilesMock::save
-                    .some_call(matching!((state) if state.pending.is_none()
-                && state.starts == 0 && state.previous.as_deref() == Some("0.0.40")))
-                    .answers_arc(Arc::new(move |_, _| {
-                        capture.notify_one();
-                        Ok(())
-                    })),
-            ))
-            .no_verify_in_drop(),
-        );
-        updater.settings = Arc::new(
-            Unimock::new(
-                SettingsStoreMock::read
-                    .some_call(matching!())
-                    .answers(&|_| Ok(None))
-                    .at_least_times(0),
-            )
-            .no_verify_in_drop(),
-        );
-        let (stop, shutdown) = watch::channel(false);
-        let signal = stop.clone();
-        if welcome {
-            updater.activity.welcomed();
-        }
-        let task = tokio::spawn(async move { updater.monitor(signal, shutdown).await });
-        let logical_limit = if welcome {
-            Duration::from_secs(1)
-        } else {
-            Duration::from_secs(61)
-        };
-        let confirmed = tokio::time::timeout(logical_limit, saved.notified()).await;
-        stop.send(true).unwrap();
-        task.await.unwrap();
-        assert!(confirmed.is_ok(), "confirmation with welcome={welcome}");
-    }
+async fn a_trial_with_no_welcome_stays_pending_at_59_seconds_and_confirms_at_60() {
+    let (mut updater, observed) = fixture();
+    updater.settings = Arc::new(Unimock::new(
+        SettingsStoreMock::read
+            .some_call(matching!())
+            .returns(Ok(None)),
+    ));
+    let (stop, shutdown) = watch::channel(false);
+    let monitor = updater.monitor(Startup::Trial, stop.clone(), shutdown);
+    tokio::pin!(monitor);
+    assert!(poll!(&mut monitor).is_pending());
+    tokio::time::advance(Duration::from_secs(59)).await;
+    assert!(poll!(&mut monitor).is_pending());
+    observed.pending();
+    tokio::time::advance(Duration::from_secs(1)).await;
+    assert!(poll!(&mut monitor).is_pending());
+    observed.confirmed();
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_trial_stays_pending_until_the_worker_welcome() {
+    let (updater, observed) = fixture();
+    let (stop, shutdown) = watch::channel(false);
+    let monitor = updater.monitor(Startup::Trial, stop.clone(), shutdown);
+    tokio::pin!(monitor);
+    assert!(poll!(&mut monitor).is_pending());
+    observed.pending();
+    updater.activity.welcomed();
+    assert!(poll!(&mut monitor).is_pending());
+    observed.confirmed();
 }

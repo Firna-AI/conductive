@@ -6,12 +6,13 @@ use std::sync::Arc;
 use cnd_runner_interface::computer::operations::{
     ComputerOperation, ComputerRelease, ContainerImage,
 };
-use cnd_runner_interface::computer::results::{ComputerErrorCode, ComputerResult, ContainerState};
+use cnd_runner_interface::computer::results::{ComputerErrorCode, ComputerResult};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::connection_support::context;
 use crate::engine::error::EngineError;
 use crate::engine::ports::EngineMock;
+use crate::engine::states::ContainerStatus;
 use crate::error::Error;
 use crate::releases::ports::{BaseImagesMock, ReleasesMock};
 
@@ -29,7 +30,7 @@ async fn base_release_validation_failure_replies_with_its_fixed_code() {
     let engine = Arc::new(Unimock::new(
         EngineMock::inspect
             .some_call(matching!("box"))
-            .returns(Ok(ContainerState::Missing)),
+            .returns(Ok(ContainerStatus::Missing)),
     ));
     let bases = Arc::new(Unimock::new(
         BaseImagesMock::ensure
@@ -62,7 +63,7 @@ async fn bootstraps_the_requested_release_and_hides_in_container_failures() {
     let engine = Arc::new(Unimock::new((
         EngineMock::inspect
             .some_call(matching!("box"))
-            .answers(&|_, _| Ok(ContainerState::Running))
+            .answers(&|_, _| Ok(ContainerStatus::Running))
             .n_times(2),
         EngineMock::bootstrap.stub(|each| {
             each.call(matching!(("box", path, identity, server) if

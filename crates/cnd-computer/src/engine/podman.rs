@@ -6,16 +6,17 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use cnd_runner_interface::computer::operations::ComputerRelease;
-use cnd_runner_interface::computer::results::ContainerState;
-use serde::Deserialize;
 
 use crate::error::Error;
 use crate::process::{Input, Invocation, Output, Process};
 use crate::settings::ServerUrl;
 
 use super::error::{EngineError, EngineErrorResultExt, EngineResult};
-use super::ports::{Engine, EnvironmentWrite};
+use super::ports::{Engine, EnvironmentWrite, ImageSave};
 use super::scripts::SET_ENVIRONMENT;
+use super::states::ContainerStatus;
+
+pub(super) const CONTAINER_LABEL: &str = "build.conductive.container";
 
 /// Native Podman client. Each operation runs a separate cancellable command.
 pub struct Podman {
@@ -57,22 +58,38 @@ impl Podman {
 
 #[async_trait]
 impl Engine for Podman {
-    async fn inspect(&self, name: &str) -> EngineResult<ContainerState> {
-        let target = container(name);
-        let output = match self
-            .checked(["container", "inspect", &target], Input::Closed)
-            .await
-        {
-            Err(EngineError::NotFound) => return Ok(ContainerState::Missing),
-            result => result?,
-        };
-        let states: Vec<Inspect> = serde_json::from_slice(&output.stdout).internal()?;
-        match states.as_slice() {
-            [entry] if entry.state.status == "running" => Ok(ContainerState::Running),
-            [_] => Ok(ContainerState::Stopped),
-            [] => Ok(ContainerState::Missing),
-            _ => Err(EngineError::Failed),
-        }
+    async fn inspect(&self, name: &str) -> EngineResult<ContainerStatus> {
+        self.container_status(name).await
+    }
+
+    async fn recover_paused(&self) -> EngineResult<()> {
+        self.recover_pauses().await
+    }
+
+    async fn wait_stopped(&self, name: &str) -> EngineResult<()> {
+        self.checked(
+            [
+                "wait",
+                "--condition=stopped",
+                "--condition=exited",
+                &container(name),
+            ],
+            Input::Closed,
+        )
+        .await?;
+        Ok(())
+    }
+
+    async fn pause(&self, name: &str) -> EngineResult<()> {
+        self.checked(["pause", &container(name)], Input::Closed)
+            .await?;
+        Ok(())
+    }
+
+    async fn unpause(&self, name: &str) -> EngineResult<()> {
+        self.checked(["unpause", &container(name)], Input::Closed)
+            .await?;
+        Ok(())
     }
 
     async fn image_exists(&self, image: &str) -> EngineResult<bool> {
@@ -99,7 +116,7 @@ impl Engine for Podman {
                 "--name",
                 &container(name),
                 "--label",
-                &format!("build.conductive.container={name}"),
+                &format!("{CONTAINER_LABEL}={name}"),
                 "--systemd=always",
                 "--cpus",
                 &cpus,
@@ -146,13 +163,15 @@ impl Engine for Podman {
         Ok(())
     }
 
-    async fn save(&self, name: &str, image: &str) -> EngineResult<()> {
-        self.checked(
-            ["commit", "--pause=true", &container(name), image],
-            Input::Closed,
-        )
-        .await?;
-        Ok(())
+    fn save<'a>(&'a self, name: &'a str, image: &'a str) -> ImageSave<'a> {
+        Box::pin(async move {
+            self.checked(
+                ["commit", "--pause=false", &container(name), image],
+                Input::Closed,
+            )
+            .await?;
+            Ok(())
+        })
     }
 
     async fn load(&self, archive: &Path, image_id: &str, tag: &str) -> EngineResult<()> {
@@ -186,20 +205,8 @@ pub(super) fn exec_args(name: &str, script: &str) -> Vec<OsString> {
     .collect()
 }
 
-fn container(name: &str) -> String {
+pub(super) fn container(name: &str) -> String {
     format!("conductive-{name}")
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "PascalCase")]
-struct Inspect {
-    state: InspectState,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "PascalCase")]
-struct InspectState {
-    status: String,
 }
 
 fn classify(stderr: &[u8]) -> EngineError {

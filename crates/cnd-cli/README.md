@@ -49,11 +49,13 @@ it as `user`, independently of agent turns and the runner connection.
 The [own computer service](../cnd-computer/README.md) runs on x86_64 Linux
 with systemd and rootless Podman. `computer check` reports the server
 requirements and exits with status 1 if a requirement fails.
-`computer enroll --code CODE` exchanges the one-time code and saves private
-settings. Use `--origin URL` and `--release-server URL` to select other
+`computer enroll` reads the one-time code as one line on standard input,
+exchanges it, and saves private settings. No process argument holds the
+code. Use `--origin URL` and `--release-server URL` to select other
 servers. `computer service` installs and restarts the systemd user unit.
 The unit runs `computer run`, which connects to the Worker and runs the
-fixed container operations. It also installs signed updates to itself.
+fixed container operations. It also tries each signed update as a trial,
+and keeps the confirmed release until the trial confirms.
 `runner` starts the full [Rust runner](../cnd-runner/README.md). It uses the
 [runner configuration](../../runner/configuration.md), plus optional
 `CONDUCTIVE_NODE` and `CONDUCTIVE_SDK_HELPER` path overrides. Installed builds
@@ -131,6 +133,14 @@ Collection runs after confirmation and retains current, previous, and the releas
 It reads that set under the download lock. It waits for no download.
 Collection defers when a check holds the download lock.
 
+`update apply --release VERSION` selects that complete release.
+It fails if the requested release is incomplete or rejected, or if a
+newer release is active. When the requested release is already active
+and confirmed, apply repairs its missing parts.
+If an older release is pending, apply restores the previous release
+before it activates the requested version. If the requested release
+itself is pending, apply uses the rollback rules and returns failure.
+
 All update operations accept `--root PATH` and `--server URL`.
 The defaults are `/opt/conductive` and `https://runner.conductive.build`.
 Checks, apply, and confirmation run as root in an installed sandbox.
@@ -142,11 +152,11 @@ check and accept added JSON fields.
 program already has the newest version. An existing active release still
 prevents a downgrade. Give both `--release VERSION` and `--digest SHA256`
 with `--bootstrap` to stage a specific release. Use the SHA-256 digest of
-the program archive. The updater rebuilds the manifest and verifies its
-signature without fetching the newest-version JSON. The signature and
-program archive come from the configured release server. The updater
-skips a complete or rejected version and a version at or below the
-active release. See [the install guide](../../image/install.md#release-installation)
+the program archive. The updater fetches the immutable manifest at the
+key that the version and digest give. It checks the signature over the
+fetched bytes and verifies the release identity before it downloads the
+program archive. The updater skips complete or rejected versions and
+versions at or below the active release. See [the install guide](../../image/install.md#release-installation)
 for the image-build sequence and the folder layout.
 
 ### Session watches
@@ -208,7 +218,8 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [build.rs](build.rs) validates and embeds the release inputs.
 - [release.rs](src/release.rs) reads the embedded version and parts.
 - [update/download.rs](src/update/download.rs) verifies the release manifest and downloads its program and parts.
-- [update/engine.rs](src/update/engine.rs) owns activation and fallback policy.
+- [update/engine.rs](src/update/engine.rs) manages update checks and start confirmation.
+- [update/activation.rs](src/update/activation.rs) selects, activates, and restores releases.
 - [update/repair.rs](src/update/repair.rs) downloads the missing parts of the release that apply starts.
 - [update/presence.rs](src/update/presence.rs) says when an unpacked part counts as present.
 - [update/ports.rs](src/update/ports.rs) defines disk, process, release source, and updater boundaries.

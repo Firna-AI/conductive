@@ -2,6 +2,7 @@
 
 mod archives;
 pub mod base;
+pub mod cache;
 pub mod http;
 pub mod journal;
 pub mod ports;

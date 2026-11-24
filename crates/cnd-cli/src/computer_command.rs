@@ -1,8 +1,10 @@
 //! Compose the own computer setup and service commands.
 
 use std::fmt;
+use std::io::{self, BufRead, Read};
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::Duration;
 
 use clap::Subcommand;
 use cnd_computer::activity::Activity;
@@ -16,6 +18,7 @@ use cnd_computer::operations::dispatch::Dispatcher;
 use cnd_computer::preflight::{Check, Preflight};
 use cnd_computer::process::{NativeProcess, Process};
 use cnd_computer::releases::base::BaseImageLoader;
+use cnd_computer::releases::cache::{ProgramCache, ProgramCacheFiles};
 use cnd_computer::releases::http::HttpReleases;
 use cnd_computer::releases::journal::LoadJournal;
 use cnd_computer::releases::ports::Releases;
@@ -29,7 +32,9 @@ use cnd_computer::settings::{
 use cnd_computer::socket::WebSocketConnector;
 use cnd_computer::timer::Timer;
 use cnd_computer::update::disk::InstalledVersions;
-use cnd_computer::update::runtime::{Startup, Updater, Updates};
+use cnd_computer::update::launch::{Launch, Launcher, NativeExec};
+use cnd_computer::update::ports::UpdateFiles;
+use cnd_computer::update::runtime::{Updater, Updates};
 use cnd_host::clock::SystemClock;
 use cnd_release::signature::RELEASE_PUBLIC_KEY;
 use tokio::signal::unix::{SignalKind, signal};
@@ -42,11 +47,8 @@ use crate::release;
 pub(crate) enum ComputerCommand {
     /// Check the server and its rootless container engine.
     Check,
-    /// Exchange a one-time code for a computer token.
+    /// Read a one-time code from standard input and enroll this computer.
     Enroll {
-        /// One-time code from Add computer.
-        #[arg(long)]
-        code: String,
         /// Conductive API origin.
         #[arg(long, default_value = DEFAULT_ORIGIN)]
         origin: String,
@@ -90,13 +92,13 @@ async fn run_command(command: ComputerCommand) -> Result<bool> {
         xdg_dir("XDG_CONFIG_HOME"),
         xdg_dir("XDG_CACHE_HOME"),
     )?;
-    let process: Arc<dyn Process> = Arc::new(NativeProcess);
-    let store: Arc<dyn SettingsStore> = Arc::new(SavedSettings {
-        path: paths.settings,
-    });
     match command {
+        ComputerCommand::Run => run_service(paths).await,
         ComputerCommand::Check => {
-            let check: Arc<dyn Check> = Arc::new(Preflight::new(process, store));
+            let check: Arc<dyn Check> = Arc::new(Preflight::new(
+                Arc::new(NativeProcess),
+                settings(paths.settings),
+            ));
             let report = check.report().await;
             for line in report.lines() {
                 println!("{line}");
@@ -104,40 +106,63 @@ async fn run_command(command: ComputerCommand) -> Result<bool> {
             Ok(report.passed())
         }
         ComputerCommand::Enroll {
-            code,
             origin,
             release_server,
         } => {
             let origin: ServerUrl = origin.parse()?;
             let release_server: ServerUrl = release_server.parse()?;
-            let enrollment: Arc<dyn Enrollment> = Arc::new(HttpEnrollment::new(store)?);
-            enrollment.enroll(&code, origin, release_server).await?;
+            let enrollment: Arc<dyn Enrollment> =
+                Arc::new(HttpEnrollment::new(settings(paths.settings))?);
+            let mut code = String::new();
+            io::stdin().lock().take(22).read_line(&mut code)?;
+            let code = code
+                .strip_suffix("\r\n")
+                .or_else(|| code.strip_suffix('\n'))
+                .unwrap_or(&code);
+            enrollment.enroll(code, origin, release_server).await?;
             println!("Computer token saved.");
             Ok(true)
         }
         ComputerCommand::Service => {
             let unit = Arc::new(UnitFile { path: paths.unit });
-            let service: Arc<dyn Service> = Arc::new(UserService::new(process, unit));
+            let service: Arc<dyn Service> =
+                Arc::new(UserService::new(Arc::new(NativeProcess), unit));
             service.install().await?;
             Ok(true)
         }
-        ComputerCommand::Run => run_service(store, process, paths.cache, paths.data).await,
     }
 }
 
-async fn run_service(
-    store: Arc<dyn SettingsStore>,
-    process: Arc<dyn Process>,
-    cache: PathBuf,
-    data: PathBuf,
-) -> Result<bool> {
-    let timer: Arc<dyn Timer> = Arc::new(SystemClock);
+fn settings(path: PathBuf) -> Arc<dyn SettingsStore> {
+    Arc::new(SavedSettings { path })
+}
+
+async fn run_service(paths: Paths) -> Result<bool> {
     let diagnostics: Arc<dyn Diagnostics> = Arc::new(TracingDiagnostics);
+    let files: Arc<dyn UpdateFiles> = Arc::new(InstalledVersions {
+        directory: paths.data,
+        executable: std::env::current_exe().ok(),
+    });
+    let cache: Arc<dyn ProgramCacheFiles> = Arc::new(ProgramCache {
+        directory: paths.cache.clone(),
+    });
+    let launcher: Arc<dyn Launch> = Arc::new(Launcher {
+        version: release::VERSION.to_owned(),
+        files: files.clone(),
+        cache: cache.clone(),
+        process: Arc::new(NativeExec),
+        diagnostics: diagnostics.clone(),
+    });
+    let startup = launcher.start();
+
+    let store = settings(paths.settings);
+    let process: Arc<dyn Process> = Arc::new(NativeProcess);
+    let timer: Arc<dyn Timer> = Arc::new(SystemClock);
     let engine: Arc<dyn Engine> = Arc::new(Podman::new(process.clone()));
     let releases: Arc<dyn Releases> =
-        Arc::new(HttpReleases::new(RELEASE_PUBLIC_KEY, cache.clone())?);
+        Arc::new(HttpReleases::new(RELEASE_PUBLIC_KEY, paths.cache.clone())?);
     let journal = Arc::new(LoadJournal {
-        path: cache.join("base-loads"),
+        path: paths.cache.join("base-loads"),
     });
     let bases = Arc::new(BaseImageLoader::new(
         engine.clone(),
@@ -145,7 +170,7 @@ async fn run_service(
         journal,
     ));
     let operations: Arc<dyn Operations> = Arc::new(Dispatcher::new(
-        engine,
+        engine.clone(),
         releases.clone(),
         bases,
         diagnostics.clone(),
@@ -167,21 +192,15 @@ async fn run_service(
     });
     let updater: Arc<dyn Updates> = Arc::new(Updater {
         version: release::VERSION.to_owned(),
-        files: Arc::new(InstalledVersions {
-            directory: data,
-            executable: std::env::current_exe().ok(),
-        }),
+        files,
+        cache,
         settings: store,
         releases,
         process,
         activity,
         timer,
-        diagnostics,
+        diagnostics: diagnostics.clone(),
     });
-    let startup = updater.start()?;
-    if startup == Startup::RolledBack {
-        return Ok(false);
-    }
     let (stop, shutdown) = watch::channel(false);
     let mut terminate = signal(SignalKind::terminate())?;
     let mut interrupt = signal(SignalKind::interrupt())?;
@@ -192,15 +211,22 @@ async fn run_service(
     });
     let monitor_shutdown = shutdown.clone();
     let run = async {
+        let recovery = tokio::time::timeout(Duration::from_secs(50), engine.recover_paused());
+        let mut startup_shutdown = shutdown.clone();
+        tokio::select! {
+            biased;
+            _ = startup_shutdown.changed() => return Ok(()),
+            recovered = recovery => {
+                if !matches!(recovered, Ok(Ok(()))) {
+                    diagnostics.pause_recovery_failed();
+                }
+            }
+        }
         let result = runtime.run(shutdown).await;
         stop.send_replace(true);
         result
     };
-    let monitor = async {
-        if startup == Startup::Ready {
-            updater.monitor(stop.clone(), monitor_shutdown).await;
-        }
-    };
+    let monitor = updater.monitor(startup, stop.clone(), monitor_shutdown);
     let (result, ()) = tokio::join!(run, monitor);
     signals.abort();
     let _ = signals.await;

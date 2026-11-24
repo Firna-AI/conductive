@@ -28,14 +28,8 @@ umask 022
 program=/run/conductive-bootstrap/conductive
 trap 'rm -rf -- /run/conductive-bootstrap' EXIT
 "$program" update check --bootstrap --release "$1" --digest "$2" --server "$3"
-apply() {
-    "$program" update apply
-    /opt/conductive/current/conductive update started
-}
-apply
-if [ "$(readlink -f /opt/conductive/current)" != "/opt/conductive/versions/$1" ]; then
-    apply
-fi
+"$program" update apply --release "$1"
+/opt/conductive/current/conductive update started
 test "$(readlink -f /opt/conductive/current)" = "/opt/conductive/versions/$1"
 systemctl restart conductive-host.service
 "#;

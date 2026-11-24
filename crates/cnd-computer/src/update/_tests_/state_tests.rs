@@ -1,26 +1,16 @@
-//! Persistent state transitions for activation, confirmation, and rollback.
+//! A trial preserves the preceding confirmed release until it is promoted.
 
-use super::{Start, UpdateState};
+use super::UpdateState;
 
 #[test]
-fn pending_release_gets_five_unconfirmed_starts_then_rolls_back() {
-    let mut state = UpdateState::default();
+fn staging_retains_the_previous_release_until_the_trial_confirms() {
+    let mut state = UpdateState {
+        previous: Some("0.0.40".into()),
+        ..UpdateState::default()
+    };
     state.stage("0.0.41", "0.0.42");
-    assert_eq!(state.previous.as_deref(), Some("0.0.41"));
-    assert_eq!(state.pending.as_deref(), Some("0.0.42"));
-    assert_eq!(state.starts, 0);
-    for count in 1..=5 {
-        assert!(matches!(state.register_start("0.0.42"), Start::Counted));
-        assert_eq!(state.starts, count);
-    }
-    assert!(matches!(state.register_start("0.0.42"), Start::RollBack));
-    assert!(matches!(
-        state.register_start("0.0.41"),
-        Start::FinishRollback(version) if version == "0.0.42"
-    ));
-    state.refuse("0.0.42");
-    assert!(state.refused.contains("0.0.42"));
-    assert_eq!(state.pending, None);
-    assert_eq!(state.starts, 0);
-    assert!(matches!(state.register_start("0.0.41"), Start::Unchanged));
+    assert_eq!(state.retained("0.0.41"), ["0.0.41", "0.0.40", "0.0.42"]);
+    assert!(!state.confirm("0.0.41"));
+    assert!(state.confirm("0.0.42"));
+    assert_eq!(state.retained("0.0.42"), ["0.0.42", "0.0.41"]);
 }

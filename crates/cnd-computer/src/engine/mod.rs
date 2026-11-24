@@ -5,3 +5,4 @@ pub mod podman;
 pub mod ports;
 mod releases;
 mod scripts;
+pub mod states;

@@ -5,42 +5,35 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use async_trait::async_trait;
-use cnd_release::version::{BINARY, DEVELOPMENT_VERSION, release_version};
+use cnd_release::version::{BINARY, release_version};
 use tokio::sync::watch;
 
 use crate::activity::Activity;
 use crate::diagnostics::Diagnostics;
 use crate::error::{Error, Result};
 use crate::process::{Invocation, Process};
+use crate::releases::cache::ProgramCacheFiles;
 use crate::releases::ports::Releases;
 use crate::settings::SettingsStore;
-use crate::timer::Timer;
+use crate::timer::{Timer, Wait};
 
+use super::launch::{Startup, collect_releases};
 use super::ports::UpdateFiles;
-use super::state::Start;
 
 const CONFIRM_AFTER: Duration = Duration::from_secs(60);
 const FIRST_CHECK: Duration = Duration::from_secs(60);
 const CHECK_INTERVAL: Duration = Duration::from_secs(10 * 60);
 
-/// Whether to run or replace the current process after reading update state.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Startup {
-    /// The service runs without automatic updates.
-    Disabled,
-    /// The service starts its automatic update monitor.
-    Ready,
-    /// The previous release is current again. Exit with failure for systemd.
-    RolledBack,
-}
-
 /// Automatic updates for the own computer program.
 #[async_trait]
 pub trait Updates: Send + Sync {
-    /// Count this start and roll back when the pending release exceeded its limit.
-    fn start(&self) -> Result<Startup>;
-    /// Confirm a healthy start and check for newer releases until shutdown.
-    async fn monitor(&self, stop: watch::Sender<bool>, shutdown: watch::Receiver<bool>);
+    /// Confirm a healthy trial and check for newer releases until shutdown.
+    async fn monitor(
+        &self,
+        startup: Startup,
+        stop: watch::Sender<bool>,
+        shutdown: watch::Receiver<bool>,
+    );
 }
 
 /// Self-update coordinator with signed release, process, and disk effects.
@@ -49,6 +42,8 @@ pub struct Updater {
     pub version: String,
     /// Installed versions, current link, and persistent state.
     pub files: Arc<dyn UpdateFiles>,
+    /// Cached downloads to collect while no request is pending.
+    pub cache: Arc<dyn ProgramCacheFiles>,
     /// Saved release endpoint, reloaded at every poll.
     pub settings: Arc<dyn SettingsStore>,
     /// Signature-checked releases.
@@ -65,81 +60,56 @@ pub struct Updater {
 
 #[async_trait]
 impl Updates for Updater {
-    fn start(&self) -> Result<Startup> {
-        if self.version == DEVELOPMENT_VERSION {
-            return Ok(Startup::Disabled);
-        }
-        if !matches!(self.files.is_current(), Ok(true)) {
-            self.diagnostics.update_location();
-            return Ok(Startup::Disabled);
-        }
-        let Ok(mut state) = self.files.state() else {
-            self.diagnostics.update_failed();
-            return Ok(Startup::Disabled);
-        };
-        match state.register_start(&self.version) {
-            Start::Unchanged => {}
-            Start::Counted => self.files.save(&state)?,
-            Start::RollBack => {
-                let previous = state.previous.clone().ok_or(Error::UpdateLocation)?;
-                self.files.save(&state)?;
-                self.files.switch(&previous)?;
-                state.refuse(&self.version);
-                self.files.save(&state)?;
-                self.collect(&previous, None);
-                self.diagnostics.update_rolled_back();
-                return Ok(Startup::RolledBack);
-            }
-            Start::FinishRollback(rejected) => {
-                state.refuse(&rejected);
-                self.files.save(&state)?;
-            }
-        }
-        self.collect(&self.version, state.previous.as_deref());
-        Ok(Startup::Ready)
-    }
-
-    async fn monitor(&self, stop: watch::Sender<bool>, mut shutdown: watch::Receiver<bool>) {
-        if *shutdown.borrow() {
+    async fn monitor(
+        &self,
+        startup: Startup,
+        stop: watch::Sender<bool>,
+        mut shutdown: watch::Receiver<bool>,
+    ) {
+        if startup == Startup::Disabled || *shutdown.borrow() {
             return;
         }
         tokio::select! {
             biased;
             _ = shutdown.changed() => {}
             _ = async {
-                tokio::join!(self.confirm(), self.poll(stop));
+                let first_check = self.timer.wait(FIRST_CHECK);
+                if startup == Startup::Trial && self.confirm().await.is_err() {
+                    self.diagnostics.update_failed();
+                    return;
+                }
+                self.poll(first_check, stop).await;
             } => {}
         }
     }
 }
 
 impl Updater {
-    async fn confirm(&self) {
+    async fn confirm(&self) -> Result<()> {
         tokio::select! {
             _ = self.activity.first_welcome() => {}
             _ = self.timer.wait(CONFIRM_AFTER) => {}
         }
-        if self.confirm_state().is_err() {
-            self.diagnostics.update_failed();
-        }
-    }
-
-    fn confirm_state(&self) -> Result<()> {
         let mut state = self.files.state()?;
-        if state.confirm(&self.version) {
-            self.files.save(&state)?;
+        let trial = state.trial.as_ref().ok_or(Error::UpdateLocation)?;
+        if trial.version != self.version
+            || self.files.current_version()?.as_deref() != Some(&trial.from)
+        {
+            return Err(Error::UpdateLocation);
         }
-        Ok(())
+        self.files.switch(&self.version)?;
+        state.confirm(&self.version);
+        self.files.save(&state)
     }
 
-    async fn poll(&self, stop: watch::Sender<bool>) {
-        self.timer.wait(FIRST_CHECK).await;
+    async fn poll(&self, first_check: Wait, stop: watch::Sender<bool>) {
+        first_check.await;
         loop {
             match self.prepare().await {
                 Ok(Some(version)) => {
                     let _idle = self.activity.idle().await;
                     if self.activate(&version).is_ok() {
-                        self.diagnostics.update_activated();
+                        self.diagnostics.update_trial_staged();
                         stop.send_replace(true);
                         return;
                     }
@@ -168,7 +138,7 @@ impl Updater {
             return Ok(None);
         }
         let state = self.files.state()?;
-        if state.refused.contains(version) {
+        if state.trial.is_some() || state.refused.contains(version) {
             return Ok(None);
         }
         let verified = self
@@ -177,7 +147,9 @@ impl Updater {
             .await?;
         let executable = self.files.install(version, &verified).await?;
         if let Err(error) = self.check_program(executable, version).await {
-            self.collect(&self.version, state.previous.as_deref());
+            if self.files.collect(&state.retained(&self.version)).is_err() {
+                self.diagnostics.update_failed();
+            }
             return Err(error);
         }
         Ok(Some(version.clone()))
@@ -197,21 +169,23 @@ impl Updater {
     }
 
     fn activate(&self, version: &str) -> Result<()> {
-        if !self.files.is_current()? {
+        if self.files.current_version()?.as_deref() != Some(&self.version) {
             return Err(Error::UpdateLocation);
         }
         let mut state = self.files.state()?;
+        if state.trial.is_some() {
+            return Err(Error::UpdateLocation);
+        }
         state.stage(&self.version, version);
         self.files.save(&state)?;
-        self.files.switch(version)?;
-        self.collect(version, Some(&self.version));
+        collect_releases(
+            &*self.files,
+            &*self.cache,
+            &*self.diagnostics,
+            &self.version,
+            &state,
+        );
         Ok(())
-    }
-
-    fn collect(&self, current: &str, previous: Option<&str>) {
-        if self.files.collect(current, previous).is_err() {
-            self.diagnostics.update_failed();
-        }
     }
 }
 

@@ -3,34 +3,35 @@
 use std::sync::Arc;
 
 use cnd_runner_interface::computer::operations::{
-    ComputerOperation, ComputerRelease, ContainerEnvVar, ContainerImage,
+    ComputerOperation, ComputerRelease, ContainerEnvVar,
 };
 use cnd_runner_interface::computer::results::{ComputerErrorCode, ComputerResult, ContainerState};
-use tokio::sync::OwnedMutexGuard;
 
 use crate::diagnostics::Diagnostics;
 use crate::engine::error::EngineError;
 use crate::engine::ports::Engine;
+use crate::engine::states::ContainerStatus;
 use crate::error::{self, Error};
 use crate::releases::ports::{BaseImages, Releases};
 
+use super::changes::Create;
 use super::cleanup::Cleanup;
 use super::environment::render;
-use super::names::{Names, org_image};
+use super::names::Names;
 use super::validation::{container_name, validate};
 use super::{OperationFuture, Operations, RequestContext, WaitForCleanup};
 
-type Result<T> = std::result::Result<T, ComputerErrorCode>;
+pub(super) type Result<T> = std::result::Result<T, ComputerErrorCode>;
 
 /// Dispatches fixed operations and serializes work on each container and image.
 pub struct Dispatcher {
-    engine: Arc<dyn Engine>,
+    pub(super) engine: Arc<dyn Engine>,
     releases: Arc<dyn Releases>,
-    bases: Arc<dyn BaseImages>,
+    pub(super) bases: Arc<dyn BaseImages>,
     diagnostics: Arc<dyn Diagnostics>,
     containers: Names,
-    images: Names,
-    cleanup: Arc<Cleanup>,
+    pub(super) images: Names,
+    pub(super) cleanup: Arc<Cleanup>,
 }
 
 impl Dispatcher {
@@ -83,6 +84,7 @@ impl Dispatcher {
             return Err(ComputerErrorCode::InvalidRequest);
         }
         let lock = self.containers.lock(name).await;
+        let status = self.inspect(name).await?;
         match operation {
             ComputerOperation::ContainerCreate {
                 container,
@@ -98,98 +100,35 @@ impl Dispatcher {
                     cpus,
                     memory_bytes,
                 };
-                self.create(request, context, lock).await
+                self.create(request, context, lock, status).await
             }
             ComputerOperation::ContainerGet { container } => {
-                let state = engine(self.engine.inspect(&container).await)?;
+                let state = match status {
+                    ContainerStatus::Missing | ContainerStatus::Removing => ContainerState::Missing,
+                    ContainerStatus::Stopped | ContainerStatus::Stopping => ContainerState::Stopped,
+                    ContainerStatus::Running => ContainerState::Running,
+                    ContainerStatus::Paused => return Err(ComputerErrorCode::Internal),
+                };
                 Ok(container_state(container, state))
             }
             ComputerOperation::ContainerStart { container, env } => {
-                if self.existing(&container).await? == ContainerState::Stopped {
-                    engine(self.engine.start(&container).await)?;
-                }
-                self.write_environment(&container, &env).await?;
-                Ok(container_state(container, ContainerState::Running))
+                self.start(container, &env, lock, existing(status)?).await
             }
             ComputerOperation::ContainerStop { container } => {
-                self.existing(&container).await?;
-                engine(self.engine.stop(&container).await)?;
-                Ok(container_state(container, ContainerState::Stopped))
+                self.stop(container, existing(status)?).await
             }
             ComputerOperation::ContainerDelete { container } => {
                 engine(self.engine.remove(&container).await)?;
                 Ok(ComputerResult::ContainerDeleted { container })
             }
-            ComputerOperation::ImageSave { container, image } => self.save(&container, image).await,
+            ComputerOperation::ImageSave { container, image } => {
+                self.save(&container, image, lock, existing(status)?).await
+            }
             ComputerOperation::ContainerBootstrap { container, release } => {
-                self.bootstrap(container, release, context).await
+                self.bootstrap(container, release, context, existing(status)?)
+                    .await
             }
         }
-    }
-
-    async fn create(
-        &self,
-        request: Create,
-        context: &RequestContext,
-        lock: OwnedMutexGuard<()>,
-    ) -> Result<ComputerResult> {
-        let Create {
-            container,
-            image,
-            env,
-            cpus,
-            memory_bytes,
-        } = request;
-        if engine(self.engine.inspect(&container).await)? != ContainerState::Missing {
-            return Err(ComputerErrorCode::AlreadyExists);
-        }
-        let image = match image {
-            ContainerImage::Org { name } => {
-                let image = org_image(&name);
-                if !engine(self.engine.image_exists(&image).await)? {
-                    return Err(ComputerErrorCode::NotFound);
-                }
-                image
-            }
-            ContainerImage::Base { release } => {
-                released(self.bases.ensure(&context.release_server, &release).await)?
-            }
-        };
-        let mut rollback = self.cleanup.created(container.clone(), lock);
-        let created = engine(
-            self.engine
-                .create(
-                    &container,
-                    &image,
-                    cpus.min(context.resources.cpus),
-                    memory_bytes.min(context.resources.memory_bytes),
-                )
-                .await,
-        );
-        let result = async {
-            created?;
-            engine(self.engine.start(&container).await)?;
-            self.write_environment(&container, &env).await
-        }
-        .await;
-        if result.is_ok() || created == Err(ComputerErrorCode::AlreadyExists) {
-            rollback.disarm();
-        } else {
-            rollback.remove().await;
-        }
-        result?;
-        Ok(container_state(container, ContainerState::Running))
-    }
-
-    async fn save(&self, container: &str, image: String) -> Result<ComputerResult> {
-        self.existing(container).await?;
-        let tag = org_image(&image);
-        let _lock = self.images.lock(&tag).await;
-        if engine(self.engine.image_exists(&tag).await)? {
-            return Err(ComputerErrorCode::AlreadyExists);
-        }
-        engine(self.engine.save(container, &tag).await)?;
-        Ok(ComputerResult::ImageSaved { image })
     }
 
     async fn bootstrap(
@@ -197,8 +136,9 @@ impl Dispatcher {
         container: String,
         release: ComputerRelease,
         context: &RequestContext,
+        status: ContainerStatus,
     ) -> Result<ComputerResult> {
-        if self.existing(&container).await? == ContainerState::Stopped {
+        if status != ContainerStatus::Running {
             return Err(ComputerErrorCode::InvalidRequest);
         }
         let program = released(
@@ -220,15 +160,20 @@ impl Dispatcher {
         })
     }
 
-    async fn existing(&self, name: &str) -> Result<ContainerState> {
-        let state = engine(self.engine.inspect(name).await)?;
-        if state == ContainerState::Missing {
-            return Err(ComputerErrorCode::NotFound);
+    async fn inspect(&self, name: &str) -> Result<ContainerStatus> {
+        let status = engine(self.engine.inspect(name).await)?;
+        if status == ContainerStatus::Paused {
+            engine(self.engine.unpause(name).await)?;
+            return Ok(ContainerStatus::Running);
         }
-        Ok(state)
+        Ok(status)
     }
 
-    async fn write_environment(&self, name: &str, env: &[ContainerEnvVar]) -> Result<()> {
+    pub(super) async fn write_environment(
+        &self,
+        name: &str,
+        env: &[ContainerEnvVar],
+    ) -> Result<()> {
         let (contents, omitted) = render(env);
         if omitted != 0 {
             self.diagnostics.environment_omitted(omitted);
@@ -237,19 +182,18 @@ impl Dispatcher {
     }
 }
 
-struct Create {
-    container: String,
-    image: ContainerImage,
-    env: Vec<ContainerEnvVar>,
-    cpus: u32,
-    memory_bytes: u64,
+fn existing(status: ContainerStatus) -> Result<ContainerStatus> {
+    match status {
+        ContainerStatus::Missing | ContainerStatus::Removing => Err(ComputerErrorCode::NotFound),
+        _ => Ok(status),
+    }
 }
 
-fn container_state(container: String, state: ContainerState) -> ComputerResult {
+pub(super) fn container_state(container: String, state: ContainerState) -> ComputerResult {
     ComputerResult::Container { container, state }
 }
 
-fn engine<T>(result: std::result::Result<T, EngineError>) -> Result<T> {
+pub(super) fn engine<T>(result: std::result::Result<T, EngineError>) -> Result<T> {
     match result {
         Ok(value) => Ok(value),
         Err(EngineError::NotFound) => Err(ComputerErrorCode::NotFound),
@@ -259,7 +203,7 @@ fn engine<T>(result: std::result::Result<T, EngineError>) -> Result<T> {
     }
 }
 
-fn released<T>(result: error::Result<T>) -> Result<T> {
+pub(super) fn released<T>(result: error::Result<T>) -> Result<T> {
     match result {
         Ok(value) => Ok(value),
         Err(Error::ReleaseInvalid) => Err(ComputerErrorCode::ReleaseInvalid),
@@ -280,3 +224,11 @@ mod container_tests;
 #[cfg(test)]
 #[path = "_tests_/release_tests.rs"]
 mod release_tests;
+
+#[cfg(test)]
+#[path = "_tests_/transition_tests.rs"]
+mod transition_tests;
+
+#[cfg(test)]
+#[path = "_tests_/save_tests.rs"]
+mod save_tests;

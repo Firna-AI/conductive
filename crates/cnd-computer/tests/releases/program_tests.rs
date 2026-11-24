@@ -3,11 +3,12 @@
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 
+use cli_release_interface::ReleaseAssetInfo;
 use cnd_computer::error::Error;
 use cnd_computer::releases::http::HttpReleases;
 use cnd_computer::releases::ports::Releases;
 use cnd_release::files::sha256;
-use cnd_release::manifest::{program_archive_key, release_manifest_bytes};
+use cnd_release::manifest::{program_archive_key, program_manifest_key};
 use cnd_release::signature::{ReleaseSigner, manifest_signature_key};
 use cnd_release::version::LATEST_KEY;
 use cnd_runner_interface::computer::operations::ComputerRelease;
@@ -28,34 +29,59 @@ fn archive() -> Vec<u8> {
     tar.into_inner().unwrap().finish().unwrap()
 }
 
-fn signed(signer: &ReleaseSigner) -> (ComputerRelease, Responses, String, String) {
-    let archive = archive();
+struct Signed {
+    release: ComputerRelease,
+    responses: Responses,
+    manifest: String,
+    signature: String,
+    archive: String,
+}
+
+fn signed(signer: &ReleaseSigner, edit: impl FnOnce(&mut ReleaseAssetInfo)) -> Signed {
+    let bytes = archive();
     let release = ComputerRelease {
         version: VERSION.into(),
-        digest: sha256(&archive),
+        digest: sha256(&bytes),
     };
-    let manifest = release_manifest_bytes(VERSION, &release.digest).unwrap();
-    let signature_key = manifest_signature_key(&manifest);
-    let archive_key = program_archive_key(VERSION, &release.digest).unwrap();
+    let archive = program_archive_key(VERSION, &release.digest).unwrap();
+    let manifest = program_manifest_key(VERSION, &release.digest).unwrap();
+    let mut info = ReleaseAssetInfo {
+        binary: "conductive".into(),
+        version: VERSION.into(),
+        target: "x86_64-unknown-linux-musl".into(),
+        asset_name: "conductive-0.0.42-x86_64-unknown-linux-musl.tar.gz".into(),
+        download_url: format!("https://runner.conductive.build/{archive}"),
+        sha256: Some(release.digest.clone()),
+    };
+    edit(&mut info);
+    let compact = serde_json::to_vec(&info).unwrap();
+    let signature = manifest_signature_key(&compact);
     let responses = Responses::from([
         (
-            signature_key.clone(),
-            (200, signer.sign(&manifest).unwrap().to_vec()),
+            signature.clone(),
+            (200, signer.sign(&compact).unwrap().to_vec()),
         ),
-        (archive_key.clone(), (200, archive)),
+        (manifest.clone(), (200, compact)),
+        (archive.clone(), (200, bytes)),
     ]);
-    (release, responses, signature_key, archive_key)
+    Signed {
+        release,
+        responses,
+        manifest,
+        signature,
+        archive,
+    }
 }
 
 #[tokio::test]
-async fn signed_program_is_extracted_and_archive_reused_from_cache() {
+async fn signed_compact_program_manifest_is_accepted_and_archive_is_cached() {
     let signer = signer();
     let cache = tempfile::tempdir().unwrap();
-    let (release, responses, signature_key, archive_key) = signed(&signer);
-    let (server, wire) = serve(responses, 3).await;
+    let signed = signed(&signer, |_| {});
+    let (server, wire) = serve(signed.responses, 5).await;
     let reader = HttpReleases::new(signer.public_key(), cache.path().to_owned()).unwrap();
     let server = server.parse().unwrap();
-    let first = reader.program(&server, &release).await;
+    let first = reader.program(&server, &signed.release).await;
     assert!(first.is_ok(), "{first:?}");
     let path = first.unwrap();
     assert_eq!(
@@ -64,7 +90,7 @@ async fn signed_program_is_extracted_and_archive_reused_from_cache() {
             .path()
             .join("programs")
             .join(VERSION)
-            .join(&release.digest)
+            .join(&signed.release.digest)
             .join("conductive")
     );
     assert_eq!(fs::read(&path).unwrap(), PROGRAM);
@@ -72,48 +98,78 @@ async fn signed_program_is_extracted_and_archive_reused_from_cache() {
         fs::metadata(&path).unwrap().permissions().mode() & 0o777,
         0o755
     );
-    assert_eq!(reader.program(&server, &release).await.unwrap(), path);
+    assert_eq!(
+        reader.program(&server, &signed.release).await.unwrap(),
+        path
+    );
     let requests = wire.await.unwrap();
-    assert!(requests[0].starts_with(&format!("GET /{signature_key} ")));
-    assert!(requests[1].starts_with(&format!("GET /{archive_key} ")));
-    assert!(requests[2].starts_with(&format!("GET /{signature_key} ")));
+    for (request, key) in requests.iter().zip([
+        &signed.manifest,
+        &signed.signature,
+        &signed.archive,
+        &signed.manifest,
+        &signed.signature,
+    ]) {
+        assert!(request.starts_with(&format!("GET /{key} ")), "{request}");
+    }
 }
 
 #[tokio::test]
-async fn missing_and_wrong_signatures_and_wrong_program_digests_are_invalid() {
+async fn accepts_only_the_requested_signed_program_identity() {
     let signer = signer();
-    for failure in ["missing", "gone", "signature", "digest", "status"] {
+    for field in ["binary", "target", "version", "digest"] {
         let cache = tempfile::tempdir().unwrap();
-        let (release, mut responses, signature_key, archive_key) = signed(&signer);
-        let count = match failure {
-            "missing" => {
-                responses.remove(&signature_key);
-                1
-            }
-            "gone" => {
-                responses.insert(signature_key, (410, Vec::new()));
-                1
-            }
-            "signature" => {
-                responses.insert(signature_key, (200, vec![0; 64]));
-                1
-            }
-            "digest" => {
-                responses.insert(archive_key, (200, b"wrong digest".to_vec()));
-                2
-            }
-            _ => {
-                responses.insert(signature_key, (503, b"private server message".to_vec()));
-                1
-            }
-        };
-        let (server, wire) = serve(responses, count).await;
+        let signed = signed(&signer, |info| match field {
+            "binary" => info.binary = "something-else".into(),
+            "target" => info.target = "aarch64-unknown-linux-musl".into(),
+            "version" => info.version = "0.0.43".into(),
+            _ => info.sha256 = Some("a".repeat(64)),
+        });
+        let (server, wire) = serve(signed.responses, 3).await;
         let reader = HttpReleases::new(signer.public_key(), cache.path().to_owned()).unwrap();
-        let result = reader.program(&server.parse().unwrap(), &release).await;
+        let result = reader
+            .program(&server.parse().unwrap(), &signed.release)
+            .await;
+        wire.abort();
+        let _ = wire.await;
         assert!(
-            (failure == "status" && matches!(result, Err(Error::ReleaseUnavailable)))
-                || (failure != "status" && matches!(result, Err(Error::ReleaseInvalid))),
-            "{failure}: {result:?}"
+            matches!(result, Err(Error::ReleaseInvalid)),
+            "{field}: {result:?}"
+        );
+        assert_eq!(fs::read_dir(cache.path()).unwrap().count(), 0);
+    }
+}
+
+#[tokio::test]
+async fn distinguishes_missing_metadata_from_unavailable_metadata_and_checks_the_archive() {
+    let signer = signer();
+    for (file, status, body, count, unavailable) in [
+        ("manifest", 404, Vec::new(), 1, false),
+        ("manifest", 410, Vec::new(), 1, false),
+        ("manifest", 503, Vec::new(), 1, true),
+        ("signature", 404, Vec::new(), 2, false),
+        ("signature", 410, Vec::new(), 2, false),
+        ("signature", 503, Vec::new(), 2, true),
+        ("signature", 200, vec![0; 64], 2, false),
+        ("archive", 200, b"wrong digest".to_vec(), 3, false),
+    ] {
+        let cache = tempfile::tempdir().unwrap();
+        let mut signed = signed(&signer, |_| {});
+        let key = match file {
+            "manifest" => signed.manifest,
+            "signature" => signed.signature,
+            _ => signed.archive,
+        };
+        signed.responses.insert(key, (status, body));
+        let (server, wire) = serve(signed.responses, count).await;
+        let reader = HttpReleases::new(signer.public_key(), cache.path().to_owned()).unwrap();
+        let result = reader
+            .program(&server.parse().unwrap(), &signed.release)
+            .await;
+        assert!(
+            (unavailable && matches!(result, Err(Error::ReleaseUnavailable)))
+                || (!unavailable && matches!(result, Err(Error::ReleaseInvalid))),
+            "{file} {status}: {result:?}",
         );
         assert_eq!(fs::read_dir(cache.path()).unwrap().count(), 0);
         assert_eq!(wire.await.unwrap().len(), count);
@@ -124,23 +180,23 @@ async fn missing_and_wrong_signatures_and_wrong_program_digests_are_invalid() {
 async fn newest_version_signature_covers_the_exact_document_bytes() {
     let signer = signer();
     let cache = tempfile::tempdir().unwrap();
-    let (release, mut responses, signature_key, archive_key) = signed(&signer);
-    let mut exact = release_manifest_bytes(VERSION, &release.digest).unwrap();
+    let mut signed = signed(&signer, |_| {});
+    let (_, mut exact) = signed.responses.remove(&signed.manifest).unwrap();
     exact.extend(b"\n ");
-    responses.remove(&signature_key);
-    responses.insert(
+    signed.responses.remove(&signed.signature);
+    signed.responses.insert(
         manifest_signature_key(&exact),
         (200, signer.sign(&exact).unwrap().to_vec()),
     );
-    responses.insert(LATEST_KEY.into(), (200, exact));
-    let (server, wire) = serve(responses, 3).await;
+    signed.responses.insert(LATEST_KEY.into(), (200, exact));
+    let (server, wire) = serve(signed.responses, 3).await;
     let reader = HttpReleases::new(signer.public_key(), cache.path().to_owned()).unwrap();
     let server = server.parse().unwrap();
     let verified = reader.latest(&server).await;
     assert!(verified.is_ok(), "{verified:?}");
     let verified = verified.unwrap();
-    assert_eq!(verified.identity(), &release);
+    assert_eq!(verified.identity(), &signed.release);
     let executable = reader.verified_program(&server, &verified).await.unwrap();
     assert_eq!(fs::read(executable).unwrap(), PROGRAM);
-    assert!(wire.await.unwrap()[2].starts_with(&format!("GET /{archive_key} ")));
+    assert!(wire.await.unwrap()[2].starts_with(&format!("GET /{} ", signed.archive)));
 }

@@ -5,7 +5,6 @@ use ed25519_dalek::{Signature, Signer, SigningKey, VerifyingKey};
 
 use crate::error::{Error, ErrorResultExt, Result};
 use crate::files::sha256;
-use crate::manifest::release_manifest_bytes;
 use crate::version::BINARY;
 
 const PLACEHOLDER_KEY: [u8; 32] = [0; 32];
@@ -57,17 +56,6 @@ pub fn verify_manifest(public_key: &[u8; 32], manifest: &[u8], signature: &[u8])
         return false;
     };
     key.verify_strict(manifest, &signature).is_ok()
-}
-
-/// Verify a release signature by rebuilding its manifest from its identity.
-pub fn verify_release_signature(
-    public_key: &[u8; 32],
-    version: &str,
-    digest: &str,
-    signature: &[u8],
-) -> Result<bool> {
-    let manifest = release_manifest_bytes(version, digest)?;
-    Ok(verify_manifest(public_key, &manifest, signature))
 }
 
 /// Immutable release key derived from the manifest, relative to the configured server.

@@ -17,6 +17,7 @@ use crate::connection_support::context;
 use crate::diagnostics::DiagnosticsMock;
 use crate::engine::error::EngineError;
 use crate::engine::ports::{Engine, EngineMock};
+use crate::engine::states::ContainerStatus;
 
 use super::{Dispatcher, Operations};
 
@@ -70,7 +71,7 @@ async fn creates_starts_and_writes_environment_with_server_resource_caps() {
     let engine = Arc::new(Unimock::new((
         EngineMock::inspect
             .next_call(matching!("box"))
-            .returns(Ok(ContainerState::Missing)),
+            .returns(Ok(ContainerStatus::Missing)),
         EngineMock::image_exists
             .next_call(matching!("localhost/conductive/org-main"))
             .returns(Ok(true)),
@@ -111,7 +112,7 @@ async fn refuses_an_existing_container_or_missing_org_image() {
     let engine = Arc::new(Unimock::new(
         EngineMock::inspect
             .some_call(matching!("box"))
-            .returns(Ok(ContainerState::Stopped)),
+            .returns(Ok(ContainerStatus::Stopped)),
     ));
     assert_eq!(
         run(engine, create()).await,
@@ -120,7 +121,7 @@ async fn refuses_an_existing_container_or_missing_org_image() {
     let engine = Arc::new(Unimock::new((
         EngineMock::inspect
             .some_call(matching!("box"))
-            .returns(Ok(ContainerState::Missing)),
+            .returns(Ok(ContainerStatus::Missing)),
         EngineMock::image_exists
             .some_call(matching!("localhost/conductive/org-main"))
             .returns(Ok(false)),
@@ -136,7 +137,7 @@ async fn a_failure_after_create_removes_the_container_and_returns_the_failure() 
     let engine = Arc::new(Unimock::new((
         EngineMock::inspect
             .next_call(matching!("box"))
-            .returns(Ok(ContainerState::Missing)),
+            .returns(Ok(ContainerStatus::Missing)),
         EngineMock::image_exists
             .next_call(matching!("localhost/conductive/org-main"))
             .returns(Ok(true)),
@@ -170,14 +171,14 @@ async fn a_cancelled_create_holds_the_name_until_cleanup() {
     let engine = Arc::new(Unimock::new((
         EngineMock::inspect.stub(|each| {
             each.call(matching!("box"))
-                .answers(&|_, _| Ok(ContainerState::Missing))
+                .answers(&|_, _| Ok(ContainerStatus::Missing))
                 .once()
                 .then()
                 .answers_arc(Arc::new(move |_, _| {
                     Ok(if removed.load(Ordering::SeqCst) {
-                        ContainerState::Missing
+                        ContainerStatus::Missing
                     } else {
-                        ContainerState::Running
+                        ContainerStatus::Running
                     })
                 }))
                 .once();

@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use async_trait::async_trait;
 use cnd_release::version::{BINARY, release_version};
 
-use crate::disk::atomic_write;
+use crate::disk::{atomic_write, collect_temporary, collect_versions};
 use crate::error::{Error, ErrorResultExt, Result};
 
 use super::ports::UpdateFiles;
@@ -24,15 +24,37 @@ pub struct InstalledVersions {
 
 #[async_trait]
 impl UpdateFiles for InstalledVersions {
-    fn is_current(&self) -> Result<bool> {
-        let Some(running) = self.executable.as_deref().and_then(Path::parent) else {
+    fn current_version(&self) -> Result<Option<String>> {
+        let current = match fs::canonicalize(self.directory.join("current")) {
+            Ok(current) => current,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
+            Err(error) => return Err(error.into()),
+        };
+        let versions = fs::canonicalize(self.directory.join("versions"))?;
+        let version = current
+            .strip_prefix(versions)
+            .ok()
+            .and_then(Path::to_str)
+            .filter(|version| release_version(version).is_ok());
+        Ok(version.map(str::to_owned))
+    }
+
+    fn runs_version(&self, version: &str) -> Result<bool> {
+        let Some(running) = self.executable.as_deref() else {
             return Ok(false);
         };
-        match fs::canonicalize(self.directory.join("current")) {
-            Ok(current) => Ok(current == fs::canonicalize(running)?),
+        match fs::canonicalize(self.program(version)?) {
+            Ok(installed) => Ok(installed == fs::canonicalize(running)?),
             Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(false),
             Err(error) => Err(error.into()),
         }
+    }
+
+    fn program(&self, version: &str) -> Result<PathBuf> {
+        Ok(self
+            .directory
+            .join(version_directory(version)?)
+            .join(BINARY))
     }
 
     fn state(&self) -> Result<UpdateState> {
@@ -84,22 +106,12 @@ impl UpdateFiles for InstalledVersions {
         Ok(())
     }
 
-    fn collect(&self, current: &str, previous: Option<&str>) -> Result<()> {
-        for entry in fs::read_dir(self.directory.join("versions"))? {
-            let entry = entry?;
-            let name = entry.file_name();
-            let Some(version) = name.to_str() else {
-                continue;
-            };
-            if version != current
-                && Some(version) != previous
-                && release_version(version).is_ok()
-                && entry.file_type()?.is_dir()
-            {
-                fs::remove_dir_all(entry.path())?;
-            }
-        }
-        Ok(())
+    fn collect(&self, keep: &[&str]) -> Result<()> {
+        collect_versions(&self.directory.join("versions"), keep)
+    }
+
+    fn clear_temporary(&self) -> Result<()> {
+        collect_temporary(&self.directory)
     }
 }
 

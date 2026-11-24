@@ -123,17 +123,21 @@ executable when the image has no program or its check fails:
 /opt/conductive/current/conductive update started
 ```
 
-To stage a specific release, give its version and program archive digest
-with `--bootstrap`.
+To install a specific release, give its version and program archive digest
+to `update check --bootstrap`. Give the same version to `update apply`.
 
 ```sh
 /path/to/conductive update check --bootstrap --release "$RELEASE_VERSION" --digest "$PROGRAM_SHA256"
+/path/to/conductive update apply --release "$RELEASE_VERSION"
+/opt/conductive/current/conductive update started
 ```
 
-The updater rebuilds the manifest from those two values. It fetches the
-signature and archive from the configured release server. It skips the
-newest-version JSON. It skips complete and rejected versions. An
-active release of the same version or a newer version prevents staging.
+The updater uses the version and digest to fetch the immutable program
+manifest. It checks the signature over the fetched bytes. It checks the
+release identity before it fetches the archive. The check skips staging
+for complete and rejected versions and versions at or below the active
+release. Apply fails if the requested version is incomplete or rejected,
+or if a newer version is active.
 
 The check command logs a warning and returns failure after a failed
 download. Before it fetches a new program archive, the updater checks the

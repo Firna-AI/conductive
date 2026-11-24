@@ -4,11 +4,10 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use cli_updater::DynBinaryInstaller;
-use cnd_release::version::release_version;
 
 use super::download::ReleaseSelection;
 use super::error::{Error, ErrorResultExt, Result};
-use super::ports::{Processes, ReleaseSource, State, Store, UpdateEngine};
+use super::ports::{Processes, ReleaseSource, Store, UpdateEngine};
 
 /// Dependencies of the sandbox updater. The composition root supplies each port.
 pub struct Engine {
@@ -36,53 +35,6 @@ impl Engine {
             tracing::warn!(%error, "sandbox installation check failed; keeping current release");
         }
         result
-    }
-
-    fn next_version(&self, current: Option<&str>) -> Result<Option<String>> {
-        let mut newest = current.map(str::to_owned);
-        for version in self.store.versions()? {
-            if match &newest {
-                Some(current) => {
-                    release_version(&version).internal()? > release_version(current).internal()?
-                }
-                None => true,
-            } {
-                newest = Some(version);
-            }
-        }
-        Ok(newest)
-    }
-
-    /// Restore the previous release after a start without confirmation.
-    ///
-    /// When the previous installer fails, `current` goes back to the failed
-    /// release with its pending marker. `current` also selects the updater
-    /// of the next start, and an older previous release can hold an updater
-    /// that repairs no part.
-    fn rollback(&self, state: State) -> Result<()> {
-        let failed = state.pending.ok_or(Error::InvalidRelease)?;
-        let previous = state.previous.ok_or(Error::NoPrevious)?;
-        self.store.reject(&failed)?;
-        self.store.transition(&State {
-            current: Some(previous.clone()),
-            previous: Some(previous.clone()),
-            pending: Some(failed.clone()),
-        })?;
-        if let Err(error) = self
-            .processes
-            .install_system(&self.store.version_path(&previous))
-        {
-            self.store.transition(&State {
-                current: Some(failed.clone()),
-                previous: Some(previous),
-                pending: Some(failed),
-            })?;
-            return Err(error);
-        }
-        self.store.transition(&State {
-            current: Some(previous),
-            ..State::default()
-        })
     }
 }
 
@@ -114,32 +66,11 @@ impl UpdateEngine for Engine {
     }
 
     async fn apply(&self) -> Result<()> {
-        let Some(_lock) = self.store.apply_lock()? else {
-            return Ok(());
-        };
-        let state = self.store.state()?;
-        if state.pending.is_some() {
-            if let Some(previous) = &state.previous {
-                self.restore_parts(previous).await;
-            }
-            return self.rollback(state);
-        }
-        let newest = self.next_version(state.current.as_deref())?;
-        if let Some(version) = &newest {
-            self.restore_parts(version).await;
-        }
-        if newest == state.current {
-            return Ok(());
-        }
-        let version = newest.ok_or(Error::InvalidRelease)?;
-        self.store.transition(&State {
-            current: Some(version.clone()),
-            previous: state.current,
-            pending: Some(version.clone()),
-        })?;
-        self.processes
-            .install_system(&self.store.version_path(&version))?;
-        Ok(())
+        self.apply_release(None).await
+    }
+
+    async fn apply_pinned(&self, version: &str) -> Result<()> {
+        self.apply_release(Some(version)).await
     }
 
     fn started(&self, running_version: &str) -> Result<()> {

@@ -11,7 +11,7 @@ use std::path::Path;
 
 use cnd_computer::update::disk::InstalledVersions;
 use cnd_computer::update::ports::UpdateFiles;
-use cnd_computer::update::state::UpdateState;
+use cnd_computer::update::state::{Trial, UpdateState};
 
 #[tokio::test]
 async fn installs_a_complete_version_and_replaces_current_with_a_relative_link() {
@@ -28,7 +28,7 @@ async fn installs_a_complete_version_and_replaces_current_with_a_relative_link()
         directory: root.path().to_owned(),
         executable: Some(versions.join("0.0.41/conductive")),
     };
-    assert!(files.is_current().unwrap());
+    assert_eq!(files.current_version().unwrap().as_deref(), Some("0.0.41"));
     assert_eq!(files.state().unwrap(), UpdateState::default());
     let archive = root.path().join("checked-program");
     fs::write(&archive, b"verified").unwrap();
@@ -38,21 +38,25 @@ async fn installs_a_complete_version_and_replaces_current_with_a_relative_link()
         fs::metadata(executable).unwrap().permissions().mode() & 0o777,
         0o755
     );
-    assert!(files.is_current().unwrap());
+    assert_eq!(files.current_version().unwrap().as_deref(), Some("0.0.41"));
     let state = UpdateState {
         previous: Some("0.0.41".into()),
-        pending: Some("0.0.42".into()),
+        trial: Some(Trial {
+            from: "0.0.41".into(),
+            version: "0.0.42".into(),
+            starts: 0,
+        }),
         ..UpdateState::default()
     };
     files.save(&state).unwrap();
     files.switch("0.0.42").unwrap();
-    files.collect("0.0.42", Some("0.0.41")).unwrap();
+    files.collect(&["0.0.42", "0.0.41"]).unwrap();
     assert_eq!(
         fs::read_link(current).unwrap(),
         Path::new("versions/0.0.42")
     );
     assert_eq!(files.state().unwrap(), state);
-    assert!(!files.is_current().unwrap());
+    assert_eq!(files.current_version().unwrap().as_deref(), Some("0.0.42"));
     assert!(!versions.join("0.0.40").exists());
     assert_eq!(fs::read_dir(&versions).unwrap().count(), 2);
 }

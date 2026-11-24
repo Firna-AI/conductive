@@ -179,6 +179,33 @@ fn container_base_writer_refuses_an_empty_archive_or_invalid_image_id()
 }
 
 #[test]
+fn published_container_archive_keeps_its_bytes_when_the_input_is_overwritten()
+-> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempfile::tempdir()?;
+    let input = directory.path().join("input.tar");
+    fs::write(&input, b"test OCI archive")?;
+    let output = directory.path().join("release");
+    let signer = ReleaseSigner::from_pem(include_str!("fixtures/rfc8032-test-key.pem"))?;
+    let manifest = DiskReleaseFiles.write_container_base(
+        VERSION,
+        RELEASE_DIGEST,
+        &input,
+        IMAGE_DIGEST,
+        &output,
+        &signer,
+    )?;
+
+    fs::write(&input, b"another archive")?;
+    let archive = output.join(container_base_archive_key(
+        VERSION,
+        &manifest.archive.sha256,
+    )?);
+    assert_eq!(manifest.archive.sha256, ARCHIVE_SHA256);
+    assert_eq!(fs::read(archive)?, b"test OCI archive");
+    Ok(())
+}
+
+#[test]
 fn container_base_command_requires_the_deploy_key() -> Result<(), Box<dyn std::error::Error>> {
     let directory = tempfile::tempdir()?;
     let output = Command::new(env!("CARGO_BIN_EXE_cnd-release"))

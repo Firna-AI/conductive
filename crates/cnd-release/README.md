@@ -44,20 +44,21 @@ The `parts` command writes an input file for the program build. Repeat
 release files. Build its program with the same version and parts file.
 Set `CONDUCTIVE_RELEASE_SIGNING_KEY` to the Ed25519 private key in PKCS#8
 PEM format. The key must match `RELEASE_PUBLIC_KEY` in `signature.rs`.
-The packager signs the exact bytes of the newest-version JSON. It writes
-the 64-byte signature to
+The packager writes the same manifest bytes to the newest-version key
+and the immutable program manifest key for that release. It signs those
+bytes and writes the 64-byte signature to
 `releases/download/conductive/signatures/<manifest-sha256>.sig`.
-The deploy publishes the signature before the newest-version JSON.
-Call `program_archive_key` with the release version and program archive
-digest to get its server-relative key. Call `release_manifest_bytes`
-with the same inputs to rebuild the exact newest-version JSON. Call
-`verify_release_signature` to check its detached signature with a trusted
-public key.
+The deploy publishes the immutable files before the newest-version JSON.
+Call `program_archive_key` and `program_manifest_key` with the release
+version and program archive digest to get the server-relative keys.
+Call `verify_manifest` with the fetched manifest bytes, the detached
+signature, and a trusted public key.
 
 The `container-base` command takes a Podman OCI archive and the image
 ID. It uses the same signing key as `package` and prints the manifest key.
 `ReleaseFiles::write_container_base` writes these files below the output
-folder.
+folder. It copies the input archive into its staging folder and hashes
+the copy.
 
 | File | Key relative to the release server |
 | --- | --- |
@@ -149,7 +150,7 @@ manifest as `ReleaseAssetInfo` and installs its archive through
 
 - [parts.rs](src/parts.rs) defines and validates the shared parts format.
 - [files.rs](src/files.rs) defines `ReleaseFiles` and the deterministic writer.
-- [manifest.rs](src/manifest.rs) defines the program archive key and rebuilds exact manifest bytes.
+- [manifest.rs](src/manifest.rs) defines the program archive and manifest keys.
 - [container_base.rs](src/container_base.rs) defines the container base manifest, keys, and reader.
 - [signature.rs](src/signature.rs) owns signing, verification, and the release public key.
 - [version.rs](src/version.rs) owns the release identity and version ordering.

@@ -15,8 +15,17 @@ pub fn program_archive_key(version: &str, digest: &str) -> Result<String> {
     ))
 }
 
-/// Rebuild the exact newest-version JSON bytes signed by the packager.
-pub fn release_manifest_bytes(version: &str, digest: &str) -> Result<Vec<u8>> {
+/// Give the key of the exact signed newest-version JSON of a release, relative to the release server.
+pub fn program_manifest_key(version: &str, digest: &str) -> Result<String> {
+    release_version(version)?;
+    validate_digest(digest)?;
+    Ok(format!(
+        "releases/download/{BINARY}/{version}/{digest}/{BINARY}-{version}-{TARGET}.json"
+    ))
+}
+
+/// Serialize the exact program manifest bytes that the packager signs.
+pub(super) fn release_manifest_bytes(version: &str, digest: &str) -> Result<Vec<u8>> {
     let key = program_archive_key(version, digest)?;
     serde_json::to_vec_pretty(&ReleaseAssetInfo {
         binary: BINARY.to_owned(),

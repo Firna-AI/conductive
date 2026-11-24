@@ -88,6 +88,8 @@ pub trait UpdateEngine: Send + Sync {
     /// Activate the newest complete release or restore a failed start.
     /// First download again each missing part of the release that starts.
     async fn apply(&self) -> Result<()>;
+    /// Activate a specific complete release.
+    async fn apply_pinned(&self, version: &str) -> Result<()>;
     /// Confirm only the running release after its first valid Worker welcome.
     fn started(&self, running_version: &str) -> Result<()>;
 }

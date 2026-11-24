@@ -11,6 +11,7 @@ use std::process::Command;
 use cli_release_interface::ReleaseAssetInfo;
 use cli_updater::{BinaryInstaller, TarGzBinaryInstaller};
 use cnd_release::files::{DiskReleaseFiles, ReleaseFiles};
+use cnd_release::manifest::program_manifest_key;
 use cnd_release::parts::{Part, PartsList};
 use cnd_release::signature::{ReleaseSigner, manifest_signature_key, verify_manifest};
 use cnd_release::version::{BASE_URL, BINARY, LATEST_KEY, TARGET};
@@ -77,11 +78,12 @@ fn signed_release_is_reproducible_and_readable_by_the_older_updater() {
     let archive = fs::read(first.join(key)).unwrap();
     assert_eq!(archive, fs::read(second.join(key)).unwrap());
     assert_eq!(metadata_bytes, fs::read(second.join(LATEST_KEY)).unwrap());
+    let manifest_path = first.join(program_manifest_key("0.0.42", digest).unwrap());
     let part_objects: Vec<_> = fs::read_dir(first.join("releases/download/conductive/0.0.42"))
         .unwrap()
         .flat_map(|entry| fs::read_dir(entry.unwrap().path()).unwrap())
         .map(|entry| entry.unwrap().path())
-        .filter(|path| path.extension().unwrap() == "json")
+        .filter(|path| path.extension().unwrap() == "json" && *path != manifest_path)
         .collect();
     assert_eq!(part_objects.len(), 1);
     assert_eq!(files.read_parts(&part_objects[0]).unwrap(), parts);

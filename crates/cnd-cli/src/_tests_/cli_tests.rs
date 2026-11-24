@@ -28,8 +28,8 @@ fn relay_uses_the_private_socket_without_address_options() {
 }
 
 #[test]
-fn computer_commands_require_a_code_only_for_enrollment() {
-    for name in ["check", "service", "run"] {
+fn computer_enroll_accepts_server_options_and_rejects_a_code_argument() {
+    for name in ["check", "enroll", "service", "run"] {
         assert!(
             Cli::try_parse_from(["conductive", "computer", name]).is_ok(),
             "{name}"
@@ -40,8 +40,6 @@ fn computer_commands_require_a_code_only_for_enrollment() {
             "conductive",
             "computer",
             "enroll",
-            "--code",
-            "ABCD-EFGH-JKMN-PQRS",
             "--origin",
             "http://localhost:4010",
             "--release-server",
@@ -49,16 +47,12 @@ fn computer_commands_require_a_code_only_for_enrollment() {
         ])
         .is_ok()
     );
-    assert_eq!(
-        Cli::try_parse_from(["conductive", "computer", "enroll"])
-            .err()
-            .map(|error| error.kind()),
-        Some(ErrorKind::MissingRequiredArgument)
-    );
-    assert_eq!(
-        Cli::try_parse_from(["conductive", "computer", "run", "--code", "hidden"])
-            .err()
-            .map(|error| error.kind()),
-        Some(ErrorKind::UnknownArgument)
-    );
+    for name in ["enroll", "run"] {
+        assert_eq!(
+            Cli::try_parse_from(["conductive", "computer", name, "--code", "fixture"])
+                .err()
+                .map(|error| error.kind()),
+            Some(ErrorKind::UnknownArgument),
+        );
+    }
 }

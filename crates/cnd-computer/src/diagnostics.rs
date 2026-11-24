@@ -35,14 +35,22 @@ pub trait Diagnostics: Send + Sync {
     fn environment_omitted(&self, count: usize);
     /// Cleanup of a failed create could not remove its container.
     fn create_cleanup_failed(&self);
-    /// The running binary is outside of the current installed version.
+    /// Cleanup could not stop a container after a failed start.
+    fn start_cleanup_failed(&self);
+    /// Cleanup could not resume the container after an image save.
+    fn save_cleanup_failed(&self);
+    /// Startup could not recover all paused containers.
+    fn pause_recovery_failed(&self);
+    /// The running binary cannot participate in automatic updates.
     fn update_location(&self);
     /// An update check, installation, or state write did not complete.
     fn update_failed(&self);
-    /// The program switched current to a verified newer release.
-    fn update_activated(&self);
-    /// The computer restored its previous release.
-    fn update_rolled_back(&self);
+    /// A verified candidate is ready for its first trial start.
+    fn update_trial_staged(&self);
+    /// The confirmed release could not execute the trial.
+    fn update_exec_failed(&self);
+    /// The trial did not confirm within its allowed starts.
+    fn update_refused(&self);
 }
 
 /// Production tracing events.
@@ -114,19 +122,37 @@ impl Diagnostics for TracingDiagnostics {
         tracing::warn!("Could not remove a failed container create.");
     }
 
+    fn start_cleanup_failed(&self) {
+        tracing::warn!("Could not stop the container after a failed start.");
+    }
+
+    fn save_cleanup_failed(&self) {
+        tracing::warn!("Could not resume the container after an image save.");
+    }
+
+    fn pause_recovery_failed(&self) {
+        tracing::warn!("Could not resume all paused containers at startup.");
+    }
+
     fn update_location(&self) {
-        tracing::warn!("Automatic updates require running the installed current program.");
+        tracing::warn!("Run the installed Conductive program to use automatic updates.");
     }
 
     fn update_failed(&self) {
         tracing::warn!("A computer software update step failed.");
     }
 
-    fn update_activated(&self) {
-        tracing::info!("A verified computer release is ready. Restarting.");
+    fn update_trial_staged(&self) {
+        tracing::info!("A verified computer release is ready for a trial. Restarting.");
     }
 
-    fn update_rolled_back(&self) {
-        tracing::warn!("The computer restored its previous release after repeated failed starts.");
+    fn update_exec_failed(&self) {
+        tracing::warn!("Could not start the trial release. Using the confirmed release.");
+    }
+
+    fn update_refused(&self) {
+        tracing::warn!(
+            "The trial release did not confirm after five tries. Using the confirmed release."
+        );
     }
 }

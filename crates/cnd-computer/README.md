@@ -15,11 +15,12 @@ and the container engine. `cnd-runner-interface` owns the wire types.
 ## What This Crate Does
 
 `computer check` reports each required capability. It reports separately
-whether a computer token is saved. `computer enroll` saves the token in
-`$XDG_CONFIG_HOME/conductive/computer.json`. The default configuration
-folder is `~/.config`. The file has mode 0600. The containing Conductive
-folder has mode 0700. `computer service` installs and starts the embedded
-user unit. Stopping the unit leaves Podman containers running.
+whether a computer token is saved. `computer enroll` reads one line from
+standard input and saves the token in `$XDG_CONFIG_HOME/conductive/computer.json`.
+The default configuration folder is `~/.config`. The file has mode 0600.
+The containing Conductive folder has mode 0700. `computer service` installs
+and starts the embedded user unit. Stopping the unit leaves Podman containers
+running.
 
 `computer run` rereads its credentials before each outbound attempt. The
 Worker must accept the hello before the computer handles requests. The
@@ -30,7 +31,10 @@ closes the connection, and exits. The log contains fixed events and
 codes. It excludes credentials, env vars, and process output.
 
 Operations on one container run in order. A failed create removes the
-partial container. A create caps CPUs and memory at the server limits.
+partial container. A failed or cancelled start stops the container if
+that request started it. At startup and before operations, the service
+unpauses paused Conductive containers. A create caps CPUs and memory at
+the server limits.
 The env file is written in `/run/ascii-secrets/env.sh` as `user` with
 mode 0600. Environment values enter Podman on standard input. The file
 contains only shell variable names. Podman mounts `/run` in memory and
@@ -43,8 +47,8 @@ contains only shell variable names. Podman mounts `/run` in memory and
 | `container.start` | Starts a stopped container and writes the env file. Returns `running`. | `not_found` |
 | `container.stop` | Gives Podman 30 seconds for a stop. Returns `stopped`. | `not_found` |
 | `container.delete` | Removes the container and volumes. A missing container also returns `container.deleted`. | |
-| `image.save` | Pauses a running container during commit. Returns `image.saved`. | `not_found` for the container. `already_exists` for the image. |
-| `container.bootstrap` | Installs the requested release and restarts the host service. Returns `container.bootstrapped` with the version. | `not_found` for the container. `invalid_request` when it is stopped. Release errors or `internal`. |
+| `image.save` | Pauses a running container during commit and unpauses it when the save succeeds, fails, or is cancelled. Returns `image.saved` on success. | `not_found` for the container. `already_exists` for the image. |
+| `container.bootstrap` | Installs the requested release. Apply restarts a running preview relay, as with every apply. Bootstrap then restarts the host service. Returns `container.bootstrapped` with the version. | `not_found` for the container. `invalid_request` when it is stopped. Release errors or `internal`. |
 
 An operation with invalid arguments returns `invalid_request`. A request
 over connection capacity returns `busy`. A storage exhaustion error
@@ -52,24 +56,32 @@ returns `no_space`. Other engine failures and local deadlines return
 `internal`. The local deadline is 14 minutes for create, image save, and
 bootstrap. The other operations have 50 seconds.
 
-An absent or bad signature, a wrong digest, or an inconsistent signed
-image returns `release_invalid`. A network failure or an unavailable
-release file returns `release_unavailable`. The program streams base
-archives to private temporary files. It verifies the size and digest,
-then checks the image ID after Podman loads the archive. Requests for the
+An absent or invalid pinned program manifest, an absent or invalid
+signature, a wrong digest, or an inconsistent signed image returns
+`release_invalid`. A network failure or another unavailable release file
+returns `release_unavailable`. The program streams base archives to private
+temporary files. It verifies the size and digest, then checks the image ID
+after Podman loads the archive. Requests for the
 same base image share an import. A local marker identifies an interrupted
-import. The program caches verified executables by version and archive digest.
+import. A pinned program download verifies the published manifest bytes and
+checks the requested release identity. The program caches verified executables
+by version and archive digest.
 
 Automatic updates check for a signed newer release one minute after
 startup, then every ten minutes. An update checks the candidate's
 `--version` output and waits for accepted requests and their replies.
-It saves the previous version and replaces the relative `current` link.
-Systemd starts the new release after the service exits. A welcome or
-60 seconds of uptime confirms the release. At the sixth unconfirmed
-start, the service restores the previous version and refuses the failed
-release. The program retains the current and previous versions.
-Development builds skip automatic updates. The running program must be in
-the folder that `current` selects for automatic updates to run.
+It records the candidate as a trial and exits. On restart, `current`
+still points to the last confirmed release. That release counts each
+trial attempt and starts the trial in the same process. A Worker welcome
+or 60 seconds of uptime confirms the trial. Confirmation atomically
+switches `current` to the trial and records the old release as previous.
+After five unconfirmed attempts, the confirmed release records the trial
+as refused and runs the service itself.
+
+At startup and when it records a trial, the program prunes cached
+programs. It keeps the current, previous, and trial versions. Startup
+also removes temporary files from interrupted downloads and installs.
+Development builds skip automatic updates.
 
 ## Quick Start
 
@@ -77,7 +89,7 @@ Run these commands as the dedicated computer user after installation.
 
 ```sh
 conductive computer check
-conductive computer enroll --code "$COMPUTER_CODE"
+printf '%s\n' "$COMPUTER_CODE" | conductive computer enroll
 conductive computer service
 ```
 
@@ -114,7 +126,8 @@ stub executable, and a shell. They run with no Podman installation or root acces
 - [Dispatcher](src/operations/dispatch.rs) validates and serializes operations.
 - [Podman](src/engine/podman.rs) builds local command arguments.
 - [Release client](src/releases/http.rs) verifies release files with the caller's public key.
-- [Updater](src/update/runtime.rs) confirms starts and activates verified releases.
+- [Launcher](src/update/launch.rs) counts tries and starts the trial program.
+- [Updater](src/update/runtime.rs) confirms trials and stages verified releases.
 
 ### Related Docs
 

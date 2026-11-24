@@ -10,7 +10,7 @@ use crate::connection_support::context;
 use crate::releases::ports::VerifiedRelease;
 use crate::settings::Settings;
 
-use super::super::state::UpdateState;
+use super::super::state::{Trial, UpdateState};
 use super::Updater;
 
 pub(super) fn updater() -> Updater {
@@ -18,6 +18,7 @@ pub(super) fn updater() -> Updater {
     Updater {
         version: "0.0.41".into(),
         files: inert.clone(),
+        cache: inert.clone(),
         settings: inert.clone(),
         releases: inert.clone(),
         process: inert.clone(),
@@ -43,11 +44,14 @@ pub(super) fn settings() -> Settings {
     }
 }
 
-pub(super) fn pending(starts: u32) -> UpdateState {
+pub(super) fn trial_state() -> UpdateState {
     UpdateState {
         previous: Some("0.0.40".into()),
-        pending: Some("0.0.41".into()),
-        starts,
+        trial: Some(Trial {
+            from: "0.0.41".into(),
+            version: "0.0.42".into(),
+            starts: 1,
+        }),
         ..UpdateState::default()
     }
 }

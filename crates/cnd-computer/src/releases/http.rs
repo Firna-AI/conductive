@@ -9,7 +9,7 @@ use cnd_release::container_base::{
     container_base_archive_key, container_base_manifest_key, container_base_signature_key,
     read_container_base_manifest,
 };
-use cnd_release::manifest::{program_archive_key, release_manifest_bytes};
+use cnd_release::manifest::{program_archive_key, program_manifest_key};
 use cnd_release::signature::{manifest_signature_key, verify_manifest};
 use cnd_release::version::{BINARY, LATEST_KEY, TARGET};
 use cnd_runner_interface::computer::operations::ComputerRelease;
@@ -20,6 +20,7 @@ use crate::http::{BodyError, bounded_body, client};
 use crate::settings::ServerUrl;
 
 use super::archives;
+use super::cache::PROGRAMS;
 use super::ports::{BaseArchive, Releases, VerifiedRelease};
 use super::program::{self, PROGRAM_LIMIT};
 
@@ -63,14 +64,18 @@ impl HttpReleases {
         read(self.file(server, key).await?, MANIFEST_LIMIT).await
     }
 
-    async fn verify(&self, server: &ServerUrl, key: &str, manifest: &[u8]) -> Result<()> {
+    async fn signed_file(&self, server: &ServerUrl, key: &str, limit: usize) -> Result<Vec<u8>> {
         let response = self.get(server, key).await?;
         match response.status() {
             StatusCode::NOT_FOUND | StatusCode::GONE => return Err(Error::ReleaseInvalid),
             status if !status.is_success() => return Err(Error::ReleaseUnavailable),
             _ => {}
         }
-        let signature = read(response, SIGNATURE_BYTES).await?;
+        read(response, limit).await
+    }
+
+    async fn verify(&self, server: &ServerUrl, key: &str, manifest: &[u8]) -> Result<()> {
+        let signature = self.signed_file(server, key, SIGNATURE_BYTES).await?;
         if !verify_manifest(&self.public_key, manifest, &signature) {
             return Err(Error::ReleaseInvalid);
         }
@@ -85,7 +90,7 @@ impl HttpReleases {
         let key = valid(program_archive_key(&release.version, &release.digest))?;
         let executable = self
             .cache
-            .join("programs")
+            .join(PROGRAMS)
             .join(&release.version)
             .join(&release.digest)
             .join(BINARY);
@@ -106,9 +111,13 @@ impl HttpReleases {
 #[async_trait]
 impl Releases for HttpReleases {
     async fn program(&self, server: &ServerUrl, release: &ComputerRelease) -> Result<PathBuf> {
-        let manifest = valid(release_manifest_bytes(&release.version, &release.digest))?;
+        let key = valid(program_manifest_key(&release.version, &release.digest))?;
+        let manifest = self.signed_file(server, &key, MANIFEST_LIMIT).await?;
         self.verify(server, &manifest_signature_key(&manifest), &manifest)
             .await?;
+        if program_identity(&manifest)? != *release {
+            return Err(Error::ReleaseInvalid);
+        }
         self.cache_program(server, release).await
     }
 
@@ -148,20 +157,7 @@ impl Releases for HttpReleases {
         let manifest = self.manifest(server, LATEST_KEY).await?;
         self.verify(server, &manifest_signature_key(&manifest), &manifest)
             .await?;
-        let Ok(info) = serde_json::from_slice::<ReleaseAssetInfo>(&manifest) else {
-            return Err(Error::ReleaseInvalid);
-        };
-        let Some(digest) = info.sha256 else {
-            return Err(Error::ReleaseInvalid);
-        };
-        if info.binary != BINARY || info.target != TARGET {
-            return Err(Error::ReleaseInvalid);
-        }
-        valid(program_archive_key(&info.version, &digest))?;
-        Ok(VerifiedRelease(ComputerRelease {
-            version: info.version,
-            digest,
-        }))
+        Ok(VerifiedRelease(program_identity(&manifest)?))
     }
 
     async fn verified_program(
@@ -171,6 +167,23 @@ impl Releases for HttpReleases {
     ) -> Result<PathBuf> {
         self.cache_program(server, release.identity()).await
     }
+}
+
+fn program_identity(manifest: &[u8]) -> Result<ComputerRelease> {
+    let Ok(info) = serde_json::from_slice::<ReleaseAssetInfo>(manifest) else {
+        return Err(Error::ReleaseInvalid);
+    };
+    let Some(digest) = info.sha256 else {
+        return Err(Error::ReleaseInvalid);
+    };
+    if info.binary != BINARY || info.target != TARGET {
+        return Err(Error::ReleaseInvalid);
+    }
+    valid(program_archive_key(&info.version, &digest))?;
+    Ok(ComputerRelease {
+        version: info.version,
+        digest,
+    })
 }
 
 fn valid<T>(result: cnd_release::error::Result<T>) -> Result<T> {

@@ -10,6 +10,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::connection_support::context;
 use crate::engine::ports::{Engine, EngineMock};
+use crate::engine::states::ContainerStatus;
 
 use super::{Dispatcher, Operations};
 
@@ -70,7 +71,8 @@ async fn reports_missing_and_deletes_idempotently() {
     let engine = Arc::new(Unimock::new((
         EngineMock::inspect
             .some_call(matching!("box"))
-            .returns(Ok(ContainerState::Missing)),
+            .answers(&|_, _| Ok(ContainerStatus::Missing))
+            .n_times(2),
         EngineMock::remove
             .some_call(matching!("box"))
             .returns(Ok(())),
@@ -104,7 +106,7 @@ async fn starting_a_stopped_container_starts_it_before_the_env_write() {
     let engine = Arc::new(Unimock::new((
         EngineMock::inspect
             .next_call(matching!("box"))
-            .returns(Ok(ContainerState::Stopped)),
+            .returns(Ok(ContainerStatus::Stopped)),
         EngineMock::start
             .next_call(matching!("box"))
             .returns(Ok(())),
@@ -120,7 +122,7 @@ async fn starting_a_running_container_refreshes_the_env_without_a_restart() {
     let engine = Arc::new(Unimock::new((
         EngineMock::inspect
             .some_call(matching!("box"))
-            .returns(Ok(ContainerState::Running)),
+            .returns(Ok(ContainerStatus::Running)),
         EngineMock::write_environment
             .some_call(matching!("box", _))
             .answers(&|_, _, _| Box::pin(async { Ok(()) })),
@@ -133,7 +135,7 @@ async fn stops_an_existing_container() {
     let engine = Arc::new(Unimock::new((
         EngineMock::inspect
             .next_call(matching!("box"))
-            .returns(Ok(ContainerState::Running)),
+            .returns(Ok(ContainerStatus::Running)),
         EngineMock::stop.next_call(matching!("box")).returns(Ok(())),
     )));
     assert_eq!(run(engine, stop()).await, result(ContainerState::Stopped));
@@ -144,7 +146,7 @@ async fn start_stop_save_and_bootstrap_reject_a_missing_container() {
     let engine = Arc::new(Unimock::new(
         EngineMock::inspect
             .some_call(matching!("box"))
-            .answers(&|_, _| Ok(ContainerState::Missing))
+            .answers(&|_, _| Ok(ContainerStatus::Missing))
             .n_times(4),
     ));
     for operation in [start(), stop(), save(), bootstrap()] {
@@ -160,7 +162,7 @@ async fn bootstrap_rejects_a_stopped_container() {
     let engine = Arc::new(Unimock::new(
         EngineMock::inspect
             .some_call(matching!("box"))
-            .returns(Ok(ContainerState::Stopped)),
+            .returns(Ok(ContainerStatus::Stopped)),
     ));
     assert_eq!(
         run(engine, bootstrap()).await,
@@ -173,7 +175,7 @@ async fn saves_a_new_image_and_refuses_to_overwrite_it() {
     let engine = Arc::new(Unimock::new((
         EngineMock::inspect
             .some_call(matching!("box"))
-            .answers(&|_, _| Ok(ContainerState::Running))
+            .answers(&|_, _| Ok(ContainerStatus::Running))
             .n_times(2),
         EngineMock::image_exists.stub(|each| {
             each.call(matching!("localhost/conductive/org-org"))
@@ -183,8 +185,14 @@ async fn saves_a_new_image_and_refuses_to_overwrite_it() {
                 .answers(&|_, _| Ok(true))
                 .once();
         }),
+        EngineMock::pause
+            .next_call(matching!("box"))
+            .returns(Ok(())),
         EngineMock::save
-            .some_call(matching!("box", "localhost/conductive/org-org"))
+            .next_call(matching!("box", "localhost/conductive/org-org"))
+            .answers(&|_, _, _| Box::pin(async { Ok(()) })),
+        EngineMock::unpause
+            .next_call(matching!("box"))
             .returns(Ok(())),
     )));
     let dispatcher = Dispatcher::new(

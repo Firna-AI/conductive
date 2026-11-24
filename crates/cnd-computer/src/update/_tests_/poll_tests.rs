@@ -17,8 +17,10 @@ use crate::connection_support::virtual_timer;
 use crate::diagnostics::DiagnosticsMock;
 use crate::error::Error;
 use crate::process::{Output, ProcessMock};
+use crate::releases::cache::ProgramCacheMock;
 use crate::releases::ports::ReleasesMock;
 use crate::settings::SettingsStoreMock;
+use crate::update::launch::Startup;
 use crate::update::ports::UpdateFilesMock;
 use crate::update::state::UpdateState;
 
@@ -54,40 +56,41 @@ fn output(version: &str) -> Output {
 }
 
 #[tokio::test(start_paused = true)]
-async fn update_waits_for_pending_requests_before_switching_and_stopping() {
+async fn activation_waits_for_requests_then_records_a_trial_beside_current() {
     let mut updater = candidate();
     let checked = Arc::new(Notify::new());
     let ready = checked.clone();
+    let staged = Arc::new(AtomicBool::new(false));
+    let observed = staged.clone();
     let switched = Arc::new(AtomicBool::new(false));
-    let observed = switched.clone();
-    updater.files = Arc::new(Unimock::new((
-        UpdateFilesMock::state
-            .each_call(matching!())
-            .answers(&|_| Ok(UpdateState::default())),
-        UpdateFilesMock::install
-            .some_call(
-                matching!(("0.0.42", path) if path.to_str() == Some("/fixture/cache/conductive")),
-            )
+    let link = switched.clone();
+    let pruned = Arc::new(AtomicBool::new(false));
+    let cache = pruned.clone();
+    let effects = Arc::new(Unimock::new((
+        UpdateFilesMock::state.each_call(matching!()).answers(&|_| Ok(UpdateState {
+            previous: Some("0.0.40".into()), ..UpdateState::default()
+        })),
+        UpdateFilesMock::install.some_call(matching!(("0.0.42", path) if path.to_str() == Some("/fixture/cache/conductive")))
             .returns(Ok(PathBuf::from("/fixture/versions/0.0.42/conductive"))),
-        UpdateFilesMock::is_current
-            .some_call(matching!())
-            .returns(Ok(true)),
-        UpdateFilesMock::save
-            .next_call(
-                matching!((state) if state.previous.as_deref() == Some("0.0.41")
-            && state.pending.as_deref() == Some("0.0.42") && state.starts == 0),
-            )
-            .returns(Ok(())),
-        UpdateFilesMock::switch
-            .next_call(matching!("0.0.42"))
+        UpdateFilesMock::current_version.some_call(matching!()).returns(Ok(Some("0.0.41".into()))),
+        UpdateFilesMock::save.next_call(matching!((state) if state.previous.as_deref() == Some("0.0.40")
+            && state.trial.as_ref().is_some_and(|trial| trial.from == "0.0.41" && trial.version == "0.0.42" && trial.starts == 0)))
             .answers_arc(Arc::new(move |_, _| {
-                switched.store(true, Ordering::SeqCst);
+                staged.store(true, Ordering::SeqCst);
                 Ok(())
             })),
-        UpdateFilesMock::collect
-            .some_call(matching!("0.0.42", Some("0.0.41")))
-            .returns(Ok(())),
-    )));
+        UpdateFilesMock::switch.some_call(matching!("0.0.42")).answers_arc(Arc::new(move |_, _| {
+            link.store(true, Ordering::SeqCst);
+            Ok(())
+        })),
+        UpdateFilesMock::collect.some_call(matching!((keep) if *keep == ["0.0.41", "0.0.40", "0.0.42"])).returns(Ok(())),
+        ProgramCacheMock::collect.next_call(matching!((keep) if *keep == ["0.0.41", "0.0.40", "0.0.42"])).answers_arc(Arc::new(move |_, _| {
+            cache.store(true, Ordering::SeqCst);
+            Ok(())
+        })),
+    )).no_verify_in_drop());
+    updater.files = effects.clone();
+    updater.cache = effects;
     updater.process = Arc::new(Unimock::new(
         ProcessMock::run
             .some_call(matching!((call) if
@@ -98,21 +101,31 @@ async fn update_waits_for_pending_requests_before_switching_and_stopping() {
             })),
     ));
     updater.diagnostics = Arc::new(Unimock::new(
-        DiagnosticsMock::update_activated
+        DiagnosticsMock::update_trial_staged
             .some_call(matching!())
             .returns(()),
     ));
     let request = updater.activity.request().await;
     let (stop, mut stopped) = watch::channel(false);
     let shutdown = stopped.clone();
-    let monitor = tokio::spawn(async move { updater.monitor(stop, shutdown).await });
+    let monitor =
+        tokio::spawn(async move { updater.monitor(Startup::Current, stop, shutdown).await });
     checked.notified().await;
     assert!(!observed.load(Ordering::SeqCst));
+    assert!(!pruned.load(Ordering::SeqCst));
     assert!(!*stopped.borrow());
     drop(request);
     stopped.changed().await.unwrap();
     assert!(*stopped.borrow());
     assert!(observed.load(Ordering::SeqCst));
+    assert!(
+        !switched.load(Ordering::SeqCst),
+        "Staging a trial moved the current link"
+    );
+    assert!(
+        pruned.load(Ordering::SeqCst),
+        "Staging a trial did not collect the program cache"
+    );
     monitor.await.unwrap();
 }
 
@@ -128,7 +141,7 @@ async fn a_wrong_program_version_cannot_become_a_candidate() {
                 .some_call(matching!("0.0.42", _))
                 .returns(Ok(PathBuf::from("/fixture/versions/0.0.42/conductive"))),
             UpdateFilesMock::collect
-                .some_call(matching!("0.0.41", None))
+                .some_call(matching!((keep) if *keep == ["0.0.41"]))
                 .returns(Ok(())),
         ))
         .no_verify_in_drop(),

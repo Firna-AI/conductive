@@ -3,7 +3,7 @@
 use cli_release_interface::ReleaseAssetInfo;
 use cnd_release::error::Error::{InvalidDigest, InvalidVersion};
 use cnd_release::files::sha256;
-use cnd_release::manifest::{program_archive_key, release_manifest_bytes};
+use cnd_release::manifest::{program_archive_key, program_manifest_key};
 use cnd_release::parts::Part;
 use cnd_release::signature::{manifest_signature_key, verify_manifest};
 use cnd_release::version::{BINARY, DEVELOPMENT_VERSION, LATEST_KEY, TARGET, release_version};
@@ -24,46 +24,18 @@ impl Engine {
         selection: ReleaseSelection<'_>,
         _lock: Box<dyn UpdateLock>,
     ) -> Result<()> {
-        let manifest = match selection {
-            ReleaseSelection::Latest(_) => self
-                .fetch_release_file(LATEST_KEY.to_owned())
-                .await
-                .internal()?,
-            ReleaseSelection::Pinned { version, digest } => pinned_manifest(version, digest)?,
+        let release = match selection {
+            ReleaseSelection::Latest(running) => self.latest_candidate(running).await?,
+            ReleaseSelection::Pinned { version, digest } => {
+                self.pinned_candidate(version, digest).await?
+            }
         };
-        let mut release: ReleaseAssetInfo = serde_json::from_slice(&manifest).internal()?;
-        let version = release_version(&release.version).internal()?;
-        if let ReleaseSelection::Latest(running) = selection
-            && running != DEVELOPMENT_VERSION
-            && version <= release_version(running).internal()?
-        {
+        let Some(release) = release else {
             return Ok(());
-        }
-        if release.binary != BINARY || release.target != TARGET {
-            return Err(Error::InvalidRelease);
-        }
+        };
         let digest = release.sha256.as_deref().ok_or(Error::MissingDigest)?;
-        if digest.len() != 64 || !digest.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-            return Err(Error::MissingDigest);
-        }
-        if self.store.versions()?.contains(&release.version)
-            || self.store.rejected(&release.version)?
-        {
-            return Ok(());
-        }
-        let state = self.store.state()?;
-        if let Some(current) = state.current
-            && version <= release_version(&current).internal()?
-        {
-            return Ok(());
-        }
-        self.check_signature(&manifest).await?;
-        let pinned = matches!(selection, ReleaseSelection::Pinned { .. });
-        if pinned {
-            release.download_url = program_archive_key(&release.version, digest).internal()?;
-        }
         let archive = self.client.download(&release).await.internal()?;
-        if pinned {
+        if matches!(selection, ReleaseSelection::Pinned { .. }) {
             check_digest(&archive, digest, BINARY)?;
         }
         self.store.prepare(&release.version)?;
@@ -86,6 +58,79 @@ impl Engine {
             self.download_part(&release.version, part).await?;
         }
         self.store.complete(&release.version, &parts)
+    }
+
+    async fn latest_candidate(&self, running: &str) -> Result<Option<ReleaseAssetInfo>> {
+        let manifest = self
+            .fetch_release_file(LATEST_KEY.to_owned())
+            .await
+            .internal()?;
+        let release: ReleaseAssetInfo = serde_json::from_slice(&manifest).internal()?;
+        let version = release_version(&release.version).internal()?;
+        if running != DEVELOPMENT_VERSION && version <= release_version(running).internal()? {
+            return Ok(None);
+        }
+        if release.binary != BINARY || release.target != TARGET {
+            return Err(Error::InvalidRelease);
+        }
+        let digest = release.sha256.as_deref().ok_or(Error::MissingDigest)?;
+        if digest.len() != 64 || !digest.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+            return Err(Error::MissingDigest);
+        }
+        if !self.should_stage(&release.version)? {
+            return Ok(None);
+        }
+        self.check_signature(&manifest).await?;
+        Ok(Some(release))
+    }
+
+    async fn pinned_candidate(
+        &self,
+        version: &str,
+        digest: &str,
+    ) -> Result<Option<ReleaseAssetInfo>> {
+        let key = pinned_manifest_key(version, digest)?;
+        if !self.should_stage(version)? {
+            return Ok(None);
+        }
+        let manifest = match self.fetch_release_file(key).await {
+            Err(cli_updater::Error::ReleaseServerStatus {
+                status: 404 | 410, ..
+            }) => {
+                return Err(Error::MissingManifest {
+                    version: version.to_owned(),
+                });
+            }
+            result => result.internal()?,
+        };
+        self.check_signature(&manifest).await?;
+        let mut release: ReleaseAssetInfo = serde_json::from_slice(&manifest).internal()?;
+        let actual_digest = release.sha256.as_deref().ok_or(Error::MissingDigest)?;
+        if release.binary != BINARY
+            || release.target != TARGET
+            || release.version != version
+            || actual_digest != digest
+        {
+            return Err(Error::InvalidRelease);
+        }
+        release.download_url = program_archive_key(version, digest).internal()?;
+        Ok(Some(release))
+    }
+
+    fn should_stage(&self, version: &str) -> Result<bool> {
+        if self
+            .store
+            .versions()?
+            .iter()
+            .any(|staged| staged == version)
+            || self.store.rejected(version)?
+        {
+            return Ok(false);
+        }
+        if let Some(active) = self.store.state()?.current {
+            return Ok(release_version(version).internal()? > release_version(&active).internal()?);
+        }
+        Ok(true)
     }
 
     /// Fetch exact bytes. The release client's `latest` method parses the JSON.
@@ -136,8 +181,8 @@ impl Engine {
     }
 }
 
-fn pinned_manifest(version: &str, digest: &str) -> Result<Vec<u8>> {
-    match release_manifest_bytes(version, digest) {
+fn pinned_manifest_key(version: &str, digest: &str) -> Result<String> {
+    match program_manifest_key(version, digest) {
         Err(InvalidVersion { .. }) => Err(Error::InvalidRelease),
         Err(InvalidDigest) => Err(Error::MissingDigest),
         result => result.internal(),

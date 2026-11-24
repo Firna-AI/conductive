@@ -1,68 +1,66 @@
-//! Track unconfirmed starts and refuse the release that exceeded its limit.
+//! The last confirmed release and the candidate currently on trial.
 
 use std::collections::BTreeSet;
 
 use serde::{Deserialize, Serialize};
 
-const MAX_STARTS: u32 = 5;
+pub(super) const MAX_TRIES: u32 = 5;
 
 /// State stored in update.json beside the current program link.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(default)]
 pub struct UpdateState {
-    /// Release to restore when the pending release fails repeatedly.
+    /// Confirmed version that preceded the current release.
     pub previous: Option<String>,
-    /// Release installed but still awaiting a healthy start.
-    pub pending: Option<String>,
-    /// Starts of the pending release since activation.
-    pub starts: u32,
-    /// Releases already refused on this computer.
+    /// Installed candidate that still needs to confirm.
+    pub trial: Option<Trial>,
+    /// Releases that used all of their tries.
     pub refused: BTreeSet<String>,
 }
 
-pub(super) enum Start {
-    Unchanged,
-    Counted,
-    RollBack,
-    FinishRollback(String),
+/// A candidate staged by the confirmed release.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+pub struct Trial {
+    /// Version that staged this trial and owns its tries.
+    pub from: String,
+    /// Candidate version.
+    pub version: String,
+    /// Attempts the confirmed program already started.
+    pub starts: u32,
 }
 
 impl UpdateState {
-    pub(super) fn register_start(&mut self, version: &str) -> Start {
-        if self.pending.as_deref() == Some(version) {
-            self.starts = self.starts.saturating_add(1);
-            if self.starts > MAX_STARTS {
-                return Start::RollBack;
-            }
-            return Start::Counted;
-        }
-        if self.starts > MAX_STARTS
-            && self.previous.as_deref() == Some(version)
-            && let Some(rejected) = &self.pending
-        {
-            return Start::FinishRollback(rejected.clone());
-        }
-        Start::Unchanged
-    }
-
     pub(super) fn stage(&mut self, current: &str, next: &str) {
-        self.previous = Some(current.to_owned());
-        self.pending = Some(next.to_owned());
-        self.starts = 0;
+        self.trial = Some(Trial {
+            from: current.to_owned(),
+            version: next.to_owned(),
+            starts: 0,
+        });
     }
 
     pub(super) fn confirm(&mut self, version: &str) -> bool {
-        if self.pending.as_deref() != Some(version) {
+        let Some(trial) = self.trial.take_if(|trial| trial.version == version) else {
             return false;
-        }
-        self.pending = None;
-        self.starts = 0;
+        };
+        self.previous = Some(trial.from);
         true
     }
 
-    pub(super) fn refuse(&mut self, version: &str) {
-        self.refused.insert(version.to_owned());
-        self.confirm(version);
+    pub(super) fn discard_trial_from_other_release(&mut self, current: &str) -> bool {
+        self.trial.take_if(|trial| trial.from != current).is_some()
+    }
+
+    pub(super) fn refuse_trial(&mut self) {
+        if let Some(trial) = self.trial.take() {
+            self.refused.insert(trial.version);
+        }
+    }
+
+    pub(super) fn retained<'a>(&'a self, current: &'a str) -> Vec<&'a str> {
+        std::iter::once(current)
+            .chain(self.previous.as_deref())
+            .chain(self.trial.as_ref().map(|trial| trial.version.as_str()))
+            .collect()
     }
 }
 

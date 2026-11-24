@@ -15,7 +15,7 @@ use crate::container_base::{
     normalize_image_id, validate_archive_size,
 };
 use crate::error::{ErrorResultExt, Result};
-use crate::manifest::{program_archive_key, release_manifest_bytes};
+use crate::manifest::{program_archive_key, program_manifest_key, release_manifest_bytes};
 use crate::parts::PartsList;
 use crate::signature::{ReleaseSigner, manifest_signature_key};
 use crate::version::{BINARY, LATEST_KEY, TARGET, release_version};
@@ -28,7 +28,7 @@ pub trait ReleaseFiles {
     fn write_parts(&self, path: &Path, parts: &PartsList) -> Result<()>;
     /// Read metadata for the newest-version comparison.
     fn read_metadata(&self, path: &Path) -> Result<ReleaseAssetInfo>;
-    /// Write immutable archive, parts and signature files, then the local newest-version JSON.
+    /// Write the immutable release files, then the local newest-version JSON.
     fn package(
         &self,
         version: &str,
@@ -38,7 +38,7 @@ pub trait ReleaseFiles {
         signer: &ReleaseSigner,
     ) -> Result<ReleaseAssetInfo>;
     /// Write an OCI archive, its signature, and its manifest under the output folder.
-    /// Keep the input archive unchanged until publication ends.
+    /// Keep the input archive unchanged during this call.
     fn write_container_base(
         &self,
         version: &str,
@@ -122,6 +122,7 @@ impl ReleaseFiles for DiskReleaseFiles {
         let archive = program_archive(&fs::read(program).internal()?)?;
         let digest = sha256(&archive);
         let key = program_archive_key(version, &digest)?;
+        let manifest_key = program_manifest_key(version, &digest)?;
         let manifest = release_manifest_bytes(version, &digest)?;
         let metadata = serde_json::from_slice(&manifest).internal()?;
         let prefix = format!("releases/download/{BINARY}/{version}");
@@ -134,6 +135,7 @@ impl ReleaseFiles for DiskReleaseFiles {
         );
         write_file(&output.join(parts_key), &parts_bytes)?;
         write_file(&output.join(manifest_signature_key(&manifest)), &signature)?;
+        write_file(&output.join(manifest_key), &manifest)?;
         write_file(&output.join(LATEST_KEY), &manifest)?;
         Ok(metadata)
     }
@@ -157,10 +159,7 @@ fn create_parent(path: &Path) -> Result<()> {
 }
 
 fn stage_container_archive(source: &Path, staged: &Path) -> Result<ContainerBaseArchive> {
-    let source = fs::canonicalize(source).internal()?;
-    if fs::hard_link(&source, staged).is_err() {
-        fs::copy(&source, staged).internal()?;
-    }
+    fs::copy(source, staged).internal()?;
     let mut archive = BufReader::with_capacity(64 * 1024, File::open(staged).internal()?);
     let mut digest = Sha256::new();
     let mut size = 0;

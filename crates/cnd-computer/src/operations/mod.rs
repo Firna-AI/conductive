@@ -1,5 +1,6 @@
 //! Fixed operation dispatch and per-connection resource limits.
 
+mod changes;
 mod cleanup;
 pub mod dispatch;
 pub mod environment;
@@ -28,7 +29,7 @@ pub struct RequestContext {
 /// A request future that owns its native operation until completion or cancellation.
 pub type OperationFuture<'a> = Pin<Box<dyn Future<Output = ComputerResult> + Send + 'a>>;
 
-/// A wait for cleanup from aborted create operations.
+/// A wait for cleanup from aborted container operations.
 pub type WaitForCleanup<'a> = Pin<Box<dyn Future<Output = ()> + Send + 'a>>;
 
 /// Execute fixed operations from the authenticated Worker.

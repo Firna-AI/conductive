@@ -2,27 +2,17 @@
 
 use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
 use std::process::Command;
-use std::sync::Arc;
 
-use cli_updater::TarGzBinaryInstaller;
-use cnd_cli::update::disk::DiskStore;
-use cnd_cli::update::engine::Engine;
-use cnd_cli::update::error::{self, Error};
+use cnd_cli::update::error::Error;
 use cnd_cli::update::ports::{State, Store, UpdateEngine};
-use cnd_cli::update::process::SystemProcesses;
-use cnd_release::files::sha256;
-use cnd_release::manifest::{program_archive_key, release_manifest_bytes};
-use cnd_release::parts::{Part, PartsList};
-use cnd_release::signature::manifest_signature_key;
-use cnd_release::version::{BINARY, LATEST_KEY};
+use cnd_release::version::BINARY;
+use serde_json::{Value, json};
 
-use crate::support::{Server, TestResult, archive, test_signer};
-
-const ACTIVE: &str = "0.0.2";
-const PINNED: &str = "0.0.3";
-const NEWEST: &str = "0.0.4";
+use crate::pinned_fixture::{
+    NEWEST, PINNED, attempt_failed_install, finish_server, pinned_fixture, record_complete, updater,
+};
+use crate::support::{Server, TestResult};
 
 #[tokio::test]
 async fn pinned_install_stages_the_requested_version_without_fetching_latest() -> TestResult {
@@ -35,6 +25,7 @@ async fn pinned_install_stages_the_requested_version_without_fetching_latest() -
     assert_eq!(
         requests,
         [
+            fixture.manifest_path,
             fixture.signature_path,
             fixture.program_path,
             "/sdk-helper".into()
@@ -56,10 +47,13 @@ async fn pinned_install_refuses_a_wrong_signature_without_staging() -> TestResul
     fixture
         .responses
         .insert(fixture.signature_path.clone(), vec![0; 64]);
-    let signature_path = fixture.signature_path.clone();
+    let expected_requests = [
+        fixture.manifest_path.clone(),
+        fixture.signature_path.clone(),
+    ];
     let (result, requests) = attempt_failed_install(fixture, "404 Not Found").await?;
     assert!(matches!(result, Err(Error::InvalidSignature)), "{result:?}");
-    assert_eq!(requests, [signature_path]);
+    assert_eq!(requests, expected_requests);
     Ok(())
 }
 
@@ -68,13 +62,16 @@ async fn pinned_install_refuses_a_missing_signature_without_staging() -> TestRes
     for status in ["404 Not Found", "410 Gone"] {
         let mut fixture = pinned_fixture()?;
         fixture.responses.remove(&fixture.signature_path);
-        let signature_path = fixture.signature_path.clone();
+        let expected_requests = [
+            fixture.manifest_path.clone(),
+            fixture.signature_path.clone(),
+        ];
         let (result, requests) = attempt_failed_install(fixture, status).await?;
         assert!(
             matches!(result, Err(Error::MissingSignature)),
             "{status}: {result:?}"
         );
-        assert_eq!(requests, [signature_path], "{status}");
+        assert_eq!(requests, expected_requests, "{status}");
     }
     Ok(())
 }
@@ -85,13 +82,61 @@ async fn pinned_install_refuses_a_wrong_program_digest_without_staging() -> Test
     fixture
         .responses
         .insert(fixture.program_path.clone(), b"wrong archive".to_vec());
-    let expected_requests = [fixture.signature_path.clone(), fixture.program_path.clone()];
+    let expected_requests = [
+        fixture.manifest_path.clone(),
+        fixture.signature_path.clone(),
+        fixture.program_path.clone(),
+    ];
     let (result, requests) = attempt_failed_install(fixture, "404 Not Found").await?;
     assert!(
         matches!(&result, Err(Error::DigestMismatch { name }) if name == BINARY),
         "{result:?}"
     );
     assert_eq!(requests, expected_requests);
+    Ok(())
+}
+
+#[tokio::test]
+async fn pinned_install_refuses_a_missing_manifest_without_staging() -> TestResult {
+    for status in ["404 Not Found", "410 Gone"] {
+        let mut fixture = pinned_fixture()?;
+        fixture.responses.remove(&fixture.manifest_path);
+        let manifest_path = fixture.manifest_path.clone();
+        let (result, requests) = attempt_failed_install(fixture, status).await?;
+        assert!(
+            matches!(&result, Err(Error::MissingManifest { version }) if version == PINNED),
+            "{status}: {result:?}"
+        );
+        assert_eq!(requests, [manifest_path], "{status}");
+    }
+    Ok(())
+}
+
+#[tokio::test]
+async fn pinned_install_refuses_a_signed_manifest_with_a_different_identity() -> TestResult {
+    let wrong_digest = "b".repeat(64);
+    for (field, value) in [
+        ("version", NEWEST),
+        ("sha256", &wrong_digest),
+        ("binary", "other-program"),
+        ("target", "other-target"),
+    ] {
+        let mut fixture = pinned_fixture()?;
+        let mut manifest: Value =
+            serde_json::from_slice(&fixture.responses[&fixture.manifest_path])?;
+        manifest[field] = json!(value);
+        fixture.replace_manifest(serde_json::to_vec(&manifest)?)?;
+        let expected_requests = [
+            fixture.manifest_path.clone(),
+            fixture.signature_path.clone(),
+        ];
+        let (result, requests) = attempt_failed_install(fixture, "404 Not Found").await?;
+        assert!(
+            matches!(result, Err(Error::InvalidRelease)),
+            "{field}: {result:?}"
+        );
+        assert_eq!(requests, expected_requests, "{field}");
+    }
     Ok(())
 }
 
@@ -180,97 +225,4 @@ fn pinned_install_flags_require_each_other_and_bootstrap() -> TestResult {
         assert!(stderr.contains(missing), "{stderr}");
     }
     Ok(())
-}
-
-struct PinnedFixture {
-    responses: HashMap<String, Vec<u8>>,
-    digest: String,
-    program_path: String,
-    signature_path: String,
-}
-
-fn pinned_fixture() -> TestResult<PinnedFixture> {
-    let helper = archive(&[("sdk-helper.mjs", b"helper bytes")])?;
-    let parts = PartsList::new(vec![Part {
-        name: "sdk-helper".into(),
-        url: "https://releases.test/sdk-helper".into(),
-        sha256: sha256(&helper),
-    }])?;
-    let executable = format!(
-        "#!/bin/sh\ncase \"$1\" in\n--version) echo 'conductive {PINNED}';;\nupdate) cat <<'PARTS'\n{}\nPARTS\n;;\nesac\n",
-        serde_json::to_string(&parts)?
-    );
-    let program = archive(&[(BINARY, executable.as_bytes())])?;
-    let digest = sha256(&program);
-    let manifest = release_manifest_bytes(PINNED, &digest)?;
-    let signature_path = format!("/{}", manifest_signature_key(&manifest));
-    let program_path = format!("/{}", program_archive_key(PINNED, &digest)?);
-    Ok(PinnedFixture {
-        responses: HashMap::from([
-            (
-                format!("/{LATEST_KEY}"),
-                release_manifest_bytes(NEWEST, &"a".repeat(64))?,
-            ),
-            (
-                signature_path.clone(),
-                test_signer()?.sign(&manifest)?.to_vec(),
-            ),
-            (program_path.clone(), program),
-            ("/sdk-helper".into(), helper),
-        ]),
-        digest,
-        program_path,
-        signature_path,
-    })
-}
-
-async fn attempt_failed_install(
-    fixture: PinnedFixture,
-    missing_status: &'static str,
-) -> TestResult<(error::Result<()>, Vec<String>)> {
-    let server = Server::start_with_missing_status(fixture.responses, missing_status)?;
-    let root = tempfile::tempdir()?;
-    let (disk, engine) = updater(root.path(), &server);
-    record_complete(disk.as_ref(), ACTIVE)?;
-    let state = State {
-        current: Some(ACTIVE.into()),
-        ..State::default()
-    };
-    disk.transition(&state)?;
-    let outcome = engine.install_pinned(PINNED, &fixture.digest).await;
-    let requests = finish_server(server)?;
-    assert_eq!(disk.state()?, state);
-    assert_eq!(disk.versions()?, [ACTIVE]);
-    assert!(!disk.version_path(PINNED).exists());
-    assert!(!root.path().join("parts").exists());
-    Ok((outcome, requests))
-}
-
-fn updater(root: &Path, server: &Server) -> (Arc<DiskStore>, Engine) {
-    let disk = Arc::new(DiskStore::new(root.to_path_buf()));
-    let engine = Engine {
-        store: disk.clone(),
-        client: Arc::new(server.client.clone()),
-        installer: Arc::new(TarGzBinaryInstaller::new()),
-        processes: Arc::new(SystemProcesses),
-    };
-    (disk, engine)
-}
-
-fn record_complete(disk: &DiskStore, version: &str) -> TestResult {
-    let folder = disk.version_path(version);
-    fs::create_dir_all(&folder)?;
-    fs::write(folder.join(BINARY), b"previous program")?;
-    disk.complete(version, &PartsList::new(vec![])?)?;
-    Ok(())
-}
-
-fn finish_server(server: Server) -> TestResult<Vec<String>> {
-    let requests = server
-        .requests
-        .lock()
-        .map(|requests| requests.clone())
-        .map_err(|_| "request lock poisoned");
-    server.finish()?;
-    Ok(requests?)
 }
