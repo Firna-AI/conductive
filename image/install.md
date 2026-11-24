@@ -123,9 +123,21 @@ executable when the image has no program or its check fails:
 /opt/conductive/current/conductive update started
 ```
 
+To stage a specific release, give its version and program archive digest
+with `--bootstrap`.
+
+```sh
+/path/to/conductive update check --bootstrap --release "$RELEASE_VERSION" --digest "$PROGRAM_SHA256"
+```
+
+The updater rebuilds the manifest from those two values. It fetches the
+signature and archive from the configured release server. It skips the
+newest-version JSON. It skips complete and rejected versions. An
+active release of the same version or a newer version prevents staging.
+
 The check command logs a warning and returns failure after a failed
 download. Before it fetches a new program archive, the updater checks the
-Ed25519 signature of the newest-version JSON with its built-in public key.
+Ed25519 signature of the program manifest with its built-in public key.
 It fetches the signature from the release server. A missing or invalid
 signature leaves the running release in use. The updater checks the
 program archive and each part against their SHA-256 digests before use.

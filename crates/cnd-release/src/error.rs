@@ -20,6 +20,33 @@ pub enum Error {
         /// The rejected version.
         version: String,
     },
+    /// A SHA-256 digest must have 64 lowercase hexadecimal characters.
+    #[error("[cnd-release] invalid SHA-256 digest")]
+    InvalidDigest,
+    /// The container base manifest cannot be decoded.
+    #[error("[cnd-release/container-base] invalid manifest: {source}")]
+    InvalidContainerBaseManifest {
+        /// The JSON decode error.
+        source: serde_json::Error,
+    },
+    /// The reader does not support the manifest schema version.
+    #[error("[cnd-release/container-base] unsupported manifest schema: {version}")]
+    UnsupportedContainerBaseSchema {
+        /// The unknown schema version.
+        version: u32,
+    },
+    /// The manifest names a different version or program archive digest.
+    #[error("[cnd-release/container-base] manifest names a different program release")]
+    ContainerBaseReleaseMismatch,
+    /// The container archive size must be a positive JavaScript-safe integer.
+    #[error("[cnd-release/container-base] invalid archive size: {size}")]
+    InvalidContainerBaseArchiveSize {
+        /// The rejected size in bytes.
+        size: u64,
+    },
+    /// The image ID must have the sha256 prefix and a lowercase SHA-256 digest.
+    #[error("[cnd-release/container-base] invalid image ID")]
+    InvalidImageId,
     /// A parts file uses an unsupported format.
     #[error("[cnd-release] unsupported parts schema: {version}")]
     UnsupportedSchema {

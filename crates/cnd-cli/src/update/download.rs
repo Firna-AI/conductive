@@ -1,7 +1,9 @@
 //! Download and verify a release, and download and verify single parts.
 
 use cli_release_interface::ReleaseAssetInfo;
+use cnd_release::error::Error::{InvalidDigest, InvalidVersion};
 use cnd_release::files::sha256;
+use cnd_release::manifest::{program_archive_key, release_manifest_bytes};
 use cnd_release::parts::Part;
 use cnd_release::signature::{manifest_signature_key, verify_manifest};
 use cnd_release::version::{BINARY, DEVELOPMENT_VERSION, LATEST_KEY, TARGET, release_version};
@@ -10,15 +12,31 @@ use super::engine::Engine;
 use super::error::{Error, ErrorResultExt, Result};
 use super::ports::UpdateLock;
 
+/// Source of the manifest and version to stage.
+pub(super) enum ReleaseSelection<'a> {
+    Latest(&'a str),
+    Pinned { version: &'a str, digest: &'a str },
+}
+
 impl Engine {
-    pub(super) async fn download(&self, running: &str, _lock: Box<dyn UpdateLock>) -> Result<()> {
-        let manifest = self
-            .fetch_release_file(LATEST_KEY.to_owned())
-            .await
-            .internal()?;
-        let release: ReleaseAssetInfo = serde_json::from_slice(&manifest).internal()?;
+    pub(super) async fn download(
+        &self,
+        selection: ReleaseSelection<'_>,
+        _lock: Box<dyn UpdateLock>,
+    ) -> Result<()> {
+        let manifest = match selection {
+            ReleaseSelection::Latest(_) => self
+                .fetch_release_file(LATEST_KEY.to_owned())
+                .await
+                .internal()?,
+            ReleaseSelection::Pinned { version, digest } => pinned_manifest(version, digest)?,
+        };
+        let mut release: ReleaseAssetInfo = serde_json::from_slice(&manifest).internal()?;
         let version = release_version(&release.version).internal()?;
-        if running != DEVELOPMENT_VERSION && version <= release_version(running).internal()? {
+        if let ReleaseSelection::Latest(running) = selection
+            && running != DEVELOPMENT_VERSION
+            && version <= release_version(running).internal()?
+        {
             return Ok(());
         }
         if release.binary != BINARY || release.target != TARGET {
@@ -40,7 +58,14 @@ impl Engine {
             return Ok(());
         }
         self.check_signature(&manifest).await?;
+        let pinned = matches!(selection, ReleaseSelection::Pinned { .. });
+        if pinned {
+            release.download_url = program_archive_key(&release.version, digest).internal()?;
+        }
         let archive = self.client.download(&release).await.internal()?;
+        if pinned {
+            check_digest(&archive, digest, BINARY)?;
+        }
         self.store.prepare(&release.version)?;
         let executable = self.store.version_path(&release.version).join(BINARY);
         self.installer
@@ -106,11 +131,24 @@ impl Engine {
             sha256: Some(part.sha256.clone()),
         };
         let bytes = self.client.download(&asset).await.internal()?;
-        if !sha256(&bytes).eq_ignore_ascii_case(&part.sha256) {
-            return Err(Error::DigestMismatch {
-                name: part.name.clone(),
-            });
-        }
+        check_digest(&bytes, &part.sha256, &part.name)?;
         self.store.unpack(part, &bytes)
     }
+}
+
+fn pinned_manifest(version: &str, digest: &str) -> Result<Vec<u8>> {
+    match release_manifest_bytes(version, digest) {
+        Err(InvalidVersion { .. }) => Err(Error::InvalidRelease),
+        Err(InvalidDigest) => Err(Error::MissingDigest),
+        result => result.internal(),
+    }
+}
+
+fn check_digest(bytes: &[u8], digest: &str, name: &str) -> Result<()> {
+    if !sha256(bytes).eq_ignore_ascii_case(digest) {
+        return Err(Error::DigestMismatch {
+            name: name.to_owned(),
+        });
+    }
+    Ok(())
 }

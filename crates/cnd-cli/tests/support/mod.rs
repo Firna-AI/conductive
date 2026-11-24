@@ -19,7 +19,7 @@ use tar::{Builder, Header};
 pub(crate) mod download;
 pub(crate) mod locking;
 
-type TestResult<T = ()> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
+pub(super) type TestResult<T = ()> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 pub(super) fn test_signer() -> cnd_release::error::Result<ReleaseSigner> {
     ReleaseSigner::from_pem(include_str!(
@@ -53,6 +53,13 @@ pub(super) struct Server {
 
 impl Server {
     pub(super) fn start(responses: HashMap<String, Vec<u8>>) -> TestResult<Self> {
+        Self::start_with_missing_status(responses, "404 Not Found")
+    }
+
+    pub(super) fn start_with_missing_status(
+        responses: HashMap<String, Vec<u8>>,
+        missing_status: &'static str,
+    ) -> TestResult<Self> {
         let public_key = test_signer()?.public_key();
         let listener = TcpListener::bind("127.0.0.1:0")?;
         let address = listener.local_addr()?;
@@ -84,7 +91,7 @@ impl Server {
                     .push(path.to_owned());
                 let (status, bytes) = match responses.get(path) {
                     Some(bytes) => ("200 OK", bytes.as_slice()),
-                    None => ("404 Not Found", [].as_slice()),
+                    None => (missing_status, [].as_slice()),
                 };
                 write!(
                     stream,

@@ -86,11 +86,11 @@ start reads the start variables again.
 A shutdown received during activation prevents execution of the new release.
 Development builds disable idle swaps.
 
-`update check` uses the `cli-updater` HTTP client to read the release
-manifest. It compares versions and checks the manifest's detached Ed25519
-signature with the built-in release public key before it fetches a new
-program archive. A missing or invalid signature leaves the running release
-in use. It downloads into a private version folder. It checks the program
+By default, `update check` reads the newest-version JSON with the
+`cli-updater` HTTP client. It compares versions. It checks the detached
+Ed25519 signature with the built-in release public key before it fetches
+a new program archive. A missing or invalid signature leaves the running
+release in use. It downloads into a private version folder. It checks the program
 digest through `cli-updater` and checks every part digest before extraction.
 It reuses present parts with the same digest. A failed check logs a
 warning and returns failure. The independent background unit cannot block a start.
@@ -132,7 +132,13 @@ Development builds keep their empty list. Older updaters use the new program's
 check and accept added JSON fields.
 `update check --bootstrap` stages the first release when the bootstrap
 program already has the newest version. An existing active release still
-prevents a downgrade. See [the install guide](../../image/install.md#release-installation)
+prevents a downgrade. Give both `--release VERSION` and `--digest SHA256`
+with `--bootstrap` to stage a specific release. Use the SHA-256 digest of
+the program archive. The updater rebuilds the manifest and verifies its
+signature without fetching the newest-version JSON. The signature and
+program archive come from the configured release server. The updater
+skips a complete or rejected version and a version at or below the
+active release. See [the install guide](../../image/install.md#release-installation)
 for the image-build sequence and the folder layout.
 
 ### Session watches

@@ -32,11 +32,17 @@ pub(crate) struct UpdateArgs {
 
 #[derive(Debug, Subcommand)]
 enum Operation {
-    /// Download the newest release without changing the active release.
+    /// Download a release without changing the active release.
     Check {
         /// Stage the first installed release, even when the bootstrap has its version.
         #[arg(long)]
         bootstrap: bool,
+        /// Version to install with the matching digest.
+        #[arg(long, requires_all = ["bootstrap", "digest"], value_name = "VERSION")]
+        release: Option<String>,
+        /// SHA-256 digest of the pinned program archive.
+        #[arg(long, requires_all = ["bootstrap", "release"], value_name = "SHA256")]
+        digest: Option<String>,
     },
     /// Apply a complete download before services start, and restore its missing parts. Requires root.
     Apply,
@@ -65,16 +71,17 @@ pub(crate) async fn execute(args: UpdateArgs) -> Result<()> {
     };
     let engine: &dyn UpdateEngine = &engine;
     match args.operation {
-        Operation::Check { bootstrap } => {
-            let version = if bootstrap {
-                DEVELOPMENT_VERSION
+        Operation::Check {
+            bootstrap,
+            release,
+            digest,
+        } => {
+            if let Some((version, digest)) = release.as_deref().zip(digest.as_deref()) {
+                engine.install_pinned(version, digest).await.internal()
+            } else if bootstrap {
+                engine.install(DEVELOPMENT_VERSION).await.internal()
             } else {
-                release::VERSION
-            };
-            if bootstrap {
-                engine.install(version).await.internal()
-            } else {
-                engine.check(version).await.internal()
+                engine.check(release::VERSION).await.internal()
             }
         }
         Operation::Apply => engine.apply().await.internal(),

@@ -6,6 +6,7 @@ use async_trait::async_trait;
 use cli_updater::DynBinaryInstaller;
 use cnd_release::version::release_version;
 
+use super::download::ReleaseSelection;
 use super::error::{Error, ErrorResultExt, Result};
 use super::ports::{Processes, ReleaseSource, State, Store, UpdateEngine};
 
@@ -22,6 +23,21 @@ pub struct Engine {
 }
 
 impl Engine {
+    async fn install_release(&self, selection: ReleaseSelection<'_>) -> Result<()> {
+        let store = self.store.clone();
+        let lock = tokio::task::spawn_blocking(move || store.installation_lock())
+            .await
+            .internal();
+        let result = match lock {
+            Ok(Ok(lock)) => self.download(selection, lock).await,
+            Ok(Err(error)) | Err(error) => Err(error),
+        };
+        if let Err(error) = &result {
+            tracing::warn!(%error, "sandbox installation check failed; keeping current release");
+        }
+        result
+    }
+
     fn next_version(&self, current: Option<&str>) -> Result<Option<String>> {
         let mut newest = current.map(str::to_owned);
         for version in self.store.versions()? {
@@ -73,23 +89,21 @@ impl Engine {
 #[async_trait]
 impl UpdateEngine for Engine {
     async fn install(&self, running_version: &str) -> Result<()> {
-        let store = self.store.clone();
-        let lock = tokio::task::spawn_blocking(move || store.installation_lock())
+        self.install_release(ReleaseSelection::Latest(running_version))
             .await
-            .internal();
-        let result = match lock {
-            Ok(Ok(lock)) => self.download(running_version, lock).await,
-            Ok(Err(error)) | Err(error) => Err(error),
-        };
-        if let Err(error) = &result {
-            tracing::warn!(%error, "sandbox installation check failed; keeping current release");
-        }
-        result
+    }
+
+    async fn install_pinned(&self, version: &str, digest: &str) -> Result<()> {
+        self.install_release(ReleaseSelection::Pinned { version, digest })
+            .await
     }
 
     async fn check(&self, running_version: &str) -> Result<()> {
         let result = match self.store.lock() {
-            Ok(Some(lock)) => self.download(running_version, lock).await,
+            Ok(Some(lock)) => {
+                self.download(ReleaseSelection::Latest(running_version), lock)
+                    .await
+            }
             Ok(None) => Err(Error::Busy),
             Err(error) => Err(error),
         };

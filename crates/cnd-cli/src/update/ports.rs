@@ -83,6 +83,8 @@ pub trait UpdateEngine: Send + Sync {
     async fn check(&self, running_version: &str) -> Result<()>;
     /// Stage an image installation after any running background check finishes.
     async fn install(&self, running_version: &str) -> Result<()>;
+    /// Stage a specific release after any running background check finishes.
+    async fn install_pinned(&self, version: &str, digest: &str) -> Result<()>;
     /// Activate the newest complete release or restore a failed start.
     /// First download again each missing part of the release that starts.
     async fn apply(&self) -> Result<()>;

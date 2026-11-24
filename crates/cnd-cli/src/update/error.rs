@@ -18,16 +18,16 @@ pub enum Error {
     /// The manifest does not verify with the embedded signing key.
     #[error("[cnd-cli/update] release manifest signature is invalid")]
     InvalidSignature,
-    /// A downloaded part does not match its digest.
+    /// A downloaded archive does not match its digest.
     #[error("[cnd-cli/update] digest mismatch for {name}")]
     DigestMismatch {
-        /// Name of the refused part.
+        /// Program or part name.
         name: String,
     },
     /// The new executable or root installer failed.
     #[error("[cnd-cli/update] start or install check failed")]
     StartFailed,
-    /// A release does not contain the required parts or identity.
+    /// A release lacks the required parts or has an invalid identity.
     #[error("[cnd-cli/update] invalid release")]
     InvalidRelease,
     /// There is no previous release to restore.
