@@ -1,6 +1,6 @@
 import type { HttpFetch } from '../../env'
+import type { CommandOffsets } from '../../machines/channel'
 import type {
-  CommandOffsets,
   PortMode,
   SandboxProvider,
   SandboxStart,

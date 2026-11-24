@@ -1,5 +1,8 @@
 import type { LocalWork } from '../../src/shared/workspaces'
 import type { AppDependencies, AppEnv } from '../env'
+import { machineChannel } from '../machines/channel'
+import { workspaceMachineOwner } from '../machines/client'
+import { verifyTarget } from '../previews/access'
 import { orgProviderForAccount } from '../sandbox/client'
 import { requireOrgMember } from './access'
 import {
@@ -32,10 +35,24 @@ export async function readContinueWork(
     dependencies.fetch,
     row.providerAccount,
   )
-  const result = await provider.runCommand(
-    row.sandboxId,
-    localWorkCommand(directory),
+  await verifyTarget(
+    env,
+    {
+      orgId: row.orgId,
+      workspaceId: row.id,
+      sandboxId: row.sandboxId,
+      providerAccount: row.providerAccount,
+      state: row.state,
+    },
+    userId,
+    false,
   )
+  const result = await machineChannel(
+    env,
+    workspaceMachineOwner(row.orgId, row.id),
+    provider,
+    row.sandboxId,
+  ).runCommand(localWorkCommand(directory))
   if (result.exitCode !== 0 || result.timedOut) throw localWorkUnavailable()
   await requireOrgMember(env.DB, orgId, userId)
   return localWorkResult(result.stdout)

@@ -159,7 +159,9 @@ and keeps the running turns active.
 Back in the queue, the alarm checks that the attempt is current and its
 deadline is still open. It saves `automaticRestartSubmitted` and ends the
 running turns. Chat keeps their undelivered messages for the next ready
-runner. The alarm then submits the command outside the queue.
+runner. The alarm then checks workspace access again, and submits the
+command outside the queue through the
+[machine channel](../machines/README.md#the-machine-channel).
 
 After the submission record, a hello on the saved stream resumes replay
 and keeps Starting.
@@ -251,8 +253,8 @@ create and resume. The workspace object runs that start:
   placeholder, one D1 statement ends the placeholder and reads the branch
   for the command. Later phases and resumes write nothing there. Before
   that, a name write renames a placeholder branch with `namedBranchSql`.
-  They make most of their D1 and
-  Boat calls outside the chat queue. The start guard in
+  They make most of their D1, provider, and
+  host calls outside the chat queue. The start guard in
   [`start-guard.ts`](start-guard.ts) runs each group of these calls with
   `outside`, as [History and event order](../chat/history.md) says. So
   chat reads, messages, and runner receipts do not wait for those calls.
@@ -342,9 +344,16 @@ the job step records of the creates and resumes of one workspace object.
   [`client.ts`](../sandbox/client.ts) marks that binding. So
   `providerForAccount` gives each provider of that env, and of a copy of
   it, through [`timed-provider.ts`](timed-provider.ts).
+  `observeHostChannels` in [`host-channel.ts`](../machines/host-channel.ts)
+  marks the same binding. So each host channel of the
+  [machine channel](../machines/README.md#the-machine-channel) comes
+  through `timedHostChannel` in `timed-provider.ts`.
 - `StartRunTimer` in [`start-run-timer.ts`](start-run-timer.ts) adds each
-  D1 and provider call to the open run of a start. A command status read
-  counts as a poll. `WorkspaceLifecycle.alarmLifecycle` gives the timer the
+  D1, provider, and host call to the open run of a start. A provider call
+  has a name such as `provider.startCommand`, and a host call a name such
+  as `host.startCommand`. A host call counts in the provider totals. A
+  command status read on either path counts as a poll, such as
+  `host.getCommandStatus`. `WorkspaceLifecycle.alarmLifecycle` gives the timer the
   wait to enter the chat queue, and `startGuard` gives the wait to enter it
   again after each outside call. A call of another queue turn during an
   outside call of the run also counts in the run. A call while no run is

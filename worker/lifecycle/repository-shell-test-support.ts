@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 
-import type { CommandResult } from '../sandbox/provider'
+import type { CommandResult } from '../machines/channel'
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
 import { testDirectory } from '../test-support/test-directory'
 import { shellQuote } from './commands'

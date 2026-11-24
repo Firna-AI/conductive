@@ -11,7 +11,7 @@ import {
 } from '../../src/shared/host'
 import type { AppEnv } from '../env'
 import { featureResult } from '../features/result'
-import { errorResponse, HttpError } from '../http'
+import { errorResponse } from '../http'
 import { hash } from '../security/crypto'
 import {
   equalDigest,
@@ -19,8 +19,8 @@ import {
   machinesBinding,
   tokenRequired,
 } from './authorization'
-import { MachineChannel } from './channel'
-import { machineUnavailable } from './errors'
+import { HostConnection, HostWelcomeWait } from './host-connection'
+import { invalidRequest, machineHttpError, machineUnavailable } from './errors'
 import { validateOperation } from './operations'
 import {
   machineObjectName,
@@ -35,7 +35,8 @@ import { socketIdentity } from './socket-state'
 
 export class Machine extends DurableObject<AppEnv> {
   private record: MachineRecord | null = null
-  private channel: MachineChannel | null = null
+  private host: HostConnection | null = null
+  private readonly welcomeWait = new HostWelcomeWait()
 
   constructor(context: DurableObjectState, env: AppEnv) {
     super(context, env)
@@ -54,7 +55,7 @@ export class Machine extends DurableObject<AppEnv> {
           socket.readyState === WebSocket.OPEN
         ) {
           this.close(HOST_CLOSE_REPLACED)
-          this.channel = new MachineChannel(socket, state, context.storage.kv)
+          this.host = new HostConnection(socket, state, context.storage.kv)
         } else
           socket.close(
             HOST_CLOSE_TOKEN_CHANGED,
@@ -68,12 +69,7 @@ export class Machine extends DurableObject<AppEnv> {
     return this.ctx.blockConcurrencyWhile(() =>
       featureResult(async () => {
         this.checkIdentity(owner)
-        if (!/^[A-Za-z0-9_-]{43}$/.test(digest))
-          throw new HttpError(
-            400,
-            'invalid_request',
-            'The request is not valid.',
-          )
+        if (!/^[A-Za-z0-9_-]{43}$/.test(digest)) throw invalidRequest()
         if (this.record?.digest === digest) return
         this.record = {
           owner,
@@ -106,7 +102,7 @@ export class Machine extends DurableObject<AppEnv> {
     return featureResult(async () => {
       requireOwner(this.record, owner)
       return {
-        connected: this.channel?.connected() ?? false,
+        connected: this.host?.connected() ?? false,
         hello: this.record?.hello ?? null,
       }
     })
@@ -140,14 +136,14 @@ export class Machine extends DurableObject<AppEnv> {
     processId: number,
     stdoutOffset: number,
     stderrOffset: number,
+    waitForHost = false,
   ) {
     return featureResult(async () => {
-      const result = await this.request(owner, {
-        kind: 'command.status',
-        processId,
-        stdoutOffset,
-        stderrOffset,
-      })
+      const result = await this.request(
+        owner,
+        { kind: 'command.status', processId, stdoutOffset, stderrOffset },
+        waitForHost,
+      )
       if (result.kind !== 'command.status')
         throw new Error('Unexpected command status.')
       return result
@@ -176,8 +172,8 @@ export class Machine extends DurableObject<AppEnv> {
     return featureResult(async () => {
       requireOwner(this.record, owner)
       validateOperation({ kind: 'stream.open', streamId: 0, port })
-      if (!this.channel) throw machineUnavailable()
-      return this.channel.open(port)
+      if (!this.host) throw machineUnavailable()
+      return this.host.open(port)
     })
   }
 
@@ -187,7 +183,7 @@ export class Machine extends DurableObject<AppEnv> {
         new URL(request.url).origin !== this.env.MACHINE_ORIGIN ||
         new URL(request.url).pathname !== HOST_PATH
       )
-        throw new HttpError(
+        throw machineHttpError(
           403,
           'machine_forbidden',
           'The connection is not available.',
@@ -203,7 +199,7 @@ export class Machine extends DurableObject<AppEnv> {
           return errorResponse(tokenRequired())
         this.close(HOST_CLOSE_REPLACED)
         const pair = new WebSocketPair()
-        this.channel = new MachineChannel(
+        this.host = new HostConnection(
           pair[1],
           { generation: this.record.generation, ready: false, lastId: 0 },
           this.ctx.storage.kv,
@@ -220,15 +216,15 @@ export class Machine extends DurableObject<AppEnv> {
     socket: WebSocket,
     value: string | ArrayBuffer,
   ): Promise<void> {
-    if (socket !== this.channel?.socket) {
+    if (socket !== this.host?.socket) {
       socket.close(HOST_CLOSE_TOKEN_CHANGED)
       return
     }
     try {
-      const message = this.channel.receive(value)
+      const message = this.host.receive(value)
       if (message?.type !== 'hello') return
       await this.ctx.blockConcurrencyWhile(async () => {
-        if (!this.record || socket !== this.channel?.socket) return
+        if (!this.record || socket !== this.host?.socket) return
         this.record.hello = {
           hostProtocolVersion: message.hostProtocolVersion,
           programVersion: message.programVersion,
@@ -239,18 +235,19 @@ export class Machine extends DurableObject<AppEnv> {
           this.close(HOST_CLOSE_UNSUPPORTED_VERSION)
           return
         }
-        this.channel.send({
+        this.host.send({
           type: 'welcome',
           hostProtocolVersion: HOST_PROTOCOL_VERSION,
         })
-        this.channel.welcomed()
+        this.host.welcomed()
+        this.welcomeWait.welcomed()
       })
     } catch {
       this.close(1008)
     }
   }
   webSocketClose(socket: WebSocket): void {
-    if (socket === this.channel?.socket) this.close(1000)
+    if (socket === this.host?.socket) this.close(1000)
   }
   webSocketError(socket: WebSocket): void {
     this.webSocketClose(socket)
@@ -264,23 +261,34 @@ export class Machine extends DurableObject<AppEnv> {
         .equals(this.ctx.id) ||
       (this.record && !sameOwner(this.record.owner, owner))
     )
-      throw new HttpError(
+      throw machineHttpError(
         404,
         'machine_not_found',
         'The cloud computer is not available.',
       )
   }
-  private request(owner: MachineOwner, operation: HostOperation) {
+  private async request(
+    owner: MachineOwner,
+    operation: HostOperation,
+    waitForHost = false,
+  ) {
     requireOwner(this.record, owner)
     validateOperation(operation)
-    if (!this.channel) throw machineUnavailable()
-    return this.channel.request(operation)
+    let deadline: number | undefined
+    if (waitForHost) {
+      deadline = await this.welcomeWait.deadline(
+        this.host?.connected() ?? false,
+      )
+      requireOwner(this.record, owner)
+    }
+    if (!this.host) throw machineUnavailable()
+    return this.host.request(operation, deadline)
   }
   private close(code: number): void {
-    const channel = this.channel
-    this.channel = null
-    channel?.disconnect()
-    if (channel && channel.socket.readyState !== WebSocket.CLOSED)
-      channel.socket.close(code, 'The connection is no longer available.')
+    const host = this.host
+    this.host = null
+    host?.disconnect()
+    if (host && host.socket.readyState !== WebSocket.CLOSED)
+      host.socket.close(code, 'The connection is no longer available.')
   }
 }

@@ -1,6 +1,6 @@
 import type { QueueTurn } from '../chat/queue-turn'
 
-/** A poll is a command status read. Every other provider call is a provider call. */
+/** A poll is a command status read. Other host calls use the provider totals. */
 export type TimedCallKind = 'provider' | 'poll' | 'd1'
 
 export interface StartRunTotals {
@@ -30,7 +30,7 @@ interface OpenRun {
 /**
  * Measures the open run of a start in one workspace object. The Worker has
  * no async context, so the object times each call of its own D1 binding and
- * providers while a run is open. A call of another queue turn during an
+ * providers and host channels while a run is open. A call of another queue turn during an
  * outside call of the run also counts in the run. Calls while no run is open
  * count nowhere.
  */

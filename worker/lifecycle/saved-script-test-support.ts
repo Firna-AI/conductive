@@ -2,7 +2,7 @@ import { execFile } from 'node:child_process'
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import type { CommandResult } from '../sandbox/provider'
+import type { CommandResult } from '../machines/channel'
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
 import { testDirectory } from '../test-support/test-directory'
 import { isRecord } from '../http'

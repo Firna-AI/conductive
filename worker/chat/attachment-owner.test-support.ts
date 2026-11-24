@@ -1,3 +1,6 @@
+import { onTestFinished } from 'vitest'
+
+import { LifecycleHost } from '../lifecycle/lifecycle-host-test-support'
 import { attachmentCommandTransfer } from '../test-support/attachment-command'
 import { handleAttachmentDownload } from './attachment-download'
 import type { TestHarness } from '../test-support/harness'
@@ -48,6 +51,8 @@ export function attachmentOwnerCopy(harness: TestHarness, failFirst = false) {
       harness.boat.setFile(sandboxId, path, bytes.byteLength)
     },
   })
+  const host = new LifecycleHost(harness.env, transfer)
+  onTestFinished(() => host.close())
   const fetch = async (request: Request) => {
     requests.push(request)
     const response = await transfer.fetch(request)
@@ -59,10 +64,12 @@ export function attachmentOwnerCopy(harness: TestHarness, failFirst = false) {
     return copying
   }
   return {
+    host,
     dependencies: { prepareAttachments: prepare },
     prepare,
     entered,
     release,
+    commands: transfer.commands,
     writes,
     requests,
     get metadataRequests() {
@@ -96,6 +103,7 @@ export async function attachmentOwnerFixture(
   const copy = attachmentOwnerCopy(harness, failFirst)
   const fixture = await attachmentFixture(harness, copy.dependencies)
   await selectAttachmentComputer(harness, 'sandbox-owner')
+  await copy.host.seed(fixture.org.id, WORKSPACE_ID, 'sandbox-owner')
   const file = await fixture.upload()
   const session = await fixture.createSession()
   const runner = await fixture.connect()

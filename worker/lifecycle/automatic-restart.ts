@@ -1,6 +1,8 @@
 import type { AppDependencies, AppEnv } from '../env'
 import type { WorkspaceChat } from '../chat/backend'
 import type { QueueTurn } from '../chat/queue-turn'
+import { machineChannel } from '../machines/channel'
+import { workspaceMachineOwner } from '../machines/client'
 import { assertReceiverActive } from '../members/receiver-fence'
 import { verifyTarget } from '../previews/access'
 import type { WorkspaceTarget } from '../previews/types'
@@ -80,6 +82,12 @@ export function createAutomaticRestart(input: {
       state: row.state,
     }
     await verifyTarget(env, target, undefined, false)
+    const channel = machineChannel(
+      env,
+      workspaceMachineOwner(orgId, workspaceId),
+      provider,
+      sandboxId,
+    )
     const at = now()
     await controller.changeLifecycle((current) => ({
       ...restartingLifecycle(current, workspaceId, at),
@@ -122,11 +130,11 @@ export function createAutomaticRestart(input: {
               }))
               if (current.runningSessions.length)
                 await chat.stopTurnsForRestart(workspaceId)
-              return turn.outside(() => provider.runCommand(sandboxId, command))
+              return turn.outside(() => channel.runCommand(command))
             }
             return turn.outside(async () => {
               await verifyRestartTarget()
-              return provider.runCommand(sandboxId, command)
+              return channel.runCommand(command)
             })
           })
           return true

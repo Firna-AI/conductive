@@ -1,10 +1,11 @@
 import type { AppEnv } from '../env'
-import { HttpError } from '../http'
+import type { HttpError } from '../http'
+import { machineHttpError } from './errors'
 
 export const MACHINE_TOKEN_PATTERN = 'cndm1\\.[0-9a-f]{64}\\.[A-Za-z0-9_-]{43}'
 
 export function tokenRequired(): HttpError {
-  return new HttpError(
+  return machineHttpError(
     401,
     'machine_token_required',
     'The connection is not available.',
@@ -16,7 +17,7 @@ export function hostToken(request: Request): {
   objectId: string
 } {
   if (request.headers.has('Origin') || request.headers.has('Cookie'))
-    throw new HttpError(
+    throw machineHttpError(
       403,
       'machine_forbidden',
       'The connection is not available.',
@@ -25,7 +26,7 @@ export function hostToken(request: Request): {
     request.method !== 'GET' ||
     request.headers.get('Upgrade')?.toLowerCase() !== 'websocket'
   )
-    throw new HttpError(
+    throw machineHttpError(
       426,
       'websocket_required',
       'Open a new connection to continue.',
@@ -42,7 +43,7 @@ export function hostToken(request: Request): {
 
 export function machinesBinding(env: AppEnv): NonNullable<AppEnv['MACHINES']> {
   if (!env.MACHINES)
-    throw new HttpError(
+    throw machineHttpError(
       503,
       'service_unavailable',
       'The app is not available. Try again.',

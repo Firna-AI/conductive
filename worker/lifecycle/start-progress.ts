@@ -1,4 +1,6 @@
 import type { AppDependencies, AppEnv } from '../env'
+import { machineChannel } from '../machines/channel'
+import { workspaceMachineOwner } from '../machines/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import {
   advanceStartCommand,
@@ -35,6 +37,14 @@ export async function advanceStartSteps(
     await nextStartCommand(storage, job, 'runner', dependencies.now())
     return true
   }
+  const sandboxId = row.sandboxId
+  if (!sandboxId) throw new WorkspaceStartError(null)
+  const channel = machineChannel(
+    env,
+    workspaceMachineOwner(row.orgId, row.id),
+    provider,
+    sandboxId,
+  )
   const label =
     job.phase === 'fetch' &&
     (job.baseBranch ||
@@ -46,7 +56,7 @@ export async function advanceStartSteps(
       env,
       endpoint,
       storage,
-      provider,
+      { sandboxId, provider, channel },
       row,
       job,
       label,

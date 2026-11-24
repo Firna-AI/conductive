@@ -1,7 +1,6 @@
+import type { CommandResult, CommandStatus } from '../machines/channel'
 import type { ProviderErrorKind } from './errors'
 import type {
-  CommandResult,
-  CommandStatus,
   PrivatePort,
   Sandbox,
   SandboxFileRead,

@@ -1,4 +1,5 @@
 import { HttpError } from '../http'
+import { isTransientHostError } from '../machines/errors'
 import { ProviderError } from '../sandbox/errors'
 import type { AttachmentStep } from '../warning-types'
 import { WarningId, errorSummary } from '../warning-values'
@@ -11,20 +12,21 @@ const ATTACHMENT_COPY_UNANSWERED_MESSAGE =
   'The cloud computer did not answer, so the attached files did not arrive. Try again.'
 
 /**
- * A provider step of a file check or download failed. The turn shows its
+ * A step of a file check or download failed. The turn shows its
  * message, and the log shows its step and the summary of its cause.
  */
 export class AttachmentTransferFailed extends HttpError {
   readonly step: AttachmentStep
   readonly failure: unknown
-  /** The provider gave no answer, as after a time-out, or a server error. */
+  /** The command or file operation gave no answer. */
   readonly unanswered: boolean
 
   constructor(step: AttachmentStep, failure: unknown) {
     const unanswered =
-      failure instanceof ProviderError &&
-      failure.kind === 'unavailable' &&
-      failure.status >= 500
+      isTransientHostError(failure) ||
+      (failure instanceof ProviderError &&
+        failure.kind === 'unavailable' &&
+        failure.status >= 500)
     super(
       503,
       'attachment_copy_failed',
@@ -39,13 +41,12 @@ export class AttachmentTransferFailed extends HttpError {
 }
 
 /**
- * Run one check or download of a file again after the provider gave no
- * answer. Each run builds its own provider requests, so a new download
- * gets a new token. Any other failure, or a second one, ends the copy.
+ * Retry a check or download once after an unanswered call. If the retry
+ * starts a new download, it gets a new token.
  */
 export async function retryUnanswered<T>(
   workspaceId: string,
-  run: () => Promise<T>,
+  run: (retry?: AttachmentTransferFailed) => Promise<T>,
 ): Promise<T> {
   try {
     return await run()
@@ -58,7 +59,7 @@ export async function retryUnanswered<T>(
       step: error.step,
       error: errorSummary(error.failure),
     })
-    return run()
+    return run(error)
   }
 }
 

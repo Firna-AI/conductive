@@ -9,8 +9,10 @@ It also covers the first-message file of a removed workspace: a new attempt can 
 `delivery-order.test.ts` holds a copy during a running turn.
 It checks that the later messages of that turn keep their order, and that Stop and another session do not wait.
 It also checks that a failed copy fails only its own turn.
-`attachmentOwnerCopy` in `attachment-owner.test-support.ts` runs the real copy helper against a fake provider.
-The fake counts the writers of each computer and path at one time, and the writes after delivery.
+`attachmentOwnerCopy` in `attachment-owner.test-support.ts` runs the real copy helper against a fake host and a fake provider.
+The fake host connects through the production machine object, and answers the download commands and their status reads.
+The fake provider answers the file checks.
+The fake transfer counts the writers of each computer and path at one time, and the writes after delivery.
 So a test finds a second writer, and a late write over an agent edit.
 `attachmentOwnerFixture` adds a workspace on one computer, an upload, a session, and a ready runner.
 `attachment-continuation.test.ts` ends a running turn while the copy of a joined message waits, and also after that message went out.

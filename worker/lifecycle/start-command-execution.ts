@@ -1,5 +1,6 @@
 import type { AppDependencies, AppEnv } from '../env'
-import type { SandboxProvider } from '../sandbox/provider'
+import type { MachineChannel } from '../machines/channel'
+import type { MachineProvider } from '../sandbox/provider'
 import {
   startWorkspaceTerminal,
   terminalStartCommand,
@@ -34,7 +35,11 @@ export async function advanceStartCommand(
   env: AppEnv,
   endpoint: WorkspaceLifecycleEndpoint,
   storage: StartJobStorage,
-  provider: SandboxProvider,
+  machine: {
+    sandboxId: string
+    provider: MachineProvider
+    channel: MachineChannel
+  },
   row: WorkspaceRow,
   job: WorkspaceStartJob,
   label: string,
@@ -42,8 +47,7 @@ export async function advanceStartCommand(
   dependencies: Pick<AppDependencies, 'fetch' | 'now'>,
   preserveBase = false,
 ): Promise<boolean> {
-  const sandboxId = row.sandboxId
-  if (!sandboxId) throw new WorkspaceStartError(null)
+  const { sandboxId, provider, channel } = machine
   if (
     job.phase !== 'fetch' &&
     job.phase !== 'branch' &&
@@ -102,8 +106,7 @@ export async function advanceStartCommand(
               )) ?? row.branch,
           }
     const started = await call(async () =>
-      provider.startCommand(
-        sandboxId,
+      channel.startCommand(
         lifecycleCommand(
           {
             kind: 'workspace',
@@ -125,16 +128,20 @@ export async function advanceStartCommand(
         ),
       ),
     )
-    await storage.update({ ...job, processId: started.processId })
+    await storage.update({
+      ...job,
+      processId: started.processId,
+      commandRoute: started.route,
+    })
     await storage.retry(job.attempt, 'progress')
     return false
   }
   const processId = job.processId
   const status = await call(() =>
-    provider.getCommandStatus(sandboxId, processId, {
-      stdoutOffset: job.stdoutOffset,
-      stderrOffset: job.stderrOffset,
-    }),
+    channel.getCommandStatus(
+      { processId, route: job.commandRoute ?? 'provider' },
+      { stdoutOffset: job.stdoutOffset, stderrOffset: job.stderrOffset },
+    ),
   )
   await storage.capture(job, status)
   await storage.retry(job.attempt, 'progress')
@@ -176,6 +183,7 @@ export async function nextStartCommand(
         : job.afterReadyPhase,
     providerRetry: null,
     processId: null,
+    commandRoute: undefined,
     stdoutOffset: 0,
     stderrOffset: 0,
   })

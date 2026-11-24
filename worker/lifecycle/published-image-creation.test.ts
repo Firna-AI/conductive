@@ -47,7 +47,8 @@ it('creates from captured image repositories while current settings and selectio
     from: 'last-good-image',
     env: { CURRENT_ENV: 'current-value' },
   })
-  expect(lifecycleCommandBody(boat.commands[0])).toContain(
+  expect(fixture.host.commands[0]).toBe(boat.commands[0])
+  expect(lifecycleCommandBody(fixture.host.commands[0])).toContain(
     "git fetch origin '+refs/heads/main:refs/remotes/origin/main'",
   )
   const accepted = fixture.starts.get(created.workspace.id)?.lastAccepted()
@@ -201,7 +202,8 @@ it('leases the image and captured branch from the same publication at claim admi
       .bind(id)
       .first('runner_protocol_version'),
   ).toBe(2)
-  expect(lifecycleCommandBody(boat.commands[0])).toContain(
+  expect(fixture.host.commands[0]).toBe(boat.commands[0])
+  expect(lifecycleCommandBody(fixture.host.commands[0])).toContain(
     "git fetch origin '+refs/heads/published-next:refs/remotes/origin/published-next'",
   )
   expect(

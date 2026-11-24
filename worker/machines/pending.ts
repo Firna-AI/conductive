@@ -5,14 +5,18 @@ import {
   HOST_MAX_PENDING_REQUESTS,
   HOST_REPLY_MAX_BYTES,
 } from '../../src/shared/host'
-import { HttpError } from '../http'
+import type { HttpError } from '../http'
 import { BoundedByteBuffer } from './byte-buffer'
 import {
   hostError,
   machineBusy,
   machineDisconnected,
+  machineHttpError,
+  machineTimeout,
   replyOverflow,
 } from './errors'
+
+export const HOST_REQUEST_LIMIT_MS = 30_000
 
 interface PendingRequest {
   operation: HostOperation
@@ -77,27 +81,22 @@ export class PendingRequests {
     return count
   }
 
-  create(operation: HostOperation) {
+  create(operation: HostOperation, deadline?: number) {
     if (this.requests.size >= HOST_MAX_PENDING_REQUESTS) throw machineBusy()
-    const id = this.allocateId()
-    const budget = replyBudget(operation)
-    const milliseconds =
+    const limit =
       operation.kind === 'command.run'
         ? (operation.timeoutSeconds + 10) * 1_000
         : operation.kind === 'stream.open'
           ? 15_000
-          : 30_000
+          : HOST_REQUEST_LIMIT_MS
+    const milliseconds =
+      deadline === undefined ? limit : Math.min(limit, deadline - Date.now())
+    if (milliseconds <= 0) throw machineTimeout()
+    const id = this.allocateId()
+    const budget = replyBudget(operation)
     const promise = new Promise<HostResult>((resolve, reject) => {
       const timer = setTimeout(
-        () =>
-          this.fail(
-            id,
-            new HttpError(
-              504,
-              'machine_timeout',
-              'The cloud computer did not answer. Try again.',
-            ),
-          ),
+        () => this.fail(id, machineTimeout()),
         milliseconds,
       )
       this.requests.set(id, {
@@ -124,7 +123,7 @@ export class PendingRequests {
     else if (result.kind === 'error') request.reject(hostError(result.code))
     else if (!matches(request.operation, result))
       request.reject(
-        new HttpError(
+        machineHttpError(
           502,
           'invalid_response',
           'The cloud computer response is not valid.',

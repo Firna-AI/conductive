@@ -6,10 +6,12 @@ import {
   localWorkUnavailable,
 } from './local-work'
 import { carriedWorkCommand } from './repository-change-commands'
+import { authorizeRepositoryChange } from './repository-change-data'
 import type {
   RepositoryChangeJob,
   RepositoryChangeOptions,
 } from './repository-change-types'
+import { workspaceCommandChannel } from './workspace-command-channel'
 
 /**
  * The work of the question: the local work of the old folder, as Continue
@@ -25,12 +27,14 @@ export async function readRepositoryChangeWork(
     options.dependencies.fetch,
     job.providerAccount,
   )
+  const channel = workspaceCommandChannel(options.env, job, provider)
   const read = async (command: string) => {
-    const result = await provider.runCommand(job.sandboxId, command)
+    const result = await channel.runCommand(command)
     if (result.exitCode !== 0 || result.timedOut) throw localWorkUnavailable()
     return localWorkResult(result.stdout)
   }
   const localWork = await read(localWorkCommand(job.directory))
+  await options.run(() => authorizeRepositoryChange(options, job))
   const carried = await read(carriedWorkCommand(job.target.directory))
   return {
     localWork,

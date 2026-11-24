@@ -11,6 +11,7 @@ import type { FeatureResult } from '../features/result'
 import type { BranchWork } from '../github/branch-work'
 import type { GitHubWorkspace } from '../github/contracts'
 import { HttpError } from '../http'
+import type { CommandRoute } from '../machines/channel'
 import { pendingContinue } from './continue-types'
 import type { DurableLifecycleState } from './durable-types'
 
@@ -62,6 +63,7 @@ export interface RepositoryChangeJob {
   /** When the job began to wait for a runner that can move. */
   runnerSince?: number
   processId: number | null
+  commandRoute?: CommandRoute
   commandStarted: boolean
   resumeQueued: boolean
   fetchId: string
@@ -70,9 +72,8 @@ export interface RepositoryChangeJob {
   publication?: { after: number; through: number }
   failure?: { status: number; code: string; message: string }
   /**
-   * When the first failed step after the move happened: a failed branch
-   * read of the new folder, or a failed publication. A job of an older
-   * deploy has no value, and its next failure sets it.
+   * The time of the first failed advance. See `retries` in `repository-change.ts`.
+   * A job of an older deploy has no value until its next failure.
    */
   failingSince?: number
   cancelled?: true

@@ -2,15 +2,22 @@
 
 This guide belongs to [Image builds](image-builds.md). It gives the retry
 policy that builds, refreshes, and workspace starts share after a transient
-provider error, the saved retry state, the job limits, and the cleanup of
-an unresolved allocation.
+provider error, the same policy for a transient host error of a start, the
+saved retry state, the job limits, and the cleanup of an unresolved
+allocation.
 
 ## The retry policy
 
 Builds, refreshes, and workspace starts share one saved policy for a
-transient Boat error. `transientProviderError` in
+transient provider error. `transientProviderError` in
 [`provider-retry.ts`](provider-retry.ts) decides which errors are
-transient. Other errors keep their existing handling.
+transient. A start sends its commands through the
+[machine channel](../machines/README.md#the-machine-channel), so a start
+step can also fail with a host error. Each transient host error of
+`isTransientHostError` in [`errors.ts`](../machines/errors.ts), and a host
+reply that does not match its request, `invalid_response`, use the same
+policy. A host error has no `Retry-After`. Other errors keep their existing
+handling.
 
 - The first transient error in an unfinished step opens a retry window of
   10 minutes, `PROVIDER_RETRY_WINDOW_MS`. A completed step resets it. A

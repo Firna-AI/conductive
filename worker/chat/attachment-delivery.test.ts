@@ -47,6 +47,7 @@ it('keeps the accepted message and exposes Try again after a copy prevents its t
   )
     .bind('sandbox-one', WORKSPACE_ID)
     .run()
+  await provider.host.seed(fixture.org.id, WORKSPACE_ID, 'sandbox-one')
   const file = await fixture.upload()
   const session = await fixture.createSession()
   const runner = await fixture.connect()
@@ -75,6 +76,7 @@ it('keeps the accepted message and exposes Try again after a copy prevents its t
     ATTACHMENT_IGNORE_BYTES,
     FILE_BYTES,
   ])
+  expect(provider.host.commands).toEqual(provider.commands)
   expect(
     runner.commands.filter((command) => command.type === 'turn'),
   ).toHaveLength(1)
@@ -131,7 +133,7 @@ it('ends a running turn after copy failure and lets Try again copy its message',
   runner.disconnect()
 })
 
-it('answers Stop during a held provider copy and never sends the stopped command', async () => {
+it('answers Stop during a held host copy and never sends the stopped command', async () => {
   const entered = held<void>()
   const release = held<void>()
   const provider = providerCopy(harness.env, {
@@ -147,6 +149,7 @@ it('answers Stop during a held provider copy and never sends the stopped command
   )
     .bind('sandbox-one', WORKSPACE_ID)
     .run()
+  await provider.host.seed(fixture.org.id, WORKSPACE_ID, 'sandbox-one')
   const file = await fixture.upload()
   const session = await fixture.createSession()
   const runner = await fixture.connect()

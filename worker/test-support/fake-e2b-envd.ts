@@ -1,5 +1,5 @@
 import type { HttpFetch } from '../env'
-import type { CommandResult, CommandStatus } from '../sandbox/provider'
+import type { CommandResult, CommandStatus } from '../machines/channel'
 import { fakeE2bFrames, fakeE2bStartConfig } from './fake-e2b-frames'
 
 export function fakeE2bJobPath(id: number, name: string): string {

@@ -286,9 +286,11 @@ it('publishes an already switched branch after the command loses its exit result
   expect(await f.storage.get(continueJobKey(job.id))).toMatchObject({
     stopCause: 'unknown',
   })
-  expect(
-    f.boat.commandRequests.filter(({ detached }) => detached),
-  ).toHaveLength(2)
+  const commands = f.boat.commandRequests.filter(({ detached }) => detached)
+  expect(commands).toHaveLength(2)
+  expect(f.host.commandRequests.filter(({ detached }) => detached)).toEqual(
+    commands,
+  )
   expect(
     (await f.history(session.id)).events.filter(
       ({ event }) => event.type === 'workspace.continued',

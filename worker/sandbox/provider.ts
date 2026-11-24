@@ -1,3 +1,9 @@
+import type {
+  CommandOffsets,
+  CommandResult,
+  CommandStatus,
+} from '../machines/channel'
+
 export const SANDBOX_STATES = [
   'init',
   'provisioning',
@@ -36,35 +42,8 @@ export interface SavedSnapshot {
   status: 'saving' | 'ready' | 'failed'
 }
 
-export interface CommandResult {
-  exitCode: number | null
-  stdout: string
-  stderr: string
-  timedOut: boolean
-}
-
 export interface StartedCommand {
   processId: number
-}
-
-/** Persist these provider byte offsets, rather than counting output characters. */
-export interface CommandOffsets {
-  stdoutOffset: number
-  stderrOffset: number
-}
-
-export interface CommandStatus extends CommandOffsets {
-  processId: number
-  state: 'running' | 'exited' | 'lost'
-  running: boolean
-  exitCode: number | null
-  /** Null when the provider does not report a timeout outcome. */
-  timedOut: boolean | null
-  stdout: string
-  stderr: string
-  stdoutNextOffset: number
-  stderrNextOffset: number
-  more: boolean
 }
 
 interface SandboxFile {
@@ -99,20 +78,8 @@ export interface PrivatePort {
 export type SandboxDesktop =
   { kind: 'ready'; url: string } | { kind: 'starting' }
 
-/** Internal server interface. Callers must authorize the org and its resource first. */
-export interface SandboxProvider {
-  privatePort(
-    sandboxId: string,
-    port: number,
-    mode: PortMode,
-  ): Promise<PrivatePort>
-  desktop(sandboxId: string): Promise<SandboxDesktop>
-  fileInfo(sandboxId: string, path: string): Promise<SandboxFileInfo>
-  readFile(
-    sandboxId: string,
-    path: string,
-    maxBytes: number,
-  ): Promise<SandboxFileRead>
+/** Callers authorize the org and its resource before using the provider. */
+export interface MachineProvider {
   create(input: SandboxStart): Promise<Sandbox>
   get(sandboxId: string): Promise<Sandbox>
   stop(sandboxId: string): Promise<Sandbox>
@@ -127,6 +94,11 @@ export interface SandboxProvider {
   saveSnapshot(sandboxId: string, name: string): Promise<SavedSnapshot>
   getSnapshot(name: string): Promise<SavedSnapshot>
   deleteSnapshot(name: string): Promise<void>
+  desktop(sandboxId: string): Promise<SandboxDesktop>
+}
+
+/** The provider path for work on a computer. A computer without a host connection can use it. */
+export interface ProviderWork {
   runCommand(sandboxId: string, command: string): Promise<CommandResult>
   startCommand(sandboxId: string, command: string): Promise<StartedCommand>
   getCommandStatus(
@@ -134,4 +106,18 @@ export interface SandboxProvider {
     processId: number,
     offsets: CommandOffsets,
   ): Promise<CommandStatus>
+  fileInfo(sandboxId: string, path: string): Promise<SandboxFileInfo>
+  readFile(
+    sandboxId: string,
+    path: string,
+    maxBytes: number,
+  ): Promise<SandboxFileRead>
+  privatePort(
+    sandboxId: string,
+    port: number,
+    mode: PortMode,
+  ): Promise<PrivatePort>
 }
+
+/** A provider client that also supplies the provider path for work. */
+export type SandboxProvider = MachineProvider & ProviderWork

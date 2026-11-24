@@ -27,6 +27,7 @@ export const RETAINED_CONFIGURATION = {}
 export async function retainedCreationFixture(bundle: string) {
   const fixture = await featureFixture(bundle, {
     configuration: RETAINED_CONFIGURATION,
+    connectHost: true,
   })
   const bindings = await fixture.runtime.getBindings<{
     WORKSPACES: DurableObjectNamespace<Workspace>

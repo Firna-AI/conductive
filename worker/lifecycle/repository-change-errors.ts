@@ -16,26 +16,32 @@ export function softwareOutdated(): HttpError {
   )
 }
 
+function changeFailure(message: string): HttpError {
+  return new HttpError(409, 'workspace_repository_change_failed', message)
+}
+
+export function repositoryChangeCouldNotFinish(): HttpError {
+  return changeFailure('The repository change could not finish. Try again.')
+}
+
 /** The reason of a failed change, for the toast "The repository didn't change." */
 export function repositoryChangeFailed(
   job: Pick<RepositoryChangeJob, 'phase' | 'baseBranch' | 'target'>,
   exitCode: number | null = null,
 ): HttpError {
-  const failed = (message: string) =>
-    new HttpError(409, 'workspace_repository_change_failed', message)
   if (job.phase === 'move' && exitCode === CHECKOUT_REFUSED)
-    return failed(repositoryFailure.clash(job.target.fullName))
+    return changeFailure(repositoryFailure.clash(job.target.fullName))
   if (job.phase === 'move' && exitCode === CONTEXT_COPY_FAILED)
-    return failed(
+    return changeFailure(
       `The context folder could not be copied to ${job.target.fullName}. Check the files of both context folders, then try again.`,
     )
   if (job.phase === 'fetch')
-    return failed(
+    return changeFailure(
       `The latest ${job.baseBranch} of ${job.target.fullName} could not be fetched. Check your GitHub access, then try again.`,
     )
   if (job.phase === 'runner')
-    return failed("The cloud computer isn't ready. Try again.")
-  return failed('The repository change could not finish. Try again.')
+    return changeFailure("The cloud computer isn't ready. Try again.")
+  return repositoryChangeCouldNotFinish()
 }
 
 /** The branch read of the new folder exited with a failure or timed out. */

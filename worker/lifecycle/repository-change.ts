@@ -11,7 +11,7 @@ import { providerForAccount } from '../sandbox/client'
 import { ProviderError } from '../sandbox/errors'
 import { reserveRepositoryChange } from './repository-change-admission'
 import { authorizeRepositoryChange } from './repository-change-data'
-import { endAfterMove, failedAfterMove } from './repository-change-end'
+import { endAfterFailure } from './repository-change-end'
 import { repositoryChangeFailed } from './repository-change-errors'
 import {
   advanceRepositoryChange,
@@ -25,10 +25,11 @@ import {
   type RepositoryChangeJob,
   type RepositoryChangeOptions,
 } from './repository-change-types'
+import { workspaceCommandChannel } from './workspace-command-channel'
 
 /**
  * The durable job of a repository change, beside Continue. The running job
- * is the reservation of the workspace. Provider waits never hold the chat
+ * is the reservation of the workspace. Command waits never hold the chat
  * queue.
  */
 export class WorkspaceRepositoryChange implements RepositoryChangeProgress {
@@ -176,10 +177,12 @@ export class WorkspaceRepositoryChange implements RepositoryChangeProgress {
       this.scope = null
       if (
         job.commandStarted &&
+        job.commandRoute !== 'host' &&
         error instanceof ProviderError &&
         error.kind === 'not_found'
       ) {
         job.processId = null
+        delete job.commandRoute
         await this.save(job)
       }
       if (await this.retries(job, error)) {
@@ -199,18 +202,18 @@ export class WorkspaceRepositoryChange implements RepositoryChangeProgress {
   }
 
   /**
-   * Whether a failed step retries after one second. A started fetch or move
-   * settles first. A step after the move retries until its end rule ends
-   * the job. Any other failure ends the job.
+   * A started fetch or move and publication retry failed steps until the
+   * end rule ends the job. Other failures end the job immediately.
    */
   private async retries(
     job: RepositoryChangeJob,
     error: unknown,
   ): Promise<boolean> {
-    if (failedAfterMove(job, error))
-      return !(await endAfterMove(this.options, this, job, error))
-    if (job.commandStarted && (job.phase === 'move' || job.phase === 'fetch'))
-      return true
+    if (
+      job.phase === 'publish' ||
+      (job.commandStarted && (job.phase === 'move' || job.phase === 'fetch'))
+    )
+      return !(await endAfterFailure(this.options, this, job, job.phase))
     const failure =
       error instanceof HttpError ? error : repositoryChangeFailed(job)
     await this.finish(job, {
@@ -237,14 +240,19 @@ export class WorkspaceRepositoryChange implements RepositoryChangeProgress {
       return null
     if (job.processId !== null) {
       await this.options.run(() => authorizeRepositoryChange(this.options, job))
-      const status = await providerForAccount(
+      const provider = providerForAccount(
         this.options.env,
         this.options.dependencies.fetch,
         job.providerAccount,
-      ).getCommandStatus(job.sandboxId, job.processId, {
-        stdoutOffset: job.stdoutOffset,
-        stderrOffset: job.stderrOffset,
-      })
+      )
+      const status = await workspaceCommandChannel(
+        this.options.env,
+        job,
+        provider,
+      ).getCommandStatus(
+        { processId: job.processId, route: job.commandRoute ?? 'provider' },
+        { stdoutOffset: job.stdoutOffset, stderrOffset: job.stderrOffset },
+      )
       if (!status.running) {
         this.scope = null
         return null

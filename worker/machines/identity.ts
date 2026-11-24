@@ -1,4 +1,5 @@
-import { isRecord, HttpError } from '../http'
+import { isRecord } from '../http'
+import { machineHttpError } from './errors'
 
 export interface MachineOwner {
   kind: 'workspace'
@@ -89,7 +90,7 @@ export function requireOwner(
   owner: MachineOwner,
 ): void {
   if (!record || !sameOwner(record.owner, owner))
-    throw new HttpError(
+    throw machineHttpError(
       404,
       'machine_not_found',
       'The cloud computer is not available.',

@@ -121,7 +121,7 @@ function expectRuns(runs: RunRow[]) {
     )
     expect(run.beganAt, `run ${run.runNumber}`).toBeLessThanOrEqual(run.endedAt)
     expect(run.slowestCall, `run ${run.runNumber}`).toMatch(
-      /^(d1|provider)\.[A-Za-z]+$/,
+      /^(?:(d1|provider)\.[A-Za-z]+|host\.(runCommand|startCommand|getCommandStatus))$/,
     )
   }
 }
@@ -129,6 +129,12 @@ function expectRuns(runs: RunRow[]) {
 it('records the steps and runs of a create with ordered, closed times', async () => {
   const fixture = fixtureForTest()
   const { runtime, org, user, boat } = fixture
+  let started = false
+  boat.beforeCommand = async (_command, detached) => {
+    if (started || !detached) return
+    started = true
+    await fixture.setTime(runtime.dependencies.now() + 125)
+  }
   let held = false
   boat.beforeStatus = async () => {
     if (held) return
@@ -188,10 +194,16 @@ it('records the steps and runs of a create with ordered, closed times', async ()
   const polled = runs.find((run) => run.pollCalls > 0)
   expect(polled).toMatchObject({
     pollMs: 250,
-    slowestCall: 'provider.getCommandStatus',
+    slowestCall: 'host.getCommandStatus',
     slowestMs: 250,
   })
   expect((polled?.endedAt ?? 0) - (polled?.beganAt ?? 0)).toBe(250)
+  expect(
+    runs.find((run) => run.slowestCall === 'host.startCommand'),
+  ).toMatchObject({
+    providerMs: 125,
+    slowestMs: 125,
+  })
 })
 
 it('records the steps and runs of a resume with its own job kind', async () => {

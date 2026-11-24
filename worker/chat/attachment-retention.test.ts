@@ -127,6 +127,7 @@ it('keeps bytes through a failed first start and replacement transfer, then swee
       "UPDATE workspace_creation_attempts SET state = 'failed'",
     ).run()
     await selectAttachmentComputer(harness, 'replacement-sandbox')
+    await copy.host.seed(fixture.org.id, WORKSPACE_ID, 'replacement-sandbox')
     await fixture.restart()
     await fixture.connect(runner)
     await fixture.drainAttachments()

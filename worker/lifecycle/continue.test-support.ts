@@ -1,3 +1,5 @@
+import { onTestFinished } from 'vitest'
+
 import type { User } from '../../src/shared/api'
 import type { ContinueWorkspaceRequest } from '../../src/shared/workspaces'
 import {
@@ -22,6 +24,7 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { LifecycleBoat } from './lifecycle-boat-test-support'
+import { LifecycleHost } from './lifecycle-host-test-support'
 import { WorkspaceContinue } from './continue'
 import {
   CONTINUE_JOB_KEY,
@@ -41,6 +44,8 @@ export async function continueFixture(harness: TestHarness) {
     mergedAt: '2026-11-09T12:00:00Z',
   })
   const boat = new LifecycleBoat()
+  const host = new LifecycleHost(chat.env, boat)
+  onTestFinished(() => host.close())
   boat.commandOutput = ''
   boat.synchronousOutput = '\0' + '0\n'
   boat.states.set('bx_continue', 'ready')
@@ -64,6 +69,7 @@ export async function continueFixture(harness: TestHarness) {
       VALUES (?, ?, ?, 'first-session', 'first-turn', 'claude', 'test-claude', 'high', 'first-message')`,
     ).bind(WORKSPACE_ID, chat.org.id, chat.owner.id),
   ])
+  await host.seed(chat.org.id, WORKSPACE_ID, 'bx_continue')
   const user = async (id: string) => {
     const value = await chat.env.DB.prepare(
       'SELECT id, github_id AS githubId, github_login AS githubLogin, display_name AS displayName, avatar_url AS avatarUrl FROM users WHERE id = ?',
@@ -210,6 +216,7 @@ export async function continueFixture(harness: TestHarness) {
     memberUser: member,
     api,
     boat,
+    host,
     options,
     state,
     scheduled,

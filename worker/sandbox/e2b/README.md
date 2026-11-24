@@ -108,7 +108,8 @@ Content overflow rechecks metadata for the exact size result.
 `fileInfo` uses Stat, with the same path, size, and type checks and typed
 provider errors. It returns directory metadata without a read of file
 content.
-The shared `SandboxProvider` interface has no file write. The client keeps
+The shared provider interfaces, `MachineProvider` and `ProviderWork`,
+have no file write. The client keeps
 its own file write for its provider and live operations.
 That write first creates the missing parent folders as `user`.
 It stages a mode 600 file beside the destination, as `user`.

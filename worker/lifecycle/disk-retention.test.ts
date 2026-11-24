@@ -104,6 +104,8 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
     expect(
       await machineTokenStatus(fixture.harness.env, owner, machineToken),
     ).toBe(101)
+    await fixture.host.disconnect('bx_1')
+    await fixture.host.connect('bx_1')
     boat.commandExitCode = 1
     await actor.advance()
     await actor.advance()
@@ -111,7 +113,7 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
       phase: 'stop',
       error: 'The startup script failed during disk retention.',
     })
-    expect(boat.commands.at(-1)).toContain(
+    expect(fixture.host.commands.at(-1)).toContain(
       '/run/conductive/retention-startup.sh',
     )
     boat.failStop = true

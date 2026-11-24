@@ -13,6 +13,7 @@ import {
   type RepositoryChangeOptions,
 } from './repository-change-types'
 import { workspaceRecord } from './workspace-data'
+import { workspaceCommandChannel } from './workspace-command-channel'
 
 /** The move is already durable. Publication repairs it without running Git again. */
 export async function publishRepositoryChange(
@@ -99,19 +100,20 @@ async function settle(
   options: RepositoryChangeOptions,
   job: RepositoryChangeJob,
 ): Promise<void> {
-  const settled = await providerForAccount(
-    options.env,
-    options.dependencies.fetch,
-    job.providerAccount,
-  )
-    .runCommand(job.sandboxId, repositoryChangeSettleCommand(job))
-    .then(
-      (result) => result.exitCode === 0 && !result.timedOut,
-      () => false,
+  try {
+    const provider = providerForAccount(
+      options.env,
+      options.dependencies.fetch,
+      job.providerAccount,
     )
-  if (!settled)
-    warnWorker({
-      kind: 'repository_change_settle_failed',
-      workspaceId: WarningId.checked(job.binding.id),
-    })
+    const channel = workspaceCommandChannel(options.env, job, provider)
+    const result = await channel.runCommand(repositoryChangeSettleCommand(job))
+    if (result.exitCode === 0 && !result.timedOut) return
+  } catch {
+    // Setup and send failures use the same warning as an unsuccessful exit.
+  }
+  warnWorker({
+    kind: 'repository_change_settle_failed',
+    workspaceId: WarningId.checked(job.binding.id),
+  })
 }

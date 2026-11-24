@@ -14,7 +14,7 @@ import { shellQuote } from '../../lifecycle/commands'
 import { seedPublishedImage } from '../../lifecycle/published-image-test-support'
 import { localSavedScriptFixture } from '../../lifecycle/saved-script-test-support'
 import type { WorkspaceStartResult } from '../../lifecycle/start-types'
-import type { CommandResult } from '../../sandbox/provider'
+import type { CommandResult } from '../../machines/channel'
 import { outerWorkerBundle } from './outer-runtime.test-support'
 import {
   OUTER_ORG,
@@ -116,6 +116,7 @@ it('restores an interrupted replacement create with its pinned data and a fresh 
     imageName: 'replacement-image',
   })
   const commandsBefore = active.boat.commandRequests.length
+  const hostCommandsBefore = active.host.commandRequests.length
   await deleteAndRestoreCreation(active)
   expect(active.boat.stopIds).toEqual(['bx_2'])
   expect(active.boat.resumeIds).toEqual([])
@@ -157,6 +158,12 @@ it('restores an interrupted replacement create with its pinned data and a fresh 
   expect(commands[0]).not.toBe(
     active.boat.commandRequests[commandsBefore - 1]?.command,
   )
+  expect(
+    active.host.commandRequests
+      .slice(hostCommandsBefore)
+      .filter((request) => request.detached)
+      .map((request) => request.command),
+  ).toEqual(commands)
   expect(active.boat.starts).toHaveLength(2)
   expect(active.boat.resumeIds).toEqual(['bx_2'])
   expect(active.boat.deletedIds).toEqual(['bx_1'])

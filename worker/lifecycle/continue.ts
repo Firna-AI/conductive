@@ -24,8 +24,9 @@ import {
   type ContinueJob,
   type ContinueOptions,
 } from './continue-types'
+import { workspaceCommandChannel } from './workspace-command-channel'
 
-/** The durable reservation excludes dispatch. Provider waits never hold the chat queue. */
+/** The durable reservation excludes dispatch. Command waits never hold the chat queue. */
 export class WorkspaceContinue implements ContinueProgress {
   scope: string | null = null
   private readonly options: ContinueOptions
@@ -167,10 +168,12 @@ export class WorkspaceContinue implements ContinueProgress {
       this.scope = null
       if (
         job.commandStarted &&
+        job.commandRoute !== 'host' &&
         error instanceof ProviderError &&
         error.kind === 'not_found'
       ) {
         job.processId = null
+        delete job.commandRoute
         await this.save(job)
       }
       if (
@@ -209,14 +212,19 @@ export class WorkspaceContinue implements ContinueProgress {
       return null
     if (job.processId !== null) {
       await this.options.run(() => authorizeContinue(this.options, job))
-      const status = await providerForAccount(
+      const provider = providerForAccount(
         this.options.env,
         this.options.dependencies.fetch,
         job.providerAccount,
-      ).getCommandStatus(job.sandboxId, job.processId, {
-        stdoutOffset: job.stdoutOffset,
-        stderrOffset: job.stderrOffset,
-      })
+      )
+      const status = await workspaceCommandChannel(
+        this.options.env,
+        job,
+        provider,
+      ).getCommandStatus(
+        { processId: job.processId, route: job.commandRoute ?? 'provider' },
+        { stdoutOffset: job.stdoutOffset, stderrOffset: job.stderrOffset },
+      )
       if (!status.running) {
         this.scope = null
         return null

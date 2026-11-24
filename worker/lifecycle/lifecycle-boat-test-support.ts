@@ -3,15 +3,23 @@ import { isRecord } from '../http'
 import type { SandboxState } from '../sandbox/provider'
 import { FakeBoat } from '../test-support/fake-boat'
 
+interface CommandRequest {
+  sandboxId: string
+  command: string
+  detached: boolean
+}
+
+interface StatusRequest {
+  processId: number
+  stdoutOffset: number
+  stderrOffset: number
+}
+
 /** Exercises BoatClient against the unchanged fake's public response override. */
 export class LifecycleBoat {
   readonly server = new FakeBoat()
   readonly commands: string[] = []
-  readonly commandRequests: {
-    sandboxId: string
-    command: string
-    detached: boolean
-  }[] = []
+  readonly commandRequests: CommandRequest[] = []
   readonly fileReads: string[] = []
   readonly sandboxReads: string[] = []
   readonly deadlineIds: string[] = []
@@ -37,15 +45,12 @@ export class LifecycleBoat {
   lostCreateReplies = 0
   afterLostCreate?: () => Promise<void>
   afterCreate?: (sandboxId: string) => Promise<void>
+  computerStarted?: (sandboxId: string, env: unknown) => Promise<void>
   beforeResume?: (sandboxId: string) => Promise<void>
   beforeSandboxRead?: (sandboxId: string) => Promise<void>
   beforeCommand?: (command: string, detached: boolean) => Promise<void>
   readonly deletedSnapshots: string[] = []
-  readonly statusRequests: {
-    processId: number
-    stdoutOffset: number
-    stderrOffset: number
-  }[] = []
+  readonly statusRequests: StatusRequest[] = []
   private readonly allocations = new Map<string, string>()
   private readonly snapshots = new Map<string, string>()
   private sandboxes = 0
@@ -60,6 +65,7 @@ export class LifecycleBoat {
     let response: Response | null = null
     let loseReply = false
     let createdId: string | undefined
+    let booted: { id: string; env: unknown } | undefined
     if (path.startsWith('/saved-snapshots/') && request.method === 'DELETE')
       this.deletedSnapshots.push(
         decodeURIComponent(path.slice('/saved-snapshots/'.length)),
@@ -73,6 +79,7 @@ export class LifecycleBoat {
       this.allocations.set(key, id)
       this.states.set(id, 'ready')
       createdId = id
+      booted = { id, env: body.env }
       response = this.sandbox(id)
       if (this.lostCreateReplies-- > 0) loseReply = true
     } else if (path === '/saved-snapshots' && request.method === 'POST') {
@@ -130,6 +137,9 @@ export class LifecycleBoat {
         }
       } else if (operation === 'resume') {
         await this.beforeResume?.(sandboxId)
+        const body: unknown = await request.clone().json()
+        if (!isRecord(body)) throw new Error('Invalid test resume')
+        booted = { id: sandboxId, env: body.env }
         this.resumeIds.push(sandboxId)
         this.states.set(sandboxId, 'ready')
         response = this.sandbox(sandboxId)
@@ -148,29 +158,19 @@ export class LifecycleBoat {
         const body: unknown = await request.clone().json()
         if (!isRecord(body) || typeof body.command !== 'string')
           throw new Error('Invalid test command')
-        this.commands.push(body.command)
-        this.commandRequests.push({
+        const result = await this.command({
           sandboxId,
           command: body.command,
           detached: body.detached === true,
         })
-        await this.beforeCommand?.(body.command, body.detached === true)
-        response =
-          body.detached === true
-            ? Response.json({
-                ok: true,
-                success: true,
-                type: 'command.started',
-                processId: ++this.processId,
-              })
-            : Response.json({
-                ok: true,
-                type: 'command.finished',
-                exitCode: this.synchronousExitCode,
-                stdout: this.synchronousOutput,
-                stderr: '',
-                timedOut: false,
-              })
+        const { kind, ...output } = result
+        response = Response.json({
+          ok: true,
+          ...(kind === 'command.started' && { success: true }),
+          type:
+            kind === 'command.started' ? 'command.started' : 'command.finished',
+          ...output,
+        })
       } else if (operation === 'files' && request.method === 'GET') {
         const path = url.searchParams.get('path')
         if (!path) throw new Error('Missing test file path')
@@ -197,41 +197,21 @@ export class LifecycleBoat {
           content: btoa(this.terminalPassword),
         })
       } else if (operation?.startsWith('commands/')) {
-        await this.beforeStatus?.()
-        const processId = Number(operation.slice('commands/'.length))
-        const offset = Number(url.searchParams.get('stdoutOffset') ?? '0')
-        const stderrOffset = Number(url.searchParams.get('stderrOffset') ?? '0')
-        this.statusRequests.push({
-          processId,
-          stdoutOffset: offset,
-          stderrOffset,
+        const offsets = {
+          stdoutOffset: Number(url.searchParams.get('stdoutOffset') ?? '0'),
+          stderrOffset: Number(url.searchParams.get('stderrOffset') ?? '0'),
+        }
+        const { kind, state, ...status } = await this.status({
+          processId: Number(operation.slice('commands/'.length)),
+          ...offsets,
         })
-        const text = this.commandOutput
-        const stdout = text.slice(offset, offset + this.statusChunkSize)
-        const nextOffset = offset + stdout.length
-        const stderr = this.commandStderr.slice(
-          stderrOffset,
-          stderrOffset + this.statusChunkSize,
-        )
-        const stderrNextOffset = stderrOffset + stderr.length
         response = Response.json({
           ok: true,
           success: true,
-          type: 'command.status',
-          processId,
-          status: this.commandRunning ? 'running' : 'exited',
-          running: this.commandRunning,
-          exitCode: this.commandRunning ? null : this.commandExitCode,
-          timedOut: false,
-          stdout,
-          stderr,
-          stdoutOffset: offset,
-          stderrOffset,
-          stdoutNextOffset: nextOffset,
-          stderrNextOffset,
-          more:
-            nextOffset < text.length ||
-            stderrNextOffset < this.commandStderr.length,
+          type: kind,
+          status: state,
+          ...status,
+          ...offsets,
         })
       } else {
         if (request.method === 'GET') {
@@ -247,12 +227,60 @@ export class LifecycleBoat {
     }
     this.server.responseOverride = response
     const reply = await this.server.fetch(request)
+    if (booted && reply.ok) await this.computerStarted?.(booted.id, booted.env)
     if (loseReply) {
       await this.afterLostCreate?.()
       throw new Error('Lost create response')
     }
     if (createdId && reply.ok) await this.afterCreate?.(createdId)
     return reply
+  }
+
+  async command(request: CommandRequest) {
+    const { command, detached } = request
+    this.commands.push(command)
+    this.commandRequests.push(request)
+    await this.beforeCommand?.(command, detached)
+    return detached
+      ? { kind: 'command.started' as const, processId: ++this.processId }
+      : {
+          kind: 'command.result' as const,
+          exitCode: this.synchronousExitCode,
+          stdout: this.synchronousOutput,
+          stderr: '',
+          timedOut: false,
+        }
+  }
+
+  async status(request: StatusRequest) {
+    await this.beforeStatus?.()
+    this.statusRequests.push(request)
+    const { stdoutOffset, stderrOffset } = request
+    const stdout = this.commandOutput.slice(
+      stdoutOffset,
+      stdoutOffset + this.statusChunkSize,
+    )
+    const stderr = this.commandStderr.slice(
+      stderrOffset,
+      stderrOffset + this.statusChunkSize,
+    )
+    const stdoutNextOffset = stdoutOffset + stdout.length
+    const stderrNextOffset = stderrOffset + stderr.length
+    return {
+      processId: request.processId,
+      kind: 'command.status' as const,
+      state: this.commandRunning ? ('running' as const) : ('exited' as const),
+      running: this.commandRunning,
+      exitCode: this.commandRunning ? null : this.commandExitCode,
+      timedOut: false,
+      stdout,
+      stderr,
+      stdoutNextOffset,
+      stderrNextOffset,
+      more:
+        stdoutNextOffset < this.commandOutput.length ||
+        stderrNextOffset < this.commandStderr.length,
+    }
   }
 
   private sandbox(id: string): Response {

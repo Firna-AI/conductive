@@ -50,7 +50,7 @@ it('creates the branch that took the title before the branch step, and keeps it 
     const branch = stored?.branch ?? ''
     expect(branch).toMatch(/^octocat\/saved-carts-[a-z0-9]{4}$/)
     expect(stored?.placeholder).toBe(0)
-    const branchCommand = boat.commands
+    const branchCommand = fixture.host.commands
       .map(lifecycleCommandBody)
       .find((body) => body.includes('checkout -b'))
     expect(branchCommand).toContain(`git checkout -b '${branch}'`)

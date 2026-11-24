@@ -1,8 +1,8 @@
-import { MachineChannel } from './channel'
+import { HostConnection } from './host-connection'
 import { socketIdentity, type MachineSocket } from './socket-state'
 import type { StreamCloseStorage } from './stream-close'
 
-export function socketFixture() {
+export function hostConnectionFixture() {
   const sent: unknown[] = []
   let attachment: unknown = { generation: 1, ready: true, lastId: 0 }
   const records = new Map<string, boolean>()
@@ -35,10 +35,10 @@ export function socketFixture() {
   }
   return {
     sent,
-    channel: () => {
+    connection: () => {
       const identity = socketIdentity(socket.deserializeAttachment())
       if (!identity) throw new Error('Missing socket identity.')
-      return new MachineChannel(socket, identity, storage)
+      return new HostConnection(socket, identity, storage)
     },
   }
 }

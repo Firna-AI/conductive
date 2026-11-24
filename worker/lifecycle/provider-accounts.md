@@ -41,12 +41,14 @@ stores, through `providerForAccount` or `orgProviderForAccount` in
 
 - Workspace actions, disk retention, input activity, archive, and
   suspension stops use the account of the workspace record.
-- Continue uses the account of its saved job for the deadline, each
-  command, each poll, the read of the branch, and the status read of its
-  fetch grant, as [Continue](continue.md#phases) says. Its resume and its
-  check of local work use the account of the workspace record, as a resume
-  and Archive do. Each phase checks that the workspace record still names
-  the saved account and sandbox.
+- Continue uses the account of its saved job for the deadline, as
+  [Continue](continue.md#phases) says. Its commands, its polls, the read of
+  the branch, and the status read of its fetch grant go through the
+  [machine channel](../machines/README.md#the-machine-channel). The
+  provider path of that channel uses the same saved account. Its resume and
+  its check of local work use the account of the workspace record, as a
+  resume and Archive do. Each phase checks that the workspace record still
+  names the saved account and sandbox.
 - A start uses the account of its saved job. When the workspace record
   already holds a sandbox in another account, the start reaches that
   sandbox through the account of the record.

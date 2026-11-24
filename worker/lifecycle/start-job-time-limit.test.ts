@@ -124,6 +124,7 @@ it('gives each resume its own deadline and restores an old saved start when its 
 
 it('enforces the start deadline before a later provider retry after reconstruction', async () => {
   const fixture = await backendFixture()
+  fixture.host.autoConnect = false
   const start = await startRetryFixture(fixture)
   const fault = statusFault(fixture)
   fault.fail('60')
@@ -158,7 +159,7 @@ it('fails a start when terminal preparation completes at the deadline before pub
   }
   await start.tick(TEST_TIME + 1_199_999)
 
-  expect(fixture.boat.statusRequests.at(-1)?.processId).toBe(
+  expect(fixture.host.statusRequests.at(-1)?.processId).toBe(
     terminal?.processId,
   )
   expect(await start.wait()).toMatchObject({

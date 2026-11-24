@@ -1,11 +1,16 @@
 # Machine connections
 
-This area owns the outbound host connection of each workspace computer.
+This area owns the outbound host connection of each workspace computer,
+and the machine channel that sends commands to that computer.
 The `Machine` Durable Object holds that connection and its token digest.
 The [host protocol](../../docs/protocol/host-connection.md) defines the
 operations, version, ports, and token lifetime.
-Production command, file, terminal, and preview callers still use the
-provider adapters. They do not call these operations yet.
+The workspace start, Continue, the repository change, the disk retention
+command, the member and automatic restarts, and the attachment downloads
+send their commands through the [machine channel](#the-machine-channel).
+File reads, terminals, previews, the desktop, builds, refreshes, image
+sources, the software image, and the
+[moved-base job](../lifecycle/moved-bases.md) still use the provider adapters.
 
 ## Access and lifetime
 
@@ -75,6 +80,41 @@ UTF-8 encoding. Shorter strings still pass the existing UTF-8 byte check.
 An open stream keeps its RPC session until the stream ends. Plain RPC
 results release their session after the client reads them.
 
+## The machine channel
+
+`machineChannel` in [channel.ts](channel.ts) gives the `MachineChannel` of
+one workspace computer. It runs a command, starts a detached command, and
+reads the status of a started command. The caller checks the org, the
+owner, and the current sandbox first. It also passes the provider client
+of the stored account and the sandbox ID, for the provider path.
+
+- Each new command goes to the host path in [host-channel.ts](host-channel.ts),
+  through the typed client and the `Machine` object of the workspace.
+- The channel uses the provider path in [provider-channel.ts](provider-channel.ts)
+  only after a refusal that comes before a send: `machine_unavailable`
+  without a host connection, `machine_not_found` without a machine record
+  of that owner, or `service_unavailable` without the `MACHINES` binding.
+  Each other error stays an error. So a request without an answer,
+  `machine_error`, never runs its command again on the provider.
+- A started command keeps its route, `host` or `provider`. The caller saves
+  the route with the process ID, and each status read uses that route. A
+  saved process without a route reads as `provider`.
+- A synchronous host command gets 600 seconds, as on the provider. A
+  detached command keeps running when the host connection drops. By default,
+  a host status read without a connection fails with `machine_unavailable`.
+  A caller can opt in to wait for a welcomed connection. The wait and the
+  status read share a 30-second request limit.
+- `isTransientHostError` in [errors.ts](errors.ts) names the transient host
+  errors: `machine_unavailable`, `machine_disconnected`, `machine_timeout`,
+  `machine_busy`, and `machine_error`. The start retry policy and the
+  attachment downloads treat them as they treat a transient provider
+  error. The disk retention command retries them until its deadline.
+- `observeHostChannels` marks a D1 binding, as `observeProviders` does for
+  providers. Each host channel of that env then comes through its observer.
+  The start records time the host calls in this way, as
+  [Start step records](../lifecycle/workspace-object.md#start-step-records)
+  says.
+
 ## Development
 
 Run `npm run test -- worker/machines` from the repository root with Node 24.
@@ -87,8 +127,15 @@ I/O context. Tests can still drive each read and write from Node.
 - [machine.ts](machine.ts): the Durable Object, token storage, RPC methods,
   hello checks, and hibernation socket handlers.
 - [client.ts](client.ts): the typed caller interface and token env builder.
+- [channel.ts](channel.ts): `machineChannel`, `MachineChannel`, and the
+  command results, output offsets, and routes.
+- [host-channel.ts](host-channel.ts): the host path of the channel, and
+  `observeHostChannels`.
+- [provider-channel.ts](provider-channel.ts): the provider path of the
+  channel, bound to one stored account and sandbox ID.
 - [route.ts](route.ts): the host route and namespace ID check.
-- [channel.ts](channel.ts): request dispatch, message parts, and stream routing.
+- [host-connection.ts](host-connection.ts): `HostConnection`, the request
+  dispatch, message parts, and stream routing of one host socket.
 - [socket-state.ts](socket-state.ts): the attachment reader, its single writer,
   and the shared request and stream ID allocator.
 - [pending.ts](pending.ts): request deadlines, reply budgets, and assembly memory.
@@ -99,6 +146,10 @@ I/O context. Tests can still drive each read and write from Node.
   streams, consumed once and cleared in bounded batches.
 - [revoke.ts](revoke.ts): the revoke of a stop, by owner or through the computer ledger.
 - [host.test-support.ts](host.test-support.ts): the fake host and runtime fixture.
+- [host-inbox.test-support.ts](host-inbox.test-support.ts): `HostInbox`,
+  the reader of host frames and request parts. The machine tests and the
+  [lifecycle fake host](../lifecycle/tests.md#image-and-provider-boundaries)
+  share it.
 
 ### Related Docs
 

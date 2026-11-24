@@ -1,3 +1,5 @@
+import { onTestFinished } from 'vitest'
+
 import type { User } from '../../src/shared/api'
 import { MACHINE_PATHS, TOOL_TURN_HEADER } from '../../src/shared/agent-tools'
 import type { ChangeRepositoryRequest } from '../../src/shared/workspaces'
@@ -22,6 +24,7 @@ import {
 } from '../test-support/harness'
 import type { DurableLifecycleState } from './durable-types'
 import { LifecycleBoat } from './lifecycle-boat-test-support'
+import { LifecycleHost } from './lifecycle-host-test-support'
 import { handleGitCredential } from './machine'
 import { WorkspaceRepositoryChange } from './repository-change'
 import {
@@ -41,6 +44,8 @@ export async function repositoryChangeFixture(harness: TestHarness) {
   api.branches.set('refs/heads/octocat/test', HEAD_SHA)
   api.comparisons.set('refs/heads/main', new Map([[HEAD_SHA, 0]]))
   const boat = new LifecycleBoat()
+  const host = new LifecycleHost(chat.env, boat)
+  onTestFinished(() => host.close())
   boat.commandOutput = ''
   boat.synchronousOutput = '\0' + '0\n'
   boat.states.set('bx_change', 'ready')
@@ -101,6 +106,7 @@ export async function repositoryChangeFixture(harness: TestHarness) {
         ]),
       ),
   ])
+  await host.seed(chat.org.id, WORKSPACE_ID, 'bx_change')
   const user = async (id: string) => {
     const value = await db
       .prepare(
@@ -255,6 +261,7 @@ export async function repositoryChangeFixture(harness: TestHarness) {
     memberUser: member,
     api,
     boat,
+    host,
     controls,
     work,
     options,

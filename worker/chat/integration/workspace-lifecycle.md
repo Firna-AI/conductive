@@ -13,8 +13,8 @@ methods of `Workspace`.
   lifecycle change of `Workspace` runs in it through `runLifecycle`, then
   calls `flushRunner`. So a waiting turn goes out when the lifecycle state
   allows it.
-- The progress phases of a sandbox start make most of their D1 and
-  provider calls outside the queue, as
+- The progress phases of a sandbox start make most of their D1, provider,
+  and host calls outside the queue, as
   [Creates and resumes](../../lifecycle/workspace-object.md#creates-and-resumes)
   says. So the chat reads, the messages, and the runner receipts do not
   wait for those calls.
@@ -112,8 +112,8 @@ methods of `Workspace`.
   with visible output, and whether a dispatched turn runs. Its record
   commits with the events and the turns. Queued turns do not count as
   working.
-- Known limit: other lifecycle work still holds the queue during its D1
-  and provider calls. The lifecycle step of the alarm holds it for the
+- Known limit: other lifecycle work still holds the queue during its D1,
+  provider, and host calls. The lifecycle step of the alarm holds it for the
   restore watch, the provider state read, the deadline extension, and the
   idle stop.
   Disk retention, Archive, cleanup, and the access stop also make their
@@ -123,7 +123,11 @@ methods of `Workspace`.
   a start step, writes the shown state to D1 in the queue.
 - A provider request of that work can take up to 30 seconds, 65 for a file
   read, or 610 for a command. The restore watch runs such a command when it
-  writes the restore marker. So a slow call delays the chat reads, the
-  messages, and the runner receipts of that workspace. The native alarm
-  handler returns before the regular alarm task ends, and the access
-  deadlines do not wait for it, as [Alarms](../../README.md#alarms) says.
+  writes the restore marker. The disk retention command starts and polls
+  its script through the
+  [machine channel](../../machines/README.md#the-machine-channel), and a
+  host request of that command can take up to 30 seconds. So a slow call
+  delays the chat reads, the messages, and the runner receipts of that
+  workspace. The native alarm handler returns before the regular alarm
+  task ends, and the access deadlines do not wait for it, as
+  [Alarms](../../README.md#alarms) says.

@@ -2,6 +2,7 @@ import type { HttpFetch } from '../env'
 import { ATTACHMENT_DOWNLOAD_PATH } from '../chat/attachment-download'
 import { shellQuote } from '../lifecycle/commands'
 import { identifier, record } from '../chat/inputs'
+import type { HostResult } from '../../src/shared/generated/HostResult'
 
 function readAttachmentCommand(command: string) {
   if (!command.includes(ATTACHMENT_DOWNLOAD_PATH)) return null
@@ -29,36 +30,6 @@ export function attachmentCommandTransfer(options: {
   const commands: string[] = []
   let nextProcess = 10_000
   const results = new Map<number, number>()
-  const fetch = async (request: Request): Promise<Response | null> => {
-    const url = new URL(request.url)
-    const processId = Number(url.pathname.match(/\/commands\/(\d+)$/)?.[1])
-    const exitCode = results.get(processId)
-    if (exitCode !== undefined)
-      return Response.json({
-        ok: true,
-        type: 'command.status',
-        success: true,
-        processId,
-        status: 'exited',
-        running: false,
-        exitCode,
-        timedOut: false,
-        stdout: '',
-        stderr: '',
-        stdoutOffset: 0,
-        stderrOffset: 0,
-        stdoutNextOffset: 0,
-        stderrNextOffset: 0,
-        more: false,
-      })
-    if (request.method !== 'POST' || !url.pathname.endsWith('/commands'))
-      return null
-    const input = record(await request.clone().json())
-    const command = identifier(input.command)
-    const sandboxId = url.pathname.split('/').at(-2)
-    if (!sandboxId) throw new Error('Missing sandbox')
-    return start(sandboxId, command)
-  }
   const start = async (sandboxId: string, command: string) => {
     const parsed = readAttachmentCommand(command)
     if (!parsed) return null
@@ -85,14 +56,66 @@ export function attachmentCommandTransfer(options: {
     }
     const id = ++nextProcess
     results.set(id, result)
-    return Response.json({
-      ok: true,
-      type: 'command.started',
-      success: true,
-      processId: id,
-    })
+    return id
   }
-  return { paths, copies, commands, fetch, start }
+  const status = ({ processId }: { processId: number }) => {
+    const exitCode = results.get(processId)
+    return Promise.resolve({
+      kind: 'command.status',
+      processId,
+      state: exitCode === undefined ? 'lost' : 'exited',
+      running: false,
+      exitCode: exitCode ?? null,
+      timedOut: false,
+      stdout: '',
+      stderr: '',
+      stdoutNextOffset: 0,
+      stderrNextOffset: 0,
+      more: false,
+    } satisfies HostResult)
+  }
+  const command = async (request: {
+    sandboxId: string
+    command: string
+    detached: boolean
+  }): Promise<HostResult> => {
+    if (!request.detached)
+      throw new Error('Expected a detached attachment command.')
+    const processId = await start(request.sandboxId, request.command)
+    if (processId === null) throw new Error('Expected an attachment download.')
+    return { kind: 'command.started', processId }
+  }
+  const fetch = async (request: Request): Promise<Response | null> => {
+    const url = new URL(request.url)
+    const processId = Number(url.pathname.match(/\/commands\/(\d+)$/)?.[1])
+    if (results.has(processId)) {
+      const { kind, state, ...output } = await status({ processId })
+      return Response.json({
+        ok: true,
+        type: kind,
+        success: true,
+        status: state,
+        stdoutOffset: 0,
+        stderrOffset: 0,
+        ...output,
+      })
+    }
+    if (request.method !== 'POST' || !url.pathname.endsWith('/commands'))
+      return null
+    const input = record(await request.clone().json())
+    const sandboxId = url.pathname.split('/').at(-2)
+    if (!sandboxId) throw new Error('Missing sandbox')
+    const id = await start(sandboxId, identifier(input.command))
+    return id === null
+      ? null
+      : Response.json({
+          ok: true,
+          type: 'command.started',
+          success: true,
+          processId: id,
+        })
+  }
+  return { paths, copies, commands, fetch, start, command, status }
 }
 
 export function attachmentTemporaryPath(command: string): string {

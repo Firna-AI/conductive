@@ -1,4 +1,12 @@
-import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 
 import { FakeRunner } from '../test-support/fake-runner'
 import {
@@ -14,10 +22,12 @@ import {
   held,
 } from './attachment.test-support'
 import { prepareMessageAttachments } from './attachment-copy'
+import * as attachmentClaims from './attachment-claim-data'
 import { providerCopy } from './attachment-copy.test-support'
 import { ATTACHMENTS_DIRECTORY } from '../../src/shared/attachment-paths'
 import { uploadAttachment } from '../test-support/attachment-upload'
 import { WORKSPACE_ID } from './harness.test-support'
+import { selectAttachmentComputer } from './attachment-owner.test-support'
 import { messageCommands } from './turn-lifecycle.test-support'
 
 let harness: TestHarness
@@ -26,6 +36,9 @@ beforeAll(async () => {
 })
 beforeEach(async () => {
   await harness.reset()
+})
+afterEach(() => {
+  vi.restoreAllMocks()
 })
 afterAll(async () => {
   await harness.dispose()
@@ -48,6 +61,7 @@ it('copies before delivery and preserves copy proof across reconnects while new 
   )
     .bind('sandbox-one', WORKSPACE_ID)
     .run()
+  await provider.host.seed(fixture.org.id, WORKSPACE_ID, 'sandbox-one')
   const upload = (id: string, name: string) =>
     uploadAttachment(
       harness.env,
@@ -87,6 +101,7 @@ it('copies before delivery and preserves copy proof across reconnects while new 
     ATTACHMENT_IGNORE_BYTES,
     FILE_BYTES,
   ])
+  expect(provider.host.commands).toEqual(provider.commands)
   expect(provider.paths[0]).toBe(
     `${ATTACHMENT_REPOSITORY_DIRECTORY}/${ATTACHMENTS_DIRECTORY}/.gitignore`,
   )
@@ -125,6 +140,7 @@ it('copies before delivery and preserves copy proof across reconnects while new 
   )
     .bind('sandbox-two', WORKSPACE_ID)
     .run()
+  await provider.host.seed(fixture.org.id, WORKSPACE_ID, 'sandbox-two')
   await fixture.connect(runner)
   await fixture.drainAttachments()
   expect(provider.copies).toEqual([
@@ -138,6 +154,7 @@ it('copies before delivery and preserves copy proof across reconnects while new 
     FILE_BYTES,
   ])
   expect(provider.paths.slice(4)).toEqual(provider.paths.slice(0, 4))
+  expect(provider.host.commands).toEqual(provider.commands)
   expect(
     (await fixture.sendAttachment(session.id, 'another-file-message', fileIds))
       .status,
@@ -160,4 +177,36 @@ it('copies before delivery and preserves copy proof across reconnects while new 
   expect(message).not.toHaveProperty('login')
   expect(message).not.toHaveProperty('credential')
   runner.disconnect()
+})
+
+it('keeps destination reads fixed while an attachment download needs eight status polls', async () => {
+  const provider = providerCopy(harness.env)
+  provider.host.statusReply = (_request, reply) =>
+    reply.kind === 'command.status' && provider.host.statusRequests.length < 8
+      ? { ...reply, state: 'running', running: true, exitCode: null }
+      : reply
+  const fixture = await attachmentFixture(harness, {
+    prepareAttachments: (...args) =>
+      prepareMessageAttachments(harness.env, ...args, provider.fetch),
+  })
+  await selectAttachmentComputer(harness, 'sandbox-polls')
+  await provider.host.seed(fixture.org.id, WORKSPACE_ID, 'sandbox-polls')
+  const file = await fixture.upload()
+  const session = await fixture.createSession()
+  const runner = await fixture.connect()
+  const readDestination = vi.spyOn(attachmentClaims, 'attachmentWorkspace')
+  try {
+    runner.emit({ type: 'runner.ready' })
+    await fixture.drain()
+    expect(
+      (await fixture.sendAttachment(session.id, 'polled-file', [file.id]))
+        .status,
+    ).toBe(202)
+    await fixture.drainAttachments()
+    expect(provider.host.statusRequests).toHaveLength(8)
+    expect(messageCommands(runner, 'polled-file')).toHaveLength(1)
+    expect(readDestination).toHaveBeenCalledTimes(5)
+  } finally {
+    runner.disconnect()
+  }
 })

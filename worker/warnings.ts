@@ -143,7 +143,7 @@ function warningFields(warning: WorkerWarning) {
         kind: warning.kind,
         message:
           warning.kind === 'attachment_transfer_retried'
-            ? 'The provider did not answer a file transfer step. The transfer runs once more.'
+            ? 'The cloud computer did not answer a file transfer step. The transfer runs once more.'
             : 'The files of a message did not reach the cloud computer.',
         workspaceId: warning.workspaceId.text,
         step: ATTACHMENT_STEPS.find((step) => step === warning.step) ?? null,
@@ -220,7 +220,7 @@ function warningFields(warning: WorkerWarning) {
       return {
         kind: warning.kind,
         message:
-          'A repository change ended after the steps after its move failed for 10 minutes. The record keeps the old repository.',
+          'A repository change failed to advance for 10 minutes and ended. The record keeps the old repository and branch.',
         workspaceId: warning.workspaceId.text,
         phase: warning.phase,
       }

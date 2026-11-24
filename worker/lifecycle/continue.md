@@ -31,9 +31,11 @@ admits a request in the chat queue:
 - The workspace owner must be active, and the workspace must have a saved
   sandbox, because Continue can resume it.
 - The job saves that sandbox and the provider account of the workspace
-  record. Its commands use that saved account. Its resume and its check of
-  local work go through the workspace record, and each phase checks that
-  the record still names the saved account, as
+  record. Its commands go through the
+  [machine channel](../machines/README.md#the-machine-channel) of the
+  workspace, and the provider path of that channel uses the saved account.
+  Its resume and its check of local work go through the workspace record,
+  and each phase checks that the record still names the saved account, as
   [Provider accounts](provider-accounts.md#routing) says.
 - `expectedBranch` must be the current branch, or the reply is 409
   `workspace_branch_changed`.
@@ -76,7 +78,7 @@ go out with the current branches.
 Each alarm run of the workspace object first runs the `continue` alarm
 source, through `runWorkspaceAlarms` in
 [`workspace-alarms.ts`](../workspace-alarms.ts). It advances the job one
-phase at a time. A provider wait never holds the chat queue. Each phase
+phase at a time. A provider or host wait never holds the chat queue. Each phase
 first checks, with `authorizeContinue` in
 [`continue-data.ts`](continue-data.ts), that the member still has access,
 that the repository, installation, and branch are unchanged, that the
@@ -129,7 +131,10 @@ fetches the selected base branch into a bare staging repository under
 - Before it starts the fetch or the move, Continue sets the auto-stop
   deadline of the sandbox to the stop time plus 60 seconds, as
   [The stop time](README.md#the-stop-time) says. Each command starts detached, and
-  the job keeps its process ID and output offsets for the later steps.
+  the job keeps its process ID, its route, and its output offsets for the
+  later steps. Each status read uses that route. If host status stays
+  unavailable, [lost-process recovery](continue-failures.md#failures-and-recovery)
+  reattaches to the command journal after bounded retries.
 
 ## The move
 
@@ -245,7 +250,12 @@ refusal.
 - [`continue-admission.ts`](continue-admission.ts): `reserveContinue`, the
   stored admission checks, and the name of the new branch.
 - [`continue-progress.ts`](continue-progress.ts): `advanceContinue`, the
-  phases and the commands, and the stop cause of each stop.
+  phases, and the stop causes of a cancel and of a failed resume.
+- [`continue-command.ts`](continue-command.ts): `advanceContinueCommand`,
+  the fetch and the move through the machine channel. It starts each
+  command, polls its saved process on its saved route, and reads the actual
+  branch after a move that failed or lost its process. It saves the stop
+  causes of the provider preparation and of each command.
 - [`continue-failure.ts`](continue-failure.ts): `continueFailed`, the safe
   error `workspace_continue_failed`, with text from the stop cause and phase.
 - [`continue-commands.ts`](continue-commands.ts): the fetch and move

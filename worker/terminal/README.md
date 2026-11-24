@@ -149,8 +149,9 @@ current folder.
 
 After a [repository change](../lifecycle/repository-change.md#publication),
 the ttyd and tmux services still have the start variables of the old
-folder, and only a resume rewrites them. So the Worker writes the new
-folder to `/run/conductive/repository`, and sets
+folder, and only a resume rewrites them. The settle command after publication
+uses the workspace machine channel to write the new folder to
+`/run/conductive/repository` and set
 `CONDUCTIVE_REPOSITORY_DIR` in the global tmux environment for each new
 shell. `terminalFolder` in [`bridge/folder.ts`](bridge/folder.ts) reads
 that file when the bridge creates the session. It takes the folder only

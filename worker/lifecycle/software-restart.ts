@@ -5,8 +5,10 @@ import {
 } from '../data/user-access'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
+import { machineChannel, type CommandResult } from '../machines/channel'
+import { workspaceMachineOwner } from '../machines/client'
+import { verifyTarget } from '../previews/access'
 import { orgProviderForAccount } from '../sandbox/client'
-import type { CommandResult } from '../sandbox/provider'
 import type { WorkspaceTarget } from '../previews/types'
 import { terminalRestartCommand } from '../terminal/support'
 import { warnWorker } from '../warnings'
@@ -135,25 +137,30 @@ export async function restartWorkspaceSoftware(input: {
     input.dependencies.fetch,
     row.providerAccount,
   )
+  const target = {
+    orgId,
+    workspaceId,
+    sandboxId,
+    providerAccount: row.providerAccount,
+    state: row.state,
+  }
+  const channel = machineChannel(
+    env,
+    workspaceMachineOwner(orgId, workspaceId),
+    provider,
+    sandboxId,
+  )
   await input.step('begin')
   let result: RestartWorkspaceResponse
   try {
-    result = await runSoftwareRestart((command) =>
-      provider.runCommand(sandboxId, command),
-    )
+    result = await runSoftwareRestart(async (command) => {
+      await verifyTarget(env, target, userId, false)
+      return channel.runCommand(command)
+    })
   } catch (error) {
     await input.step('fail')
     throw error
   }
-  await refreshAfterRestart(
-    {
-      orgId,
-      workspaceId,
-      sandboxId,
-      providerAccount: row.providerAccount,
-      state: row.state,
-    },
-    (terminal) => input.step({ terminal }),
-  )
+  await refreshAfterRestart(target, (terminal) => input.step({ terminal }))
   return result
 }

@@ -42,10 +42,18 @@ export async function readyWorkspace(
       },
     })
   const lifecycle = () => start.endpoint.readLifecycle()
-  const commands = () =>
-    fixture.boat.commands.filter(
+  const restartCommands = (commands: readonly string[]) =>
+    commands.filter(
       (command) =>
         command === UPDATE_CHECK_COMMAND || command === RESTART_COMMAND,
     )
-  return { fixture, actor, workspaceId, restart, lifecycle, commands }
+  return {
+    fixture,
+    actor,
+    workspaceId,
+    restart,
+    lifecycle,
+    commands: () => restartCommands(fixture.boat.commands),
+    hostCommands: () => restartCommands(fixture.host.commands),
+  }
 }

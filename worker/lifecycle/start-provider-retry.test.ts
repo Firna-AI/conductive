@@ -8,14 +8,14 @@ const backendFixture = setupBackendTests()
 it('bounds lasting start status faults across alarm restarts and retains existing failure cleanup', async () => {
   const fixture = await backendFixture()
   const start = await startRetryFixture(fixture)
-  statusFault(fixture)
+  fixture.host.statusError = 'internal'
   const now = fixture.runtime.dependencies.now() + 1_000
   await start.tick(now)
   await start.restart()
   await start.tick(now + 1_000)
-  const calls = fixture.boat.statusRequests.length
+  const calls = fixture.host.statusRequests.length
   await start.tick(now + 2_000)
-  const earlyCalls = fixture.boat.statusRequests.length
+  const earlyCalls = fixture.host.statusRequests.length
   await start.tick(now + 3_000)
   await start.tick(now + 600_000)
   expect(await start.job()).toBeUndefined()
@@ -28,11 +28,13 @@ it('bounds lasting start status faults across alarm restarts and retains existin
   })
   expect(fixture.boat.deletedIds).toEqual(['bx_1'])
   expect(earlyCalls).toBe(calls)
+  expect(fixture.boat.statusRequests).toEqual(fixture.host.statusRequests)
   expect(fixture.boat.deadlineIds).toEqual(['bx_1'])
 })
 
 it('preserves captured start output and lets cancellation bypass a pending retry', async () => {
   const fixture = await backendFixture()
+  fixture.host.autoConnect = false
   const start = await startRetryFixture(fixture)
   const fault = statusFault(fixture)
   const now = fixture.runtime.dependencies.now() + 1_000

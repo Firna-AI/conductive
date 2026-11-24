@@ -85,17 +85,12 @@ it('starts a fresh download and temporary file after restart before the message 
     expect(
       copy.read('sandbox-owner', command?.attachments[0]?.path ?? ''),
     ).toEqual(FILE_BYTES)
-    const started = copy.requests.filter((request) => request.method === 'POST')
-    const commands = await Promise.all(
-      started.map(async (request) => {
-        const input: { command: string } = await request.clone().json()
-        return input.command
-      }),
-    )
+    const commands = copy.commands
     expect(commands).toHaveLength(2)
     expect(attachmentTemporaryPath(commands[0])).not.toBe(
       attachmentTemporaryPath(commands[1]),
     )
+    expect(copy.host.commands).toEqual(commands)
   } finally {
     copy.release.resolve()
     await copy.settleCopies()

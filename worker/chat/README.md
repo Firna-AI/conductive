@@ -281,8 +281,9 @@ Restart keeps that storage, and disposal removes it.
 ## Seams for other milestones
 
 [Chat attachments](attachments.md) gives storage, message proofs, shared file transfers, the one-use machine download route, dispatch order, agent input, and cleanup.
-Attachment copies use the provider account of the workspace record.
-Each copy checks that account and the sandbox ID before each file and after the last file.
+Attachment copies run their downloads through the [machine channel](../machines/README.md#the-machine-channel) of the workspace.
+The provider path of that channel and the file check use the provider account of the workspace record.
+Each copy checks that account, the org, and the sandbox ID before each file, before each command start, and after the last file.
 
 [Chat backend integration](integration/README.md) gives the seams for other
 features. It covers the hooks, the trusted workspace calls, the workspace

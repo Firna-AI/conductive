@@ -5,6 +5,7 @@ import {
   mailDiagnosticFields,
 } from './mail-diagnostics'
 import { MailDeliveryError } from './mail-sender'
+import { machineHttpCodes } from './machines/errors'
 import { ProviderError } from './sandbox/errors'
 import { CommandFailed } from './warnings'
 
@@ -121,6 +122,7 @@ const HTTP_CODES = [
   'attachment_copy_failed',
   'attachment_missing',
   'attachment_not_found',
+  ...machineHttpCodes(),
 ] as const
 
 export type WarningCode = (typeof HTTP_CODES)[number] | 'unknown'

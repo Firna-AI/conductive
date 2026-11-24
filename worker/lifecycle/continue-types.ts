@@ -7,6 +7,7 @@ import type {
 import type { WorkspaceChat } from '../chat/backend'
 import type { ChatData } from '../chat/types'
 import type { AppDependencies, AppEnv } from '../env'
+import type { CommandRoute } from '../machines/channel'
 import type { FeatureResult } from '../features/result'
 import type {
   GitHubRefreshWorkspace,
@@ -57,6 +58,8 @@ export interface ContinueJob {
   directory: string
   phase: (typeof CONTINUE_PHASES)[number]
   processId: number | null
+  commandRoute?: CommandRoute
+  hostStatusFailingSince?: number
   commandStarted: boolean
   resumeQueued: boolean
   fetchId: string

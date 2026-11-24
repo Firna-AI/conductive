@@ -5,6 +5,7 @@ import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
 import { sessionPaths } from '../../src/shared/sessions'
 import type { QueueTurn } from '../chat/queue-turn'
 import { LIFECYCLE_FENCE_KEY } from '../members/receiver-fence'
+import type { ReceiverStorage } from '../members/receiver-storage'
 import { heldOperation } from '../test-support/held-operation'
 import { TEST_ORIGIN } from '../test-support/harness'
 import { readMergeWorkspace } from '../github/merge-access'
@@ -26,11 +27,16 @@ export async function automaticRestartFixture(
   fixture: Awaited<ReturnType<typeof backendFixture>>,
   initialTurn: 'finished' | 'running' | 'started' = 'finished',
 ) {
-  const { actor, id: workspaceId } = await seededCompletedWorkspace(fixture, {
+  const {
+    actor,
+    id: workspaceId,
+    sandboxId,
+  } = await seededCompletedWorkspace(fixture, {
     workspaceId: `automatic-restart-${++workspaceNumber}`,
   })
   const { org, runtime } = fixture
-  const { peers, controls } = actor.native.api
+  await fixture.host.seed(org.id, workspaceId, sandboxId)
+  const { peers, controls, chat, controller } = actor.native.api
   const token = await readWorkspaceToken(runtime.env, workspaceId)
   const now = runtime.dependencies.now
   const eventNumbers = new Map<string, number>()
@@ -99,20 +105,45 @@ export async function automaticRestartFixture(
   await controls.drain()
   const awayAt = now()
   const tick = (ms: number) => fixture.advanceTo(awayAt + ms, workspaceId)
+  const restartCommands = (commands: readonly string[]) =>
+    commands.filter(
+      (command) =>
+        command === UPDATE_CHECK_COMMAND || command === RESTART_COMMAND,
+    )
+  const advanceRestart = async (storage: ReceiverStorage = actor.storage) => {
+    const run = <T>(work: (turn: QueueTurn) => Promise<T>): Promise<T> =>
+      chat.runLifecycle(work)
+    const restart = createAutomaticRestart({
+      env: runtime.env,
+      dependencies: runtime.dependencies,
+      storage,
+      controller,
+      chat,
+      run,
+      refreshTerminal: async () => {},
+    })
+    await fixture.setTime(awayAt + 180_000)
+    let commands: (() => Promise<void>) | undefined
+    await run(() =>
+      restart((work) => {
+        commands = work
+      }),
+    )
+    if (!commands) throw new Error('The automatic restart did not start.')
+    await commands()
+  }
   return {
     actor,
     fixture,
     lifecycle: () => actor.endpoint().readLifecycle(),
-    commands: () =>
-      fixture.boat.commands.filter(
-        (command) =>
-          command === UPDATE_CHECK_COMMAND || command === RESTART_COMMAND,
-      ),
+    commands: () => restartCommands(fixture.boat.commands),
+    hostCommands: () => restartCommands(fixture.host.commands),
     awayAt,
     connect,
     firstTurn,
     setOffset: (ms: number) => fixture.setTime(awayAt + ms),
     tick,
+    advanceRestart,
     originalTurnEnds: async () => {
       const { events } = await controls.history(workspaceId)
       return events
@@ -142,31 +173,9 @@ export async function automaticRestartFixture(
           }
         },
       })
-      const { chat, controller } = actor.native.api
-      const run = <T>(work: (turn: QueueTurn) => Promise<T>): Promise<T> =>
-        chat.runLifecycle(work)
-      const restart = createAutomaticRestart({
-        env: runtime.env,
-        dependencies: runtime.dependencies,
-        storage,
-        controller,
-        chat,
-        run,
-        refreshTerminal: async () => {},
-      })
       return {
         ...held,
-        restart: async () => {
-          await fixture.setTime(awayAt + 180_000)
-          let commands: (() => Promise<void>) | undefined
-          await run(() =>
-            restart((work) => {
-              commands = work
-            }),
-          )
-          if (!commands) throw new Error('The automatic restart did not start.')
-          await commands()
-        },
+        restart: () => advanceRestart(storage),
       }
     },
     holdCommand: (heldCommand: string, updateExitCode = 0) => {

@@ -8,6 +8,10 @@ import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-
 import { workspaceMachineOwner } from '../machines/client'
 import { machineTokenStatus } from '../machines/token.test-support'
 import { record, string } from '../chat/inputs'
+import {
+  LIFECYCLE_STATE_KEY,
+  type DurableLifecycleState,
+} from './durable-types'
 
 it('revokes the retention token when the computer stops before the stop phase', async () => {
   const fixture = await retentionCommandFixture(await backendFixture())
@@ -38,7 +42,7 @@ const FAILURE =
 
 it('polls a retained never-ending maintenance script across reconstruction and stops it at the original deadline', async () => {
   const fixture = await retentionCommandFixture(await backendFixture())
-  const { boat, platform } = fixture
+  const { boat, host, platform } = fixture
   const held = heldOperation()
   boat.commandRunning = true
   boat.commandOutput = 'maintenance still running\n'
@@ -47,6 +51,7 @@ it('polls a retained never-ending maintenance script across reconstruction and s
       await held.wait()
   }
   const commands = boat.commandRequests.length
+  const hostCommands = host.commandRequests.length
   const advancing = platform.endpoint().advance()
   try {
     const result = await Promise.race([
@@ -59,19 +64,28 @@ it('polls a retained never-ending maintenance script across reconstruction and s
     await advancing
   }
   expect(await fixture.progress()).toEqual({ phase: 'startup', error: null })
-  expect(boat.commandRequests.slice(commands)).toEqual([
-    expect.objectContaining({ detached: true }),
-  ])
+  const started = boat.commandRequests.slice(commands)
+  expect(started).toEqual([expect.objectContaining({ detached: true })])
+  expect(host.commandRequests.slice(hostCommands)).toEqual(started)
+  expect(await platform.storage.get(LIFECYCLE_STATE_KEY)).toMatchObject({
+    diskRetentionCommand: { commandRoute: 'host', processId: 5 },
+  })
+  await host.disconnect('bx_1')
   await platform.restart()
+  await platform.endpoint().advance()
+  expect(await fixture.progress()).toEqual({ phase: 'startup', error: null })
+  expect(boat.stopIds).toEqual([])
+  await host.connect('bx_1')
   await fixture.tick(DEADLINE - 1)
   expect(await fixture.progress()).toEqual({ phase: 'startup', error: null })
   expect(await platform.storage.getAlarm()).toBe(DEADLINE)
   expect(boat.commandRequests).toHaveLength(commands + 1)
-  expect(boat.statusRequests.at(-1)).toEqual({
+  expect(host.statusRequests.at(-1)).toEqual({
     processId: 5,
     stdoutOffset: 0,
     stderrOffset: 0,
   })
+  await host.disconnect('bx_1')
   boat.failStop = true
   await platform.restart()
   await fixture.tick(DEADLINE)
@@ -100,6 +114,34 @@ it('polls a retained never-ending maintenance script across reconstruction and s
     error: null,
   })
   expect(boat.resumeIds).toEqual(['bx_1', 'bx_1'])
+})
+
+it('polls a retained legacy process on the provider after the host connects and the workspace reconstructs', async () => {
+  const fixture = await retentionCommandFixture(await backendFixture())
+  const { boat, host, platform } = fixture
+  await host.disconnect('bx_1')
+  await platform.endpoint().advance()
+  const state =
+    await platform.storage.get<DurableLifecycleState>(LIFECYCLE_STATE_KEY)
+  if (!state?.diskRetentionCommand)
+    throw new Error('Expected a retained process.')
+  expect(state.diskRetentionCommand).toMatchObject({
+    commandRoute: 'provider',
+    processId: 5,
+  })
+  delete state.diskRetentionCommand.commandRoute
+  await platform.storage.put(LIFECYCLE_STATE_KEY, state)
+  const hostPolls = host.statusRequests.length
+  await host.connect('bx_1')
+  await platform.restart()
+  await platform.endpoint().advance()
+  expect(host.statusRequests).toHaveLength(hostPolls)
+  expect(boat.statusRequests.at(-1)).toEqual({
+    processId: 5,
+    stdoutOffset: 0,
+    stderrOffset: 0,
+  })
+  expect(await fixture.progress()).toEqual({ phase: 'stop', error: null })
 })
 
 it('hands an active maintenance script to confirmed stop cleanup before accepting a user resume', async () => {

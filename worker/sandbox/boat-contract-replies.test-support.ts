@@ -1,5 +1,5 @@
+import type { CommandStatus } from '../machines/channel'
 import type { ContractReply } from './contract-fixture.test-support'
-import type { CommandStatus } from './provider'
 
 type FailureKind = Extract<ContractReply, { kind: 'failure' }>['errorKind']
 type FileValue = Extract<ContractReply, { kind: 'file' }>['value']

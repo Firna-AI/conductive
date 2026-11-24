@@ -17,7 +17,7 @@ const backendFixture = setupBackendTests()
 
 it('starts and caches the terminal after startup at create and resume while retention starts no terminal', async () => {
   const fixture = await backendFixture()
-  const { runtime, org, user, boat } = fixture
+  const { runtime, org, user, boat, host } = fixture
   const queued = fixture.nextQueued()
   const creation = createWorkspace(runtime, org.id, user, {
     repositoryId: fixture.repositoryId,
@@ -34,11 +34,12 @@ it('starts and caches the terminal after startup at create and resume while rete
     if (!command.includes('systemctl start conductive-terminal.service')) return
     expect(detached).toBe(true)
     terminalStarts++
-    expect(boat.commandRequests.at(-2)).toMatchObject({
+    expect(host.commandRequests.at(-2)).toEqual(boat.commandRequests.at(-2))
+    expect(host.commandRequests.at(-2)).toMatchObject({
       detached: true,
     })
     expect(
-      lifecycleCommandBody(boat.commandRequests.at(-2)?.command),
+      lifecycleCommandBody(host.commandRequests.at(-2)?.command),
     ).toContain("bash '/run/conductive/startup.sh'")
   }
   const reportReadyDuringTerminal = async () => {

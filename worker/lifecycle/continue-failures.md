@@ -27,12 +27,26 @@ Continue job, its recovery, and the stop cause that each stop saves.
   records the open question of these words.
 - Once a fetch or a move started, each later step settles that command
   first. A failed access check then closes the fetch scope and keeps the
-  error, but the command result is still read.
+  error, but the command result is still read. While the workspace record
+  names the saved sandbox and account, the read uses the machine channel of
+  the workspace. When the record is gone or names another computer, the
+  provider still reads a command that it started on the saved sandbox. A
+  command that the host started then cannot settle, because the host
+  connection of the workspace belongs to the current computer. The job ends
+  with the kept error.
 - A fetch that ends after a cancel or a kept error ends the job with that
   error. A move that ended well goes on to its publication, also after a
   cancel.
-- After a lost provider reply or a lost process, Continue only reattaches
-  to the saved command journal. A command that never reached the sandbox
+- The first transient failure to read host status saves its time in the
+  job. Continue retries the status read for two minutes. Any status reply
+  clears the time. If the read still fails at the limit, Continue follows
+  lost-process recovery. The recovery command goes through the machine
+  channel and can reattach through the saved provider account when the
+  host is away. The original process ID is used only on its starting route.
+- After a lost start reply from the host or the provider, or a lost
+  process, Continue only reattaches to the saved command journal. A lost
+  process is a `lost` status, or a provider 404 for a command on the
+  provider route. A command that never reached the sandbox
   fails the job, so no operation starts again with an old identity. The
   journal keeps the exit status of an ended command. So a reattach reads
   the same reserved status, and saves the same stop cause.
@@ -75,8 +89,13 @@ text, path, token, or provider body.
 
 - `readContinueJob` reads a missing or unrecognized cause as `unknown`. So
   a job of an older deploy keeps working. The job keeps the earlier shapes
-  of `failure`, `outcome`, and `phase`, so a previous Worker keeps working
-  too.
+  of `failure`, `outcome`, and `phase`.
+- The job saves the route of a started command, `host` or `provider`, in
+  `commandRoute` beside its process ID. A saved process without a route
+  reads on the provider path, so such a job stays readable. A saved job
+  with the `host` route needs a Worker that has the
+  [machine channel](../machines/README.md#the-machine-channel). The same
+  holds for a saved [repository change](repository-change.md) job.
 - After a cancel or a kept access error, the end status of a command does
   not change the cause.
 - Unless the job is cancelled, a good start of a command and the good end

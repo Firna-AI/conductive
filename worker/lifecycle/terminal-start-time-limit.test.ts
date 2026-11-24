@@ -21,7 +21,7 @@ it('fails a hanging detached terminal setup at the original deadline after recon
     phase: 'terminal',
     processId: expect.any(Number),
   })
-  expect(fixture.boat.commandRequests.at(-1)).toMatchObject({
+  expect(fixture.host.commandRequests.at(-1)).toMatchObject({
     detached: true,
     command: expect.stringContaining(
       'systemctl start conductive-terminal.service',
@@ -30,7 +30,7 @@ it('fails a hanging detached terminal setup at the original deadline after recon
   const commands = fixture.boat.commandRequests.length
   await start.restart()
   await start.tick(TEST_TIME + 1_199_999)
-  expect(fixture.boat.statusRequests.at(-1)?.processId).toBe(running?.processId)
+  expect(fixture.host.statusRequests.at(-1)?.processId).toBe(running?.processId)
   expect(fixture.boat.fileReads).toEqual([])
   expect(fixture.boat.commandRequests).toHaveLength(commands)
   expect(await start.storage.getAlarm()).toBe(TEST_TIME + 1_200_000)

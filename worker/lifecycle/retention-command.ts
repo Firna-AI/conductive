@@ -1,4 +1,5 @@
-import type { SandboxProvider } from '../sandbox/provider'
+import type { CommandRoute, MachineChannel } from '../machines/channel'
+import { isTransientHostError } from '../machines/errors'
 import { lifecycleCommand } from './command-intents'
 import type { DiskRetentionResult } from './durable-types'
 import { workspaceStartupCommand } from './image-software'
@@ -11,6 +12,7 @@ import type { WorkspaceActionContext } from './workspace-actions'
 export interface RetentionCommandState {
   attempt: string
   processId: number | null
+  commandRoute?: CommandRoute
   stdoutOffset: number
   stderrOffset: number
   stopRequestedAt?: number
@@ -23,8 +25,7 @@ export interface RetentionCommandPort {
 
 export async function advanceRetentionCommand(
   context: WorkspaceActionContext,
-  provider: SandboxProvider,
-  sandboxId: string,
+  channel: MachineChannel,
   deadlineAt: number,
   command: RetentionCommandPort,
   ownerUserId: string,
@@ -34,8 +35,7 @@ export async function advanceRetentionCommand(
   try {
     if (state.processId === null) {
       const settings = await readImageSettings(context.env.DB, context.orgId)
-      const started = await provider.startCommand(
-        sandboxId,
+      const started = await channel.startCommand(
         lifecycleCommand(
           {
             kind: 'workspace',
@@ -50,13 +50,16 @@ export async function advanceRetentionCommand(
           ),
         ),
       )
-      await command.save({ ...state, processId: started.processId })
+      await command.save({
+        ...state,
+        processId: started.processId,
+        commandRoute: started.route,
+      })
       if (context.dependencies.now() < deadlineAt)
         return { done: false, error: null }
     } else {
-      const status = await provider.getCommandStatus(
-        sandboxId,
-        state.processId,
+      const status = await channel.getCommandStatus(
+        { processId: state.processId, route: state.commandRoute ?? 'provider' },
         {
           stdoutOffset: state.stdoutOffset,
           stderrOffset: state.stderrOffset,
@@ -77,7 +80,12 @@ export async function advanceRetentionCommand(
           error = 'The startup script failed during disk retention.'
       }
     }
-  } catch {
+  } catch (failure) {
+    if (
+      isTransientHostError(failure) &&
+      context.dependencies.now() < deadlineAt
+    )
+      return { done: false, error: null }
     error = 'The startup script could not run during disk retention.'
   }
   if (context.dependencies.now() >= deadlineAt)

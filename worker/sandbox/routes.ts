@@ -1,5 +1,5 @@
+import type { CommandOffsets } from '../machines/channel'
 import { ProviderError } from './errors'
-import type { CommandOffsets } from './provider'
 
 export type BoatRoute =
   | { operation: 'create' | 'saveSnapshot' }

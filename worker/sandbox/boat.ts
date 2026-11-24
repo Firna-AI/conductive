@@ -1,4 +1,5 @@
 import type { HttpFetch } from '../env'
+import type { CommandOffsets, CommandStatus } from '../machines/channel'
 import { ProviderError } from './errors'
 import { readSandboxFile, readSandboxFileInfo } from './file-read'
 import {
@@ -9,8 +10,6 @@ import {
   readStartedCommand,
 } from './parsers'
 import type {
-  CommandOffsets,
-  CommandStatus,
   PrivatePort,
   PortMode,
   SandboxDesktop,

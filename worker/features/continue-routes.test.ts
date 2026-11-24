@@ -215,18 +215,16 @@ it('resumes Continue through real routes and socket wake, fences sends and Archi
         }),
       ]),
     )
-    const commands = f.boat.commandRequests.filter(
-      ({ detached, command }) =>
-        detached && command.includes('conductive-continue'),
-    )
-    expect(commands).toHaveLength(2)
-    expect(await (await post()).json()).toEqual(result)
-    expect(
-      f.boat.commandRequests.filter(
+    const continueCommands = (requests: typeof f.boat.commandRequests) =>
+      requests.filter(
         ({ detached, command }) =>
           detached && command.includes('conductive-continue'),
-      ),
-    ).toHaveLength(2)
+      )
+    const commands = continueCommands(f.boat.commandRequests)
+    expect(commands).toHaveLength(2)
+    expect(continueCommands(f.host.commandRequests)).toEqual(commands)
+    expect(await (await post()).json()).toEqual(result)
+    expect(continueCommands(f.boat.commandRequests)).toHaveLength(2)
     const fresh = await requestRunner(f, token)
     if (!fresh.webSocket) throw new Error('Missing reconnected runner.')
     runner = new OuterFakeRunner(fresh.webSocket, OUTER_WORKSPACE, {

@@ -70,7 +70,7 @@ It rebuilds the job inside workerd before calling the existing controller guard.
 This lower-level proof permits a Stop between epoch capture and admission.
 Normal production lifecycle RPC methods share the chat queue.
 
-The `start-outside-*.test.ts` files hold a `LifecycleBoat` request or reply while the production `Workspace` advances a start.
+The `start-outside-*.test.ts` files hold a provider request or reply of `LifecycleBoat`, or a command status read that `LifecycleHost` answers from the same scenario, while the production `Workspace` advances a start.
 `expectSettled` in `start-outside.test-support.ts` races each operation against a 10-second deadline.
 These tests check the order of the events, not the elapsed time.
 
@@ -116,6 +116,17 @@ Dedicated source tests keep their real local Git fixture.
 Its detached process IDs, status offsets, delayed replies, and stop failures remain observable.
 Its `afterCreate` hook holds a successful create reply.
 Its `beforeResume` hook holds a resume request before the fake applies it.
+
+`LifecycleHost` in [`lifecycle-host-test-support.ts`](lifecycle-host-test-support.ts) is the fake host program.
+Each create and each resume of `LifecycleBoat` gives it the machine token of that computer.
+It then opens a real host WebSocket to the production `Machine` object.
+A fixture that seeds a workspace in D1 calls `seed`, which issues the token with `issueMachineToken`.
+The fake host answers each command and status read from the scenario state of `LifecycleBoat`: its hooks, output, exit codes, and process IDs.
+The captures of `LifecycleBoat` hold the commands and status reads of both paths.
+The `commandRequests` and `statusRequests` of `LifecycleHost` hold only the requests that crossed the socket.
+With `autoConnect` set to false, a computer stays on the provider path until the test calls `connect`.
+`disconnect` drops the socket of one computer.
+A build create carries no machine token, so it stays on the provider path.
 
 Tests replace the current fetch dependency to inject a provider fault.
 The native outbound route reads that current dependency for each request.

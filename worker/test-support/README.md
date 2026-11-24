@@ -29,6 +29,18 @@ Each runtime that runs a workspace also exports `Machine` and supplies
 host WebSocket. Their test caller is another Durable Object, so RPC streams
 stay inside one I/O context across reads and writes. Plain calls release
 their RPC sessions before a hibernation check.
+The fake host, `LifecycleHost` in
+[lifecycle-host-test-support.ts](../lifecycle/lifecycle-host-test-support.ts),
+also opens a real host WebSocket to the production `Machine` object.
+It uses the machine token of each create and resume of the fake Boat, or a
+token that `issueMachineToken` issues for a seeded workspace through its
+`seed`. The lifecycle, Continue, repository change, restart, and attachment
+fixtures connect it. On the outer runtime, `connectHost` connects it at
+each create and resume, and a fixture can call `host.seed`, as the services
+fixture does. So the commands of a workspace cross that socket. A computer
+without a connected fake host gets the provider path of the fake provider.
+The [lifecycle test guide](../lifecycle/tests.md#image-and-provider-boundaries)
+gives its captures and controls.
 
 Await Reset, Restart, and Crash before later calls to the object, because the context reset can interrupt them.
 An interrupted call can get a text error from the runtime instead of JSON.
@@ -244,6 +256,8 @@ A callback counts as complete only after the `waitUntil` work that it starts end
 - `runner-connection.ts` supplies the in-memory socket.
 - `process-environment.ts` builds an isolated environment for a Node child process in a test.
 - [attachment-command.ts](attachment-command.ts) fakes detached attachment commands and their status replies. It reads the generated destination and bearer token, calls an injected download route, and records exact copied bytes.
+  Its `fetch` gives the provider replies, and its `command` and `status` give the same results to the fake host.
+- [lifecycle-host-test-support.ts](../lifecycle/lifecycle-host-test-support.ts): `LifecycleHost`, the fake host program. It connects through the production `Machine` object, and answers commands and status reads from a scenario: the state of `LifecycleBoat`, or the fake attachment transfer.
 - `attachments.ts`: `fakeAttachments(ids)`, the attachment metadata of the lifecycle fixtures. Each file gets the `path` of the shared builder in `src/shared/attachment-paths.ts`, as an upload reply and an admitted message give it.
 
 See [the browser fakes](../../src/test-support/README.md),

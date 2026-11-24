@@ -9,7 +9,10 @@ import {
   OUTER_WORKSPACE,
 } from '../chat/integration/outer-seed.test-support'
 import { DEVICE_TEST_NOW } from '../devices/clock.test-support'
-import { RESTART_COMMAND } from '../lifecycle/software-restart'
+import {
+  RESTART_COMMAND,
+  UPDATE_CHECK_COMMAND,
+} from '../lifecycle/software-restart'
 import { heldOperation } from '../test-support/held-operation'
 import {
   restart,
@@ -17,6 +20,8 @@ import {
   snapshot,
   type ServicesFixture,
 } from './fixture.test-support'
+
+const restartCommands = [UPDATE_CHECK_COMMAND, RESTART_COMMAND]
 
 let bundle: string
 let fixture: ServicesFixture | undefined
@@ -35,6 +40,7 @@ async function savedCatalogue(active: ServicesFixture) {
 
 it('keeps the stored catalogue on a failed header Restart and ends a pending control as unconfirmed at disconnect', async () => {
   const active = (fixture = await servicesFixture(bundle))
+  await active.connectHost()
   const runner = await active.connect()
   runner.document('services.report.part', 'report', snapshot)
   await runner.fence()
@@ -76,10 +82,13 @@ it('keeps the stored catalogue on a failed header Restart and ends a pending con
     outcome: { state: 'unconfirmed' },
   })
   expect(await savedCatalogue(active)).toEqual(before)
+  expect(active.boat.commands).toEqual(restartCommands)
+  expect(active.host.commands).toEqual(restartCommands)
 })
 
 it('keeps service storage through header Restart and the automatic software restart', async () => {
   const active = (fixture = await servicesFixture(bundle))
+  await active.connectHost()
   const runner = await active.connect()
   runner.document('services.report.part', 'report', snapshot)
   await runner.fence()
@@ -90,6 +99,8 @@ it('keeps service storage through header Restart and the automatic software rest
   )
   expect(header.status).toBe(200)
   expect(await savedCatalogue(active)).toEqual(before)
+  expect(active.boat.commands).toEqual(restartCommands)
+  expect(active.host.commands).toEqual(restartCommands)
   const replacement = await active.connect()
   replacement.document('services.report.part', 'fresh', {
     ...snapshot,
@@ -118,5 +129,7 @@ it('keeps service storage through header Restart and the automatic software rest
   expect(
     active.boat.commands.filter((command) => command === RESTART_COMMAND),
   ).toHaveLength(2)
+  expect(active.boat.commands).toEqual([...restartCommands, ...restartCommands])
+  expect(active.host.commands).toEqual([...restartCommands, ...restartCommands])
   expect(await savedCatalogue(active)).toEqual(current)
 })

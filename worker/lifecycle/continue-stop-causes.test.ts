@@ -11,6 +11,7 @@ import {
 import { WORKSPACE_ID } from '../chat/harness.test-support'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { continueFixture } from './continue.test-support'
+import { LostHostReply } from './lifecycle-host-test-support'
 import {
   CONTINUE_JOB_KEY,
   continueJobKey,
@@ -106,7 +107,7 @@ it('keeps an uncertain command start through reconstruction and never repeats it
     await beforeCommand?.(command, detached)
     if (detached && !lost) {
       lost = true
-      throw new Error('untrusted provider body')
+      throw new LostHostReply()
     }
   }
   await f.coordinator.advance()
@@ -116,6 +117,7 @@ it('keeps an uncertain command start through reconstruction and never repeats it
     processId: null,
   })
   f.reconstruct()
+  await f.host.connect('bx_continue')
   f.boat.commandExitCode = 125
   await f.finish()
   await expect(f.result(pending.continueId)).rejects.toMatchObject({

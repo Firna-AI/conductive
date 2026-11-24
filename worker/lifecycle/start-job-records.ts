@@ -1,5 +1,6 @@
 import type { QueueTurn } from '../chat/queue-turn'
 import type { AppEnv } from '../env'
+import { observeHostChannels } from '../machines/host-channel'
 import { observeProviders } from '../sandbox/client'
 import {
   LIFECYCLE_STATE_KEY,
@@ -33,7 +34,7 @@ import { StartRunTimer, type ComputerMark } from './start-run-timer'
 import { START_JOB_KEY } from './start-storage'
 import type { WorkspaceStartJob } from './start-types'
 import { timedDatabase } from './timed-d1'
-import { timedProvider } from './timed-provider'
+import { timedHostChannel, timedProvider } from './timed-provider'
 
 interface OpenRun {
   job: StartRecordJob
@@ -50,8 +51,8 @@ export interface StartRun {
 
 /**
  * The job step records of the starts of one workspace object, as
- * `docs/protocol/step-timing.md` requires. Its env times the D1 and provider
- * calls of each start run. The rows wait in object storage, and go to D1 in
+ * `docs/protocol/step-timing.md` requires. Its env times D1, provider, and
+ * host calls of each start run. The rows wait in object storage, and go to D1 in
  * the batch of a shown-state write. A record never fails or holds back a
  * start: each failure here drops the record with a warning.
  */
@@ -75,6 +76,7 @@ export class StartJobRecords {
       plain: env.DB,
       observe: (provider) => timedProvider(provider, timer),
     })
+    observeHostChannels(db, (host) => timedHostChannel(host, timer))
     // A live view, so that the controller reads the same env values as the
     // rest of the object, also values that a test sets after the start. The
     // target is a fresh copy, so its keys stay free to give another value.

@@ -7,7 +7,7 @@ import { onTestFinished } from 'vitest'
 
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
 import { testDirectory } from '../test-support/test-directory'
-import type { CommandResult } from '../sandbox/provider'
+import type { CommandResult } from '../machines/channel'
 import { FakeGitHubGit } from './fake-github-git-test-support'
 import { shellQuote } from './commands'
 import {

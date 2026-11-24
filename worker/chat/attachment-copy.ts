@@ -1,6 +1,8 @@
 import type { AppEnv, HttpFetch } from '../env'
 import { attachmentPath } from '../../src/shared/attachment-paths'
 import { HttpError } from '../http'
+import { machineChannel } from '../machines/channel'
+import { workspaceMachineOwner } from '../machines/client'
 import { providerForAccount } from '../sandbox/client'
 import { ProviderError } from '../sandbox/errors'
 import { attachmentWorkspace } from './attachment-claim-data'
@@ -9,7 +11,7 @@ import { attachmentRepositoryDirectory } from './attachment-paths'
 import { attachmentNotFound } from './attachment-record'
 import { createAttachmentDownload } from './attachment-download-data'
 import { attachmentDownloadCommand } from './attachment-download-command'
-import { runAttachmentDownload } from './attachment-download-process'
+import { attachmentDownloadProcess } from './attachment-download-process'
 import { AttachmentMissing } from './attachment-missing'
 import { markAttachmentTransferred } from './attachment-transfer-data'
 import {
@@ -39,15 +41,35 @@ export async function prepareMessageAttachments(
     )
   if (destination !== sandboxId) throw attachmentNotFound()
   const provider = providerForAccount(env, httpFetch, workspace.providerAccount)
-  const directory = await attachmentRepositoryDirectory(env.DB, workspace)
-  const missing: string[] = []
-  for (const attachment of attachments) {
+  const channel = machineChannel(
+    env,
+    workspaceMachineOwner(workspace.orgId, workspaceId),
+    provider,
+    destination,
+  )
+  const requireDestination = async () => {
     const current = await attachmentWorkspace(env.DB, workspaceId, userId)
     if (
       current?.sandboxId !== destination ||
+      current.orgId !== workspace.orgId ||
       current.providerAccount !== workspace.providerAccount
     )
       throw attachmentNotFound()
+  }
+  const downloadChannel: Pick<
+    ReturnType<typeof machineChannel>,
+    'startCommand' | 'getCommandStatus'
+  > = {
+    async startCommand(command) {
+      await requireDestination()
+      return channel.startCommand(command)
+    },
+    getCommandStatus: channel.getCommandStatus,
+  }
+  const directory = await attachmentRepositoryDirectory(env.DB, workspace)
+  const missing: string[] = []
+  for (const attachment of attachments) {
+    await requireDestination()
     const record = await readAttachment(env.DB, attachment.attachmentId)
     if (
       !record ||
@@ -83,7 +105,7 @@ export async function prepareMessageAttachments(
     }
     const origin = env.MACHINE_ORIGIN
     if (!origin) throw attachmentNotFound()
-    await retryUnanswered(workspaceId, async () => {
+    const download = attachmentDownloadProcess(downloadChannel, async () => {
       const token = await createAttachmentDownload(env.DB, {
         attachmentId: record.id,
         workspaceId,
@@ -91,18 +113,15 @@ export async function prepareMessageAttachments(
         sandboxId: destination,
         providerAccount: workspace.providerAccount,
       })
-      await runAttachmentDownload(
-        provider,
-        destination,
-        attachmentDownloadCommand({
-          directory,
-          relativePath: attachment.relativePath,
-          origin,
-          token,
-          sizeBytes: record.sizeBytes,
-        }),
-      )
+      return attachmentDownloadCommand({
+        directory,
+        relativePath: attachment.relativePath,
+        origin,
+        token,
+        sizeBytes: record.sizeBytes,
+      })
     })
+    await retryUnanswered(workspaceId, download)
     if (
       !(await markAttachmentTransferred(
         env.DB,
@@ -114,12 +133,7 @@ export async function prepareMessageAttachments(
     )
       throw attachmentNotFound()
   }
-  const current = await attachmentWorkspace(env.DB, workspaceId, userId)
-  if (
-    current?.sandboxId !== destination ||
-    current.providerAccount !== workspace.providerAccount
-  )
-    throw attachmentNotFound()
+  await requireDestination()
   if (missing.length > 0) throw new AttachmentMissing(missing)
   return destination
 }

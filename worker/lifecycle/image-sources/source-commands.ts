@@ -1,9 +1,5 @@
-import type {
-  CommandOffsets,
-  CommandStatus,
-  SandboxProvider,
-  StartedCommand,
-} from '../../sandbox/provider'
+import type { CommandOffsets, CommandStatus } from '../../machines/channel'
+import type { SandboxProvider, StartedCommand } from '../../sandbox/provider'
 import { ProviderError } from '../../sandbox/errors'
 
 export function refusedSourceStart(error: unknown): error is ProviderError {

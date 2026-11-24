@@ -6,10 +6,17 @@ sandbox of an org starts from. A workspace has its own sandbox and one
 branch at a time. [Continue](continue.md) moves it to a new branch after
 its merge. A [repository change](repository-change.md) moves it to a new
 branch of another repository of the org, in the same sandbox. The code reaches its provider only through the
-`SandboxProvider` interface in [`provider.ts`](../sandbox/provider.ts),
-with the client of the provider account that each record stores.
+interfaces in [`provider.ts`](../sandbox/provider.ts), with the client of
+the provider account that each record stores. `MachineProvider` gives the
+life of a computer. `ProviderWork` gives the provider path of commands,
+file reads, and private ports.
 [Provider accounts](provider-accounts.md) and the
 [sandbox area](../sandbox/README.md) say how.
+The start steps, Continue, the repository change, the disk retention
+command, and the restarts send their commands through the
+[machine channel](../machines/README.md#the-machine-channel). It uses the
+host connection of the computer, and the provider path of the same account
+only when the computer has no host connection.
 
 `chatLifecycleRoute` in [`worker/app-api/lifecycle.ts`](../app-api/lifecycle.ts)
 gives the create, read, resume, and activity routes of a workspace to
@@ -265,6 +272,14 @@ the persisted resource records and the retained computer ledger.
   Org env values cannot replace either variable. A trusted name is empty
   unless it is valid and matches the configured source without letter case.
 - [automatic-restart.ts](automatic-restart.ts): checks the saved absence, waiting messages, and provider state. It claims the shared restart and sends its commands outside the chat queue.
+- [workspace-command-channel.ts](workspace-command-channel.ts): binds the
+  machine channel of each Continue and repository change command to the
+  workspace, sandbox, and provider account of its job. After a failed
+  access check, `settlementCommandChannel` gives that channel only while
+  the workspace record still names the saved sandbox and account.
+  Otherwise only a started command on the provider route can still settle.
+  The command that updates folders after publication uses the workspace
+  machine channel with the records check from that publication attempt.
 
 [Key code](key-code.md) lists the entry points of the lifecycle code, and
 the guides that give the entry points of each part.

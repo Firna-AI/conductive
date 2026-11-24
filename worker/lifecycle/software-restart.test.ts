@@ -19,10 +19,11 @@ async function refusal(operation: Promise<unknown>): Promise<HttpError> {
 }
 
 it('checks for updates, restarts the runner and the relay, and shows Starting until the runner is ready', async () => {
-  const { actor, restart, lifecycle, commands } =
+  const { actor, restart, lifecycle, commands, hostCommands } =
     await readyWorkspace(fixtureForTest())
   expect(await restart()).toEqual({ updateCheck: 'ok' })
   expect(commands()).toEqual([UPDATE_CHECK_COMMAND, RESTART_COMMAND])
+  expect(hostCommands()).toEqual(commands())
   expect(await lifecycle()).toMatchObject({ state: 'starting' })
   expect((await lifecycle())?.softwareRestartAt).toBeTypeOf('number')
   await actor.endpoint().reportRunnerLifecycle({ type: 'runner.ready' })
@@ -32,13 +33,14 @@ it('checks for updates, restarts the runner and the relay, and shows Starting un
 })
 
 it('restarts with the installed software when the update check fails', async () => {
-  const { fixture, restart, lifecycle, commands } =
+  const { fixture, restart, lifecycle, commands, hostCommands } =
     await readyWorkspace(fixtureForTest())
   fixture.boat.beforeCommand = async (command) => {
     fixture.boat.synchronousExitCode = command === UPDATE_CHECK_COMMAND ? 1 : 0
   }
   expect(await restart()).toEqual({ updateCheck: 'failed' })
   expect(commands()).toEqual([UPDATE_CHECK_COMMAND, RESTART_COMMAND])
+  expect(hostCommands()).toEqual(commands())
   expect((await lifecycle())?.state).toBe('starting')
 })
 
@@ -49,7 +51,9 @@ it('shows the error state with Try again when the restart command fails, and sti
     record(fixture.boat.starts[0].env).CONDUCTIVE_MACHINE_TOKEN,
   )
   const owner = workspaceMachineOwner(fixture.org.id, workspaceId)
+  await fixture.host.disconnect('bx_1')
   expect(await machineTokenStatus(fixture.harness.env, owner, token)).toBe(101)
+  await fixture.host.connect('bx_1')
   fixture.boat.synchronousExitCode = 1
   const error = await refusal(restart())
   expect([error.status, error.code]).toEqual([502, 'restart_failed'])
@@ -89,12 +93,13 @@ it('ends a restart whose runner is not ready within the time limit', async () =>
 })
 
 it('refuses a workspace that does not run, an archived one, and a person outside the org', async () => {
-  const { fixture, workspaceId, restart, commands } =
+  const { fixture, workspaceId, restart, commands, hostCommands } =
     await readyWorkspace(fixtureForTest())
   await restart()
   const busy = await refusal(restart())
   expect([busy.status, busy.code]).toEqual([409, 'workspace_not_running'])
   expect(commands()).toEqual([UPDATE_CHECK_COMMAND, RESTART_COMMAND])
+  expect(hostCommands()).toEqual(commands())
   const outsider = await refusal(restart('user-outside'))
   expect(outsider.status).toBe(404)
   await fixture.runtime.env.DB.prepare(

@@ -12,7 +12,7 @@ import {
   repositoryLocation,
 } from '../lifecycle/repository-locations'
 import { localSavedScriptFixture } from '../lifecycle/saved-script-test-support'
-import type { CommandResult } from '../sandbox/provider'
+import type { CommandResult } from '../machines/channel'
 import { featureFixture, type FeatureFixture } from './fixture.test-support'
 import {
   admitRetainedCreation,
@@ -41,6 +41,7 @@ afterEach(async () => {
 it('replays a saved branch after Restore with a new journal and preserves the existing branch and its files', async () => {
   const active = (fixture = await featureFixture(bundle, {
     configuration: RETAINED_CONFIGURATION,
+    connectHost: true,
   }))
   const sandbox = (local = await localSavedScriptFixture(OUTER_REPOSITORY))
   const { id, branch } = await admitRetainedCreation(active)
@@ -92,6 +93,7 @@ it('replays a saved branch after Restore with a new journal and preserves the ex
     ).exitCode,
   ).toBe(0)
   const commandsBefore = active.boat.commandRequests.length
+  const hostCommandsBefore = active.host.commandRequests.length
   await deleteAndRestoreCreation(active)
   expect(
     (
@@ -116,6 +118,12 @@ it('replays a saved branch after Restore with a new journal and preserves the ex
     active.boat.commandRequests[commandsBefore - 1]?.command,
   )
   expect(
+    active.host.commandRequests
+      .slice(hostCommandsBefore)
+      .filter((request) => request.detached)
+      .map((request) => request.command),
+  ).toEqual(commands)
+  expect(
     (
       await sandbox.run(
         [
@@ -134,6 +142,7 @@ it('replays a saved branch after Restore with a new journal and preserves the ex
 it('runs interrupted saved startup after Restore instead of following its dead journal owner', async () => {
   const active = (fixture = await featureFixture(bundle, {
     configuration: RETAINED_CONFIGURATION,
+    connectHost: true,
   }))
   const sandbox = (local = await localSavedScriptFixture(OUTER_REPOSITORY))
   const marker = shellQuote(`${sandbox.directory}/interrupted`)
@@ -169,6 +178,7 @@ it('runs interrupted saved startup after Restore instead of following its dead j
     processId: expect.any(Number),
   })
   const commandsBefore = active.boat.commandRequests.length
+  const hostCommandsBefore = active.host.commandRequests.length
   await deleteAndRestoreCreation(active)
   expect(
     (
@@ -194,6 +204,12 @@ it('runs interrupted saved startup after Restore instead of following its dead j
   expect(commands[0]).not.toBe(
     active.boat.commandRequests[commandsBefore - 1]?.command,
   )
+  expect(
+    active.host.commandRequests
+      .slice(hostCommandsBefore)
+      .filter((request) => request.detached)
+      .map((request) => request.command),
+  ).toEqual(commands)
   expect(active.boat.resumeIds).toEqual([original.allocatedSandboxId])
   expect(active.boat.deletedIds).toEqual([])
 })

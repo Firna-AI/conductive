@@ -1,3 +1,4 @@
+import type { MachineChannel } from '../machines/channel'
 import type { SandboxProvider } from '../sandbox/provider'
 import { providerState } from './provider-state'
 import type { StartRunTimer } from './start-run-timer'
@@ -54,6 +55,24 @@ export function timedProvider(
     getCommandStatus: (sandboxId, processId, offsets) =>
       timer.time('poll', 'provider.getCommandStatus', () =>
         provider.getCommandStatus(sandboxId, processId, offsets),
+      ),
+  }
+}
+
+export function timedHostChannel(
+  host: MachineChannel,
+  timer: Pick<StartRunTimer, 'time'>,
+): MachineChannel {
+  return {
+    runCommand: (command) =>
+      timer.time('provider', 'host.runCommand', () => host.runCommand(command)),
+    startCommand: (command) =>
+      timer.time('provider', 'host.startCommand', () =>
+        host.startCommand(command),
+      ),
+    getCommandStatus: (command, offsets, options) =>
+      timer.time('poll', 'host.getCommandStatus', () =>
+        host.getCommandStatus(command, offsets, options),
       ),
   }
 }

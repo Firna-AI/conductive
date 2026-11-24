@@ -141,7 +141,8 @@ it('keeps a failed create and its first message while revoking its token and ret
         org: org.id,
       },
     })
-    expect(lifecycleCommandBody(boat.commands[1])).toContain(
+    expect(fixture.host.commands[1]).toBe(boat.commands[1])
+    expect(lifecycleCommandBody(fixture.host.commands[1])).toContain(
       `export CONDUCTIVE_TURN_ID='${created.first.turnId}'`,
     )
   } finally {

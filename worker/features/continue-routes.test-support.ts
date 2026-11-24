@@ -28,6 +28,7 @@ export async function continueRoutesFixture(
   const secret = 'continue-webhook-secret'
   const fixture = await featureFixture(bundle, {
     ...options,
+    connectHost: true,
     configuration: {
       GITHUB_APP_PRIVATE_KEY: privateKey
         .export({ type: 'pkcs1', format: 'pem' })
