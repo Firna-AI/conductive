@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 
-import type { CommandResult } from '../sandbox/provider'
+import type { CommandResult } from '../machines/channel'
 import { setupBackendTests } from './backend-test-hooks'
 import { SOFTWARE } from './backend-test-support'
 import { readBuild, readBuildJob } from './build-data'
@@ -8,6 +8,7 @@ import { shellQuote } from './commands'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { advanceImageBuild, startImageBuild } from './image-builds'
 import { finishImageBuild } from './image-test-support'
+import { LostHostReply } from './lifecycle-host-test-support'
 import { localSavedScriptFixture } from './saved-script-test-support'
 import { advanceToRunner } from './start-resume-test-support'
 import { createWorkspace } from './workspaces'
@@ -115,7 +116,7 @@ it('recovers a running startup after a lost start reply without repeating its si
       runs.push(local.run(command, first ? started : followed))
       if (first) {
         await running
-        throw new Error('Lost successful command start reply')
+        throw new LostHostReply('Lost successful command start reply')
       }
       await following
     }
@@ -139,12 +140,17 @@ it('recovers a running startup after a lost start reply without repeating its si
     })
     expect((await start.job())?.failure).toBeUndefined()
     await start.restart()
+    await fixture.host.connect('bx_1')
     await fixture.setTime(fixture.runtime.dependencies.now() + 1_000)
     fixture.boat.commandRunning = true
     await start.advance()
     await following
     expect(await local.file('effects')).toBe('once\n')
-    expect(await start.job()).toMatchObject({ phase: 'startup', processId: 3 })
+    expect(await start.job()).toMatchObject({
+      phase: 'startup',
+      processId: 3,
+      commandRoute: 'host',
+    })
     await gate.release()
     const results = await Promise.all(runs)
     expect(results.map((result) => result.stdout)).toEqual([

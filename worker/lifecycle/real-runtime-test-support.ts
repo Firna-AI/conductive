@@ -1,10 +1,11 @@
-import type { Machine } from '../machines/machine'
 import { Miniflare, Response as RuntimeResponse, WebSocket } from 'miniflare'
 
 import { workspaceEventsPath } from '../../src/shared/events'
 import { closeSockets, SocketInbox } from '../chat/adapter-sockets.test-support'
+import type { Machine } from '../machines/machine'
 import type { LifecycleEnvironment } from './runtime'
 import { LifecycleBoat } from './lifecycle-boat-test-support'
+import { LifecycleHost } from './lifecycle-host-test-support'
 import type { WorkspaceRuntimeFixture } from './workspace-runtime-test-worker'
 import { SESSION_COOKIE } from '../security/cookies'
 import { seedAppAccess } from '../test-support/app-access'
@@ -131,6 +132,8 @@ export async function realRuntimeFixture(bundle: string) {
     BOAT_ORG_ID: 'app-org',
     BOAT_KEY_ENCRYPTION_KEY: btoa('e'.repeat(32)),
   }
+  const host = new LifecycleHost(env, boat)
+  boat.computerStarted = host.computerStarted
   await database.batch([
     database.prepare(
       "INSERT INTO users (id, github_id, github_login, created_at, updated_at) VALUES ('runtime-user', 11, 'octocat', 0, 0)",
@@ -229,6 +232,7 @@ export async function realRuntimeFixture(bundle: string) {
   }
   return {
     boat,
+    host,
     requests,
     env,
     closeConnections: closeBrowsers,
@@ -268,6 +272,7 @@ export async function realRuntimeFixture(bundle: string) {
     },
     restart: async (disconnect = true) => {
       if (disconnect) await closeBrowsers()
+      await host.close()
       await runtime.dispose()
       runtime = create()
       bindings = await runtime.getBindings<RuntimeBindings>()
@@ -277,7 +282,7 @@ export async function realRuntimeFixture(bundle: string) {
     },
     dispose: async () => {
       try {
-        await closeBrowsers()
+        await Promise.all([closeBrowsers(), host.close()])
       } finally {
         try {
           await runtime.dispose()

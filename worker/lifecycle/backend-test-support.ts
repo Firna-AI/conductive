@@ -6,6 +6,7 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { LifecycleBoat } from './lifecycle-boat-test-support'
+import { LifecycleHost } from './lifecycle-host-test-support'
 import { backendActor, type BackendActor } from './backend-test-platform'
 import { backendPump } from './backend-pump.test-support'
 import { backendStart } from './backend-start.test-support'
@@ -29,6 +30,8 @@ export async function backendFixture(sharedHarness?: TestHarness) {
   const harness = sharedHarness ?? (await createHarness())
   const { session, org, user } = await seedBackend(harness)
   const boat = new LifecycleBoat()
+  const host = new LifecycleHost(harness.env, boat)
+  boat.computerStarted = host.computerStarted
   const env = {
     ...harness.env,
     WORKSPACES: harness.native.bindings.WORKSPACES,
@@ -145,6 +148,7 @@ export async function backendFixture(sharedHarness?: TestHarness) {
     org,
     user,
     boat,
+    host,
     runtime,
     images,
     scheduled,
@@ -163,6 +167,7 @@ export async function backendFixture(sharedHarness?: TestHarness) {
     },
     pauseStarts: () => {},
     dispose: async () => {
+      await host.close()
       if (!sharedHarness) await harness.dispose()
     },
   }

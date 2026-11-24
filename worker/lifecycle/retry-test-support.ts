@@ -96,7 +96,7 @@ export async function startRetryFixture(fixture: Fixture) {
   }
   return {
     ...start,
-    endpoint: runtime.workspace(created.workspace.id),
+    endpoint: actor.endpoint(),
     storage: actor.storage,
     tick: async (at: number) => {
       await fixture.advanceTo(at, created.workspace.id)

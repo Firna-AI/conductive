@@ -1,5 +1,6 @@
 import { ProviderError } from '../sandbox/errors'
-import { isRecord } from '../http'
+import { isRecord, type HttpError } from '../http'
+import { isTransientHostError } from '../machines/errors'
 
 const PROVIDER_RETRY_WINDOW_MS = 600_000
 
@@ -26,13 +27,14 @@ export function providerRetryExpired(
   )
 }
 
-export function transientProviderError(error: unknown): error is ProviderError {
-  return (
-    error instanceof ProviderError &&
-    ['unavailable', 'invalid_response', 'conflict', 'rate_limited'].includes(
-      error.kind,
-    )
-  )
+export function transientProviderError(
+  error: unknown,
+): error is ProviderError | HttpError {
+  return error instanceof ProviderError
+    ? ['unavailable', 'invalid_response', 'conflict', 'rate_limited'].includes(
+        error.kind,
+      )
+    : isTransientHostError(error, true)
 }
 
 export function nextProviderRetry(
@@ -43,7 +45,9 @@ export function nextProviderRetry(
   if (!transientProviderError(error)) return null
   const openedAt = previous?.openedAt ?? now
   const remaining = openedAt + PROVIDER_RETRY_WINDOW_MS - now
-  const retryAfter = (error.retryAfterSeconds ?? 0) * 1_000
+  const retryAfter =
+    (error instanceof ProviderError ? (error.retryAfterSeconds ?? 0) : 0) *
+    1_000
   if (remaining <= 0 || !Number.isFinite(retryAfter) || retryAfter > remaining)
     return null
   const failures = (previous?.failures ?? 0) + 1

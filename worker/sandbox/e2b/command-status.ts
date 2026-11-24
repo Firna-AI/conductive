@@ -1,6 +1,6 @@
 import { isRecord } from '../../http'
+import type { CommandOffsets, CommandStatus } from '../../machines/channel'
 import { ProviderError } from '../errors'
-import type { CommandOffsets, CommandStatus } from '../provider'
 import { ResponseBudget, responseOverflow } from './budgets'
 import { EnvdSession } from './envd'
 import { invalidResponse } from './errors'

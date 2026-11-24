@@ -1,9 +1,8 @@
 import { isRecord } from '../http'
+import type { CommandResult, CommandStatus } from '../machines/channel'
 import { ProviderError } from './errors'
 import {
   SANDBOX_STATES,
-  type CommandResult,
-  type CommandStatus,
   type Sandbox,
   type SavedSnapshot,
   type StartedCommand,

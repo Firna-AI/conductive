@@ -2,6 +2,7 @@ import type { User } from '../../src/shared/api'
 import type { CreateWorkspaceRequest } from '../../src/shared/workspaces'
 import type { SendMessageRequest } from '../../src/shared/messages'
 import type { WorkspaceCapabilities } from '../../src/shared/secrets'
+import type { CommandRoute } from '../machines/channel'
 import type { MaskedStartLog } from './masked-start-log'
 import type { SavedProvisionedWorkspace } from './workspace-response'
 import type { RepositoryLocation } from './repository-locations'
@@ -29,6 +30,7 @@ interface WorkspaceStartData {
   afterReadyPhase?: 'fetch' | 'branch' | 'startup'
   creation?: WorkspaceCreation
   processId: number | null
+  commandRoute?: CommandRoute
   stdoutOffset: number
   stderrOffset: number
   createPayloadCiphertext?: string

@@ -26,7 +26,8 @@ it('keeps admission separate and chains create exits with the same step order, t
   expect(await start.job()).toMatchObject({ phase: 'fetch', processId: 1 })
   await start.actor.advance(TEST_TIME + 2_000)
   expect(await start.job()).toMatchObject({ phase: 'branch', processId: 2 })
-  expect(lifecycleCommandBody(fixture.boat.commands.at(-1) ?? '')).toContain(
+  expect(fixture.host.commands).toEqual(fixture.boat.commands)
+  expect(lifecycleCommandBody(fixture.host.commands.at(-1) ?? '')).toContain(
     'git checkout -b',
   )
   await start.actor.advance(TEST_TIME + 3_000)
@@ -107,7 +108,8 @@ it('checks access again after a completed fetch before it starts the branch comm
     ok: false,
     error: { code: 'user_suspended' },
   })
-  expect(fixture.boat.commandRequests).toHaveLength(1)
+  expect(fixture.host.commandRequests).toHaveLength(1)
+  expect(fixture.boat.commandRequests).toEqual(fixture.host.commandRequests)
 })
 
 it('starts a resumed startup in the run that sees readiness and stops after a backward move', async () => {
@@ -132,6 +134,7 @@ it('starts a resumed startup in the run that sees readiness and stops after a ba
   expect(await fixture.starts.get(id)?.job()).toMatchObject({
     phase: 'startup',
     processId: 1,
+    commandRoute: 'host',
   })
   expect(fixture.boat.resumeIds).toEqual([sandboxId, sandboxId])
 })
@@ -148,7 +151,8 @@ it('does not start the next command when an exit reaches the five-second run lim
   }
   await start.actor.advance(TEST_TIME + 2_000)
   expect(await start.job()).toMatchObject({ phase: 'branch', processId: null })
-  expect(fixture.boat.commandRequests).toHaveLength(1)
+  expect(fixture.host.commandRequests).toHaveLength(1)
+  expect(fixture.boat.commandRequests).toEqual(fixture.host.commandRequests)
   expect(await start.actor.storage.get('alarm:lifecycle:start')).toBe(
     TEST_TIME + 8_000,
   )

@@ -16,13 +16,21 @@ export type StoredWorkspaceStartJob = StoredJob<WorkspaceStartJob>
 export function serializeStartJob(
   job: WorkspaceStartJob,
 ): StoredWorkspaceStartJob {
-  return { ...job, startupScript: serializeSavedScript(job.startupScript) }
+  const { commandRoute, ...data } = job
+  return {
+    ...data,
+    ...(job.processId !== null &&
+      commandRoute !== undefined && { commandRoute }),
+    startupScript: serializeSavedScript(job.startupScript),
+  }
 }
 
 export function readStartJob(job: StoredWorkspaceStartJob): WorkspaceStartJob {
   return {
     ...job,
     providerAccount: job.providerAccount ?? DEFAULT_PROVIDER_ACCOUNT,
+    commandRoute:
+      job.processId === null ? undefined : (job.commandRoute ?? 'provider'),
     startupScript: readSavedScript(job.startupScript),
     providerRetry:
       job.providerRetry === undefined

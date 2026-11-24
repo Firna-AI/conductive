@@ -1,4 +1,4 @@
-import type { CommandResult, CommandStatus } from '../provider'
+import type { CommandResult, CommandStatus } from '../../machines/channel'
 import { COMMAND_BUDGET, responseOverflow } from './budgets'
 
 /** Predict JSON escaping without allocating the serialized command text. */

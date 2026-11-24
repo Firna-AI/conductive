@@ -55,6 +55,7 @@ export async function advanceStartPhases(input: {
         waitStartedAt: dependencies.now(),
         providerRetry: null,
         processId: null,
+        commandRoute: undefined,
         stdoutOffset: 0,
         stderrOffset: 0,
       })

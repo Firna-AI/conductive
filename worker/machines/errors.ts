@@ -1,6 +1,23 @@
 import type { HostErrorCode } from '../../src/shared/generated/HostErrorCode'
 import { HttpError } from '../http'
 
+export function isTransientHostError(
+  error: unknown,
+  includeInvalidResponse = false,
+): error is HttpError {
+  return (
+    error instanceof HttpError &&
+    ([
+      'machine_unavailable',
+      'machine_disconnected',
+      'machine_timeout',
+      'machine_busy',
+      'machine_error',
+    ].includes(error.code) ||
+      (includeInvalidResponse && error.code === 'invalid_response'))
+  )
+}
+
 export function machineUnavailable() {
   return new HttpError(
     503,

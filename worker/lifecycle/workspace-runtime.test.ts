@@ -131,9 +131,10 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
       (_, index) => index + 1,
     ),
   )
-  const statusCount = fixture.boat.statusRequests.length
+  const statusCount = fixture.host.statusRequests.length
   await fixture.restart()
   await abandoned
+  await fixture.host.connect('bx_1')
   const resumedBrowser = await fixture.openEvents(id)
   const resumedHistory = await publicHistory(resumedBrowser.inbox)
   expect(resumedHistory).toEqual(beforeRestart)
@@ -147,14 +148,16 @@ it('runs the production Workspace across caller loss, a full runtime restart, an
   }
   expect(await restored.checkpoint()).toBeUndefined()
   expect(await restored.waitCreationLifecycle()).toEqual({ ok: true })
-  expect(fixture.boat.statusRequests[statusCount]).toEqual({
+  expect(fixture.host.statusRequests[statusCount]).toEqual({
     processId: 1,
     stdoutOffset: 4,
     stderrOffset: 0,
   })
   expect(fixture.boat.starts).toHaveLength(1)
-  expect(fixture.boat.commands).toHaveLength(4)
-  expect(fixture.boat.commandRequests.at(-1)).toMatchObject({
+  expect(fixture.host.commands).toHaveLength(4)
+  expect(fixture.boat.commandRequests).toEqual(fixture.host.commandRequests)
+  expect(fixture.boat.statusRequests).toEqual(fixture.host.statusRequests)
+  expect(fixture.host.commandRequests.at(-1)).toMatchObject({
     detached: true,
     command: expect.stringContaining(
       'systemctl start conductive-terminal.service',

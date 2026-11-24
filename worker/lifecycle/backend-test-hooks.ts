@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest'
 
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { backendFixture } from './backend-test-support'
@@ -13,6 +13,9 @@ export function setupBackendTests() {
   beforeEach(async () => {
     await harness.reset()
     fixture = await backendFixture(harness)
+  })
+  afterEach(async () => {
+    await fixture?.dispose()
   })
   afterAll(async () => {
     await harness.dispose()

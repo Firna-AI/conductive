@@ -1,11 +1,11 @@
 import { isRecord } from '../../http'
-import { ProviderError } from '../errors'
 import type {
   CommandOffsets,
   CommandResult,
   CommandStatus,
-  StartedCommand,
-} from '../provider'
+} from '../../machines/channel'
+import { ProviderError } from '../errors'
+import type { StartedCommand } from '../provider'
 import supervisorSource from './command-supervisor.py?raw'
 import { ResponseBudget, responseOverflow } from './budgets'
 import { commandStatus } from './command-status'

@@ -19,7 +19,7 @@ import {
   machinesBinding,
   tokenRequired,
 } from './authorization'
-import { MachineChannel } from './channel'
+import { HostConnection } from './host-connection'
 import { machineUnavailable } from './errors'
 import { validateOperation } from './operations'
 import {
@@ -35,7 +35,7 @@ import { socketIdentity } from './socket-state'
 
 export class Machine extends DurableObject<AppEnv> {
   private record: MachineRecord | null = null
-  private channel: MachineChannel | null = null
+  private host: HostConnection | null = null
 
   constructor(context: DurableObjectState, env: AppEnv) {
     super(context, env)
@@ -54,7 +54,7 @@ export class Machine extends DurableObject<AppEnv> {
           socket.readyState === WebSocket.OPEN
         ) {
           this.close(HOST_CLOSE_REPLACED)
-          this.channel = new MachineChannel(socket, state, context.storage.kv)
+          this.host = new HostConnection(socket, state, context.storage.kv)
         } else
           socket.close(
             HOST_CLOSE_TOKEN_CHANGED,
@@ -106,7 +106,7 @@ export class Machine extends DurableObject<AppEnv> {
     return featureResult(async () => {
       requireOwner(this.record, owner)
       return {
-        connected: this.channel?.connected() ?? false,
+        connected: this.host?.connected() ?? false,
         hello: this.record?.hello ?? null,
       }
     })
@@ -176,8 +176,8 @@ export class Machine extends DurableObject<AppEnv> {
     return featureResult(async () => {
       requireOwner(this.record, owner)
       validateOperation({ kind: 'stream.open', streamId: 0, port })
-      if (!this.channel) throw machineUnavailable()
-      return this.channel.open(port)
+      if (!this.host) throw machineUnavailable()
+      return this.host.open(port)
     })
   }
 
@@ -203,7 +203,7 @@ export class Machine extends DurableObject<AppEnv> {
           return errorResponse(tokenRequired())
         this.close(HOST_CLOSE_REPLACED)
         const pair = new WebSocketPair()
-        this.channel = new MachineChannel(
+        this.host = new HostConnection(
           pair[1],
           { generation: this.record.generation, ready: false, lastId: 0 },
           this.ctx.storage.kv,
@@ -220,15 +220,15 @@ export class Machine extends DurableObject<AppEnv> {
     socket: WebSocket,
     value: string | ArrayBuffer,
   ): Promise<void> {
-    if (socket !== this.channel?.socket) {
+    if (socket !== this.host?.socket) {
       socket.close(HOST_CLOSE_TOKEN_CHANGED)
       return
     }
     try {
-      const message = this.channel.receive(value)
+      const message = this.host.receive(value)
       if (message?.type !== 'hello') return
       await this.ctx.blockConcurrencyWhile(async () => {
-        if (!this.record || socket !== this.channel?.socket) return
+        if (!this.record || socket !== this.host?.socket) return
         this.record.hello = {
           hostProtocolVersion: message.hostProtocolVersion,
           programVersion: message.programVersion,
@@ -239,18 +239,18 @@ export class Machine extends DurableObject<AppEnv> {
           this.close(HOST_CLOSE_UNSUPPORTED_VERSION)
           return
         }
-        this.channel.send({
+        this.host.send({
           type: 'welcome',
           hostProtocolVersion: HOST_PROTOCOL_VERSION,
         })
-        this.channel.welcomed()
+        this.host.welcomed()
       })
     } catch {
       this.close(1008)
     }
   }
   webSocketClose(socket: WebSocket): void {
-    if (socket === this.channel?.socket) this.close(1000)
+    if (socket === this.host?.socket) this.close(1000)
   }
   webSocketError(socket: WebSocket): void {
     this.webSocketClose(socket)
@@ -273,14 +273,14 @@ export class Machine extends DurableObject<AppEnv> {
   private request(owner: MachineOwner, operation: HostOperation) {
     requireOwner(this.record, owner)
     validateOperation(operation)
-    if (!this.channel) throw machineUnavailable()
-    return this.channel.request(operation)
+    if (!this.host) throw machineUnavailable()
+    return this.host.request(operation)
   }
   private close(code: number): void {
-    const channel = this.channel
-    this.channel = null
-    channel?.disconnect()
-    if (channel && channel.socket.readyState !== WebSocket.CLOSED)
-      channel.socket.close(code, 'The connection is no longer available.')
+    const host = this.host
+    this.host = null
+    host?.disconnect()
+    if (host && host.socket.readyState !== WebSocket.CLOSED)
+      host.socket.close(code, 'The connection is no longer available.')
   }
 }
