@@ -867,8 +867,18 @@ Depends on: 4
 - [ ] Measure a dev server preview and a busy terminal through the machine
       object, against the provider path, on Boat and on E2B. Save the
       results under `.context/own-computers/`.
-- [ ] If the host connection is clearly slower, stop and bring the
+  - [x] Measure on a local test bed that runs the real machine object and
+        host session code, against a provider-like path, at four
+        round-trip times.
+        Branch: calummoore/own-computers-milestone-5-speed-of-lg7b
+  - [ ] Measure on real Boat and E2B computers. It waits for Cal's choice
+        of how to measure on real infrastructure.
+- [x] If the host connection is clearly slower, stop and bring the
       Cloudflare Tunnel fallback to Cal as a decision.
+      Branch: calummoore/own-computers-milestone-5-speed-of-lg7b
+
+The report, the bench, and the raw results are in
+`.context/own-computers/m5/`.
 
 ## Milestone 6: Commands over the host connection
 
