@@ -826,9 +826,10 @@ November 2026.
 - The Worker serves the install script at `/install-computer` on the
   marketing hostname, from `image/computer/install.sh`. The script runs as
   a user who can use sudo. It checks Linux on x86_64, systemd, Podman 4 or
-  later, `newuidmap` and `newgidmap`, and cgroups v2. It makes the user
-  `conductive` with subordinate IDs, delegates the cpu, memory, and pids
-  controllers to the user manager of that user, and turns on lingering. It
+  later, `newuidmap` and `newgidmap`, cgroups v2, `curl`, `sha256sum`, and
+  `tar`. It makes the user `conductive` with subordinate IDs, delegates the
+  cpu, cpuset, io, memory, and pids controllers to the user manager of that
+  user, and turns on lingering. It
   installs the program of the newest release under the home of that user,
   then runs check, enroll, and service as that user. Each step can run
   again. Reason: Podman without root needs these settings.
@@ -854,6 +855,10 @@ November 2026.
   and the starts. The last stage installs the pinned release. Reason: the
   E2B template and own computers then have one source for their base, and
   no unit can start during an image build.
+- The last stage also installs `ttyd` and `tmux` and masks the package's
+  `ttyd` service, as the software step of a build does. Reason: the
+  terminal of the release needs them, so a container of the base image
+  starts with working sandbox software.
 - A separate job of the deploy run builds the container base image after
   the release publish. It saves the image with `podman save --format
   oci-archive`, signs it with `cnd-release` and the release key, and
