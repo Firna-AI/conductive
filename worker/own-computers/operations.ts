@@ -50,7 +50,9 @@ function readEnv(value: unknown): readonly ContainerEnvVar[] {
     if (
       !isRecord(entry) ||
       typeof entry.name !== 'string' ||
-      !/^[A-Za-z_][A-Za-z0-9_]*$/.test(entry.name) ||
+      entry.name.length === 0 ||
+      entry.name.includes('=') ||
+      entry.name.includes('\0') ||
       typeof entry.value !== 'string' ||
       entry.value.includes('\0')
     )

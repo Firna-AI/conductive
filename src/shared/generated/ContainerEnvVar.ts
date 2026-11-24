@@ -6,7 +6,7 @@
  */
 export type ContainerEnvVar = {
   /**
-   * Environment variable name.
+   * Nonempty environment variable name without `=` or NUL.
    */
   name: string
   /**

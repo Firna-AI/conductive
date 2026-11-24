@@ -78,23 +78,79 @@ it.each(cases)(
   },
 )
 
-it('rejects an invalid operation before it allocates a request or sends a frame', async () => {
+it('passes the saved environment name APP.CONFIG to the computer', async () => {
+  const f = await setup()
+  const added = await f.add()
+  const { host } = await added.connect()
+  const savedEnv = [{ name: 'APP.CONFIG', value: 'enabled' }]
+  const result = added.client.start(container, savedEnv)
+
+  const sent = await Promise.race([
+    host.request(),
+    result.catch((error: unknown) => error),
+  ])
+  expect(sent).toEqual({
+    requestId: 1,
+    operation: { kind: 'container.start', container, env: savedEnv },
+    parts: 0,
+  })
+  host.send({ type: 'reply', requestId: 1, result: running })
+  await expect(result).resolves.toEqual(running)
+})
+
+it.each([
+  {
+    reason: 'NUL in an environment value',
+    entry: { name: 'CONFIG', value: 'x\0y' },
+  },
+  {
+    reason: 'equals sign in an environment name',
+    entry: { name: 'APP=CONFIG', value: 'enabled' },
+  },
+])(
+  'rejects $reason before it allocates a request or sends a frame',
+  async ({ entry }) => {
+    const f = await setup()
+    const added = await f.add()
+    const { host } = await added.connect()
+
+    const nextRequest = host.request()
+    const invalid = added.client.start(container, [entry])
+    await expect(Promise.race([invalid, nextRequest])).rejects.toMatchObject({
+      status: 400,
+      code: 'invalid_request',
+    })
+    const result = added.client.get(container)
+    const sent = await nextRequest
+    host.send({ type: 'reply', requestId: sent.requestId, result: running })
+    expect(sent).toEqual({
+      requestId: 1,
+      operation: { kind: 'container.get', container },
+      parts: 0,
+    })
+    await expect(result).resolves.toEqual(running)
+  },
+)
+
+it('keeps the connection and advances the request ID after hibernation', async () => {
   const f = await setup()
   const added = await f.add()
   const { host } = await added.connect()
 
-  await expect(
-    added.client.start(container, [{ name: 'HAS-NUL', value: 'x\0y' }]),
-  ).rejects.toMatchObject({ status: 400, code: 'invalid_request' })
-  const result = added.client.get(container)
-  const sent = await host.request()
-  host.send({ type: 'reply', requestId: sent.requestId, result: running })
-  expect(sent).toEqual({
-    requestId: 1,
-    operation: { kind: 'container.get', container },
-    parts: 0,
-  })
-  await expect(result).resolves.toEqual(running)
+  const first = added.getInWorker(container)
+  const request = await host.request()
+  host.send({ type: 'reply', requestId: request.requestId, result: running })
+  expect(request.requestId).toBe(1)
+  await expect(first).resolves.toEqual(running)
+
+  await added.hibernate()
+  expect(await added.client.connection()).toEqual({ connected: true })
+
+  const second = added.getInWorker(container)
+  const next = await host.request()
+  host.send({ type: 'reply', requestId: next.requestId, result: running })
+  await expect(second).resolves.toEqual(running)
+  expect(next.requestId).toBe(2)
 })
 
 it('sends a large operation in binary parts and reads a reply assembled from parts', async () => {

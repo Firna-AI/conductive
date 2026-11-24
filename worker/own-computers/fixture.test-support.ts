@@ -23,6 +23,11 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { ownComputerClient } from './client'
+import { computerObjectId } from './identity'
+import {
+  OWN_COMPUTER_APP_TEST_HEADER,
+  OWN_COMPUTER_TEST_PATH,
+} from './probe.test-support'
 import { FakeComputer } from './socket.test-support'
 
 export const computerResources: ComputerResources = {
@@ -133,11 +138,29 @@ export function setupOwnComputers() {
           const { computer: view }: OwnComputerResponse = await response.json()
           return view
         },
-        async newCode() {
-          const response = await request(codePath, 'POST')
+        async newCode(): Promise<OwnComputerCodeResponse> {
+          const response = await harness.native.runtime.dispatchFetch(
+            `${harness.env.APP_ORIGIN}${codePath}`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Cookie: session,
+                Origin: harness.env.APP_ORIGIN,
+                [OWN_COMPUTER_APP_TEST_HEADER]: '1',
+              },
+              body: '{}',
+            },
+          )
           expect(response.status).toBe(200)
-          const result: OwnComputerCodeResponse = await response.json()
-          return result
+          const result = await response.json()
+          if (
+            !isRecord(result) ||
+            typeof result.code !== 'string' ||
+            typeof result.expiresAt !== 'number'
+          )
+            throw new Error('Expected an enrollment code and its expiry.')
+          return { code: result.code, expiresAt: result.expiresAt }
         },
         async enroll() {
           return tokenFrom(await dispatch('POST', added.code))
@@ -147,6 +170,29 @@ export function setupOwnComputers() {
           const host = await open(token)
           await hello(host, resources)
           return { host, token }
+        },
+        async getInWorker(container: string): Promise<unknown> {
+          const response = await harness.native.runtime.dispatchFetch(
+            `${harness.env.APP_ORIGIN}${OWN_COMPUTER_TEST_PATH}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...owner, container }),
+            },
+          )
+          expect(response.status).toBe(200)
+          return response.json()
+        },
+        async hibernate() {
+          const id = computerObjectId(
+            harness.native.bindings.OWN_COMPUTERS,
+            computerId,
+          )
+          await harness.native.runtime.unsafeEvictDurableObject(
+            'worker-core-tests',
+            'OwnComputer',
+            { id: id.toString(), webSockets: 'hibernate' },
+          )
         },
       }
     }

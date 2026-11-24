@@ -10,7 +10,7 @@ import type { AppDependencies, AppEnv } from '../env'
 import { HttpError, requiredString } from '../http'
 import { requireOrgAdmin, requireOrgMember } from '../members/permissions'
 import type { RequestContext } from '../security/gate'
-import { closeRemovedComputer } from './client'
+import { closeRevokedComputerConnection } from './client'
 import {
   insertComputer,
   readCurrentCode,
@@ -121,6 +121,7 @@ export async function ownComputersRoute(
           'The own computer has already connected.',
         )
       }
+      await closeRevokedComputerConnection(env, owner)
       return Response.json(code.reply)
     }
     case 'limit': {
@@ -176,7 +177,7 @@ async function removeComputer(
     const access = await readComputerAccess(env.DB, owner)
     if (!access) throw computerNotFound()
   }
-  await closeRemovedComputer(env, owner)
+  await closeRevokedComputerConnection(env, owner, true)
   return new Response(null, { status: 204 })
 }
 

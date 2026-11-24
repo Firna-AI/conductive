@@ -1,12 +1,7 @@
 import { expect, it } from 'vitest'
 
 import { issueMachineToken, workspaceMachineOwner } from '../machines/client'
-import {
-  hello,
-  helloMessage,
-  setupOwnComputers,
-  tokenFrom,
-} from './fixture.test-support'
+import { hello, setupOwnComputers, tokenFrom } from './fixture.test-support'
 
 const setup = setupOwnComputers()
 
@@ -56,11 +51,14 @@ it('replaces an unused code and revokes a token that never welcomed', async () =
 
   const token = await tokenFrom(await f.dispatch('POST', replacement.code))
   const socket = await f.open(token)
+  socket.send({ type: 'ping' })
+  expect(await socket.next()).toEqual({ type: 'pong' })
   expect((await f.request(added.codePath)).status).toBe(409)
   const newest = await added.newCode()
+  // An open socket would answer this ping, so the race reads the pong.
+  if (socket.socket.readyState === 1) socket.send({ type: 'ping' })
+  expect(await Promise.race([socket.closed, socket.next()])).toBe(4003)
   expect((await f.dispatch('GET', token)).status).toBe(401)
-  socket.send(helloMessage())
-  expect(await socket.closed).toBe(4003)
 
   const reissued = await tokenFrom(await f.dispatch('POST', newest.code))
   await hello(await f.open(reissued))

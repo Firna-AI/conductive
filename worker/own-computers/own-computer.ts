@@ -65,11 +65,16 @@ export class OwnComputer extends DurableObject<AppEnv> {
     })
   }
 
-  closeRemoved(owner: ComputerOwner) {
+  closeRevokedConnection(owner: ComputerOwner, removed: boolean) {
     return this.ctx.blockConcurrencyWhile(() =>
       featureResult(async () => {
-        await this.checkOwner(owner, true)
-        if (this.channel) this.close(this.channel, COMPUTER_CLOSE_REVOKED)
+        const access = await this.checkOwner(owner, removed)
+        const channel = this.channel
+        if (
+          channel &&
+          (removed || channel.identity.digest !== access.tokenDigest)
+        )
+          this.close(channel, COMPUTER_CLOSE_REVOKED)
       }),
     )
   }

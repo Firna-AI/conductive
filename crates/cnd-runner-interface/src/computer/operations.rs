@@ -36,7 +36,7 @@ pub enum ContainerImage {
 /// Debug output redacts the value because it can hold a token or secret.
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 pub struct ContainerEnvVar {
-    /// Environment variable name.
+    /// Nonempty environment variable name without `=` or NUL.
     pub name: String,
     /// Value without a NUL byte.
     pub value: String,

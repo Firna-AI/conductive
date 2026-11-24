@@ -110,7 +110,16 @@ export function ownComputerClient(env: AppEnv, owner: ComputerOwner) {
   }
 }
 
-/** Complete revocation after the removal write, including on another DELETE. */
-export function closeRemovedComputer(env: AppEnv, owner: ComputerOwner) {
-  return computerResult(env, owner, (stub) => stub.closeRemoved(owner), true)
+/** Close a revoked connection after a code replacement or removal. */
+export function closeRevokedComputerConnection(
+  env: AppEnv,
+  owner: ComputerOwner,
+  removed = false,
+) {
+  return computerResult(
+    env,
+    owner,
+    (stub) => stub.closeRevokedConnection(owner, removed),
+    removed,
+  )
 }
