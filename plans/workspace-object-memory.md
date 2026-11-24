@@ -875,6 +875,10 @@ Depends on: 2, 3, 4, 5, and 6
       Worker version and finish it on the other, in both directions.
       Include a middle part with another base branch, which each version
       must refuse. Source: the review of PR #672.
+- [ ] Run the rollback and conversion proofs again at the final head
+      when a review fix changes stored writes, transaction paths, or a
+      reader module. Name the proof head in the evidence. Source: the
+      round 3 review checks and Cal's message of 24 November 2026.
 - [ ] Copy the evidence into `.context/workspace-object-memory/`. Compare
       the heap, the CPU, the storage rows, and the kept history with the
       figures of the recorded decisions. Add one line here that names the
