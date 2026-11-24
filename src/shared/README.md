@@ -1,10 +1,10 @@
 # Shared contracts
 
-These modules define the browser API, the host and runner protocols, and the pure
+These modules define the browser API, the computer, host, and runner protocols, and the pure
 transcript fold that the browser and the Worker share.
 They use JSON values and TypeScript types.
 The [runner interface crate](../../crates/cnd-runner-interface/README.md)
-owns host and runner messages, agent chat events, workspace tool requests and replies,
+owns computer, host, and runner messages, agent chat events, workspace tool requests and replies,
 and each type they use.
 `ts-rs` writes those types into `generated/`. Import each generated file
 directly. Keep the runtime readers, constants, and helpers in TypeScript.
@@ -286,6 +286,8 @@ per-target outer alias and no credential.
 
 ### Key Code
 
+- [Computer constants](computer.ts) define the computer path, version, transport limits, and close codes.
+- [Own computer API](own-computers.ts) defines the browser paths, computer records, and code replies.
 - [Host constants](host.ts) define the host path, version, local stream ports,
   transport budgets, ping interval, and close codes.
 - [Host frames](host-frames.ts) encode and decode binary stream data and

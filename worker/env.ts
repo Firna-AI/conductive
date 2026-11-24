@@ -2,6 +2,7 @@ import type { InvitationMailer } from './invitation-mailer'
 import type { ConnectionScheduler } from './security/connection-access'
 import type { Workspace } from './workspace'
 import type { Machine } from './machines/machine'
+import type { OwnComputer } from './own-computers/own-computer'
 
 export interface AppEnv {
   DB: D1Database
@@ -14,6 +15,7 @@ export interface AppEnv {
   ASSETS?: { fetch(request: Request): Promise<Response> }
   WORKSPACES?: DurableObjectNamespace<Workspace>
   MACHINES?: DurableObjectNamespace<Machine>
+  OWN_COMPUTERS?: DurableObjectNamespace<OwnComputer>
   AI?: Ai
   CONDUCTIVE_TITLE_MODEL?: string
   CONDUCTIVE_MODELS?: string

@@ -28,6 +28,7 @@
         "worker/chat/runner-entry.test-support.ts",
         "worker/features/continue-entry.test-support.ts",
         "worker/machines/entry.test-support.ts",
+        "worker/test-support/native-worker-entry.ts",
         // The deploy bundles this file by path. Astro loads the content config.
         "worker/lifecycle/image-runtime.ts",
         "src/marketing/content.config.ts",

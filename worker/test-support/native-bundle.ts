@@ -22,7 +22,5 @@ export async function nativeWorkspaceBundle(): Promise<string> {
 // The global setup builds it again for each watch rerun, so it skips the
 // cache of `workerLibraryBundle`, which lives for the whole process.
 export function buildNativeWorkspaceBundle(): Promise<string> {
-  return buildWorkerLibrary(
-    join(import.meta.dirname, 'native-workspace-entry.ts'),
-  )
+  return buildWorkerLibrary(join(import.meta.dirname, 'native-worker-entry.ts'))
 }

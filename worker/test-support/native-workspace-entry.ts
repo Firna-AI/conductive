@@ -25,7 +25,6 @@ import { nativeCryptoObservation } from './native-crypto'
 import { nativeChatRecordControls } from './native-chat-record-controls'
 import { nativeWarningObservation } from './native-warnings'
 import { initialNativeTitleModel } from './native-constructor-options'
-import { nativeEntryFetch } from './native-entry-router'
 import { nativeLifecycleControls } from './native-lifecycle-controls'
 import { nativeLifecycleRpc } from './native-lifecycle-rpc'
 import { nativeGitHubState } from '../github/native-state.test-support'
@@ -288,11 +287,3 @@ export class NativeWorkspace extends Workspace {
     }
   }
 }
-
-/** @public Bundled Worker entry for the native test runtime. */
-export default {
-  fetch: nativeEntryFetch,
-}
-
-/** @public Miniflare loads this class by its export name. */
-export { Machine } from '../machines/machine'

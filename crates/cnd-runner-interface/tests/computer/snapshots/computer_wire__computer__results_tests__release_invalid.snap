@@ -1,0 +1,8 @@
+---
+source: crates/cnd-runner-interface/tests/computer/results_tests.rs
+expression: message
+---
+{
+  "kind": "error",
+  "code": "release_invalid"
+}

@@ -1,0 +1,8 @@
+---
+source: crates/cnd-runner-interface/tests/computer/results_tests.rs
+expression: message
+---
+{
+  "kind": "image.saved",
+  "image": "acme-image"
+}

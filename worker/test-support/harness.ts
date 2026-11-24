@@ -48,6 +48,7 @@ export async function createHarness(
   const env: AppEnv = {
     DB: db,
     MACHINES: native.bindings.MACHINES,
+    OWN_COMPUTERS: native.bindings.OWN_COMPUTERS,
     CHAT_ATTACHMENTS: attachments,
     ...variables,
   }

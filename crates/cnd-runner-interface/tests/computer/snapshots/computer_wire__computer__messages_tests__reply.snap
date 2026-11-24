@@ -1,0 +1,13 @@
+---
+source: crates/cnd-runner-interface/tests/computer/messages_tests.rs
+expression: message
+---
+{
+  "type": "reply",
+  "requestId": 4294967295,
+  "result": {
+    "kind": "container",
+    "container": "workspace-1",
+    "state": "running"
+  }
+}

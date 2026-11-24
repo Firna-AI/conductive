@@ -1,0 +1,70 @@
+//! Each result, state, and error code of the computer connection.
+
+use cnd_runner_interface::computer::results::ComputerResult;
+
+computer_wire!(
+    container_running,
+    ComputerResult,
+    r#"{"kind":"container","container":"workspace-1","state":"running"}"#
+);
+computer_wire!(
+    container_stopped,
+    ComputerResult,
+    r#"{"kind":"container","container":"workspace-1","state":"stopped"}"#
+);
+computer_wire!(
+    container_missing,
+    ComputerResult,
+    r#"{"kind":"container","container":"workspace-1","state":"missing"}"#
+);
+computer_wire!(
+    container_deleted,
+    ComputerResult,
+    r#"{"kind":"container.deleted","container":"workspace-1"}"#
+);
+computer_wire!(
+    image_saved,
+    ComputerResult,
+    r#"{"kind":"image.saved","image":"acme-image"}"#
+);
+computer_wire!(
+    container_bootstrapped,
+    ComputerResult,
+    r#"{"kind":"container.bootstrapped","container":"workspace-1","version":"0.0.42"}"#
+);
+computer_wire!(
+    invalid_request,
+    ComputerResult,
+    r#"{"kind":"error","code":"invalid_request"}"#
+);
+computer_wire!(
+    not_found,
+    ComputerResult,
+    r#"{"kind":"error","code":"not_found"}"#
+);
+computer_wire!(
+    already_exists,
+    ComputerResult,
+    r#"{"kind":"error","code":"already_exists"}"#
+);
+computer_wire!(busy, ComputerResult, r#"{"kind":"error","code":"busy"}"#);
+computer_wire!(
+    release_unavailable,
+    ComputerResult,
+    r#"{"kind":"error","code":"release_unavailable"}"#
+);
+computer_wire!(
+    release_invalid,
+    ComputerResult,
+    r#"{"kind":"error","code":"release_invalid"}"#
+);
+computer_wire!(
+    no_space,
+    ComputerResult,
+    r#"{"kind":"error","code":"no_space"}"#
+);
+computer_wire!(
+    internal,
+    ComputerResult,
+    r#"{"kind":"error","code":"internal"}"#
+);

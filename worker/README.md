@@ -50,6 +50,8 @@ On the app hostname, the Worker serves these API routes:
 - The account, its default model, its agent logins, the model list, and Get started.
 - The org login metadata for members, and admin writes and endpoint model
   refreshes, through [org login routes](app-api/org-agent-logins.ts).
+- The own computer records for members, and enrollment codes, limits,
+  build requests, and removal for admins. [Own computer backend](own-computers/README.md)
 - The start and poll of a Codex ChatGPT device code sign-in, through
   [Codex authentication](codex-auth/README.md).
 - The sections, the repositories, the members, and the workspace list of an org.
@@ -188,6 +190,14 @@ It stores the machine token digest, its generation, owner, and last host hello.
 The [machine area](machines/README.md) owns the connection and its typed RPC client.
 The Wrangler migration `v2` adds this class and leaves `v1` unchanged.
 Cloudflare cannot roll back a Worker across this Durable Object migration.
+
+## Own computer objects
+
+The `OWN_COMPUTERS` binding selects one `OwnComputer` Durable Object for
+each own computer. The machine hostname accepts enrollment and WebSocket
+requests at `/v1/computer`. D1 holds the records and credential digests.
+The Wrangler migration `v3` adds this class. Cloudflare cannot roll back
+a Worker across this Durable Object migration. [Own computer backend](own-computers/README.md)
 
 ## Workspace object connections
 

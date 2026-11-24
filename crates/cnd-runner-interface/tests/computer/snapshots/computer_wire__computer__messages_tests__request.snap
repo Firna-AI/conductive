@@ -1,0 +1,12 @@
+---
+source: crates/cnd-runner-interface/tests/computer/messages_tests.rs
+expression: message
+---
+{
+  "type": "request",
+  "requestId": 1,
+  "operation": {
+    "kind": "container.get",
+    "container": "workspace-1"
+  }
+}
