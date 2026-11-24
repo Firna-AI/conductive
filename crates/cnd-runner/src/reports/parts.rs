@@ -37,6 +37,13 @@ fn groups<T: Clone + Serialize>(
     Ok(Some(result))
 }
 
+/// Check both delta budgets after the filter adds display labels.
+pub(super) fn fits_one_delta(event: &RunnerFileEvent) -> Result<bool> {
+    Ok(matches!(event, RunnerFileEvent::FilesChanged { delta }
+        if delta.changes.len() <= FILE_TREE_DELTA_MAX_CHANGES as usize)
+        && codec::encode(event)?.len() <= FILE_EVENT_MAX_BYTES as usize)
+}
+
 pub(super) fn split(event: RunnerFileEvent) -> Result<Option<Vec<RunnerFileEvent>>> {
     match event {
         RunnerFileEvent::FilesUnavailable {} => Ok(Some(vec![event])),

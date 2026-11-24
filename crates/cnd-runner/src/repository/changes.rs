@@ -33,6 +33,23 @@ fn counts(bytes: &[u8]) -> Result<BTreeMap<String, (u64, u64)>> {
     Ok(result)
 }
 
+/// Sum complete or selected change rows with overflow checks.
+pub(crate) fn summarize_changes<'a>(
+    files: impl IntoIterator<Item = &'a BranchChangedFile>,
+) -> Option<ChangesResponseSummary> {
+    let mut summary = ChangesResponseSummary {
+        files: 0,
+        added: 0,
+        removed: 0,
+    };
+    for file in files {
+        summary.files = summary.files.checked_add(1)?;
+        summary.added = summary.added.checked_add(file.changed_file.added)?;
+        summary.removed = summary.removed.checked_add(file.changed_file.removed)?;
+    }
+    Some(summary)
+}
+
 impl GitRepository {
     /// Refresh the rebuilt index so restored stat data cannot hide changed content.
     /// Snapshot scans finish parallel content reads first to warm Git's serial reads.
@@ -113,12 +130,8 @@ impl GitRepository {
             });
         }
         let order = path_order()?;
-        files.sort_by(|a, b| order.compare(&a.changed_file.path, &b.changed_file.path));
-        let summary = ChangesResponseSummary {
-            files: files.len() as u64,
-            added: files.iter().map(|file| file.changed_file.added).sum(),
-            removed: files.iter().map(|file| file.changed_file.removed).sum(),
-        };
+        files.sort_by(|a, b| order(&a.changed_file.path, &b.changed_file.path));
+        let summary = summarize_changes(&files).ok_or(Error::InvalidOutput)?;
         Ok(ChangesResponse {
             base_branch: branch.into(),
             display_base_branch: None,
@@ -131,6 +144,7 @@ impl GitRepository {
             uncommitted_file_count: Some(uncommitted_file_count),
             files,
             summary,
+            omitted: None,
         })
     }
 }

@@ -110,6 +110,7 @@ async fn snapshot_keeps_entries_changes_and_both_identity_maps_for_mixed_git_sta
                 added: 3,
                 removed: 1
             },
+            omitted: None,
         }
     );
     let mut identities = BTreeMap::from([

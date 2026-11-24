@@ -131,6 +131,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 - [Chat events](src/chat_events.rs) defines agent events and tool output.
 - [Tool details](src/runner_tool_detail.rs) defines the private parts of a complete tool-detail source.
 - [File reports](src/file_tree.rs) defines report parts, deltas, and their identities.
+- Defines changed rows and the separate totals for listed and omitted files. [file_changes.rs](src/file_changes.rs)
 - [File results](src/runner_files.rs) defines read commands and their results.
 - [Skill reports](src/skills.rs) defines public metadata and private discovery/input records.
 - [Helper messages](src/sdk_helper.rs) defines JSON line requests and outputs.
@@ -154,6 +155,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
 - [File server protocol](../../docs/protocol/file-server.md)
+- [File report protocol](../../docs/protocol/file-reports.md)
 - [Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Agent tools](../../docs/protocol/agent-tools.md)
 - [Services](../../docs/protocol/services.md) and

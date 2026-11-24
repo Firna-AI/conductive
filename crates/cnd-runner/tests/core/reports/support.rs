@@ -118,6 +118,7 @@ pub(super) fn snapshot(paths: Vec<String>) -> RepositorySnapshot {
                 change: None,
             })
             .collect(),
+        context_only_paths: Default::default(),
         changes: ChangesResponse {
             base_branch: "main".into(),
             display_base_branch: None,
@@ -129,6 +130,7 @@ pub(super) fn snapshot(paths: Vec<String>) -> RepositorySnapshot {
                 added: 0,
                 removed: 0,
             },
+            omitted: None,
         },
         identities: BTreeMap::new(),
         read_identities: BTreeMap::new(),

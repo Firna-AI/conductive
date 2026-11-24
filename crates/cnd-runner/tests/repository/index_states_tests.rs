@@ -138,6 +138,7 @@ async fn unmerged_and_other_index_states_preserve_snapshot_entries_and_changes()
                 added: 9,
                 removed: 7,
             },
+            omitted: None,
         }
     );
     assert_eq!(snapshot.base_commit, base);

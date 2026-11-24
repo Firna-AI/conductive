@@ -1,6 +1,6 @@
 # Runner file report limits
 
-Status: Active. On branch `calummoore/object-memory-runner-report-limits-0m1g`, no pull request yet. Cal approved implementation on 23 November 2026. Milestone 1 is complete. Milestone 2 is complete. Milestone 3 is in progress. Milestone 4 waits for the tab-state pull request to merge into `main`, and Cal releases it. The pull request that completes the work deletes this plan.
+Status: Active. On branch `calummoore/object-memory-runner-report-limits-0m1g`, no pull request yet. Cal approved implementation on 23 November 2026. Milestone 1 is complete. Milestones 2 and 3 are complete. Milestone 4 waits for the tab-state pull request to merge into `main`, and Cal releases it. The pull request that completes the work deletes this plan.
 
 Conductive keeps the latest file tree and branch changes in each workspace's Durable Object.
 One object has a 128 MB memory limit.
@@ -380,18 +380,21 @@ Depends on: Milestone 2.
 Bound reports from new runners while keeping complete Git scans and turn comparisons.
 The existing Worker must still accept the emitted reports at this milestone's end.
 
-- [ ] Add the two limit constants and optional fields in `crates/cnd-runner-interface/`, with Rust as the type owner. Mirror needed runtime limits in `src/shared/files.ts` through the existing constant parity check.
-- [ ] Add stable selection in the report layer. Apply Cal's answers, directory closure, omitted counts, and omitted line totals before splitting.
-- [ ] Keep full source state for content detection, marks, Git status, unpushed counts, and turn-file comparisons.
-- [ ] Compare the last emitted selection for deltas. Keep membership replacement, count updates, and absent-path refreshes atomic within one delta, or send a full bounded tree.
-- [ ] Repeat metadata in all parts. Include it in serialized byte budgeting and preserve it through credential filtering.
-- [ ] Extend existing report tests for the cap boundary, deterministic retained paths, exact omitted totals, directory ancestors, and ignored context entries.
-- [ ] Cover growth across the tree limit, return below it, selected-entry eviction, empty count updates, omitted deletions, base transitions to empty diffs, rename reclassification, and requested repairs.
-- [ ] Keep the existing whole-entry, 256 KiB, 512-change, restart, and resend assertions.
-- [ ] Extend wire serialization cases for absent fields, explicit zeros, and nonzero metadata. Verify the previous Worker's retained-summary check accepts new report samples.
-- [ ] Run `cargo run -p cnd-runner-interface --example export_bindings`. Commit generated output without hand edits.
-- [ ] Update `crates/cnd-runner/README.md` and `crates/cnd-runner-interface/README.md` for useful entry-point or boundary changes.
-- [ ] Run `cargo test -p cnd-runner-interface` and `cargo test -p cnd-runner`. Record test costs and assertion-failure proof for new cases.
+- [x] Add the two limit constants and optional fields in `crates/cnd-runner-interface/`, with Rust as the type owner. Mirror needed runtime limits in `src/shared/files.ts` through the existing constant parity check.
+- [x] Add stable selection in the report layer. Apply Cal's answers, directory closure, omitted counts, and omitted line totals before splitting.
+- [x] Keep full source state for content detection, marks, Git status, unpushed counts, and turn-file comparisons.
+- [x] Compare the last emitted selection for deltas. Keep membership replacement, count updates, and absent-path refreshes atomic within one delta, or send a full bounded tree.
+- [x] Repeat metadata in all parts. Include it in serialized byte budgeting and preserve it through credential filtering.
+- [x] Extend existing report tests for the cap boundary, deterministic retained paths, exact omitted totals, directory ancestors, and ignored context entries.
+- [x] Cover growth across the tree limit, return below it, selected-entry eviction, empty count updates, omitted deletions, base transitions to empty diffs, rename reclassification, and requested repairs.
+- [x] Keep the existing whole-entry, 256 KiB, 512-change, restart, and resend assertions.
+- [x] Extend wire serialization cases for absent fields, explicit zeros, and nonzero metadata. Verify the previous Worker's retained-summary check accepts new report samples.
+- [x] Run `cargo run -p cnd-runner-interface --example export_bindings`. Commit generated output without hand edits.
+- [x] Update `crates/cnd-runner/README.md` and `crates/cnd-runner-interface/README.md` for useful entry-point or boundary changes.
+- [x] Run `cargo test -p cnd-runner-interface` and `cargo test -p cnd-runner`. Record test costs and assertion-failure proof for new cases.
+
+The implementor report, test costs, and failure proofs are `.context/runner-file-report-limits/m3-report.md` and `m3-checks/`.
+The current-Worker compatibility check is in `.context/runner-file-report-limits/compat/`.
 
 ## Milestone 4: Worker metadata and compatibility
 
