@@ -125,8 +125,9 @@ supplies no entry. The runner reads the optional entry, as
 ## Secrets
 
 - A build sandbox starts with no org env vars and no workspace token. It
-  gets only the folder variables, which hold no secret. So no saved
-  snapshot holds a secret of a workspace.
+  gets the folder variables, which hold no secret, and its machine token,
+  which stays in memory. So no saved snapshot holds a secret of a
+  workspace.
 - The Worker gives each read token only to the Git command that copies its
   repository. The Worker revokes it before the build goes on, as
   [GitHub tokens](../docs/protocol/tokens-and-secrets.md#github-tokens)

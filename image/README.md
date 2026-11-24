@@ -205,7 +205,7 @@ A build, a disk retention restart, and an unfinished start launch no runner.
   The release packager replaces it with `MACHINE_PATHS.runner`.
   Run only a rendered copy.
 - Keep each start script safe to run in a build sandbox. Of the variables
-  in the [startup table](start.md#start-in-a-workspace), a build sandbox has only the folder variables.
+  in the [startup table](start.md#start-in-a-workspace), a build sandbox has only the folder variables and `CONDUCTIVE_MACHINE_ORIGIN`.
   The relay needs none of them.
 - [Developer scripts](developer-scripts.md#development) gives the checks of
   the developer scripts.
