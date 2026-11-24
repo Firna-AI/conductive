@@ -7,12 +7,18 @@ import {
   type BucketList,
   type BucketManifest,
 } from './bucket-layout'
-import { loadFiles, saveFiles, type StoredFiles } from './storage'
+import { FilesState } from './state'
 import { fileEntry, writeBucketProjection } from './test-support/bucket-builder'
+import { observeFilesStorage } from './test-support/observe-storage'
 import {
   createFilesStorage,
   type FilesStorageHarness,
 } from './test-support/storage'
+import {
+  readStoredFiles,
+  writeStorageRecord,
+  type StoredFiles,
+} from './test-support/storage-record'
 
 let runtime: FilesStorageHarness
 beforeAll(async () => {
@@ -152,23 +158,19 @@ it('rejects damaged bucket records with the old-layout read error', async () => 
     treeChunks: 0,
     changesChunks: 0,
   }
-  await oldStorage.write(
-    { [FILES_KEY]: { ...oldManifest, treeChunks: -1 } },
-    [],
-  )
-  await expect(loadFiles(oldStorage)).rejects.toMatchObject(readError)
-  await oldStorage.write(
-    {
-      [FILES_KEY]: { ...oldManifest, treeChunks: 1 },
-      [`${FILES_KEY}:tree:0`]: 'null',
-    },
-    [],
-  )
-  await expect(loadFiles(oldStorage)).rejects.toMatchObject(readError)
+  await writeStorageRecord(oldStorage, {
+    [FILES_KEY]: { ...oldManifest, treeChunks: -1 },
+  })
+  await expect(readStoredFiles(oldStorage)).rejects.toMatchObject(readError)
+  await writeStorageRecord(oldStorage, {
+    [FILES_KEY]: { ...oldManifest, treeChunks: 1 },
+    [`${FILES_KEY}:tree:0`]: 'null',
+  })
+  await expect(readStoredFiles(oldStorage)).rejects.toMatchObject(readError)
 
   // The harness transports values as JSON, which omits an undefined field.
   await expect(
-    loadFiles({
+    readStoredFiles({
       ...oldStorage,
       get: (key) =>
         key === FILES_KEY
@@ -189,7 +191,9 @@ it('rejects damaged bucket records with the old-layout read error', async () => 
           damage({ manifest, tree, changes, updates })
         },
       })
-      await expect(loadFiles(storage), name).rejects.toMatchObject(readError)
+      await expect(readStoredFiles(storage), name).rejects.toMatchObject(
+        readError,
+      )
     }),
   )
 })
@@ -210,9 +214,9 @@ it.each(['bucket', 'order'] as const)(
     })
 
     const getMany = vi.fn(storage.getMany)
-    await expect(loadFiles({ ...storage, getMany })).rejects.toMatchObject(
-      readError,
-    )
+    await expect(
+      readStoredFiles({ ...storage, getMany }),
+    ).rejects.toMatchObject(readError)
     expect(getMany).toHaveBeenCalledTimes(1)
     const [[keys]] = getMany.mock.calls
     expect(keys).toContain(missingKey)
@@ -220,19 +224,43 @@ it.each(['bucket', 'order'] as const)(
   },
 )
 
-it('rejects a damaged bucket manifest before an old-layout write', async () => {
+it('rejects a damaged bucket manifest before writing a tree mark', async () => {
   const storage = runtime.storage('damaged-save')
   const original = await writeBucketProjection(storage, projection, {
     corrupt(manifest, updates) {
       updates[FILES_KEY] = { ...manifest, hash: 'other' }
     },
   })
-  const write = vi.fn(storage.write)
+  const observed = observeFilesStorage(storage)
   await expect(
-    saveFiles({ ...storage, write }, projection),
+    new FilesState(observed.storage).apply('stream', {
+      type: 'files.unavailable',
+    }),
   ).rejects.toMatchObject(readError)
-  expect(write).not.toHaveBeenCalled()
+  expect(observed.writes).toEqual([])
   await expect(storage.get(FILES_KEY)).resolves.toStrictEqual(
     original[FILES_KEY],
   )
+})
+
+it('stops legacy reads and conversion after one batch when the first chunk is missing', async () => {
+  const storage = runtime.storage('missing-first-legacy-chunk')
+  const legacy = {
+    connectionId: 'stream',
+    hasSnapshot: true,
+    treeChunks: 10_000,
+    changesChunks: 0,
+  }
+  await writeStorageRecord(storage, { [FILES_KEY]: legacy })
+  const observed = observeFilesStorage(storage)
+  const state = new FilesState(observed.storage)
+  await expect(state.tree()).rejects.toMatchObject(readError)
+  await expect(
+    state.apply('stream', { type: 'files.unavailable' }),
+  ).rejects.toMatchObject(readError)
+  expect(observed.reads.map((keys) => keys.length)).toEqual([1, 64, 1, 64])
+  expect(observed.reads[1][0]).toEqual(`${FILES_KEY}:tree:0`)
+  expect(observed.reads[3]).toEqual(observed.reads[1])
+  expect(observed.writes).toEqual([])
+  await expect(storage.get(FILES_KEY)).resolves.toStrictEqual(legacy)
 })

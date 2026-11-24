@@ -1,5 +1,5 @@
 import { isRecord } from '../../http'
-import type { StoredFiles } from '../storage'
+import type { StoredFiles } from './storage-record'
 
 const record: unknown = JSON.parse(String.raw`{
   "files:state:v1": {

@@ -15,7 +15,8 @@ import {
   type BucketManifest,
   type ListKind,
 } from '../bucket-layout'
-import type { FilesStorage, StoredFiles } from '../storage'
+import type { FilesStorage } from '../storage'
+import { writeStorageRecord, type StoredFiles } from './storage-record'
 
 type BucketFor = (path: string) => number
 
@@ -80,8 +81,7 @@ async function buildList(
   return { fields, count: items.length, orderChunks, buckets }
 }
 
-export async function writeBucketProjection(
-  storage: FilesStorage,
+export async function buildBucketProjection(
   state: StoredFiles,
   { bucketFor = bucketOf, corrupt }: BucketOptions = {},
 ): Promise<Readonly<Record<string, unknown>>> {
@@ -105,6 +105,40 @@ export async function writeBucketProjection(
   }
   updates[FILES_KEY] = manifest
   corrupt?.(manifest, updates)
-  await storage.write(updates, [])
+  return updates
+}
+
+export async function writeBucketProjection(
+  storage: FilesStorage,
+  state: StoredFiles,
+  options?: BucketOptions,
+): Promise<Readonly<Record<string, unknown>>> {
+  const updates = await buildBucketProjection(state, options)
+  await writeStorageRecord(storage, updates)
+  return updates
+}
+
+export async function writeOldProjection(
+  storage: FilesStorage,
+  state: StoredFiles,
+): Promise<Readonly<Record<string, unknown>>> {
+  const updates: Record<string, unknown> = {}
+  const treeChunks = addChunks(
+    updates,
+    state.tree === null ? '' : JSON.stringify(state.tree),
+    (index) => `files:state:v1:tree:${index}`,
+  )
+  const changesChunks = addChunks(
+    updates,
+    state.changes === null ? '' : JSON.stringify(state.changes),
+    (index) => `files:state:v1:changes:${index}`,
+  )
+  updates['files:state:v1'] = {
+    connectionId: state.connectionId,
+    hasSnapshot: state.hasSnapshot,
+    treeChunks,
+    changesChunks,
+  }
+  await writeStorageRecord(storage, updates)
   return updates
 }

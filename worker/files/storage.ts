@@ -1,34 +1,38 @@
 import type { ChangesResponse } from '../../src/shared/generated/ChangesResponse'
 import type { FileTreeResponse } from '../../src/shared/generated/FileTreeResponse'
 import { isRecord } from '../http'
+import { convertFilesProjection } from './bucket-convert'
 import {
   BUCKET_LAYOUT,
-  CHUNK_CHARACTERS,
   FILES_KEY,
-  bucketListKeys,
   parseBucketManifest,
   type BucketManifest,
   type ListKind,
 } from './bucket-layout'
 import { readBucketList } from './bucket-read'
+import { deleteBucketList } from './bucket-write'
 import { invalidFileResponse } from './errors'
 import { natural, parseChanges, parseTree } from './parsers'
+import {
+  deleteStoredChunks,
+  legacyChunkKeys,
+  readStoredText,
+} from './stored-chunks'
 
-export interface FilesStorage {
+export interface FilesReader {
   get(key: string): Promise<unknown>
   getMany(keys: readonly string[]): Promise<ReadonlyMap<string, unknown>>
-  /** All updates and removals commit together. */
-  write(
-    updates: Readonly<Record<string, unknown>>,
-    removals: readonly string[],
-  ): Promise<void>
 }
 
-export interface StoredFiles {
-  connectionId: string | null
-  hasSnapshot: boolean
-  tree: FileTreeResponse | null
-  changes: ChangesResponse | null
+export interface FilesTransaction extends FilesReader {
+  put(key: string, value: unknown): Promise<void>
+  delete(key: string): Promise<boolean>
+}
+
+export interface FilesStorage extends FilesReader {
+  transaction<T>(
+    work: (transaction: FilesTransaction) => Promise<T>,
+  ): Promise<T>
 }
 
 interface OldFilesManifest {
@@ -41,9 +45,9 @@ interface OldFilesManifest {
 
 export type FilesManifest = OldFilesManifest | BucketManifest
 
-export function durableFilesStorage(
-  storage: Pick<DurableObjectStorage, 'get' | 'transaction'>,
-): FilesStorage {
+function durableFilesReader(
+  storage: Pick<DurableObjectStorage, 'get'>,
+): FilesReader {
   return {
     get: (key) => storage.get<unknown>(key),
     async getMany(keys) {
@@ -54,17 +58,27 @@ export function durableFilesStorage(
       }
       return values
     },
-    write: (updates, removals) =>
-      storage.transaction(async (transaction) => {
-        for (const [key, value] of Object.entries(updates))
-          await transaction.put(key, value)
-        for (const key of removals) await transaction.delete(key)
-      }),
+  }
+}
+
+export function durableFilesStorage(
+  storage: Pick<DurableObjectStorage, 'get' | 'transaction'>,
+): FilesStorage {
+  return {
+    ...durableFilesReader(storage),
+    transaction: (work) =>
+      storage.transaction((transaction) =>
+        work({
+          ...durableFilesReader(transaction),
+          put: (key, value) => transaction.put(key, value),
+          delete: (key) => transaction.delete(key),
+        }),
+      ),
   }
 }
 
 export async function readFilesManifest(
-  storage: FilesStorage,
+  storage: FilesReader,
 ): Promise<FilesManifest> {
   const value = await storage.get(FILES_KEY)
   if (value === undefined)
@@ -92,23 +106,13 @@ export async function readFilesManifest(
 }
 
 async function readChunks(
-  storage: FilesStorage,
+  storage: FilesReader,
   kind: ListKind,
   count: number,
 ): Promise<unknown> {
-  const chunks: string[] = []
-  const keys = Array.from(
-    { length: count },
-    (_, index) => `${FILES_KEY}:${kind}:${index}`,
-  )
-  const values = await storage.getMany(keys)
-  for (let index = 0; index < count; index++) {
-    const chunk = values.get(keys[index])
-    if (typeof chunk !== 'string') throw invalidFileResponse()
-    chunks.push(chunk)
-  }
+  const text = await readStoredText(storage, legacyChunkKeys(kind, count))
   try {
-    return JSON.parse(chunks.join(''))
+    return JSON.parse(text)
   } catch {
     throw invalidFileResponse()
   }
@@ -147,60 +151,41 @@ export async function readFileList(
   return kind === 'tree' ? parseTree(value) : parseChanges(value)
 }
 
-export async function loadFiles(storage: FilesStorage): Promise<StoredFiles> {
-  const stored = await readFilesManifest(storage)
-  return {
-    connectionId: stored.connectionId,
-    hasSnapshot: stored.hasSnapshot,
-    tree: await readFileList(storage, stored, 'tree'),
-    changes: await readFileList(storage, stored, 'changes'),
-  }
-}
-
-export async function saveFiles(
-  storage: FilesStorage,
-  state: StoredFiles,
-): Promise<void> {
-  const previous = await readFilesManifest(storage)
-  const updates: Record<string, unknown> = {}
-  const removals: string[] = []
-  const counts = { treeChunks: 0, changesChunks: 0 }
-  for (const kind of ['tree', 'changes'] as const) {
-    const text = state[kind] === null ? '' : JSON.stringify(state[kind])
-    const count = Math.ceil(text.length / CHUNK_CHARACTERS)
-    counts[`${kind}Chunks`] = count
-    for (let index = 0; index < count; index++) {
-      updates[`${FILES_KEY}:${kind}:${index}`] = text.slice(
-        index * CHUNK_CHARACTERS,
-        (index + 1) * CHUNK_CHARACTERS,
-      )
-    }
-    for (let index = count; index < previous[`${kind}Chunks`]; index++)
-      removals.push(`${FILES_KEY}:${kind}:${index}`)
-    if (previous.layout === BUCKET_LAYOUT) {
-      for (const key of bucketListKeys(kind, previous[kind])) removals.push(key)
-    }
-  }
-  updates[FILES_KEY] = {
-    connectionId: state.connectionId,
-    hasSnapshot: state.hasSnapshot,
-    ...counts,
-  }
-  await storage.write(updates, removals)
-}
-
 /**
  * After a repository change, the stored reports are of the old folder. The
  * tree keeps its entries and its revision with the unavailable mark, so a
  * later delta still applies, and the next complete tree clears the mark.
  * The changes go, so the Changes API waits for the report of the new folder.
  */
-export async function markFilesMoved(storage: FilesStorage): Promise<void> {
-  const state = await loadFiles(storage)
-  if (!state.tree && !state.changes) return
-  await saveFiles(storage, {
-    ...state,
-    tree: state.tree && { ...state.tree, unavailable: true },
-    changes: null,
+export function markFilesMoved(storage: FilesStorage): Promise<void> {
+  return storage.transaction(async (transaction) => {
+    const previous = await readFilesManifest(transaction)
+    const hasLists =
+      previous.layout === BUCKET_LAYOUT
+        ? previous.tree !== null || previous.changes !== null
+        : previous.treeChunks > 0 || previous.changesChunks > 0
+    if (!hasLists) return
+
+    const manifest =
+      previous.layout === BUCKET_LAYOUT
+        ? previous
+        : await convertFilesProjection(transaction, {
+            ...previous,
+            changesChunks: 0,
+          })
+    if (previous.layout === BUCKET_LAYOUT)
+      await deleteBucketList(transaction, 'changes', previous.changes)
+    else
+      await deleteStoredChunks(
+        transaction,
+        legacyChunkKeys('changes', previous.changesChunks),
+      )
+    if (manifest.tree)
+      manifest.tree = {
+        ...manifest.tree,
+        fields: { ...manifest.tree.fields, unavailable: true },
+      }
+    manifest.changes = null
+    await transaction.put(FILES_KEY, manifest)
   })
 }

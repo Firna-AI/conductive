@@ -5,7 +5,7 @@ that the runner keeps for each event, and the file reports.
 
 The runner keeps each event within the limits that
 [Agent runner](../docs/protocol/agent-runner.md) and
-[Files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
+[File reports](../docs/protocol/file-reports.md)
 state. The [shared contracts](../src/shared/README.md) hold the constants.
 No variable changes them.
 Runner byte budgets apply after its known-credential filter. Displayed

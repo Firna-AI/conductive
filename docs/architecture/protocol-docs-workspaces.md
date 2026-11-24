@@ -96,6 +96,9 @@ protocol docs.
     - [Files of an HTML page](../protocol/html-page-files.md): the files
       and the system fonts that a page can load, and the cases that do
       not show as the agent saw them.
+  - [File reports](../protocol/file-reports.md): the limits, the parts,
+    the revisions, and the repairs of the runner's reports of the file
+    tree and the branch changes.
   - [Port previews](../protocol/port-previews.md): detected servers, manual
     opening, the open from a local address in the chat, preview tabs,
     and the relay requirement.

@@ -232,8 +232,9 @@ view, the scroll after a send, and the place that each tab keeps.
   when earlier history arrives after newer events.
 - While the earlier history loads, the chat says so above the messages
   that it shows.
-- The Durable Object of the workspace stores every event, so the chat
-  survives a stop of the sandbox.
+- The Durable Object of the workspace stores the chat history, so the chat
+  survives a stop of the sandbox. [Chat history](chat-history.md) states
+  what the stored history keeps.
 - A tab keeps the chat of each workspace that it showed in memory. A
   return to that workspace shows the chat at once, then gets only the new
   events (decision 87).

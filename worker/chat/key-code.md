@@ -109,9 +109,15 @@ first.
   change in a queue task with its receiver generation, then calls
   `flushRunner`.
 - `history-pages.ts`: `HistoryPages`, the pages of the stored history and
-  the index of replaced answers and tool states. `read` reads forward one
-  list of 32 events or session keys. `readNewest` uses `BROWSER_PAGE_LIMITS`
-  for the browser: up to 2,048 session events or 4 MiB of them.
+  the index of replaced answers and tool states. `read` reads forward
+  through storage lists of four events or session keys, until the cutoff,
+  4 MiB of shown events, the connection budget, or 2,048 stored steps.
+  `readNewest` uses `HISTORY_PAGE_LIMITS` for the browser: up to 2,048
+  session events or 4 MiB of them.
+- `history-forward-pages.ts`: `readForwardHistory`, the one forward page
+  reader of the workspace history and the session index, and
+  `HISTORY_PAGE_LIMITS`. `history-page-event.ts` counts the bytes of a
+  shown event, from its stored text when it was stored as chunks.
 - `history-newest-pages.ts` and `history-session-records.ts`: the reverse
   and forward reads of the session keys, the byte and scan limits, and the
   exclusive cursor of the next earlier page.

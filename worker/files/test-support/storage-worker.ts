@@ -2,18 +2,20 @@ import { DurableObject } from 'cloudflare:workers'
 
 import { isRecord } from '../../http'
 import { FILES_KEY } from '../bucket-layout'
+import { FilesState } from '../state'
 import { durableFilesStorage, type FilesStorage } from '../storage'
+import { writeStorageRecord } from './storage-record'
 
 interface StorageWorkerEnv {
   FILES: DurableObjectNamespace<StoredFiles>
 }
 
-class CommitFailure extends Error {
-  readonly staged: Record<string, unknown>
+class BucketWriteFailure extends Error {
+  readonly keys: string[]
 
-  constructor(staged: Record<string, unknown>) {
-    super('Test storage commit failed')
-    this.staged = staged
+  constructor(keys: string[]) {
+    super('Test bucket write failed')
+    this.keys = keys
   }
 }
 
@@ -28,6 +30,7 @@ export class StoredFiles extends DurableObject<StorageWorkerEnv> {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url)
     if (url.searchParams.has('inspect')) return this.inspect()
+    if (request.method === 'PATCH') return this.applyEvent(await request.json())
     if (request.method === 'POST') {
       const value: unknown = await request.json()
       if (!isRecord(value)) throw new Error('Invalid storage read request')
@@ -41,9 +44,7 @@ export class StoredFiles extends DurableObject<StorageWorkerEnv> {
         throw new Error('Invalid storage write request')
       }
       const removals = readKeys(value.removals)
-      if (url.searchParams.has('failCommit'))
-        return this.abortCommit(value.updates, removals)
-      await this.files.write(value.updates, removals)
+      await writeStorageRecord(this.files, value.updates, removals)
       return new Response(null, { status: 204 })
     }
     const key = url.searchParams.get('key')
@@ -52,27 +53,36 @@ export class StoredFiles extends DurableObject<StorageWorkerEnv> {
     return Response.json(value === undefined ? {} : { value })
   }
 
-  private async abortCommit(
-    updates: Readonly<Record<string, unknown>>,
-    removals: readonly string[],
-  ): Promise<Response> {
-    const storage = this.ctx.storage
-    const files = durableFilesStorage({
-      get: storage.get.bind(storage),
-      transaction: (operation) =>
-        storage.transaction(async (transaction) => {
-          await operation(transaction)
-          const staged = await transaction.list<unknown>({ prefix: FILES_KEY })
-          throw new CommitFailure(Object.fromEntries(staged))
-        }),
-    })
-    try {
-      await files.write(updates, removals)
-    } catch (error) {
-      if (!(error instanceof CommitFailure)) throw error
-      return Response.json(error.staged, { status: 409 })
+  private async applyEvent(value: unknown): Promise<Response> {
+    if (!isRecord(value) || typeof value.connectionId !== 'string')
+      throw new Error('Invalid standalone apply request')
+    const { connectionId, event, failAfterBucketWrites } = value
+    const keys: string[] = []
+    const storage: FilesStorage = {
+      ...this.files,
+      transaction: (work) =>
+        this.files.transaction((transaction) =>
+          work({
+            ...transaction,
+            async put(key, next) {
+              await transaction.put(key, next)
+              if (key.startsWith(`${FILES_KEY}:tree:bucket:`)) {
+                keys.push(key)
+                if (keys.length === failAfterBucketWrites)
+                  throw new BucketWriteFailure(keys)
+              }
+            },
+          }),
+        ),
     }
-    throw new Error('Expected the storage transaction to fail')
+    try {
+      return Response.json(
+        await new FilesState(storage).apply(connectionId, event),
+      )
+    } catch (error) {
+      if (!(error instanceof BucketWriteFailure)) throw error
+      return Response.json(error.keys, { status: 409 })
+    }
   }
 
   private async inspect(): Promise<Response> {
