@@ -202,6 +202,7 @@ Drag the header of a section to move the section to another place in the list.
 On a phone, use a long press to lift a top-level row or a section header.
 With a keyboard, focus a top-level row and press **Alt+Up** or **Alt+Down**.
 On a Mac, use **Option** in place of **Alt**.
+The workspace that you have open in a collapsed section does not move this way. Use **Move to section** in its menu, or open the section first.
 Every member of the org sees the same order of sections.
 
 You can also select **Move to section** in the top-level row's menu.

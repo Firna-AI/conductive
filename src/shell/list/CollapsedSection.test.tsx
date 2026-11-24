@@ -13,6 +13,7 @@ import { pressHintKey } from '../shortcuts/shortcut-test-kit'
 import { mountScreen, press, settle } from '../test-mount'
 import { startedApp } from '../test-render'
 import { OrgList } from './OrgList'
+import { layOut, mouse } from './row-drag-test-kit'
 
 const org = FAKE_IDS.org
 /** The list of Acme with the two trees of the mockups in Checkout. */
@@ -32,7 +33,7 @@ function rowsOf(view: HTMLElement, section: string): string[] {
 }
 
 describe('a collapsed section that holds the open workspace', () => {
-  test('shows only the open row, the keys of the list count it, and Alt with Up does not move it', async () => {
+  test('shows only the open row, the keys of the list count it, and neither Alt with Up nor a drag moves it', async () => {
     const server = new FakeApiServer({ subWorkspaces: true })
     const app = await startedApp(server, { onKey: windowKeys(window) })
     await app.org(org).reload('list')
@@ -51,8 +52,8 @@ describe('a collapsed section that holds the open workspace', () => {
     )
     await settle()
     const shown = rowsOf(view, 'Infra')
-    // The section hides the places of its rows, so Alt with Up moves
-    // nothing.
+    // The section hides the places of its rows, so Alt with Up and a drag
+    // move nothing.
     const row = view.querySelector<HTMLElement>(
       `a[href="${routes.workspace(org, 'retry-queue')}"]`,
     )
@@ -60,6 +61,11 @@ describe('a collapsed section that holds the open workspace', () => {
     const sent = server.requests.length
     act(() => row.focus())
     const key = press(row, 'ArrowUp', { alt: true })
+    await settle()
+    layOut(view, 'Infra', 0, ['retry-queue'], 40)
+    mouse(row, 'pointerdown', { clientY: 30 })
+    mouse(window, 'pointermove', { clientY: 40 })
+    mouse(window, 'pointerup', { clientY: 40, buttons: 0 })
     await settle()
     const moved = {
       prevented: key.defaultPrevented,
