@@ -199,3 +199,94 @@ async fn snapshot_keeps_entries_changes_and_both_identity_maps_for_mixed_git_sta
     assert_eq!(snapshot.base_commit, base);
     assert_eq!(h.stored_git(), saved);
 }
+
+#[tokio::test]
+async fn changes_after_the_report_limit_keep_marks_turn_rows_and_rename_content() {
+    let h = Fixture::new().await;
+    for index in 0..1_000 {
+        h.write(&format!("filler/{index:04}.txt"), b"one line\n");
+    }
+    h.git(&["add", "--", "filler"]);
+    let before = h.repository.checkpoint().await.unwrap();
+
+    h.git(&["mv", "rename me.txt", "z-renamed.txt"]);
+    h.write("z-renamed.txt", b"keep\nthese\nlines\nextra\n");
+    h.git(&["add", "--", "z-renamed.txt"]);
+    h.write("README.md", b"first\nchanged\nextra\n");
+
+    let snapshot = h.repository.snapshot("main".into()).await.unwrap();
+    let paths_after_limit: Vec<_> = snapshot
+        .changes
+        .files
+        .iter()
+        .skip(1_000)
+        .map(|file| file.changed_file.path.as_str())
+        .collect();
+    assert_eq!(
+        (
+            snapshot.changes.files.len(),
+            snapshot.changes.summary,
+            paths_after_limit.as_slice(),
+        ),
+        (
+            1_002,
+            ChangesResponseSummary {
+                files: 1_002,
+                added: 1_003,
+                removed: 1,
+            },
+            &["README.md", "z-renamed.txt"][..],
+        ),
+    );
+    let marks: Vec<_> = snapshot
+        .entries
+        .iter()
+        .filter(|entry| matches!(entry.path.as_str(), "README.md" | "z-renamed.txt"))
+        .map(|entry| (entry.path.as_str(), entry.change.as_ref()))
+        .collect();
+    assert_eq!(
+        marks,
+        [
+            ("README.md", Some(&ChangeKind::Modified)),
+            ("z-renamed.txt", Some(&ChangeKind::Renamed)),
+        ],
+    );
+
+    let changed = h
+        .repository
+        .changed_since("main".into(), before)
+        .await
+        .unwrap();
+    let rows: Vec<_> = changed
+        .iter()
+        .map(|file| {
+            (
+                file.path.as_str(),
+                file.previous_path.as_deref(),
+                &file.change,
+                file.added,
+                file.removed,
+            )
+        })
+        .collect();
+    assert_eq!(
+        rows,
+        [
+            ("README.md", None, &ChangeKind::Modified, 2, 1),
+            (
+                "z-renamed.txt",
+                Some("rename me.txt"),
+                &ChangeKind::Renamed,
+                1,
+                0
+            ),
+        ],
+    );
+
+    let diff = h
+        .repository
+        .diff("z-renamed.txt".into(), "main".into())
+        .await
+        .unwrap();
+    assert_eq!(diff.old_content.as_deref(), Some("keep\nthese\nlines\n"));
+}

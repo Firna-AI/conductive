@@ -45,9 +45,14 @@ export function StillLinks(props: { children: ReactNode }) {
 /**
  * Sends the links of the screens inside it to other pages. A link to a page
  * that the table names opens the page that the table gives, such as the
- * limited page of a file page. Each other link keeps its page.
+ * limited page of a file page. Each other link keeps its page. Inside an
+ * enclosing table, such as the table of a workspace screen around one of
+ * its parts, the enclosing table stays, because the screen knows its whole
+ * state.
  */
 export function LinkPages(props: { table: PageTable; children: ReactNode }) {
+  const enclosing = useContext(LinkTable)
+  if (enclosing.size > 0) return props.children
   return (
     <LinkTable.Provider value={props.table}>
       {props.children}

@@ -70,7 +70,7 @@ The entry becomes a chip, a small box with its name, in the message field.
 Your message gives the agent its path, such as `@src/app.ts` or `@src/lib/`.
 Use **Attach files** for a file from your own computer.
 
-If `@` finds no match while **All files** is limited, the message box says that some files are outside the list.
+When **All files** has a notice about files or folders left out, `@` says some files are outside the list if it finds no match.
 Type the path in your message or ask the agent to find it.
 
 A row's menu in **All files** or **Changes** offers **Add to chat** only if you can mention its path.

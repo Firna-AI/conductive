@@ -236,7 +236,7 @@ A file or a diff over the read limit shows the size and the limit that
 the backend sends, and the terminal as the way to open it. The download
 route reads a file with the same limit, so a file page offers Download
 only after a read that fits. A binary diff links to its file tab in place
-of Download.
+of Download, unless the diff deletes the file.
 
 ## Development
 

@@ -9,7 +9,8 @@ import { limitedListPaths } from '../limitedListPaths'
  * stays with the lists of the large branch: the rows and the tabs of the
  * lists, the back links and the Files tab of a phone, the file tabs of the
  * centre column, and the file chips of the chat. Complete lists keep every
- * page.
+ * page. The registered files panel uses it too, for its own page. Inside a
+ * workspace screen, the table of the screen stays, as `LinkPages` says.
  */
 export function WorkspaceLinks(props: {
   lists: ListState | undefined

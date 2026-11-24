@@ -110,6 +110,50 @@ fn delta_shape(delta: &FileTreeDelta) -> (u64, usize, Option<u64>) {
 }
 
 #[tokio::test]
+async fn splits_513_mark_edits_when_a_new_base_clears_omitted_diffs() {
+    let mut current = snapshot(
+        ["a-listed".into()]
+            .into_iter()
+            .chain((0..513).map(|index| format!("file-{index:03}")))
+            .collect(),
+    );
+    current.changes.files = current
+        .entries
+        .iter_mut()
+        .map(|entry| {
+            entry.change = Some(ChangeKind::Modified);
+            changed_file(&entry.path, 1, 1, false)
+        })
+        .collect();
+    let h = Fixture::with_limits(
+        current.clone(),
+        ReportLimits {
+            changed_files: 1,
+            ..ReportLimits::default()
+        },
+    );
+    h.files.refresh(true, None, None).await.unwrap();
+    h.take();
+
+    current.base_commit = "new base".into();
+    current.changes.files.truncate(1);
+    for entry in &mut current.entries[1..] {
+        entry.change = None;
+    }
+    *h.current.lock().unwrap() = Some(current);
+    h.files.refresh(false, None, None).await.unwrap();
+    let deltas: Vec<_> = h
+        .take_reports()
+        .iter()
+        .filter_map(|event| match event {
+            RunnerFileEvent::FilesChanged { delta } => Some(delta_shape(delta)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(deltas, [(2, 512, Some(0)), (3, 1, Some(0))]);
+}
+
+#[tokio::test]
 async fn omitted_context_refresh_and_512_listed_edits_split_into_two_deltas() {
     let mut current = snapshot(
         [

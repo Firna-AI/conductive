@@ -6,6 +6,7 @@ import {
 } from '../../../components/files/FilesPanel'
 import { pathStates } from '../../../fixtures/maskedFiles'
 import { listStates } from '../../../fixtures/limitedFiles'
+import { WorkspaceLinks } from '../../../screens/workspaceLinks'
 import { bannerStates } from '../../../../../../src/ui/components/workspace/barModel'
 import { fileTabViews } from './fileSchemas'
 import { fileRowMenuSchema } from './rowMenuSchemas'
@@ -13,7 +14,9 @@ import { fileRowMenuSchema } from './rowMenuSchemas'
 /**
  * The files panel of the workspace, registered with Mokly. A screen
  * supplies the state of a sandbox in place of the lists, and on a phone
- * the actions of the pull request bar above the checks.
+ * the actions of the pull request bar above the checks. Limited lists send
+ * the links of the panel to the pages of the large branch, as a workspace
+ * screen does. Inside such a screen, the table of the screen stays.
  */
 export const filesPanel = defineComponent({
   slug: 'files-panel',
@@ -54,19 +57,21 @@ export const filesPanel = defineComponent({
     tree: 'latest',
   },
   render: (props) => (
-    <FilesPanel
-      banner={props.banner}
-      checksTop={props.checksTop}
-      edited={props.edited}
-      lists={props.lists}
-      menu={props.menu}
-      only={props.only}
-      open={props.open}
-      paths={props.paths}
-      placeholder={props.placeholder}
-      tree={props.tree}
-      view={props.view}
-    />
+    <WorkspaceLinks lists={props.lists}>
+      <FilesPanel
+        banner={props.banner}
+        checksTop={props.checksTop}
+        edited={props.edited}
+        lists={props.lists}
+        menu={props.menu}
+        only={props.only}
+        open={props.open}
+        paths={props.paths}
+        placeholder={props.placeholder}
+        tree={props.tree}
+        view={props.view}
+      />
+    </WorkspaceLinks>
   ),
   variants: [
     {

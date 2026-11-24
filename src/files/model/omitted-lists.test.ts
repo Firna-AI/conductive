@@ -113,20 +113,23 @@ it('keeps the omitted totals of each list from reads, history, and live reports,
   }
   const remove = { operation: 'remove', path: 'notes.md' } as const
   live(7, delta(3, [remove], 18_413), 'swap')
-  live(8, delta(4, [], 18_000), 'count only')
-  live(9, { type: 'files.unavailable' }, 'mark')
+  // An update with an explicit zero clears a positive count. The count
+  // then rises again, so the full report below still replaces a count.
+  live(8, delta(4, [], 0), 'zero update')
+  live(9, delta(5, [], 18_000), 'count only')
+  live(10, { type: 'files.unavailable' }, 'mark')
   live(
-    10,
+    11,
     { type: 'changes.updated', changes: { ...data.changes, omitted: zero } },
     'changes zero',
   )
   live(
-    11,
+    12,
     { type: 'files.snapshot', tree: { ...data.files, omittedEntryCount: 0 } },
     'tree zero',
   )
-  live(12, { type: 'files.snapshot', tree: data.files }, 'older tree')
-  live(13, { type: 'changes.updated', changes: data.changes }, 'older list')
+  live(13, { type: 'files.snapshot', tree: data.files }, 'older tree')
+  live(14, { type: 'changes.updated', changes: data.changes }, 'older list')
 
   const step = (
     name: string,
@@ -140,6 +143,7 @@ it('keeps the omitted totals of each list from reads, history, and live reports,
       step('reads', 'no tree', false, omitted),
       step('history', 18_412, false, omitted),
       step('swap', 18_413, false, omitted),
+      step('zero update', 0, false, omitted),
       step('count only', 18_000, false, omitted),
       step('mark', 18_000, true, omitted),
       step('changes zero', 18_000, true, zero),

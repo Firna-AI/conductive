@@ -214,6 +214,9 @@ as [`src/ui/components/chat/`](../../src/ui/components/chat/).
   the large branch: the rows and the tabs of the lists, the back links and
   the Files tab of a phone, the file tabs, and the file chips of the chat.
   Each other link keeps its page, such as the Checks tab and the tools.
+  The page of the registered files panel gives the same table while its
+  `lists` prop is limited. Inside an enclosing table, such as the table of
+  a workspace screen, `LinkPages` keeps the enclosing table.
 - A screen takes a part that the app uses too from
   [`src/ui/`](../../src/ui/README.md). A part that only the mockups use
   lives in `src/components/`. When the app starts to use such a part, the

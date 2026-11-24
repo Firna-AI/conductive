@@ -12,6 +12,36 @@ export type DiffRow =
 
 const hunkHeader = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/
 
+const deletedFileMode = /^deleted file mode /m
+
+const newFileMode = /^new file mode /m
+
+/**
+ * Whether a patch deletes its file: Git writes a `deleted file mode` line
+ * in the header of a deleted file. A type change, such as a file that
+ * becomes a link, deletes the old entry and adds a new one at the same
+ * path, so its patch also holds a `new file mode` line, and the path still
+ * holds a file. A line of a hunk starts with its sign, so no changed line
+ * can read as a header.
+ */
+export function deletesFile(patch: string): boolean {
+  return deletedFileMode.test(patch) && !newFileMode.test(patch)
+}
+
+/** The lines that the rows of a text diff add and remove. */
+export function changedLines(rows: readonly DiffRow[]): {
+  added: number
+  removed: number
+} {
+  let added = 0
+  let removed = 0
+  for (const row of rows) {
+    if (row.kind === 'added') added += 1
+    else if (row.kind === 'removed') removed += 1
+  }
+  return { added, removed }
+}
+
 /**
  * Reads the hunks of a unified diff. The file header before the first
  * hunk, such as `diff --git` and `+++`, does not show.

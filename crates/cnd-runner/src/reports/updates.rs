@@ -50,14 +50,10 @@ impl TreeHistory {
         }
     }
 
-    /// Per-path diff refreshes require matching tree and Changes histories.
+    /// Deltas require matching captures for the prior tree and Changes reports.
     fn can_use_delta(&self, published_changes: &RepositorySnapshot) -> bool {
         let tree = self.source.as_ref();
-        ptr::eq(tree, published_changes)
-            || (tree.base_commit == published_changes.base_commit
-                && tree.changes.base_branch == published_changes.changes.base_branch
-                && tree.changes.files == published_changes.changes.files
-                && tree.identities == published_changes.identities)
+        ptr::eq(tree, published_changes) || tree == published_changes
     }
 
     /// Plan against the prior report histories. Pack each group after filtering.

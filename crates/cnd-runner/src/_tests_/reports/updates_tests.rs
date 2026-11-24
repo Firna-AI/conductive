@@ -61,6 +61,14 @@ async fn requested_kind_preserves_other_history_and_failed_scans_require_full_re
     let h = Fixture::new(snapshot(vec![]));
     h.files.refresh(true, None, None).await.unwrap();
     assert_eq!(kinds(&h.take()), ["changes", "tree"]);
+    h.files
+        .refresh(true, Some(FileReportKind::Changes), None)
+        .await
+        .unwrap();
+    assert_eq!(kinds(&h.take()), ["changes"]);
+    h.files.refresh(false, None, None).await.unwrap();
+    assert!(h.take().is_empty());
+
     let mut first = snapshot(vec!["first".into()]);
     first.changes.unpushed_commits = Some(7);
     *h.current.lock().unwrap() = Some(first);
@@ -70,7 +78,7 @@ async fn requested_kind_preserves_other_history_and_failed_scans_require_full_re
         .unwrap();
     assert_eq!(kinds(&h.take()), ["tree"]);
     h.files.refresh(false, None, None).await.unwrap();
-    assert_eq!(kinds(&h.take()), ["changes"]);
+    assert_eq!(kinds(&h.take()), ["changes", "tree"]);
     let mut current = snapshot(vec!["second".into()]);
     current.changes.uncommitted_file_count = Some(7);
     *h.current.lock().unwrap() = Some(current);
@@ -80,7 +88,7 @@ async fn requested_kind_preserves_other_history_and_failed_scans_require_full_re
         .unwrap();
     assert_eq!(kinds(&h.take()), ["changes"]);
     h.files.refresh(false, None, None).await.unwrap();
-    assert_eq!(kinds(&h.take()), ["delta"]);
+    assert_eq!(kinds(&h.take()), ["tree"]);
     *h.current.lock().unwrap() = None;
     h.files
         .refresh(true, Some(FileReportKind::Changes), Some("failed".into()))
@@ -92,6 +100,33 @@ async fn requested_kind_preserves_other_history_and_failed_scans_require_full_re
     *h.current.lock().unwrap() = Some(snapshot(vec!["second".into()]));
     h.files.refresh(false, None, None).await.unwrap();
     assert_eq!(kinds(&h.take()), ["changes", "tree"]);
+}
+
+#[tokio::test]
+async fn changes_only_repair_refreshes_a_reverted_ignored_context_file() {
+    const PATH: &str = ".context/note.txt";
+    let mut original = named_snapshot(&[".context", PATH]);
+    original.entries[0].kind = FileEntryKind::Directory;
+    original.context_only_paths = [".context", PATH].map(str::to_owned).into();
+    original.read_identities = [(PATH.into(), "original bytes".into())].into();
+    let h = Fixture::new(original.clone());
+    h.files.refresh(true, None, None).await.unwrap();
+    h.take();
+
+    let mut edited = original.clone();
+    edited.read_identities = [(PATH.into(), "temporary bytes".into())].into();
+    *h.current.lock().unwrap() = Some(edited);
+    h.files
+        .refresh(true, Some(FileReportKind::Changes), None)
+        .await
+        .unwrap();
+    assert_eq!(kinds(&h.take()), ["changes"]);
+
+    *h.current.lock().unwrap() = Some(original);
+    h.files.refresh(false, None, None).await.unwrap();
+    let events = h.take();
+    assert_eq!(kinds(&events), ["tree"]);
+    assert_eq!(full_tree(&events), (2, vec![".context", PATH], Some(0)));
 }
 
 #[tokio::test]

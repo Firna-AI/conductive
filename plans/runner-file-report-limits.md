@@ -211,6 +211,7 @@ Do not change that plan's bucket format or repair protocol here.
 - **Orchestrator call, 20 November 2026:** Use existing removes and upserts for retained membership changes that fit one byte-bounded delta of at most 512 operations. Remove outgoing entries first.
 - **Orchestrator call, 20 November 2026:** Send the new omission count in that delta. Missing delta metadata preserves the previous count. A count-only update can use an empty delta.
 - **Orchestrator call, 20 November 2026:** Send a bounded full tree when a membership replacement or required path refresh cannot fit one delta. Ordinary content updates keep their existing split-delta behavior.
+- **Orchestrator call, 24 November 2026, review finding 27, superseding the call above for refreshes:** A full tree replaces deltas only when the refresh-only operations of an update do not fit one delta. An operation that also edits its entry goes with the other edits and may split. Reason: every affected path still refreshes, because an edit refreshes its path in whichever delta carries it. Ordinary edits may split, as the protocol already requires. Only refresh-only no-ops exist just to make readers read again, so they must arrive as one group or as a full tree. A regression shows the two-delta case.
 - **Orchestrator call, 20 November 2026:** Refresh an omitted path with a remove of that absent entry. A retained path uses an unchanged upsert. Existing readers refresh that path without growing the tree.
 - **Orchestrator call, 20 November 2026:** After a base change, refresh paths from both complete changes lists that neither retained list names. Include old and new rename paths. Fall back to a full bounded tree when these touches exceed one delta.
 - **Orchestrator call, 20 November 2026:** Also refresh omitted paths when complete change-row metadata changes, including rename pairing without a content or base change. Compare both source lists and include each old and new path.
@@ -231,7 +232,7 @@ Worker and app parsers already accept an empty `changes` array in a tree delta.
 An absent-path remove leaves retained entries unchanged and invalidates that path in existing app readers.
 Milestone 2 states these requirements explicitly.
 When a limited tree changes its listed entries, the whole update and its omission count share one delta only when it fits both budgets.
-The required path refreshes of an update must fit one delta together. Other edits split into deltas as before.
+The refresh-only operations of an update, removes of absent paths and upserts of unchanged entries, must fit one delta together. Other edits split into deltas as before, also an edit of a path that needs a refresh.
 Otherwise send one full bounded tree, rather than a partially applied membership replacement.
 Preserve tree metadata while ordinary content deltas advance revisions.
 Measure omitted-only edits and large replacements before the final review.

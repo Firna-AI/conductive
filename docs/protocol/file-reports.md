@@ -187,13 +187,18 @@ decision number names a dated record, as
   - A limited tree that changes its listed entries keeps the whole update
     in one delta or one full tree. Here a limited tree omits entries before
     or after the update. So a reader never sees a part of such an update.
-  - The required refreshes of an update must fit one delta together, or
-    the runner sends one full tree.
+  - Refresh-only operations must arrive together because their only
+    effect is to make readers read again. They remove absent paths or
+    upsert unchanged entries. If they do not fit one delta, the runner
+    sends one full tree.
   - The scans behind the last tree and the last changes report differ, as
     after a repair of only one report kind. The runner then sends one full
     tree.
-- Every other edit still splits into several deltas when it does not fit
-  one, as [Parts and revisions](#parts-and-revisions) says.
+- An operation that also edits its entry goes with the other edits.
+  Ordinary edits split across successive deltas when they exceed one
+  delta's budget, unless a full-tree rule applies. Each edit refreshes
+  its path in whichever delta carries it, so every affected path
+  refreshes. See [Parts and revisions](#parts-and-revisions).
 - Reason for a full tree when the two scans differ: it makes every reader
   read each open file and diff again, also an older reader.
 - In each scan that sends both reports, the runner sends every part of the

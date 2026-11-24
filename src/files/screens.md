@@ -63,14 +63,20 @@ screen, its props, and the services that the shell passes to it.
   keeps its zoom.
 - `FilePage` shows the tab of an HTML file, a name that ends with `.html`
   or `.htm` in any case, as [The page of an HTML file](html-page.md) says.
-- `DiffPage` shows the diff of one changed file.
+- `DiffPage` shows the diff of one changed file. While Changes lists the
+  path, its row gives the changed lines of the header and tells a deleted
+  file. A path that Changes leaves out takes both from its own diff: the
+  lines from the rows of a text diff, and a deletion from a patch with a
+  `deleted file mode` line and no `new file mode` line, as a change of type
+  gives both.
 - The `placeholder` prop of `FilePage` and `DiffPage` replaces the content
   of the page, for example with a sandbox state. The page then reads
   nothing, and its header offers no Download. A diff keeps its changed
-  lines from Changes. With `keepShown`, a page that already shows its file
-  keeps it, with Copy, and so does the page of an HTML file that shows in
-  its frame. The placeholder shows only in place of a page with nothing to
-  show. When the placeholder goes, the page reads at once.
+  lines from Changes while Changes lists its path. With `keepShown`, a page
+  that already shows its file keeps it, with Copy, and so does the page of
+  an HTML file that shows in its frame. The placeholder shows only in place
+  of a page with nothing to show. When the placeholder goes, the page reads
+  at once.
 - `FileTabItem` is the closable tab of a file or a diff, and
   `LiftedFileTab` is the copy that a drag lifts.
   [File tabs](file-tabs.md) gives their props, their names, the temporary

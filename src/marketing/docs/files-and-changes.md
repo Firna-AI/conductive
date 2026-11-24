@@ -38,10 +38,12 @@ File tools stay unavailable after removal.
 
 With current cloud computer software, **All files** lists up to 50,000 files and folders in total.
 **Changes** lists up to 1,000 changed files.
-When a list leaves out files or folders, the current app shows a notice with the count.
+A notice about a limited list gives the number of files or folders left out.
 
-The **Changes** tab and the summary above the list count all changed files.
-The summary also totals lines added and removed across all changed files.
+The **Changes** tab and the summary above the list show the number of changed files.
+The summary also shows totals for lines added and removed.
+These numbers cover all changed files when **Changes** has a notice about files left out.
+When that notice is absent, the numbers cover only the files in the list.
 
 To find files or review changes outside the lists, use **Terminal** or ask the agent.
 Older cloud computer software keeps full lists until its [automatic software update](/docs/cloud-computer#apply-setup-changes).
