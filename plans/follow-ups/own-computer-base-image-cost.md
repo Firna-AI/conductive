@@ -1,0 +1,62 @@
+# The base image slows deploys and fills storage
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, an implementation item of that branch. Option D is the wider fix F of the finding check of review finding 54. The time gap after each deploy comes from the same check.
+- **Location:** job `container-base` in `.github/workflows/deploy.yml:543`, `docs/protocol/own-computers.md:201`, `docs/protocol/own-computers.md:210`, `docs/protocol/sandbox-software.md:66`
+- **Reason:** Each option changes the deploy, a protocol rule, or the first build of an own computer, which nobody has designed yet.
+
+- **Source:** Implementation. **Category:** Performance.
+- **Terms:**
+  - **Container base image:** the signed image that each deploy publishes, with the tools of the E2B template and one release, for the first build of each own computer.
+  - **Tools image:** the build stage `tools` of `image/computer/Containerfile`, which holds the tools of the E2B template and no release.
+  - **Bootstrap:** the fixed container operation that installs the release of the Worker in a running container and starts its host program.
+  - **E2B template:** the base image of the cloud computers on E2B, whose install scripts live in `image/e2b/`.
+  - **Newest-version JSON:** the file `releases/latest/conductive/x86_64-unknown-linux-musl` in the release bucket, which names the newest release and its digest.
+- **Background:**
+  - The job `container-base` of `.github/workflows/deploy.yml` runs after the `deploy` job of each deploy from `main`. It builds the container base image, signs it with the release signing key of the deploy, and uploads it to the R2 bucket `conductive-runner`.
+  - The protocol requires that each deploy publishes a signed container base image. The image holds the Ubuntu 24.04 base of the E2B template, with the newest release (`docs/protocol/own-computers.md:201-203`).
+  - The first build of each own computer starts from the container base image (`docs/protocol/own-computers.md:210`).
+  - A test build on 24 November 2026 saved an archive of 1,749,391,872 bytes. The build and the upload take about 15 to 25 minutes, by an estimate. No deploy has run the job yet, because it is not on `main`.
+  - The workflow has one concurrency group, `deploy-production`. So the next deploy waits until the whole run ends, also the job `container-base`.
+  - On 24 November 2026, the last 15 deploy runs took 7.4 to 10.1 minutes each, with one run of 16.6 minutes. `main` deploys about 8 times a day.
+  - Nothing deletes old base images. `docs/deployment/runner-archive.md:75` says that old immutable files stay in the bucket.
+  - The base of a release appears only after its Worker is live. It comes after the health check, the wait of up to 15 minutes for the software image of the cloud computers, and the build.
+  - No requirement says which base the first build of an own computer uses before then. A first build that asks for the base of the live release then fails. After a failed build, the app starts no new build by itself (`docs/protocol/org-image.md:69-71`).
+  - The first builds on own computers come with the work that runs workspaces on own computers.
+  - After a failed publication, Re-run failed jobs runs only `container-base` again, with the release version and digest of the first attempt. The section "When a deploy fails" of `docs/automatic-deploys.md` says so.
+- **Problem:** The job about triples the time of each deploy run, so each later fix reaches production up to 25 minutes later. Each deploy adds about 1.75 GB to the bucket, about 420 GB a month at 8 deploys a day, with no cleanup. A first build in the 15 to 40 minutes after each deploy finds no base of the live release.
+- **Impact if no action:** Fixes reach users later. The bucket and its cost grow with no limit. A first build of an own computer in that time gap fails, and an admin must select Try again.
+- **Root question:** How does each own computer get a signed base for its first build, with the live Worker's release, without slow deploys or a full bucket?
+- **Options:**
+  - **A.** Keep one full image for each deploy. Move the job into its own workflow, which the deploy starts and does not wait for. Add a lifecycle rule to the bucket that deletes container base files after 14 days.
+    - The rule needs an operator with Cloudflare access.
+    - GitHub sends a failure alert only to the person who starts a run. So a run that the deploy starts alerts no person.
+    - With one concurrency group, GitHub keeps only the newest waiting run. So a release that a newer release replaces at once can get no base.
+    - One more workflow holds the release signing key.
+    - A rule by age also deletes the base of the live release when no deploy runs for 14 days. The sentence "Old immutable files stay in the bucket" of `docs/deployment/runner-archive.md` changes for base files.
+    - A keeps the time gap after each deploy, so the first build needs a rule for it, such as a wait for the base.
+    - Effort: Small.
+  - **B.** Build the tools image only when its inputs change, keyed by a digest of the inputs.
+    - A first build starts from the newest published tools image, and the bootstrap installs the release of the Worker in it.
+    - Most deploys then publish no image, and no first build waits for a base of the live release. So B also closes the time gap.
+    - Cost: each first build also downloads and installs the release.
+    - It changes the rule "with the newest release" at `docs/protocol/own-computers.md:201-203` and the sentence at `docs/protocol/sandbox-software.md:66-69`. It also changes the design of the first build on an own computer, which nobody has built yet.
+    - Read both legal pages and each public guide in full, as `CLAUDE.md` says.
+    - Effort: Medium.
+  - **C.** Publish the image to an OCI registry, so that each deploy adds only its changed layers, and sign the image digest with the release key. This adds a registry, its token, and a second trust path. Effort: Large.
+  - **D.** An addition to A, B, or C: a scheduled workflow publishes each missing base.
+    - It reads the newest release from the newest-version JSON in R2. When the manifest key of the base of that release is missing, it publishes that base. Under B, it checks the tools image of the current inputs.
+    - It shares its steps with the deploy through a reusable workflow.
+    - A missing base is then published with no operator, whatever ended the first attempt.
+    - Cost: one more trigger holds the release signing key and the R2 token. After a failed publish step, the newest-version JSON can lag the live Worker.
+    - Effort: Medium.
+- **Left out:**
+  - A weekly build only: a new computer then starts from a release up to a week old, which breaks "the newest release".
+  - A build on each server: each server then needs about an hour and the downloads of the template before its first build.
+  - A build of the base in the deploy before the Worker goes live: it closes the time gap. But each fix then goes live 15 to 25 minutes later, which fails this goal. It also adds a gate to the deploy.
+- **Wider fix:** B. It removes the large artifact from most deploys, and no first build waits for a base of the live release. D is the wider fix for a base that fails to publish, whatever ended the first attempt.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/deploy-build-code-reaches-signing-key.md` changes the same code. A and D add a workflow that holds the release signing key, so the fix of that item must then cover that workflow too.
+- **Recommendation:** B. It removes the large artifact from most deploys and closes the time gap. No first build on an own computer exists yet that the change could break. The first recommendation was A, before the time gap was known. A keeps the rule in force with a small change, but it leaves the time gap open.
+- **Action:** ask the user, because no option is clearly best. A keeps a large artifact for each deploy and the time gap. B changes a protocol rule and the design of the first build.

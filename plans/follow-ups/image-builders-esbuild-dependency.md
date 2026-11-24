@@ -1,0 +1,33 @@
+# Image builders load an undeclared esbuild
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, found during review round 1 of that branch.
+- **Location:** `image/computer/build-base.mjs:9`, `image/e2b/build-template.mjs:9`, `package.json`, `.github/workflows/deploy.yml:161`, `image/package-system.sh:11`
+- **Reason:** Every caller finds esbuild today, because the deploy installs both package sets, and the fix changes root dependencies that this branch does not touch.
+
+- **Source:** Implementation. **Category:** Code structure.
+- **Terms:**
+  - **esbuild:** the JavaScript bundler with which the image builders bundle their TypeScript before they run it.
+- **Background:**
+  - `image/computer/build-base.mjs` and `image/e2b/build-template.mjs` bundle their TypeScript with esbuild, and then they run it. At line 9, both make their `require` from `runner/package.json`.
+  - Neither `runner/package.json` nor the root `package.json` names esbuild.
+  - `runner/sdk-helper/package.json` names esbuild 0.28.2 as a dev dependency. A `require` from `runner/` does not look in `runner/sdk-helper/node_modules`.
+  - So Node finds esbuild in the root `node_modules`. It is there only because other packages depend on it. On 24 November 2026, `npm ls esbuild` showed esbuild 0.28.2 under `@cloudflare/vite-plugin`, `@mokly/mokly`, `vite`, and `wrangler`.
+  - Two more callers use the same root copy through `npx --no-install esbuild`: the release build step at `.github/workflows/deploy.yml:161`, and the three bundles at `image/package-system.sh:11-13`.
+  - `image/live-check.mjs` loads esbuild from `runner/sdk-helper/package.json`, which names it.
+  - The deploy jobs run `npm ci` and `npm ci --prefix runner`, so every caller works today.
+  - The docs differ. `image/developer-scripts.md:12` asks for `npm ci --prefix runner` before the image scripts. `image/e2b/README.md:16` asks for the runner packages. `image/developer-scripts.md:177` and `image/computer/README.md:191` ask for `npm ci`.
+  - When `build-template.mjs` fails, its error text says "Install the runner packages and check the image scripts."
+- **Problem:** The builders depend on an esbuild that no package that they load from declares. A dependency update of vite, wrangler, or Mokly that drops or moves esbuild breaks both builders, the release build of the deploy, and `image/package-system.sh`. A developer who follows the runner instructions alone gets an esbuild error with a misleading message.
+- **Impact if no action:** A dependency update can break the deploy and the image builders, with an error that names the wrong packages.
+- **Root question:** Where do the image builders and the deploy get esbuild from?
+- **Options:**
+  - **A.** Correct the docs and the error text. Say that the builders need the root `npm ci`, at `image/developer-scripts.md:12`, at `image/e2b/README.md:16`, and in `build-template.mjs`. The builders still depend on a dependency of other packages. Effort: Small.
+  - **B.** Add esbuild as a direct dev dependency of `runner/package.json`. The runner then installs one more copy of esbuild, which must stay at the version of the others. The deploy and `image/package-system.sh` still use the root copy. Effort: Small.
+  - **C.** Add esbuild 0.28.2 as a direct dev dependency of the root `package.json`, and load it from the root in both builders. Then the builders, the release build of the deploy, and `image/package-system.sh` all use a declared dependency. Correct the docs and the error text as in A. Effort: Small.
+- **Left out:** Running the TypeScript with the type stripping of Node 24, with no bundler: the builders import Worker files whose imports have no file extension. The ES module loader of Node does not resolve such imports.
+- **Wider fix:** C. One declared dependency then serves every caller of esbuild in the root.
+- **Previous examples:** `image/e2b/build-template.mjs` added the `require` from `runner/package.json` in commit `507ee23f6` of 19 November 2026. `image/computer/build-base.mjs` copied it in commit `8b65a5f04`.
+- **Recommendation:** C. It gives every caller one declared dependency, at the cost of the doc fix.
+- **Action:** fix after merge, apply C, because every caller works today, and the fix changes the root dependencies outside the files of the branch.

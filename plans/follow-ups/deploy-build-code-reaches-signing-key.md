@@ -1,0 +1,47 @@
+# Deploy build code runs before the signing key
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** Medium. **Harder later:** Yes.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 1, a problem that the finding check of finding 51 found. It covers the `deploy` job, which the primary branch already had, and the new `container-base` job.
+- **Location:** `.github/workflows/deploy.yml:131`, `.github/workflows/deploy.yml:186`, `.github/workflows/deploy.yml:599`, `.github/workflows/deploy.yml:651`
+- **Reason:** The `deploy` job had this pattern on the primary branch before this change, and the fix restructures the jobs that deploy production.
+
+- **Source:** Review. **Category:** Security.
+- **Terms:**
+  - **Release signing key:** the Ed25519 private key, in PKCS#8 PEM, in the secret `CONDUCTIVE_RELEASE_SIGNING_KEY` of the GitHub environment `production`, which signs each release.
+  - **Deploy token:** the Cloudflare API token in the secret `CLOUDFLARE_API_TOKEN`, which deploys the Worker and writes the release bucket `conductive-runner`.
+  - **Build code:** code from outside the repository that a job runs, such as npm package scripts, Cargo build scripts, and third-party GitHub actions.
+- **Background:**
+  - An own computer is a Linux server of an org that runs its workspaces, and it installs each new release by itself.
+  - Own computer decision 4 B, of 22 November 2026, signs each release. So a leak of the deploy token cannot reach the servers of the orgs (`docs/protocol/sandbox-software.md:48-54`). This holds only while the token and the key do not leak together.
+  - The `deploy` job of `.github/workflows/deploy.yml` runs `actions/checkout@v7`, `actions/setup-node@v7`, `npm ci` and `npm ci --prefix runner`, `dtolnay/rust-toolchain@stable`, `Swatinem/rust-cache@v2`, `npm run build`, and the release build with `cargo`.
+  - Only after these steps does its step "Sign and package Conductive release" get the key. That step runs `target/debug/cnd-release`, a program that the same job built. Later steps of the job get the deploy token.
+  - The `container-base` job follows the same pattern: `npm ci`, the same actions, `cargo build -p cnd-release`, and the image build. Then its step "Sign the container base image" gets the key and runs `target/debug/cnd-release`. Its next step gets the deploy token.
+  - Each third-party action of the workflow is pinned by a tag or a branch, which its owner can move. `stable` of `dtolnay/rust-toolchain` is a branch. Only `.github/workflows/release.yml:34` pins an action by its commit.
+  - All steps of a job run on one runner as one user. A process that an earlier step starts can keep running until the job ends.
+  - A signature is the raw 64 bytes of Ed25519 over the manifest bytes (`crates/cnd-release/src/signature.rs`). OpenSSL 3 of the runner image `ubuntu-24.04` makes the same signature with `openssl pkeyutl -sign -rawin`, because Ed25519 signatures are deterministic.
+  - The release signing key pair does not exist yet. The admin makes it before the own computers change merges into `main`, and the deploy on `main` signs no release yet.
+- **Problem:** A compromised npm package, Cargo crate, or action in either job runs before the step that gets the key. It can change `target/debug/cnd-release`, which that step then runs with the key. It can also leave a process that reads the environment of the later steps. So one compromised dependency can take both the key and the deploy token.
+- **Impact if no action:** With both secrets, an attacker can sign a release and publish it, and each own computer then installs it. That defeats own computer decision 4 B.
+- **Root question:** How does the deploy keep the release signing key away from code that the repository does not control?
+- **Options:**
+  - **A.** Change nothing, and record the exposure as a risk in the protocol. Own computer decision 4 B then holds only for a leak of the token outside a deploy run. Effort: Small.
+  - **B.** Pin each third-party action by its full commit, as `.github/workflows/release.yml` does for `release-please-action`. This closes only the path through actions. npm package scripts and Cargo build scripts still run before the key. Each update of an action needs a new pin. Effort: Small.
+  - **C.** Sign in a separate job that runs no build code.
+    - The `deploy` and `container-base` jobs make the archives and the unsigned manifests. They pass only the small manifests to the signing job as workflow artifacts, and they get the signatures back.
+    - The signing job checks out nothing. It uses only tools of the runner image: `gh` for the artifacts, `jq` and `sha256sum` for the files, and `openssl pkeyutl -sign -rawin` for each signature.
+    - The upload order stays: archives and signatures first, manifests last.
+    - Cost: `cnd-release package` and `cnd-release container-base` need a mode that writes an unsigned manifest. A test must show that the program accepts a signature that OpenSSL made.
+    - A compromised build can still get one bad release signed, because the signing job signs what the build made. But it cannot take the key for later use.
+    - Effort: Medium.
+  - **D.** Keep the key in a cloud key service, which the signing job reaches through GitHub OIDC, so that no job holds the key bytes. Cost: new infrastructure and credentials. The protocol sentence "The signing key is a secret of the deploy" changes. Effort: Large.
+- **Left out:**
+  - `npm ci --ignore-scripts`: it fails the goal. Cargo build scripts and the app build still run before the key, and some packages, such as esbuild, need their install scripts.
+  - Reproducible builds that a second builder checks: they prove the build, not the safety of the key. They also need a deterministic build of every part.
+- **Wider fix:** C. One signing job that runs no build code keeps the key out of every build job. This also holds for a job that a later change adds.
+- **Previous examples:** The Mac app signing job in `.github/workflows/desktop-sign.yml` also runs `npm ci` and the build first. Only then does a step get the Apple signing secrets of the environment `desktop-release`.
+- **Related:**
+  - `plans/follow-ups/own-computer-first-install-trust.md`: the same rule. Its options B, C, and E rely on the release signing key staying secret.
+  - `plans/follow-ups/own-computer-base-image-cost.md`: the same code. Its options A and D add a workflow that holds the signing key, so the fix of this item must cover those workflows too.
+- **Recommendation:** C. It keeps the key in a job that runs only the tools of the runner image, so no dependency of the build can copy it. Do it before the admin makes the key, so that the key never reaches a job that runs build code. D keeps the key bytes out of every job, but it needs new infrastructure.
+- **Action:** fix after merge, apply C, because the pattern was on the primary branch before this change, and the fix restructures the production deploy.

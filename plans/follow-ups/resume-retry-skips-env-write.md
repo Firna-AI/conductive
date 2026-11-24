@@ -1,0 +1,35 @@
+# A resume retry can skip the env write
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 1, a problem outside the scope that the finding check of finding 7 found.
+- **Location:** `advanceStartMachine` in `worker/lifecycle/start-machine.ts:119`, `resume` in `worker/sandbox/e2b/client.ts:71`
+- **Reason:** The start flow and the E2B provider are the cloud path of the primary branch, which this change does not touch.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Start job:** the saved state of one workspace start in its workspace object, whose `machine` phase makes or resumes the sandbox.
+  - **Env write:** the step that writes `/run/ascii-secrets/env.sh` in the sandbox, with the env vars of the org and the tokens of this run.
+  - **Machine token:** the token with which the host program of a sandbox opens its host connection, new at each create and at each resume.
+  - **Machine object:** the Durable Object of each machine, which ends its host connection and keeps the digest of its machine token.
+- **Background:**
+  - In the `machine` phase, `advanceStartMachine` in `worker/lifecycle/start-machine.ts` reads the state of the sandbox. It calls `provider.resume` only when the state is `stopped` (line 119).
+  - Before the resume, it gets a new machine token from `machineEnvironment`. The new token replaces the old one, so the machine object then accepts only the new token (`docs/protocol/host-connection.md:63-64`).
+  - On E2B, `resume` in `worker/sandbox/e2b/client.ts:71-75` first resumes the sandbox, and then it writes the env with `writeEnvironment`. The protocol names this env write as a provider call of its own (`docs/protocol/host-connection.md:36-39`).
+  - After a temporary provider error, such as `unavailable` or `rate_limited`, the start tries the same phase again after a back-off. It tries for up to 10 minutes (`worker/lifecycle/provider-retry.ts`).
+  - Own computers do not have this gap. Since a fix on the branch `calummoore/own-computers-milestone-11-host-program-3jbp`, a computer start that started a stopped container stops it again when a later step fails.
+- **Problem:** When the env write of an E2B resume fails with a temporary error, the sandbox already runs. The retry finds it running, so it skips `provider.resume` and the env write, and goes on to the `ready` phase. The sandbox then has the env file of its previous run, or none, and no valid machine token.
+- **Impact if no action:** From the code, the host program cannot open its host connection, so the Worker cannot run the next start steps on the sandbox. The start can then fail at its time limit, and agents can get the env vars of the previous run. Nobody reproduced this.
+- **Root question:** How does a start make sure that a resumed sandbox has the env of this run before the start goes on?
+- **Options:**
+  - **A.** Make the E2B `resume` all or nothing. When its env write fails, it stops the sandbox again before it returns the error. The retry then finds the sandbox `stopped`, and it resumes the sandbox with a new env write. This is the rule that own computers follow.
+    - Cost: a stop adds some seconds to a rare retry.
+    - A call that the Worker loses between the two steps, for example at a restart of the workspace object, still leaves the gap.
+    - Effort: Small.
+  - **B.** Record in the start job that this start resumes the sandbox, before the call. At a retry that finds the sandbox running with that record, write the env again through a new provider method, and then go on. This also covers a lost call. Cost: a new method of the provider interface, which only E2B needs. Effort: Medium.
+  - **C.** Write the env through the same new method at each pass of the `machine` phase that finds a running E2B sandbox, with no record. Cost: it also rewrites the env of a sandbox that ran before the start, with a new machine token. Effort: Medium.
+- **Left out:** A retry of the env write inside `resume`, alone: it fails the goal. A failure that outlasts the retries still ends with a running sandbox and no env write.
+- **Wider fix:** A. It closes the gap at the provider boundary. Each caller of the E2B `resume` then gets a stopped sandbox or the env of this run. Other callers are `worker/lifecycle/disk-retention.ts` and `worker/lifecycle/archive-maintenance.ts`.
+- **Previous examples:** The computer program of own computers had the same gap: a failed env write left a resumed container running. The branch `calummoore/own-computers-milestone-11-host-program-3jbp` fixed it with a stop of that container (`start` in `crates/cnd-computer/src/operations/changes.rs:78`).
+- **Recommendation:** A. It is the smallest change that gives `running` one meaning for each caller of the E2B `resume`, the same meaning as on own computers.
+- **Action:** fix after merge, apply A, because the problem is on the cloud path of the primary branch, outside this change, and its likelihood is Rare.

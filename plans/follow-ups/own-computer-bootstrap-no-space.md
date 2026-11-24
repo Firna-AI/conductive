@@ -1,0 +1,44 @@
+# The bootstrap hides a full disk
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 1, finding 10, with option C of its finding check.
+- **Location:** `Dispatcher::bootstrap` in `crates/cnd-computer/src/operations/dispatch.rs:134`, `classify` in `crates/cnd-computer/src/engine/podman.rs:212`, `crates/cnd-computer/README.md:51`
+- **Reason:** A full disk during a bootstrap is rare, the harm is a generic message, and the error code `no_space` that the fix needs already exists.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Bootstrap:** the fixed container operation that installs the release of the Worker in a running container and restarts its host service.
+  - **`podman exec`:** the Podman command that runs a command inside a running container, and that exits with status 125 when Podman itself fails.
+  - **Engine:** the `Engine` trait of the computer crate in `crates/cnd-computer/src/engine/ports.rs`, which `Podman` implements with Podman commands.
+- **Background:**
+  - The computer protocol has the error code `no_space`. The Worker maps it to HTTP 507 with the text "The own computer is out of space." (`worker/own-computers/errors.ts:51`).
+  - `classify` in `crates/cnd-computer/src/engine/podman.rs` reads the error text of a failed Podman command. It maps "no space left on device" and "disk quota exceeded" to `NoSpace`. It maps text about a missing or an existing container or image to `NotFound` or `AlreadyExists`.
+  - The other operations map engine errors with the shared function `engine` in `crates/cnd-computer/src/operations/dispatch.rs`, which keeps `no_space`.
+  - The bootstrap runs two scripts with `podman exec`. One copies the program into the container. The other installs the release and restarts the host service.
+  - The program `conductive` prints an internal error with its source chain. So a full disk prints "No space left on device (os error 28)". The installer that `update apply` runs passes its standard error on.
+  - The README of the crate says that a storage exhaustion error returns `no_space`. Its `container.bootstrap` row lists only release errors or `internal` (`crates/cnd-computer/README.md:51-55`).
+- **Problem:** `Dispatcher::bootstrap` maps each failure of the bootstrap in the engine to `internal`. So a full disk during the install in the container gives the same reply as an unexpected failure.
+- **Impact if no action:** The user gets a generic retry message when the server needs more free space.
+- **Root question:** How does the bootstrap tell the user that storage stopped the install?
+- **Options:**
+  - **A.** Return `no_space` for the typed storage error in `Dispatcher::bootstrap`, and keep `internal` for the other failures of the commands in the container. Add the storage error to the bootstrap test. Effort: Small.
+  - **B.** Give each engine method its own failure type, with one mapping of storage exhaustion for all methods. This changes the `Engine` trait and its tests. Effort: Medium.
+  - **C.** Put the rule in the engine.
+    - For a failed `podman exec`, map the storage text to `NoSpace`, and map other output of the command in the container to `Failed`. This covers the env write, which writes the env file in the container, and both bootstrap steps.
+    - Keep the full classification only for the errors of Podman itself, which `podman exec` reports with exit status 125.
+    - The dispatcher then maps the bootstrap with the shared `engine` function, as every other operation does.
+    - Cost: it depends on the documented exit status 125 of Podman. A command in the container that exits with 125 is then read as a Podman error.
+    - The env write can then no longer turn text from inside the container into `not_found` or `already_exists`.
+    - Move the case that hides failures in the container from the test `bootstraps_the_requested_release_and_hides_in_container_failures` in `crates/cnd-computer/src/operations/_tests_/release_tests.rs` to the Podman stub tests in `crates/cnd-computer/tests/podman_tests.rs`.
+    - Effort: Small.
+  - **D.** Give storage exhaustion a fixed exit status. The updater exits with its own status when its error chain holds `StorageFull` or `QuotaExceeded`. The bootstrap script passes that status on, and the engine maps it to `NoSpace` with no text. Cost: a new contract between `cnd-cli` and `cnd-computer`, which covers only the writes of the updater. Effort: Medium.
+  - **E.** After a failed bootstrap, measure the free space of the Podman storage on the server. Reply `no_space` below a fixed floor. Cost: the floor is a guess, so an unrelated failure on a nearly full disk also replies `no_space`. It misses a user quota, and the crate has no call for free space yet. Effort: Medium.
+- **Left out:**
+  - Forwarding each Podman classification: text from inside the container can give a wrong `not_found` or `already_exists`. C forwards only the errors of Podman itself.
+  - A free-space check that refuses the bootstrap before the install: the updater skips the parts that are on disk. So the needed space is unknown in advance. A refusal by an estimate would block bootstraps that fit, against the rule that the bootstrap runs at each start (`docs/protocol/host-connection.md:142`). It is also a new rejection, which needs the user.
+- **Wider fix:** C. The rule lives in the engine, which knows which output comes from inside the container, and the `Engine` trait does not change. So a later operation inside the container cannot lose `no_space` again.
+- **Previous examples:** The create test `a_failure_after_create_removes_the_container_and_returns_the_failure` already keeps `no_space` through the cleanup (`crates/cnd-computer/src/operations/_tests_/dispatch_tests.rs`).
+- **Related:** `plans/follow-ups/own-computer-bootstrap-newer-release.md` changes the same code. Under its option B, a newer active release stays a bootstrap failure, and this item sets its error code. Under its option F, that state succeeds. The two changes do not conflict.
+- **Recommendation:** C. It has the effort of A and removes the special case from the dispatcher. Test a command that prints the storage text, and a command that prints "no such container" with exit status 1. Also update the `container.bootstrap` row of the operation table in `crates/cnd-computer/README.md`.
+- **Action:** fix after merge, apply C, because a full disk during a bootstrap is rare, the severity is Medium, and the error code already exists.

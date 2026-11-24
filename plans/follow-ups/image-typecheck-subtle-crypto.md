@@ -1,0 +1,34 @@
+# The image typecheck fails on timingSafeEqual
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 1, a problem outside the scope.
+- **Location:** `image/tsconfig.json:5`, `worker/machines/authorization.ts:54`, `image/live-stream.ts:32`, `image/developer-scripts.md:189`
+- **Reason:** The error is also on the primary branch `calummoore/external-mac-linux-server-cloud-j9ih`, so it is not part of this change.
+
+- **Source:** Review. **Category:** Code structure.
+- **Terms:**
+  - **Image typecheck:** the command `npx tsc -p image/tsconfig.json`, which checks the TypeScript of `image/` and which `npm run typecheck` does not run.
+  - **Generated Worker types:** the file `.wrangler/worker-configuration.d.ts`, which `npm run types` writes with Wrangler, and which declares the Workers runtime.
+- **Background:**
+  - `image/developer-scripts.md:189-190` says that `npm run typecheck` does not check the TypeScript files of `image/`. It tells a developer to check them with `npx tsc -p image/tsconfig.json`.
+  - `image/tsconfig.json` sets `lib` to `ES2023` and `DOM`, adds the Node types, and includes the generated Worker types.
+  - The files of `image/` import Worker code, so the check also reads Worker files, such as `worker/machines/authorization.ts`.
+  - `equalDigest` in `worker/machines/authorization.ts:53-58` calls `crypto.subtle.timingSafeEqual`. The Workers runtime has this method, and the generated Worker types declare it. The DOM library has no such method.
+  - `npm run typecheck` checks Worker code with `tsconfig.worker.json` and `tsconfig.worker-tests.json`. Their `lib` is `ES2023` with no DOM, so the Workers type applies, and the check passes.
+  - Two scratch checks on 24 November 2026 changed only the `lib` of the image config: to `["ES2023"]`, and to `["ES2023", "ESNext.Disposable"]`. Both removed this error.
+  - Both scratch checks gave a new error at `image/live-stream.ts:32`: TS2769. The `URL` of the Workers types does not match the `URL` type of the Node types that the `ws` package expects.
+- **Problem:** `npx tsc -p image/tsconfig.json` fails with `worker/machines/authorization.ts(54,24): error TS2339: Property 'timingSafeEqual' does not exist on type 'SubtleCrypto'.` The config loads the DOM library and the generated Worker types, and the DOM type of `crypto.subtle` applies.
+- **Impact if no action:** The check that the developer docs name always fails. So a developer cannot see new type errors in the files of `image/`.
+- **Root question:** How does the image typecheck read Worker code with the types of the Workers runtime?
+- **Options:**
+  - **A.** Change `image/tsconfig.json` so that the Workers type of `crypto` applies, for example with no `DOM` in `lib`. Then also fix the `URL` type at `image/live-stream.ts:32`, for example with a string address for `ws`. Effort: Small.
+  - **B.** Change the Worker code so that it compiles under both configs, for example with a comparison in constant time that does not call `timingSafeEqual`. Production code then changes for a developer check. A hand-written comparison is also less sure to take constant time than the method of the runtime. Effort: Small.
+  - **C.** Add the image typecheck to `npm run typecheck`, together with A or B. This adds a gate, which the user decides. Effort: Small.
+- **Left out:**
+  - A cast to the Workers type at `worker/machines/authorization.ts:54`: the `typescript` skill avoids casts, and A gives the right type with no cast.
+  - Leaving the Worker files out of the image check: the files of `image/` import them, so TypeScript reads them anyway.
+- **Wider fix:** C, a detection fix. The gate then catches the next break of this config. It adds a gate, so the user decides.
+- **Previous examples:** None found.
+- **Recommendation:** A. It fixes the config that applies the wrong type, and the Worker code stays as the runtime expects it.
+- **Action:** fix after merge, apply A, because the error is also on the primary branch, so a separate branch fixes it.
