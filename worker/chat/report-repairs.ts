@@ -17,9 +17,15 @@ const PREFIX = 'chat:v1:report-repair:'
 /** A kind keeps one command identity until a complete replacement is stored. */
 export class ReportRepairs {
   private readonly data: ChatData
+  private readonly ended:
+    ((kind: RunnerReportKind) => Promise<void>) | undefined
 
-  constructor(data: ChatData) {
+  constructor(
+    data: ChatData,
+    ended?: (kind: RunnerReportKind) => Promise<void>,
+  ) {
     this.data = data
+    this.ended = ended
   }
 
   get(kind: RunnerReportKind): Promise<StoredReportRepair | undefined> {
@@ -40,6 +46,7 @@ export class ReportRepairs {
 
   async remove(kind: RunnerReportKind): Promise<void> {
     await this.data.delete(`${PREFIX}${kind}`)
+    await this.ended?.(kind)
   }
 
   async confirmedThrough(streamId: string, cursor: number): Promise<number> {

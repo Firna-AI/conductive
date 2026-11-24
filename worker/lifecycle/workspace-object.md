@@ -115,7 +115,11 @@ Browser responses keep the plain string log of the shared contract.
 The `fetch` of the class opens the workspace event socket at
 `workspaceEventsPath` of `src/shared/events.ts`. Forward the browser's
 upgrade request without changes, because the object runs the browser gate
-itself. The socket sends the stored history first, then each new event.
+itself. The socket sends the stored history after the requested event
+number first, then each new event. The workspace GET gives a seed and its
+cutoff for a new workspace stream. Older apps can request a replay from
+event 0. [Workspace events](../../docs/protocol/workspace-events.md) gives
+the read and replay rules.
 
 An admitted failed create keeps its workspace and normal event socket.
 Every current member can read its chat, queued messages, and saved cause.

@@ -4,6 +4,11 @@ import { createHarness, type TestHarness } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import { startTurn } from './turn-lifecycle.test-support'
 import {
+  failure,
+  noFailures,
+  readState,
+} from './workspace-read-state.test-support'
+import {
   fullReport,
   oversizedReport,
   refreshCommands,
@@ -131,5 +136,118 @@ it('delivers repair commands during an active turn and ignores nonreplaceable re
   expect((await refusedEvents(fixture)).at(-1)).toMatchObject({
     runnerEventType: 'files.snapshot',
     repairFailed: true,
+  })
+})
+
+it('ends only the matching failure on a full report or an unchanged name report', async () => {
+  const fixture = await createChatFixture(harness)
+  await fixture.env.DB.prepare('UPDATE workspaces SET name = ? WHERE id = ?')
+    .bind('Existing name', WORKSPACE_ID)
+    .run()
+  const read = () => readState(fixture.chat.store, WORKSPACE_ID)
+  await read()
+  const runner = await fixture.connect()
+  const kinds = [
+    'workspace.title',
+    'start.updated',
+    'files.snapshot',
+    'changes.updated',
+  ] as const
+  for (const kind of kinds) {
+    runner.emit(oversizedReport(kind))
+    runner.emit(oversizedReport(kind, 2))
+  }
+  await fixture.drain()
+  const open = {
+    ...noFailures,
+    'workspace.title': failure(
+      'workspace.title',
+      2,
+      1_800_000_000_000,
+      2,
+      'fake-stream-1',
+      'too_large',
+    ),
+    'start.updated': failure(
+      'start.updated',
+      4,
+      1_800_000_000_000,
+      4,
+      'fake-stream-1',
+      'too_large',
+    ),
+    'files.snapshot': failure(
+      'files.snapshot',
+      6,
+      1_800_000_000_000,
+      6,
+      'fake-stream-1',
+      'too_large',
+    ),
+    'changes.updated': failure(
+      'changes.updated',
+      8,
+      1_800_000_000_000,
+      8,
+      'fake-stream-1',
+      'too_large',
+    ),
+  }
+  expect((await read()).state.failures).toEqual(open)
+  runner.emit(fullReport('files.snapshot', 3))
+  await fixture.drain()
+  expect(await read()).toMatchObject({
+    eventNumber: 9,
+    state: { failures: { ...open, 'files.snapshot': null } },
+  })
+  runner.emit(fullReport('workspace.title', 3))
+  await fixture.drain()
+  const remaining = { ...open, 'files.snapshot': null, 'workspace.title': null }
+  expect(await read()).toMatchObject({
+    eventNumber: 9,
+    state: { failures: remaining },
+  })
+  runner.emit(oversizedReport('workspace.title', 4))
+  runner.emit(oversizedReport('workspace.title', 5))
+  await fixture.drain()
+  expect(await read()).toMatchObject({
+    eventNumber: 11,
+    state: {
+      failures: {
+        ...remaining,
+        'workspace.title': failure(
+          'workspace.title',
+          11,
+          1_800_000_000_000,
+          12,
+          'fake-stream-1',
+          'too_large',
+        ),
+      },
+    },
+  })
+})
+
+it('keeps null skill lists and no notice when a skills repair fails', async () => {
+  const fixture = await createChatFixture(harness)
+  const read = () => readState(fixture.chat.store, WORKSPACE_ID)
+  await read()
+  const runner = await fixture.connect()
+  runner.emit(fullReport('skills.updated'))
+  runner.emit(oversizedReport('skills.updated', 2))
+  runner.emit(oversizedReport('skills.updated', 3))
+  await fixture.drain()
+  expect(await read()).toEqual({
+    eventNumber: 4,
+    state: {
+      ports: null,
+      skills: {
+        eventNumber: 4,
+        occurredAt: 1_800_000_000_000,
+        event: { type: 'skills.updated', skills: null },
+      },
+      repositoryId: null,
+      failures: noFailures,
+    },
   })
 })

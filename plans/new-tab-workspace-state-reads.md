@@ -566,57 +566,57 @@ state for older workspaces and after a rollback, before its reads answer.
 The GET reply of the workspace adds the seed. The app ignores the new
 member, so the product works as before.
 
-- [ ] Add the read types of call 1 to `src/shared/`. Add the optional
+- [x] Add the read types of call 1 to `src/shared/`. Add the optional
       `seed` to the ordered workspace reply type. Keep each reader of a
       reply without `seed` working.
-- [ ] Add the read-state projection of calls 2 and 3 to
+- [x] Add the read-state projection of calls 2 and 3 to
       `ChatTransaction.emit` and `ReportRepairs.remove`, under a new
       versioned `chat:v1:` key. Keep the memory plan's rule that a file
       event is not copied, and keep the update beside the summary update.
-- [ ] Add the continuity mark of call 5 to `ChatTransaction.finish` and
+- [x] Add the continuity mark of call 5 to `ChatTransaction.finish` and
       `ChatMetadata` in `worker/chat/store-metadata.ts`. Keep the record
       readable by the previous Worker.
-- [ ] Add the shared recovery of call 6. Run each page in its own queued
+- [x] Add the shared recovery of call 6. Run each page in its own queued
       task, with a stored continuation and a fixed-size accumulator.
-- [ ] Confirm that each full file report removes the repair record of its
+- [x] Confirm that each full file report removes the repair record of its
       kind in its transaction. The recovery skips file descriptors only
       under this rule. Add the case to `runner-repairs.test.ts` when no
       test covers it.
-- [ ] Add the seed to the GET reply of call 7. The reply waits for the
+- [x] Add the seed to the GET reply of call 7. The reply waits for the
       recovery outside the chat queue when one must run. Keep Resume and
       the other ordered replies as they are.
-- [ ] Add tests at the lowest level that fails without the change. Use
+- [x] Add tests at the lowest level that fails without the change. Use
       `worker/chat/runner-repairs.test.ts`, `worker/chat/runner-ports.test.ts`,
       a new unit test of the read state beside
       `worker/chat/history-session-index.test.ts`, and
       `worker/chat/integration/workspace-resume-response.test.ts`.
       `worker/chat/integration/chat-read-state.test.ts` tests the read marks
       of members, so it is not the home of these cases:
-  - [ ] The port event, the skills event, and each failure match the
+  - [x] The port event, the skills event, and each failure match the
         cutoff after a commit, a rolled-back transaction, a crash, and an
         eviction.
-  - [ ] A failed skills repair gives the seed its `skills.updated` event
+  - [x] A failed skills repair gives the seed its `skills.updated` event
         with null lists, and no notice.
-  - [ ] A resent runner event adds no second failure.
-  - [ ] A full report ends only the window of its kind.
-  - [ ] A name report that changes nothing ends the name notice.
-  - [ ] A refusal after the null list of a stop shows its own first time.
-  - [ ] A recovery of an older workspace gives the first time of each open
+  - [x] A resent runner event adds no second failure.
+  - [x] A full report ends only the window of its kind.
+  - [x] A name report that changes nothing ends the name notice.
+  - [x] A refusal after the null list of a stop shows its own first time.
+  - [x] A recovery of an older workspace gives the first time of each open
         failure and the newest skills event, and it reads no file chunk.
         Cover file descriptors of 1 MiB and of 4 KiB.
-  - [ ] No storage list of the recovery asks for more than four events.
-  - [ ] A read after a write without the mark waits for the recovery and
+  - [x] No storage list of the recovery asks for more than four events.
+  - [x] A read after a write without the mark waits for the recovery and
         then gives the seed. No reply leaves the seed out.
-  - [ ] A runner receipt commits between two pages of a recovery, and the
+  - [x] A runner receipt commits between two pages of a recovery, and the
         seed includes it.
-  - [ ] An eviction during a recovery resumes from the stored page. A write
+  - [x] An eviction during a recovery resumes from the stored page. A write
         without the mark during a recovery restarts it.
-- [ ] Update `worker/chat/README.md` with its "Skill lists" section,
+- [x] Update `worker/chat/README.md` with its "Skill lists" section,
       `worker/chat/report-repairs.md`, `worker/chat/history.md`, and the
       socket text of `worker/lifecycle/workspace-object.md`.
-- [ ] Update `src/shared/README.md` and each shared contract guide that
+- [x] Update `src/shared/README.md` and each shared contract guide that
       lists the workspace reply or the Files replies, for the new types.
-- [ ] Update the Rules of `worker/app-api/README.md` and the "Browser
+- [x] Update the Rules of `worker/app-api/README.md` and the "Browser
       routes" of `worker/lifecycle/routes.md`, which describe the ordered
       GET and Resume replies.
 

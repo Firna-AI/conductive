@@ -75,9 +75,10 @@ gives their rules.
   the message, in the same transaction.
 - `readChatWorkspaceSummary()` returns the last event number, the last
   event number with visible output, and whether a dispatched turn runs.
-- `readChatWorkspaceResponse(orgId, workspaceId, appOrigin)` returns the reply of a
-  workspace read or Resume and that summary, as
-  [Browser routes](../lifecycle/README.md#browser-routes) says.
+- `readChatWorkspaceResponse(orgId, workspaceId, appOrigin, includeSeed)`
+  returns the ordered workspace reply and its chat summary. GET sets
+  `includeSeed`. [Browser routes](../lifecycle/routes.md#browser-routes)
+  gives both reply shapes.
 - `writeAgentSession(input)` accepts trusted tool requests after exact-object, org, archive, and current-sender checks inside the queue.
   The [tools README](../tools/README.md#session-writes) gives its machine routes and resume behavior.
 - `manageAgentSession(input, origin)` renames, closes, or stops a session for the stored sender of a tool call.
@@ -197,6 +198,9 @@ of the tab and runner sockets across a wake.
 publisher, the event numbers, the runner streams, and the order of the
 runner commands.
 
+[The workspace read state](history.md#the-workspace-read-state) gives the
+stored state and the recovery that the workspace GET uses.
+
 ## Retries
 
 [Retries](retries.md) gives the stored retry state, and the rules of the
@@ -241,10 +245,11 @@ No origin is saved in the chat records or the history.
 
 The chat backend keeps the latest skill lists of the workspace, as
 [The list in the workspace](../../docs/protocol/skill-mentions.md#the-list-in-the-workspace)
-says. The lists are the latest `skills.updated` event of the history, so
-each tab gets them, also while the cloud computer sleeps. A runner report
-passes the output filter first. That filter leaves out each skill whose
-name held a secret value. Then `skill-reports.ts` cuts each description.
+says. The workspace seed carries the latest `skills.updated` event at its
+cutoff, also while the cloud computer sleeps. The history also keeps that
+event for socket replay. A runner report passes the output filter first.
+That filter leaves out each skill whose name held a secret value.
+Then `skill-reports.ts` cuts each description.
 `skill-state.ts` stores the result, and it publishes `skills: null` when the
 list is unavailable. [Chat backend key code](key-code.md) gives both files.
 
