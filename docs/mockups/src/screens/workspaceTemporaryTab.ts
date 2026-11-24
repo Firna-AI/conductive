@@ -32,6 +32,7 @@ const pressedTabs: ReadonlySet<WorkspaceState['tab']> = new Set([
   'skill-gone',
   'skill-too-large',
   'skill-older-software',
+  'skill-failed',
 ])
 
 /** The state draws a temporary tab: the file, diff, or skill of its tab. */

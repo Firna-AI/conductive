@@ -8,9 +8,9 @@ import {
 export const skillTabNotices = defineScreen({
   title: 'Notices of the skill tab',
   description:
-    'The read of the text runs. A spinner and "Opening the skill" take the place of the text. The header already shows the name and the agent, which the tab knows, and the description, from the list of skills that the workspace keeps. So it does not move when the text comes. The saved states show the other notices: a skill that the list no longer holds, a text over the read limit, a stopped cloud computer, and older cloud computer software.',
+    'The read of the text runs. A spinner and "Opening the skill" take the place of the text. The header already shows the name and the agent, which the tab knows, and the description, from the list of skills that the workspace keeps. So it does not move when the text comes. The saved states show the other notices: a skill that the list no longer holds, a text over the read limit, older cloud computer software, and a read that failed. A stopped cloud computer has its own page, app/skill-mentions/tab/stopped.',
   rationale:
-    'The design calls of the skill tabs plan give one notice in place of the text for each case, and no notice names the provider of the sandbox. The tab reads the text each time it shows, and again after each skills report while it shows, so a change of the name or the description of the skill shows without a reload.',
+    'The design calls of the skill tabs plan give one notice in place of the text for each case, and no notice names the provider of the sandbox. The tab reads the text each time it shows, and again after each skills report while it shows, so a change of the name or the description of the skill shows without a reload. A stopped cloud computer shows the state of the sandbox in place of the text, as a file tab does, so it has its own page.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: {
@@ -43,15 +43,6 @@ export const skillTabNotices = defineScreen({
       props: { tab: 'skill-too-large' },
     },
     {
-      slug: 'stopped',
-      title: 'Cloud computer stopped',
-      description:
-        'The cloud computer stopped while Cal read the chat. The press on the chip opened the skill tab, and the open started the cloud computer again, as the open of a file tab does. The header of the workspace shows Starting. In place of the text, the tab waits for the start, with no Resume, also on a phone. When the start ends, the tab reads the text. When the cloud computer stops while the tab shows the text, the text stays, as a file stays in its tab.',
-      rationale:
-        'A stopped cloud computer acts for a skill tab as for a file tab, from decision 247: the open of the tab asks for the text, so it starts the cloud computer, and a Resume for a moment would be noise. A tab without text when the cloud computer stops shows the stopped state with Resume, as a file tab does.',
-      props: { tab: 'skill', sandbox: 'starting' },
-    },
-    {
       slug: 'older-software',
       title: 'Older cloud computer software',
       description:
@@ -59,6 +50,15 @@ export const skillTabNotices = defineScreen({
       rationale:
         'The software of the cloud computer tells the app when it connects whether it can read a skill, so the notice shows at once. Restart installs the newest software, as app/restart shows, and the tab reads the text when the workspace leaves Starting. The words follow the notice of the HTML preview, which asks for the same Restart.',
       props: { tab: 'skill-older-software' },
+    },
+    {
+      slug: 'failed',
+      title: 'Failed read',
+      description:
+        'The read of the text failed for a cause without a notice of its own: the cloud computer could not read the file, its connection dropped, or the server failed. In place of the text, a notice says "This skill didn\'t open", with Try again, which reads the text again. The header keeps the name, the agent, and the description, because the list of skills still holds the skill.',
+      rationale:
+        'A design call of the skill tabs plan of 24 November 2026: every tab has a failure state, and Try again repeats the read. The notice has the look and the words of the failure of a file tab, "This file didn\'t open", with no sentence under its title, because the title names what failed and Try again is the way to recover. The notice of a removed skill would give a wrong cause, and a spinner that keeps reading would never end for a lasting failure.',
+      props: { tab: 'skill-failed' },
     },
   ],
 })

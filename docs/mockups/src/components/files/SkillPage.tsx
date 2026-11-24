@@ -4,6 +4,7 @@ import { useSharedUiTheme } from '@firna/ui/theme'
 import { ChevronLeft } from 'lucide-react'
 import type { Agent } from '../../../../../src/shared/generated/Agent'
 import { SkillIcon } from '../../../../../src/ui/components/chat/SkillChip'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { codeView } from '../../entries/components/files/CodeView.mockup'
 import { markdownView } from '../../entries/components/files/MarkdownView.mockup'
@@ -13,6 +14,7 @@ import {
   skillFileName,
 } from '../../fixtures/skillFiles'
 import { plansSkill } from '../../fixtures/skills'
+import { skillPaths } from '../../skillPaths'
 import { ScreenLink } from '../common/ScreenLink'
 import type { BackLink } from '../layout/Page'
 import { ViewSwitch } from './FilePage'
@@ -24,11 +26,17 @@ import styles from './SkillPage.module.css'
  * What a skill tab shows under its header: the Markdown body in Preview,
  * the whole text in Source, or a notice in place of the text. The notices
  * are the read that runs, a skill that the list no longer holds, a text
- * over the read limit, and software of the cloud computer that cannot read
- * a skill.
+ * over the read limit, software of the cloud computer that cannot read a
+ * skill, and a read that failed for another cause.
  */
 export type SkillTabView =
-  'preview' | 'source' | 'loading' | 'gone' | 'too-large' | 'older-software'
+  | 'preview'
+  | 'source'
+  | 'loading'
+  | 'gone'
+  | 'too-large'
+  | 'older-software'
+  | 'failed'
 
 /** A spinner and one line, while the read of the text runs. */
 function Loading() {
@@ -84,6 +92,24 @@ function SkillBody(props: { view: SkillTabView }) {
           icon="rotate-cw"
           moklyInstance="skill-older-software"
           title={skillTabCopy.olderSoftwareTitle}
+        />
+      )
+    case 'failed':
+      // The failure of a file tab: an alert with Try again, which reads the
+      // text again, so it leads to the skill in Preview.
+      return (
+        <emptyState.Component
+          action={
+            <ScreenLink asChild to={skillPaths.preview}>
+              <actionButton.Component moklyInstance="retry-skill-read">
+                {skillTabCopy.tryAgain}
+              </actionButton.Component>
+            </ScreenLink>
+          }
+          alert
+          icon="circle-alert"
+          moklyInstance="skill-failed"
+          title={skillTabCopy.failedTitle}
         />
       )
   }

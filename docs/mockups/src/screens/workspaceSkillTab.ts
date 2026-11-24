@@ -24,6 +24,8 @@ export function openSkill(state: WorkspaceState): SkillTabView | undefined {
       return 'too-large'
     case 'skill-older-software':
       return 'older-software'
+    case 'skill-failed':
+      return 'failed'
     default:
       return undefined
   }
@@ -37,6 +39,7 @@ const viewPaths: Readonly<Record<SkillTabView, string>> = {
   gone: skillPaths.gone,
   'too-large': skillPaths.tooLarge,
   'older-software': skillPaths.olderSoftware,
+  failed: skillPaths.failed,
 }
 
 /**

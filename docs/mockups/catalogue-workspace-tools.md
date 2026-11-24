@@ -269,9 +269,13 @@ pages:
     Copy path.
   - `app/skill-mentions/tab/notices` has "Opening the skill" while the
     text loads. Its `gone` variant has a skill that the list no longer
-    holds, its `too-large` variant a text over 1 MB, its `stopped` variant
-    the wait while the open starts a stopped cloud computer, and its
-    `older-software` variant the notice that asks for Restart.
+    holds, its `too-large` variant a text over 1 MB, and its
+    `older-software` variant the notice that asks for Restart. Its
+    `failed` variant has "This skill didn't open" with Try again, for a
+    read that failed for another cause, as a file tab shows "This file
+    didn't open".
+  - `app/skill-mentions/tab/stopped` has the wait while the open starts a
+    stopped cloud computer.
 
 On a phone the skill chip keeps its icon and ends with a ×, as each chip
 of the composer does. The flow `user-flows/use-a-skill` goes from the

@@ -282,6 +282,11 @@ Each call below is my call, made on 2026-11-24 unless it says otherwise.
   removed skill for each failure, because it gives a wrong cause, and a
   spinner that keeps reading, because a lasting failure never ends. Found
   by the docs milestone on 2026-11-24.
+  - The notice has the alert icon, the title, and a Try again button, with
+    no sentence, as the failure state of a file tab. The stopped state has
+    its own catalogue page, `app/skill-mentions/tab/stopped`, so that the
+    notices page keeps at most five screens. Found by the mockups on
+    2026-11-24.
 
 ## Milestone 1: Mockups
 
@@ -358,13 +363,14 @@ Depends on: 2
 The docs milestone found that a skill tab had no state for a failed read.
 Draw it before the app milestone builds it.
 
-- [ ] Add a `failed` variant to `app/skill-mentions/tab/notices`: "This
+- [x] Add a `failed` variant to `app/skill-mentions/tab/notices`: "This
       skill didn't open" with Try again, in the look of the failure state
       of a file tab (`src/files/ui/FileStates.tsx`). Add the words to
       `docs/mockups/src/components/files/skillTabCopy.ts`.
-- [ ] Update `docs/mockups/catalogue.md` and the catalogue pages that list
+- [x] Update `docs/mockups/catalogue.md` and the catalogue pages that list
       the notices.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed page.
+- [x] Run `npm run mockups:check`. Smoke-test the changed page.
+      Evidence: `.context/skill-tabs/m2a/`.
 
 ## Milestone 3: The skill read in the runner
 
@@ -463,7 +469,9 @@ Make the chips pressable and show the skill tab.
       while it shows.
 - [ ] Show "This skill didn't open" with Try again for a failed read, as
       the mockup of Milestone 2a draws it. Add the notice to the Notices
-      section of `docs/protocol/skill-tabs.md` in the same change.
+      section of `docs/protocol/skill-tabs.md` in the same change. The doc
+      says each notice has "an icon, a title, and one sentence". Word the
+      failed notice as an icon, a title, and Try again.
 - [ ] Update `src/chat/text-key-code.md` and `src/chat/integration.md`,
       which say that a skill chip opens nothing.
 - [ ] Add DOM tests: a press in a sent message and in the composer, the

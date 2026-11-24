@@ -30,7 +30,8 @@
  * (skill tab decision 1 B), in Preview, and `skill-source` in Source. The
  * other `skill-` states show a notice in place of its text: the read that
  * runs, a skill that the list no longer holds, a text over the read limit,
- * and older cloud computer software. A phone shows the skill in Files.
+ * older cloud computer software, and a read that failed, with Try again. A
+ * phone shows the skill in Files.
  */
 export const tabStates = [
   'session',
@@ -61,6 +62,7 @@ export const tabStates = [
   'skill-gone',
   'skill-too-large',
   'skill-older-software',
+  'skill-failed',
 ] as const
 
 /**

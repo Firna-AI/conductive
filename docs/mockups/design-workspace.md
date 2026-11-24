@@ -153,9 +153,12 @@ the bars of the cloud computer.
     description, a text over 1 MB, and older cloud computer software. A
     cloud computer that is not ready shows the state of a sandbox, as in
     a file tab.
-  - `skillTabCopy.ts` beside the page holds the words of the agent label
-    and of the notices. It imports no fixture, so it can move to the
-    shared UI with the page.
+  - A read that failed for another cause shows the failure of a file tab:
+    the alert icon, "This skill didn't open", and Try again, with no
+    sentence under the title. Try again reads the text again.
+  - `skillTabCopy.ts` beside the page holds the words of the agent label,
+    of the notices, and of Try again. It imports no fixture, so it can
+    move to the shared UI with the page.
   - On a phone the skill is a page of the Files tab, which leads back to
     All files, as a file does.
 - `TerminalTabs` in `src/components/tools/` draws the terminals of a

@@ -1,1 +1,1 @@
-{ "order": ["source", "temporary", "notices"] }
+{ "order": ["source", "temporary", "notices", "stopped"] }

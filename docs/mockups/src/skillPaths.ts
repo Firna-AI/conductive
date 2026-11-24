@@ -9,4 +9,5 @@ export const skillPaths = {
   gone: 'app/skill-mentions/tab/notices/gone',
   tooLarge: 'app/skill-mentions/tab/notices/too-large',
   olderSoftware: 'app/skill-mentions/tab/notices/older-software',
+  failed: 'app/skill-mentions/tab/notices/failed',
 } as const

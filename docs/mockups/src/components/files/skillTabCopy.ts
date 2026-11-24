@@ -2,9 +2,9 @@ import type { Agent } from '../../../../../src/shared/generated/Agent'
 
 /**
  * The words of the tab of a skill: the agent of the skill in the header,
- * the line while the text loads, and the notices in place of the text.
- * This module imports no fixture, so it can move to the shared UI when the
- * app draws the tab.
+ * the line while the text loads, the notices in place of the text, and the
+ * failure of the read with its button. This module imports no fixture, so
+ * it can move to the shared UI when the app draws the tab.
  */
 export const skillTabCopy = {
   /**
@@ -35,4 +35,14 @@ export const skillTabCopy = {
   olderSoftwareTitle: 'Restart to open this skill',
   olderSoftwareBody:
     'Opening a skill needs newer cloud computer software. Select Restart in the workspace header.',
+  /**
+   * The read failed for a cause without a notice of its own: the cloud
+   * computer cannot read the file, its connection dropped, or the server
+   * failed. The words follow the failure of a file tab, "This file didn't
+   * open". The title names what failed and Try again repeats the read, so
+   * the notice has no sentence under its title.
+   */
+  failedTitle: "This skill didn't open",
+  /** The button of the failed read, which reads the text again. */
+  tryAgain: 'Try again',
 } as const

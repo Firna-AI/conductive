@@ -15,6 +15,7 @@ const skillTabViews = [
   'gone',
   'too-large',
   'older-software',
+  'failed',
 ] as const satisfies readonly SkillTabView[]
 
 /**
