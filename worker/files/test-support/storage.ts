@@ -40,7 +40,7 @@ export async function createFilesStorage() {
     ],
   })
   return {
-    storage(name: string): FilesStorage {
+    storage(name: string, { failCommit = false } = {}): FilesStorage {
       return {
         async get(key) {
           const response = await runtime.dispatchFetch(
@@ -71,10 +71,18 @@ export async function createFilesStorage() {
           return entries
         },
         async write(updates, removals) {
+          const query = new URLSearchParams({ name })
+          if (failCommit) query.set('failCommit', '1')
           const response = await runtime.dispatchFetch(
-            `https://storage.test/?${new URLSearchParams({ name })}`,
+            `https://storage.test/?${query}`,
             { method: 'PUT', body: JSON.stringify({ updates, removals }) },
           )
+          if (failCommit && response.status === 409) {
+            const staged: unknown = await response.json()
+            throw Object.assign(new Error('Test storage commit failed'), {
+              staged,
+            })
+          }
           if (response.status !== 204)
             throw new Error('Test storage write failed')
         },

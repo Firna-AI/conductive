@@ -56,15 +56,15 @@ async fn uses_fixed_case_insensitive_web_types_with_an_octet_stream_fallback() {
 #[tokio::test]
 async fn date_fallback_keeps_full_precision_and_head_sends_headers_without_a_body() {
     let h = Fixture::new().await;
-    h.write("page.html", b"body");
+    h.write("page.txt", b"body");
     File::options()
         .write(true)
-        .open(h.directory.path().join("page.html"))
+        .open(h.directory.path().join("page.txt"))
         .unwrap()
         .set_modified(UNIX_EPOCH + Duration::from_millis(1_000_900))
         .unwrap();
-    let get = h.get("/page.html").await;
-    let head = h.marked("HEAD", "/page.html", &[]).await;
+    let get = h.get("/page.txt").await;
+    let head = h.marked("HEAD", "/page.txt", &[]).await;
     assert_eq!(get.status, 200);
     assert_eq!(get.headers["cache-control"], "no-cache");
     assert_eq!(
@@ -90,7 +90,7 @@ async fn date_fallback_keeps_full_precision_and_head_sends_headers_without_a_bod
         ("invalid", 200),
     ] {
         let response = h
-            .marked("GET", "/page.html", &[("If-Modified-Since", date)])
+            .marked("GET", "/page.txt", &[("If-Modified-Since", date)])
             .await;
         assert_eq!(response.status, expected, "{date}");
     }
