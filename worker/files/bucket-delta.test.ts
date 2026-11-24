@@ -2,6 +2,7 @@ import { afterAll, beforeAll, expect, it } from 'vitest'
 
 import type { FileEntry } from '../../src/shared/generated/FileEntry'
 import type { FileTreeChange } from '../../src/shared/generated/FileTreeChange'
+import type { FileTreeDelta } from '../../src/shared/generated/FileTreeDelta'
 import {
   BUCKET_COUNT,
   FILES_KEY,
@@ -37,10 +38,14 @@ async function treeProjection(name: string, entries: FileEntry[]) {
   const state = new FilesState(observed.storage)
   return {
     observed,
-    apply: (changes: FileTreeChange[], revision = 2) =>
+    apply: (
+      changes: FileTreeChange[],
+      revision = 2,
+      metadata: Pick<FileTreeDelta, 'omittedEntryCount'> = {},
+    ) =>
       state.apply('stream', {
         type: 'files.changed',
-        delta: { revision, changes },
+        delta: { revision, changes, ...metadata },
       }),
     tree: () => new FilesState(storage).tree(),
   }
@@ -51,6 +56,29 @@ const b = fileEntry('b')
 const z = fileEntry('z')
 const modifiedA: FileEntry = { ...a, change: 'modified' }
 const modifiedB: FileEntry = { ...b, displayPath: 'masked', change: 'renamed' }
+
+it('sets a count on a legacy tree with an empty delta and keeps it across uncounted deltas', async () => {
+  const { observed, apply, tree } = await treeProjection('count-only', [a, b])
+  await expect(tree()).resolves.toStrictEqual({ revision: 1, entries: [a, b] })
+  await expect(apply([], 2, { omittedEntryCount: 29 })).resolves.toBe(true)
+  expect(observed.reads).toStrictEqual([[FILES_KEY]])
+  expect(observed.writes).toHaveLength(1)
+  expect(Object.keys(observed.writes[0].updates)).toEqual([FILES_KEY])
+  expect(observed.writes[0].removals).toEqual([])
+  await expect(tree()).resolves.toStrictEqual({
+    revision: 2,
+    omittedEntryCount: 29,
+    entries: [a, b],
+  })
+  await expect(
+    apply([{ operation: 'upsert', entry: modifiedA }], 3),
+  ).resolves.toBe(true)
+  await expect(tree()).resolves.toStrictEqual({
+    revision: 3,
+    omittedEntryCount: 29,
+    entries: [modifiedA, b],
+  })
+})
 
 it('reads and writes only the two affected buckets for existing upserts and updates order on insertion', async () => {
   const { observed, apply, tree } = await treeProjection('upserts', [z, a, b])

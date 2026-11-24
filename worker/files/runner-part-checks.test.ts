@@ -101,6 +101,10 @@ it.each([
     field: 'a different summary',
     patch: { summary: { files: 3, added: 4, removed: 0 } },
   },
+  {
+    field: 'explicit omitted totals that part one did not carry',
+    patch: { omitted: { files: 0, added: 0, removed: 0 } },
+  },
 ])('refuses a middle changes part with $field', async ({ patch }) => {
   const { reports, storage } = await trackedReports()
   await reports.accept(changesPart(1, 3))
@@ -128,6 +132,7 @@ it('reads part one once to restore comparison fields in a previous Worker state'
       baseBranch: 'main',
       unpushedCommits: 3,
       summary: { files: 4, added: 4, removed: 0 },
+      omitted: null,
     },
   })
 

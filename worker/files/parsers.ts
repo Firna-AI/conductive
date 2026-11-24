@@ -1,6 +1,7 @@
 import type { BranchChangedFile } from '../../src/shared/generated/BranchChangedFile'
 import type { ChangeKind } from '../../src/shared/generated/ChangeKind'
 import type { ChangesResponse } from '../../src/shared/generated/ChangesResponse'
+import type { ChangesResponseSummary } from '../../src/shared/generated/ChangesResponseSummary'
 import type { FileEntry } from '../../src/shared/generated/FileEntry'
 import type { FileTreeChange } from '../../src/shared/generated/FileTreeChange'
 import type { FileTreeResponse } from '../../src/shared/generated/FileTreeResponse'
@@ -47,6 +48,8 @@ export function parseTree(value: unknown): FileTreeResponse {
   if (
     !isRecord(value) ||
     !natural(value.revision) ||
+    (value.omittedEntryCount !== undefined &&
+      !natural(value.omittedEntryCount)) ||
     !Array.isArray(value.entries)
   ) {
     throw invalidFileResponse()
@@ -55,6 +58,9 @@ export function parseTree(value: unknown): FileTreeResponse {
     revision: value.revision,
     entries: value.entries.map(fileEntry),
     ...(value.unavailable === true ? { unavailable: true } : {}),
+    ...(value.omittedEntryCount === undefined
+      ? {}
+      : { omittedEntryCount: value.omittedEntryCount }),
   }
 }
 
@@ -105,6 +111,19 @@ function changedFile(value: unknown): BranchChangedFile {
   }
 }
 
+export function parseChangesSummary(
+  value: unknown,
+): ChangesResponseSummary | undefined {
+  if (
+    !isRecord(value) ||
+    !natural(value.files) ||
+    !natural(value.added) ||
+    !natural(value.removed)
+  )
+    return undefined
+  return { files: value.files, added: value.added, removed: value.removed }
+}
+
 export function parseChanges(value: unknown): ChangesResponse {
   if (
     !isRecord(value) ||
@@ -112,12 +131,12 @@ export function parseChanges(value: unknown): ChangesResponse {
     (value.unpushedCommits !== undefined && !natural(value.unpushedCommits)) ||
     (value.uncommittedFileCount !== undefined &&
       !natural(value.uncommittedFileCount)) ||
-    !Array.isArray(value.files) ||
-    !isRecord(value.summary) ||
-    !natural(value.summary.files) ||
-    !natural(value.summary.added) ||
-    !natural(value.summary.removed)
+    !Array.isArray(value.files)
   )
+    throw invalidFileResponse()
+  const summary = parseChangesSummary(value.summary)
+  const omitted = parseChangesSummary(value.omitted)
+  if (!summary || (value.omitted !== undefined && !omitted))
     throw invalidFileResponse()
   return {
     baseBranch: value.baseBranch,
@@ -131,11 +150,8 @@ export function parseChanges(value: unknown): ChangesResponse {
       ? { displayBaseBranch: value.displayBaseBranch }
       : {}),
     files: value.files.map(changedFile),
-    summary: {
-      files: value.summary.files,
-      added: value.summary.added,
-      removed: value.summary.removed,
-    },
+    summary,
+    ...(omitted === undefined ? {} : { omitted }),
   }
 }
 
@@ -150,6 +166,8 @@ export function parseFileEvent(value: unknown): FileEvent {
     value.type === 'files.changed' &&
     isRecord(value.delta) &&
     natural(value.delta.revision) &&
+    (value.delta.omittedEntryCount === undefined ||
+      natural(value.delta.omittedEntryCount)) &&
     Array.isArray(value.delta.changes)
   ) {
     return {
@@ -157,6 +175,9 @@ export function parseFileEvent(value: unknown): FileEvent {
       delta: {
         revision: value.delta.revision,
         changes: value.delta.changes.map(treeChange),
+        ...(value.delta.omittedEntryCount === undefined
+          ? {}
+          : { omittedEntryCount: value.delta.omittedEntryCount }),
       },
     }
   }

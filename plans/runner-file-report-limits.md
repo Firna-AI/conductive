@@ -1,6 +1,6 @@
 # Runner file report limits
 
-Status: Active. On branch `calummoore/object-memory-runner-report-limits-0m1g`, no pull request yet. Cal approved implementation on 23 November 2026. Milestone 1 is complete. Milestones 2 and 3 are complete. Milestone 4 waits for the tab-state pull request to merge into `main`, and Cal releases it. The pull request that completes the work deletes this plan.
+Status: Active. On branch `calummoore/object-memory-runner-report-limits-0m1g`, no pull request yet. Cal approved implementation on 23 November 2026. Milestone 1 is complete. Milestones 1 to 4 are complete. Milestone 5 is in progress. The pull request that completes the work deletes this plan.
 
 Conductive keeps the latest file tree and branch changes in each workspace's Durable Object.
 One object has a 128 MB memory limit.
@@ -411,20 +411,24 @@ Depends on: Milestone 3, and the tab-state pull request merged into `main`. The 
 
 Preserve omission metadata through the merged bucket projection, full report assembly, filtering, storage, and API publication.
 
-- [ ] Read and integrate the merged memory change before editing `worker/files/runner-reports.ts` or projection storage.
-- [ ] Update `worker/files/README.md` for useful boundary changes.
-- [ ] Extend `worker/files/parsers.ts` and `runner-input.ts` to retain optional metadata while accepting legacy reports.
-- [ ] Check repeated metadata when the report completes. Keep the retained-summary equality check and existing repair behavior.
-- [ ] Preserve both legacy lists without a Worker cutoff. Check that a legacy report above 1,000 changes still refreshes an open diff after a base-only change.
-- [ ] Store and reload metadata with complete projections. Preserve it through deltas and unavailable marks, and replace it with the next full report.
-- [ ] Verify empty deltas and absent-path removes against the merged bucket implementation. Keep these operations within the affected buckets.
-- [ ] Extend `src/shared/output-fields.ts` only where needed. Verify `worker/chat/runner-output.ts` preserves counts across filtering and masking.
-- [ ] Serve optional fields inside existing tree and changes payloads. Preserve any event numbers introduced by the tab-state plan.
-- [ ] Extend existing Worker integration tests for multipart join, omitted totals, reload, reconnect, explicit-zero replacement, and legacy missing fields.
-- [ ] Use one-time fixtures to check new runner to previous Worker, old runner to new Worker, and previous reader to new stored data.
-- [ ] Check rollback and re-upgrade with a saved no-field projection and an in-flight report. Preserve unknown counts or repair the report, rather than inventing zeros. Also check that a tree delta with `omittedEntryCount` sets the count of a saved tree without one.
-- [ ] Include masked multipart publication and failed-part repair in the existing chat report coverage.
-- [ ] Run `npm run test -- worker/files` and the affected `worker/chat` report and output-filter tests.
+- [x] Read and integrate the merged memory change before editing `worker/files/runner-reports.ts` or projection storage.
+- [x] Update `worker/files/README.md` for useful boundary changes.
+- [x] Extend `worker/files/parsers.ts` and `runner-input.ts` to retain optional metadata while accepting legacy reports.
+- [x] Check repeated metadata when the report completes. Keep the retained-summary equality check and existing repair behavior.
+- [x] Preserve both legacy lists without a Worker cutoff. Check that a legacy report above 1,000 changes still refreshes an open diff after a base-only change.
+- [x] Store and reload metadata with complete projections. Preserve it through deltas and unavailable marks, and replace it with the next full report.
+- [x] Verify empty deltas and absent-path removes against the merged bucket implementation. An empty delta reads no row bucket. A delta with removes reads each tree bucket at most once, one at a time, and an absent remove writes no row or order chunk.
+  - **Orchestrator call, 24 November 2026:** Keep the merged remove path, which visits every tree bucket once per delta because a folder's entries can be in any bucket. So an absent-path refresh costs what an ordinary deletion costs, and the projection is never loaded at once. Milestone 6 measures bursts and can choose a runner-side full-tree fallback. An index of folder descendants was not chosen, because it needs a storage change for no measured need.
+- [x] Extend `src/shared/output-fields.ts` only where needed. Verify `worker/chat/runner-output.ts` preserves counts across filtering and masking.
+- [x] Serve optional fields inside existing tree and changes payloads. Preserve any event numbers introduced by the tab-state plan.
+- [x] Extend existing Worker integration tests for multipart join, omitted totals, reload, reconnect, explicit-zero replacement, and legacy missing fields.
+- [x] Use one-time fixtures to check new runner to previous Worker, old runner to new Worker, and previous reader to new stored data.
+- [x] Check rollback and re-upgrade with a saved no-field projection and an in-flight report. Preserve unknown counts or repair the report, rather than inventing zeros. Also check that a tree delta with `omittedEntryCount` sets the count of a saved tree without one.
+- [x] Include masked multipart publication and failed-part repair in the existing chat report coverage.
+- [x] Run `npm run test -- worker/files` and the affected `worker/chat` report and output-filter tests.
+
+The implementor report, test costs, and failure proofs are `.context/runner-file-report-limits/m4-report.md` and `m4-checks/`.
+The one-time compatibility suite against the previous Worker at `4fdb5bc7d` is in `.context/runner-file-report-limits/compat-m4/`.
 
 ## Milestone 5: Files and Changes panels
 

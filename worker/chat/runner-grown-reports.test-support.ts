@@ -4,6 +4,8 @@ import type { FileEvent } from '../../src/shared/files'
 import { encrypt } from '../security/crypto'
 import { orgEnvironmentContext } from '../lifecycle/settings-data'
 import { createRunnerLimitsFixture } from './runner-limits.test-support'
+const omittedEntryCount = 1_430
+const omitted = { files: 40, added: 132, removed: 11 }
 export const grownEntries: readonly FileEntry[] = Array.from(
   { length: 960 },
   (_, index) => ({
@@ -23,7 +25,10 @@ export function reportPart(
     .map(({ path, name, kind, change }) => ({ path, name, kind, change }))
   const part = { revision: 1, partNumber, partCount: 2 }
   if (kind === 'tree')
-    return { type: 'files.snapshot', tree: { ...part, entries } }
+    return {
+      type: 'files.snapshot',
+      tree: { ...part, omittedEntryCount, entries },
+    }
   return {
     type: 'changes.updated',
     changes: {
@@ -37,6 +42,7 @@ export function reportPart(
         uncommitted: true,
       })),
       summary: { files: 960, added: 960, removed: 0 },
+      omitted,
     },
   }
 }
@@ -44,7 +50,7 @@ export function completeReport(kind: 'tree' | 'changes'): FileEvent {
   if (kind === 'tree')
     return {
       type: 'files.snapshot',
-      tree: { revision: 1, entries: grownEntries },
+      tree: { revision: 1, omittedEntryCount, entries: grownEntries },
     }
   return {
     type: 'changes.updated',
@@ -60,6 +66,7 @@ export function completeReport(kind: 'tree' | 'changes'): FileEvent {
         uncommitted: true,
       })),
       summary: { files: 960, added: 960, removed: 0 },
+      omitted,
     },
   }
 }

@@ -1,22 +1,28 @@
 import type { RunnerChangesPart } from '../../src/shared/generated/RunnerChangesPart'
+import type { ChangesResponseSummary } from '../../src/shared/generated/ChangesResponseSummary'
 import type { RunnerFileEvent } from '../../src/shared/generated/RunnerFileEvent'
 import { isRecord } from '../http'
-import { natural } from './parsers'
+import { natural, parseChangesSummary } from './parsers'
 import { parseRunnerFileEvent } from './runner-input'
 import type { FilesReader } from './storage'
 
 export type ReportKind = 'tree' | 'changes'
-export interface ChangesPartFields {
-  baseBranch: string
-  unpushedCommits?: number
-  uncommittedFileCount?: number
-  summary: RunnerChangesPart['summary']
+export type FullReportPart = Extract<
+  RunnerFileEvent,
+  { type: 'files.snapshot' | 'changes.updated' }
+>
+interface ChangesPartFields extends Pick<
+  RunnerChangesPart,
+  'baseBranch' | 'unpushedCommits' | 'uncommittedFileCount' | 'summary'
+> {
+  omitted: ChangesResponseSummary | null
 }
+type ReportPartFields = ChangesPartFields | { omittedEntryCount: number | null }
 export interface ReportProgress {
   revision: number
   partCount: number
   through: number
-  fields?: ChangesPartFields
+  fields?: ReportPartFields
 }
 export interface ReportSequence {
   appliedRevision: number
@@ -41,46 +47,65 @@ export const emptySequence = (): ReportSequence => ({
   report: null,
 })
 
-export function changesPartFields({
+function summaryFields({ files, added, removed }: ChangesResponseSummary) {
+  return { files, added, removed }
+}
+
+function changesPartFields({
   baseBranch,
   unpushedCommits,
   uncommittedFileCount,
   summary,
+  omitted,
 }: ChangesPartFields): ChangesPartFields {
   return {
     baseBranch,
     ...(unpushedCommits === undefined ? {} : { unpushedCommits }),
     ...(uncommittedFileCount === undefined ? {} : { uncommittedFileCount }),
-    summary: {
-      files: summary.files,
-      added: summary.added,
-      removed: summary.removed,
-    },
+    summary: summaryFields(summary),
+    omitted: omitted === null ? null : summaryFields(omitted),
   }
 }
 
-function parseChangesPartFields(value: unknown): ChangesPartFields | undefined {
+/** Null means the part had no omission field. A missing value needs part 1. */
+export function reportPartFields(event: FullReportPart): ReportPartFields {
+  if (event.type === 'files.snapshot')
+    return { omittedEntryCount: event.tree.omittedEntryCount ?? null }
+  return changesPartFields({
+    ...event.changes,
+    omitted: event.changes.omitted ?? null,
+  })
+}
+
+function parsePartFields(
+  value: unknown,
+  kind: ReportKind,
+): ReportPartFields | undefined {
   if (!isRecord(value)) return undefined
-  const { baseBranch, unpushedCommits, uncommittedFileCount, summary } = value
+  if (kind === 'tree') {
+    const { omittedEntryCount } = value
+    return omittedEntryCount === null || natural(omittedEntryCount)
+      ? { omittedEntryCount }
+      : undefined
+  }
+  const { baseBranch, unpushedCommits, uncommittedFileCount } = value
+  const summary = parseChangesSummary(value.summary)
+  const omitted =
+    value.omitted === null ? null : parseChangesSummary(value.omitted)
   if (
     typeof baseBranch !== 'string' ||
     (unpushedCommits !== undefined && !natural(unpushedCommits)) ||
     (uncommittedFileCount !== undefined && !natural(uncommittedFileCount)) ||
-    !isRecord(summary) ||
-    !natural(summary.files) ||
-    !natural(summary.added) ||
-    !natural(summary.removed)
+    !summary ||
+    omitted === undefined
   )
     return undefined
   return changesPartFields({
     baseBranch,
     unpushedCommits,
     uncommittedFileCount,
-    summary: {
-      files: summary.files,
-      added: summary.added,
-      removed: summary.removed,
-    },
+    summary,
+    omitted,
   })
 }
 
@@ -105,8 +130,7 @@ function sequence(value: unknown, kind: ReportKind): ReportSequence {
       report.through > report.partCount
     )
       throw new Error('Stored runner report progress is invalid.')
-    const fields =
-      kind === 'changes' ? parseChangesPartFields(report.fields) : undefined
+    const fields = parsePartFields(report.fields, kind)
     progress = {
       revision: report.revision,
       partCount: report.partCount,

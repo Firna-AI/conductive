@@ -4,7 +4,7 @@ import { parseChanges } from '../../src/files/api/parse-changes'
 import { FilesState } from '../files/state'
 import type { FilesStorage } from '../files/storage'
 import { createRunnerLimitsFixture } from './runner-limits.test-support'
-import { snapshot } from './runner-fixtures.test-support'
+import { file, snapshot } from './runner-fixtures.test-support'
 function fileStorage(
   fixture: Awaited<ReturnType<typeof createRunnerLimitsFixture>>,
 ): FilesStorage {
@@ -85,6 +85,22 @@ it('joins trees and independent changes parts before projection, live publicatio
     type: 'confirm',
     streamId: 'stream',
     throughEventNumber: 7,
+  })
+  const countedRemove = {
+    revision: 3,
+    omittedEntryCount: 5,
+    changes: [{ operation: 'remove', path: 'missing.txt' }],
+  }
+  const delta = { type: 'files.changed', delta: countedRemove }
+  await fixture.receive(8, delta)
+  expect(fixture.published.at(-1)).toMatchObject({
+    eventNumber: 4,
+    event: delta,
+  })
+  await expect(files.tree()).resolves.toStrictEqual({
+    revision: 3,
+    omittedEntryCount: 5,
+    entries: [file('a.txt'), file('b.txt')],
   })
 })
 it('discards refused and superseded assemblies, keeps complete reports, and isolates streams', async () => {

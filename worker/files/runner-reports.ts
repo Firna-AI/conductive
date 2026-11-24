@@ -1,15 +1,15 @@
 import type { RunnerFileEvent } from '../../src/shared/generated/RunnerFileEvent'
 import type { FileEvent } from '../../src/shared/files'
 import {
-  changesPartFields,
   emptySequence,
   loadReportState,
+  reportPartFields,
   reportPartUpdates,
   REPORT_KEY,
   storedPart,
   storedParts,
   storedReportKeys,
-  type ChangesPartFields,
+  type FullReportPart,
   type ReportKind,
   type ReportState,
 } from './report-storage'
@@ -33,19 +33,38 @@ function checkPaths(entries: readonly { path: string }[], partCount: number) {
 function joinReport(parts: readonly RunnerFileEvent[]): FileEvent {
   const first = parts[0]
   if (first?.type === 'files.snapshot') {
-    const entries = parts.flatMap((part) =>
-      part.type === 'files.snapshot' ? part.tree.entries : invalid(),
-    )
+    const { omittedEntryCount } = first.tree
+    const entries = parts.flatMap((part) => {
+      if (
+        part.type !== 'files.snapshot' ||
+        part.tree.omittedEntryCount !== omittedEntryCount
+      )
+        return invalid()
+      return part.tree.entries
+    })
     checkPaths(entries, first.tree.partCount)
     return {
       type: first.type,
-      tree: { revision: first.tree.revision, entries },
+      tree: {
+        revision: first.tree.revision,
+        entries,
+        ...(omittedEntryCount === undefined ? {} : { omittedEntryCount }),
+      },
     }
   }
   if (first?.type !== 'changes.updated') return invalid()
-  const files = parts.flatMap((part) =>
-    part.type === 'changes.updated' ? part.changes.files : invalid(),
-  )
+  const { omitted } = first.changes
+  const files = parts.flatMap((part) => {
+    if (part.type !== 'changes.updated') return invalid()
+    const other = part.changes.omitted
+    if (
+      other?.files !== omitted?.files ||
+      other?.added !== omitted?.added ||
+      other?.removed !== omitted?.removed
+    )
+      return invalid()
+    return part.changes.files
+  })
   checkPaths(files, first.changes.partCount)
   const summary = { files: files.length, added: 0, removed: 0 }
   for (const file of files) {
@@ -73,6 +92,7 @@ function joinReport(parts: readonly RunnerFileEvent[]): FileEvent {
         ? {}
         : { displayBaseBranch: first.changes.displayBaseBranch }),
       summary,
+      ...(omitted === undefined ? {} : { omitted }),
       files,
     },
   }
@@ -174,10 +194,7 @@ export class RunnerFileReports {
   private async acceptPart(
     transaction: FilesTransaction,
     state: ReportState,
-    event: Extract<
-      RunnerFileEvent,
-      { type: 'files.snapshot' | 'changes.updated' }
-    >,
+    event: FullReportPart,
   ): Promise<FileEvent | null> {
     const kind: ReportKind =
       event.type === 'files.snapshot' ? 'tree' : 'changes'
@@ -200,24 +217,20 @@ export class RunnerFileReports {
       (previous && part.revision <= previous.revision)
     )
       invalid()
-    let fields: ChangesPartFields | undefined
+    const fields = reportPartFields(event)
     let firstPart: RunnerFileEvent | undefined
-    if (event.type === 'changes.updated') {
-      const incoming = changesPartFields(event.changes)
-      if (sameRevision && previous) {
-        fields = previous.fields
-        if (!fields) {
-          firstPart = await storedPart(transaction, 'changes', 1)
-          if (firstPart.type !== 'changes.updated') return invalid()
-          fields = changesPartFields(firstPart.changes)
-        }
-        if (JSON.stringify(incoming) !== JSON.stringify(fields)) invalid()
-      } else {
-        fields = incoming
+    if (sameRevision && previous) {
+      let expected = previous.fields
+      if (!expected) {
+        firstPart = await storedPart(transaction, kind, 1)
+        if (firstPart.type !== event.type) return invalid()
+        expected = reportPartFields(firstPart)
       }
+      if (JSON.stringify(fields) !== JSON.stringify(expected)) invalid()
     }
     let complete: FileEvent | null = null
     if (part.partNumber === part.partCount) {
+      // A previous Worker can leave stored parts with different omission fields.
       const parts =
         sameRevision && previous
           ? await storedParts(transaction, kind, previous, firstPart)
@@ -230,7 +243,7 @@ export class RunnerFileReports {
       revision: part.revision,
       partCount: part.partCount,
       through: part.partNumber,
-      ...(fields ? { fields } : {}),
+      fields,
     }
     if (complete) sequence.appliedRevision = part.revision
     const updates = {
