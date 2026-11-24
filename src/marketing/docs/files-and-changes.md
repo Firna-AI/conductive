@@ -242,6 +242,8 @@ Use `git status` in **Terminal** to inspect it.
 Use the copy action in a file header to copy its text.
 Use **Download** to save its original bytes on your computer.
 The header confirms a copy with **Copied**.
+To select only the text of a file or a diff, click in it and press **Cmd+A**, or **Ctrl+A** on Windows and Linux.
+A copy of selected file text keeps its blank lines.
 
 If copying or downloading fails, the header asks you to try again.
 Read the file successfully before you try its download action.

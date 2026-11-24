@@ -154,6 +154,30 @@ tests the hook, and `TabScroll.test.tsx` of the
 [workspace files](../shell/workspace/files/) tests the tabs of the
 workspace screen.
 
+### Select all in a file
+
+`CodeView` and `DiffView` draw their rows in `CodeBox` of
+`code/CodeBox.tsx`, a focusable region, so a press in the text gives it
+the focus. Its key handler turns Cmd+A or Ctrl+A into a selection of the
+box only. The browser would otherwise select the whole app. The line
+numbers cannot be selected, so a copy leaves them out.
+
+`CodeView` gives `CodeBox` the `copySource` of its text, from
+`code/code-selection.ts`: its lines, joined with line feeds, and the
+offset of the start of each line. Each row carries `data-copy-line`, the
+index of its line, and its text cell carries `data-copy-text`. A copy
+maps the two ends of each range of the selection to offsets in that
+text, and gives `copiedText`, the text between them. Only the rows of
+the two ends are read, so a copy costs the same in a long file. A browser
+can split one drag into several ranges, as Firefox does at each line
+number, so the copy joins every range. It keeps the empty lines, which
+the browser leaves out, and select all gives the whole text that the view
+shows. A caret, or a range that reaches out of the box, leaves the copy
+to the browser. The diff gives no source, so its copy stays the copy of
+the browser. `code/CodeBox.dom.test.tsx` tests select all, and
+`code/CodeCopy.dom.test.tsx` tests the copy, with the helpers of
+`code/code-box-test-kit.tsx`.
+
 ## Labels of paths
 
 [Labels of paths](labels.md) gives the label that each screen shows in
