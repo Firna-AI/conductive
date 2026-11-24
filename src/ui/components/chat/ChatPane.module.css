@@ -1,9 +1,6 @@
-.chat:focus {
+.chat {
   /* The chat takes the focus only from code, such as after a close. */
   outline: none;
-}
-
-.chat {
   display: flex;
   flex: 1;
   flex-direction: column;

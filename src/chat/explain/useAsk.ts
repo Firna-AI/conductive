@@ -15,7 +15,7 @@ import { setHighlights } from './highlights'
 import type { ExplainSelection } from './selection'
 
 /** The explanation that the Send of an Ask started. */
-export interface StartedAsk {
+interface StartedAsk {
   id: string
   /**
    * The unsent popover showed at the reply, so the follow-up field of the

@@ -23,7 +23,7 @@ import { messageAttributes } from './selection'
 const { org, workspace, session } = FAKE_IDS
 
 /** The route of a start in the parent session of the recorded chat. */
-export const explainPath = explainSessionPath(org, workspace, session)
+const explainPath = explainSessionPath(org, workspace, session)
 
 /** The quote of each Ask of the tests, in the recorded answer. */
 export const askQuote = 'Manual entry still works'
