@@ -21,6 +21,7 @@ import {
 import { servicePaths } from '../shared/services'
 import type { FakeRouteWriter } from './fake-api-routes'
 import type { FakeWorkspaceEvents } from './fake-events'
+import { fakeFileLists } from './fake-file-lists'
 import { FAKE_IDS, FAKE_TIME } from './fixtures/core'
 import {
   MASKED_GONE_PATH,
@@ -144,7 +145,7 @@ export function fakeToolRoutes(
   const data = toolFixtures(banner, paths)
   const org = FAKE_IDS.org
   const id = FAKE_IDS.workspace
-  routes.json('GET', filePaths.tree(org, id), data.files)
+  fakeFileLists(routes, events)
   if (paths === 'masked') {
     const seed = MASKED_SEED_PATH
     routes.json('GET', filePaths.content(org, id, seed), maskedSeedFile())
@@ -167,7 +168,6 @@ export function fakeToolRoutes(
       },
     }),
   )
-  routes.json('GET', filePaths.changes(org, id), data.changes)
   routes.json('GET', filePaths.diff(org, id, FAKE_FILE_PATH), data.diff)
   // The upload in parts of the app's upload operation, at the routes of each
   // target: a workspace, and the first message of a new workspace. Each

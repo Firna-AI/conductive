@@ -732,35 +732,44 @@ A new Files store starts its stream after the cutoffs of both its reads.
 This milestone waits for Milestone 4, because both change the development
 fake and the socket fixtures of `src/test-support/`.
 
-- [ ] Parse `stateRead` in the Files client, also from the 503 body.
+Design calls for this milestone, 24 November 2026. Each list keeps the
+repository and failed repair from its accepted read. A null repository
+means that the read has no repository record. It leaves any repository
+already learned from the stream in place. The list keeps its last error
+during a retry and hides it while the request waits. An obsolete reply
+then leaves the previous result available for Try again.
+
+Evidence: `.context/new-tab-workspace-state-reads/impl/m5-report.md`.
+
+- [x] Parse `stateRead` in the Files client, also from the 503 body.
       Tell the 503 from the 502 by the status, because both use the code
       `file_unavailable`. Keep each optional field of the limits plan.
-- [ ] Move `WorkspaceFiles` to the order of call 13.
-- [ ] Replace `treeFromStream` and `changesFromStream` with the event
+- [x] Move `WorkspaceFiles` to the order of call 13.
+- [x] Replace `treeFromStream` and `changesFromStream` with the event
       floors in `files-sync.ts`. Delete the two flags.
-- [ ] Seed the failed repairs and `RepositoryWatch` from each read.
-- [ ] Keep replay recovery for older-Worker replies and failed reads
+- [x] Seed the failed repairs and `RepositoryWatch` from each read.
+- [x] Keep replay recovery for older-Worker replies and failed reads
       without a cutoff. Keep each successful list's floor during it.
-- [ ] Move the development fake of the file routes to give `stateRead`:
+- [x] Move the development fake of the file routes to give `stateRead`:
       `src/test-support/fake-tool-routes.ts` and
       `src/files/dev/dev-fixtures.ts`.
-- [ ] Add tests in `src/files/model/`: `files-store.test.ts`,
+- [x] Add tests in `src/files/model/`: `files-store.test.ts`,
       `files-repairs.test.ts`, `files-moved.test.ts`,
       `files-refresh.test.ts`, and `files-unavailable.test.ts`:
-  - [ ] Both reply orders with different cutoffs give the same lists.
-  - [ ] A late reply below a floor changes nothing.
-  - [ ] A full tree, an unavailable mark, and a failed repair start from
+  - [x] Both reply orders with different cutoffs give the same lists.
+  - [x] A late reply below a floor changes nothing.
+  - [x] A full tree, an unavailable mark, and a failed repair start from
         the reads.
-  - [ ] A repository change between the cutoffs marks only the older list.
-  - [ ] A new runner stream at revision 1 still replaces the tree.
-  - [ ] An authorized 503 with `stateRead` for one missing list counts as
+  - [x] A repository change between the cutoffs marks only the older list.
+  - [x] A new runner stream at revision 1 still replaces the tree.
+  - [x] An authorized 503 with `stateRead` for one missing list counts as
         its cutoff.
-  - [ ] A network failure of one read keeps the other list live. Replay
+  - [x] A network failure of one read keeps the other list live. Replay
         reports can fill the failed list without a manual retry.
-  - [ ] An aborted read gives no cursor.
-  - [ ] An older-Worker success or authorized 503 without `stateRead`
+  - [x] An aborted read gives no cursor.
+  - [x] An older-Worker success or authorized 503 without `stateRead`
         replays from event 0.
-- [ ] Update `src/files/README.md`, `src/files/store.md`, and
+- [x] Update `src/files/README.md`, `src/files/store.md`, and
       `src/files/development.md`.
 
 ## Milestone 6: Verification, commit, review, and pull request

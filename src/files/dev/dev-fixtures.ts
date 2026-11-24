@@ -6,10 +6,12 @@ import { autocompleteHook } from '../../../docs/mockups/src/fixtures/fileContent
 import { filePaths, type FileTooLargeResponse } from '../../shared/files'
 import { decodeUtf8 } from '../../shared/utf8'
 import type { FakeApiServer } from '../../test-support/fake-api'
+import { fakeFileLists } from '../../test-support/fake-file-lists'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { toolFixtures } from '../../test-support/fixtures/tools'
 import { splitPath } from '../navigation'
 import * as samples from './dev-samples'
+import type { DevView } from './dev-view'
 import reportCss from './pages/report.css?raw'
 import reportHtml from './pages/report.html?raw'
 
@@ -166,7 +168,7 @@ const extraEntries: readonly FileEntry[] = [
 export function devTree(): FileTreeResponse {
   const tree = toolFixtures().files
   return {
-    revision: tree.revision,
+    ...tree,
     entries: [...tree.entries, ...extraEntries],
   }
 }
@@ -176,8 +178,21 @@ export function devTree(): FileTreeResponse {
  * file texts, downloads, diffs, a binary file, a file over the read limit,
  * and a file whose read and download fail.
  */
-export function registerDevFiles(server: FakeApiServer): void {
-  server.json('GET', filePaths.tree(org, id), devTree())
+export function registerDevFiles(
+  server: FakeApiServer,
+  view?: Pick<DevView, 'scenario' | 'tree'>,
+): void {
+  if (view?.scenario !== 'live') {
+    fakeFileLists(
+      server,
+      server.events,
+      {
+        tree: view?.tree === 'none' ? null : devTree(),
+        changes: toolFixtures().changes,
+      },
+      server.events.last(id),
+    )
+  }
   const encoder = new TextEncoder()
   for (const [path, text] of devTextFiles) {
     registerFile(server, path, encoder.encode(text))

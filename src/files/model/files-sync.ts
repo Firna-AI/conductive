@@ -2,29 +2,31 @@ import type { ChangesResponse } from '../../shared/generated/ChangesResponse'
 import type { FileTreeDelta } from '../../shared/generated/FileTreeDelta'
 import type { FileTreeResponse } from '../../shared/generated/FileTreeResponse'
 import type { FileEvent } from '../../shared/files'
+import type { FilesError } from '../api/files-errors'
+import type { FileListRead } from './files-reads'
 import { applyTreeDelta, treeFromSnapshot, type FileTree } from './tree-model'
 
-/**
- * The tree and the changes, merged from the file routes and the event
- * stream. The stream is in event order, so after it gives a value, an
- * older read of the route cannot replace that value.
- */
+interface ListState<T> {
+  value: T | null
+  /** The read cutoff or the newest event that changed the list. */
+  floor: number
+  error: FilesError | null
+}
+
+interface TreeUpdate {
+  eventNumber: number
+  delta: FileTreeDelta
+}
+
+/** The tree and changes merged from the file routes and the event stream. */
 export interface FilesSync {
-  tree: FileTree | null
-  treeFromStream: boolean
-  /**
-   * The cloud computer could not read the files. The tree is the saved one,
-   * or empty when none was saved, and its entries can be out of date. Only a
-   * full tree of the stream clears the mark. A tree update and a reply of
-   * the tree route clear nothing.
-   */
+  tree: ListState<FileTree>
   treeUnavailable: boolean
   /** Updates that wait for a tree, or for a tree read after a gap. */
-  pending: readonly FileTreeDelta[]
+  pending: readonly TreeUpdate[]
   /** An update skipped a revision, so the tree must be read again. */
   treeStale: boolean
-  changes: ChangesResponse | null
-  changesFromStream: boolean
+  changes: ListState<ChangesResponse>
 }
 
 /** A merge result, with the paths whose content may have changed. */
@@ -36,13 +38,11 @@ export interface SyncStep {
 }
 
 export const emptySync: FilesSync = {
-  tree: null,
-  treeFromStream: false,
+  tree: { value: null, floor: -1, error: null },
   treeUnavailable: false,
   pending: [],
   treeStale: false,
-  changes: null,
-  changesFromStream: false,
+  changes: { value: null, floor: -1, error: null },
 }
 
 const none: ReadonlySet<string> = new Set()
@@ -53,18 +53,6 @@ function unchanged(sync: FilesSync): SyncStep {
 
 function unknownPaths(sync: FilesSync): SyncStep {
   return { sync, touched: none, allTouched: true }
-}
-
-/** Applies the waiting updates that are newer than the tree, in order. */
-function withPending(tree: FileTree, pending: readonly FileTreeDelta[]) {
-  let current = tree
-  const ordered = [...pending].sort((a, b) => a.revision - b.revision)
-  for (const delta of ordered) {
-    if (delta.revision > current.revision) {
-      current = applyTreeDelta(current, delta).tree
-    }
-  }
-  return current
 }
 
 /**
@@ -85,63 +73,135 @@ function listedPaths(
   return touched
 }
 
-export function syncFetchedTree(
+function fetchedTree(
   sync: FilesSync,
   response: FileTreeResponse,
+  cutoff: number | undefined,
 ): SyncStep {
-  if (sync.treeFromStream && !sync.treeStale) return unchanged(sync)
-  const tree = withPending(treeFromSnapshot(response), sync.pending)
-  // A reply can be older than a mark of the stream, so it only adds one.
-  const treeUnavailable = sync.treeUnavailable || response.unavailable === true
+  if (cutoff === undefined && sync.tree.value && !sync.treeStale)
+    return unchanged(sync)
+  let value = treeFromSnapshot(response)
+  let floor = cutoff ?? sync.tree.floor
+  for (const { eventNumber, delta } of sync.pending) {
+    if (cutoff !== undefined && eventNumber <= cutoff) continue
+    if (delta.revision <= value.revision) continue
+    value = applyTreeDelta(value, delta).tree
+    floor = Math.max(floor, eventNumber)
+  }
+  const treeUnavailable =
+    response.unavailable === true ||
+    (cutoff === undefined && sync.treeUnavailable)
   return {
-    sync: { ...sync, tree, treeUnavailable, pending: [], treeStale: false },
+    sync: {
+      ...sync,
+      tree: { value, floor, error: null },
+      treeUnavailable,
+      pending: [],
+      treeStale: false,
+    },
     touched: none,
-    allTouched: sync.tree !== null,
+    allTouched: sync.tree.value !== null,
   }
 }
 
-export function syncFetchedChanges(
+function fetchedChanges(
   sync: FilesSync,
   changes: ChangesResponse,
+  cutoff: number | undefined,
 ): SyncStep {
-  if (sync.changesFromStream) return unchanged(sync)
+  if (cutoff === undefined && sync.changes.value) return unchanged(sync)
   return {
-    sync: { ...sync, changes },
-    touched: listedPaths(sync.changes, changes),
+    sync: {
+      ...sync,
+      changes: {
+        value: changes,
+        floor: cutoff ?? sync.changes.floor,
+        error: null,
+      },
+    },
+    touched: listedPaths(sync.changes.value, changes),
     allTouched: false,
   }
 }
 
-function syncDelta(sync: FilesSync, delta: FileTreeDelta): SyncStep {
-  const { tree } = sync
+/** Accepts a cutoff above the list's floor. A legacy read can fill a gap. */
+export function syncRead(
+  sync: FilesSync,
+  { list, result }: FileListRead,
+): SyncStep {
+  const cutoff = result.stateRead?.eventNumber
+  if (cutoff !== undefined && cutoff <= sync[list].floor) return unchanged(sync)
+  if (result.ok) {
+    return list === 'tree'
+      ? fetchedTree(sync, result.value, cutoff)
+      : fetchedChanges(sync, result.value, cutoff)
+  }
+  if (cutoff === undefined) {
+    return unchanged({
+      ...sync,
+      [list]: { ...sync[list], error: result.error },
+    })
+  }
+  return {
+    sync: {
+      ...sync,
+      [list]: { value: null, floor: cutoff, error: result.error },
+      ...(list === 'tree'
+        ? {
+            treeUnavailable: false,
+            treeStale: false,
+            pending: sync.pending.filter(
+              (update) => update.eventNumber > cutoff,
+            ),
+          }
+        : {}),
+    },
+    touched: none,
+    allTouched: sync[list].value !== null,
+  }
+}
+
+function syncDelta(sync: FilesSync, update: TreeUpdate): SyncStep {
+  const tree = sync.tree.value
+  const { delta, eventNumber } = update
   if (!tree || sync.treeStale) {
-    return unknownPaths({ ...sync, pending: [...sync.pending, delta] })
+    return unknownPaths({ ...sync, pending: [...sync.pending, update] })
   }
   if (delta.revision <= tree.revision) return unknownPaths(sync)
   if (delta.revision > tree.revision + 1) {
     return unknownPaths({
       ...sync,
-      pending: [...sync.pending, delta],
+      pending: [...sync.pending, update],
       treeStale: true,
     })
   }
   const step = applyTreeDelta(tree, delta)
   return {
-    sync: { ...sync, tree: step.tree },
+    sync: {
+      ...sync,
+      tree: { ...sync.tree, value: step.tree, floor: eventNumber },
+    },
     touched: step.touched,
     allTouched: false,
   }
 }
 
 /** Applies one file event of the stream, in event order. */
-export function syncEvent(sync: FilesSync, event: FileEvent): SyncStep {
+export function syncEvent(
+  sync: FilesSync,
+  event: FileEvent,
+  eventNumber: number,
+): SyncStep {
   switch (event.type) {
     case 'files.snapshot':
       return {
         sync: {
           ...sync,
-          tree: treeFromSnapshot(event.tree),
-          treeFromStream: true,
+          tree: {
+            value: treeFromSnapshot(event.tree),
+            floor: eventNumber,
+            error: null,
+          },
           treeUnavailable: event.tree.unavailable === true,
           pending: [],
           treeStale: false,
@@ -150,15 +210,22 @@ export function syncEvent(sync: FilesSync, event: FileEvent): SyncStep {
         allTouched: true,
       }
     case 'files.changed':
-      return syncDelta(sync, event.delta)
+      return syncDelta(sync, { eventNumber, delta: event.delta })
     case 'files.unavailable':
       // The saved tree stays, and no file content changes.
-      return unchanged({ ...sync, treeUnavailable: true })
+      return unchanged({
+        ...sync,
+        tree: { ...sync.tree, floor: eventNumber },
+        treeUnavailable: true,
+      })
     case 'changes.updated':
       return {
-        sync: { ...sync, changes: event.changes, changesFromStream: true },
-        touched: listedPaths(sync.changes, event.changes),
-        allTouched: sync.changes === null,
+        sync: {
+          ...sync,
+          changes: { value: event.changes, floor: eventNumber, error: null },
+        },
+        touched: listedPaths(sync.changes.value, event.changes),
+        allTouched: sync.changes.value === null,
       }
   }
 }
@@ -171,11 +238,22 @@ export function syncEvent(sync: FilesSync, event: FileEvent): SyncStep {
  * the next changes report of the stream gives the new list. Any file may
  * have changed.
  */
-export function syncMoved(sync: FilesSync): SyncStep {
+export function syncMoved(
+  sync: FilesSync,
+  eventNumber: number,
+  tree: boolean,
+  changes: boolean,
+): SyncStep {
   return unknownPaths({
     ...sync,
-    treeUnavailable: sync.tree !== null || sync.treeUnavailable,
-    changes: null,
-    changesFromStream: false,
+    ...(tree
+      ? {
+          tree: { ...sync.tree, floor: eventNumber },
+          treeUnavailable: sync.tree.value !== null || sync.treeUnavailable,
+        }
+      : {}),
+    ...(changes
+      ? { changes: { value: null, floor: eventNumber, error: null } }
+      : {}),
   })
 }

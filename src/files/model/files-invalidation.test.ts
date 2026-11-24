@@ -3,9 +3,9 @@ import { filePaths, type FileEvent } from '../../shared/files'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { FAKE_FILE_PATH, toolFixtures } from '../../test-support/fixtures/tools'
-import { deferred, envelopeAfter, filesFor } from '../files-test-kit'
+import { deferred, envelopeAfter, observeFileReads } from '../files-test-kit'
 
-it('counts each unknown-path event and each path update in one first-history publication', () => {
+it('counts each unknown-path event and each path update in one first-history publication', async () => {
   const server = new FakeApiServer()
   const data = toolFixtures()
   const afterRecorded = server.events.history().throughEventNumber
@@ -40,23 +40,27 @@ it('counts each unknown-path event and each path update in one first-history pub
   for (const event of events) server.events.emit(envelopeAfter(server, event))
   let deliver = () => {}
   const treeReply = deferred<Response>()
-  const changesReply = deferred<Response>()
-  const files = filesFor(
-    server,
+  let treeReads = 0
+  const reads = observeFileReads(
     (after, listener) =>
       server.events.subscribe(Math.max(after, afterRecorded), (message) => {
         if (message.type === 'history') deliver = () => listener(message)
         else listener(message)
       }),
-    (input, init) => {
-      if (input === filePaths.tree(FAKE_IDS.org, FAKE_IDS.workspace))
-        return treeReply.promise
-      if (input === filePaths.changes(FAKE_IDS.org, FAKE_IDS.workspace))
-        return changesReply.promise
-      return server.fetch(input, init)
+    async (input) => {
+      if (input === filePaths.tree(FAKE_IDS.org, FAKE_IDS.workspace)) {
+        treeReads += 1
+        if (treeReads > 1) return treeReply.promise
+      }
+      return Response.json(
+        { error: { code: 'file_unavailable' } },
+        { status: 503 },
+      )
     },
   )
+  const { files } = reads
   files.start()
+  await Promise.all([reads.tree[0], reads.changes[0]])
   let publications = 0
   const unsubscribe = files.subscribe(() => {
     publications += 1
@@ -74,6 +78,5 @@ it('counts each unknown-path event and each path update in one first-history pub
     unsubscribe()
     files.stop()
     treeReply.resolve(Response.json(data.files))
-    changesReply.resolve(Response.json(data.changes))
   }
 })

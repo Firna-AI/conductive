@@ -15,7 +15,7 @@ import type { FileListKind } from '../navigation'
 import {
   filesAfterHistory,
   filesFor,
-  heldTree,
+  heldTreeRetry,
   slow,
   startFiles,
   testNavigation,
@@ -109,6 +109,7 @@ it(
   slow,
   async () => {
     const server = new FakeApiServer()
+    server.json('GET', filePaths.tree(org, id), toolFixtures().files)
     const all = await panel(server, 'all', {
       kind: 'file',
       path: 'README.md',
@@ -182,10 +183,11 @@ it(
     expect(none).toMatch(unread)
     expect(none).not.toContain('Files show here')
 
-    // A live mark arrives while the first reply of the tree route waits.
-    const held = heldTree(server)
+    // A live mark arrives after the first read fails, while its retry waits.
+    const held = heldTreeRetry(server)
     const files = filesAfterHistory(server, held.fetch)
-    files.start()
+    await startFiles(files)
+    files.retry()
     server.events.emit(
       nextEnvelope(server.events, { type: 'files.unavailable' }, FAKE_TIME),
     )

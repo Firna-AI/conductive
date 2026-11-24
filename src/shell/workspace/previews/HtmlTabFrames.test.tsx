@@ -3,12 +3,12 @@
 import { act } from 'react'
 import { describe, expect, onTestFinished, test, vi } from 'vitest'
 import type { FileResponse } from '../../../shared/generated/FileResponse'
-import { HeldRequests } from '../../../app/test-kit'
 import { filePaths } from '../../../shared/files'
 import { previewLaunchUrl } from '../../../shared/previews'
 import type { FakeApiServer } from '../../../test-support/fake-api'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
 import {
+  deferred,
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
   waitFor,
@@ -52,7 +52,7 @@ const tabsOfB: {
   name: string
   path: string
   mode: 'preview' | 'source'
-  prepare: (server: FakeApiServer, held: HeldRequests) => void
+  prepare: (server: FakeApiServer) => void
 }[] = [
   {
     name: 'Source of another HTML file',
@@ -80,8 +80,12 @@ const tabsOfB: {
     name: 'an HTML file with no label yet',
     path: 'reports/draft.html',
     mode: 'preview',
-    prepare: (_server, held) =>
-      held.hold('GET', filePaths.content(org, id, 'reports/draft.html')),
+    prepare: (server) => {
+      const path = 'reports/draft.html'
+      const reply = deferred<FileResponse>()
+      server.json('GET', filePaths.content(org, id, path), reply.promise)
+      onTestFinished(() => reply.resolve(htmlRead(path)))
+    },
   },
 ]
 
@@ -91,13 +95,10 @@ describe('the kept frames of the tabs of HTML files', () => {
     async ({ path, mode, prepare }) => {
       holdAnimationFrames()
       const server = serverWithReport()
-      const held = new HeldRequests(server)
-      prepare(server, held)
+      prepare(server)
       const shows = vi.spyOn(PageFrames.prototype, 'show')
       onTestFinished(() => shows.mockRestore())
-      const { view, navigation } = await openTab(server, reportHref, {
-        fetch: held.fetch,
-      })
+      const { view, navigation } = await openTab(server, reportHref)
       await waitFor(() => frameOf(view), 'the page of the report')
 
       act(() =>

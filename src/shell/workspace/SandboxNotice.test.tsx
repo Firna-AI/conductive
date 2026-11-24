@@ -74,7 +74,7 @@ describe('SandboxBar', () => {
     expect(header()).not.toContain('Stopped')
     expect(text()).toContain('Waiting for the sandbox')
     expect(text()).not.toContain('Sandbox stopped')
-    expect(text()).toContain('5 files changed')
+    expect(text()).toContain('7 files changed')
 
     // The fake keeps the sandbox stopped after its Resume, so the bar shows
     // once the open ends.
@@ -83,7 +83,7 @@ describe('SandboxBar', () => {
     expect(queryByLabel('Message', container)).toBeNull()
     expect(header()).toContain('Stopped')
     expect(text()).toContain('Sandbox stopped')
-    expect(text()).toContain('5 files changed')
+    expect(text()).toContain('7 files changed')
   })
 
   test('on a phone, the Terminal tab waits with no Resume while the open resumes the sandbox', async () => {

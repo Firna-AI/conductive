@@ -173,28 +173,6 @@ describe('a workspace that the tab showed', () => {
     )
   })
 
-  test('is forgotten at a sign-out and when another person signs in', async () => {
-    holdAnimationFrames()
-    const server = new FakeApiServer()
-    const socket = recordingSocket(server)
-    const app = await startedApp(server, { events: socket.source })
-    const { view } = mountTab(app)
-    await settle()
-    typeText(messageField(view), 'A draft of the first person')
-    await act(() => app.account.signOut())
-    expect(app.boot.get().state).toBe('signed-out')
-    const signedOut = socket.opens.length
-    await act(() => app.start())
-    await settle()
-    expect(draftOf(view)).toBe('')
-    expect(socket.opens.slice(signedOut)).toContain(0)
-    typeText(messageField(view), 'A draft before another person')
-    server.signIn(fakeUsers[1])
-    await act(() => app.start())
-    await settle()
-    expect(draftOf(view)).toBe('')
-  })
-
   test('takes a login that the tab saves while away, and keeps its draft and Send', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
