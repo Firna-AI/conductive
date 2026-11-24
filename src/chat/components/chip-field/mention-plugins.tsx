@@ -6,6 +6,7 @@ import {
   type LexicalEditor,
 } from 'lexical'
 import { allFilesUnavailable } from '../../../ui/components/chat/lostCopy'
+import { omittedMentionLine } from '../../../ui/components/files/listNoticeCopy'
 import type { FileEntry } from '../../../shared/generated/FileEntry'
 import { useChatLinks } from '../../links/LinksContext'
 import { MentionIcon } from '../../mentions/MentionIcon'
@@ -74,11 +75,16 @@ export function MentionReconcilePlugin() {
   return null
 }
 
-/** The one line of the list in place of its rows, or null. */
+/**
+ * The one line of the list in place of its rows, or null. While the tree
+ * leaves out entries, the line of no match also says that some files are
+ * not listed, and what the member can do.
+ */
 function lineOf(tree: MentionTree, query: string, rows: number): string | null {
   if (tree.state === 'loading') return 'Loading files…'
   if (tree.state === 'unavailable') return allFilesUnavailable.title
-  return rows === 0 ? `Nothing matches “${query}”` : null
+  if (rows > 0) return null
+  return tree.limited ? omittedMentionLine(query) : `Nothing matches “${query}”`
 }
 
 /**

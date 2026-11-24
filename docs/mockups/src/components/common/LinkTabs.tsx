@@ -1,6 +1,7 @@
 import tabScroll from '../../../../../src/ui/components/workspace/TabScroll.module.css'
 import { ScreenLink } from './ScreenLink'
 import { classes } from '../../../../../src/ui/components/common/classes'
+import { formatCount } from '../../../../../src/ui/components/common/counts'
 import styles from '../../../../../src/ui/components/common/LinkTabs.module.css'
 
 export type LinkTab = {
@@ -53,9 +54,7 @@ export function LinkTabs(props: {
           <>
             {tab.label}
             {tab.count === undefined ? null : (
-              <span className={styles.count}>
-                {tab.count.toLocaleString('en')}
-              </span>
+              <span className={styles.count}>{formatCount(tab.count)}</span>
             )}
           </>
         )

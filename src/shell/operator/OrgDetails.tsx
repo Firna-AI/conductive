@@ -1,4 +1,5 @@
 import { Ban, Trash2 } from 'lucide-react'
+import { formatCount } from '../../ui/components/common/counts'
 import { Notice } from '../../ui/components/common/Notice'
 import {
   deletedOrgBody,
@@ -18,7 +19,7 @@ import type {
 } from '../../shared/operator'
 import type { OperatorProvidersResponse } from '../../shared/operator-providers'
 import { AccountBox } from './AccountBox'
-import { counted, formatCount, formatLongDay, formatShortDay } from './format'
+import { counted, formatLongDay, formatShortDay } from './format'
 import { suspensionTitle } from './TargetPage'
 import { Joined, TargetList, TargetRow, TargetState } from './TargetParts'
 

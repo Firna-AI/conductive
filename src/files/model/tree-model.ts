@@ -7,12 +7,27 @@ import { pathLabel } from './file-labels'
 export interface FileTree {
   revision: number
   entries: ReadonlyMap<string, FileEntry>
+  /**
+   * The entries that the report of the tree leaves out, from its omitted
+   * totals: zero when it leaves out none. Absent while the count is unknown,
+   * as for the tree of an older runner.
+   */
+  omittedEntryCount?: number
 }
 
+/** The omitted entry count as a field to spread, or nothing when unknown. */
+function omittedOf(
+  count: number | undefined,
+): Pick<FileTree, 'omittedEntryCount'> {
+  return count === undefined ? {} : { omittedEntryCount: count }
+}
+
+/** A full tree, which replaces the entries and the count at once. */
 export function treeFromSnapshot(snapshot: FileTreeResponse): FileTree {
   return {
     revision: snapshot.revision,
     entries: new Map(snapshot.entries.map((entry) => [entry.path, entry])),
+    ...omittedOf(snapshot.omittedEntryCount),
   }
 }
 
@@ -67,7 +82,10 @@ function movePath(
 
 /**
  * Applies one tree update in order. A directory move can repeat the moves
- * of the entries inside it, so each move is safe to apply twice.
+ * of the entries inside it, so each move is safe to apply twice. A remove
+ * of a path that the tree does not hold, such as a path that its report
+ * leaves out, changes no entry and still touches the path. An update with
+ * an omitted entry count sets the count, and one without keeps it.
  */
 export function applyTreeDelta(
   tree: FileTree,
@@ -95,5 +113,9 @@ export function applyTreeDelta(
         break
     }
   }
-  return { tree: { revision: delta.revision, entries }, touched }
+  const count = delta.omittedEntryCount ?? tree.omittedEntryCount
+  return {
+    tree: { revision: delta.revision, entries, ...omittedOf(count) },
+    touched,
+  }
 }

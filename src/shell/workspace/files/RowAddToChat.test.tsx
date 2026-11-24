@@ -252,12 +252,14 @@ describe('Add to chat in the row menu of the Files panel', () => {
     },
   )
 
-  test('leaves out Add to chat on a path that the list of @ does not offer, and on a deleted file of Changes that the tree still holds', async () => {
+  test('leaves out Add to chat on a path that the list of @ does not offer, on a deleted file of Changes that the tree still holds, and on a changed file that the limited tree leaves out', async () => {
     const { server, view, navigation } = await openPaletteTab(allFiles)
     const quoted = '"draft".md'
     const deleted = 'src/app/checkout/postcodeLookup.ts'
+    const omitted = 'src/app/checkout/useAddressAutocomplete.ts'
     // The tree and Changes come from their own reports, so the tree can
-    // still hold a file that Changes lists as deleted.
+    // still hold a file that Changes lists as deleted. A limited tree can
+    // leave out a file that Changes lists.
     const upsert = (path: string, name: string) => ({
       operation: 'upsert' as const,
       entry: { path, name, kind: 'file' as const, change: null },
@@ -266,7 +268,12 @@ describe('Add to chat in the row menu of the Files panel', () => {
       type: 'files.changed',
       delta: {
         revision: 3,
-        changes: [upsert(quoted, quoted), upsert(deleted, 'postcodeLookup.ts')],
+        omittedEntryCount: 1,
+        changes: [
+          upsert(quoted, quoted),
+          upsert(deleted, 'postcodeLookup.ts'),
+          { operation: 'remove', path: omitted },
+        ],
       },
     })
     await settle()
@@ -277,12 +284,17 @@ describe('Add to chat in the row menu of the Files panel', () => {
     act(() => navigation.push(changes))
     await settle()
     const row = rowTo(view, 'Changed files', { kind: 'diff', path: deleted })
+    const deletedMenu = openMenu(row, 'postcodeLookup.ts')
+    await pressKey('Escape')
+    const left = rowTo(view, 'Changed files', { kind: 'diff', path: omitted })
     expect({
       unoffered,
-      deleted: openMenu(row, 'postcodeLookup.ts'),
+      deleted: deletedMenu,
+      omitted: openMenu(left, 'useAddressAutocomplete.ts'),
     }).toEqual({
       unoffered: { items: ['Copy path'], lines: 0 },
       deleted: { items: ['Copy path'], lines: 0 },
+      omitted: { items: ['Copy path'], lines: 0 },
     })
   })
 })

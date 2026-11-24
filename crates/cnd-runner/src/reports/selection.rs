@@ -2,11 +2,13 @@
 
 use std::collections::{HashMap, HashSet};
 
-use cnd_runner_interface::file_changes::{ChangesResponse, FILE_CHANGES_REPORT_MAX_FILES};
+use cnd_runner_interface::file_changes::{
+    BranchChangedFile, ChangesResponse, FILE_CHANGES_REPORT_MAX_FILES,
+};
 use cnd_runner_interface::file_tree::{FILE_TREE_REPORT_MAX_ENTRIES, FileEntry, FileEntryKind};
 
-use crate::error::{Error, Result};
-use crate::repository::changes::summarize_changes;
+use crate::error::{Error, ErrorResultExt, Result};
+use crate::repository::changes::{sort_changed_files_by_path, summarize_changes};
 use crate::repository::service::RepositorySnapshot;
 
 const CONTEXT_TREE_RESERVE: usize = 5_000;
@@ -32,24 +34,40 @@ impl Default for ReportLimits {
     }
 }
 
-/// Bounded report in selection order. Keep Git status counts from the complete scan.
-pub(super) fn select_changes(source: &ChangesResponse, limit: usize) -> Result<ChangesResponse> {
+/// Listed changes for tree priority and report output.
+pub(super) struct ChangesSelection<'a> {
+    /// Retained files in selection order for the tree priority pass.
+    pub(super) priority_files: Vec<&'a BranchChangedFile>,
+    /// Changes report with its files in path order.
+    pub(super) response: ChangesResponse,
+}
+
+/// Select uncommitted changes first. Keep Git status counts from the complete scan.
+pub(super) fn select_changes(
+    source: &ChangesResponse,
+    limit: usize,
+) -> Result<ChangesSelection<'_>> {
     let mut ordered = source
         .files
         .iter()
         .filter(|file| file.uncommitted)
         .chain(source.files.iter().filter(|file| !file.uncommitted));
-    let files: Vec<_> = ordered.by_ref().take(limit).cloned().collect();
+    let priority_files: Vec<_> = ordered.by_ref().take(limit).collect();
+    let mut files: Vec<_> = priority_files.iter().copied().cloned().collect();
     let summary = summarize_changes(&files).ok_or(Error::InvalidNumber)?;
     let omitted = summarize_changes(ordered).ok_or(Error::InvalidNumber)?;
-    Ok(ChangesResponse {
-        base_branch: source.base_branch.clone(),
-        display_base_branch: source.display_base_branch.clone(),
-        unpushed_commits: source.unpushed_commits,
-        uncommitted_file_count: source.uncommitted_file_count,
-        files,
-        summary,
-        omitted: Some(omitted),
+    sort_changed_files_by_path(&mut files).internal()?;
+    Ok(ChangesSelection {
+        priority_files,
+        response: ChangesResponse {
+            base_branch: source.base_branch.clone(),
+            display_base_branch: source.display_base_branch.clone(),
+            unpushed_commits: source.unpushed_commits,
+            uncommitted_file_count: source.uncommitted_file_count,
+            files,
+            summary,
+            omitted: Some(omitted),
+        },
     })
 }
 
@@ -97,7 +115,7 @@ impl<'a> TreePaths<'a> {
 /// Give retained changed files priority, then share space between the two path groups.
 pub(super) fn select_tree(
     source: &RepositorySnapshot,
-    changes: &ChangesResponse,
+    priority_files: &[&BranchChangedFile],
     limits: ReportLimits,
 ) -> TreeSelection {
     if source.entries.len() <= limits.tree_entries {
@@ -115,7 +133,7 @@ pub(super) fn select_tree(
             .collect(),
         kept: HashSet::with_capacity(limits.tree_entries),
     };
-    for file in &changes.files {
+    for file in priority_files {
         if let Some(entry) = paths
             .available
             .get(file.changed_file.path.as_str())

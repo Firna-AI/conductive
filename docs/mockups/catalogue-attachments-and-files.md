@@ -159,8 +159,9 @@ its tests again. So it holds 68,412 files and folders, and it changes
 2,243 files. Each limited list shows its notice in a quiet row: at the top
 of All files, and under the summary of Changes. The row stays in view
 while the rows scroll. Each count comes from the list, not from the limit.
-The file counts of the Changes tab and of the summary, and the counts in
-the notices, show with thousands separators. Items 1 F and 2 B show only
+The file counts of the Changes tab and of the summary, the line totals,
+and the counts in the notices, show with thousands separators. Items 1 F
+and 2 B show only
 in which rows appear, with no group and no label. A link to a file that a
 list leaves out still opens the file.
 

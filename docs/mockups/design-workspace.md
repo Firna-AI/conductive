@@ -86,9 +86,11 @@ link, and the bars of the cloud computer.
   [`src/ui/components/files/`](../../src/ui/components/files/) gives the
   words of the items and of the toast. Add to chat has the icon of the `@`
   of a mention, because the speech bubble with a plus names New session.
-- `ListNotice` in `src/components/files/` draws the notice of a file list
-  that leaves out entries, from runner file report limits, as
-  `app/files/limited` and `app/files/changes/limited` show. It is a row in
+- `ListNotice` in
+  [`src/ui/components/files/`](../../src/ui/components/files/) draws the
+  notice of a file list that leaves out entries, from runner file report
+  limits, as `app/files/limited` and `app/files/changes/limited` show. The
+  app draws the same part. It is a row in
   the fill of a raised surface, with the info icon. It stands at the top of
   All files and under the summary of Changes, and it does not scroll with
   the rows. Its edges stay neutral, with one line under it. All files counts
@@ -100,8 +102,11 @@ link, and the bars of the cloud computer.
   not the latest one keeps its place under the lists, so a saved limited
   list shows both. `listNoticeCopy.ts` beside it holds the words, also the
   line of the list of `@` when nothing in a limited tree matches. The file
-  counts of the Changes tab and of the summary, and the counts in the
-  notices, show with thousands separators, such as 2,243. Each file link of
+  counts of the Changes tab and of the summary, the line totals, and the
+  counts in the notices, show with thousands separators, such as 2,243.
+  `formatCount` in
+  [`src/ui/components/common/counts.ts`](../../src/ui/components/common/counts.ts)
+  writes each of them. Each file link of
   a limited screen opens the limited page of its file or list, from the
   table of `src/limitedListPaths.ts`, which `ScreenLink` reads. The Checks
   tab and the other views of the workspace keep their standard pages.

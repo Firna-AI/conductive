@@ -60,13 +60,13 @@ async fn production_reporter_enforces_tree_changes_and_context_limits() {
 
 #[tokio::test]
 async fn keeps_uncommitted_changes_first_and_reports_exact_omitted_totals() {
-    let mut current = named_snapshot(&["b-untracked", "c-modified", "d-modified", "z-modified"]);
+    let mut current = named_snapshot(&["á.txt", "c-modified", "d-modified", "Z-modified"]);
     current.changes.files = vec![
-        changed_file("a-deleted", 0, 10, false),
-        changed_file("b-untracked", 3, 0, true),
+        changed_file("a\u{301}.txt", 0, 10, false),
+        changed_file("á.txt", 3, 0, true),
         changed_file("c-modified", 7, 6, false),
         changed_file("d-modified", 1, 4, false),
-        changed_file("z-modified", 2, 1, true),
+        changed_file("Z-modified", 2, 1, true),
     ];
     current.changes.files[0].changed_file.change = ChangeKind::Deleted;
     current.changes.files[1].changed_file.change = ChangeKind::Untracked;
@@ -94,7 +94,7 @@ async fn keeps_uncommitted_changes_first_and_reports_exact_omitted_totals() {
             .iter()
             .map(|file| file.changed_file.path.as_str())
             .collect::<Vec<_>>(),
-        ["b-untracked", "z-modified", "a-deleted"],
+        ["a\u{301}.txt", "á.txt", "Z-modified"],
     );
     assert_eq!(
         report.summary,
@@ -164,18 +164,20 @@ async fn keeps_priority_files_with_ancestors_and_skips_an_oversized_closure() {
 
 #[tokio::test]
 async fn tree_priority_keeps_changed_submodules_and_files_that_remain_on_disk() {
-    let mut current = named_snapshot(&["a-ordinary", "m-replacement", "y-submodule", "z-on-disk"]);
+    let mut current = named_snapshot(&["a-committed", "m-replacement", "y-submodule", "z-on-disk"]);
+    current.entries[0].change = Some(ChangeKind::Modified);
     current.entries[1].kind = FileEntryKind::Directory;
     current.entries[2].kind = FileEntryKind::Directory;
     current.entries[2].change = Some(ChangeKind::Modified);
     current.entries[3].change = Some(ChangeKind::Deleted);
     current.changes.files = vec![
+        changed_file("a-committed", 1, 0, false),
         changed_file("m-replacement", 0, 1, true),
         changed_file("y-submodule", 0, 0, true),
         changed_file("z-on-disk", 0, 2, true),
     ];
-    current.changes.files[0].changed_file.change = ChangeKind::Deleted;
-    current.changes.files[2].changed_file.change = ChangeKind::Deleted;
+    current.changes.files[1].changed_file.change = ChangeKind::Deleted;
+    current.changes.files[3].changed_file.change = ChangeKind::Deleted;
     let h = Fixture::with_limits(
         current,
         ReportLimits {

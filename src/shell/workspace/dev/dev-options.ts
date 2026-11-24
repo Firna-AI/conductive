@@ -38,6 +38,8 @@ import { firstStartStates, type FirstStartState } from './dev-first-start'
  *   that way. With `bar`, the change takes the names of `branches`.
  * - `services=running|ended|empty|load-failed`: the Preview tool lists
  *   these services above the servers of the stored report of the ports.
+ * - `lists=limited`: the file lists of a large branch, whose reports leave
+ *   out entries, as `app/files/limited` draws them.
  */
 export interface DevOptions {
   repair: readonly RunnerReportKind[]
@@ -51,6 +53,8 @@ export interface DevOptions {
   bar: DevBar | null
   repository: FakeRepositoryEnd | null
   services: FakeServiceState | null
+  /** The stored history ends with the limited lists of a large branch. */
+  limited: boolean
 }
 
 /** The GitHub state of the bar, a turn that runs, and the answers of its actions. */
@@ -108,6 +112,7 @@ export function readDevOptions(search: string): DevOptions {
         'fetch-failed',
       ]) ?? null,
     services: pick(query, 'services', fakeServiceStates) ?? null,
+    limited: query.get('lists') === 'limited',
   }
 }
 

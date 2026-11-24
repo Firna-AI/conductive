@@ -33,6 +33,13 @@ fn counts(bytes: &[u8]) -> Result<BTreeMap<String, (u64, u64)>> {
     Ok(result)
 }
 
+/// Sort changed files by English collation with the raw path as the tie-break.
+pub(crate) fn sort_changed_files_by_path(files: &mut [BranchChangedFile]) -> Result<()> {
+    let order = path_order()?;
+    files.sort_by(|a, b| order(&a.changed_file.path, &b.changed_file.path));
+    Ok(())
+}
+
 /// Sum complete or selected change rows with overflow checks.
 pub(crate) fn summarize_changes<'a>(
     files: impl IntoIterator<Item = &'a BranchChangedFile>,
@@ -129,8 +136,7 @@ impl GitRepository {
                 uncommitted: dirty.contains(path) || dirty.contains(old),
             });
         }
-        let order = path_order()?;
-        files.sort_by(|a, b| order(&a.changed_file.path, &b.changed_file.path));
+        sort_changed_files_by_path(&mut files)?;
         let summary = summarize_changes(&files).ok_or(Error::InvalidOutput)?;
         Ok(ChangesResponse {
             base_branch: branch.into(),

@@ -44,10 +44,12 @@ function filesInHistory(
           treeFromSnapshot(tree),
           event.delta,
         )
+        const { omittedEntryCount } = updated
         tree = {
           ...tree,
           revision: updated.revision,
           entries: [...updated.entries.values()],
+          ...(omittedEntryCount === undefined ? {} : { omittedEntryCount }),
         }
         break
       }

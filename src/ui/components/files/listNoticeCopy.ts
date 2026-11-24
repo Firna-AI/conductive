@@ -1,20 +1,17 @@
+import { formatCount } from '../common/counts'
+
 /**
  * The words of the file lists that leave out entries: the notices of All
  * files and Changes, and the line of the list of `@` when nothing that it
  * lists matches. The words name the files that the list does not show and
  * where the member finds them. They use the counts of the lists, never the
- * limits, and they hold no fixture, so the app can take them over.
+ * limits of the reports.
  */
 
 /** The lists that can leave out entries. */
 export const omittedLists = ['all-files', 'changes'] as const
 
 export type OmittedList = (typeof omittedLists)[number]
-
-/** A count as the app shows it, with thousands separators: "18,412". */
-export function formatCount(count: number): string {
-  return count.toLocaleString('en')
-}
 
 /**
  * The notice of All files, which counts files and folders together,

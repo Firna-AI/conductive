@@ -14,7 +14,12 @@ screen, its props, and the services that the shell passes to it.
   under the unavailable mark. A read that runs still shows its load, and
   any other failed read shows Try again. The workspace screen gives it the
   wait of a sandbox that starts, so a resume shows the saved lists and the
-  first start of a new workspace shows the wait. Under the lists, the
+  first start of a new workspace shows the wait. While a report leaves out
+  entries, the shared `ListNotice` gives their count from the report: at
+  the top of All files, and under the summary of Changes. The summary and
+  the tab of Changes count the whole change, with the omitted totals.
+  A list that leaves out entries never shows the state of an empty list.
+  Under the lists, the
   panel shows one notice for each failed repair, in the order of the tabs, with its age. A saved tree that
   the cloud computer could not read shows the notice of All files, with no
   age. The notices show under each of the three tabs, and they have no

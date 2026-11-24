@@ -1,12 +1,12 @@
 import { StatTile, StatTileRow } from '@firna/ui/chart'
 import { Table, TableCell, type TableColumn } from '@firna/ui/table'
+import { formatCount } from '../../ui/components/common/counts'
 import { Section } from '../../ui/components/settings/Section'
 import tiles from '../../ui/components/operator/OperatorTiles.module.css'
 import { routes } from '../../app/router'
 import type { OperatorOverview } from '../../shared/operator'
 import { AppLink } from '../ui/AppLink'
 import { useViewport, type Viewport } from '../ui/viewport'
-import { formatCount } from './format'
 import { EmptyRows, NameLink } from './TargetParts'
 
 /** Each tile shares the width of the row, so a phone shows two in a line. */

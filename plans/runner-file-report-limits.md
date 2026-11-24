@@ -1,6 +1,6 @@
 # Runner file report limits
 
-Status: Active. On branch `calummoore/object-memory-runner-report-limits-0m1g`, no pull request yet. Cal approved implementation on 23 November 2026. Milestone 1 is complete. Milestones 1 to 4 are complete. Milestone 5 is in progress. The pull request that completes the work deletes this plan.
+Status: Active. On branch `calummoore/object-memory-runner-report-limits-0m1g`, no pull request yet. Cal approved implementation on 23 November 2026. Milestones 1 to 5a are complete. Milestone 6 is in progress. The pull request that completes the work deletes this plan.
 
 Conductive keeps the latest file tree and branch changes in each workspace's Durable Object.
 One object has a 128 MB memory limit.
@@ -438,17 +438,37 @@ Depends on: Milestones 1 and 4.
 
 Render the approved mockups with real retained lists and omitted totals.
 
-- [ ] Extend `src/files/api/` readers with generated types. Preserve optional metadata in the tree model and every synchronization path.
-- [ ] Show the approved All files and Changes notices. Use full aggregate totals for the Changes header and tab count.
-- [ ] Keep omission notices with saved lists during sleep, restart, and unavailable scans. Remove them after an explicit-zero replacement.
-- [ ] Keep file and diff reads usable when their paths are outside the retained lists. Check refresh after omitted-content changes.
-- [ ] Verify the approved mention behavior, answer links and pictures, Add to chat, and attached-file chips. Add no second tree under item 3 A.
-- [ ] Show the limited-coverage words in the no-match line of the `@` list while the tree is limited, as `app/file-mentions/list/limited` draws.
-- [ ] Format the counts of the Changes tab, the Changes summary, and both `DiffStat` copies with one shared count formatter in `src/ui/`. Move the mockup copies of the format in `docs/mockups/src/components/files/listNoticeCopy.ts` and `docs/mockups/src/components/common/LinkTabs.tsx` to that formatter.
-- [ ] Extend existing parser, tree, synchronization, and panel tests at the lowest level that protects each changed requirement.
-- [ ] Update `src/files/README.md` and `src/files/store.md` for useful boundary changes.
-- [ ] Run `npm run test -- src/files` and only the affected mention or row-menu tests.
-- [ ] Smoke-test the real panels against controlled reports on desktop and phone. Save PNG screenshots under `.context/runner-file-report-limits/`.
+- [x] Extend `src/files/api/` readers with generated types. Preserve optional metadata in the tree model and every synchronization path.
+- [x] Show the approved All files and Changes notices. Use full aggregate totals for the Changes header and tab count.
+- [x] Keep omission notices with saved lists during sleep, restart, and unavailable scans. Remove them after an explicit-zero replacement.
+- [x] Keep file and diff reads usable when their paths are outside the retained lists. Check refresh after omitted-content changes.
+- [x] Verify the approved mention behavior, answer links and pictures, Add to chat, and attached-file chips. Add no second tree under item 3 A.
+- [x] Show the limited-coverage words in the no-match line of the `@` list while the tree is limited, as `app/file-mentions/list/limited` draws.
+- [x] Format the counts of the Changes tab, the Changes summary, and both `DiffStat` copies with one shared count formatter in `src/ui/`. Move the mockup copies of the format in `docs/mockups/src/components/files/listNoticeCopy.ts` and `docs/mockups/src/components/common/LinkTabs.tsx` to that formatter.
+- [x] Extend existing parser, tree, synchronization, and panel tests at the lowest level that protects each changed requirement.
+- [x] Update `src/files/README.md` and `src/files/store.md` for useful boundary changes.
+- [x] Run `npm run test -- src/files` and only the affected mention or row-menu tests.
+- [x] Smoke-test the real panels against controlled reports on desktop and phone. Save PNG screenshots under `.context/runner-file-report-limits/`.
+
+The implementor report, failure proofs, catalogue comparison, and screenshots are `.context/runner-file-report-limits/m5-report.md`, `m5-checks/`, and `m5-screenshots/`.
+
+- **Orchestrator call, 24 November 2026:** The runner sorts the listed changes by path after it selects them, so older apps keep today's row order. The tree priority still uses the selection order. The app shows rows in the order that it receives them, with no second sort.
+- **Orchestrator call, 24 November 2026:** The notice part and its words moved to `src/ui/components/files/`, because the app uses them. `tools/ui-move/map.json` lists the three moved paths.
+- The app does not read `FILE_TREE_REPORT_MAX_ENTRIES` or `FILE_CHANGES_REPORT_MAX_FILES`. The notices use the reported counts. The development fixture sizes its limited lists with them, and the parity test keeps them equal to Rust.
+
+## Milestone 5a: Mockup alignment for changed folders
+
+Tags: mockup
+
+Depends on: Milestone 1.
+
+Milestone 5 found that the limited All files mockup draws `tests/fixtures` closed, although it holds listed changed files.
+The app on `main` opens every folder that holds a changed entry, and the canonical mockups draw changed folders open.
+So the new mockup state is the side that changes.
+
+- [x] Draw every folder that holds a listed changed file open in the limited mockup states, as the app draws it. Run `npm run mockups:check`, compare the build with a baseline, and retake the affected screenshots.
+
+The catalogue comparison is `.context/runner-file-report-limits/m5-checks/catalogue-compare-5a.json`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
@@ -459,6 +479,8 @@ Verify the combined change, compare report costs, and prepare one pull request i
 - [ ] Run early format, lint, and file-length checks with Node 24.
 - [ ] Prove that each new test fails on the behavior it protects. Run each new asynchronous or browser test 10 times and record its cost.
 - [ ] Run a one-time cost check for 1,000 changes, 50,000 tree entries, and omitted-only edits. Compare CPU, rows, history bytes, and heap with the supplied measurements.
+- [ ] Rerun `worker/chat/runner-file-parts.test.ts > refuses inconsistent changes metadata and empty multipart reports` at default concurrency, 10 times on the branch head and 10 times on `main` at `4fdb5bc7d`. It timed out once at 15 s during Milestone 4. The evidence is `.context/runner-file-report-limits/m4-checks/guard-timeout-evidence.md`. Fix the cause if the branch made it slower.
+- [ ] Measure the first draw of All files with a limited tree whose changed folder holds about 45,000 entries. The app has no virtual list. Ask Cal if the measured time needs a new design choice.
 - [ ] Measure a burst of absent-path refreshes in existing app readers. Choose a full-tree fallback before repeated scans dominate the cost.
 - [ ] Save cost and compatibility evidence under `.context/runner-file-report-limits/`. Ask Cal if a new design choice is needed.
 - [ ] Install desktop and runner dependencies as `AGENTS.md` requires. Run `npm run check`, which includes the mockup check.

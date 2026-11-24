@@ -114,17 +114,19 @@ export const retainedEntries: readonly MentionEntry[] = uniqueEntries([
     ]),
 ])
 
-/** The folders that All files shows open in the limited tree. */
-const openFolders: ReadonlySet<string> = new Set([
-  'src',
-  'src/app',
-  'src/app/checkout',
-  'tests',
-  'tests/checkout',
-])
-
 /** The mark of each changed file, by its path. */
 const changeOf = new Map(listedChanges.map((file) => [file.path, file.change]))
+
+/**
+ * The folders that All files shows open in the limited tree: each folder
+ * that holds a changed entry, as the app opens them until the member closes
+ * one. So the folders of the recorded answers that Changes lists show open.
+ */
+const openFolders: ReadonlySet<string> = new Set(
+  retainedEntries.flatMap((entry) =>
+    !entry.folder && changeOf.has(entry.path) ? foldersOf(entry.path) : [],
+  ),
+)
 
 /** The folder that holds a path, or '' at the root. */
 function parentOf(path: string): string {

@@ -28,6 +28,7 @@ import {
 } from '../../../test-support/fixtures/core'
 import { senderSnapshot } from '../../../test-support/fixtures/workspaces'
 import { serveFakeServices } from '../../../test-support/fake-services'
+import { storeLimitedLists } from '../../../test-support/limited-file-lists'
 import {
   fullReport,
   nextEnvelope,
@@ -56,6 +57,9 @@ const server = new FakeApiServer(
       }
     : {},
 )
+// The limited lists go first, because a later full report of a list would
+// clear its failed repair.
+if (options.limited) storeLimitedLists(server.events, now())
 storeFailedRepairs(server.events, options.repair, now())
 // The services answer as the Worker does, beside the servers of a report.
 if (options.services) {

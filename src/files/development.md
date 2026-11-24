@@ -16,6 +16,7 @@ The address holds the state of the page:
 | `scenario` | `mockup`, the mockup data, or `live`, which includes the recorded updates |
 | `repair`   | `all-files`, `changes`, or both, as `all-files,changes`, with failed repairs from the list reads |
 | `tree`     | `saved`, or `none`: the cloud computer could not read the files, and All files keeps the saved tree, or no tree was saved |
+| `lists`    | `limited`: the lists of a large branch, whose reports leave out entries |
 | `preview`  | What the Preview of an HTML file shows: `page`, the default, or `opening`, `failed`, or `older-software` |
 | `controls` | `off` hides the development controls                         |
 
@@ -76,3 +77,13 @@ controls also have these buttons:
 `?tree=saved` and `?tree=none` store the mark in the history. The tree
 read gives the marked saved tree or the marked empty tree together with
 its cutoff. Use these settings with the mockup data.
+
+`?lists=limited` serves the lists of `app/files/limited` and
+`app/files/changes/limited` of the mockups, as a new runner reports a
+branch that passes the limits of its reports. All files lists 50,000
+entries and leaves out 18,412, such as `tsconfig.json`, whose file tab
+still reads the file. Changes lists 1,000 files and leaves out 1,243. The
+report lists its files in path order, as a new runner sends them.
+`test-support/limited-file-lists.ts` builds both lists. Use it
+with the mockup data. With `?tree=saved` or `?repair=changes`, a limited
+list shows its notice beside the notice of that state.

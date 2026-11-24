@@ -159,11 +159,11 @@ impl FileReporter {
         };
         let send_changes = kind != Some(FileReportKind::Tree)
             && (full || changes_updated(state.changes.as_deref(), &current));
-        let changes_response = select_changes(&current.changes, self.limits.changed_files)?;
+        let changes = select_changes(&current.changes, self.limits.changed_files)?;
         let planned_tree = if kind == Some(FileReportKind::Changes) {
             None
         } else {
-            let tree = TreeHistory::new(current.clone(), &changes_response, self.limits);
+            let tree = TreeHistory::new(current.clone(), &changes, self.limits);
             let previous = state.tree.as_ref().filter(|_| !full && !state.unavailable);
             let Some(parts) = tree.parts(
                 previous,
@@ -180,7 +180,7 @@ impl FileReporter {
         if send_changes {
             let event = RunnerFileEvent::ChangesUpdated {
                 changes: RunnerChangesPart {
-                    changes_response,
+                    changes_response: changes.response,
                     runner_file_revision_part: RunnerFileRevisionPart {
                         revision: state.revisions.changes + 1,
                         part_number: 1,

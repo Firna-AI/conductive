@@ -3,8 +3,8 @@ import {
   entryName,
 } from '../../../../../src/ui/components/chat/entryPaths'
 import { allFilesUnavailable } from '../../../../../src/ui/components/chat/lostCopy'
+import { omittedMentionLine } from '../../../../../src/ui/components/files/listNoticeCopy'
 import { retainedEntries } from '../../fixtures/limitedFiles'
-import { omittedMentionLine } from '../files/listNoticeCopy'
 import { mentionRows } from './fileMentions'
 import { mentionList } from '../../entries/components/chat/MentionList.mockup'
 

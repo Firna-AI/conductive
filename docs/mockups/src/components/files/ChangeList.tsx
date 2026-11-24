@@ -11,9 +11,9 @@ import { diffStat } from '../../entries/components/files/DiffStat.mockup'
 import { listNotice } from '../../entries/components/files/ListNotice.mockup'
 import { instanceKey } from '../../instanceKey'
 import { RowMenuItem, type FileRowMenu } from './FileRowMenu'
-import { formatCount } from './listNoticeCopy'
 import { paths } from '../../paths'
 import { classes } from '../../../../../src/ui/components/common/classes'
+import { formatCount } from '../../../../../src/ui/components/common/counts'
 import styles from './ChangeList.module.css'
 
 /**

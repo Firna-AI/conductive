@@ -1,11 +1,12 @@
 import { defineComponent } from '@mokly/mokly'
-import { ListNotice } from '../../../components/files/ListNotice'
-import { omittedLists } from '../../../components/files/listNoticeCopy'
+import { ListNotice } from '../../../../../../src/ui/components/files/ListNotice'
+import { omittedLists } from '../../../../../../src/ui/components/files/listNoticeCopy'
 import { limitedLists } from '../../../fixtures/limitedFiles'
 
 /**
  * The notice of a file list that leaves out entries, registered with
- * Mokly. Its pages show the notice of All files and of Changes.
+ * Mokly. Its pages show the notice of All files and of Changes. The app
+ * draws the same part.
  */
 export const listNotice = defineComponent({
   slug: 'list-notice',

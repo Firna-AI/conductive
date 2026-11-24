@@ -5,7 +5,6 @@ use std::ops::Range;
 use std::ptr;
 use std::sync::Arc;
 
-use cnd_runner_interface::file_changes::ChangesResponse;
 use cnd_runner_interface::file_tree::{
     FileTreeChange, FileTreeDelta, RunnerFileEvent, RunnerFileRevisionPart, RunnerFileTreePart,
 };
@@ -16,7 +15,7 @@ use crate::repository::service::RepositorySnapshot;
 use super::parts::{Oversized, fits_one_delta, split, split_delta};
 use super::prepare::ReportFilter;
 use super::refreshes::{content_paths, listed_changes_paths, omitted_diff_paths};
-use super::selection::{ReportLimits, TreeSelection, select_tree};
+use super::selection::{ChangesSelection, ReportLimits, TreeSelection, select_tree};
 
 /// Last complete tree and the unbounded scan that supplied it.
 pub(super) struct TreeHistory {
@@ -39,11 +38,11 @@ impl TreeHistory {
     /// Build the next selection from the same capture as its changes report.
     pub(super) fn new(
         source: Arc<RepositorySnapshot>,
-        changes: &ChangesResponse,
+        changes: &ChangesSelection<'_>,
         limits: ReportLimits,
     ) -> Self {
-        let selection = select_tree(&source, changes, limits);
-        let listed_changes = listed_changes_paths(changes);
+        let selection = select_tree(&source, &changes.priority_files, limits);
+        let listed_changes = listed_changes_paths(&changes.response);
         Self {
             source,
             selection,

@@ -16,7 +16,14 @@ import type { SkillsStore } from './mention-skills'
  * Files screens fits it. `tree` is null until a tree loads.
  */
 export interface MentionFilesSnapshot {
-  tree: { entries: ReadonlyMap<string, FileEntry> } | null
+  tree: {
+    entries: ReadonlyMap<string, FileEntry>
+    /**
+     * The entries that the report of the tree leaves out, or absent while
+     * the count is unknown, as the tree of the Files screens gives it.
+     */
+    omittedEntryCount?: number
+  } | null
   /** Why the tree did not load, while no tree shows. */
   treeError: unknown
   /** The cloud computer could not read the files. */
@@ -63,12 +70,17 @@ export interface MentionTarget {
 
 /**
  * The tree as the list of `@` and the chips find it: still loading, not
- * available, or ready with its entries.
+ * available, or ready with its entries. A `limited` tree leaves out entries
+ * that its report omits, so a file of the branch can have no entry.
  */
 export type MentionTree =
   | { state: 'loading' }
   | { state: 'unavailable' }
-  | { state: 'ready'; entries: ReadonlyMap<string, FileEntry> }
+  | {
+      state: 'ready'
+      entries: ReadonlyMap<string, FileEntry>
+      limited: boolean
+    }
 
 const loading: MentionTree = { state: 'loading' }
 const unavailable: MentionTree = { state: 'unavailable' }
@@ -80,14 +92,19 @@ const readyTrees = new WeakMap<object, MentionTree>()
  * The tree of a snapshot. A saved tree that is marked unavailable still
  * shows. The value stays the same while the tree stays the same, so a
  * change of another part of the files, such as an open folder, draws no
- * message again.
+ * message again. A tree is limited only while its count of omitted entries
+ * is above zero. An unknown count, as from an older runner, is no limit.
  */
 function treeOf(snapshot: MentionFilesSnapshot): MentionTree {
   const { tree } = snapshot
   if (tree && (tree.entries.size > 0 || !snapshot.treeUnavailable)) {
     const known = readyTrees.get(tree)
     if (known) return known
-    const ready: MentionTree = { state: 'ready', entries: tree.entries }
+    const ready: MentionTree = {
+      state: 'ready',
+      entries: tree.entries,
+      limited: (tree.omittedEntryCount ?? 0) > 0,
+    }
     readyTrees.set(tree, ready)
     return ready
   }

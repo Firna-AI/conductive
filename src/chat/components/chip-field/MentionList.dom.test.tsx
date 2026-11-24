@@ -150,6 +150,29 @@ describe('the list of @', () => {
     })
   })
 
+  test('while the tree leaves out entries, the line of no match also says that some files are not listed, and a tree that leaves out none keeps the plain line', async () => {
+    const lines: (string | null)[] = []
+    const entries = toolFixtures().files.entries.filter(
+      (item) => item.path !== 'tsconfig.json',
+    )
+    for (const count of [18_412, 0, undefined]) {
+      const server = new FakeApiServer()
+      server.json('GET', filePaths.tree(FAKE_IDS.org, FAKE_IDS.workspace), {
+        revision: 1,
+        entries,
+        ...(count === undefined ? {} : { omittedEntryCount: count }),
+      })
+      const view = await mountMentionField({ files: await realFiles(server) })
+      typeMessage(view.field, 'Turn on strict mode in @tsconfig')
+      lines.push(view.line())
+    }
+    expect(lines).toEqual([
+      'Nothing matches “tsconfig”. Some files are not listed, so type the path or ask the agent.',
+      'Nothing matches “tsconfig”',
+      'Nothing matches “tsconfig”',
+    ])
+  })
+
   test('a draft that comes back with a query lets typing continue the query, and a tree that loads makes no chip of it', async () => {
     const view = await mountMentionField({
       tree: null,

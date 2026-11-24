@@ -1,7 +1,4 @@
-/** A count as the section writes it, with a comma in each thousand: 1,284. */
-export function formatCount(value: number): string {
-  return value.toLocaleString('en')
-}
+import { formatCount } from '../../ui/components/common/counts'
 
 /** A count and its noun: "1 org", or "312 orgs". */
 export function counted(value: number, one: string, many: string): string {
