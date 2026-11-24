@@ -3,7 +3,7 @@
 - **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-20, from branch `calummoore/sandbox-start-issue-secrets-q3is`, review round 2, the wider fix of finding 7 and a new problem of its check.
-- **Location:** `rollback` and `apply` in `crates/cnd-cli/src/update/engine.rs`, `restore_parts` in `crates/cnd-cli/src/update/repair.rs`, `image/release/conductive-runner.service` (its `ExecStartPre=` runs `/opt/conductive/current/conductive update apply`), and the Updates section of `docs/protocol/sandbox-software.md`.
+- **Location:** `apply` in `crates/cnd-cli/src/update/engine.rs`, `apply_release` and `rollback` in `crates/cnd-cli/src/update/activation.rs`, `restore_parts` in `crates/cnd-cli/src/update/repair.rs`, `image/release/conductive-runner.service` (its `ExecStartPre=` runs `/opt/conductive/current/conductive update apply`), and the Updates section of `docs/protocol/sandbox-software.md`.
 - **Reason:** the branch fixes the installer error, and the wider fix changes the rule that a start goes on after a failed repair, which the user decides.
 
 - **Source:** Review. **Category:** Product bug.

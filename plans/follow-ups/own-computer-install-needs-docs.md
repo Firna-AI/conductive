@@ -1,0 +1,31 @@
+# The docs leave out three install needs
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, an implementation item of that branch.
+- **Location:** `docs/protocol/own-computers.md:149`, `src/marketing/docs/own-computers.md:22`, `docs/mockups/src/components/own-computers/addComputerCopy.ts:24`, `check_server` in `image/computer/install.sh:68`
+- **Reason:** Option A adds requirements to a protocol doc, and the user reviews each new requirement.
+
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Terms:**
+  - **Add computer:** the dialog of the Own computers tab in which an admin names a new own computer and gets its install command.
+  - **`newuidmap` and `newgidmap`:** the commands that map the subordinate user and group IDs of rootless Podman, which Ubuntu ships in the package `uidmap`.
+- **Background:**
+  - The protocol says that Add computer names these needs of the server: Linux on x86_64, with systemd and Podman. The install checks these needs, and that Podman runs without root (`docs/protocol/own-computers.md:149-151`).
+  - The public guide says the same (`src/marketing/docs/own-computers.md:22-24`). So does the Add computer text of the mockup (`docs/mockups/src/components/own-computers/addComputerCopy.ts:24`).
+  - `check_server` in `image/computer/install.sh` also checks Podman 4 or later, cgroups v2, and the commands `newuidmap`, `newgidmap`, `curl`, `sha256sum`, and `tar`. It prints one line for each missing need, and then it stops.
+  - `image/computer/README.md` lists all of these needs.
+  - The health report of the program also requires Podman 4 or later and cgroups v2 (`crates/cnd-computer/src/preflight.rs`).
+- **Problem:** The install also needs Podman 4 or later, cgroups v2, and the commands `newuidmap` and `newgidmap`. No protocol doc, guide, or mockup names them. Ubuntu 22.04 ships Podman 3.4.4, so the install refuses its packaged Podman.
+- **Impact if no action:** An admin learns of these needs only when the install stops. The install then names each missing need.
+- **Root question:** Which needs of a server must an admin see before the install, and which Podman version must the install accept?
+- **Options:**
+  - **A.** Name the three needs in the protocol doc, in the public guide, and in the Add computer text of the mockup. The Add computer screen of the app then shows them when the app builds that screen. Read both legal pages and each public guide in full, as `CLAUDE.md` says. Effort: Small.
+  - **B.** Test the install and the container operations on Ubuntu 22.04 with Podman 3.4. Lower the floor if they pass, and then name the needs as in A. Effort: Medium.
+  - **C.** Change nothing, because the install names each missing need. Effort: Small.
+- **Left out:** None. These three cover the choices.
+- **Wider fix:** None. The `documentation` skill already requires the docs to match the behaviour of the install.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/own-computer-docker.md` changes the same doc sections. Under its options A or D, it also changes the Add computer section of `docs/protocol/own-computers.md` and the guide section "Add a computer". Make both edits in one change.
+- **Recommendation:** A. Admins then see every need before they run the command. B can follow when a user asks for Ubuntu 22.04.
+- **Action:** ask the user, because A adds requirements to a protocol doc, and the user reviews each new requirement.

@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-20, from branch `calummoore/sandbox-start-issue-secrets-q3is`, review round 1, finding 4. Checked again on 2026-11-20 after review round 2, which added options F and G and the Node case.
-- **Location:** `apply` and `rollback` in `crates/cnd-cli/src/update/engine.rs`, `restore_parts` in `crates/cnd-cli/src/update/repair.rs`, `complete_versions` in `crates/cnd-cli/src/update/state.rs`, the Updates section of `docs/protocol/sandbox-software.md`, and the update paragraph of `src/marketing/docs/cloud-computer.md`.
+- **Location:** `apply` in `crates/cnd-cli/src/update/engine.rs`, `apply_release` and `rollback` in `crates/cnd-cli/src/update/activation.rs`, `restore_parts` in `crates/cnd-cli/src/update/repair.rs`, `complete_versions` in `crates/cnd-cli/src/update/state.rs`, the Updates section of `docs/protocol/sandbox-software.md`, and the update paragraph of `src/marketing/docs/cloud-computer.md`.
 - **Reason:** the user must choose how a staged release that lost a part is treated, because the options change which release starts.
 
 - **Source:** Review. **Category:** Docs or spec.

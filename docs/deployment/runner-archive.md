@@ -1,11 +1,12 @@
 # Conductive releases and software image
 
 This page belongs to [Deployment inputs](../deployment.md). It describes
-release publication and the software image of each deploy from `main`.
+the release, container base image, and software image of each deploy from
+`main`.
 
 ## Conductive release files
 
-Every image build and refresh installs the newest Conductive release.
+Every org image build and refresh installs the newest Conductive release.
 The Worker reads the newest-version JSON before admission and command
 composition. `CONDUCTIVE_RELEASE_SERVER` can replace the default base
 `https://runner.conductive.build`. No archive URL or digest variable is needed.
@@ -35,13 +36,20 @@ The deploy writes these keys:
 
 - SDK helper: `releases/download/sdk-helper/sdk-helper-<sha256>.tar.gz`.
 - System: `releases/download/system/system-<sha256>.tar.gz`.
-- Program: `releases/download/conductive/<version>/<sha256>/conductive-<version>-x86_64-unknown-linux-musl.tar.gz`.
+- Program: `releases/download/conductive/<version>/<release-digest>/conductive-<version>-x86_64-unknown-linux-musl.tar.gz`.
+- Program manifest: `releases/download/conductive/<version>/<release-digest>/conductive-<version>-x86_64-unknown-linux-musl.json`.
+- Program signature: `releases/download/conductive/signatures/<manifest-sha256>.sig`.
 - Parts: `releases/download/conductive/<version>/<sha256>/parts-<version>-x86_64-unknown-linux-musl.json`.
 - Newest-version JSON: `releases/latest/conductive/x86_64-unknown-linux-musl`.
 
-Each `<sha256>` names the digest of that file's bytes. The program archive
-holds `conductive`. The parts JSON has schema version 1 and a `parts` array
-of `name`, `url`, and `sha256` objects. Immutable files have a one-year cache
+Each `<sha256>` names the digest of that file's bytes. The
+`<release-digest>` is the SHA-256 digest of the program archive.
+The `<manifest-sha256>` is the SHA-256 digest of the program manifest.
+The program manifest has the same bytes as the newest-version JSON for
+that release. The detached Ed25519 signature covers those bytes.
+The program archive holds `conductive`. The parts JSON has schema version
+1 and a `parts` array of `name`, `url`, and `sha256` objects.
+Immutable files have a one-year cache
 time. The newest-version JSON has content type `application/json` and
 `Cache-Control: max-age=60`.
 
@@ -65,6 +73,34 @@ The S3 key pair comes from the deploy token, as
 [Cloudflare documents](https://developers.cloudflare.com/r2/api/tokens/).
 The key ID is the token ID. The secret key is the SHA-256 digest of the token.
 The run masks it in the log. Old immutable files stay in the bucket.
+
+### The container base image in each deploy
+
+The `container-base` job runs after a successful `deploy` job on `main`.
+It builds the Ubuntu 24.04 base of the E2B template and installs the
+Conductive release of that deploy by version and program archive digest.
+Each own computer uses this base for its first org image build.
+See [The org image of each own computer](../protocol/own-computers.md#the-org-image-of-each-own-computer).
+
+The job writes these immutable keys to `conductive-runner` with a one-year
+cache time.
+
+- OCI archive at `releases/download/container-base/<version>/<archive-sha256>/container-base-<version>.tar`, with content type `application/x-tar`.
+- Signature at `releases/download/container-base/signatures/<manifest-sha256>.sig`, with content type `application/octet-stream`.
+- Manifest at `releases/download/container-base/<version>/<release-digest>.json`, with content type `application/json`.
+
+`<release-digest>` is the `sha256` of the program archive in the
+newest-version JSON for that release. The container base image manifest
+records the release identity, the archive digest and size, and the
+Podman image ID. Its Ed25519 signature covers the manifest bytes.
+
+1. Check the public manifest key. If it exists, record the skip and end the job.
+2. Build the image, save it as an OCI archive, and sign its manifest with
+   the release signing key.
+3. Upload the archive and signature through the R2 S3 API. Skip each key
+   that exists. Check the public archive size and the signature bytes.
+4. Upload the manifest last and check its public size. This makes the
+   archive and signature available before a reader finds the manifest.
 
 ### The software image
 

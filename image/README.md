@@ -13,7 +13,9 @@ In a workspace sandbox, this software starts the agent runner and the
 preview relay. It also
 gives git a fresh GitHub token for each operation. The release program also
 supplies the workspace CLI and MCP server. The folder also holds [developer scripts](developer-scripts.md) that no build installs: release
-packaging, a real-sandbox live check, and the E2B template builder.
+packaging, a real-sandbox live check, the E2B template builder, and the
+container base image builder. The [own computer files](computer/README.md)
+set up an own computer and build its container base image.
 
 ## Responsibilities
 
@@ -30,6 +32,11 @@ packaging, a real-sandbox live check, and the E2B template builder.
 - Start no runner in a build sandbox. The service runs it only in a
   workspace sandbox.
 - Start the host service during installation when it does not run.
+- Set up an own computer with its install script: a separate user for
+  Podman without root, the newest release, and the systemd user service of
+  the computer mode.
+- Build the container base image of own computers from the scripts of the
+  E2B template and the release of one deploy.
 - Package the system part on a developer machine or in the deploy workflow.
 - Check the chat path and time the first agent start in a real sandbox.
 
@@ -134,6 +141,17 @@ and their sources.
 Each org image build still installs the newest release of the sandbox
 software, as on Boat.
 
+## Own computers
+
+An own computer is a Linux server that an admin adds to an org. Each
+workspace and each build of the org on it runs in its own Podman
+container. [Own computers](computer/README.md) describes the install
+script of such a server. The script sets up the program in computer mode,
+as a systemd user service of a separate user. The same guide describes the
+container base image. That image holds the base software of the E2B
+template and the release of one deploy. Each own computer builds its first
+org image from it. The deploy builds, signs, and publishes it.
+
 ## Install
 
 [Install in a build](install.md) describes the verified bootstrap, release
@@ -218,6 +236,8 @@ A build, a disk retention restart, and an unfinished start launch no runner.
   a file and runs it with Bash.
 - [Developer scripts](developer-scripts.md#key-code): the system packager
   and the live check.
+- [Own computers](computer/README.md#key-code): the install script, the
+  user unit, and the container base image build.
 
 ### Related Docs
 
@@ -229,6 +249,8 @@ A build, a disk retention restart, and an unfinished start launch no runner.
   the org image, the startup script, and the env vars.
 - [Services](../docs/protocol/services.md): the lifetime, the environment,
   and the logs of services.
+- [Own computers](../docs/protocol/own-computers.md): the install, the
+  computer connection, and the org image of each own computer.
 - [Access and security](../docs/protocol/access-and-security.md): what a
   sandbox holds, GitHub tokens, and the terminal.
 - [Architecture](../docs/architecture/components.md#sandbox-software): the sandbox

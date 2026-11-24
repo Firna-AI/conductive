@@ -1,0 +1,57 @@
+# A rerun stops at the spent code
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 2, finding 85, with option D and the new problems of its finding check.
+- **Location:** `enroll_and_start` in `image/computer/install.sh:263`, `CodeRefused` in `crates/cnd-computer/src/error.rs:25`, `ServiceFailed` in `crates/cnd-computer/src/error.rs:35`, `crates/cnd-cli/tests/computer_install_tests.rs`, step 7 in `image/computer/README.md:73`
+- **Reason:** A rerun meets the spent code only after a stop or a failed service step at the end of an install. The failure leaves the server as it was.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **One-time code:** the code in the install command of an own computer, which works once, within 1 hour, and which the Worker exchanges for the computer token.
+  - **Computer token:** the lasting credential with which an own computer opens its computer connection. The Worker keeps only its digest.
+  - **New code:** the action of the Own computers tab that gives a computer that never connected a new one-time code, and revokes its unused token.
+- **Background:**
+  - The install script runs `conductive computer check`, then `conductive computer enroll`, then `conductive computer service`, as the user `conductive` (`enroll_and_start` in `image/computer/install.sh`). An agent call of the own computers plan says that each install step can run again.
+  - `computer enroll` exchanges the code with the Worker and saves the computer token (`crates/cnd-computer/src/enrollment.rs:68`). The Worker spends the code at the exchange (`consumeComputerCode` in `worker/own-computers/code-data.ts:80`). So no rerun can get the first token again.
+  - `computer service` writes the user unit and starts the service. The service runs `conductive computer run`.
+  - `computer run` waits for a missing enrollment. It logs "Computer settings are missing or unreadable. Waiting for enrollment." and reads the settings again every 5 seconds (`crates/cnd-computer/src/runtime.rs:59-67`).
+  - After a refusal with HTTP 401, `computer run` waits 5 minutes before its next try (`delay` in `crates/cnd-computer/src/runtime.rs`).
+  - A refused code prints "A code works once within 1 hour. Choose New code in the app to get a new command." (`CodeRefused` in `crates/cnd-computer/src/error.rs`). A failed service step prints "The service could not start. Check the systemd user manager and run this command again." (`ServiceFailed`).
+  - New code works only for a computer that never connected. After the first connection, the Worker replies `409 computer_already_connected` (`worker/own-computers/admin.ts:114-121`).
+  - While the code is used and the computer never connected, the protocol and the guide offer only Show command until the hour ends. Show command then answers `409 code_unavailable`. `docs/protocol/own-computers.md:154-157` and `src/marketing/docs/own-computers.md:32-34` give this state.
+  - The branch `calummoore/own-computers-milestone-11-host-program-3jbp` fixes the rerun of the install command. A rerun now reuses a runnable installed program, and it keeps `current` when the enroll fails.
+- **Problem:**
+  - The process can stop after the token is saved, or the service step can fail. A rerun of the same command then tries to exchange the spent code again. It stops at the refused code, before the service step.
+  - The text of `ServiceFailed` then tells the admin to run the command again, which cannot work.
+  - A rerun on a computer that is already connected also stops at the refused code, with "Choose New code in the app". The Worker refuses New code for that computer, and the computer needs no action.
+- **Impact if no action:** The admin cannot finish with the original command. The admin must find the saved enrollment and start the service by hand, or get a new code. The app offers New code only after the hour of the old code ends.
+- **Root question:** After the Worker spent the one-time code, how does a rerun of the install command finish the install or name the right next step?
+- **Options:**
+  - **A.** Print and document the exact command that starts the service after a successful exchange. The admin must run that command. The text of `ServiceFailed` must then change too. Effort: Small.
+  - **B.** Save a private receipt with the token in the same write, for the same install attempt, and resume at the service step on a rerun.
+    - The receipt must come from the code that `computer enroll` reads on standard input, never from an argument.
+    - Test a failed service start, then a retry that makes one exchange.
+    - Cost: as written, B can report success with a revoked token. After New code or Remove computer, a rerun of the old command from the shell history matches its receipt, starts the service, and prints success. So B must check that the saved token still works.
+    - Effort: Medium.
+  - **C.** Make the code exchange recoverable with proof of the original attempt. The computer makes a secret before the exchange, and the Worker binds the exchange to it. This also covers a lost reply before the server saved the token, and it changes the exchange protocol. Effort: Large.
+  - **D.** Start the service before the exchange: run check, then service, then enroll.
+    - A failed service step then stops the install while the code still works. So the same command finishes after the admin fixes the server.
+    - An install that stops after the exchange leaves a running service. That service reads the token within 5 seconds and connects.
+    - On a rerun over an earlier, revoked token, the restarted service gets HTTP 401 and waits 5 minutes. So restart the service once more after the exchange, and only warn when that restart fails.
+    - When the exchange refuses the code and a token is saved, say that the computer can already be enrolled. It needs no action when the app shows it as connected.
+    - Change step 7 of `image/computer/README.md`, the agent call on the install steps in `plans/own-computers.md`, and the expected calls in `crates/cnd-cli/tests/computer_install_tests.rs`. Add a test in which the service step fails and no exchange runs.
+    - Cost: each rerun restarts the service, also when its exchange then fails. A failed exchange leaves an idle service that waits for enrollment. A fix of the server that takes more than 1 hour needs New code.
+    - Effort: Small.
+- **Left out:**
+  - A reuse of any saved token: after New code or Remove computer, the saved token is revoked, or it belongs to another record or origin. So it fails the goal.
+  - A code that works again until the first connection: it breaks the one-time rule of `docs/protocol/own-computers.md:146`. A second use of a stolen code can also take over the enrollment.
+  - A service that spends the code from a saved code file at its first start: D is better on each point. In both, the code is spent only after the service runs. Under D, no code goes to disk, and the admin sees a refused code at once.
+- **Wider fix:** C. C also covers a lost reply, which leaves no receipt for B to use. A replaced or removed code also ends its retries, so C cannot resume with a revoked token.
+- **Previous examples:** `plans/follow-ups/own-computer-spent-code-state.md` records the same state from the side of the app: a computer whose code is used and that never connected.
+- **Related:**
+  - `plans/follow-ups/own-computer-spent-code-state.md`: the same state, and options that conflict. That item names a lost reply and a token that was not saved. This item adds a saved token whose service never started. Its option D lets a token of a used code connect for the first time only until the deadline of the code. That conflicts with A and B here, because a recovery after the deadline then fails. D here works with each option of that item.
+  - `plans/follow-ups/own-computer-code-exchange-docs.md`: the same exchange. Its option C is option C here, so decide the two together. Under its option D, the exchange counts as the first connection. New code then fails after a failed install, and only Remove computer and Add computer help.
+  - `plans/follow-ups/own-computer-service-unit-updates.md`: work that waits for this item. Its option A asks an admin to run `conductive computer service` again, and a rerun of the install command reaches that step only after this fix.
+- **Recommendation:** D. It removes both causes with a small change of the step order, because `computer run` already waits for enrollment. B costs more, and as written it can report success with a revoked token. D must land with or after the fix that makes a rerun reuse a runnable installed program, because each rerun then restarts the service.
+- **Action:** fix after merge, apply D, because the likelihood is Rare and the severity is Medium.

@@ -1,0 +1,31 @@
+# Service logs hold ANSI colour codes
+
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 1, a problem outside the scope.
+- **Location:** `main` in `crates/cnd-cli/src/main.rs:27`
+- **Reason:** The program sets up its log output in the same way on `main`, for every mode, so the fix is not part of this change.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **ANSI escape codes:** control sequences, such as `ESC[2m` and `ESC[32m`, that a terminal reads as colour and style, and that other readers show as text.
+  - **Journal:** the systemd log that `journalctl` shows, which keeps the standard error of each service.
+- **Background:**
+  - `main` in `crates/cnd-cli/src/main.rs` sets up the log output with `tracing_subscriber::fmt()`. It writes to standard error and leaves the ANSI setting at its default.
+  - In tracing-subscriber 0.3.23, the default turns ANSI codes on unless the variable `NO_COLOR` is set and not empty. It does not check whether standard error is a terminal.
+  - Each mode of the program runs as a systemd service that writes to the journal. Examples are `conductive-host.service` and `conductive-runner.service` in each sandbox, and `conductive-computer.service` on each own computer.
+  - On 24 November 2026, the journal of the computer service showed lines such as `ESC[2m2026-11-24T16:34:46.828863ZESC[0m ESC[32m INFOESC[0m The computer connection is ready`. The journal of the runner service on a cloud computer of this project showed `ESC[33m WARNESC[0m` lines on the same day.
+  - The install script of an own computer prints a `journalctl` command, so that the admin reads this log (`show_result` in `image/computer/install.sh`).
+  - The bootstrap of a cloud computer also writes the output of the program to the file `/run/conductive/bootstrap.log` (`worker/lifecycle/software-bootstrap.ts:80`).
+- **Problem:** Each line in the journal of each service of the program holds escape codes, such as `[2m` and `[32m`, around its time and its level. They make the log harder to read and to search.
+- **Impact if no action:** Each admin and each developer who reads a service log reads escape codes in each line.
+- **Root question:** When does the program colour its log output?
+- **Options:**
+  - **A.** Turn ANSI codes on only when standard error is a terminal, with `std::io::IsTerminal`, and keep the `NO_COLOR` rule. An admin who runs a command in a terminal keeps the colours. Effort: Small.
+  - **B.** Turn ANSI codes off always, with `with_ansi(false)`. A terminal then loses the colours too. Effort: Small.
+  - **C.** Change nothing. Effort: Small.
+- **Left out:** `NO_COLOR=1` in each unit: A is better on every point. One change in the program covers every unit, and every other output that is not a terminal, such as `/run/conductive/bootstrap.log`.
+- **Wider fix:** A. The program then decides from its output, so each new service and each new log file gets plain text.
+- **Previous examples:** None found.
+- **Recommendation:** A. It removes the codes from every log, and a person at a terminal keeps the colours.
+- **Action:** fix after merge, apply A, because the setup is the same on `main` for every mode, outside the change of this branch.

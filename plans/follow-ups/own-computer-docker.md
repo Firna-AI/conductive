@@ -1,0 +1,64 @@
+# Docker does not run in own computer workspaces
+
+- **Severity:** High. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 1, finding 52, with options C and D and the recommendation of its finding check.
+- **Location:** `create` in `crates/cnd-computer/src/engine/podman.rs:104`, `image/computer/Containerfile:13`, `image/e2b/install-base.sh:35`, `image/computer/README.md:255`, `docs/protocol/own-computers.md:170`, `docs/protocol/own-computers.md:261`
+- **Reason:** Each option changes the supported tools or the rights of agent code on the server, and no user decision covers either change.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Rootless Podman:** the container engine of an own computer, which runs each workspace as the server user `conductive`, with no root rights on the server.
+  - **Container base image:** the signed image that each deploy publishes, with the tools of the E2B template and one release, for the first build of each own computer.
+  - **`--privileged`:** a Podman create option that gives a rootless container all rights of the user `conductive`, with no seccomp filter, AppArmor profile, or masked paths.
+  - **E2B template:** the base image of the cloud computers on E2B, whose install scripts live in `image/e2b/`.
+  - **Add computer:** the dialog of the Own computers tab in which an admin names a new own computer and gets its install command.
+- **Background:**
+  - Each own computer runs the program `conductive` in computer mode, as the server user `conductive`. It runs each workspace and each build of the org in its own container of rootless Podman.
+  - The protocol requires Podman without root, as a separate user. Reason: an attack through the Worker or through a release then reaches only the containers. The protocol rejected access to a Docker socket, because it equals root on the server (`docs/protocol/own-computers.md:168-172`). This item calls these requirements the rootless rule.
+  - Own computer decision 5 C, of 22 November 2026, chose Linux containers, because a container runs the same software as a cloud computer.
+  - `docs/protocol/own-computers.md:208` gives the reason for the container base image. It says: "the agents then get the same computer tools as on E2B, and the install script of the org runs on the same base".
+  - The container base image runs the install scripts of the E2B template with no change (`image/computer/Containerfile:13-18`). `image/e2b/install-base.sh:27` adds the user `user` to the group `docker`. Line 35 of that script enables `docker.service`.
+  - The Cloud computer tab lists Docker in the base image of every org (`src/shared/base-image.ts:26`). The live check of the E2B template proves Docker with `sudo -n docker run --rm hello-world` (`image/e2b/runtime-probe.py:34`).
+  - `create` in `crates/cnd-computer/src/engine/podman.rs` gives every container the same options: `--systemd=always`, the CPU and memory limits, and an anonymous volume for `/tmp`.
+  - A check on 24 November 2026 used rootless Podman 4.9.3 on Ubuntu 24.04 with kernel 6.8. It booted a container of the base tools with four sets of rights, and it ran `docker run hello-world` in each:
+    - `--cap-add NET_ADMIN`: `docker.service` starts, and the run fails at the image extract.
+    - `--privileged`: `docker.service` starts, and the overlay mount of containerd fails with `invalid argument`.
+    - `--cap-add NET_ADMIN` with anonymous volumes for `/var/lib/docker` and `/var/lib/containerd`: the layer extract fails with `operation not permitted`.
+    - `--privileged` with anonymous volumes for `/var/lib/docker` and `/var/lib/containerd`: `hello-world` runs.
+- **Problem:** With the current options, `docker.service` fails at the boot of each container. `dockerd` cannot make its NAT chain, because `iptables` gets `Permission denied`. systemd then reports the state `degraded`. So Docker does not work in a workspace or a build on an own computer, as `image/computer/README.md:255-259` records.
+- **Impact if no action:** An org install script that runs Docker fails in the first build of each own computer. Until a first good build, no workspace can start on that computer (`docs/protocol/own-computers.md:225`). Agents that use Docker in a workspace fail too.
+- **Root question:** Which rights does a container on an own computer get, so that the base tools, Docker included, work as on a cloud computer?
+- **Options:**
+  - **A.** Make Docker a documented exception for own computers. Leave the Docker units out of the container base image, and direct Docker work to cloud computers. Record the exception in the protocol, the public guide, and Add computer. Every computer runs the one install script of the org. A script that needs Docker must then probe for it, for example with `docker info`. Effort: Medium.
+  - **B.** Support a Docker-compatible tool inside each rootless workspace. Check that existing org scripts work with it, and that it stays inside the isolation of the workspace. Effort: Large.
+  - **C.** Keep the Docker of the base. Add `--privileged` and anonymous volumes for `/var/lib/docker` and `/var/lib/containerd` to the arguments of `create` in `crates/cnd-computer/src/engine/podman.rs`.
+    - The check in **Background** shows that this set runs a Docker container. Each other tested set fails.
+    - Work: update the create test in `crates/cnd-computer/tests/podman_tests.rs`, and make a one-time proof with the computer mode on a real server.
+    - Add the container rights to `docs/protocol/own-computers.md`, with a risk in its Risks section. Update the limit in `image/computer/README.md` and the guide `src/marketing/docs/own-computers.md`. Read both legal pages and each public guide in full, as `CLAUDE.md` says.
+    - Security cost: the container stays inside the rights of the user `conductive`, so it gets no root on the server. But seccomp, AppArmor, and the masked paths are off for agent code in every workspace. That code also gets mount and network admin rights in its user namespace.
+    - So a kernel bug that needs those rights reaches the kernel of the server more easily than it reaches a cloud computer. The earlier privilege escalations through nf_tables are examples of such bugs.
+    - A narrower set, such as named capabilities with the default seccomp filter, can keep more protection. It needs its own proof.
+    - Image cost: Podman saves no volume in an org image, the saved image that new workspaces start from. The same holds for `/tmp`. So a Docker image that the install script pulls or builds does not reach the workspaces. Each workspace pulls or builds it again.
+    - The proof ran on one server only. Other kernels and distributions are not tested.
+    - Until own computers reach production, no existing container needs a change.
+    - Effort: Medium.
+  - **D.** Let the admin turn C on or off for each own computer.
+    - Add an install option. The computer saves it in its settings and applies it at each create.
+    - The protocol, the README, and the guide name the choice, its default, and its risk.
+    - A computer without the choice acts as in A. A Docker step in the one install script of the org then fails there, unless the script probes for Docker.
+    - If the app must show or change the choice, it needs a wire field, a Worker change, and UI work. The effort then becomes Large.
+    - Effort: Medium.
+- **Left out:**
+  - The Docker socket of the server: it equals root on the server and breaks the rootless rule.
+  - The Podman socket of the user `conductive`: a workspace could then mount the home of that user. It could read the computer token and the env files of every workspace.
+  - A separate server user and engine for each workspace: the computer mode would need root at run time to make the users.
+  - Sysbox: it needs a runtime that root installs and runs, which breaks the rootless rule.
+  - A microVM for each workspace, such as Podman with `krun` or Kata: it adds KVM to the server needs. Many cloud servers give no KVM.
+  - Docker removed from the base of every computer: it removes a tool that the Cloud computer tab promises.
+  - A Docker check that runs in CI each time: it tests the behaviour of third-party tools, which the `testing` skill sends to a one-time proof.
+- **Wider fix:** C. It gives each container root rights inside its user namespace. So a later tool of the base that needs mount, network, or namespace rights also works. Only the two volumes are specific to Docker. B must know Docker, so it is a direct fix.
+- **Previous examples:** None found. The live check of the E2B template runs a real Docker container (`image/e2b/runtime-probe.py:34`).
+- **Related:** `plans/follow-ups/own-computer-install-needs-docs.md` changes the same doc sections. Under A or D, this item also changes the Add computer section of `docs/protocol/own-computers.md` and the guide section "Add a computer". Make both edits in one change.
+- **Recommendation:** C. It keeps the tools and the one install script that the protocol and own computer decision 5 C promise. Its change is tested, and it stays inside the rootless rules. The user must accept the wider kernel exposure as a recorded risk, or choose D to give that choice to each admin. The review first recommended A.
+- **Action:** ask the user, because C adds a container rule and a risk to the protocol, which no user decision covers.

@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-18, from the options check of branch `calummoore/oslo-3u7a`.
-- **Location:** `crates/cnd-cli/src/update/engine.rs:110`, `crates/cnd-runner/src/engine/handler.rs:124`.
+- **Location:** `started` in `crates/cnd-cli/src/update/engine.rs`, `crates/cnd-runner/src/engine/handler.rs:124`.
 - **Reason:** The repository trust change does not change release confirmation or release cleanup.
 
 ### 1. Cleanup hides a successful release confirmation

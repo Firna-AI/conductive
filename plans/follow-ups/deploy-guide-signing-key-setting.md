@@ -1,0 +1,32 @@
+# The deploy guide leaves out the signing key
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 2, a problem outside the scope that the finding check of finding 81 found.
+- **Location:** `docs/automatic-deploys.md:40`, `.github/workflows/deploy.yml:68`, `.github/workflows/deploy.yml:86`, `crates/cnd-release/README.md:79`
+- **Reason:** The settings check of the key came with commit `9aad67b5c` on the primary branch `calummoore/external-mac-linux-server-cloud-j9ih`, before this change.
+
+- **Source:** Review. **Category:** Docs or spec.
+- **Terms:**
+  - **Release signing key:** the Ed25519 private key, in PKCS#8 PEM, in the secret `CONDUCTIVE_RELEASE_SIGNING_KEY` of the GitHub environment `production`, which signs each release.
+  - **Settings job:** the job `settings` of `.github/workflows/deploy.yml`, which checks the deploy settings before any build or change of the deployment.
+- **Background:**
+  - The section "GitHub settings" of the deploy guide `docs/automatic-deploys.md` lists two settings of the environment `production`: the secret `CLOUDFLARE_API_TOKEN` and the variable `CLOUDFLARE_ACCOUNT_ID`.
+  - The guide says: "When neither setting exists, the run warns and deploys nothing." It also says: "When only one of the two settings exists, the run fails."
+  - The settings job also checks the secret `CONDUCTIVE_RELEASE_SIGNING_KEY` (`.github/workflows/deploy.yml:68`). When the token and the account ID exist and the key is missing, the job fails with "Environment production is missing secret CONDUCTIVE_RELEASE_SIGNING_KEY." (`.github/workflows/deploy.yml:86-90`).
+  - When the token and the account ID are both missing, the run still warns and deploys nothing, also with no key.
+  - Only the section "The signing key" of `crates/cnd-release/README.md` names the secret. It gives the commands that make the key pair and set the secret.
+  - The admin makes the key pair before the own computers change merges into `main`, at the first TODO under the heading "Milestone 16: Verification, commit, review, and pull request" of `plans/own-computers.md`.
+- **Problem:** An operator who sets up the deploy from the guide does not learn of the key. The first run of a deploy then fails at the settings job.
+- **Impact if no action:** A deploy setup from the guide fails until the operator finds the key in the README of a crate.
+- **Root question:** Where does an operator learn of each setting that the deploy needs?
+- **Options:**
+  - **A.** Add the key to the table of the section "GitHub settings", as a secret of the environment `production` that signs each release. Link to the section "The signing key" of `crates/cnd-release/README.md` for the commands. Say that a run with the token and the account ID but no key fails. Effort: Small.
+  - **B.** Move the commands that make the key into the guide, and let the README of the crate link to the guide. Cost: the guide then holds the steps of a crate, which its README owns. Effort: Small.
+  - **C.** Change nothing. The settings job names the missing secret in its error. Effort: Small.
+- **Left out:** A CI check that the guide lists each secret of the workflow: it reads workflow YAML, which the `testing` skill says never gets a test. A new check is also the choice of the user.
+- **Wider fix:** None. The `documentation` skill already requires the docs to match the workflow.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/deploy-build-code-reaches-signing-key.md` changes the same setting. Under its option F, the key moves to its own GitHub environment, so the guide must name that environment instead.
+- **Recommendation:** A. The guide is the one place that lists the deploy settings, and the README keeps the commands.
+- **Action:** fix after merge, apply A, because the gap came with the primary branch, outside the change of this branch.

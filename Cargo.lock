@@ -310,6 +310,7 @@ dependencies = [
  "clap",
  "cli-release-interface",
  "cli-updater",
+ "cnd-computer",
  "cnd-credential",
  "cnd-host",
  "cnd-relay",
@@ -332,6 +333,33 @@ dependencies = [
  "tracing-subscriber",
  "unimock",
  "uuid",
+]
+
+[[package]]
+name = "cnd-computer"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "cli-release-interface",
+ "cnd-host",
+ "cnd-release",
+ "cnd-runner-interface",
+ "flate2",
+ "futures-util",
+ "internal-error",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tar",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "tokio-tungstenite",
+ "tokio-util",
+ "tracing",
+ "unimock",
+ "url",
 ]
 
 [[package]]
