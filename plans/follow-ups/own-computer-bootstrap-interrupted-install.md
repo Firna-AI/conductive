@@ -1,0 +1,61 @@
+# An interrupted bootstrap can refuse its own release
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 2, finding 61, with the root question, option D, and a new problem of its finding check.
+- **Location:** `apply_release` in `crates/cnd-cli/src/update/activation.rs:22`, `started` in `crates/cnd-cli/src/update/engine.rs:76`, `APPLY_BOOTSTRAP` in `crates/cnd-computer/src/engine/scripts.rs:26`, `crates/cnd-cli/tests/update/apply_pinned_tests.rs:142`, the TODO "Keep each install across a stop" in `plans/own-computers.md:1176`
+- **Reason:** An open TODO of the own computers plan already schedules the updater change, and no Worker code sends a bootstrap before that TODO lands.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Bootstrap:** the fixed container operation that installs the release of the Worker in a running container and restarts its host program.
+  - **Pin:** the release that the running Worker names for a bootstrap, by its exact version and the digest of its program archive.
+  - **Pending release:** a release that the updater switched to and that no runner confirmed yet. The next apply rolls it back as a failed start, and it never installs again.
+  - **Runner:** the agent runner service of the container, which confirms its release at its first connection to the Worker.
+- **Background:**
+  - The bootstrap script `APPLY_BOOTSTRAP` in `crates/cnd-computer/src/engine/scripts.rs` runs three commands in the container. `update check --bootstrap --release <version> --digest <sha256>` stages the pin. `update apply --release <version>` activates it. `update started` confirms it.
+  - Then the script checks that the link `current` names the pin, and it restarts the host service.
+  - `update apply --release` switches `current` to the pin, records the pin as pending, and then runs the system installer (`apply_release` in `crates/cnd-cli/src/update/activation.rs`).
+  - When an apply finds a pending release, it rolls that release back first, and the rollback writes a rejection record. When the rolled-back release is the requested pin, the apply then refuses the pin with `ReleaseRejected` (`crates/cnd-cli/src/update/activation.rs:22-32`).
+  - The test `pinned_apply_rolls_back_and_refuses_the_requested_pending_release` (`crates/cnd-cli/tests/update/apply_pinned_tests.rs:142`) asserts this refusal.
+  - `started` in `crates/cnd-cli/src/update/engine.rs` returns success with no confirmation while another process holds the apply lock (lines 76-79).
+  - The protocol says that an install of the bootstrap stays across a stop. The next start of the runner starts that release. That start never counts the install as a failed start only because no runner confirmed it. `docs/protocol/host-connection.md:162-164` and `docs/protocol/sandbox-software.md:141-143` say so.
+  - A pending release that a runner tried stays a failed start, and it never installs again (`docs/protocol/sandbox-software.md:138-140`).
+  - The plan `plans/own-computers.md` holds the open TODO "Keep each install across a stop", under its heading "Milestone 9: Old computers, and removal of the provider path". The TODO says: "Today an install that no runner confirms rolls back at the next runner start, and its version is then rejected (`rollback` in `crates/cnd-cli/src/update/activation.rs`). The new updater marks a release that no runner started yet, and its next apply starts that release. Test a brief-start install, then a resume."
+  - A design call of that plan says that this updater change can replace the confirmation of the bootstrap with `update started`.
+  - No production Worker code sends `container.bootstrap` yet. The work that runs workspaces on own computers connects it, and that work depends on the milestone of the TODO.
+- **Problem:** Three cases leave a pending pin that no runner tried:
+  - The system installer fails once, after the switch of `current`.
+  - The container stops between `update apply` and `update started`.
+  - `update started` exits with status 0 and confirms nothing, because another process holds the apply lock. The bootstrap then reports success while its pin stays pending.
+
+  A retry of the same pin then rolls it back and refuses it. After the third case, the next start of the runner rolls the pin back and rejects it.
+- **Impact if no action:** A temporary failure can make the container refuse the release of the Worker at every retry. The workspace stays blocked until the release of the Worker changes or an operator repairs the container.
+- **Root question:** How can a pending release count as failed only after a runner tried it, so that each retry of a pin finishes the install?
+- **Options:**
+  - **A.** Record that the bootstrap owns the pending install. Recover or undo that install at the next start, before the normal rollback runs. This adds a second record to reconcile. Effort: Medium.
+  - **B.** Give the updater a bootstrap mode of activation with a durable install state. It retries an interrupted system install, and it keeps the rollback of a failed start for a release that a runner tried. This changes the new activation and removes the separate confirmation step. Effort: Medium.
+  - **C.** Give the host program in the container its own install and recovery path. This changes how the sandbox software is packaged and updated. Effort: Large.
+  - **D.** Leave the code fix to the open TODO "Keep each install across a stop", and record the link now in this item.
+    - The TODO must cover the three cases of **Problem**.
+    - Its test must add a retry of the same pin after a failed system install and after a stop. Put it next to the test that refuses a requested pending release.
+    - Its mark of a release that no runner started replaces `update started` in `APPLY_BOOTSTRAP`.
+    - Cost: the gap stays until that TODO lands. One design of the mark then serves the bootstrap of each machine and the migration job of `docs/protocol/host-connection-migration.md`.
+    - Effort: Small.
+  - **E.** Fix the reported failure in the new branch of the pinned apply.
+    - When the system install of a pinned apply fails, write back the earlier state and the link `current`. Do not run the previous installer, because it can fail for the same reason. Write no rejection record, and return the error. A retry then installs the pin again.
+    - This covers a full disk, and a `systemctl` call that fails while systemd still starts.
+    - Test an installer that fails once, then a retry of the same pin.
+    - Cost: the system files can mix two releases until the next apply. A hard stop or a skipped confirmation still leaves the pending record.
+    - Effort: Small.
+- **Left out:**
+  - An earlier `update started`: it confirms a broken install, so it fails the goal.
+  - A system install before the switch of `current`: the installer reads `current/system` (`image/install-system.sh:4`), so it would install the units of the old release.
+  - A repair by the computer or the Worker: neither can tell whether a runner tried the pending release. The computer connection also carries only fixed operations (`docs/protocol/own-computers.md:178-181`).
+- **Wider fix:** B. The updater can recover each interrupted bootstrap from the state that it already owns. D leaves B to the TODO.
+- **Previous examples:** `plans/follow-ups/release-confirmation-cleanup-result.md` records that a successful `update started` can skip the confirmation while another process holds the apply lock. It warns new code not to treat that success as proof of a confirmation.
+- **Related:**
+  - `plans/follow-ups/own-computer-bootstrap-newer-release.md` changes the same code. If the user chooses its option F, that rule goes into the same activation of the bootstrap that the TODO builds. F does not conflict with D or E.
+  - `plans/follow-ups/own-computer-bootstrap-no-space.md` changes the same code. A full disk can also make the system install fail. So a retry after the admin frees space meets this gap, also when that item is fixed.
+- **Recommendation:** D. B is the updater change that the open TODO already schedules, and no user can meet the gap before that TODO lands. The branch that completes the TODO deletes this item.
+- **Action:** fix after merge, apply D, because an open TODO of the plan schedules the updater mark, and no Worker code sends a bootstrap before then.

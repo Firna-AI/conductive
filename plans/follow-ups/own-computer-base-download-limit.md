@@ -1,0 +1,53 @@
+# Slow servers never finish their first build
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 2, a new problem of the joint finding check of findings 63 and 87.
+- **Location:** `deadline` in `crates/cnd-computer/src/session/state.rs:121`, `download` in `crates/cnd-computer/src/releases/archives.rs:14`, `BaseImageLoader::ensure` in `crates/cnd-computer/src/releases/base.rs:78`, `deadline` in `worker/own-computers/pending.ts:26`
+- **Reason:** No Worker code sends a create from a base yet. So no server can meet the limit before the work that runs workspaces on own computers.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Container base image:** the signed image that each deploy publishes, with the tools of the E2B template and one release, for the first build of each own computer.
+  - **Create from a base:** the container operation `container.create` with the container base image of a release, which the first build of an own computer sends.
+  - **Shared import:** the one download and load of a base image that serves all requests that need that image at the same time.
+  - **E2B template:** the base image of the cloud computers on E2B, whose install scripts live in `image/e2b/`.
+- **Background:**
+  - On the computer, a create, a save, and a bootstrap end after 14 minutes with `internal`. The other operations end after 50 seconds (`deadline` in `crates/cnd-computer/src/session/state.rs`).
+  - That limit is an agent call of the own computers plan, not a protocol rule. Its reason is that both limits end before the limit of the Worker.
+  - The Worker waits 15 minutes for a create, a save, or a bootstrap. Then it replies `504 computer_timeout` with "The own computer did not answer. Try again." (`deadline` in `worker/own-computers/pending.ts`).
+  - The protocol gives each build of an org image a time limit of 60 minutes (`docs/protocol/workspace-life.md:56-57`).
+  - A create from a base that the computer does not have downloads the archive, and checks its size and digest. Then it loads the archive with `podman load` and checks the image ID. `base` in `crates/cnd-computer/src/releases/http.rs` and `Import` in `crates/cnd-computer/src/releases/base.rs` do this.
+  - A test build on 24 November 2026 saved an archive of 1,749,391,872 bytes.
+  - `download` in `crates/cnd-computer/src/releases/archives.rs` streams the archive into a private temporary file. The file goes away when the download ends without success.
+  - Requests for the same base share one import, but the loader keeps only a weak handle to it (`BaseImageLoader::ensure` in `crates/cnd-computer/src/releases/base.rs`). So the import ends when the last request that waits for it ends.
+  - The HTTP client of the releases has a total limit of 60 minutes for one request (`HttpReleases::new` in `crates/cnd-computer/src/releases/http.rs`).
+  - The first build of an own computer starts from the container base image (`docs/protocol/own-computers.md:210`). Until its first good build, no workspace can start on that computer (`docs/protocol/own-computers.md:225`). After a failed build, the app starts no new build by itself (`docs/protocol/org-image.md:69-71`).
+- **Problem:** A create from a base must download and load about 1.75 GB within the 14 minutes of the operation. At the limit, the request ends, the import ends with it, and the partial file goes away. Each retry downloads the archive again from zero. So a server that downloads at less than about 17 Mbit/s can never finish its first build. The load and the checks take time too, so the real floor is higher.
+- **Impact if no action:** An own computer on a slow link can never start a workspace. Each Try again uses the whole 14 minutes and the bandwidth of a full download.
+- **Root question:** How does a server on a slow link finish the download of its first base image?
+- **Options:**
+  - **A.** Give a create that must download its base a longer limit, on the computer and in the Worker, such as 45 minutes. Cost: it changes the agent call on the limits, and the Worker waits longer for one reply. The build limit of 60 minutes still bounds the whole first build, so the floor only falls to about 5 Mbit/s. Effort: Small.
+  - **B.** Keep the partial download and resume it.
+    - Keep the partial file under a name that the archive digest gives. Continue it with an HTTP `Range` request at the next try, and check the digest over the whole file at the end.
+    - Cost: a partial file of up to 1.75 GB stays on disk between tries, so the startup sweep and the prune must know its name.
+    - Each try still needs a Try again from an admin, so a slow server needs several.
+    - Nobody checked that the release address answers `Range` requests.
+    - Effort: Medium.
+  - **C.** Let the download outlive the request.
+    - The loader keeps a strong handle to the import until the import ends. A request that ends at its limit then does not end the download, and the next create joins it or finds the loaded image.
+    - Cost: a download runs with no request that waits for it, and a stop of the service must cancel it.
+    - The total limit of the HTTP client, 60 minutes, then sets the floor at about 4 Mbit/s, unless a base download gets a longer one.
+    - Effort: Medium.
+- **Left out:**
+  - No change: it fails the goal for each slow server.
+  - A smaller base image: the tools image alone had an archive of 1.33 GB in a test on 24 November 2026. So it lowers the floor by about a quarter only.
+  - An automatic retry of the first build: each retry downloads from zero again. The protocol rule that the app starts no new build after a failed build also stays.
+  - A download at the first connection: the computer does not know the base of the first build until the create names it.
+- **Wider fix:** C. The life of a long download then no longer depends on the life of one request.
+- **Previous examples:** None found.
+- **Related:**
+  - `plans/follow-ups/own-computer-base-image-cost.md` changes the same download. Each of its options still downloads a base of more than 1 GB at the first build. Its first-build rule E also adds a bootstrap to a first build in the gap after a deploy.
+  - `plans/follow-ups/own-computer-startup-temporary-files.md` changes the same cache folder. Under B here, the partial file needs a name that the startup sweep keeps. It also needs a rule that removes it when its release is no longer needed.
+- **Recommendation:** C. It keeps the limits of the plan and the Worker. A slow server then finishes its first build at the first Try again after the download ends in the background. For a link below about 4 Mbit/s, C also needs a longer limit of the HTTP client for a base download, or B.
+- **Action:** fix after merge, apply C, because no Worker code sends a create from a base yet.

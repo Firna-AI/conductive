@@ -1,0 +1,65 @@
+# Updates never change the installed service unit
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 2, findings 64 and 86. The two findings are one problem. The item uses the root question and options D and E of their joint finding check.
+- **Location:** `install` in `crates/cnd-computer/src/service.rs:47`, `image/computer/conductive-computer.service:5`, `Updater::confirm` in `crates/cnd-computer/src/update/runtime.rs:108`, `crates/cnd-computer/src/update/launch.rs`
+- **Reason:** Each option except A gives automatic updates the control of the installed systemd configuration, and no requirement or user decision settles who changes the unit.
+
+- **Source:** Review. **Category:** Docs or spec.
+- **Terms:**
+  - **Service unit:** the systemd user unit `conductive-computer.service` of the user `conductive`, which starts, stops, and restarts the computer mode of an own computer.
+  - **Trial:** a new release that runs before it replaces the confirmed release, and that confirms at its first welcome from the Worker or after 60 seconds.
+  - **Drop-in:** a file in the folder `conductive-computer.service.d/` that overrides settings of the unit without a change of the unit file.
+- **Background:**
+  - An own computer runs the program `conductive` in computer mode, as a systemd user service of the user `conductive`. The computer mode runs the workspace containers of the server and holds its connection to the Worker.
+  - The program embeds the unit text of `image/computer/conductive-computer.service`. The unit sets `Type=exec`, `ExecStart=%h/.local/share/conductive/current/conductive computer run`, `Restart=always`, `RestartSec=5`, and `KillMode=process`.
+  - Only `conductive computer service` writes the installed unit, at `~/.config/systemd/user/conductive-computer.service` of the user `conductive`. It writes the embedded text, reloads the user manager, enables the unit, and restarts it (`install` in `crates/cnd-computer/src/service.rs`).
+  - The install script runs `conductive computer service` as its last step.
+  - The program updates itself with trials (`crates/cnd-computer/src/update/launch.rs`). The confirmed release counts each try of a trial and replaces its own process with the trial.
+  - A trial that confirms moves the link `current` to itself and saves the update state. This step is the promotion (`Updater::confirm` in `crates/cnd-computer/src/update/runtime.rs`). After five tries with no confirmation, the confirmed release refuses the trial, which then never installs again.
+  - No step of an update writes the unit. So systemd keeps the unit of the first install, whatever release runs.
+  - The unit already needed one fix after a check: `KillMode=process`. With the default, a stop of the unit kills the `conmon` process of each container, and `podman stop` then hangs.
+  - The program exits with status 0 after it stages a trial. So the update path needs `Restart=always`.
+  - Own computer decision 4, of 22 November 2026, left out manual updates on each server, because the product needs automatic updates.
+- **Problem:** A release can ship a changed unit, but an installed computer gets it only when an admin runs `conductive computer service` again on the server.
+- **Impact if no action:** A release that fixes how the service starts, stops, or restarts leaves each installed computer on the old behaviour. This lasts until an admin acts on each server.
+- **Root question:** How does each installed computer get each change to its service unit, and what restores the service when a change is bad?
+- **Options:**
+  - **A.** Keep each unit change as an upgrade by hand.
+    - The docs declare the unit stable. They give a direct `conductive computer service` run as the user `conductive`.
+    - Each refresh restarts the service, and the restart cancels the running operations.
+    - A rerun of the install command becomes the refresh path only after the fix of `plans/follow-ups/own-computer-install-rerun-spent-code.md`. Until then, a rerun stops at the spent code before the service step.
+    - A needs an admin on each server, against the reason of own computer decision 4.
+    - Effort: Small.
+  - **B.** Refresh the managed unit with each confirmed release.
+    - The promotion of a trial writes the embedded unit with the writer of `conductive computer service`. It reloads the user manager only when the file changed, and it does not restart the service.
+    - Each confirmed start writes the unit too. So a promotion that a stop cut short ends at the next start or poll.
+    - B keeps the drop-ins of the admin. It keeps the last usable unit when the write fails. A failed refresh logs a warning and does not end the updater.
+    - B can land after the merge. The first release that has B writes its own unit when it confirms, so installed computers need no step by hand.
+    - Effort: Medium.
+  - **C.** Keep the launch lines in a stable base unit, and give each release its settings in a versioned drop-in. Add a recovery path for a failed change.
+    - The stable part must be a base unit or a launcher that replaces its own process. A launcher as the main process of the unit was rejected because of `KillMode=process`. A stop or a crash of such a launcher leaves the program running, and systemd starts a second one.
+    - Cost: a new layout of the installed files and a new recovery path.
+    - Effort: Large.
+  - **D.** Apply each unit change inside the trial.
+    - Before the confirmed release exits for a trial, it gets the unit of the candidate. It already runs the `--version` of the candidate in the same way.
+    - It checks that `ExecStart=`, `Type=`, and `Restart=` did not change. Then it writes the unit and reloads systemd. When it refuses the trial, it writes its own unit back.
+    - Cost: each release must keep the command that prints its unit for the release before it.
+    - A setting that stops every start, such as a wrong `WorkingDirectory=`, still stops the release that would write the old unit back. A change of the launch lines still needs A or C.
+    - Effort: Medium.
+  - **E.** Keep A, and show when a computer needs it.
+    - The computer reports in its hello, the first message of each connection, whether its installed unit matches the unit that it embeds. When they differ, the page of the computer shows the refresh command.
+    - Cost: a hello field in the Rust wire types and the generated TypeScript, and a Worker change. A mockup, the page of the computer, and the protocol section change too.
+    - Effort: Large.
+- **Left out:**
+  - A change of only the embedded unit text: it leaves the installed unit as it was, so it fails the goal.
+  - A call of `conductive computer service` inside an update: it restarts the service. During a trial, the restart ends the process that must confirm. After a confirmation, it ends the connection and the running operations. B gives the same unit with no restart, so B is better on every point.
+  - `systemctl --user set-property --runtime`: it changes resource settings only, not `ExecStart=`, `Restart=`, or `KillMode=`, so it fails the goal.
+  - A systemd path unit or timer that copies the unit when `current` changes: B is better on every point. The program already runs at each confirmation, and the extra unit is one more file that no update reaches.
+  - Units as files in the release archive, as the sandbox release ships them: this changes only where B, C, or D read the text.
+- **Wider fix:** C. Only C keeps a recovery path, and the lines that start and restart the service, out of the reach of a release. B and D can still deliver a unit that stops every start.
+- **Previous examples:** The installer of the sandbox software copies the systemd units of the active release and reloads systemd at each apply (`image/install-system.sh:4-16`).
+- **Related:** `plans/follow-ups/own-computer-install-rerun-spent-code.md`: work that waits for its answer. Under A, the documented refresh stays a direct `conductive computer service` run until a rerun of the install command can reach the service step.
+- **Recommendation:** B. It delivers each unit change with no step on the server. It adds less code to the update path than D, and it costs less than C. C best protects the service from a bad unit.
+- **Action:** ask the user, because B gives automatic updates the control of the installed systemd unit, and no requirement or user decision settles that.

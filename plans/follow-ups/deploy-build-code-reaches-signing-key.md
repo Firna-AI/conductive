@@ -1,10 +1,10 @@
 # Deploy build code runs before the signing key
 
 - **Severity:** High. **Effort:** Medium. **Confidence:** Medium. **Harder later:** Yes.
-- **Kind:** Outside the scope.
-- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 1, a problem that the finding check of finding 51 found. It covers the `deploy` job, which the primary branch already had, and the new `container-base` job.
-- **Location:** `.github/workflows/deploy.yml:131`, `.github/workflows/deploy.yml:186`, `.github/workflows/deploy.yml:599`, `.github/workflows/deploy.yml:651`
-- **Reason:** The `deploy` job had this pattern on the primary branch before this change, and the fix restructures the jobs that deploy production.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, review round 1, a problem that the finding check of finding 51 found. It covers the `deploy` job, which the primary branch already had, and the new `container-base` job. Updated on 2026-11-24 with review finding 81 of round 2, the same pattern in the `container-base` job, and its finding check. Options E and F are options D and E of that check. Its option B is option C here.
+- **Location:** `.github/workflows/deploy.yml:131`, `.github/workflows/deploy.yml:186`, `.github/workflows/deploy.yml:586`, `.github/workflows/deploy.yml:599`, `.github/workflows/deploy.yml:627`, `.github/workflows/deploy.yml:651`, `.github/workflows/deploy.yml:661`
+- **Reason:** The fix covers the `deploy` job, which is outside the change of the branch that found it. It must also land before the admin makes the key.
 
 - **Source:** Review. **Category:** Security.
 - **Terms:**
@@ -17,31 +17,58 @@
   - The `deploy` job of `.github/workflows/deploy.yml` runs `actions/checkout@v7`, `actions/setup-node@v7`, `npm ci` and `npm ci --prefix runner`, `dtolnay/rust-toolchain@stable`, `Swatinem/rust-cache@v2`, `npm run build`, and the release build with `cargo`.
   - Only after these steps does its step "Sign and package Conductive release" get the key. That step runs `target/debug/cnd-release`, a program that the same job built. Later steps of the job get the deploy token.
   - The `container-base` job follows the same pattern: `npm ci`, the same actions, `cargo build -p cnd-release`, and the image build. Then its step "Sign the container base image" gets the key and runs `target/debug/cnd-release`. Its next step gets the deploy token.
+  - The image build of the `container-base` job runs third-party install scripts as root through `sudo podman` (`.github/workflows/deploy.yml:638-645`), on the runner that then gets the key.
+  - One key signs the program manifests and the base manifests (`crates/cnd-release/README.md:57-58`). So a fix of one job protects nothing while the other job gives the same key to build code.
+  - The key signs the raw bytes of a manifest, with no domain separation (`sign` in `crates/cnd-release/src/signature.rs:45-47`). Neither reader refuses unknown fields: `read_container_base_manifest` in `crates/cnd-release/src/container_base.rs`, and `ReleaseAssetInfo` of `cli-release-interface`. So a signer that signs any JSON can sign one that also passes as a program manifest.
+  - Before a publish, `for_publish` checks that the key matches the public key `RELEASE_PUBLIC_KEY` of the program (`crates/cnd-release/src/signature.rs:28-37`).
+  - The Worker deploy gives the deploy token to Wrangler, an npm package (`.github/workflows/deploy.yml:274-280`, `.github/workflows/deploy.yml:336-350`). So no option keeps the token away from build code. Own computer decision 4 B needs only that the token and the key do not leak together.
   - Each third-party action of the workflow is pinned by a tag or a branch, which its owner can move. `stable` of `dtolnay/rust-toolchain` is a branch. Only `.github/workflows/release.yml:34` pins an action by its commit.
   - All steps of a job run on one runner as one user. A process that an earlier step starts can keep running until the job ends.
-  - A signature is the raw 64 bytes of Ed25519 over the manifest bytes (`crates/cnd-release/src/signature.rs`). OpenSSL 3 of the runner image `ubuntu-24.04` makes the same signature with `openssl pkeyutl -sign -rawin`, because Ed25519 signatures are deterministic.
-  - The release signing key pair does not exist yet. The admin makes it before the own computers change merges into `main`, and the deploy on `main` signs no release yet.
+  - A signature is the raw 64 bytes of Ed25519 over the manifest bytes. OpenSSL 3 of the runner image `ubuntu-24.04` makes the same signature with `openssl pkeyutl -sign -rawin`, because Ed25519 signatures are deterministic.
+  - Each re-run of the `container-base` job publishes the release of the original deploy in place, because that job has no run-attempt guard (`.github/workflows/deploy.yml:545-547`).
+  - The release signing key pair does not exist yet, and the deploy on `main` signs no release yet. The admin makes the key pair at the first TODO under the heading "Milestone 16: Verification, commit, review, and pull request" of `plans/own-computers.md`, before the own computers change merges into `main`. So a fix after that merge comes too late: the first signed deploy can already give the key to build code.
 - **Problem:** A compromised npm package, Cargo crate, or action in either job runs before the step that gets the key. It can change `target/debug/cnd-release`, which that step then runs with the key. It can also leave a process that reads the environment of the later steps. So one compromised dependency can take both the key and the deploy token.
 - **Impact if no action:** With both secrets, an attacker can sign a release and publish it, and each own computer then installs it. That defeats own computer decision 4 B.
 - **Root question:** How does the deploy keep the release signing key away from code that the repository does not control?
 - **Options:**
   - **A.** Change nothing, and record the exposure as a risk in the protocol. Own computer decision 4 B then holds only for a leak of the token outside a deploy run. Effort: Small.
   - **B.** Pin each third-party action by its full commit, as `.github/workflows/release.yml` does for `release-please-action`. This closes only the path through actions. npm package scripts and Cargo build scripts still run before the key. Each update of an action needs a new pin. Effort: Small.
-  - **C.** Sign in a separate job that runs no build code.
-    - The `deploy` and `container-base` jobs make the archives and the unsigned manifests. They pass only the small manifests to the signing job as workflow artifacts, and they get the signatures back.
-    - The signing job checks out nothing. It uses only tools of the runner image: `gh` for the artifacts, `jq` and `sha256sum` for the files, and `openssl pkeyutl -sign -rawin` for each signature.
-    - The upload order stays: archives and signatures first, manifests last.
+  - **C.** Sign the manifests of both jobs in one separate job that runs no build code.
+    - The `deploy` and `container-base` jobs make the archives and the unsigned manifests. They pass only the small manifests to the signing job, and they get the signatures back.
+    - The signing job checks out nothing and runs no action that a tag pins. It uses only tools of the runner image: `gh` for the files, `jq` and `sha256sum` for the checks, and `openssl pkeyutl -sign -rawin` for each signature.
+    - It checks the exact keys and formats of each manifest, and the version and digest of the deploy. Reason: one key signs both kinds of manifest with no domain separation.
+    - The upload order stays: archives and signatures first, manifests last. The new jobs keep the in-place re-run of a failed publication.
     - Cost: `cnd-release package` and `cnd-release container-base` need a mode that writes an unsigned manifest. A test must show that the program accepts a signature that OpenSSL made.
+    - The `deploy` job splits around the signing job, because a job reads outputs only from jobs that ended before it started. So the effort can grow.
     - A compromised build can still get one bad release signed, because the signing job signs what the build made. But it cannot take the key for later use.
     - Effort: Medium.
-  - **D.** Keep the key in a cloud key service, which the signing job reaches through GitHub OIDC, so that no job holds the key bytes. Cost: new infrastructure and credentials. The protocol sentence "The signing key is a secret of the deploy" changes. Effort: Large.
+  - **D.** Keep the key in a cloud key service, which the signing job reaches through GitHub OIDC, so that no job holds the key bytes. A short-lived upload identity that reaches only the bucket can join it. Cost: new infrastructure and credentials. The protocol sentence "The signing key is a secret of the deploy" changes. Effort: Large.
+  - **E.** Sign only the base manifest in a job that runs no build code, and keep the archive upload in the build job.
+    - The build job builds the image and uploads the archive with the token, as today. It gives the unsigned manifest as a base64 job output.
+    - A signing job checks out nothing and uses no action. With `jq`, it checks the exact keys and formats of the manifest, and the version and digest of the deploy. It signs with `openssl pkeyutl -sign -rawin` and gives the signature as a job output.
+    - A last job uploads the signature, then the manifest.
+    - Cost: `cnd-release container-base` needs a mode that writes an unsigned manifest, and a test must show that `verify_manifest` accepts a signature that OpenSSL made. The key check of `for_publish` must stay. The new jobs keep the in-place re-run.
+    - `docs/deployment/runner-archive.md`, the section on the `container-base` command in `crates/cnd-release/README.md`, and the design call on the base job in `plans/own-computers.md` change.
+    - E moves a few hundred bytes between jobs, not the archive of 1.75 GB. E covers the `container-base` job alone, so it protects nothing while the `deploy` job gives the same key to build code.
+    - Effort: Medium.
+  - **F.** An addition to C: keep the key in its own GitHub environment, such as `release-signing`, with a deployment branch rule for `main`. Only the signing job names that environment.
+    - The key check of the `settings` job (`.github/workflows/deploy.yml:68`, `.github/workflows/deploy.yml:86-90`) moves into the signing job, before any upload.
+    - A job that names `production` then cannot read the key. This also holds for a job that a later change adds.
+    - Cost: the admin makes the environment and sets the key there, at the existing key step. No existing secret moves, because the key does not exist yet.
+    - F must land together with C, because the `deploy` job signs in its own job until C lands.
+    - Effort: Small.
 - **Left out:**
   - `npm ci --ignore-scripts`: it fails the goal. Cargo build scripts and the app build still run before the key, and some packages, such as esbuild, need their install scripts.
   - Reproducible builds that a second builder checks: they prove the build, not the safety of the key. They also need a deterministic build of every part.
-- **Wider fix:** C. One signing job that runs no build code keeps the key out of every build job. This also holds for a job that a later change adds.
+  - Secrets only in later steps: they are already in later steps, and a process from an earlier step keeps running until the job ends.
+  - No npm and Cargo in the base job, with an OpenSSL signature in the same job: it fails the goal. The image build still runs third-party code as root on the runner that then gets the key.
+  - A fresh job for the base signing and the upload: it moves the archive of 1.75 GB between jobs. Its only gain is a base build with no token. But the `deploy` job gives the token to build code anyway, through Wrangler, so E gives the same protection of the key.
+  - A separate key for base images: it adds a secret, a second public key constant, and a protocol change. It moves no build code away from either key.
+- **Wider fix:** C with F. C alone does not say where the key lives. If the key stays in `production`, a later job that names `production` gets the key again, for example a workflow that `plans/follow-ups/own-computer-base-image-cost.md` adds. With F, only the signing environment holds the key.
 - **Previous examples:** The Mac app signing job in `.github/workflows/desktop-sign.yml` also runs `npm ci` and the build first. Only then does a step get the Apple signing secrets of the environment `desktop-release`.
 - **Related:**
   - `plans/follow-ups/own-computer-first-install-trust.md`: the same rule. Its options B, C, and E rely on the release signing key staying secret.
-  - `plans/follow-ups/own-computer-base-image-cost.md`: the same code. Its options A and D add a workflow that holds the signing key, so the fix of this item must cover those workflows too.
-- **Recommendation:** C. It keeps the key in a job that runs only the tools of the runner image, so no dependency of the build can copy it. Do it before the admin makes the key, so that the key never reaches a job that runs build code. D keeps the key bytes out of every job, but it needs new infrastructure.
-- **Action:** fix after merge, apply C, because the pattern was on the primary branch before this change, and the fix restructures the production deploy.
+  - `plans/follow-ups/own-computer-base-image-cost.md`: the same code. Its options A, B, D, and G change or add the jobs that hold the signing key. So the fix of this item must cover them too.
+  - `plans/follow-ups/deploy-guide-signing-key-setting.md`: the same setting. The deploy guide must name the key, and under F its new environment.
+- **Recommendation:** C with F, for both jobs, before the admin makes the key. C keeps the key in a job that runs only the tools of the runner image, so no dependency of the build can copy it. F keeps the key there for each later job. E alone protects nothing while the `deploy` job holds the same key. D keeps the key bytes out of every job, but it needs new infrastructure.
+- **Action:** ask the user, because the fix that protects anything covers both jobs, and the `deploy` job is outside the branch that found it. A fix of the `container-base` job alone protects nothing while the `deploy` job holds the same key.

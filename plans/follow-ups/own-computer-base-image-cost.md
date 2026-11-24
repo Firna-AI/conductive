@@ -2,8 +2,8 @@
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, an implementation item of that branch. Option D is the wider fix F of the finding check of review finding 54. The time gap after each deploy comes from the same check.
-- **Location:** job `container-base` in `.github/workflows/deploy.yml:543`, `docs/protocol/own-computers.md:201`, `docs/protocol/own-computers.md:210`, `docs/protocol/sandbox-software.md:66`
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-11-host-program-3jbp`, an implementation item of that branch. Option D is the wider fix F of the finding check of review finding 54. The time gap after each deploy comes from the same check. Updated on 2026-11-24 with review findings 63 and 87 of round 2, which repeat the time gap, and their joint finding check. Options E, F, and G are options B, D, and F of that check. Its option E is option B here, and its option G is option D here.
+- **Location:** job `container-base` in `.github/workflows/deploy.yml:543`, `docs/protocol/own-computers.md:201`, `docs/protocol/own-computers.md:210`, `docs/protocol/sandbox-software.md:66`, `base` in `crates/cnd-computer/src/releases/http.rs:129`, `crates/cnd-computer/src/operations/changes.rs:48`
 - **Reason:** Each option changes the deploy, a protocol rule, or the first build of an own computer, which nobody has designed yet.
 
 - **Source:** Implementation. **Category:** Performance.
@@ -22,12 +22,14 @@
   - On 24 November 2026, the last 15 deploy runs took 7.4 to 10.1 minutes each, with one run of 16.6 minutes. `main` deploys about 8 times a day.
   - Nothing deletes old base images. `docs/deployment/runner-archive.md:75` says that old immutable files stay in the bucket.
   - The base of a release appears only after its Worker is live. It comes after the health check, the wait of up to 15 minutes for the software image of the cloud computers, and the build.
-  - No requirement says which base the first build of an own computer uses before then. A first build that asks for the base of the live release then fails. After a failed build, the app starts no new build by itself (`docs/protocol/org-image.md:69-71`).
+  - No requirement says which base the first build of an own computer uses before then. After a failed build, the app starts no new build by itself (`docs/protocol/org-image.md:69-71`).
+  - In that time, a create from the base of the live release replies `release_unavailable`, because the manifest of that base is not published yet. `base` in `crates/cnd-computer/src/releases/http.rs:129` and `crates/cnd-computer/src/operations/changes.rs:48-49` give this reply. The Worker shows it as "The release is not available. Try again." (`worker/own-computers/errors.ts:49`).
+  - A create ends after 14 minutes on the computer, which is shorter than the time gap. So a wait inside one create cannot cover the gap.
   - The first builds on own computers come with the work that runs workspaces on own computers.
-  - After a failed publication, Re-run failed jobs runs only `container-base` again, with the release version and digest of the first attempt. The section "When a deploy fails" of `docs/automatic-deploys.md` says so.
-- **Problem:** The job about triples the time of each deploy run, so each later fix reaches production up to 25 minutes later. Each deploy adds about 1.75 GB to the bucket, about 420 GB a month at 8 deploys a day, with no cleanup. A first build in the 15 to 40 minutes after each deploy finds no base of the live release.
+  - After a failed publication, Re-run failed jobs runs only `container-base` again, with the release version and digest of the first attempt. The section "When a deploy fails" of `docs/automatic-deploys.md` says so. Until such a re-run or the next deploy, the release has no base.
+- **Problem:** The job about triples the time of each deploy run, so each later fix reaches production up to 25 minutes later. Each deploy adds about 1.75 GB to the bucket, about 420 GB a month at 8 deploys a day, with no cleanup. A first build in the 15 to 40 minutes after each deploy finds no base of the live release. A failed publication makes that gap last until a repair.
 - **Impact if no action:** Fixes reach users later. The bucket and its cost grow with no limit. A first build of an own computer in that time gap fails, and an admin must select Try again.
-- **Root question:** How does each own computer get a signed base for its first build, with the live Worker's release, without slow deploys or a full bucket?
+- **Root question:** How does each first build get a signed base with the Worker's release, also after a failed publication, without slow deploys or a full bucket?
 - **Options:**
   - **A.** Keep one full image for each deploy. Move the job into its own workflow, which the deploy starts and does not wait for. Add a lifecycle rule to the bucket that deletes container base files after 14 days.
     - The rule needs an operator with Cloudflare access.
@@ -35,28 +37,53 @@
     - With one concurrency group, GitHub keeps only the newest waiting run. So a release that a newer release replaces at once can get no base.
     - One more workflow holds the release signing key.
     - A rule by age also deletes the base of the live release when no deploy runs for 14 days. The sentence "Old immutable files stay in the bucket" of `docs/deployment/runner-archive.md` changes for base files.
-    - A keeps the time gap after each deploy, so the first build needs a rule for it, such as a wait for the base.
+    - A keeps the time gap after each deploy. So the first build needs E, F, or a wait for the exact base within the build limit. Such a wait can still use the whole limit after a slow or failed publication, and then end in Try again.
+    - With E, keep the newest base out of the deletion, for example with a cleanup step of the workflow in place of a bucket rule. Otherwise a first build finds no base after 14 days with no deploy.
     - Effort: Small.
   - **B.** Build the tools image only when its inputs change, keyed by a digest of the inputs.
     - A first build starts from the newest published tools image, and the bootstrap installs the release of the Worker in it.
-    - Most deploys then publish no image, and no first build waits for a base of the live release. So B also closes the time gap.
+    - Most deploys then publish no image, and no first build waits for a base of the live release. So B holds the first-build rule of E in the form of a tools image, and it closes the time gap.
+    - A first build could pin the tools image of the current inputs instead. Then the time gap would come back at each deploy that changes those inputs.
     - Cost: each first build also downloads and installs the release.
     - It changes the rule "with the newest release" at `docs/protocol/own-computers.md:201-203` and the sentence at `docs/protocol/sandbox-software.md:66-69`. It also changes the design of the first build on an own computer, which nobody has built yet.
+    - A create then names a tools image, not a release. So the base of a create in the wire types, the signed base manifest, and the base loader change too.
     - Read both legal pages and each public guide in full, as `CLAUDE.md` says.
-    - Effort: Medium.
-  - **C.** Publish the image to an OCI registry, so that each deploy adds only its changed layers, and sign the image digest with the release key. This adds a registry, its token, and a second trust path. Effort: Large.
+    - Effort: Large. The first grade was Medium. The finding check of the review graded the same approach Large.
+  - **C.** Publish the image to an OCI registry, so that each deploy adds only its changed layers, and sign the image digest with the release key. This adds a registry, its token, and a second trust path. Like A, C keeps the time gap, so it needs E or F. Effort: Large.
   - **D.** An addition to A, B, or C: a scheduled workflow publishes each missing base.
     - It reads the newest release from the newest-version JSON in R2. When the manifest key of the base of that release is missing, it publishes that base. Under B, it checks the tools image of the current inputs.
     - It shares its steps with the deploy through a reusable workflow.
-    - A missing base is then published with no operator, whatever ended the first attempt.
+    - A missing base is then published with no operator, whatever ended the first attempt. Under F, a held first build then continues after the next scheduled run, not after a re-run by an operator.
     - Cost: one more trigger holds the release signing key and the R2 token. After a failed publish step, the newest-version JSON can lag the live Worker.
+    - Effort: Medium.
+  - **E.** An addition to A or C, and a part of B: a rule for the first build.
+    - A first build uses the newest published signed base, and the bootstrap installs the release of the Worker on top. When no signed base exists yet, the first build waits.
+    - This keeps a first build working, whatever delayed or stopped the publication of the newest base.
+    - The selection can be a signed pointer that the base job writes last, or a record of the newest base that the Worker verified. Both give the same rule.
+    - Each first build in the time gap then runs a real pinned bootstrap from an older release. So the fixes of the bootstrap become part of the first-build path.
+    - Cost: a new requirement at `docs/protocol/own-computers.md:210`, with a read of both legal pages and each public guide in full.
+    - Effort: Medium.
+  - **F.** An addition to A or C, in place of E: hold the first build until the exact signed base is ready. Then resume it by itself.
+    - A failed publication then delays the setup of the computer until a repair.
+    - The page of the computer needs a new held state, with a mockup.
+    - Effort: Medium.
+  - **G.** An addition to F or to a wait: shorten the time gap.
+    - Build the slow tools stage while the `deploy` job runs, or take it from a cache that its input digest identifies. Add only the release layer when the publish step names the release.
+    - The gap then shrinks from about 15 to 40 minutes to a few minutes, by an estimate: the release layer, the save, and the upload.
+    - Cost: the gap stays, so F or a wait is still necessary. The base job changes shape. It must keep the in-place re-run of a failed publication.
     - Effort: Medium.
 - **Left out:**
   - A weekly build only: a new computer then starts from a release up to a week old, which breaks "the newest release".
   - A build on each server: each server then needs about an hour and the downloads of the template before its first build.
   - A build of the base in the deploy before the Worker goes live: it closes the time gap. But each fix then goes live 15 to 25 minutes later, which fails this goal. It also adds a gate to the deploy.
-- **Wider fix:** B. It removes the large artifact from most deploys, and no first build waits for a base of the live release. D is the wider fix for a base that fails to publish, whatever ended the first attempt.
-- **Previous examples:** None found.
-- **Related:** `plans/follow-ups/deploy-build-code-reaches-signing-key.md` changes the same code. A and D add a workflow that holds the release signing key, so the fix of that item must then cover that workflow too.
-- **Recommendation:** B. It removes the large artifact from most deploys and closes the time gap. No first build on an own computer exists yet that the change could break. The first recommendation was A, before the time gap was known. A keeps the rule in force with a small change, but it leaves the time gap open.
-- **Action:** ask the user, because no option is clearly best. A keeps a large artifact for each deploy and the time gap. B changes a protocol rule and the design of the first build.
+  - A wait inside one create: a create ends after 14 minutes, which is shorter than the gap.
+  - A clearer error and a note in the docs: it fails the goal. Each first build in the gap still fails and needs Try again.
+  - An automatic retry of a first build that failed with `release_unavailable`: it is a form of F that first shows a failed build. It also needs an exception to the rule that the app starts no new build after a failed build.
+- **Wider fix:** E for the time gap. A first build then works whatever delayed or stopped the publication: a slow build, a failed upload, or a new tools image under B. B is the wider fix for the cost, because most deploys then build no large image. D repairs a base that fails to publish, whatever ended the first attempt.
+- **Previous examples:** For cloud computers, a missing software image slows a build and never fails it (`docs/protocol/software-image.md:44-47`).
+- **Related:**
+  - `plans/follow-ups/deploy-build-code-reaches-signing-key.md` changes the same code. A, B, D, and G change or add the jobs that hold the release signing key. So the fix of that item must cover them too.
+  - `plans/follow-ups/own-computer-base-download-limit.md` changes the same download. Each option here still downloads a base of more than 1 GB within the 14-minute limit of a create.
+  - `plans/follow-ups/own-computer-bootstrap-interrupted-install.md` and `plans/follow-ups/own-computer-bootstrap-newer-release.md` change the bootstrap. Under B and E, a first build runs a pinned bootstrap, so the fixes of those items become part of the first-build path.
+- **Recommendation:** A with E. E closes the time gap for each option, also after a failed publication, so the gap no longer decides between A and B. A with E then keeps the rule that each deploy publishes a base with the newest release, at a Medium effort, while B is Large. B best removes the cost, because most deploys then build no large image. This changes the recommendation of this item from B, which it gave when only B closed the gap. The first recommendation was A.
+- **Action:** ask the user, because no option is clearly best, and E adds a rule for the first build that no requirement covers. A keeps a large artifact for each deploy, and B changes a protocol rule and the design of the first build.
