@@ -2,7 +2,7 @@
 
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-23, from pull request #671, branch `calummoore/universal-expo-app-milestone-1-mockups-emjd`, the wider fixes of review findings 5 and 10.
+- **Added:** 2026-11-23, from pull request #671, branch `calummoore/universal-expo-app-milestone-1-mockups-emjd`, review item 17, the wider fixes of review findings 5 and 10.
 - **Location:** `src/marketing/pages/app-host/terms-consent.astro`, `src/marketing/pages/app-host/github-setup/[outcome].astro:26`, `docs/mockups/src/components/marketing/LegalLinks.tsx`, `docs/mockups/src/components/marketing/CatalogueText.tsx`, `src/ui/components/settings/skillsTrustCopy.ts:28`, and the phone-app context of `docs/mockups/src/components/tools/`.
 - **Reason:** the recommended option changes the pages of the app host for every client, which are on `origin/main`, and only the user can approve that.
 
