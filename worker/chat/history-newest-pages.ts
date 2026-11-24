@@ -1,6 +1,5 @@
-import { jsonBytes } from '../../src/shared/event-limits'
+import { historyEventBytes, type ShowHistoryEvent } from './history-page-event'
 import type { PageLimits } from './history-pages'
-import type { StoredWorkspaceEvent } from './history-storage'
 import { historySessionKey, historySessionPrefix } from './history-session-keys'
 import {
   listSessionHistory,
@@ -19,9 +18,7 @@ export async function readNewestHistory(
   before: number | undefined,
   through: number,
   limits: PageLimits,
-  shown: (
-    stored: StoredWorkspaceEvent,
-  ) => Promise<WorkspaceEventEnvelope | null>,
+  shown: ShowHistoryEvent,
 ): Promise<NewestChatHistoryResponse> {
   const events: WorkspaceEventEnvelope[] = []
   const scanLimit = Math.max(1, limits.scan)
@@ -44,10 +41,10 @@ export async function readNewestHistory(
     for (const [index, { eventNumber, stored }] of records.entries()) {
       last = eventNumber
       scanned += 1
-      const envelope = stored === undefined ? null : await shown(stored)
-      if (envelope) {
-        events.push(envelope)
-        if (limits.bytes !== Infinity) bytes += jsonBytes(envelope)
+      const event = stored === undefined ? null : await shown(stored)
+      if (event) {
+        events.push(event.envelope)
+        if (limits.bytes !== Infinity) bytes += historyEventBytes(event)
       }
       if (bytes < limits.bytes) continue
       more ||= index < records.length - 1
