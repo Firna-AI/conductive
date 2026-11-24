@@ -137,7 +137,7 @@ Depends on: every other milestone
 
 - [x] Run the targeted tests and `npm run check`. The static checks and the mockup build passed. The full Vitest suite first timed out on this cloud computer, as on a clean `origin/main` here. With `TMPDIR` on `/dev/shm`, it passed all 5,738 tests in 1,699 files. Logs: `.context/repository-load-failures/gate*.log` and `related-tests.log`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings, then apply the fix rule: fix the `fix now` findings, record follow-up items under `plans/follow-ups/` for the rest, re-review once, and report.
+- [x] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings, then apply the fix rule: fix the `fix now` findings, record follow-up items under `plans/follow-ups/` for the rest, re-review once, and report. Round 1 found 6 findings and round 2 found 5. Fixed: 1, 5, 6, 8, 10, and 11. Deferred to follow-up items: 2, 3, 4, 7, and 9, and the native test of 10.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the plan".
 - [ ] Open the pull request. Its description gives the decisions and the design calls of this plan with their dates, a permalink to this plan, and the follow-up items that the change adds.
 
