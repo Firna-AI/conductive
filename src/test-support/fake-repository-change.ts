@@ -196,16 +196,15 @@ export function repositoryFetch(
     }
     server.json('GET', filePaths.changes(org, id), changes)
     emit({ type: 'changes.updated', changes })
-    const last = server.events.history(
-      Number.MAX_SAFE_INTEGER,
-    ).throughEventNumber
     const workspace = movedWorkspace(detail.workspace, names.branch)
-    server.json('GET', workspacePath(org, id), {
-      ...detail,
-      workspace,
-      eventNumber: last,
-    })
-    changedReply(server, workspace, last)
+    server.handle('GET', workspacePath(org, id), async () =>
+      Response.json({
+        ...detail,
+        workspace,
+        ...server.events.stateRead(id),
+      }),
+    )
+    changedReply(server, workspace, server.events.last(id))
     const github = newBranchGitHub(names)
     const { banner, checks } = github
     server.json('GET', githubPaths.banner(org, id), { banner })
@@ -231,9 +230,7 @@ export function repositoryFetch(
       activeTurnStartedAt: null,
       retryMessageId: null,
     }
-    const eventNumber = server.events.history(
-      Number.MAX_SAFE_INTEGER,
-    ).throughEventNumber
+    const eventNumber = server.events.last(id)
     const sessions = [...listed.sessions, session]
     server.json('GET', sessionsPath(org, id), {
       ...listed,

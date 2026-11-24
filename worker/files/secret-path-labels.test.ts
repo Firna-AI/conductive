@@ -11,6 +11,7 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { createFilesHandler } from './handlers'
+import { standaloneFileLists } from './test-support/list-reads'
 import { WorkspaceFiles } from './workspace'
 
 let harness: TestHarness
@@ -134,6 +135,7 @@ it('joins distinct real paths and labels runner reads, diffs, and provider fallb
   })
   const handler = createFilesHandler({
     maxFileBytes: 100,
+    fileLists: standaloneFileLists(() => files),
     workspaceFiles: () => files,
     repositoryRoot: () => '/home/user/repo',
     fetch: harness.boat.fetch,

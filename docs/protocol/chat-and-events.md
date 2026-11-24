@@ -209,39 +209,7 @@ view, the scroll after a send, and the place that each tab keeps.
 
 ## Events
 
-- The browser gets chat events only in the app's own event type. No SDK
-  event type and no provider event type reaches the browser.
-- Reason: one event type serves both agents, and the web app needs no
-  change when an SDK changes its events.
-- Every open tab of a workspace gets the same events in the same order.
-- A tab that shows a session gets the newest part of its stored history
-  first. The live events start after that part, and the earlier history
-  loads above it (decision 280).
-- Reason: the newest messages and the work of a running turn show after
-  one read, also in a long session. Live events after the full history
-  were rejected, because a long session then showed nothing new until its
-  whole history had loaded.
-- A connection opens before its stored history comes. One connection
-  sends at most about 8 MB of stored history. Then the workspace closes
-  it, and the tab connects again after the last part that it got.
-- Reason: the stored history of a connection waits in the memory of the
-  workspace until the tab reads it, and that memory has a fixed limit. A
-  replay of the whole history on one connection was rejected, because a
-  long history then stopped the workspace.
-- The chat shows each event of a session once and in event order, also
-  when earlier history arrives after newer events.
-- While the earlier history loads, the chat says so above the messages
-  that it shows.
-- The Durable Object of the workspace stores the chat history, so the chat
-  survives a stop of the sandbox. [Chat history](chat-history.md) states
-  what the stored history keeps.
-- A tab keeps the chat of each workspace that it showed in memory. A
-  return to that workspace shows the chat at once, then gets only the new
-  events (decision 87).
-- A reload or a new tab starts empty. No chat stays on the disk of the
-  device.
-- A cache on the disk was rejected, because the chat, with its code and
-  any secret that an agent printed, would stay on the device.
+[Workspace events](workspace-events.md) states the events that reach each tab, the reads that give a new tab the state of a workspace, and what a tab keeps.
 
 ## The agent runner
 

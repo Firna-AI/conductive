@@ -13,7 +13,6 @@ import {
   windowPlatform,
   windowVisibility,
 } from '../../../app/services'
-import type { WorkspaceSocketMessage } from '../../../shared/events'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { scenarioFetch } from '../../../test-support/fake-bar-dev'
 import {
@@ -89,36 +88,9 @@ const fetch = options.repository
 const workspaceId = options.start
   ? seedFirstStart(server, options.start, options.member)
   : FAKE_IDS.workspace
-/**
- * The messages of one workspace, as its own socket gives them. The fake
- * keeps one log for every workspace, and a first-start state opens a second
- * workspace.
- */
-function ofWorkspace(
-  workspaceId: string,
-  listener: (message: WorkspaceSocketMessage) => void,
-) {
-  return (message: WorkspaceSocketMessage) => {
-    if (message.type === 'event') {
-      if (message.envelope.workspaceId === workspaceId) listener(message)
-      return
-    }
-    const events = message.history.events.filter(
-      (envelope) => envelope.workspaceId === workspaceId,
-    )
-    listener({ type: 'history', history: { ...message.history, events } })
-  }
-}
-
 const app = new AppModel({
   api: createApiClient(fetch, fetchFiles(fetch)),
-  events: {
-    open: (target, handlers) =>
-      server.events.subscribe(
-        target.afterEventNumber,
-        ofWorkspace(target.workspaceId, handlers.message),
-      ),
-  },
+  events: server.events,
   now,
   delay: browserDelay,
   onFocus: windowFocus(window),

@@ -9,6 +9,7 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { setupFilesHttp } from './test-support/http'
+import { FILES_KEY } from './bucket-layout'
 import { connectWorkspaceFiles } from './test-support/runner'
 import {
   createFilesStorage,
@@ -67,6 +68,7 @@ it('serves the last stored file tree and changes while the sandbox sleeps', asyn
       },
     ],
     unavailable: true,
+    stateRead: { eventNumber: 0, repositoryId: null, failure: null },
   })
   expect(changes.status).toBe(200)
   expect(await changes.json()).toMatchObject({
@@ -174,23 +176,22 @@ it('reads runner content and downloads bytes and uses the repository default bra
 })
 
 it('checks the request gate and org workspace relationship before reaching file resources', async () => {
-  const context = await setupFilesHttp(harness, runtime)
   const { org, workspaceId, request, handler, session, workspaceFiles } =
-    context
-  const routes = [filePaths.tree, filePaths.changes].map((route) =>
-    route(org.id, workspaceId),
-  )
-  routes.push(
+    await setupFilesHttp(harness, runtime)
+  const routes = [
+    filePaths.tree(org.id, workspaceId),
+    filePaths.changes(org.id, workspaceId),
     filePaths.content(org.id, workspaceId, 'file.txt'),
     filePaths.download(org.id, workspaceId, 'file.txt'),
     filePaths.diff(org.id, workspaceId, 'file.txt'),
-  )
+  ]
   for (const path of routes) {
     const anonymous = await handler(
       new Request(`${TEST_ORIGIN}${path}`),
       harness.env,
     )
     expect(anonymous.status).toBe(401)
+    expect(await anonymous.json()).not.toHaveProperty('stateRead')
     expect(
       (await request(path, { headers: { Origin: 'https://preview.example' } }))
         .status,
@@ -244,19 +245,22 @@ it('checks the request gate and org workspace relationship before reaching file 
   expect(harness.boat.requests).toHaveLength(0)
 })
 
-it('returns explicit unavailable state before a snapshot and confines reads to repository paths', async () => {
-  const { org, workspaceId, request, files, evict } = await setupFilesHttp(
-    harness,
-    runtime,
-  )
+it('returns a cutoff only for a missing list and confines reads to repository paths', async () => {
+  const { org, workspaceId, request, files, storage, evict } =
+    await setupFilesHttp(harness, runtime)
   for (const path of [
     filePaths.tree(org.id, workspaceId),
     filePaths.changes(org.id, workspaceId),
   ]) {
     const response = await request(path)
     expect(response.status).toBe(503)
-    expect(await response.json()).toMatchObject({
-      error: { code: 'file_unavailable' },
+    expect(await response.json()).toEqual({
+      error: {
+        code: 'file_unavailable',
+        message:
+          'The file is not available. Try again when the cloud computer is ready.',
+      },
+      stateRead: { eventNumber: 0, repositoryId: null, failure: null },
     })
   }
   const connected = await connectWorkspaceFiles(files)
@@ -269,6 +273,7 @@ it('returns explicit unavailable state before a snapshot and confines reads to r
     revision: 0,
     entries: [],
     unavailable: true,
+    stateRead: { eventNumber: 0, repositoryId: null, failure: null },
   })
   const response = await request(
     filePaths.content(org.id, workspaceId, '../other-repository/secret.txt'),
@@ -278,6 +283,15 @@ it('returns explicit unavailable state before a snapshot and confines reads to r
     error: {
       code: 'invalid_input',
       message: 'Choose a file in this repository.',
+    },
+  })
+  await storage.transaction((data) => data.put(FILES_KEY, null))
+  const damaged = await request(filePaths.tree(org.id, workspaceId))
+  expect(damaged.status).toBe(502)
+  expect(await damaged.json()).toEqual({
+    error: {
+      code: 'file_unavailable',
+      message: 'The file could not be read. Try again.',
     },
   })
   expect(connected.runner.commands).toHaveLength(0)

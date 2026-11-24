@@ -31,6 +31,7 @@ export interface PreviewsState {
 
 export type PreviewsAction =
   | { type: 'load' }
+  | { type: 'workspace-seeded' }
   | { type: 'loaded'; previews: readonly Preview[] }
   | { type: 'load-failed'; error: ToolError }
   | { type: 'open' }
@@ -172,6 +173,13 @@ export function previewsReducer(
   action: PreviewsAction | WorkspaceEvent,
 ): PreviewsState {
   switch (action.type) {
+    case 'workspace-seeded':
+      return {
+        ...state,
+        previews: [],
+        load: { state: 'loading' },
+        read: state.read + 1,
+      }
     case 'load':
       return { ...state, load: { state: 'loading' }, read: state.read + 1 }
     case 'loaded':

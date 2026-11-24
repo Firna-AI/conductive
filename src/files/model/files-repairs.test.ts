@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest'
+import { expect, it, onTestFinished } from 'vitest'
 import type { WorkspaceEvent } from '../../shared/events'
 import { filePaths } from '../../shared/files'
 import { FakeApiServer } from '../../test-support/fake-api'
@@ -10,7 +10,13 @@ import {
   refusedTreeUpdate,
   treeUpdate,
 } from '../../test-support/recorded-repairs'
-import { filesFor, slow, startFiles, waitUntil } from '../files-test-kit'
+import {
+  filesFor,
+  observeFileReads,
+  slow,
+  startFiles,
+  waitUntil,
+} from '../files-test-kit'
 
 const minute = 60_000
 
@@ -93,28 +99,34 @@ it(
   },
 )
 
-it(
-  'rebuilds the failed repairs of a new tab from the stored workspace history',
-  slow,
-  async () => {
-    const server = new FakeApiServer()
-    emit(server, refusedReport('files.snapshot', true), FAKE_TIME)
-    emit(server, refusedReport('changes.updated', true), FAKE_TIME + minute)
-    emit(server, fullReport('files.snapshot'), FAKE_TIME + 2 * minute)
-    emit(
-      server,
-      refusedReport('files.snapshot', true, 2),
-      FAKE_TIME + 3 * minute,
-    )
-    // A new tab gets this history first. Its route reads answer after it.
-    const files = filesFor(server)
-    await startFiles(files)
-    expect(files.getSnapshot().failedRepairs).toEqual({
+it('starts both failed repairs at their first times from the reads', async () => {
+  const server = new FakeApiServer()
+  emit(server, refusedReport('files.snapshot', true), FAKE_TIME)
+  emit(server, refusedReport('changes.updated', true), FAKE_TIME + minute)
+  emit(server, fullReport('files.snapshot'), FAKE_TIME + 2 * minute)
+  emit(server, refusedReport('files.snapshot', true, 2), FAKE_TIME + 3 * minute)
+  emit(
+    server,
+    refusedReport('changes.updated', true, 3),
+    FAKE_TIME + 4 * minute,
+  )
+  const cutoff = server.events.last(FAKE_IDS.workspace)
+  const after: number[] = []
+  const reads = observeFileReads((cursor) => {
+    after.push(cursor)
+    return () => {}
+  }, server.fetch)
+  onTestFinished(() => reads.files.stop())
+  reads.files.start()
+  await Promise.all([reads.tree[0], reads.changes[0]])
+  expect({ after, failed: reads.files.getSnapshot().failedRepairs }).toEqual({
+    after: [cutoff],
+    failed: {
       'files.snapshot': FAKE_TIME + 3 * minute,
       'changes.updated': FAKE_TIME + minute,
-    })
-  },
-)
+    },
+  })
+})
 
 it(
   'keeps a failed repair in memory when the stream opens again after a gap',
@@ -122,6 +134,7 @@ it(
   async () => {
     const server = new FakeApiServer()
     const after: number[] = []
+    const cutoff = server.events.last(FAKE_IDS.workspace)
     let drop = false
     const files = filesFor(server, (afterEventNumber, listener) => {
       after.push(afterEventNumber)
@@ -140,7 +153,7 @@ it(
     drop = true
     emit(server, treeUpdate(3))
     emit(server, treeUpdate(4))
-    expect(after).toEqual([0, reopenedAfter])
+    expect(after).toEqual([cutoff, reopenedAfter])
     expect(files.getSnapshot().tree?.revision).toBe(4)
     expect(files.getSnapshot().failedRepairs).toEqual({
       'changes.updated': FAKE_TIME,

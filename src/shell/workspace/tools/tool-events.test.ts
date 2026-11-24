@@ -2,7 +2,12 @@ import { describe, expect, test } from 'vitest'
 import { WorkspaceStream } from '../../../app/events'
 import { ManualDelay, RecordingEvents } from '../../../app/test-kit'
 import type { WorkspaceEventEnvelope } from '../../../shared/events'
+import type { WorkspaceSeed } from '../../../shared/workspace-state-read'
 import { FAKE_IDS, FAKE_TIME } from '../../../test-support/fixtures/core'
+import {
+  emptyWorkspaceSeed,
+  seededFailure,
+} from '../../../test-support/fixtures/workspace-seed'
 import {
   fullReport,
   refusedReport,
@@ -17,12 +22,13 @@ function raw(eventNumber: number, event: object, occurredAt = FAKE_TIME) {
 }
 
 /** The tool events of the workspace, which follow its real stream. */
-function followed() {
+function followed(seed?: WorkspaceSeed) {
   const source = new RecordingEvents()
   const target = { orgId: FAKE_IDS.org, workspaceId }
   const stream = new WorkspaceStream(source, target, new ManualDelay().delay)
   const tools = new ToolEvents()
   tools.follow(stream)
+  if (seed) stream.applyBaseline(5, seed)
   stream.start()
   return { source, tools }
 }
@@ -43,6 +49,40 @@ const docs = { port: 4321, name: 'astro dev', folder: 'docs' }
 const revoke = (previewId: string) => ({ type: 'preview.revoked', previewId })
 
 describe('the tool events of a workspace', () => {
+  test('keeps the seeded port report and its first failed repair with newer revokes', () => {
+    const ports = {
+      eventNumber: 2,
+      occurredAt: FAKE_TIME - 120_000,
+      event: { type: 'ports.updated', ports: [nextDev] } as const,
+    }
+    const failure = seededFailure('ports.updated', 4, FAKE_TIME - 60_000)
+    const { source, tools } = followed({
+      ...emptyWorkspaceSeed,
+      ports,
+      failures: { ...emptyWorkspaceSeed.failures, 'ports.updated': failure },
+    })
+    source.send({ type: 'event', envelope: raw(6, revoke('after-cutoff')) })
+    const revoked = {
+      eventNumber: 6,
+      occurredAt: FAKE_TIME,
+      event: revoke('after-cutoff'),
+    }
+    expect(replayOf(tools)).toEqual([ports, failure, revoked])
+
+    source.send({
+      type: 'event',
+      envelope: raw(7, { type: 'ports.updated', ports: null }),
+    })
+    expect(replayOf(tools)).toEqual([
+      revoked,
+      {
+        eventNumber: 7,
+        occurredAt: FAKE_TIME,
+        event: { type: 'ports.updated', ports: null },
+      },
+    ])
+  })
+
   test('replay each revoke and only the latest readable port report, in event order, to a tool that shows later', () => {
     const { source, tools } = followed()
     source.send({

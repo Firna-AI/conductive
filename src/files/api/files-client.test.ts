@@ -1,8 +1,10 @@
 import { expect, it } from 'vitest'
 import { filePaths } from '../../shared/files'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
-import { clientFor } from '../files-test-kit'
+import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { toolFixtures } from '../../test-support/fixtures/tools'
+import { refusedReport } from '../../test-support/recorded-repairs'
+import { clientFor, emptyChanges } from '../files-test-kit'
 
 const org = FAKE_IDS.org
 const id = FAKE_IDS.workspace
@@ -97,4 +99,107 @@ it('gives the download address of a path in the workspace, with the path encoded
   const href = clientFor(new FakeApiServer().fetch).downloadHref(name)
   expect(href).toBe(filePaths.download(org, id, name))
   expect(new URL(href, 'https://app.test').searchParams.get('path')).toBe(name)
+})
+
+it('reads each list cutoff and keeps the optional fields of both lists', async () => {
+  const server = new FakeApiServer()
+  const stateRead = {
+    eventNumber: 18,
+    repositoryId: 'repo-1',
+    failure: {
+      eventNumber: 16,
+      occurredAt: FAKE_TIME,
+      event: refusedReport('files.snapshot', true),
+    },
+  }
+  const tree = { ...toolFixtures().files, unavailable: true }
+  const changes = {
+    ...emptyChanges,
+    displayBaseBranch: 'masked',
+    unpushedCommits: 0,
+    uncommittedFileCount: 4,
+  }
+  const changesRead = { eventNumber: 23, repositoryId: null, failure: null }
+  server.json('GET', filePaths.tree(org, id), { ...tree, stateRead })
+  server.json('GET', filePaths.changes(org, id), {
+    ...changes,
+    stateRead: changesRead,
+  })
+  const client = clientFor(server.fetch)
+
+  expect(await client.readTree()).toEqual({ ok: true, value: tree, stateRead })
+  expect(await client.readChanges()).toEqual({
+    ok: true,
+    value: changes,
+    stateRead: changesRead,
+  })
+})
+
+it('takes a cutoff only from an authorized unavailable list with readable state', async () => {
+  const stateRead = { eventNumber: 12, repositoryId: 'repo-1', failure: null }
+  const read = (status: number, body: unknown, code = 'file_unavailable') =>
+    clientFor(async () =>
+      Response.json({ error: { code }, stateRead: body }, { status }),
+    ).readChanges()
+  const failed = (status: number, code = 'file_unavailable') => ({
+    ok: false,
+    error: { kind: 'failed', status, code },
+  })
+
+  expect(await read(503, stateRead)).toEqual({ ...failed(503), stateRead })
+  expect(await read(502, stateRead)).toEqual(failed(502))
+  expect(await read(403, stateRead, 'forbidden')).toEqual(
+    failed(403, 'forbidden'),
+  )
+  expect(await read(503, stateRead, 'sandbox_unavailable')).toEqual(
+    failed(503, 'sandbox_unavailable'),
+  )
+  expect(await read(503, undefined)).toEqual(failed(503))
+  expect(await read(503, { ...stateRead, eventNumber: -1 })).toEqual(
+    failed(503),
+  )
+})
+
+it('keeps a valid list when its cutoff, repository, or repair is unreadable', async () => {
+  const tree = { revision: 0, entries: [] }
+  const stateRead = { eventNumber: 0, repositoryId: null, failure: null }
+  const failure = {
+    eventNumber: 1,
+    occurredAt: FAKE_TIME,
+    event: refusedReport('changes.updated', true),
+  }
+  const read = (state: unknown, revision: unknown = 0) =>
+    clientFor(async () =>
+      Response.json({ ...tree, revision, stateRead: state }),
+    ).readTree()
+
+  expect(await read(stateRead)).toEqual({ ok: true, value: tree, stateRead })
+  for (const unreadable of [
+    { ...stateRead, eventNumber: 2 ** 53 },
+    { ...stateRead, repositoryId: 12 },
+    { ...stateRead, failure: undefined },
+    { ...stateRead, failure },
+    { ...stateRead, eventNumber: 2, failure },
+  ]) {
+    expect(await read(unreadable)).toEqual({ ok: true, value: tree })
+  }
+  expect(await read(stateRead, 'invalid')).toEqual({
+    ok: false,
+    error: { kind: 'failed', status: 200, code: 'invalid_response' },
+  })
+})
+
+it('takes no cutoff when a list fetch resolves after the request is aborted', async () => {
+  const controller = new AbortController()
+  const client = clientFor(async () =>
+    Response.json({
+      revision: 0,
+      entries: [],
+      stateRead: { eventNumber: 12, repositoryId: null, failure: null },
+    }),
+  )
+  const reading = client.readTree(controller.signal)
+  controller.abort()
+
+  expect(await reading).toEqual({ ok: false, error: { kind: 'aborted' } })
 })

@@ -1,11 +1,13 @@
 import { HttpError } from '../http'
 import type { ChatData } from './types'
 import { CHAT_META } from './storage-keys'
+import type { WorkspaceReadMark } from './workspace-read-mark'
 
 export interface ChatMetadata {
   workspaceId: string
   through: number
   commandThrough: number
+  readState?: WorkspaceReadMark
 }
 
 export async function readChatMetadata(

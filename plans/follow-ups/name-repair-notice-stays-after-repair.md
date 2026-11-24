@@ -1,0 +1,32 @@
+# Name repair notice stays after its repair ends
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-23, from the plan refresh of `calummoore/object-memory-new-tab-state-reads-cesn`. The options check of that plan found it on 2026-11-20.
+- **Location:** `worker/chat/workspace-title.ts:29`, where `storeWorkspaceTitle` removes the repair record before it returns at line 30 without an event. `src/shell/workspace/header-notices.ts:93`, where `HeaderNotices` clears the name failure only on a `workspace.title` event of the stream.
+- **Reason:** The defect exists on `main` without the new tab state reads change, and its fix changes the name notice or the browser events, which is not in the scope of that plan.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Repair record:** the stored `report.refresh` command of one report kind, under the key `chat:v1:report-repair:<kind>`, in the state `pending` or `failed`. `worker/chat/report-repairs.ts` keeps it.
+  - **Failed repair marker:** a stored `runner.event-refused` event with `repairFailed: true` and no session. The Worker stores it when it refuses the fresh full report that a repair asked for.
+  - **Name notice:** the bar below the workspace header that says that the workspace name is out of date, with the time since its repair failed. `src/shell/workspace/repair-notices.md` describes it.
+- **Background:**
+  - The runner reports the workspace name with a `workspace.title` event. The Worker also makes a name itself, from the first message, through `worker/chat/workspace-titles.ts:98`. Both paths call `storeWorkspaceTitle`. The runner path is `worker/chat/runner-receipt.ts:195`.
+  - When the Worker refuses a `workspace.title` report, it asks the runner once for a fresh full report. When it refuses that report too, it stores a failed repair marker, and the repair record becomes `failed`.
+  - `HeaderNotices` reads the workspace stream. A failed repair marker of the kind `workspace.title` adds the name notice. Only a later `workspace.title` event in the stream removes it.
+  - `docs/protocol/lost-workspace-updates.md` says that a stored complete report of a kind ends its repair, also a failed one, and that a newer complete report of that kind clears the notice. It also says that a name report sets the name only while the workspace has no name.
+  - `storeWorkspaceTitle` calls `transaction.repairs.remove('workspace.title')` first, at line 29. Then it returns null with no event when `workspaceTitleAvailable` is false, at line 30. That is the case when the workspace already has a name in D1, or when the stored history already holds a title (`transaction.lifecycleRecovery().title`).
+- **Problem:** Trigger: the name repair of a workspace fails, and later a `workspace.title` report reaches `storeWorkspaceTitle` while the workspace already has a name. A member rename, an earlier title, or the Worker's own title can give that name. The Worker then removes the repair record and stores no event. So no tab gets a `workspace.title` event, and the name notice stays, although the repair ended and the name is no longer out of date.
+- **Impact if no action:** Today each open tab keeps the name notice. Each new tab and each reload shows it again too, because they replay the stored history: it holds the failed repair marker and no later `workspace.title` event. The notice then stays until a later `workspace.title` event, and a named workspace never stores one. After the new tab state reads change merges, a new tab reads the open failures from the repair records, so only a tab that was open before the report keeps the notice until it reloads. Expected behaviour: the notice clears in every open tab when the repair ends, and no new tab shows it.
+- **Root question:** How does each tab learn that a failed name repair ended when the workspace stores no name event?
+- **Options:**
+  - **A.** When `storeWorkspaceTitle` removes a `failed` record and stores no event, store a small sessionless event that ends the repair of that kind, such as `report.repair-ended` with the kind. `HeaderNotices` and the stream readers of other kinds clear the failure on it. It adds a browser event type, so older Mac apps must ignore it safely, and the new tab state reads change must count it in its notice window. Effort: Medium.
+  - **B.** Show the name notice only while the workspace has no name. `HeaderNotices` or the header reads the name from the workspace detail, which `workspace.updated` keeps current in each open tab. A name report cannot change a named workspace, so nothing is out of date then. It adds no event. It is a partial mitigation only: it does not cover the part of the trigger where only the stored history holds a title while D1 has no name. In that case the notice still stays. Effort: Small.
+  - **C.** Keep the repair record when `storeWorkspaceTitle` stores no event. The notice then stays correct for the record, but it keeps saying that the name is out of date while the name is set, and the kind gets no further repair request. Effort: Small.
+- **Left out:** Store the `workspace.title` event even when the name stays: each caller projects the event into D1 with `projectWorkspaceTitle`, so the event would replace a member's name, unless each caller and each reader changes too.
+- **Wider fix:** A. It gives each report kind one event that ends a repair, so no other kind can repeat this defect when its report stores no event.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/workspace-title-from-sandbox-unchecked.md` asks which names the Worker accepts from a sandbox. Its option D removes the runner title path. That item and this one share `storeWorkspaceTitle`, but they ask different questions, so they stay apart.
+- **Recommendation:** A. It is the only option that ends the notice in every tab for the whole trigger, because it signals the end of the repair itself. B is a smaller partial mitigation: it clears the notice when D1 has a name, but not when only the stored history holds a title.
+- **Action:** ask the user, because A adds a browser event type that older Mac apps receive, and B and C change when a notice that is on `main` shows, so each option changes behaviour that users see.

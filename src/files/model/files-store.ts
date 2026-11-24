@@ -1,47 +1,32 @@
 import type { FilesClient } from '../api/files-client'
 import { TabPlaces } from '../../app/tab-places'
 import type { ScrollOffset } from '../ui/kept-scroll'
-import { parseStreamMessage, type StreamEnvelope } from '../api/parse-events'
+import type { StreamEnvelope } from '../api/parse-events'
 import {
   noFailedRepairs,
   repairsAfter,
+  setFailedRepair,
   type FailedRepairs,
 } from './failed-repairs'
 import { FilesInvalidation } from './files-invalidation'
+import { FilesReads, type FileList, type FileListRead } from './files-reads'
+import { FilesStream, type FilesSubscribe } from './files-stream'
 import { RepositoryWatch } from './repository-watch'
 import type { FilesSnapshot } from './files-snapshot'
 import {
   emptySync,
   syncEvent,
-  syncFetchedChanges,
-  syncFetchedTree,
   syncMoved,
+  syncRead,
   type FilesSync,
   type SyncStep,
 } from './files-sync'
 
 export type { FilesSnapshot } from './files-snapshot'
 
-/**
- * The workspace event stream after `afterEventNumber`. It sends stored
- * history in one or more pages, then live events. Live events wait for the
- * final history page. The shell injects its socket adapter, or
- * `FakeWorkspaceEvents.subscribe` in development.
- */
-export type FilesSubscribe = (
-  afterEventNumber: number,
-  listener: (message: unknown) => void,
-) => () => void
+export type { FilesSubscribe } from './files-stream'
 
-type Resource = 'tree' | 'changes'
-
-/**
- * The live files of one workspace: the tree and the changes from the file
- * routes, kept current by the file events of the workspace stream. It
- * skips repeated events, and reads the stream again after a gap. The stored
- * history can come in pages that share one cutoff, and a page can leave out
- * numbers. Live events wait until the final page.
- */
+/** The two Files lists of one workspace, kept current by reads and events. */
 export class WorkspaceFiles {
   readonly client: FilesClient
   /**
@@ -49,7 +34,7 @@ export class WorkspaceFiles {
    * view, which stays while the app keeps the store. A reload forgets it.
    */
   readonly scrollPlaces = new TabPlaces<ScrollOffset>()
-  private readonly subscribeToStream: FilesSubscribe
+  private readonly stream: FilesStream
   private sync: FilesSync = emptySync
   private snapshot: FilesSnapshot = {
     tree: null,
@@ -66,47 +51,55 @@ export class WorkspaceFiles {
   }
   private repairs: FailedRepairs = noFailedRepairs
   private readonly listeners = new Set<() => void>()
-  private readonly reads = new Map<Resource, AbortController>()
-  private lastEventNumber = 0
-  /** The cutoff of a replay that has more pages to come, or null. */
-  private replay: number | null = null
-  /** The live events that wait for the final page of a replay. */
-  private waiting: StreamEnvelope[] = []
-  private subscription = 0
-  private unsubscribe: (() => void) | null = null
+  private readonly reads: FilesReads
   private running = false
-  private readonly repository = new RepositoryWatch()
+  private followed = false
+  private readonly repositories = {
+    tree: new RepositoryWatch(),
+    changes: new RepositoryWatch(),
+  }
   /** A repository change dropped the changes, so the route reads again. */
   private changesMoved = false
 
   constructor(options: { client: FilesClient; subscribe: FilesSubscribe }) {
     this.client = options.client
-    this.subscribeToStream = options.subscribe
+    this.stream = new FilesStream(options.subscribe, (events, history) =>
+      this.receive(events, history),
+    )
+    this.reads = new FilesReads(this.client)
   }
 
   /** Reads the files and follows the stream. Safe to call again after stop. */
   start(): void {
     if (this.running) return
     this.running = true
-    this.listen()
-    if (!this.sync.tree || this.sync.treeStale) this.read('tree')
-    if (!this.sync.changes) this.read('changes')
+    if (this.followed) {
+      this.stream.start()
+      this.retry()
+      return
+    }
+    this.reads.begin()
+    this.read('tree', false)
+    this.read('changes', false)
+    this.publish({})
   }
 
   stop(): void {
     this.running = false
-    this.subscription += 1
-    this.unsubscribe?.()
-    this.unsubscribe = null
-    this.reads.forEach((controller) => controller.abort())
-    this.reads.clear()
+    this.stream.stop()
+    this.reads.stop()
   }
 
   /** Reads the tree and the changes again where they failed. */
   retry(): void {
     if (!this.running) return
-    if (!this.sync.tree || this.sync.treeStale) this.read('tree')
-    if (!this.sync.changes) this.read('changes')
+    if (
+      (!this.sync.tree.value || this.sync.treeStale) &&
+      !this.reads.has('tree')
+    )
+      this.read('tree')
+    if (!this.sync.changes.value && !this.reads.has('changes'))
+      this.read('changes')
   }
 
   setFolderOpen(path: string, open: boolean): void {
@@ -144,95 +137,66 @@ export class WorkspaceFiles {
 
   private publish(change: Partial<FilesSnapshot>): void {
     const { tree, treeUnavailable, changes } = this.sync
-    const failedRepairs = this.repairs
     this.snapshot = {
       ...this.snapshot,
-      tree,
+      tree: tree.value,
+      treeError: this.reads.has('tree') ? null : tree.error,
       treeUnavailable,
-      changes,
-      failedRepairs,
+      changes: changes.value,
+      changesError: this.reads.has('changes') ? null : changes.error,
+      failedRepairs: this.repairs,
       ...change,
     }
     this.listeners.forEach((listener) => listener())
   }
 
-  private listen(): void {
-    const subscription = ++this.subscription
-    this.replay = null
-    this.waiting = []
-    this.unsubscribe?.()
-    this.unsubscribe = this.subscribeToStream(
-      this.lastEventNumber,
-      (message) => {
-        if (subscription === this.subscription) this.receive(message)
-      },
-    )
-  }
-
-  private receive(raw: unknown): void {
-    const message = parseStreamMessage(raw)
-    if (!message) return
-    if (message.type === 'event') {
-      if (this.replay !== null) this.waiting.push(message.envelope)
-      else this.live(message.envelope)
-      return
-    }
+  private receive(events: readonly StreamEnvelope[], history: boolean): void {
     const invalidation = new FilesInvalidation()
-    const through = message.throughEventNumber
     let taken = false
-    for (const envelope of message.envelopes) {
-      if (envelope.eventNumber > through) continue
+    for (const envelope of events) {
       taken = this.take(envelope, invalidation) || taken
     }
-    const next = message.nextAfterEventNumber
-    this.replay = next === null ? null : through
-    this.lastEventNumber = Math.max(
-      this.lastEventNumber,
-      next === null ? through : Math.min(next, through),
-    )
     if (taken) this.commit(invalidation)
-    else this.publish({})
-    if (next !== null) return
-    const waiting = this.waiting.sort((a, b) => a.eventNumber - b.eventNumber)
-    this.waiting = []
-    for (const envelope of waiting) {
-      if (!this.live(envelope)) return
-    }
+    else if (history) this.publish({})
   }
 
-  /** Applies one live event, or subscribes again after a gap and says so. */
-  private live(envelope: StreamEnvelope): boolean {
-    // A gap: subscribe again, so the history brings the missed events.
-    if (envelope.eventNumber > this.lastEventNumber + 1) {
-      this.listen()
-      return false
-    }
-    const invalidation = new FilesInvalidation()
-    if (this.take(envelope, invalidation)) this.commit(invalidation)
-    return true
-  }
-
-  /**
-   * Takes one numbered event once. True when it was a new file event, or
-   * when it changed the failed repairs.
-   */
+  /** Takes an ordered event that passes the floor of its list. */
   private take(
     envelope: StreamEnvelope,
     invalidation: FilesInvalidation,
   ): boolean {
-    if (envelope.eventNumber <= this.lastEventNumber) return false
-    this.lastEventNumber = envelope.eventNumber
-    const repairs = repairsAfter(this.repairs, envelope)
-    const repaired = repairs !== this.repairs
-    this.repairs = repairs
-    if (this.repository.moved(envelope.repositoryId)) {
-      this.apply(syncMoved(this.sync), invalidation)
-      this.changesMoved = true
+    const { eventNumber, event, failedRepair, repositoryId } = envelope
+    if (repositoryId !== null) {
+      const tree =
+        eventNumber > this.sync.tree.floor &&
+        this.repositories.tree.moved(repositoryId)
+      const changes =
+        eventNumber > this.sync.changes.floor &&
+        this.repositories.changes.moved(repositoryId)
+      if (!tree && !changes) return false
+      this.apply(syncMoved(this.sync, eventNumber, tree, changes), invalidation)
+      this.changesMoved ||= changes
       return true
     }
-    if (!envelope.event) return repaired
-    this.apply(syncEvent(this.sync, envelope.event), invalidation)
-    return true
+    if (!event && !failedRepair) return false
+    const list =
+      event?.type === 'changes.updated' ||
+      failedRepair?.report === 'changes.updated'
+        ? 'changes'
+        : 'tree'
+    if (eventNumber <= this.sync[list].floor) return false
+    const repairs = repairsAfter(this.repairs, envelope)
+    const repaired = repairs !== this.repairs
+    if (repaired) {
+      this.repairs = repairs
+      this.sync = {
+        ...this.sync,
+        [list]: { ...this.sync[list], floor: eventNumber },
+      }
+    }
+    if (event)
+      this.apply(syncEvent(this.sync, event, eventNumber), invalidation)
+    return event !== null || repaired
   }
 
   private apply(step: SyncStep, invalidation: FilesInvalidation): void {
@@ -240,54 +204,53 @@ export class WorkspaceFiles {
     invalidation.add(step)
   }
 
-  private commit(
-    invalidation: FilesInvalidation,
-    change: Partial<FilesSnapshot> = {},
-  ): void {
+  private commit(invalidation: FilesInvalidation): void {
     if (this.sync.treeStale && !this.reads.has('tree')) {
       this.read('tree', false)
-      change = { ...change, treeError: null }
     }
     // The changes of the new folder: the route waits for its first report.
     if (this.changesMoved) {
       this.changesMoved = false
       this.read('changes', false)
-      change = { ...change, changesError: null }
     }
-    this.publish({ ...invalidation.apply(this.snapshot), ...change })
+    this.publish(invalidation.apply(this.snapshot))
   }
 
-  private read(resource: Resource, publishStart = true): void {
-    this.reads.get(resource)?.abort()
-    const controller = new AbortController()
-    this.reads.set(resource, controller)
-    if (publishStart) {
-      this.publish(
-        resource === 'tree' ? { treeError: null } : { changesError: null },
-      )
-    }
-    const done = () => {
-      if (this.reads.get(resource) !== controller) return false
-      this.reads.delete(resource)
-      return true
-    }
-    if (resource === 'tree') {
-      void this.client.readTree(controller.signal).then((result) => {
-        if (!done()) return
-        if (!result.ok) return this.publish({ treeError: result.error })
-        const invalidation = new FilesInvalidation()
-        this.apply(syncFetchedTree(this.sync, result.value), invalidation)
-        this.commit(invalidation, { treeError: null })
-      })
+  private read(list: FileList, publishStart = true): void {
+    this.reads.read(
+      list,
+      (reply) => this.acceptRead(reply),
+      (cursor) => {
+        this.followed = true
+        this.stream.start(cursor)
+      },
+    )
+    if (publishStart) this.publish({})
+  }
+
+  private acceptRead(read: FileListRead): void {
+    const {
+      list,
+      result: { stateRead },
+    } = read
+    const step = syncRead(this.sync, read)
+    if (!step) {
+      if (list === 'tree' && this.sync.treeStale) this.read('tree', false)
+      this.publish({})
       return
     }
-    void this.client.readChanges(controller.signal).then((result) => {
-      if (!done()) return
-      if (!result.ok) return this.publish({ changesError: result.error })
-      const invalidation = new FilesInvalidation()
-      this.apply(syncFetchedChanges(this.sync, result.value), invalidation)
-      this.commit(invalidation, { changesError: null })
-    })
+    if (stateRead && stateRead.eventNumber > this.sync[list].floor) {
+      this.repositories[list].seed(stateRead.repositoryId)
+      const report = list === 'tree' ? 'files.snapshot' : 'changes.updated'
+      this.repairs = setFailedRepair(
+        this.repairs,
+        report,
+        stateRead.failure?.occurredAt,
+      )
+    }
+    const invalidation = new FilesInvalidation()
+    this.apply(step, invalidation)
+    this.publish(invalidation.apply(this.snapshot))
   }
 }
 

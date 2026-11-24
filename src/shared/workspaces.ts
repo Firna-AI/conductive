@@ -6,6 +6,7 @@ import { orgPath } from './api'
 
 import type { SendMessageRequest } from './messages'
 import type { WorkspaceCapabilities } from './secrets'
+import type { WorkspaceSeed } from './workspace-state-read'
 
 export const WORKSPACE_RESTORE_MS = 14 * 24 * 60 * 60 * 1_000
 
@@ -59,6 +60,7 @@ export interface WorkspaceResponse {
 export interface OrderedWorkspaceResponse extends WorkspaceResponse {
   /** The workspace event sequence when this read or resume reply was made. */
   eventNumber: number
+  seed?: WorkspaceSeed
 }
 export interface WorkspacesResponse {
   workspaces: readonly Workspace[]

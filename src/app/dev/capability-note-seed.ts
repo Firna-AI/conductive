@@ -73,7 +73,7 @@ export function seedCapabilityNotes(
 ): void {
   if (scenario === null) return
   writesOf(scenario).forEach(([member, changes], index) => {
-    const history = events.history()
+    const history = events.history(0, FAKE_IDS.workspace)
     const newest = history.events.reduce(
       (at, envelope) => Math.max(at, envelope.occurredAt),
       FAKE_TIME,
