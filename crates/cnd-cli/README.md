@@ -1,13 +1,13 @@
 # cnd-cli
 
 This crate builds `conductive`, the command line program for Conductive
-cloud computers. Use the executable to access its commands. This crate
+cloud computers and own computers. Use the executable to access its commands. This crate
 also exposes the update engine through a library API.
 
 ## Responsibilities
 
 Provide one command entry point for the host program, agent runner, preview relay, MCP
-server, Git credential helper, software updates, and workspace tools.
+server, Git credential helper, software updates, own computers, and workspace tools.
 
 ## What This Crate Does
 
@@ -25,7 +25,7 @@ sorts below every release.
 At process start, every command installs `aws-lc-rs` as the Rustls crypto
 provider. The host and runner use this explicit process default for TLS.
 
-The commands are `host`, `runner`, `relay`, `mcp`, `git-credential`, `update`,
+The commands are `host`, `computer`, `runner`, `relay`, `mcp`, `git-credential`, `update`,
 `workspaces`, `sessions`, `messages`, `sections`, `repositories`, `models`,
 `previews`, `mac`, `secrets`, and `services`. The workspace commands and
 `mcp` run 27 Worker calls and five local service calls in
@@ -46,6 +46,14 @@ machine origin and token from the saved env file before each connection.
 It waits for missing values and reconnects after each drop or refusal.
 Its command children receive a clean environment. The system service runs
 it as `user`, independently of agent turns and the runner connection.
+The [own computer service](../cnd-computer/README.md) runs on x86_64 Linux
+with systemd and rootless Podman. `computer check` reports the server
+requirements and exits with status 1 if a requirement fails.
+`computer enroll --code CODE` exchanges the one-time code and saves private
+settings. Use `--origin URL` and `--release-server URL` to select other
+servers. `computer service` installs and restarts the systemd user unit.
+The unit runs `computer run`, which connects to the Worker and runs the
+fixed container operations. It also installs signed updates to itself.
 `runner` starts the full [Rust runner](../cnd-runner/README.md). It uses the
 [runner configuration](../../runner/configuration.md), plus optional
 `CONDUCTIVE_NODE` and `CONDUCTIVE_SDK_HELPER` path overrides. Installed builds
@@ -159,6 +167,7 @@ Run these commands from the repository root:
 ```sh
 cargo run -p cnd-cli -- --help
 cargo run -p cnd-cli -- --version
+cargo run -p cnd-cli -- computer --help
 cargo run -p cnd-cli -- update --help
 cargo run -p cnd-cli -- update parts
 ```
@@ -207,6 +216,7 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.
 - [runner_command.rs](src/runner_command.rs) makes one `RunnerStart` before its reconstruction loop, and composes the full runner and graceful shutdown.
 - [host_command.rs](src/host_command.rs) composes the host runtime, native effects, and graceful service shutdown.
+- [computer_command.rs](src/computer_command.rs) composes enrollment, the health report, and the own computer service.
 - [runner_round.rs](src/runner_round.rs) composes each runner round, negotiates its private service transport, and updates display context without blocking a move on native work.
 - [runner_services.rs](src/runner_services.rs) composes the one native manager and private socket.
 - [service_command.rs](src/service_command.rs) runs the unit-owned execution and output helper.

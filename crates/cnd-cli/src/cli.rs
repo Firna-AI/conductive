@@ -3,6 +3,7 @@
 use clap::Parser;
 
 use crate::command::Command;
+use crate::computer_command;
 use crate::error::{Error, Result};
 use crate::host_command;
 use crate::release;
@@ -16,7 +17,7 @@ use crate::update_command;
 #[command(
     name = "conductive",
     version = release::VERSION,
-    about = "Conductive cloud computer commands",
+    about = "Conductive computer commands",
     after_long_help = cnd_tools::cli::HELP
 )]
 pub(crate) struct Cli {
@@ -28,6 +29,10 @@ impl Cli {
     /// Run supported commands and report unavailable command families.
     pub(crate) async fn execute(self) -> Result<()> {
         let _parts = release::parts()?;
+        if let Command::Computer(command) = self.command {
+            computer_command::execute(command).await;
+            return Ok(());
+        }
         if let Command::Host = self.command {
             return host_command::execute().await;
         }

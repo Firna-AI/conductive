@@ -6,6 +6,7 @@ use std::path::PathBuf;
 
 use clap::{Args, Subcommand};
 
+use crate::computer_command::ComputerCommand;
 use crate::update_command::UpdateArgs;
 
 /// Command families served by the Conductive program.
@@ -13,6 +14,9 @@ use crate::update_command::UpdateArgs;
 pub(crate) enum Command {
     /// Open the outbound machine connection for commands, files, and local streams.
     Host,
+    /// Set up or run a Linux server for Conductive workspaces.
+    #[command(subcommand)]
+    Computer(ComputerCommand),
     /// Run agent sessions through the private SDK helper.
     Runner,
     /// Execute a private service record after the system manager changes user.
@@ -55,6 +59,7 @@ impl fmt::Display for Command {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = match self {
             Self::Host => "host",
+            Self::Computer(_) => "computer",
             Self::Runner => "runner",
             Self::ServiceExec { .. } => "service-exec",
             Self::Relay => "relay",

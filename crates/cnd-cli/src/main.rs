@@ -8,6 +8,7 @@ use crate::cli::Cli;
 
 mod cli;
 mod command;
+mod computer_command;
 mod error;
 mod host_command;
 mod release;
