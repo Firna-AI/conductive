@@ -476,17 +476,24 @@ Depends on: Milestones 1 to 5, and the memory plan's merged pull request.
 
 Verify the combined change, compare report costs, and prepare one pull request into `main`.
 
-- [ ] Run early format, lint, and file-length checks with Node 24.
-- [ ] Prove that each new test fails on the behavior it protects. Run each new asynchronous or browser test 10 times and record its cost.
-- [ ] Run a one-time cost check for 1,000 changes, 50,000 tree entries, and omitted-only edits. Compare CPU, rows, history bytes, and heap with the supplied measurements.
-- [ ] Rerun `worker/chat/runner-file-parts.test.ts > refuses inconsistent changes metadata and empty multipart reports` at default concurrency, 10 times on the branch head and 10 times on `main` at `4fdb5bc7d`. It timed out once at 15 s during Milestone 4. The evidence is `.context/runner-file-report-limits/m4-checks/guard-timeout-evidence.md`. Fix the cause if the branch made it slower.
-- [ ] Measure the first draw of All files with a limited tree whose changed folder holds about 45,000 entries. The app has no virtual list. Ask Cal if the measured time needs a new design choice.
-- [ ] Measure a burst of absent-path refreshes in existing app readers. Choose a full-tree fallback before repeated scans dominate the cost.
-- [ ] Save cost and compatibility evidence under `.context/runner-file-report-limits/`. Ask Cal if a new design choice is needed.
-- [ ] Install desktop and runner dependencies as `AGENTS.md` requires. Run `npm run check`, which includes the mockup check.
-- [ ] Run `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test --workspace`.
-- [ ] Run `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli`. Install the target and `musl-tools` if needed.
-- [ ] Regenerate shared bindings and check for generated drift. Check each changed Markdown link.
+- [x] Run early format, lint, and file-length checks with Node 24.
+- [x] Prove that each new test fails on the behavior it protects. Run each new asynchronous or browser test 10 times and record its cost.
+- [x] Run a one-time cost check for 1,000 changes, 50,000 tree entries, and omitted-only edits. Compare CPU, rows, history bytes, and heap with the supplied measurements.
+- [x] Rerun `worker/chat/runner-file-parts.test.ts > refuses inconsistent changes metadata and empty multipart reports` at default concurrency, 10 times on the branch head and 10 times on `main` at `4fdb5bc7d`. It timed out once at 15 s during Milestone 4. The evidence is `.context/runner-file-report-limits/m4-checks/guard-timeout-evidence.md`. Fix the cause if the branch made it slower.
+- [x] Measure the first draw of All files with a limited tree whose changed folder holds about 45,000 entries. The app has no virtual list. Ask Cal if the measured time needs a new design choice.
+- [x] Measure a burst of absent-path refreshes in existing app readers. Choose a full-tree fallback before repeated scans dominate the cost.
+- [x] Save cost and compatibility evidence under `.context/runner-file-report-limits/`. Ask Cal if a new design choice is needed.
+The cost evidence is `.context/runner-file-report-limits/m6-costs-report.md` and `m6-costs/`. The timeout comparison is `m6-guard/result.md`.
+
+- **Orchestrator call, 24 November 2026:** Keep the 512-operation delta budget for absent-path refreshes, with no earlier full-tree fallback. A delta cost less Worker CPU, storage, and wire bytes than a full tree at every size. One app reader is slower with a large delta from about 64 removes, but Worker and reader together still favour the delta, and a full tree also makes every open file read again.
+- The heap of a 50,000-entry full resend peaked at up to 59.4 MB, above the estimate of about 45 MB and below the 128 MB limit. A legacy tree of 68,412 entries peaked at up to 75 MB.
+- The first draw of a changed folder with 45,000 entries takes 7 to 8 s with both legacy and limited reports. It is outside the scope: `plans/follow-ups/large-changed-folder-first-draw.md`.
+- The guard test times out on `main` under the same load. The two head-only timeouts stay unclassified until exact-head CI.
+
+- [ ] Run the complete npm gate in CI on the exact head of the pull request, as Cal asked on 23 November 2026, in place of a local run.
+- [ ] Run the Rust checks, including the doc-tests, in the `Rust gate` CI job on the exact head. `rustdoc` is missing on this computer, so the doc-tests did not run locally.
+- [ ] Run the Rust release build in the `Rust gate` CI job on the exact head.
+- [x] Regenerate shared bindings and check for generated drift. Check each changed Markdown link.
 - [ ] Commit with the `git-commit` skill and push this workspace branch.
 - [ ] Review the full diff against `origin/main` with the `implementation-review` skill after the push. Report findings and apply the fix rule.
       Fix `fix now` findings, record follow-up items for the rest, re-review once, and report.
