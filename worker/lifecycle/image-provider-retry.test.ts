@@ -7,6 +7,7 @@ const backendFixture = setupBackendTests()
 
 it('bounds lasting image status faults across alarm restarts while reads and deadline updates succeed', async () => {
   const fixture = await backendFixture()
+  fixture.host.autoConnect = false
   const image = await imageRetryFixture(fixture)
   statusFault(fixture)
   const now = fixture.runtime.dependencies.now()
@@ -58,6 +59,7 @@ it('bounds lasting image status faults across alarm restarts while reads and dea
 
 it('keeps the original failure age when healthy running polls continue beyond the window', async () => {
   const fixture = await backendFixture()
+  fixture.host.autoConnect = false
   const image = await imageRetryFixture(fixture)
   const fault = statusFault(fixture)
   const now = fixture.runtime.dependencies.now()
@@ -79,6 +81,7 @@ it('keeps the original failure age when healthy running polls continue beyond th
 
 it('honors Retry-After and healthy progress while resetting the window only after image phase completion', async () => {
   const fixture = await backendFixture()
+  fixture.host.autoConnect = false
   const image = await imageRetryFixture(fixture)
   const fault = statusFault(fixture)
   const now = fixture.runtime.dependencies.now()

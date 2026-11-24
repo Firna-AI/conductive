@@ -1,4 +1,5 @@
 import type { AppDependencies, AppEnv } from '../../env'
+import { readCommandRoute } from '../command-intents'
 import type { PrepareImageSources } from '../image-builds'
 import { revokeSourceToken } from './cleanup'
 import { finishSourceCopy } from './copy-data'
@@ -23,7 +24,10 @@ export async function advanceLegacySources(
     job.phase === 'finalize'
   ) {
     if (job.processId === null) throw new Error('Missing source process')
-    const status = await input.commands.status(job.processId, job)
+    const status = await input.commands.status(
+      { processId: job.processId, route: readCommandRoute(job.commandRoute) },
+      job,
+    )
     await saveSourceStatus(env.DB, job.buildId, status, job.sourceIndex)
     if (status.running) return false
     if (job.phase === 'fetch') {

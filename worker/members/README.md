@@ -127,10 +127,11 @@ and the production `deleteOrgState` callback.
 Delete records the deletion date and revokes previews before any hook or provider call.
 It preserves an already-stopped disk's stop and keepalive dates.
 A failed suspension, stop, or maintenance call keeps recovery state for retry.
-Each workspace sandbox stop attempts token revocation before the provider
+Each sandbox stop attempts token revocation before the provider
 request. A failed revoke warns and lets the stop continue.
-The computer ledger maps a sandbox to its workspace. Build
-sandboxes have no machine token here. A deleted-org retention resume gets
+The computer ledger maps a sandbox to its workspace or its build. The stop
+of each listed sandbox revokes the machine token of that workspace or build.
+A deleted-org retention resume gets
 only the machine origin and a new machine token. Its stop attempts revocation.
 After the stop, retention must confirm revocation before it records completion.
 A failed revoke keeps the stop pending for the existing cleanup retry.

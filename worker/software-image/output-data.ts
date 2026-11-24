@@ -1,4 +1,5 @@
 import type { SoftwareImage } from './types'
+import { hideMachineTokens } from '../lifecycle/build-machine-token'
 
 const OUTPUT_PART_BYTES = 64 * 1024
 const PARTS_PER_STATEMENT = 40
@@ -9,7 +10,7 @@ export function softwareImageOutputStatements(
   image: SoftwareImage,
   output: string,
 ): D1PreparedStatement[] {
-  const bytes = new TextEncoder().encode(output)
+  const bytes = new TextEncoder().encode(hideMachineTokens(output))
   const parts: string[] = []
   for (let start = 0; start < bytes.length;) {
     let end = Math.min(start + OUTPUT_PART_BYTES, bytes.length)

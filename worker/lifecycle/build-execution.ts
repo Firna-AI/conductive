@@ -1,4 +1,7 @@
 import { CommandFailed } from '../warnings'
+import type { MachineChannel } from '../machines/channel'
+import { buildMachineOwner } from '../machines/client'
+import { revokeMachineTokenOnStop } from '../machines/revoke'
 import type { SandboxProvider } from '../sandbox/provider'
 import { providerForAccount } from '../sandbox/client'
 import {
@@ -15,7 +18,7 @@ import { scheduleIdleImage } from './image-schedule'
 import type { ImageRuntime } from './image-builds'
 import { deleteSandboxIfPresent, deleteSnapshotIfPresent } from './cleanup'
 import { cleanupBuildImageSources } from './image-sources/cleanup'
-import { lifecycleCommand } from './command-intents'
+import { lifecycleCommand, readCommandRoute } from './command-intents'
 import {
   recordBuildCommand,
   recordSoftwarePackages,
@@ -28,11 +31,9 @@ import { imageIsPublished } from './org-image-data'
 
 export async function advanceBuildCommand(
   runtime: ImageRuntime,
-  provider: SandboxProvider,
+  channel: MachineChannel,
   job: BuildJob,
 ): Promise<boolean> {
-  const sandboxId = job.sandboxId
-  if (!sandboxId) throw new Error('Missing build sandbox')
   if (job.processId === null) {
     let command: string
     if (job.phase === 'software') {
@@ -44,26 +45,34 @@ export async function advanceBuildCommand(
         software.packagesVersion,
       )
     } else
-      command = `set -eu\n${savedScriptCommand('/tmp/conductive-install.sh', job.installScript, ['set -a', '. /run/ascii-secrets/env.sh', 'set +a'])}\nrm -f /tmp/conductive-install.sh`
+      command = `set -eu\n${savedScriptCommand(
+        '/tmp/conductive-install.sh',
+        job.installScript,
+        [
+          'set -a',
+          '. /run/ascii-secrets/env.sh',
+          'set +a',
+          'unset CONDUCTIVE_MACHINE_TOKEN CONDUCTIVE_MACHINE_ORIGIN',
+        ],
+      )}\nrm -f /tmp/conductive-install.sh`
     if (job.phase !== 'software' && job.phase !== 'install')
       throw new Error('Invalid image command phase')
-    const started = await provider.startCommand(
-      sandboxId,
+    const started = await channel.startCommand(
       lifecycleCommand({ kind: 'build', id: job.buildId }, job.phase, command),
     )
     await recordBuildCommand(
       runtime.env.DB,
       job.buildId,
-      started.processId,
+      started,
       phaseLabel(job.phase),
       runtime.dependencies.now(),
     )
     return false
   }
-  const status = await provider.getCommandStatus(sandboxId, job.processId, {
-    stdoutOffset: job.stdoutOffset,
-    stderrOffset: job.stderrOffset,
-  })
+  const status = await channel.getCommandStatus(
+    { processId: job.processId, route: readCommandRoute(job.commandRoute) },
+    job,
+  )
   await saveBuildOutput(
     runtime.env.DB,
     job.buildId,
@@ -90,7 +99,7 @@ export async function advanceBuildCommand(
 
 export async function cleanupBuild(
   runtime: ImageRuntime,
-  provider: SandboxProvider,
+  provider: SandboxProvider | undefined,
   job: BuildJob,
 ): Promise<boolean> {
   if (
@@ -107,7 +116,7 @@ export async function cleanupBuild(
       sandboxId:
         job.sandboxId ??
         (await recoverImageBuildForCleanup(
-          runtime.env.DB,
+          runtime.env,
           providerForAccount(
             runtime.env,
             runtime.dependencies.fetch,
@@ -120,6 +129,15 @@ export async function cleanupBuild(
     await updateBuildJob(runtime.env.DB, job.buildId, 'cleanup')
   }
   const failures: unknown[] = []
+  try {
+    await revokeMachineTokenOnStop(
+      runtime.env,
+      buildMachineOwner(job.orgId, job.buildId),
+      'retry',
+    )
+  } catch (error) {
+    failures.push(error)
+  }
   for (const computer of await liveBuildComputers(
     runtime.env.DB,
     job.orgId,
@@ -140,21 +158,47 @@ export async function cleanupBuild(
       failures.push(error)
     }
   }
-  if (failures.length > 0) throw failures[0]
-  if (job.sandboxId) {
+  if (failures.length === 0 && job.sandboxId) {
     await runtime.env.DB.prepare(
       'UPDATE image_builds SET sandbox_id = NULL WHERE id = ? AND org_id = ? AND sandbox_id = ? AND provider_account = ?',
     )
       .bind(job.buildId, job.orgId, job.sandboxId, job.providerAccount)
       .run()
   }
+  let snapshotCleaned = false
+  try {
+    snapshotCleaned = await cleanupBuildSnapshot(runtime, provider, job)
+  } catch (error) {
+    failures.push(error)
+  }
+  if (failures.length > 0) throw failures[0]
+  if (!snapshotCleaned) return false
+  await updateBuildJob(runtime.env.DB, job.buildId, 'done')
+  await scheduleIdleImage(runtime, job.orgId, jobSoftware(job))
+  await startAddedImageBuild(runtime, job)
+  return true
+}
+
+async function cleanupBuildSnapshot(
+  runtime: ImageRuntime,
+  provider: SandboxProvider | undefined,
+  job: BuildJob,
+): Promise<boolean> {
   if (
     job.state === 'failed' &&
     job.snapshotName &&
     (job.snapshotName !== job.previousImageName ||
       job.providerAccount !== job.previousProviderAccount)
   )
-    await deleteSnapshotIfPresent(provider, job.snapshotName)
+    await deleteSnapshotIfPresent(
+      provider ??
+        providerForAccount(
+          runtime.env,
+          runtime.dependencies.fetch,
+          job.providerAccount,
+        ),
+      job.snapshotName,
+    )
   // Keep build metadata and logs. Only the current image needs a snapshot.
   if (
     job.state === 'succeeded' &&
@@ -187,9 +231,6 @@ export async function cleanupBuild(
       )
     }
   }
-  await updateBuildJob(runtime.env.DB, job.buildId, 'done')
-  await scheduleIdleImage(runtime, job.orgId, jobSoftware(job))
-  await startAddedImageBuild(runtime, job)
   return true
 }
 

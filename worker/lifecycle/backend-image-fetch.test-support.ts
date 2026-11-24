@@ -16,6 +16,19 @@ export function imageAppKey(): string {
     .toString())
 }
 
+export async function runImageSourceCredential(env: AppEnv, command: string) {
+  const grant = command.match(/Authorization: Bearer ([A-Za-z0-9_-]+)/)?.[1]
+  if (!grant) return
+  const response = await handleImageSourceCredential(
+    new Request(`${env.MACHINE_ORIGIN}${IMAGE_SOURCE_CREDENTIAL_PATH}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${grant}` },
+    }),
+    env,
+  )
+  await response.body?.cancel()
+}
+
 export function backendImageFetch(
   env: AppEnv,
   provider: HttpFetch,
@@ -35,25 +48,20 @@ export function backendImageFetch(
         )
       if (request.method === 'DELETE' && url.pathname === '/installation/token')
         return new Response(null, { status: 204 })
+      if (
+        request.method === 'GET' &&
+        /^\/repositories\/\d+$/.test(url.pathname) &&
+        request.headers
+          .get('Authorization')
+          ?.startsWith('Bearer ghs_lifecycle_image_')
+      )
+        return Response.json({ size: 1 })
     }
     if (url.hostname !== 'boat.dev') return github(request)
     if (request.method === 'POST' && url.pathname.endsWith('/commands')) {
       const body: unknown = await request.clone().json()
-      if (isRecord(body) && typeof body.command === 'string') {
-        const grant = body.command.match(
-          /Authorization: Bearer ([A-Za-z0-9_-]+)/,
-        )?.[1]
-        if (grant) {
-          const response = await handleImageSourceCredential(
-            new Request(
-              `${env.MACHINE_ORIGIN}${IMAGE_SOURCE_CREDENTIAL_PATH}`,
-              { method: 'POST', headers: { Authorization: `Bearer ${grant}` } },
-            ),
-            env,
-          )
-          await response.body?.cancel()
-        }
-      }
+      if (isRecord(body) && typeof body.command === 'string')
+        await runImageSourceCredential(env, body.command)
     }
     return provider(request)
   })

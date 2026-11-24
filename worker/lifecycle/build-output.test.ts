@@ -16,6 +16,37 @@ import { finishImageBuild } from './image-test-support'
 
 const backendFixture = setupBackendTests()
 
+it('hides machine tokens in build logs without changing command offsets', async () => {
+  const { images, org, user, boat, runtime } = backendFixture()
+  const id = await startImageBuild(images, {
+    orgId: org.id,
+    userId: user.id,
+    kind: 'build',
+    software: SOFTWARE,
+  })
+  const token = `cndm1.${'a'.repeat(64)}.${'b'.repeat(43)}`
+  await writeBuildLog(runtime.env.DB, id, `heading ${token}\n`, TEST_TIME)
+  for (let step = 0; step < 3; step++)
+    await advanceImageBuild(images, org.id, id)
+  boat.commandRunning = true
+  boat.commandOutput = `stdout ${token}\n`
+  boat.commandStderr = `stderr ${token}\n`
+  await advanceImageBuild(images, org.id, id)
+  expect(
+    (await readBuild(runtime.env.DB, org.id, id)).log.map(({ text }) => text),
+  ).toEqual(
+    expect.arrayContaining([
+      'heading [hidden]\n',
+      'stdout [hidden]\n',
+      'stderr [hidden]\n',
+    ]),
+  )
+  expect(await readBuildJob(runtime.env.DB, org.id, id)).toMatchObject({
+    stdoutOffset: 122,
+    stderrOffset: 122,
+  })
+})
+
 it('stores a detached status reply above two million output bytes in bounded rows without losing output', async () => {
   const fixture = await backendFixture()
   const { images, org, user, boat, runtime } = fixture

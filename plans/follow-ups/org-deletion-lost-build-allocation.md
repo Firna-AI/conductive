@@ -78,3 +78,9 @@
     - Then one step runner isolates the stops from the other pre-purge steps. A failed stop writes a fixed warning, and the later pre-purge steps still run.
     - The Delete org and Restore org routes run the suspension and the stops through `stopDeletedOrg` in `worker/members/deletion.ts`. A failed stop there ends the request before the next step.
     - An earlier follow-up item chose that step runner. It is at [this permalink](https://github.com/Firna-AI/conductive/blob/456e53237c38ff800dbf076fb004f36b5c287554/plans/follow-ups/pre-purge-step-failure-blocks-others.md).
+- **Evidence update, 2026-11-24, machine tokens of builds:** each build sandbox now gets a machine token in its create env. The token opens the host connection of that sandbox to its machine object, named `build:<buildId>`.
+  - The build issues the token before its first create request. It keeps the token encrypted in `image_build_jobs.machine_token_ciphertext`, so that each replay of the saved request sends the same token.
+  - The build clears that value when it saves the sandbox ID, and when its own cleanup ends. Its cleanup revokes the token before it deletes the build computers.
+  - When Delete org sets an allocating build to `done`, no build code runs again. So the escaped sandbox keeps a valid token in its memory until its 30-minute auto-stop. The job row keeps the encrypted token until the purge deletes the row by the cascade.
+  - No work reaches that machine object after `done`, because only the build sends commands there. So the token gives no access to any work.
+  - Option B then also needs these steps: replay the saved request with the env of the saved token, revoke the token of the build machine by its build ID, and clear `machine_token_ciphertext`. The revoke needs no sandbox ID.

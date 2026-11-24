@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
+import { HttpError } from '../../http'
 import {
   createHarness,
   TEST_TIME,
@@ -142,6 +143,32 @@ it('retries a definite refused copy start within the saved window and Retry-Afte
   expect((await fixture.job()).providerRetry).toBeNull()
   await fixture.advance()
   expect(fixture.finalizes()).toHaveLength(2)
+})
+
+it('retries a source copy after the host refuses its start as busy', async () => {
+  const fixture = await parallelFixture(harness, { sizesKiB: [1] })
+  await fixture.advance()
+  await fixture.advance()
+  fixture.refuseStarts(
+    1,
+    new HttpError(503, 'machine_busy', 'The computer is busy'),
+  )
+  await fixture.advance()
+  expect(await fixture.job()).toMatchObject({
+    state: 'running',
+    providerRetry: { failures: 1, retryAt: TEST_TIME + 1_000 },
+  })
+  expect(
+    await readSourceJob(fixture.env.DB, fixture.input.buildId),
+  ).toMatchObject({
+    phase: 'ready',
+    grantHash: null,
+    tokenCiphertext: null,
+  })
+  expect(fixture.copies()).toHaveLength(0)
+  fixture.setTime(TEST_TIME + 1_000)
+  await fixture.advance()
+  expect(fixture.copies()).toHaveLength(1)
 })
 
 it('revokes and retains metadata token ownership before the first copy across reconstruction', async () => {

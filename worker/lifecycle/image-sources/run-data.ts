@@ -1,5 +1,6 @@
 import { activeOrgPredicate } from '../../data/org-access'
 import type { CommandStatus } from '../../machines/channel'
+import type { RoutedCommand } from '../command-intents'
 import type { SelectedRepository } from '../settings-data'
 import { clearImageRetryStatement } from '../image-retry-data'
 
@@ -23,6 +24,7 @@ export interface SourceRun {
   providerAccount: string
   phase: RunPhase
   processId: number | null
+  commandRoute: string | null
   stdoutOffset: number
   stderrOffset: number
   memoryText: string
@@ -34,7 +36,7 @@ export interface SourceRun {
 }
 
 const columns = `build_id AS buildId, org_id AS orgId, sandbox_id AS sandboxId,
-  provider_account AS providerAccount, phase, process_id AS processId,
+  provider_account AS providerAccount, phase, process_id AS processId, command_route AS commandRoute,
   stdout_offset AS stdoutOffset, stderr_offset AS stderrOffset, memory_text AS memoryText,
   memory_budget AS memoryBudget, metadata_plan_json AS metadataPlanJson,
   metadata_batch_index AS metadataBatchIndex, metadata_repository_index AS metadataRepositoryIndex, failed`
@@ -112,13 +114,13 @@ export async function setRunPhase(
   db: D1Database,
   buildId: string,
   phase: RunPhase,
-  processId: number | null = null,
+  command: RoutedCommand | null = null,
 ) {
   await db
     .prepare(
-      'UPDATE image_source_runs SET phase = ?, process_id = ? WHERE build_id = ?',
+      'UPDATE image_source_runs SET phase = ?, process_id = ?, command_route = ? WHERE build_id = ?',
     )
-    .bind(phase, processId, buildId)
+    .bind(phase, command?.processId ?? null, command?.route ?? null, buildId)
     .run()
 }
 
@@ -130,7 +132,7 @@ export async function completeRunPhase(
   await db.batch([
     db
       .prepare(
-        'UPDATE image_source_runs SET phase = ?, process_id = NULL WHERE build_id = ?',
+        'UPDATE image_source_runs SET phase = ?, process_id = NULL, command_route = NULL WHERE build_id = ?',
       )
       .bind(phase, buildId),
     clearImageRetryStatement(db, buildId),
@@ -160,7 +162,8 @@ export async function saveMemoryBudget(
   await db.batch([
     db
       .prepare(
-        `UPDATE image_source_runs SET memory_budget = ?, phase = 'metadata-ready', process_id = NULL WHERE build_id = ?`,
+        `UPDATE image_source_runs SET memory_budget = ?, phase = 'metadata-ready', process_id = NULL,
+         command_route = NULL WHERE build_id = ?`,
       )
       .bind(budget, buildId),
     clearImageRetryStatement(db, buildId),

@@ -5,8 +5,9 @@ how the lifecycle code builds and refreshes the org image. The org image is
 the saved snapshot that every new sandbox of an org starts from. It also
 gives the provider retry policy that builds, refreshes, and workspace
 starts share. [Build sandboxes](#build-sandboxes) describes their starting
-image and the clone token of each copy. [Key code](#key-code) names the
-files of the image code.
+image and the clone token of each copy. [The build machine](build-machine.md)
+gives the machine token of a build and the path of its commands.
+[Key code](#key-code) names the files of the image code.
 
 ## Build sandboxes
 
@@ -14,7 +15,8 @@ files of the image code.
   matching ready software image, or a new default sandbox without one.
   A hidden switch build uses the same first-build path on its target
   account. It never starts from an older image of the org there.
-  Its env holds only the folder variables.
+  The env of each build sandbox holds only the folder variables and the
+  variables of its [machine token](build-machine.md).
 - Risk: a program with root access that an earlier install left in that
   image can read the clone token of a later copy. That token can only read
   its own repository, which the image already holds. The Worker revokes it
@@ -145,9 +147,11 @@ step saved.
   the newest release, clears its command journal, and saves a snapshot.
   It does not run the org install script.
 - The org image changes only when the new snapshot is ready. Each job
-  deletes every live ledger computer of that org and build, and keeps its history and log.
-  A failed Delete keeps cleanup scheduled until each computer is removed.
-  Cleanup attempts every live computer even when another Delete fails.
+  revokes the machine token of its build. Then it deletes every live ledger
+  computer of that org and build, and keeps its history and log.
+  A failed revoke or Delete keeps cleanup scheduled until the revoke
+  succeeds and each computer is removed.
+  Cleanup attempts every live computer even when the revoke or another Delete fails.
   It reports that failure after the independent Deletes finish.
   Missing computers count as removed.
   Confirmed ledger deletions keep later retries from repeating finished work.
@@ -160,6 +164,11 @@ step saved.
 - The composition root must pass the Members lifecycle hooks through
   `withImageSourceCleanup(env, fetch, hooks)` from `image-sources/members.ts`,
   as the [source loader](repository-layout.md#the-source-loader) says.
+
+## The build machine
+
+[The build machine](build-machine.md) gives the machine token of a build,
+its replay and its revoke, and the path of each build command.
 
 ## Step records
 
@@ -213,48 +222,14 @@ it too, so the version and the snapshot always come from the same image.
 ## Provider retries
 
 [Provider retries](provider-retries.md) gives the retry policy of builds,
-refreshes, and starts after a transient provider error, and of starts after
-a transient host error, the saved retry state, the job limits, and the
-cleanup of an unresolved allocation.
+refreshes, and starts after a transient provider or host error, the saved
+retry state, the job limits, and the cleanup of an unresolved allocation.
 
 ## Refresh timers
 
-`refreshImagesForPush` in [`image-timers.ts`](image-timers.ts) starts a
-refresh for each org whose current image holds the pushed repository, and
-that has an admin who is not suspended. It
-acts on a push to the default branch, at most once in 30 minutes for each
-org. A push during a running job waits for a later refresh. Only the
-verified GitHub webhook receiver may call it. The
-[GitHub backend](../github/README.md) owns that receiver. The image
-coordinator starts the daily refresh by itself.
-A daily refresh sets the saved daily deadline 24 hours after its start.
-
-`imageHoldsOldValues` in
-[`org-image-refresh-data.ts`](org-image-refresh-data.ts) is true when the
-published image holds a repository name or default branch that differs from
-the saved one, and the newest build succeeded. `readImageSchedule` then makes
-the next alarm due at once, and `runImageAlarm` and `refreshImagesForPush`
-start a build in place of a refresh. So a build follows each job or failed
-start that leaves old values in the image. The check reads no GitHub data,
-so it cannot find a change whose webhook never saved it.
-`wakeImagesForRepositoryChange` in
-[`repository-change-builds.ts`](repository-change-builds.ts) wakes the
-coordinator of each such org after the GitHub webhook receiver saves a
-repository change. Its discovery reads the image of each org's current account.
-It calls `scheduleIdleImage` in [`image-schedule.ts`](image-schedule.ts),
-which reads that account and schedules from the saved job and refresh deadlines.
-It reads the software release only when an org needs a wake.
-[Repository changes on GitHub](../../docs/protocol/repository-changes-on-github.md)
-states the rules.
-
-Both refreshes start with the first admin who is not suspended, from
-`firstActiveOrgAdmin` in [`settings-data.ts`](settings-data.ts). An org
-without such an admin gets neither refresh. Its push uses no part of the
-30-minute limit, and a recorded push refresh stays pending. Without a
-waiting switch, the image coordinator sets no new alarm. A waiting switch
-keeps its eligibility alarm.
-[Operator actions](../../docs/protocol/operator-actions.md#starts-stops-and-builds)
-states the rule.
+[Refresh timers](refresh-timers.md) gives the refresh of an org image after
+a push, the daily refresh, and the wake of the image coordinator after a
+repository change on GitHub.
 
 ## Key code
 
@@ -275,18 +250,24 @@ states the rule.
   It also builds waiting repositories after a successful build or refresh,
   when the newest build succeeded.
 - [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.
-- [`build-execution.ts`](build-execution.ts): build commands and cleanup of every live ledger computer for the exact org and build.
+- [`image-build-steps.ts`](image-build-steps.ts): `advanceBuildStep`, one
+  step of a job, with the machine channel of its build machine.
+- [`build-execution.ts`](build-execution.ts): build commands through the
+  machine channel, and the cleanup that revokes the machine token before
+  it deletes every live ledger computer for the exact org and build.
 - [`image-allocation.ts`](image-allocation.ts): `allocateImageBuild` creates
   or replays the allocation of a running build with the provider of its
-  caller, saves the sandbox ID, and completes the allocation phase.
+  caller, saves the sandbox ID, and completes the allocation phase. A job
+  that already holds its sandbox ID skips the create.
   `recoverImageBuildForCleanup` recovers a saved allocation for
   `cleanupBuild`, which passes a cleanup-mode client. It saves a recovered
   sandbox ID, or returns null after a certified absence. Failed image jobs
   retain their unresolved allocation phase until cleanup recovers and
   deletes the sandbox.
 - [`build-log-statements.ts`](build-log-statements.ts): `buildLogStatements`,
-  which splits output into rows and adds the budget statements of
-  [`build-log-retention.ts`](build-log-retention.ts) to the same D1 batch.
+  which hides each machine token, splits output into rows, and adds the
+  budget statements of [`build-log-retention.ts`](build-log-retention.ts)
+  to the same D1 batch.
 - [`build-log-reader.ts`](build-log-reader.ts): `readBuildSnapshot`, which
   reads the build state and its log in one D1 batch.
 - [`image-timers.ts`](image-timers.ts): `refreshImagesForPush` and

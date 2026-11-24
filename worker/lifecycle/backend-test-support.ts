@@ -13,6 +13,7 @@ import { backendStart } from './backend-start.test-support'
 import {
   backendImageFetch,
   imageAppKey,
+  runImageSourceCredential,
 } from './backend-image-fetch.test-support'
 import { seedBackend } from './backend-seed.test-support'
 import type { StoredWorkspaceStartJob } from './start-job-codec'
@@ -30,13 +31,19 @@ export async function backendFixture(sharedHarness?: TestHarness) {
   const harness = sharedHarness ?? (await createHarness())
   const { session, org, user } = await seedBackend(harness)
   const boat = new LifecycleBoat()
-  const host = new LifecycleHost(harness.env, boat)
-  boat.computerStarted = host.computerStarted
   const env = {
     ...harness.env,
     WORKSPACES: harness.native.bindings.WORKSPACES,
     MACHINE_ORIGIN: 'https://machine.conductive.test',
   }
+  const host = new LifecycleHost(harness.env, {
+    command: async (request) => {
+      await runImageSourceCredential(env, request.command)
+      return boat.command(request)
+    },
+    status: (request) => boat.status(request),
+  })
+  boat.computerStarted = host.computerStarted
   const repositoryId = 'repository-one'
   await env.DB.prepare(
     'INSERT INTO repositories (id, org_id, github_repository_id, full_name, default_branch, installation_id) VALUES (?, ?, 1, ?, ?, 91)',

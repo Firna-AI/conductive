@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 
+import { MACHINE_TOKEN_PATTERN } from '../machines/authorization'
 import { setupBackendTests } from '../lifecycle/backend-test-hooks'
 import { SOFTWARE_RELEASE as SOFTWARE } from '../lifecycle/software-release-test-support'
 import { SAVED_IMAGE_NAME } from '../lifecycle/image-names'
@@ -10,8 +11,8 @@ import { softwareImages } from './data'
 const fixtureForTest = setupBackendTests()
 const digest = 'a'.repeat(64)
 
-it('resumes commands with saved offsets, publishes once, and creates a secret-free sandbox', async () => {
-  const { images, boat } = fixtureForTest()
+it('sends only machine environment and resumes host commands with saved offsets', async () => {
+  const { images, boat, host } = fixtureForTest()
   boat.commandRunning = true
   boat.commandOutput = 'first\n'
   const first = await requestSoftwareImage(images, SOFTWARE, digest)
@@ -19,7 +20,12 @@ it('resumes commands with saved offsets, publishes once, and creates a secret-fr
   expect(first.output).toBe('first\n')
   expect(boat.starts).toHaveLength(1)
   expect(boat.starts[0]).toMatchObject({ noEnv: true, ttlSeconds: 1800 })
-  expect(boat.starts[0].env).toEqual({})
+  expect(boat.starts[0].env).toEqual({
+    CONDUCTIVE_MACHINE_ORIGIN: images.env.MACHINE_ORIGIN,
+    CONDUCTIVE_MACHINE_TOKEN: expect.stringMatching(
+      new RegExp(`^${MACHINE_TOKEN_PATTERN}$`),
+    ),
+  })
   expect(boat.starts[0]).not.toHaveProperty('from')
   expect(boat.starts[0].labels).not.toHaveProperty('org')
   const attempt = (await softwareImages(images.env.DB, 'boat'))[0]
@@ -27,6 +33,9 @@ it('resumes commands with saved offsets, publishes once, and creates a secret-fr
   expect(boat.starts[0].name).toBe(`software-image-${attempt.id}`)
   expect(attempt).toMatchObject({
     phase: 'software',
+    processId: 1,
+    commandRoute: 'host',
+    machineTokenCiphertext: null,
     stdoutOffset: 6,
     output: 'first\n',
     packagesVersion: await imagePackagesVersion(),
@@ -39,15 +48,40 @@ it('resumes commands with saved offsets, publishes once, and creates a secret-fr
     phase: 'done',
     output: 'last\n',
   })
-  expect(boat.statusRequests.at(-1)?.stdoutOffset).toBe(6)
-  expect(boat.commands.at(-1)).toBe("rm -rf -- '/tmp/conductive-lifecycle'")
+  expect(host.statusRequests.at(-1)?.stdoutOffset).toBe(6)
+  expect(host.commands.at(-1)).toBe("rm -rf -- '/tmp/conductive-lifecycle'")
+  expect(boat.statusRequests).toEqual(host.statusRequests)
+  expect(boat.commandRequests).toEqual(host.commandRequests)
   expect(boat.deletedIds).toEqual(['bx_1'])
+  await host.disconnect('bx_1')
+  await expect(host.connect('bx_1')).rejects.toThrow(
+    'Host upgrade returned 401',
+  )
   expect(boat.deadlineIds).toContain('bx_1')
   expect(await requestSoftwareImage(images, SOFTWARE, digest)).toMatchObject({
     state: 'ready',
     output: '',
   })
   expect(boat.starts).toHaveLength(1)
+})
+
+it('hides machine tokens in software image output and keeps the original offsets', async () => {
+  const { images, boat } = fixtureForTest()
+  const token = `cndm1.${'a'.repeat(64)}.${'b'.repeat(43)}`
+  boat.commandRunning = true
+  boat.commandOutput = `stdout ${token}\n`
+  boat.commandStderr = `stderr ${token}\n`
+  expect(await requestSoftwareImage(images, SOFTWARE, digest)).toMatchObject({
+    output: 'stdout [hidden]\nstderr [hidden]\n',
+  })
+  expect((await softwareImages(images.env.DB, 'boat'))[0]).toMatchObject({
+    output: 'stdout [hidden]\nstderr [hidden]\n',
+    stdoutOffset: 122,
+    stderrOffset: 122,
+  })
+  expect(await requestSoftwareImage(images, SOFTWARE, digest)).toMatchObject({
+    output: '',
+  })
 })
 
 it('keeps failed output within 64 KiB and retries only for a new deploy token digest', async () => {

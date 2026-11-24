@@ -31,7 +31,7 @@ After a concurrent write, it reads again and applies the requested time
 unless that time is already current.
 
 The workspace objects read the saved time, as
-[The stop time](../lifecycle/README.md#the-stop-time) says.
+[The stop time](../lifecycle/stop-time.md) says.
 
 ## Key code
 

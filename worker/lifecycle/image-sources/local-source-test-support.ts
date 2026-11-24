@@ -22,6 +22,7 @@ import {
 } from './native-process-test-support'
 import { createGitHubImageSourceMaterializer } from './materialize'
 import { SourceCommandPort } from './source-commands'
+import { providerChannel } from '../../machines/provider-channel'
 import { SOFTWARE } from '../backend-test-support'
 
 /** Real Git, a local bare GitHub repository, and the real private claim handler. */
@@ -159,7 +160,9 @@ export async function localSourceFixture(
     )
     const fullInput = {
       ...input,
-      commands: new SourceCommandPort(provider, input.sandboxId),
+      commands: new SourceCommandPort(
+        providerChannel(provider, input.sandboxId),
+      ),
     }
     const prepare = (now = () => TEST_TIME) =>
       createGitHubImageSourceMaterializer(env, { fetch: access.fetch, now })(

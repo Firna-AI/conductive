@@ -1,6 +1,9 @@
+import { hideMachineTokens } from '../lifecycle/build-machine-token'
+
 const OUTPUT_LIMIT = 64 * 1024
 
 export function keptOutput(text: string): string {
+  text = hideMachineTokens(text)
   const bytes = new TextEncoder().encode(text)
   if (bytes.length <= OUTPUT_LIMIT) return text
   let start = bytes.length - OUTPUT_LIMIT

@@ -4,6 +4,7 @@ import { readSoftwareRelease } from '../lifecycle/software-release'
 import {
   clearImageCommands,
   lifecycleCommand,
+  readCommandRoute,
 } from '../lifecycle/command-intents'
 import { providerState } from '../lifecycle/provider-state'
 import {
@@ -11,9 +12,11 @@ import {
   JobTimeLimit,
 } from '../lifecycle/job-time-limit'
 import type { SandboxProvider } from '../sandbox/provider'
+import { softwareImageChannel } from './channel'
 import { readSoftwareImage, saveSoftwareImage } from './data'
 import { keptOutput } from './output'
 import { SOFTWARE_IMAGE_FAILED } from './failure'
+import { beginSoftwareImageAllocation } from './machine-token'
 import { saveSoftwareImageOperation } from './operation-data'
 import {
   allocateSoftwareImage,
@@ -29,17 +32,23 @@ export async function advanceSoftwareImageStep(
 ): Promise<{ wait?: boolean }> {
   const db = runtime.env.DB
   if (image.phase === 'create') {
-    await saveSoftwareImage(db, image, { phase: 'allocating' })
+    await beginSoftwareImageAllocation(runtime.env, image)
     return {}
   }
   if (image.phase === 'allocating') {
-    const sandboxId = await allocateSoftwareImage(db, provider, image)
+    const sandboxId = await allocateSoftwareImage(runtime, provider, image)
     const current = await readSoftwareImage(db, image.id)
     if (current?.state === 'building' && current.phase === 'allocating')
       await saveSoftwareImage(db, current, { sandboxId, phase: 'software' })
     return {}
   }
   if (!image.sandboxId) throw new Error('Missing software image sandbox')
+  const channel = softwareImageChannel(
+    runtime,
+    provider,
+    image.id,
+    image.sandboxId,
+  )
   if (image.operation === null) {
     const state = providerState((await provider.get(image.sandboxId)).state)
     if (state === 'error' || state === 'stopped')
@@ -65,8 +74,7 @@ export async function advanceSoftwareImageStep(
       // version hashes the apt part, so no build pins this row while that
       // other apt part is current.
       const packagesVersion = await imagePackagesVersion()
-      const started = await provider.startCommand(
-        image.sandboxId,
+      const started = await channel.startCommand(
         lifecycleCommand(
           { kind: 'software-image', id: image.id },
           'software',
@@ -78,13 +86,16 @@ export async function advanceSoftwareImageStep(
       )
       await saveSoftwareImage(db, image, {
         processId: started.processId,
+        commandRoute: started.route,
         packagesVersion,
       })
       return {}
     }
-    const status = await provider.getCommandStatus(
-      image.sandboxId,
-      image.processId,
+    const status = await channel.getCommandStatus(
+      {
+        processId: image.processId,
+        route: readCommandRoute(image.commandRoute),
+      },
       image,
     )
     const output = status.stdout + status.stderr
@@ -116,7 +127,7 @@ export async function advanceSoftwareImageStep(
     return { wait: waiting }
   }
   if (image.phase === 'journal') {
-    await clearImageCommands(provider, image.sandboxId)
+    await clearImageCommands(channel)
     await saveSoftwareImage(db, image, { phase: 'snapshot' })
     return {}
   }

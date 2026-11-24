@@ -14,9 +14,10 @@ file reads, and private ports.
 [sandbox area](../sandbox/README.md) say how.
 The start steps, Continue, the repository change, the disk retention
 command, and the restarts send their commands through the
-[machine channel](../machines/README.md#the-machine-channel). It uses the
-host connection of the computer, and the provider path of the same account
-only when the computer has no host connection.
+[machine channel](../machines/README.md#the-machine-channel). The org image
+builds and refreshes, with their image sources, use it too. The channel
+uses the host connection of the computer, and the provider path of the same
+account only when the computer has no host connection.
 
 `chatLifecycleRoute` in [`worker/app-api/lifecycle.ts`](../app-api/lifecycle.ts)
 gives the create, read, resume, and activity routes of a workspace to
@@ -148,7 +149,10 @@ Saved jobs with the earlier named default still publish through the same path.
 ### Builds and refreshes
 
 [Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
-provider retries, logs, snapshot leases, and refresh timers.
+provider retries, logs, and snapshot leases.
+[The build machine](build-machine.md) gives the machine token of a build and the path of its commands.
+[Refresh timers](refresh-timers.md) gives the refresh of an org image after a push, the daily refresh,
+and the wake of the image coordinator after a repository change on GitHub.
 [Provider switches](provider-switches.md) gives hidden switch builds, member
 build waits, and the atomic publication of a new account.
 The [software image area](../software-image/README.md) builds the shared
@@ -201,38 +205,9 @@ the rows of a purged org.
 
 ## The stop time
 
-Each workspace create and resume delivers a new machine token through the
-[machine client](../machines/README.md). A create pins it inside the existing
-encrypted allocation payload. Replays keep that payload and digest.
-Resume issues it immediately before the provider call. Org env values
-cannot override the machine token or origin. Each stop request attempts
-token revocation before it calls the provider. A failed revoke writes a
-fixed warning and lets the stop continue. Confirmed physical stops attempt
-revocation again, also after disk retention ends or the computer stops itself.
-The lifecycle settlement uses the confirmed-stop and active-retention checks.
-State publication alone never revokes. Tokens remain valid during retention
-and after a failed software restart leaves the computer running for Try again.
-Archive maintenance retains its retry state until observed-stop revocation succeeds.
-Failed creates revoke before they retire their computer for cleanup.
-
-The operator saves the stop time of idle sandboxes on the Settings tab, as
-[Stop and resume](../../docs/protocol/stop-and-resume.md#the-stop) says.
-[`idle-stop.ts`](idle-stop.ts) reads it from the `idle_stop_settings` row.
-
-- Each workspace object reads it through the `idleMs` hook and keeps it for
-  60 seconds. A failed read keeps the last value, or 30 minutes before the
-  first read.
-- The alarm and its schedule use it for the idle stop. `idleMs` is a
-  required hook, so no lifecycle can drop the setting.
-- When the alarm fires before the stop time ends, at least 15 minutes after
-  the last activity, with the runner connected and no restore watch due, it
-  extends the provider auto-stop. So a longer stop time reaches a running
-  sandbox before its old provider auto-stop ends.
-- Each workspace create, resume, and auto-stop call sets the provider
-  auto-stop to the stop time plus 60 seconds, from
-  `workspaceAutoStopSeconds`. When the read fails, it uses the longest
-  choice, so that the provider never stops a sandbox early.
-- Image builds and the disk retention restarts keep 1,800 seconds.
+[The stop time](stop-time.md) gives the machine token of each workspace
+create and resume, its revocation at each stop, and the stop time of idle
+sandboxes.
 
 ## Provider accounts
 
@@ -280,6 +255,15 @@ the persisted resource records and the retained computer ledger.
   Otherwise only a started command on the provider route can still settle.
   The command that updates folders after publication uses the workspace
   machine channel with the records check from that publication attempt.
+- [build-machine-token.ts](build-machine-token.ts): encrypts and decrypts
+  the machine token of a build create or a software image create, bound to
+  its machine object. `buildMachineEnvironment` gives the env of a saved
+  token. `hideMachineTokens` hides each machine token in a build log or a
+  software image output.
+- [command-intents.ts](command-intents.ts): `readCommandRoute` reads the
+  saved route of a build, source, or software image command, with NULL as
+  `provider`. It refuses an unknown route. `clearImageCommands` removes the
+  command journals of an image sandbox through its machine channel.
 
 [Key code](key-code.md) lists the entry points of the lifecycle code, and
 the guides that give the entry points of each part.

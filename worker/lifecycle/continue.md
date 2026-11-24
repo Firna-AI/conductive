@@ -130,7 +130,7 @@ fetches the selected base branch into a bare staging repository under
   when the fetch ends or fails, at a cancel, and when the object rebuilds.
 - Before it starts the fetch or the move, Continue sets the auto-stop
   deadline of the sandbox to the stop time plus 60 seconds, as
-  [The stop time](README.md#the-stop-time) says. Each command starts detached, and
+  [The stop time](stop-time.md) says. Each command starts detached, and
   the job keeps its process ID, its route, and its output offsets for the
   later steps. Each status read uses that route. If host status stays
   unavailable, [lost-process recovery](continue-failures.md#failures-and-recovery)

@@ -1,5 +1,7 @@
 import { publishBuild } from './build-admission-data'
 import type { SandboxProvider } from '../sandbox/provider'
+import { machineChannel } from '../machines/channel'
+import { buildMachineOwner } from '../machines/client'
 import { requireActiveOrg, requireActiveUser } from '../data/user-access'
 import { assignBuildSnapshot, readBuildJob, type BuildJob } from './build-data'
 import { allocateImageBuild } from './image-allocation'
@@ -28,14 +30,18 @@ export async function advanceBuildStep(
   const recoveringAllocation = job.phase === 'allocating' && !job.sandboxId
   if (!recoveringAllocation) await requireActiveOrg(env.DB, orgId)
   if (job.phase === 'create') {
-    await beginBuildAllocation(env.DB, buildId, dependencies.now())
-    job = { ...job, phase: 'allocating' }
+    const machineTokenCiphertext = await beginBuildAllocation(
+      env,
+      job,
+      dependencies.now(),
+    )
+    job = { ...job, phase: 'allocating', machineTokenCiphertext }
   }
   if (job.phase === 'allocating') {
     if (!recoveringAllocation && job.startedByUserId)
       await requireActiveUser(env.DB, job.startedByUserId)
     await allocateImageBuild(
-      env.DB,
+      env,
       provider,
       job,
       recoveringAllocation,
@@ -44,6 +50,12 @@ export async function advanceBuildStep(
     return false
   }
   if (!job.sandboxId) throw new Error('Missing build sandbox')
+  const channel = machineChannel(
+    env,
+    buildMachineOwner(orgId, buildId),
+    provider,
+    job.sandboxId,
+  )
   const machine = await provider.get(job.sandboxId)
   const status = providerState(machine.state)
   if (status === 'error' || status === 'stopped')
@@ -57,8 +69,10 @@ export async function advanceBuildStep(
   )
     throw new JobTimeLimit('build')
   if (job.phase === 'snapshot') {
-    if (job.snapshotName === null)
-      await clearImageCommands(provider, job.sandboxId)
+    if (job.snapshotName === null) {
+      await requireActiveOrg(env.DB, orgId)
+      await clearImageCommands(channel)
+    }
     await requireActiveOrg(env.DB, orgId)
     const snapshot = await createResource(
       runtime.env.DB,
@@ -106,12 +120,12 @@ export async function advanceBuildStep(
           : readRepositoryLocations(
               JSON.parse(job.previousRepositoryLocationsJson),
             ),
-      commands: new SourceCommandPort(provider, job.sandboxId),
+      commands: new SourceCommandPort(channel),
     })
     if (prepared === false) return false
     await completeBuildPhase(env.DB, buildId, 'software', dependencies.now())
     return false
   }
   await requireActiveOrg(env.DB, orgId)
-  return await advanceBuildCommand(runtime, provider, job)
+  return await advanceBuildCommand(runtime, channel, job)
 }

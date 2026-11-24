@@ -1,4 +1,7 @@
 import { savedImageName } from './image-names'
+import type { AppEnv } from '../env'
+import { buildMachineOwner } from '../machines/client'
+import { buildMachineEnvironment } from './build-machine-token'
 import { buildSource } from './build-software'
 import type {
   Sandbox,
@@ -137,11 +140,16 @@ export async function createSandboxResource(
   return sandbox
 }
 
-export function buildSandboxIntent(
-  db: D1Database,
+export async function buildSandboxIntent(
+  env: AppEnv,
   job: BuildJob,
   mayHaveAllocated: boolean,
-): SandboxResourceIntent {
+): Promise<SandboxResourceIntent> {
+  const machineEnv = await buildMachineEnvironment(
+    env,
+    buildMachineOwner(job.orgId, job.buildId),
+    job.machineTokenCiphertext,
+  )
   return {
     kind: 'sandbox',
     mayHaveAllocated,
@@ -155,12 +163,15 @@ export function buildSandboxIntent(
     input: {
       snapshotName: buildSource(job)?.name,
       name: `image-${job.buildId}`,
-      env: repositoryEnvironment(
-        capturedRepositoryLocations(
-          job.repositoryLocationsJson,
-          readRepositories(JSON.parse(job.repositoriesJson)),
+      env: {
+        ...repositoryEnvironment(
+          capturedRepositoryLocations(
+            job.repositoryLocationsJson,
+            readRepositories(JSON.parse(job.repositoriesJson)),
+          ),
         ),
-      ),
+        ...machineEnv,
+      },
       ttlSeconds: 1_800,
       idempotencyKey: `image-${job.buildId}`,
       labels: { org: job.orgId, build: job.buildId },
@@ -168,7 +179,7 @@ export function buildSandboxIntent(
     // The durable build pins the body. Preserve a recorded allocation before replay.
     persist: () =>
       updateBuildJob(
-        db,
+        env.DB,
         job.buildId,
         job.phase === 'allocating' ? 'allocating' : 'create',
       ),

@@ -3,14 +3,19 @@
 This area builds the shared sandbox software image for each app software
 version. The image holds the provider's base image and the app software.
 It holds no repository, org data, or credential.
-Its build receives no app environment variable.
+The Worker gives its build sandbox only two env vars: the machine token of
+its [build machine](#the-build-machine), and the machine origin.
+The token stays out of the image, as
+[What a sandbox holds](../../docs/protocol/isolation.md#what-a-sandbox-holds) says.
 The [org lifecycle](../lifecycle/README.md) owns org builds and their pins.
 
 ## Responsibilities
 
 - Compute the version from the release version and the exact release install command.
 - Install the workspace CLI and MCP server as part of the release program.
-- Keep each attempt, phase, resource intent, command offset, and output in D1.
+- Keep each attempt, phase, resource intent, command offset and route, and output in D1.
+- Send the build commands through the machine channel of the build machine,
+  and revoke its machine token at cleanup.
 - Build one image at a time in the default provider account.
 - Recover resource requests and detached commands after a lost reply.
 - Answer each deploy request within its reply budget.
@@ -66,10 +71,12 @@ check, the release lookup, and admission.
   checkpoint exists. The route then answers the retryable
   `503 service_unavailable`.
 - `ExecutionContext.waitUntil` keeps the work running after the answer.
-  The work then starts no new release lookup or provider call. A call that
-  already runs can end, and the work saves its result.
-- Each network call stops 45 seconds after the request starts, also a long
-  journal command. Cloudflare keeps work for at most 30 seconds after the
+  The work then starts no new release lookup, provider call, or host call.
+  Here a host call is each call to the machine object, also the token issue
+  and the revoke. A call that already runs can end, and the work saves its
+  result.
+- Each provider or host call stops 45 seconds after the request starts, also
+  a long journal command. Cloudflare keeps work for at most 30 seconds after the
   answer or a disconnect of the client, so about 5 seconds stay for D1
   writes.
 
@@ -83,7 +90,7 @@ Saved progress lets a poll go on where an earlier poll stopped:
 - A linked attempt that failed under an earlier deploy goes through
   admission again, with its saved release. So the later deploy still
   starts a new attempt.
-- Before its main provider call, a step can need other calls: the
+- Before its main call, a step can need other provider calls: the
   readiness read, the auto-stop update, or a snapshot lookup that finds no
   snapshot. Each
   finished call is saved in `software_image_operations`, so a later poll
@@ -92,8 +99,8 @@ Saved progress lets a poll go on where an earlier poll stopped:
   at its save. Each save of the attempt changes the revision, also a save
   by the previous Worker. The next step then starts again with the
   readiness read.
-- A transient provider error also clears the saved operation. A call that
-  the 45-second stop ends keeps it for the next poll.
+- A transient provider or host error also clears the saved operation. A
+  call that the 45-second stop ends keeps it for the next poll.
 - The next poll can start while the work of an earlier poll still runs.
   The phase and revision guards, the create key, the snapshot intent, the
   command journal, and the one-time claim of each output row keep the
@@ -115,9 +122,36 @@ Limits that stay:
 - Near the end of its total wait, the deploy run gives its last request
   only the seconds that remain. That request can end before 20 seconds,
   with no answer.
-- A provider call that does not end within 45 seconds of the start of its
-  poll cannot finish in a poll, for example a very slow journal command.
+- A provider or host call that does not end within 45 seconds of the start
+  of its poll cannot finish in a poll, for example a very slow journal command.
   The Cron work has neither the reply budget nor the 45-second stop.
+
+## The build machine
+
+The build sandbox has its own machine object, `software-image:<imageId>`,
+which no org owns. Its commands go through the
+[machine channel](../machines/README.md#the-machine-channel) of that object.
+The readiness read, the auto-stop, the snapshot, and the deletes stay
+provider calls.
+
+- `beginSoftwareImageAllocation` in [machine-token.ts](machine-token.ts)
+  makes the machine token when the attempt leaves `create`. It saves the
+  token encrypted with the move to `allocating`.
+- `allocateSoftwareImage` in [resources.ts](resources.ts) puts the token and
+  the machine origin in the env of the create. Before each create request,
+  it issues the digest of that token to the machine object. So each replay
+  sends the same token.
+- D1 clears the saved token when the attempt saves its sandbox ID or
+  reaches `done`.
+- An allocation that the previous Worker began has no saved token. Its
+  create sends no env var, so its commands keep the provider path.
+- The software command saves its process ID with its route, and each status
+  read uses that route. The journal clear goes through the same channel.
+- The saved output and the kept output hide each machine token as
+  `[hidden]`. The saved offsets still count the bytes of the raw output.
+- The cleanup of an attempt before its `done` phase revokes the token
+  before it deletes the sandbox. A failed revoke keeps the attempt for a
+  later cleanup, and the deletes still run.
 
 ## Cron work
 
@@ -141,30 +175,37 @@ more than 30 minutes ago and that no deploy link names.
 
 Run `npm run test -- worker/software-image worker/lifecycle/software-image-start.test.ts`
 from the repository root with Node 24.
-The tests use local D1 and the lifecycle fake provider.
+The tests use local D1, the lifecycle fake provider, and the lifecycle
+[fake host](../lifecycle/tests.md#image-and-provider-boundaries).
 [poll.test.ts](poll.test.ts) and [poll-admission.test.ts](poll-admission.test.ts)
 test the reply budget. [poll-progress.test.ts](poll-progress.test.ts) tests
 the progress of slow calls that succeed: the saved operations, a snapshot
 lookup that finds no snapshot, and admission across slow release reads and
 a reused attempt that fails.
-These tests hold provider replies and D1 reads, and move fake timers. They
-use no real sleep.
+[poll-host.test.ts](poll-host.test.ts) tests the stop of host calls after
+the answer and at the 45-second stop.
+[machine-token.test.ts](machine-token.test.ts) tests the token issue under
+the same stops, a competing create, and an allocation of the previous Worker.
+These tests hold provider and host replies and D1 reads, and move fake
+timers. They use no real sleep.
 
 ### Key Code
 
 - [version.ts](version.ts): the hash of the release version and software command.
 - [route.ts](route.ts) and [deploy-gate.ts](deploy-gate.ts): the machine route, its lookup of the attempt of a deploy, and the token gate.
-- [poll.ts](poll.ts): `boundedSoftwareImagePoll`, the reply budget, the checkpoint answer, and the network stop.
+- [poll.ts](poll.ts): `boundedSoftwareImagePoll`, the reply budget, the checkpoint answer, and the network stop. `runNetworkCall` applies that stop to each call to the machine object.
 - [result.ts](result.ts): `softwareImageResult`, the answer fields of an attempt.
 - [response.ts](response.ts): `softwareImageResponse`, the JSON answer. It encodes each saved output part on its own, in the same `output` field.
 - [build.ts](build.ts): admission, version replacement, and resumable advancement.
-- [steps.ts](steps.ts): sandbox readiness, commands, snapshot, and publication.
-- [resources.ts](resources.ts): persisted allocation and snapshot requests.
+- [steps.ts](steps.ts): sandbox readiness, commands through the machine channel, snapshot, and publication.
+- [channel.ts](channel.ts): `softwareImageChannel`, the machine channel of the build sandbox. In a deploy poll, each call goes through `runNetworkCall`.
+- [machine-token.ts](machine-token.ts): `beginSoftwareImageAllocation`, which saves the encrypted machine token with the move to `allocating`.
+- [resources.ts](resources.ts): persisted allocation and snapshot requests. The create carries the machine token, and each create request first issues its digest.
 - [data.ts](data.ts): D1 queries and writes guarded by phase and revision, and `softwareImageForDeploy`, the attempt of a deploy.
 - [operation-data.ts](operation-data.ts): the saved operations of one phase and revision.
-- [output-data.ts](output-data.ts): the waiting output that each command status saves, and its claim by a deploy poll.
+- [output-data.ts](output-data.ts): the waiting output that each command status saves, with each machine token hidden, and its claim by a deploy poll.
 - [deploy-data.ts](deploy-data.ts): the links from a deploy token digest to its attempt, and the Cron cleanup of the poll records.
-- [cleanup.ts](cleanup.ts): attempt cleanup and the guarded retirement of ready images of other versions.
+- [cleanup.ts](cleanup.ts): attempt cleanup, which revokes the machine token before the deletes, and the guarded retirement of ready images of other versions.
 - [repair.ts](repair.ts): the Cron work: the current version, then advancement, cleanup, and retirement in each account.
 
 ### Related Docs

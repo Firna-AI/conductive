@@ -6,7 +6,7 @@ import {
   requireActiveUser,
   userSuspended,
 } from '../data/user-access'
-import { orgProviderForAccount, providerForAccount } from '../sandbox/client'
+import { orgProviderForAccount } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { IMAGE_BUILD_TIME_LIMIT_MS, JobTimeLimit } from './job-time-limit'
 import {
@@ -166,12 +166,7 @@ export async function advanceImageBuild(
       !(await cleanupBuildImageSources(env, dependencies.fetch, buildId))
     )
       return false
-    if (cleaningUp)
-      return await cleanupBuild(
-        runtime,
-        providerForAccount(env, dependencies.fetch, job.providerAccount),
-        job,
-      )
+    if (cleaningUp) return await cleanupBuild(runtime, undefined, job)
     const admin = await firstOrgAdmin(env.DB, orgId)
     if (!admin)
       throw new HttpError(404, 'org_not_found', 'The org is not available.')

@@ -883,6 +883,79 @@ November 2026.
   required and trimmed. Two computers can have the same name. Reason: no
   requirement makes the names unique.
 
+The orchestrator of the primary branch made three calls for Milestone 8 on
+24 November 2026, as agent calls:
+
+- Milestone 8 keeps the route of each build command and the machine token
+  of each build create in D1. One new migration adds only nullable
+  columns: `command_route` in `image_build_jobs`, `image_source_jobs`,
+  `image_source_runs`, and `software_images`, and
+  `machine_token_ciphertext` in `image_build_jobs` and `software_images`.
+  A route of NULL reads as the provider path. Reason: the build jobs live
+  in D1, and each replayed create builds its body again from D1.
+- The machine of each software image build gets its machine token, as each
+  other machine does. The sentence of
+  [What a sandbox holds](../docs/protocol/isolation.md#what-a-sandbox-holds)
+  that gave its build sandbox no token was a leftover that contradicted own
+  computer decision 1 D. Reason: every machine then has one path, and the
+  token stays in memory, so the saved image holds no secret.
+- The sentence of
+  [Repository folders](../docs/protocol/repository-folders.md) that gave
+  the sandbox of a build or a refresh only the folder variables was the
+  same kind of leftover. It now says that the install script gets only the
+  folder variables, and that the sandbox also gets its machine token.
+  Reason: it applies own computer decision 1 D, with no new decision.
+
+These are agent calls of the orchestrator of Milestone 8, made on 24
+November 2026.
+
+- The machine object of an org build has the name `build:<buildId>`. The
+  machine object of a software image build has the name
+  `software-image:<imageId>`. Reason: each build has one create, and its ID
+  exists before the provider names the sandbox.
+- A build and a software image build each make their machine token once,
+  when the job leaves its `create` phase. The job keeps the token encrypted
+  in its D1 row until the create completes or the cleanup ends. Each
+  replayed create sends the same token. Reason: a replay must send the
+  body of the first request.
+- A software image build registers the digest of its token just before
+  each create request, after its revision check. A repeated registration
+  of the same digest changes nothing. Reason: two polls can advance one
+  attempt, and only the poll that saves the move to `allocating` chooses
+  the token.
+- A create that the previous Worker began holds no token, so its replay
+  sends none, and that build keeps the provider path. Reason: the previous
+  Worker sent its first request with no token.
+- Each saved process ID of a build command, a source command, the source
+  layout, and the software image keeps its route. Each write of a process
+  ID also writes its route. Reason: the Milestone 6 call that each saved
+  job keeps the route of its command.
+- The cleanup of a build revokes its machine token before it deletes the
+  build computers. A failed revoke keeps the cleanup scheduled, as a failed
+  Delete does, and the deletes still run. Reason: the delete is the stop of
+  a build machine (own computer decision 11 B).
+- The revoke through the computer ledger also finds the machine of a
+  build, so the org purge revokes it too. Reason: the purge deletes build
+  computers through the same ledger.
+- The install script gets no machine variable. Its command removes the
+  machine token and origin after it loads the build env, as the runner
+  start does. Reason: the install script and its packages need no token,
+  and its env stays as it was.
+- The build log and the output of the software image hide each match of
+  the machine token pattern in each write, as the start log does. Reason:
+  [The machine token](../docs/protocol/host-connection.md#the-machine-token)
+  says that no log holds a machine token, and members read the build log.
+- After the answer of a software image poll, the work sends no new host
+  call. A host call ends at the 45-second stop of the poll, as a provider
+  call does. Reason: Cloudflare keeps the work for at most 30 seconds
+  after the answer.
+- A source command start that gets `machine_busy` counts as a refused
+  start, as a Boat 429 does, so the scheduler starts it again. Reason: the
+  Worker and the host program both send it before the command runs.
+- No build record counts host calls. Reason: no build record counts
+  provider calls, and Milestone 6 counts host calls only in the start-run
+  records.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -1056,8 +1129,24 @@ Depends on: 5, 6
 
 Depends on: 6
 
-- [ ] Move the org image builds, the refreshes, the software image build,
+- [x] Move the org image builds, the refreshes, the software image build,
       and the image sources to the channel.
+      Branch: `calummoore/own-computers-milestone-8-builds-over-ef32`.
+  - [x] Give each build machine its own machine object, and a machine
+        token at its create that each replay sends again. Revoke the token
+        before the delete of the build computers.
+  - [x] Move the build commands, the source commands, the source layout,
+        the journal clear, and the software image commands to the channel.
+        Keep the route of each saved process in D1, with a migration that
+        keeps the previous Worker working.
+  - [x] Say in `docs/protocol/isolation.md` that the software image build
+        sandbox gets only its machine token. Read both legal pages and each
+        public guide in full.
+  - [x] Move each test with every assertion.
+  - [x] Update the READMEs of the changed areas.
+
+Evidence, prompts, and reports: `.context/own-computers/m8/` of the
+Milestone 8 workspace, W-592.
 
 ## Milestone 8a: Mockups of the migration job and removed computers
 

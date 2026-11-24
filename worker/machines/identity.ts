@@ -1,14 +1,20 @@
 import { isRecord } from '../http'
 import { machineHttpError } from './errors'
 
-export interface MachineOwner {
-  kind: 'workspace'
-  orgId: string
-  workspaceId: string
-}
+export type MachineOwner =
+  | { kind: 'workspace'; orgId: string; workspaceId: string }
+  | { kind: 'build'; orgId: string; buildId: string }
+  | { kind: 'software-image'; imageId: string }
 
 export function machineObjectName(owner: MachineOwner): string {
-  return `workspace:${owner.workspaceId}`
+  switch (owner.kind) {
+    case 'workspace':
+      return `workspace:${owner.workspaceId}`
+    case 'build':
+      return `build:${owner.buildId}`
+    case 'software-image':
+      return `software-image:${owner.imageId}`
+  }
 }
 
 export interface MachineRecord {
@@ -23,28 +29,50 @@ export interface MachineRecord {
 }
 
 export function readOwner(value: unknown): MachineOwner | null {
-  if (
-    !isRecord(value) ||
-    value.kind !== 'workspace' ||
-    typeof value.orgId !== 'string' ||
-    !value.orgId ||
-    typeof value.workspaceId !== 'string' ||
-    !value.workspaceId
-  )
-    return null
-  return {
-    kind: 'workspace',
-    orgId: value.orgId,
-    workspaceId: value.workspaceId,
+  if (!isRecord(value)) return null
+  switch (value.kind) {
+    case 'workspace':
+      return nonempty(value.orgId) && nonempty(value.workspaceId)
+        ? {
+            kind: value.kind,
+            orgId: value.orgId,
+            workspaceId: value.workspaceId,
+          }
+        : null
+    case 'build':
+      return nonempty(value.orgId) && nonempty(value.buildId)
+        ? { kind: value.kind, orgId: value.orgId, buildId: value.buildId }
+        : null
+    case 'software-image':
+      return nonempty(value.imageId)
+        ? { kind: value.kind, imageId: value.imageId }
+        : null
+    default:
+      return null
   }
 }
 
+function nonempty(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0
+}
+
 export function sameOwner(left: MachineOwner, right: MachineOwner): boolean {
-  return (
-    left.kind === right.kind &&
-    left.orgId === right.orgId &&
-    left.workspaceId === right.workspaceId
-  )
+  switch (left.kind) {
+    case 'workspace':
+      return (
+        right.kind === left.kind &&
+        right.orgId === left.orgId &&
+        right.workspaceId === left.workspaceId
+      )
+    case 'build':
+      return (
+        right.kind === left.kind &&
+        right.orgId === left.orgId &&
+        right.buildId === left.buildId
+      )
+    case 'software-image':
+      return right.kind === left.kind && right.imageId === left.imageId
+  }
 }
 
 export function readMachineRecord(value: unknown): MachineRecord | null {

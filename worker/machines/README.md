@@ -1,22 +1,29 @@
 # Machine connections
 
-This area owns the outbound host connection of each workspace computer,
-and the machine channel that sends commands to that computer.
+This area owns the outbound host connection of each machine, and the
+machine channel that sends commands to that machine. A machine is a
+workspace computer, or the build machine of an org image build, a refresh,
+or a software image build.
 The `Machine` Durable Object holds that connection and its token digest.
 The [host protocol](../../docs/protocol/host-connection.md) defines the
 operations, version, ports, and token lifetime.
 The workspace start, Continue, the repository change, the disk retention
 command, the member and automatic restarts, and the attachment downloads
 send their commands through the [machine channel](#the-machine-channel).
-File reads, terminals, previews, the desktop, builds, refreshes, image
-sources, the software image, and the
+The org image builds and refreshes, their image sources, and the software
+image build use it too.
+File reads, terminals, previews, the desktop, and the
 [moved-base job](../lifecycle/moved-bases.md) still use the provider adapters.
 
 ## Access and lifetime
 
-The object name is `workspace:<workspaceId>` in the `MACHINES` binding.
-Trusted RPC calls include the org and workspace owner. A different owner
-gets `machine_not_found`. A missing binding gives `service_unavailable`.
+Each owner has one object in the `MACHINES` binding. Its name is
+`workspace:<workspaceId>` for a workspace, `build:<buildId>` for an org image
+build or a refresh, and `software-image:<imageId>` for a software image build.
+Trusted RPC calls include the owner. A workspace owner and a build owner
+name their org. A software image owner names only its image, because no org
+owns that build. A different owner gets `machine_not_found`. A missing
+binding gives `service_unavailable`.
 
 `GET /v1/host` accepts only a machine bearer token on the machine hostname.
 It refuses cookies and Origin headers. The token names an object ID that
@@ -44,6 +51,15 @@ valid while retention runs with a stopped display state, and after a failed
 software restart leaves the computer running in error for Try again.
 A failed create revokes before it retires its computer for cleanup.
 The next start replaces the token.
+
+A build machine gets one token for its create. Each replay of that create
+sends the same token. The cleanup of the build revokes the token before it
+deletes the build machine, as
+[The build machine](../lifecycle/build-machine.md) and
+[Software images](../software-image/README.md#the-build-machine) say.
+`computerMachineOwner` in [workspace-data.ts](workspace-data.ts) finds the
+workspace or the build of a computer ledger row. So a revoke through the
+computer ledger also reaches the machine of a build.
 
 ## Operations and streams
 
@@ -83,13 +99,13 @@ results release their session after the client reads them.
 ## The machine channel
 
 `machineChannel` in [channel.ts](channel.ts) gives the `MachineChannel` of
-one workspace computer. It runs a command, starts a detached command, and
+one machine. It runs a command, starts a detached command, and
 reads the status of a started command. The caller checks the org, the
 owner, and the current sandbox first. It also passes the provider client
 of the stored account and the sandbox ID, for the provider path.
 
 - Each new command goes to the host path in [host-channel.ts](host-channel.ts),
-  through the typed client and the `Machine` object of the workspace.
+  through the typed client and the `Machine` object of the owner.
 - The channel uses the provider path in [provider-channel.ts](provider-channel.ts)
   only after a refusal that comes before a send: `machine_unavailable`
   without a host connection, `machine_not_found` without a machine record
@@ -106,9 +122,10 @@ of the stored account and the sandbox ID, for the provider path.
   status read share a 30-second request limit.
 - `isTransientHostError` in [errors.ts](errors.ts) names the transient host
   errors: `machine_unavailable`, `machine_disconnected`, `machine_timeout`,
-  `machine_busy`, and `machine_error`. The start retry policy and the
-  attachment downloads treat them as they treat a transient provider
-  error. The disk retention command retries them until its deadline.
+  `machine_busy`, and `machine_error`. Starts, builds, refreshes, the
+  software image build, and the attachment downloads treat them as they
+  treat a transient provider error. The disk retention command retries them
+  until its deadline.
 - `observeHostChannels` marks a D1 binding, as `observeProviders` does for
   providers. Each host channel of that env then comes through its observer.
   The start records time the host calls in this way, as
@@ -126,7 +143,15 @@ I/O context. Tests can still drive each read and write from Node.
 
 - [machine.ts](machine.ts): the Durable Object, token storage, RPC methods,
   hello checks, and hibernation socket handlers.
-- [client.ts](client.ts): the typed caller interface and token env builder.
+- [client.ts](client.ts): the typed caller interface, the owner builders
+  `workspaceMachineOwner`, `buildMachineOwner`, and
+  `softwareImageMachineOwner`, and the token functions. `newMachineToken`
+  makes a token without its issue, and `machineTokenEnvironment` gives the
+  env of a token.
+- [identity.ts](identity.ts): `MachineOwner` with its three kinds,
+  `machineObjectName`, and the owner reader and comparison.
+- [workspace-data.ts](workspace-data.ts): `computerMachineOwner`, the
+  workspace or build owner of a computer ledger row.
 - [channel.ts](channel.ts): `machineChannel`, `MachineChannel`, and the
   command results, output offsets, and routes.
 - [host-channel.ts](host-channel.ts): the host path of the channel, and

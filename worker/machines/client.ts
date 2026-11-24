@@ -32,9 +32,23 @@ async function machineResult<T>(
 export function workspaceMachineOwner(
   orgId: string,
   workspaceId: string,
-): MachineOwner {
+): Extract<MachineOwner, { kind: 'workspace' }> {
   return { kind: 'workspace', orgId, workspaceId }
 }
+
+export function buildMachineOwner(
+  orgId: string,
+  buildId: string,
+): Extract<MachineOwner, { kind: 'build' }> {
+  return { kind: 'build', orgId, buildId }
+}
+
+export function softwareImageMachineOwner(
+  imageId: string,
+): Extract<MachineOwner, { kind: 'software-image' }> {
+  return { kind: 'software-image', imageId }
+}
+
 export function machineClient(env: AppEnv, owner: MachineOwner) {
   return {
     issue: (digest: string) =>
@@ -76,11 +90,20 @@ export async function issueMachineToken(
   owner: MachineOwner,
   makeToken = randomToken,
 ): Promise<string> {
-  const machines = machinesBinding(env)
-  const token = `cndm1.${machines.idFromName(machineObjectName(owner)).toString()}.${makeToken()}`
+  const token = newMachineToken(env, owner, makeToken)
   await machineClient(env, owner).issue(await hash(token))
   return token
 }
+
+export function newMachineToken(
+  env: AppEnv,
+  owner: MachineOwner,
+  makeToken = randomToken,
+): string {
+  const id = machinesBinding(env).idFromName(machineObjectName(owner))
+  return `cndm1.${id.toString()}.${makeToken()}`
+}
+
 export async function revokeMachineToken(
   env: AppEnv,
   owner: MachineOwner,
@@ -92,8 +115,18 @@ export async function machineEnvironment(
   owner: MachineOwner,
   makeToken = randomToken,
 ): Promise<Record<string, string>> {
+  return machineTokenEnvironment(
+    env,
+    await issueMachineToken(env, owner, makeToken),
+  )
+}
+
+export function machineTokenEnvironment(
+  env: AppEnv,
+  token: string,
+): Record<string, string> {
   return {
     CONDUCTIVE_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
-    CONDUCTIVE_MACHINE_TOKEN: await issueMachineToken(env, owner, makeToken),
+    CONDUCTIVE_MACHINE_TOKEN: token,
   }
 }

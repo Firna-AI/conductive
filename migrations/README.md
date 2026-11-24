@@ -101,6 +101,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Parallel image sources | `202611161200`–`202611161259` |
 | Sub-workspaces | `202611161700`–`202611161759` |
 | Own computers: records and connection | `202611241000`–`202611241059` |
+| Own computers: builds over the host connection | `202611241100`–`202611241159` |
 
 ## Key code
 
@@ -630,3 +631,10 @@ deletes these records. Account deletion clears the three actor references.
 The migration adds a nullable `computer_id` to `workspaces`, `org_images`,
 and `automations`. Existing rows and previous Worker writes get null.
 The [own computer backend](../worker/own-computers/README.md) owns the new records.
+
+`202611241100_build_command_routes.sql` adds nullable command route columns
+to `image_build_jobs`, `image_source_jobs`, `image_source_runs`, and
+`software_images`. A command with no route uses the provider path.
+It also adds nullable encrypted machine token columns to `image_build_jobs`
+and `software_images` so a replay can send the original create request.
+Existing rows and previous Worker inserts get null in all six columns.

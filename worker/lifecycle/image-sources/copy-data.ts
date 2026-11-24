@@ -18,7 +18,7 @@ export async function finishSourceCopy(
   await db.batch([
     db
       .prepare(
-        `UPDATE image_source_jobs SET phase = 'revoke', process_id = NULL,
+        `UPDATE image_source_jobs SET phase = 'revoke', process_id = NULL, command_route = NULL,
        grant_hash = NULL, failed = ? WHERE build_id = ? AND source_index = ?`,
       )
       .bind(succeeded ? 0 : 1, job.buildId, job.sourceIndex),
@@ -29,7 +29,7 @@ export async function finishSourceCopy(
 export async function refuseSourceCopy(db: D1Database, job: SourceJob) {
   await db
     .prepare(
-      `UPDATE image_source_jobs SET phase = 'retry-revoke', process_id = NULL,
+      `UPDATE image_source_jobs SET phase = 'retry-revoke', process_id = NULL, command_route = NULL,
      grant_hash = NULL WHERE build_id = ? AND source_index = ?`,
     )
     .bind(job.buildId, job.sourceIndex)

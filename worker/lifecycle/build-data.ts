@@ -46,6 +46,8 @@ export interface BuildJob {
   startedByUserId: string | null
   phase: BuildPhase
   processId: number | null
+  commandRoute: string | null
+  machineTokenCiphertext: string | null
   stdoutOffset: number
   stderrOffset: number
   installScript: SavedScript
@@ -65,7 +67,8 @@ const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state, b.start
   b.provider_account AS providerAccount,
   b.settings_revision AS settingsRevision, b.runner_protocol_version AS runnerProtocolVersion,
   b.started_by_user_id AS startedByUserId,
-  j.phase, j.process_id AS processId, j.stdout_offset AS stdoutOffset,
+  j.phase, j.process_id AS processId, j.command_route AS commandRoute,
+  j.machine_token_ciphertext AS machineTokenCiphertext, j.stdout_offset AS stdoutOffset,
   j.stderr_offset AS stderrOffset, j.install_script AS installScript,
   j.repositories_json AS repositoriesJson, j.software_json AS softwareJson,
   j.repository_locations_json AS repositoryLocationsJson,
@@ -113,22 +116,24 @@ export function buildPhaseStatement(
   db: D1Database,
   buildId: string,
   phase: BuildPhase,
-  processId: number | null = null,
+  machineTokenCiphertext: string | null = null,
 ): D1PreparedStatement {
   return db
     .prepare(
-      'UPDATE image_build_jobs SET phase = ?, process_id = ?, stdout_offset = 0, stderr_offset = 0 WHERE build_id = ?',
+      `UPDATE image_build_jobs SET phase = ?, process_id = NULL, command_route = NULL,
+       stdout_offset = 0, stderr_offset = 0,
+       machine_token_ciphertext = CASE WHEN ? = 'done' THEN NULL ELSE COALESCE(?, machine_token_ciphertext) END
+       WHERE build_id = ?`,
     )
-    .bind(phase, processId, buildId)
+    .bind(phase, phase, machineTokenCiphertext, buildId)
 }
 
 export async function updateBuildJob(
   db: D1Database,
   buildId: string,
   phase: BuildPhase,
-  processId: number | null = null,
 ): Promise<void> {
-  await buildPhaseStatement(db, buildId, phase, processId).run()
+  await buildPhaseStatement(db, buildId, phase).run()
 }
 
 export async function assignBuildSandbox(
@@ -137,12 +142,18 @@ export async function assignBuildSandbox(
   sandboxId: string,
   providerAccount: string,
 ): Promise<void> {
-  await db
-    .prepare(
-      'UPDATE image_builds SET sandbox_id = ?, provider_account = ? WHERE id = ?',
-    )
-    .bind(sandboxId, providerAccount, buildId)
-    .run()
+  await db.batch([
+    db
+      .prepare(
+        'UPDATE image_builds SET sandbox_id = ?, provider_account = ? WHERE id = ?',
+      )
+      .bind(sandboxId, providerAccount, buildId),
+    db
+      .prepare(
+        'UPDATE image_build_jobs SET machine_token_ciphertext = NULL WHERE build_id = ?',
+      )
+      .bind(buildId),
+  ])
 }
 
 export function buildSnapshotStatement(

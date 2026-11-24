@@ -45,6 +45,7 @@ export class LifecycleHost {
   readonly commandRequests: LifecycleBoat['commandRequests'] = []
   readonly statusRequests: LifecycleBoat['statusRequests'] = []
   autoConnect = true
+  commandReply?: (request: HostCommandRequest, reply: HostResult) => HostResult
   statusError?: HostErrorCode
   statusReply?: (request: HostStatusRequest, reply: HostResult) => HostResult
   private readonly computers = new Map<string, HostComputer>()
@@ -177,7 +178,8 @@ export class LifecycleHost {
       }
       this.commands.push(request.command)
       this.commandRequests.push(request)
-      return this.scenario.command(request)
+      const result = await this.scenario.command(request)
+      return this.commandReply?.(request, result) ?? result
     }
     if (operation.kind === 'command.status') {
       const request = {

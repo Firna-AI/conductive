@@ -132,8 +132,11 @@ requirements.
   memory. Reason: the memory of a build can hold a secret, such as the
   token of a repository copy.
 - The software image holds no org data and no secret, because every org
-  uses it. Its build sandbox starts with no env var, no token, and no
-  repository.
+  uses it. Its build sandbox starts with only one secret: its machine
+  token. It gets no env var of any org and no repository.
+- The machine token of a software image build stays in the memory of its
+  sandbox, so the software image does not hold it. The token stops
+  working at the delete of that sandbox.
 - A sandbox gets no agent login at a start.
   [Agent logins in a sandbox](#agent-logins-in-a-sandbox) says how each
   turn uses an agent login.

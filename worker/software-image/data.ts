@@ -1,11 +1,13 @@
 import type { SoftwareRelease } from '../lifecycle/software-release'
 import { softwareImageName } from '../lifecycle/image-names'
+import type { CommandRoute } from '../machines/channel'
 import { softwareImageOutputStatements } from './output-data'
 import type { SoftwareImage } from './types'
 
 const columns = `software_images.id, provider_account AS providerAccount, version, software_json AS softwareJson,
   snapshot_name AS snapshotName, snapshot_recorded AS snapshotRecorded, state, phase, revision,
-  sandbox_id AS sandboxId, process_id AS processId, stdout_offset AS stdoutOffset,
+  sandbox_id AS sandboxId, process_id AS processId, command_route AS commandRoute,
+  machine_token_ciphertext AS machineTokenCiphertext, stdout_offset AS stdoutOffset,
   stderr_offset AS stderrOffset, output, error, token_digest AS tokenDigest,
   started_at AS startedAt, completed_at AS completedAt, packages_version AS packagesVersion,
   (SELECT operation FROM software_image_operations o WHERE o.image_id = software_images.id
@@ -118,6 +120,7 @@ type Progress = Partial<
     | 'state'
     | 'sandboxId'
     | 'processId'
+    | 'machineTokenCiphertext'
     | 'stdoutOffset'
     | 'stderrOffset'
     | 'output'
@@ -126,7 +129,7 @@ type Progress = Partial<
     | 'snapshotRecorded'
     | 'packagesVersion'
   >
->
+> & { commandRoute?: CommandRoute | null }
 
 /** Phase and revision fence stale provider replies and competing output polls. */
 export async function saveSoftwareImage(
@@ -136,10 +139,15 @@ export async function saveSoftwareImage(
   newOutput = '',
 ): Promise<boolean> {
   const next = { ...before, ...changes }
+  const ciphertext =
+    next.sandboxId !== null || next.phase === 'done'
+      ? null
+      : next.machineTokenCiphertext
   const update = db
     .prepare(
       `UPDATE software_images SET phase = ?, state = ?, sandbox_id = ?,
-    process_id = ?, stdout_offset = ?, stderr_offset = ?, output = ?, error = ?,
+    process_id = ?, command_route = ?, machine_token_ciphertext = ?,
+    stdout_offset = ?, stderr_offset = ?, output = ?, error = ?,
     completed_at = ?, snapshot_recorded = ?, packages_version = ?, revision = revision + 1
     WHERE id = ? AND state = ? AND phase = ? AND revision = ?`,
     )
@@ -148,6 +156,8 @@ export async function saveSoftwareImage(
       next.state,
       next.sandboxId,
       next.processId,
+      next.processId === null ? null : next.commandRoute,
+      ciphertext,
       next.stdoutOffset,
       next.stderrOffset,
       next.output,

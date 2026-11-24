@@ -12,6 +12,7 @@ const backendFixture = setupBackendTests()
 
 it('resumes saved build progress on the next alarm after a transient provider error', async () => {
   const fixture = await backendFixture()
+  fixture.host.autoConnect = false
   const { images, org, user, boat, runtime } = fixture
   const id = await startImageBuild(images, {
     orgId: org.id,

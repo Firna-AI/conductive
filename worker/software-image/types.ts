@@ -24,6 +24,8 @@ export interface SoftwareImage {
   operation: 'ready' | 'auto-stop' | 'snapshot-missing' | null
   sandboxId: string | null
   processId: number | null
+  commandRoute: string | null
+  machineTokenCiphertext: string | null
   stdoutOffset: number
   stderrOffset: number
   output: string
@@ -41,6 +43,7 @@ export interface SoftwareImageRuntime {
   poll?: {
     stopped(): boolean
     expired(): boolean
+    runNetworkCall<T>(call: () => Promise<T>): Promise<T>
     checkpoint(image: SoftwareImage, output: string): void
     output(parts: string[]): void
   }

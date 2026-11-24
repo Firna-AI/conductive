@@ -1,4 +1,5 @@
 import { buildLogRetentionStatements } from './build-log-retention'
+import { hideMachineTokens } from './build-machine-token'
 
 const LOG_ROW_BYTES = 262_144
 
@@ -35,7 +36,7 @@ export function buildLogStatements(
     ? "HAVING EXISTS (SELECT 1 FROM image_builds WHERE id = ? AND state = 'running')"
     : ''
   return [
-    ...splitLog(text).map((chunk) =>
+    ...splitLog(hideMachineTokens(text)).map((chunk) =>
       db
         .prepare(
           `INSERT INTO image_build_logs (build_id, event_number, occurred_at, text)
