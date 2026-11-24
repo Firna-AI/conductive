@@ -164,7 +164,6 @@ pub enum RunnerControlCommand {
     /// RunnerFileCommand.
     RunnerFileCommand(RunnerFileCommand),
     /// Direct skill read. Exported separately until the Worker sends it.
-    #[ts(skip)]
     RunnerReadSkill(RunnerReadSkill),
     /// RunnerReportRefresh.
     RunnerReportRefresh(RunnerReportRefresh),

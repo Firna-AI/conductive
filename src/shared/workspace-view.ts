@@ -1,3 +1,4 @@
+import type { SkillIdentity } from './skills'
 import type { WorkspaceViewWire } from './workspace-view-wire'
 import { workspacePath } from './workspaces'
 
@@ -24,6 +25,11 @@ export function isTabPort(value: unknown): value is number {
 
 export type TemporaryTab = { kind: 'file' | 'diff'; path: string }
 
+export interface SkillTabPlace extends SkillIdentity {
+  /** The index of the skill tab in the whole tab row, from 0. */
+  place: number
+}
+
 /**
  * The server keeps view state. Only the panel sizes and the last workspace
  * of each org stay in the browser.
@@ -33,6 +39,10 @@ export interface WorkspaceView {
   activeTab: WorkspaceTab | null
   /** The temporary file or diff tab, in either display mode, or null. */
   temporaryTab: TemporaryTab | null
+  /** These fields are also the saved JSON and HTTP representation. */
+  skillTabs?: readonly SkillTabPlace[]
+  activeSkill?: SkillIdentity | null
+  temporarySkill?: SkillIdentity | null
   fileList: 'all' | 'changes' | 'checks'
   tool: 'terminal' | 'preview' | 'desktop'
   terminal?: string

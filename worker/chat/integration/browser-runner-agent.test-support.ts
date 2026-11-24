@@ -39,6 +39,7 @@ export class BrowserRunnerAgent {
   }
 
   command(command: RunnerCommand): void {
+    if (command.type === 'skill.read') return
     if (command.type === 'file.read' || command.type === 'file.diff') {
       this.send({
         type:

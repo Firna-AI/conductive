@@ -6,6 +6,7 @@ import {
 } from '../../src/shared/workspace-view'
 import {
   viewFromWire,
+  viewToWire,
   type PreviewTabPlace,
 } from '../../src/shared/workspace-view-wire'
 import { identifier, record } from '../chat/inputs'
@@ -13,6 +14,7 @@ import { HttpError } from '../http'
 import { activeOrgIdPredicate } from '../data/org-access'
 import { requireActiveOrg } from '../data/user-access'
 import { isTerminalId } from '../../src/shared/terminal'
+import { withWorkspaceSkills } from './workspace-view-skills'
 
 function invalidView(): never {
   throw new HttpError(
@@ -95,27 +97,31 @@ function previewPlaces(value: unknown): PreviewTabPlace[] {
 }
 
 /**
- * A save of the view route, as `WorkspaceViewWire` says. A save without
- * `previewTabs` comes from an older copy of the app, which knows no Preview
- * tab. It keeps `stored`, the Preview tabs of the saved view, at their
- * places, so an older copy erases no Preview tab.
+ * A save keeps the stored tabs for each tab kind that the app omits from
+ * the save. Each kind has a field that an older app can omit.
  */
 export function workspaceViewSave(
   value: unknown,
-  stored: readonly PreviewTabPlace[],
+  stored: WorkspaceView | undefined,
 ): WorkspaceView {
   const body = record(value)
   const base = workspaceViewInput(body)
   const places =
-    body.previewTabs === undefined ? stored : previewPlaces(body.previewTabs)
+    body.previewTabs === undefined
+      ? ((stored && viewToWire(stored).previewTabs) ?? [])
+      : previewPlaces(body.previewTabs)
   const active = body.activePreview ?? null
   if (active !== null && !isTabPort(active)) return invalidView()
-  return viewFromWire(base, places, active)
+  return (
+    withWorkspaceSkills(viewFromWire(base, places, active), body, stored) ??
+    invalidView()
+  )
 }
 
 /** Whether a save of the view route comes from an older copy of the app. */
-export function keepsStoredPreviewTabs(value: unknown): boolean {
-  return record(value).previewTabs === undefined
+export function keepsStoredViewTabs(value: unknown): boolean {
+  const view = record(value)
+  return view.previewTabs === undefined || view.skillTabs === undefined
 }
 
 export async function savedWorkspaceView(
@@ -137,8 +143,8 @@ export async function savedWorkspaceView(
       fileList: 'all',
       tool: 'terminal',
     }
-  const value: unknown = JSON.parse(row.viewJson)
-  return workspaceViewInput(value)
+  const value = record(JSON.parse(row.viewJson))
+  return withWorkspaceSkills(workspaceViewInput(value), value) ?? invalidView()
 }
 
 export async function saveWorkspaceView(

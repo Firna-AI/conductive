@@ -1,3 +1,6 @@
+import type { RunnerCommand } from '../../src/shared/generated/RunnerCommand'
+import type { SkillIdentity } from '../../src/shared/skills'
+import { RunnerSkillReads, skillUnavailable } from '../skills/runner'
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import {
   isSupportedRunnerVersion,
@@ -28,6 +31,7 @@ interface NativeRunnerConnections {
 
 export class RunnerConnections {
   current: ActiveRunner | null = null
+  readonly skillReads: RunnerSkillReads
   /** Memory only. A physical socket enables durable state and native alarms. */
   private retained = false
   /** Memory only. Restore rebuilds the socket-to-peer handles. */
@@ -51,6 +55,7 @@ export class RunnerConnections {
   ) {
     this.store = store
     this.dependencies = dependencies
+    this.skillReads = new RunnerSkillReads(dependencies.randomId)
     this.publish = publish
     this.bind = bind
     this.native = native
@@ -133,6 +138,7 @@ export class RunnerConnections {
           this.reportConnected(active)
           warnRunnerConnection('runner_disconnected', active.state)
           this.current = null
+          this.skillReads.detach(active.state.id)
           this.dependencies.runnerDetached(active.state.id)
           this.dependencies.waitUntil(
             Promise.all([
@@ -225,18 +231,44 @@ export class RunnerConnections {
     this.dependencies.runnerAttached(
       active.state.workspace.id,
       active.state.id,
-      (command) =>
-        this.store.run(async () => {
-          if (this.current !== active) return false
-          try {
-            await active.peer.send(command)
-            return true
-          } catch {
-            active.peer.close()
-            return false
-          }
-        }),
+      (command) => this.sendRead(active, command),
     )
+  }
+
+  readSkill(skill: SkillIdentity, signal: AbortSignal): Promise<string> {
+    const active = this.current
+    if (!active?.state.ready) throw skillUnavailable()
+    return this.skillReads.read(
+      active.state,
+      skill,
+      (command) => this.sendRead(active, command, signal),
+      signal,
+    )
+  }
+
+  private sendRead(
+    active: ActiveRunner,
+    command: Extract<
+      RunnerCommand,
+      { type: 'file.read' | 'file.diff' | 'skill.read' }
+    >,
+    signal?: AbortSignal,
+  ): Promise<boolean> {
+    return this.store.run(async () => {
+      if (this.current !== active || signal?.aborted) return false
+      if (
+        command.type === 'skill.read' &&
+        (!active.state.ready || active.state.skillReads !== true)
+      )
+        return false
+      try {
+        await active.peer.send(command)
+        return true
+      } catch {
+        active.peer.close()
+        return false
+      }
+    })
   }
 
   async alarm(): Promise<void> {

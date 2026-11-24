@@ -401,33 +401,33 @@ Depends on: 3
 
 Give the browser the skill text, and save skill tabs.
 
-- [ ] Add a route that reads one skill of a workspace by its agent and
+- [x] Add a route that reads one skill of a workspace by its agent and
       its name. It checks the member's access to the workspace, as the
       file content route does. It sends the command only on the runner
       connection, and it calls no provider route.
-- [ ] Remove `#[ts(skip)]` from `RunnerReadSkill` in `RunnerControlCommand`
+- [x] Remove `#[ts(skip)]` from `RunnerReadSkill` in `RunnerControlCommand`
       (`crates/cnd-runner-interface/src/runner_commands.rs`), run the
       generator, and send the command through the generated
       `RunnerCommand` type. Milestone 3 hid it until the Worker sends it.
-- [ ] Check the agent and the name: the agent is `claude` or `codex`, and
+- [x] Check the agent and the name: the agent is `claude` or `codex`, and
       the name holds 1 to 256 characters without white space or control
       characters.
-- [ ] Hide in the text what the workspace hides in a runner event, as
+- [x] Hide in the text what the workspace hides in a runner event, as
       for a skill description, plus each exact copy of the workspace token
       and the turn tokens, as `docs/protocol/skill-tabs.md` says under
       "The read". Do not reuse `filterFileResponse`, which filters only
       the path label. Changed on 2026-11-24: the read sends no
       description, and the filter is not the file tab filter.
-- [ ] Answer a runner without `skill_reads` and a stopped cloud computer
+- [x] Answer a runner without `skill_reads` and a stopped cloud computer
       with error codes that the app shows as notices.
-- [ ] Save skill tabs in `skillTabs`, `activeSkill`, and `temporarySkill`
+- [x] Save skill tabs in `skillTabs`, `activeSkill`, and `temporarySkill`
       of the view route and of the stored JSON, never in `tabs`. A save
       without `skillTabs` keeps the stored skill tabs, as for Preview
       tabs. When such a save names a temporary file or diff, the stored
       temporary skill tab closes.
-- [ ] Check that the previous Worker reads a stored view with the new
+- [x] Check that the previous Worker reads a stored view with the new
       fields. Record the result under `.context/skill-tabs/`.
-- [ ] Add Worker tests: access, the filter, each error, an older runner,
+- [x] Add Worker tests: access, the filter, each error, an older runner,
       a view round trip with an older app, and one temporary tab after a
       save of an older app.
 

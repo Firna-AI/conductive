@@ -157,6 +157,11 @@ export class RunnerChannel {
         'runner_hello_required',
         'The connection is not ready.',
       )
+    if (message.type === 'skill.read.result') {
+      progress.stage = 'skill_result'
+      this.connections.skillReads.receive(active.state.id, message.value)
+      return
+    }
     if (
       message.type === 'file.read.result' ||
       message.type === 'file.diff.result'

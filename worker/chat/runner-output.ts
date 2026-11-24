@@ -19,6 +19,17 @@ export interface FilteredRunnerOutput {
   save(): Promise<void>
 }
 
+export async function runnerOutputSecretValues(
+  env: AppEnv,
+  view: ChatTransaction,
+  workspace: { id: string; orgId: string },
+): Promise<string[]> {
+  return [
+    ...(await runningOutputSecrets(env, workspace)),
+    ...(await agentOutputSecrets(env, view.secrets, workspace, view.now)),
+  ]
+}
+
 /** Restore per-receipt state so a failed transaction cannot consume held text. */
 export async function filterRunnerOutput(
   env: AppEnv,
@@ -26,15 +37,9 @@ export async function filterRunnerOutput(
   workspace: RunnerWorkspaceRecord,
   input: RunnerEventEnvelope,
 ): Promise<FilteredRunnerOutput> {
-  const activeValues = new Set([
-    ...(await runningOutputSecrets(env, workspace)),
-    ...(await agentOutputSecrets(
-      env,
-      transaction.secrets,
-      workspace,
-      transaction.now,
-    )),
-  ])
+  const activeValues = new Set(
+    await runnerOutputSecretValues(env, transaction, workspace),
+  )
   if (input.event.type === 'tool.detail.part')
     return filterToolDetail(
       env,

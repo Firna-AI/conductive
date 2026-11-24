@@ -28,3 +28,15 @@ export function isSkillName(name: string): boolean {
     !/[\s\p{Z}\p{Cc}]/u.test(name)
   )
 }
+import type { RunnerReadSkill } from './generated/RunnerReadSkill'
+import { workspacePath } from './workspaces'
+
+export type SkillIdentity = Pick<RunnerReadSkill, 'agent' | 'name'>
+
+export function skillContentPath(
+  orgId: string,
+  workspaceId: string,
+  { agent, name }: SkillIdentity,
+): string {
+  return `${workspacePath(orgId, workspaceId)}/skills/content?${new URLSearchParams({ agent, name })}`
+}

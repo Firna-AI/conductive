@@ -20,6 +20,7 @@ import { HttpError } from '../http'
 import { featureWorkspaceId } from './paths'
 import { revokedWorkspacePreviews } from './preview-data'
 import { createServicesHandler } from '../services/handler'
+import { createSkillHandler } from '../skills/handler'
 
 export class WorkspaceFeatures {
   readonly previews: ReturnType<typeof createPreviewHandler>
@@ -28,6 +29,7 @@ export class WorkspaceFeatures {
   private readonly dependencies: AppDependencies
   private readonly desktop: ReturnType<typeof createDesktopHandler>
   private readonly files: ReturnType<typeof createFilesHandler>
+  private readonly skills: ReturnType<typeof createSkillHandler>
   private readonly env: AppEnv
   private readonly services: ReturnType<typeof createServicesHandler>
   private readonly matches: (id: string) => boolean
@@ -78,6 +80,7 @@ export class WorkspaceFeatures {
     this.terminals = new WorkspaceTerminals(chat)
     this.terminal = createTerminalHandler(env, tools, this.terminals)
     this.desktop = createDesktopHandler(env, tools)
+    this.skills = createSkillHandler(env, chat, dependencies.now)
     this.files = createFilesHandler({
       ...dependencies,
       maxFileBytes: FILE_READ_MAX_BYTES,
@@ -129,6 +132,8 @@ export class WorkspaceFeatures {
       return response
     }
     if (/\/github(?:\/.*)?$/.test(path)) return null
+    if (path.endsWith('/skills/content'))
+      return this.skills(request, workspaceId)
     return this.files(request, this.env)
   }
 
