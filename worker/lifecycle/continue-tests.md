@@ -22,8 +22,10 @@ results.
   failed move saves its stop cause and gives its exact text. The failed
   read saves the metadata cause until the repair.
   [`continue.test-support.ts`](continue.test-support.ts) builds its
-  chat fixture with the Continue hold, the fake GitHub repository, and the
-  fake Boat.
+  chat fixture with the Continue hold, the fake GitHub repository, the
+  fake Boat, and the [fake host](tests.md#image-and-provider-boundaries).
+  The fake host connects with a machine token that the fixture issues, so
+  the Continue commands cross the host socket.
 - [`continue-stop-causes.test.ts`](continue-stop-causes.test.ts) uses the
   same fixture: the causes of a cancel, a provider failure, and a failed
   start, an uncertain start that never repeats the move, and the read of a

@@ -84,7 +84,7 @@ points of each part.
 - [`start-coordinator.ts`](start-coordinator.ts): `WorkspaceStartCoordinator`,
   the durable start. Its admission and each advance run in the queue task
   of their caller. [`start-storage.ts`](start-storage.ts) keeps its
-  phases, admission, process IDs, output offsets, retry state, deadline, and results.
+  phases, admission, process IDs with their command routes, output offsets, retry state, deadline, and results.
   Its `begin` refuses while a start job exists. Its `complete` ends only
   the job of the given attempt.
 - [`start-advance.ts`](start-advance.ts): `advanceStartPhases` runs the code of the saved phase for one advance, in each phase after `records`.
@@ -92,10 +92,13 @@ points of each part.
 - [`creation-fetch-label.ts`](creation-fetch-label.ts) names the pull request or base branch in the fetch step from saved run facts.
 - [`start-progress.ts`](start-progress.ts): the command steps, the
   terminal setup and its password read, and the move into the saved runner
-  readiness phase.
+  readiness phase. It makes the
+  [machine channel](../machines/README.md#the-machine-channel) of the
+  command steps from the authorized workspace record.
   [`start-command-execution.ts`](start-command-execution.ts) starts each
-  step command detached, also the setup command of the
-  [terminal backend](../terminal/README.md), and polls its saved process.
+  step command detached through that channel, also the setup command of the
+  [terminal backend](../terminal/README.md), and polls its saved process on
+  its saved route.
   Its `prepareStartTerminal` checks the start time limit before and after
   the password read.
 - [`start-completion.ts`](start-completion.ts): restores runner-step progress
@@ -115,6 +118,8 @@ points of each part.
   keeps cleanup ownership after the start publishes its failure.
 - [`start-job-codec.ts`](start-job-codec.ts): `serializeStartJob` and
   `readStartJob`, which convert the start job for storage and internal RPC.
+  `readStartJob` reads a saved process without a route as a `provider`
+  command.
 - [`start-logs.ts`](start-logs.ts): `releasedStartLog`, which masks the
   decrypted log as a [`MaskedStartLog`](masked-start-log.ts).
 - [`start-log-storage.ts`](start-log-storage.ts): `readStartLog` and `readEncryptedStartLog` read the saved start log under the `START_LOG_PREFIX` keys.
@@ -168,8 +173,11 @@ points of each part.
   maintenance resume, startup, and stop phases. Its D1 progress retains a
   failure while stop cleanup retries.
 - [`retention-command.ts`](retention-command.ts): `advanceRetentionCommand`
-  starts the maintenance script detached and polls its saved process.
-  Its journal identity and output offsets survive reconstruction.
+  starts the maintenance script detached through the machine channel, and
+  polls its saved process on its saved route.
+  Its journal identity, route, and output offsets survive reconstruction.
+  A transient host error retries until the maintenance deadline. Each other
+  error, also a provider error, saves its failure and moves to the stop phase.
 - [`retention-stop.ts`](retention-stop.ts): `stopRetention` saves the
   attempt's stop request before it contacts the provider. Later confirmation
   uses that time. An already stopped sandbox with no saved request keeps

@@ -79,6 +79,12 @@ npm run test -- worker/chat/integration
   starts a new runtime on the same stored data, and keeps the fake Boat
   and GitHub state. The default storage stays outside the repository and
   is removed on disposal. A caller can keep its own `persistencePath`.
+- With `connectHost`, each create and resume of the fake Boat also
+  connects the [fake host](../../lifecycle/tests.md#image-and-provider-boundaries)
+  through the production machine object, so the commands of that computer
+  cross the host socket. `host.seed` connects it for a seeded workspace.
+  `restart()` and disposal close its sockets. A computer without a
+  connected fake host uses the provider path of the fake Boat.
 - `seedOuterRuntime` in `outer-seed.test-support.ts` adds three users with
   sessions, two orgs, two workspaces with tokens, stored agent logins, and
   a published org image.

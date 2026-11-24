@@ -111,10 +111,16 @@ turn and the branch step use the sender.
    than ready, working, input, and unread with HTTP 409 and
    `workspace_not_running`. Otherwise it shows Starting and stores
    `softwareRestartAt`.
-3. Outside that queue, the route runs `UPDATE_CHECK_COMMAND` through the
-   Boat `command` route. It starts the unit of the periodic update check,
-   with a limit of 60 seconds. Its result is the `updateCheck` of the reply.
-4. It runs `RESTART_COMMAND`, which restarts the runner under the start
+3. Outside that queue, the route checks again that the member is still in
+   the org, that the workspace is not archived, that the org and the owner
+   are active, and that the record still names the same sandbox and
+   provider account. Then it runs
+   `UPDATE_CHECK_COMMAND` through the
+   [machine channel](../machines/README.md#the-machine-channel) of the
+   workspace. It starts the unit of the periodic update check, with a limit
+   of 60 seconds. Its result is the `updateCheck` of the reply.
+4. After the same check, it runs `RESTART_COMMAND` through the same
+   channel. That command restarts the runner under the start
    lock, so that its pre-start step applies a complete download, and then
    the preview relay and ttyd. The ttyd command removes the old support
    marker before the restart. It shares the bounded support probe of a

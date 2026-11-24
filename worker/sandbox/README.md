@@ -183,13 +183,14 @@ Both preserve the caller's decoded byte limit and exact size result.
 
 ## Attachment downloads
 
-Attached files reach the sandbox through detached commands.
+Attached files reach the sandbox through detached commands of the
+[machine channel](../machines/README.md#the-machine-channel).
 The cloud computer downloads each file from a one-use route on the machine host.
 The command checks its size before an atomic move to the repository path.
-The provider needs `exec` for these commands.
+The provider path of the channel needs `exec` for these commands, for a computer without a host connection.
 [Chat attachment delivery](../chat/attachments.md#dispatch) owns the download tokens, access checks, command, and polling.
 
-The shared `SandboxProvider` interface has no file write.
+The shared provider interfaces, `MachineProvider` and `ProviderWork`, have no file write.
 The E2B client keeps its own atomic streamed writer for its provider and live operations, as
 [Commands and files](e2b/README.md#commands-and-files) says.
 
@@ -203,7 +204,8 @@ The transport tests use counted streams to check exact budgets and early cancell
 ### Provider contract suite
 
 [provider-contract.test.ts](provider-contract.test.ts) runs one shared set of
-`SandboxProvider` assertions against the Boat and E2B adapters. The shared modules
+`SandboxProvider` assertions, for both `MachineProvider` and `ProviderWork`,
+against the Boat and E2B adapters. The shared modules
 call only the public provider methods. They compare the values and the
 typed errors that callers use:
 
@@ -241,7 +243,9 @@ The Boat-specific create test keeps the exact two-request idempotency assertion.
 
 ### Key Code
 
-- [provider.ts](provider.ts) defines the server's sandbox and file read interface, with `PrivatePort` and `PortCredential`.
+- [provider.ts](provider.ts) defines `MachineProvider`, the life of a computer: create, get, stop, resume, fork, delete, the auto-stop, the snapshots, and the desktop.
+  It also defines `ProviderWork`, the provider commands, file reads, and private ports, with `PrivatePort` and `PortCredential`.
+  `SandboxProvider` combines both. The [machine channel](../machines/README.md#the-machine-channel) owns `CommandResult`, `CommandStatus`, and `CommandOffsets`.
 - [The E2B client](e2b/README.md#key-code) owns envd, commands, protected env setup, identity-only cleanup, and private ports.
 - [boat.ts](boat.ts) forwards provider operations to the Boat helpers. It builds the Boat port credential.
 - [provider-contract.test.ts](provider-contract.test.ts) runs the [provider contract suite](#provider-contract-suite) with the Boat driver, `createBoatContractFixture` in [boat-contract.test-support.ts](boat-contract.test-support.ts). Its port case checks the Boat port credential that `privatePort` returns.

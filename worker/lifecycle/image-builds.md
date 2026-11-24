@@ -213,8 +213,9 @@ it too, so the version and the snapshot always come from the same image.
 ## Provider retries
 
 [Provider retries](provider-retries.md) gives the retry policy of builds,
-refreshes, and starts after a transient provider error, the saved retry
-state, the job limits, and the cleanup of an unresolved allocation.
+refreshes, and starts after a transient provider error, and of starts after
+a transient host error, the saved retry state, the job limits, and the
+cleanup of an unresolved allocation.
 
 ## Refresh timers
 

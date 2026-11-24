@@ -40,8 +40,10 @@ Continue job, and passes each other ID to the rules above.
   while all of these hold: the fetch scope of the job is open, the job is
   in its `fetch` phase, it is not cancelled and has no outcome, and the job
   passes the access check of each phase. Once the job knows the process ID
-  of its fetch, the provider account of the job must also report that
-  command as running. The access check runs again before that read.
+  of its fetch, a status read on the saved route of that command must also
+  report it as running. The read goes through the machine channel of the
+  workspace, and its provider path uses the provider account of the job.
+  The access check runs again before that read.
 - Otherwise the fetch ID gets no sender, so the route refuses it.
 - The scope lives only in the memory of the object. A rebuilt object has
   no open scope, so an earlier fetch ID never works again.

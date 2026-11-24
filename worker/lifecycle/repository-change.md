@@ -104,7 +104,9 @@ in [`repository-change-data.ts`](repository-change-data.ts): the member
 still has access, the record still names the old repository, branch,
 sandbox, and provider account, and the org still chose the new repository.
 Once the fetch or the move started, a failed check only saves the error,
-and the command still settles.
+and the command still settles, as for
+[Continue](continue-failures.md#failures-and-recovery). So a host command on
+a computer that the record no longer names ends the job with that error.
 
 1. `verify` reads the default branch of the new repository, and the open
    pull request and the pushed commits of the old branch, as the member.
@@ -266,6 +268,8 @@ have it.
   the admission refusals, a runner that cannot move, and a runner that
   does not say hello.
 - [`repository-change-recovery.test.ts`](repository-change-recovery.test.ts):
+  the poll of a saved command on its own route across a reconstruction,
+  also of a saved move without a route,
   a change that publishes after an admin unchose the new repository during
   the move, the end after 10 minutes of a publication whose guard never
   matches and of a failed branch read, the retry of a publication whose

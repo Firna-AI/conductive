@@ -45,7 +45,9 @@ This page belongs to the [chat backend integration](README.md) guide.
   same way. An interrupt stops its former process. Late ends stay late.
 - `resolveAttachments(userId, workspaceId, ids, messageId, usedIds)` checks the sender's files and target.
   The chat transaction supplies the IDs whose accepted-use evidence it already holds.
-- `prepareAttachments` copies through the provider outside the chat queue.
+- `prepareAttachments` copies through the
+  [machine channel](../../machines/README.md#the-machine-channel) of the
+  workspace, outside the chat queue.
   It gets the sandbox ID that the copy owner of the message selected, and
   it writes only there. A finished copy returns to the queue and saves the
   copy proof of its message and sandbox. A failed copy returns to the queue
