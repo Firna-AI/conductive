@@ -1,0 +1,33 @@
+# Check GitHub stacks live, then enable server rebase
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Post-merge task.
+- **Added:** 2026-11-24, from `calummoore/merge-queue-k2ep`, decision 319 of its plan.
+- **Location:** `worker/merge-queue/server-rebase.ts:10`.
+- **Reason:** The checks need a scratch repository that the GitHub App can reach. The agent's GitHub App token could not create one (`createRepository` was refused), so Cal must create it.
+
+- **Terms:**
+  - **GitHub stack:** GitHub's own stacked pull requests. Each pull request targets the branch of the one below it, and a merge of one also merges each one below it.
+  - **Restack:** a move of one queued pull request onto the newest commit of the branch below it.
+  - **Server rebase:** GitHub's GraphQL mutation `updatePullRequestBranch` with `updateMethod: REBASE`, which rebases one pull request branch on GitHub's servers.
+- **Background:**
+  - The merge queue keeps its queued pull requests in one GitHub stack (decision 313). Its rules are in `docs/protocol/merge-queue.md` and `docs/protocol/merge-queue-stack.md`.
+  - On 22 November 2026 Cal chose decision 319 B: a restack first asks GitHub for a server rebase, and sends an agent turn only on a conflict. He chose it on one condition: a live check must show that the server rebase keeps only the layer's own commits after a squash merge below it.
+  - The code for the server rebase exists, behind the constant `GITHUB_SERVER_REBASE_FIRST = false` in `worker/merge-queue/server-rebase.ts`. Until it is on, every restack uses one agent turn (decision 319 A), which works but costs a turn.
+  - The stack client and its fakes were built from GitHub's REST docs (`/repos/{owner}/{repo}/stacks`, API version `2026-03-10`), not from a live repository.
+  - The server rebase rebases only onto the pull request's current GitHub base. The queue sets a new base only after a restack (`docs/protocol/merge-queue-stack.md`), so the check must show whether this order works with the server rebase.
+- **Task:**
+  1. Cal creates the private repository `Firna-AI/merge-queue-scratch` with a README, and gives the Conductive GitHub App access to it. Never use `Firna-AI/conductive` for these checks.
+  2. With small branches and pull requests, check and record:
+     - A merge of an upper layer merges the layers below.
+     - A stack merge that stops partway, and the state of each layer.
+     - Which layers GitHub rebases after a merge, and which webhooks it sends.
+     - A base that already holds the head of the layer.
+     - The server rebase of one layer after a squash merge below it: does it keep only the layer's own commits, refuse a stale expected head, and accept a member's user token?
+     - Which GitHub App permission the stacks routes need.
+     - That a stack and its bases survive a rename of the default branch.
+  3. Fix each difference between GitHub and the fakes in `worker/github/fake-stacks.ts`, `fake-pull-writes.ts`, and the code that relies on it.
+  4. If the server rebase check passes, set `GITHUB_SERVER_REBASE_FIRST` to `true`, and test the queue's restack with it. If it fails, ask Cal whether decision 319 changes to A.
+- **Impact if no action:** Each restack keeps using an agent turn and a running cloud computer. A difference between GitHub and the fakes can stall the queue in production.
+- **Needs:** The merged change, the scratch repository with the GitHub App installed, and Cal's GitHub account.
+- **Done when:** Each check above has a recorded result, the fakes match GitHub, and the server rebase is on or Cal has chosen decision 319 A.

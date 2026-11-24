@@ -63,8 +63,8 @@ no collapse control. `subWorkspaces` of the list states, from
   variant has the menu of the top-level row of the deepest tree, with Move
   to section and its sections, which move the whole tree.
 
-`app/merge-queue` draws the Merge queue group of the plan
-`plans/merge-queue.md`, from decisions 313 to 320 of 22 November 2026,
+`app/merge-queue` draws the Merge queue group that
+[Merge queue](../protocol/merge-queue.md) states, from decisions 313 to 320 of 22 November 2026,
 with the rows that Cal asked for in his review of the same day, and his
 choice of that day that the user handles a failure. Its
 canonical screen has the list of Acme with the group at the top, above the

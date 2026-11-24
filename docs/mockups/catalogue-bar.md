@@ -67,8 +67,8 @@ the merge and Continue to the next task.
 
 ## The merge queue
 
-`app/banner/merge-queue` draws the bar of the merge queue of the plan
-`plans/merge-queue.md`, from decisions 313 to 320 of 22 November 2026,
+`app/banner/merge-queue` draws the bar of the merge queue that
+[Merge queue](../protocol/merge-queue.md) states, from decisions 313 to 320 of 22 November 2026,
 from Cal's choice of the same day that the user handles a failure, and
 from decision 321 of 23 November 2026, which gives a conflict of a
 restack one turn of the queue.

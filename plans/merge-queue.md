@@ -938,7 +938,7 @@ tests.
 - [x] Parse the `stack` object of `pull_request` webhook payloads.
 - [x] Add the stacks routes and the base change to the fake GitHub server
       of the tests.
-- [ ] Check these against a scratch repository of Cal's org, record the
+- [ ] Moved to `plans/follow-ups/merge-queue-live-stack-checks.md` on 24 November 2026, because the scratch repository needs Cal. Check these against a scratch repository of Cal's org, record the
       results under `.context/merge-queue/`, and update this plan:
   - [ ] A merge of an upper layer merges the layers below.
   - [ ] A stack merge that stops partway, and the state of each layer.
@@ -1079,17 +1079,17 @@ Depends on: every other milestone
 
 - [x] Smoke-test the queue with the local Worker and the fake GitHub
       server: join three workspaces, re-order, fail one, and merge.
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Add a follow-up item for agent tools that add to the queue.
-- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+- [x] Add a follow-up item for agent tools that add to the queue.
+- [x] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
-- [ ] Open the pull request. Its description gives the decisions and the
+- [x] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
 

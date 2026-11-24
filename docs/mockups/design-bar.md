@@ -81,7 +81,7 @@ Continue, and the merge queue.
 
 ## The merge queue
 
-The plan `plans/merge-queue.md` adds a merge queue for each repository,
+[Merge queue](../protocol/merge-queue.md) gives a merge queue for each repository,
 which lands its pull requests into the default branch as one GitHub
 stack (decisions 313 and 320). The bar shows the queue in two parts.
 `queueModel.ts` in
