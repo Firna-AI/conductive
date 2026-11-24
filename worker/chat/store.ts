@@ -15,6 +15,11 @@ import {
 
 export { ChatTransaction } from './chat-transaction'
 
+type WorkspaceRead<T> = (view: ChatTransaction) => Promise<T>
+
+export type QueuedWorkspaceRead<T> =
+  WorkspaceRead<T> | { withReadState: WorkspaceRead<T> }
+
 /** Transactions commit each event with its cursor and affected records. */
 export class ChatStore {
   private readonly queue = new ChatQueue(() => this.reportTurnEnds())
@@ -90,10 +95,15 @@ export class ChatStore {
     return this.readState.prepare(workspaceId, turn)
   }
 
-  async read<T>(
-    workspaceId: string,
-    work: (view: ChatTransaction) => Promise<T>,
-  ): Promise<T> {
+  readQueued<T>(workspaceId: string, work: QueuedWorkspaceRead<T>): Promise<T> {
+    return this.run(async (turn) => {
+      if (typeof work === 'function') return this.read(workspaceId, work)
+      await this.prepareWorkspaceReadState(workspaceId, turn)
+      return this.read(workspaceId, work.withReadState)
+    })
+  }
+
+  async read<T>(workspaceId: string, work: WorkspaceRead<T>): Promise<T> {
     return work(
       new ChatTransaction(
         this.storage,

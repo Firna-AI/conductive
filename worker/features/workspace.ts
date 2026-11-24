@@ -1,6 +1,7 @@
 import { FILE_READ_MAX_BYTES } from '../../src/shared/files'
 import type { AppDependencies, AppEnv } from '../env'
 import { createFilesHandler } from '../files/handlers'
+import { workspaceFileLists } from '../files/list-reads'
 import type { WorkspaceFiles } from '../files/workspace'
 import { createDesktopHandler } from '../desktop/handler'
 import { createTerminalHandler } from '../terminal/handler'
@@ -80,6 +81,7 @@ export class WorkspaceFeatures {
     this.files = createFilesHandler({
       ...dependencies,
       maxFileBytes: FILE_READ_MAX_BYTES,
+      fileLists: workspaceFileLists(chat),
       workspaceFiles: () => files,
       repositoryRoot: async (workspace) =>
         repositoryLocation(

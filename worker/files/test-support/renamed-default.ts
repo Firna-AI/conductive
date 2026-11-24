@@ -7,6 +7,7 @@ import {
 import { createFilesHandler } from '../handlers'
 import { WorkspaceFiles } from '../workspace'
 import { setupFilesHttp } from './http'
+import { standaloneFileLists } from './list-reads'
 import { connectWorkspaceFiles } from './runner'
 import type { FilesStorageHarness } from './storage'
 
@@ -84,10 +85,12 @@ export async function setupRenamedDefaultFiles(
   })
   await continued.flush()
   await evict()
+  const workspaceFiles = (id: string) =>
+    id === workspaceId ? files : continuedFiles
   const handler = createFilesHandler({
     maxFileBytes: 1024,
-    workspaceFiles: (workspace) =>
-      workspace.id === workspaceId ? files : continuedFiles,
+    fileLists: standaloneFileLists(workspaceFiles),
+    workspaceFiles: (workspace) => workspaceFiles(workspace.id),
     repositoryRoot: () => '/home/user/repos/storefront',
     fetch: h.boat.fetch,
     now: () => TEST_TIME,
