@@ -445,6 +445,21 @@ migration of the computers of the transition, which became option D.
   is the one of commit `b77a52baa`, with the one Privacy sentence on the
   own computers of a deleted org that decision 12 A adds.
 
+### Own computer decisions 18 and 19: Running work during a pause or a limit
+
+- **18. The count during a pause.** Root question: when an operator pauses
+  the job during its count, what does the count do? Options: **A.** the
+  count goes on, and the job starts no step until Continue. **B.** the
+  count stops with the pause. **Choice:** A, on 24 November 2026. Reason:
+  the count uses no start, and the operator gets the counts sooner.
+- **19. Running steps when an operator sets a limit.** Root question: what
+  happens to the steps of other orgs that already run? Options: **A.** they
+  go on to their end, and the job starts no new step of another org.
+  **B.** the job stops them at once. **Choice:** A, on 24 November 2026.
+  Reason: it matches Pausing, and no step ends halfway.
+- These numbers follow the item numbers of the conversation, so 14 to 17
+  stay open there and are not yet recorded here.
+
 ## Design calls
 
 These are agent calls, made on 22 November 2026.
@@ -897,6 +912,11 @@ The second options check gave most of these TODOs. Its report is in
       configured, a provider error or a missing disk, and an archived
       workspace whose Restore ends within a day. Pace each workspace by its
       own account.
+- [ ] Apply own computer decisions 18 A and 19 A: the count goes on during
+      a pause, and the running steps of other orgs go on to their end when
+      an operator sets a limit. State both rules in
+      `docs/protocol/host-connection-migration.md` with the other rules of
+      Milestone 9.
 - [ ] Install on each running computer as own computer decision 8 A says:
       download the pinned release, then restart the runner, as Restart
       does (`worker/lifecycle/software-restart.ts:36-49`). Restart today
