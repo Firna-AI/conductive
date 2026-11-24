@@ -1,5 +1,6 @@
-import type { SoftwareImage } from './types'
 import { hideMachineTokens } from '../lifecycle/build-machine-token'
+import type { RedactedCommandOutput } from '../lifecycle/build-output-redaction'
+import type { SoftwareImage } from './types'
 
 const OUTPUT_PART_BYTES = 64 * 1024
 const PARTS_PER_STATEMENT = 40
@@ -8,9 +9,9 @@ const PARTS_PER_STATEMENT = 40
 export function softwareImageOutputStatements(
   db: D1Database,
   image: SoftwareImage,
-  output: string,
+  output: RedactedCommandOutput,
 ): D1PreparedStatement[] {
-  const bytes = new TextEncoder().encode(hideMachineTokens(output))
+  const bytes = new TextEncoder().encode(hideMachineTokens(output.text))
   const parts: string[] = []
   for (let start = 0; start < bytes.length;) {
     let end = Math.min(start + OUTPUT_PART_BYTES, bytes.length)

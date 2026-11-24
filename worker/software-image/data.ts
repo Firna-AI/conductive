@@ -1,6 +1,8 @@
 import type { SoftwareRelease } from '../lifecycle/software-release'
 import { softwareImageName } from '../lifecycle/image-names'
+import type { RedactedCommandOutput } from '../lifecycle/build-output-redaction'
 import type { CommandRoute } from '../machines/channel'
+import { keptOutput } from './output'
 import { softwareImageOutputStatements } from './output-data'
 import type { SoftwareImage } from './types'
 
@@ -121,9 +123,6 @@ type Progress = Partial<
     | 'sandboxId'
     | 'processId'
     | 'machineTokenCiphertext'
-    | 'stdoutOffset'
-    | 'stderrOffset'
-    | 'output'
     | 'error'
     | 'completedAt'
     | 'snapshotRecorded'
@@ -136,7 +135,7 @@ export async function saveSoftwareImage(
   db: D1Database,
   before: SoftwareImage,
   changes: Progress,
-  newOutput = '',
+  newOutput?: RedactedCommandOutput,
 ): Promise<boolean> {
   const next = { ...before, ...changes }
   const ciphertext =
@@ -158,9 +157,9 @@ export async function saveSoftwareImage(
       next.processId,
       next.processId === null ? null : next.commandRoute,
       ciphertext,
-      next.stdoutOffset,
-      next.stderrOffset,
-      next.output,
+      newOutput?.stdoutOffset ?? before.stdoutOffset,
+      newOutput?.stderrOffset ?? before.stderrOffset,
+      newOutput ? keptOutput(before.output, newOutput) : before.output,
       next.error,
       next.completedAt,
       next.snapshotRecorded,
@@ -170,7 +169,9 @@ export async function saveSoftwareImage(
       before.phase,
       before.revision,
     )
-  const statements = softwareImageOutputStatements(db, before, newOutput)
+  const statements = newOutput
+    ? softwareImageOutputStatements(db, before, newOutput)
+    : []
   const result = statements.length
     ? (await db.batch([...statements, update])).at(-1)
     : await update.run()

@@ -5,7 +5,9 @@ import {
   issueMachineToken,
   machineClient,
 } from '../machines/client'
+import { failingMachineRevokes } from '../machines/revoke.test-support'
 import { revokeComputerMachineToken } from '../machines/revoke'
+import { machineTokenStatus } from '../machines/token.test-support'
 import { boatRoute } from '../sandbox/routes'
 import { TEST_TIME } from '../test-support/harness'
 import { setupBackendTests } from './backend-test-hooks'
@@ -119,4 +121,33 @@ it('revokes the build token when a failed job can end without a provider', async
   await expect(host.connect('build-token')).rejects.toThrow(
     'Host upgrade returned 401',
   )
+})
+
+it('keeps a failed build without a provider pending until it can revoke its token', async () => {
+  const fixture = fixtureForTest()
+  const { images, org, boat, harness } = fixture
+  const image = await imageRetryFixture(fixture, { steps: 0 })
+  await images.env.DB.prepare(
+    'UPDATE image_builds SET provider_account = ? WHERE id = ?',
+  )
+    .bind('missing-account', image.id)
+    .run()
+  const owner = buildMachineOwner(org.id, image.id)
+  const token = await issueMachineToken(images.env, owner)
+
+  await expect(
+    advanceImageBuild(
+      { ...images, env: failingMachineRevokes(images.env) },
+      org.id,
+      image.id,
+    ),
+  ).rejects.toThrow('Machine revoke unavailable.')
+  expect(await image.job()).toMatchObject({ state: 'failed', phase: 'cleanup' })
+  expect(await pendingImageCleanup(images.env.DB, org.id)).toBe(image.id)
+  expect(await machineTokenStatus(harness.env, owner, token)).toBe(101)
+
+  expect(await advanceImageBuild(images, org.id, image.id)).toBe(true)
+  expect(await image.job()).toMatchObject({ state: 'failed', phase: 'done' })
+  expect(boat.deletedIds).toEqual([])
+  expect(await machineTokenStatus(harness.env, owner, token)).toBe(401)
 })

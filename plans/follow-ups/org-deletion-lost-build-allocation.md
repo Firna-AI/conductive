@@ -81,6 +81,8 @@
 - **Evidence update, 2026-11-24, machine tokens of builds:** each build sandbox now gets a machine token in its create env. The token opens the host connection of that sandbox to its machine object, named `build:<buildId>`.
   - The build issues the token before its first create request. It keeps the token encrypted in `image_build_jobs.machine_token_ciphertext`, so that each replay of the saved request sends the same token.
   - The build clears that value when it saves the sandbox ID, and when its own cleanup ends. Its cleanup revokes the token before it deletes the build computers.
-  - When Delete org sets an allocating build to `done`, no build code runs again. So the escaped sandbox keeps a valid token in its memory until its 30-minute auto-stop. The job row keeps the encrypted token until the purge deletes the row by the cascade.
+  - When Delete org sets an allocating build to `done`, no build code runs again. The escaped sandbox keeps the token in its memory until its 30-minute auto-stop. The machine object keeps the digest of the token with no end, so a copy of the token still opens a connection after that stop. The job row keeps the encrypted token until the purge deletes the row by the cascade.
+  - A failed build whose create replay is still pending keeps its token at Delete org too: its job keeps the phase `allocating`, and `stopOrgLifecycleRecords` changes only running builds.
   - No work reaches that machine object after `done`, because only the build sends commands there. So the token gives no access to any work.
   - Option B then also needs these steps: replay the saved request with the env of the saved token, revoke the token of the build machine by its build ID, and clear `machine_token_ciphertext`. The revoke needs no sandbox ID.
+  - `plans/follow-ups/build-machine-token-lifetime.md` holds the end of the token for every path that ends a build. Its option D ends the token with no step of this item.

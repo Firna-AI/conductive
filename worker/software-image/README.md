@@ -75,10 +75,12 @@ check, the release lookup, and admission.
   Here a host call is each call to the machine object, also the token issue
   and the revoke. A call that already runs can end, and the work saves its
   result.
-- Each provider or host call stops 45 seconds after the request starts, also
-  a long journal command. Cloudflare keeps work for at most 30 seconds after the
-  answer or a disconnect of the client, so about 5 seconds stay for D1
-  writes.
+- At 45 seconds, the poll aborts pending provider calls and stops waiting
+  for host calls. The machine object keeps a request to the host pending
+  until the host replies, reconnects, or the request reaches the machine
+  object's limit. The sandbox command keeps its own limit, as a provider
+  command does. Cloudflare keeps work for at most 30 seconds after the
+  answer or a client disconnect, so about 5 seconds stay for D1 writes.
 
 Saved progress lets a poll go on where an earlier poll stopped:
 
@@ -99,8 +101,8 @@ Saved progress lets a poll go on where an earlier poll stopped:
   at its save. Each save of the attempt changes the revision, also a save
   by the previous Worker. The next step then starts again with the
   readiness read.
-- A transient provider or host error also clears the saved operation. A
-  call that the 45-second stop ends keeps it for the next poll.
+- A transient provider or host error also clears the saved operation.
+  The 45-second stop keeps it for the next poll.
 - The next poll can start while the work of an earlier poll still runs.
   The phase and revision guards, the create key, the snapshot intent, the
   command journal, and the one-time claim of each output row keep the
@@ -122,9 +124,8 @@ Limits that stay:
 - Near the end of its total wait, the deploy run gives its last request
   only the seconds that remain. That request can end before 20 seconds,
   with no answer.
-- A provider or host call that does not end within 45 seconds of the start
-  of its poll cannot finish in a poll, for example a very slow journal command.
-  The Cron work has neither the reply budget nor the 45-second stop.
+- A poll can wait for a call for only the part of its 45 seconds that
+  remain. The Cron work has neither the reply budget nor the 45-second stop.
 
 ## The build machine
 
@@ -182,8 +183,8 @@ test the reply budget. [poll-progress.test.ts](poll-progress.test.ts) tests
 the progress of slow calls that succeed: the saved operations, a snapshot
 lookup that finds no snapshot, and admission across slow release reads and
 a reused attempt that fails.
-[poll-host.test.ts](poll-host.test.ts) tests the stop of host calls after
-the answer and at the 45-second stop.
+[poll-host.test.ts](poll-host.test.ts) tests that the poll refuses new host
+calls after the answer and stops waiting for a host call at 45 seconds.
 [machine-token.test.ts](machine-token.test.ts) tests the token issue under
 the same stops, a competing create, and an allocation of the previous Worker.
 These tests hold provider and host replies and D1 reads, and move fake
@@ -193,7 +194,7 @@ timers. They use no real sleep.
 
 - [version.ts](version.ts): the hash of the release version and software command.
 - [route.ts](route.ts) and [deploy-gate.ts](deploy-gate.ts): the machine route, its lookup of the attempt of a deploy, and the token gate.
-- [poll.ts](poll.ts): `boundedSoftwareImagePoll`, the reply budget, the checkpoint answer, and the network stop. `runNetworkCall` applies that stop to each call to the machine object.
+- [poll.ts](poll.ts): `boundedSoftwareImagePoll`, the reply budget, the checkpoint answer, and the network stop. `runNetworkCall` limits the poll's wait for each call to the machine object.
 - [result.ts](result.ts): `softwareImageResult`, the answer fields of an attempt.
 - [response.ts](response.ts): `softwareImageResponse`, the JSON answer. It encodes each saved output part on its own, in the same `output` field.
 - [build.ts](build.ts): admission, version replacement, and resumable advancement.

@@ -5,10 +5,13 @@ import type {
 } from '../../src/shared/org-settings'
 import { HttpError } from '../http'
 import { readOrgProviderAccount } from '../data/org-provider-account'
-import type { CommandStatus } from '../machines/channel'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
 import { readBuildSnapshot } from './build-log-reader'
-import { buildLogStatements } from './build-log-statements'
+import {
+  buildCommandLogStatements,
+  buildLogStatements,
+} from './build-log-statements'
+import type { RedactedCommandOutput } from './build-output-redaction'
 import { decodeBuildJob, type StoredBuildJob } from './build-job-codec'
 import type { ProviderRetryState } from './provider-retry'
 import type { SavedScript } from './saved-script'
@@ -181,18 +184,16 @@ export async function assignBuildSnapshot(
 export async function saveBuildOutput(
   db: D1Database,
   buildId: string,
-  status: CommandStatus,
+  output: RedactedCommandOutput,
   now: number,
 ): Promise<void> {
   await db.batch([
-    ...[status.stdout, status.stderr]
-      .filter(Boolean)
-      .flatMap((text) => buildLogStatements(db, buildId, text, now)),
+    ...buildCommandLogStatements(db, buildId, output, now),
     db
       .prepare(
         'UPDATE image_build_jobs SET stdout_offset = ?, stderr_offset = ? WHERE build_id = ?',
       )
-      .bind(status.stdoutNextOffset, status.stderrNextOffset, buildId),
+      .bind(output.stdoutOffset, output.stderrOffset, buildId),
   ])
 }
 

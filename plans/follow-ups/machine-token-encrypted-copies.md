@@ -1,0 +1,36 @@
+# The Worker keeps encrypted copies of machine tokens
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-8-builds-over-ef32` (pull request #686), review round 1, finding 106.
+- **Location:** `docs/protocol/host-connection.md:60`, `docs/protocol/access-and-security.md:117`, `docs/architecture/data-and-trust.md:26`, `worker/lifecycle/start-allocation.ts:85`, `worker/lifecycle/build-machine-token.ts`, `worker/software-image/machine-token.ts`, and `migrations/202611241100_build_command_routes.sql`.
+- **Reason:** The protocol promises that the Worker keeps only a digest of each machine token, and only agent calls chose the encrypted copies, so the user decides which side is right.
+
+- **Source:** Review.
+- **Category:** Docs or spec.
+- **Terms:**
+  - **Machine token:** the secret in the env of a sandbox that opens its host connection to its machine object. The machine object checks it against a stored digest.
+  - **Replayed create:** a second create request with the same idempotency key, after the reply of the first was lost. On Boat, only a replay with the same body finds the sandbox of the first request.
+- **Background:**
+  - `docs/protocol/host-connection.md:60` and `docs/protocol/access-and-security.md:117` say that the Worker keeps only a digest of each machine token. The table at `docs/architecture/data-and-trust.md:26` lists only the digest.
+  - A create sends the token in the env of the create body. After a lost reply, the replay must send the same body, so the Worker must still know the token.
+  - So the Worker keeps an encrypted copy of the token of each create until the create completes:
+    - A workspace create keeps it in its encrypted create payload, in the workspace object (`worker/lifecycle/start-allocation.ts:85`). A Milestone 4 agent call of the own computers plan, of 23 November 2026, chose this.
+    - An org build keeps it in `image_build_jobs.machine_token_ciphertext`, and a software image build in `software_images.machine_token_ciphertext`. Milestone 8 agent calls, of 24 November 2026, chose this. The build clears it when it saves its sandbox ID and when its own cleanup reaches `done`. A job that Delete org ends keeps it until the purge.
+  - Each copy uses the Worker's key `BOAT_KEY_ENCRYPTION_KEY`, the same key that protects the stored GitHub tokens of source copies.
+  - No legal page and no public guide restates the digest-only sentence.
+- **Problem:** The protocol says that the Worker keeps only a digest, but the Worker keeps an encrypted copy of each machine token while its create waits for a reply.
+- **Impact if no action:** The protocol and the code disagree on what the Worker stores. A reviewer cannot tell which rule the code must meet.
+- **Root question:** What may the Worker keep of each machine token, so that the sandbox of a create whose reply was lost still opens its host connection?
+- **Options:**
+  - **A.** Approve the temporary encrypted copy. Change the two digest-only sentences and the table: the Worker keeps a digest of each machine token, and an encrypted copy only while its create waits for its reply. The digest stays the value of the check. Read both legal pages and every guide in full, as `CLAUDE.md` asks. Effort: Small.
+  - **B.** Derive a stable token for each create from a dedicated key and its saved identity, so no copy is stored. Anyone with the key and the saved IDs can then rebuild each live token, and key rotation needs support for open creates. Effort: Large.
+  - **C.** Give the token to the sandbox in a separate step after the create. This needs a provider call that the host connection doc does not keep, or a change of the first boot. Effort: Large.
+  - **D.** A, but keep the copy of a pending create in the machine object beside its digest, not in D1. The object gives the same token to each replay, and drops it when the sandbox ID is saved and at the revoke. Remove the two `machine_token_ciphertext` columns before the migration reaches `main`. Then no D1 writer, such as the Delete org write, can leave a copy behind. Effort: Medium.
+  - **E.** Put a single-use enrollment code in the create in place of the token. The host program trades it for its token at its first connection. Effort: Large.
+- **Left out:** A fresh token for each replay: Boat can refuse a changed body, or return the first sandbox with the old token, which the machine object then refuses. A new create with a new key after a lost reply: the first sandbox escapes cleanup.
+- **Wider fix:** None. The `documentation` skill already asks the protocol and the code to agree.
+- **Previous examples:** The Milestone 4 copy in the workspace create payload.
+- **Related:** `plans/follow-ups/build-machine-token-lifetime.md` ends the build tokens. Under B, C, D, or E, the two token columns of the Milestone 8 migration go, so the answer must come before the own computers branch merges into `main`.
+- **Recommendation:** A. It is the only Small option, it covers the workspace create too, and the copy exists only while a create waits for its reply. D best protects the codebase, because no D1 writer can then leave a copy behind.
+- **Action:** ask the user, because the protocol promises digest-only storage, and only agent calls chose the temporary encrypted copies.

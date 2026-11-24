@@ -11,6 +11,8 @@ import {
   writeBuildLog,
 } from './build-data'
 import { SNAPSHOT_DONE_LOG, SNAPSHOT_START_LOG } from './build-command-data'
+import { RedactedCommandOutput } from './build-output-redaction'
+import { buildEventsResponse } from './build-stream'
 import { advanceImageBuild, startImageBuild } from './image-builds'
 import { finishImageBuild } from './image-test-support'
 
@@ -45,6 +47,64 @@ it('hides machine tokens in build logs without changing command offsets', async 
     stdoutOffset: 122,
     stderrOffset: 122,
   })
+})
+
+it('masks a token split across build status replies and releases the final text', async () => {
+  const { images, org, user, boat, host } = backendFixture()
+  const { DB: db } = images.env
+  const id = await startImageBuild(images, {
+    orgId: org.id,
+    userId: user.id,
+    kind: 'build',
+    software: SOFTWARE,
+  })
+  for (let step = 0; step < 3; step++)
+    await advanceImageBuild(images, org.id, id)
+  const before = await readBuild(db, org.id, id)
+  const cursor = before.log.at(-1)?.eventNumber ?? 0
+  const newLog = async () =>
+    (await readBuild(db, org.id, id)).log
+      .filter((event) => event.eventNumber > cursor)
+      .map((event) => event.text)
+
+  const token = `cndm1.${'a'.repeat(64)}.${'b'.repeat(43)}`
+  const prefix = 'x'.repeat(110)
+  boat.commandOutput = `${prefix}${token}\ncndm1.abc`
+  boat.commandStderr = `note ${token}\n`
+  boat.commandExitCode = 1
+  boat.statusChunkSize = 130
+
+  expect(await advanceImageBuild(images, org.id, id)).toBe(false)
+  expect(await newLog()).toEqual([prefix, 'note [hidden]\n'])
+  expect(await readBuildJob(db, org.id, id)).toMatchObject({
+    phase: 'software',
+    stdoutOffset: 110,
+    stderrOffset: 120,
+  })
+
+  expect(await advanceImageBuild(images, org.id, id)).toBe(true)
+  expect(host.statusRequests).toEqual([
+    { processId: 1, stdoutOffset: 0, stderrOffset: 0 },
+    { processId: 1, stdoutOffset: 110, stderrOffset: 120 },
+  ])
+  const completed = await readBuild(db, org.id, id)
+  expect(completed.build.state).toBe('failed')
+  expect(await newLog()).toEqual([
+    prefix,
+    'note [hidden]\n',
+    '[hidden]\ncndm1.abc',
+    completed.build.error,
+  ])
+  const response = await buildEventsResponse({
+    env: images.env,
+    orgId: org.id,
+    userId: user.id,
+    buildId: id,
+    after: cursor,
+  })
+  const reply = await response.text()
+  expect(reply).toContain(JSON.stringify('[hidden]\ncndm1.abc'))
+  expect(reply).not.toContain(token)
 })
 
 it('stores a detached status reply above two million output bytes in bounded rows without losing output', async () => {
@@ -121,7 +181,7 @@ it('keeps UTF-8 characters and event order across all build log writers', async 
   await saveBuildOutput(
     runtime.env.DB,
     id,
-    {
+    RedactedCommandOutput.redact({
       processId: 7,
       state: 'exited',
       running: false,
@@ -134,7 +194,7 @@ it('keeps UTF-8 characters and event order across all build log writers', async 
       stdoutNextOffset: 262_146,
       stderrNextOffset: 4,
       more: false,
-    },
+    }),
     TEST_TIME,
   )
   await failBuild(runtime.env.DB, id, message, TEST_TIME + 1)

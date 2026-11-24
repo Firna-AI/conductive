@@ -28,6 +28,7 @@ import { recoverImageBuildForCleanup } from './image-allocation'
 import { liveBuildComputers } from './computer-ledger'
 import { startAddedImageBuild } from './first-image-build'
 import { imageIsPublished } from './org-image-data'
+import { RedactedCommandOutput } from './build-output-redaction'
 
 export async function advanceBuildCommand(
   runtime: ImageRuntime,
@@ -76,7 +77,7 @@ export async function advanceBuildCommand(
   await saveBuildOutput(
     runtime.env.DB,
     job.buildId,
-    status,
+    RedactedCommandOutput.redact(status),
     runtime.dependencies.now(),
   )
   if (status.more || status.running) return false

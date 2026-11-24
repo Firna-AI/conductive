@@ -917,7 +917,8 @@ November 2026.
   when the job leaves its `create` phase. The job keeps the token encrypted
   in its D1 row until the create completes or the cleanup ends. Each
   replayed create sends the same token. Reason: a replay must send the
-  body of the first request.
+  body of the first request. A job that Delete org ends keeps the token
+  until the purge deletes its row, as review round 1 of Milestone 8 found.
 - A software image build registers the digest of its token just before
   each create request, after its revision check. A repeated registration
   of the same digest changes nothing. Reason: two polls can advance one
@@ -948,7 +949,10 @@ November 2026.
 - After the answer of a software image poll, the work sends no new host
   call. A host call ends at the 45-second stop of the poll, as a provider
   call does. Reason: Cloudflare keeps the work for at most 30 seconds
-  after the answer.
+  after the answer. Review finding 104 of Milestone 8 narrowed this call
+  on 24 November 2026: the stop ends the poll's wait for a host call, and
+  the machine object ends the request at its reply, at a reconnect, or at
+  its own limit.
 - A source command start that gets `machine_busy` counts as a refused
   start, as a Boat 429 does, so the scheduler starts it again. Reason: the
   Worker and the host program both send it before the command runs.

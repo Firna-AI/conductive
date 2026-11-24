@@ -1,0 +1,31 @@
+# Each reader of command output masks tokens itself
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** Yes.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from branch `calummoore/own-computers-milestone-8-builds-over-ef32` (pull request #686), review round 1, the wider fix of findings 1 and 102.
+- **Location:** `worker/machines/host-channel.ts:19`, `worker/machines/provider-channel.ts:5`, the build output redactor of `worker/lifecycle/`, `worker/lifecycle/start-logs.ts:41`, and `worker/lifecycle/masked-start-log.ts:3`.
+- **Reason:** The branch that found the problem fixed the two build readers. This wider fix changes the replies of every command consumer of the machine channel, outside that branch.
+
+- **Source:** Review.
+- **Category:** Code structure.
+- **Terms:**
+  - **Machine channel:** `machineChannel` in `worker/machines/channel.ts`. It sends each command of the Worker to the host connection of a computer, or to the provider path of the same account. `hostChannel` and `providerChannel` are its two leaf channels.
+  - **Status read:** one read of the new output of a started command, from saved byte offsets. A long command gives its output in several status reads.
+- **Background:**
+  - `docs/protocol/host-connection.md`, "The machine token", says that no log holds a machine token.
+  - A command can print a machine token, because each process in the machine can read it.
+  - Review findings 1 and 102 found that the org build log and the software image output masked each status read alone, so a token split across two reads reached the log. The fix gave both build readers one shared redactor. It hides each whole token, holds back a trailing part that could start a token while the command runs, and saves the offset before that part.
+  - The start log masks the joined text itself (`worker/lifecycle/start-logs.ts:41`).
+  - Each other reader of command output, now and in later changes, must call a redactor itself.
+- **Problem:** The protection lives in each reader, not at the one place where command output enters the Worker. A reader that a later change adds can store or show a split token again.
+- **Impact if no action:** A new reader of command output can put a machine token in a log or a reply.
+- **Root question:** How does each reader of command output get machine tokens hidden, also a reader that a later change adds?
+- **Options:**
+  - **A.** Keep the redactor in each reader, and give each new reader a test for a split token. Effort: Small for each reader.
+  - **B.** Mask in the two leaf channels. One helper wraps the replies of `hostChannel` and `providerChannel`. It hides each whole token. While the command runs or `more` is true, it removes a trailing part that could start a token and returns the read position before it. The build readers then use the replies as they come. Cost: each command consumer gets the changed replies, so each consumer needs a read, and text that ends in a possible token start shows one read later. Effort: Medium.
+  - **C.** Mask in the host program, which knows the exact token. Commands that the provider path started keep only the Worker mask until that path goes. Effort: Medium.
+- **Left out:** Masking in the browser: the stored rows and the replies keep the token.
+- **Wider fix:** B. One helper at the one entry of command output covers each reader on both routes.
+- **Previous examples:** Review findings 1 and 102 of pull request #686. Commit `70545b5ac` handles credential fragments in runner output.
+- **Recommendation:** B. It protects each later reader with no work in that reader.
+- **Action:** fix after merge, apply B, because it changes the replies of every command consumer outside the branch that found it.

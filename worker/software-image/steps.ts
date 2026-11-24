@@ -1,3 +1,4 @@
+import { RedactedCommandOutput } from '../lifecycle/build-output-redaction'
 import { installImageSoftware } from '../lifecycle/image-software'
 import { imagePackagesVersion } from '../lifecycle/image-packages'
 import { readSoftwareRelease } from '../lifecycle/software-release'
@@ -14,7 +15,6 @@ import {
 import type { SandboxProvider } from '../sandbox/provider'
 import { softwareImageChannel } from './channel'
 import { readSoftwareImage, saveSoftwareImage } from './data'
-import { keptOutput } from './output'
 import { SOFTWARE_IMAGE_FAILED } from './failure'
 import { beginSoftwareImageAllocation } from './machine-token'
 import { saveSoftwareImageOperation } from './operation-data'
@@ -98,7 +98,6 @@ export async function advanceSoftwareImageStep(
       },
       image,
     )
-    const output = status.stdout + status.stderr
     const waiting = status.more || status.running
     const failed =
       !waiting &&
@@ -108,9 +107,6 @@ export async function advanceSoftwareImageStep(
         db,
         image,
         {
-          stdoutOffset: status.stdoutNextOffset,
-          stderrOffset: status.stderrNextOffset,
-          output: keptOutput(image.output + output),
           phase: waiting || failed ? 'software' : 'journal',
           ...(failed
             ? {
@@ -120,7 +116,7 @@ export async function advanceSoftwareImageStep(
               }
             : {}),
         },
-        output,
+        RedactedCommandOutput.redact(status),
       ))
     )
       throw new AttemptChanged()

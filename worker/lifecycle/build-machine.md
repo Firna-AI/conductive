@@ -17,8 +17,10 @@ that object for its host connection.
 - `buildSandboxIntent` in [`resource-intents.ts`](resource-intents.ts) adds
   the token and the machine origin to the env of the create. Each replay of
   the create, also a replay in cleanup, sends the same token.
-- D1 clears the saved token when the create returns its sandbox ID, or when
-  the job reaches `done`. A job that holds its sandbox ID makes no new create.
+- The build code clears the saved token when it saves the sandbox ID and
+  when its own cleanup reaches `done`. A job that Delete org ends keeps
+  its saved token until the purge deletes the job's row. A job that holds
+  its sandbox ID makes no new create.
 - A create that the previous Worker began has no saved token. Its replay
   sends no token, so that build keeps the provider path.
 - `advanceBuildStep` in [`image-build-steps.ts`](image-build-steps.ts) sends

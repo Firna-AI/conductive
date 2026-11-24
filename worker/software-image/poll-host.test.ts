@@ -114,7 +114,7 @@ it('refuses a software image host command after the poll answers', async () => {
   }
 })
 
-it('ends a pending software image host command at the poll work deadline', async () => {
+it('stops waiting for a pending software image host call at the 45-second stop', async () => {
   const { boat, host, tasks, run, env } = await hostPollFixture()
   const reply = heldOperation()
   const outcomes: unknown[] = []

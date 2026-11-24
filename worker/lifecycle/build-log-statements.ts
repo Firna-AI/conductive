@@ -1,5 +1,6 @@
 import { buildLogRetentionStatements } from './build-log-retention'
 import { hideMachineTokens } from './build-machine-token'
+import type { RedactedCommandOutput } from './build-output-redaction'
 
 const LOG_ROW_BYTES = 262_144
 
@@ -25,7 +26,7 @@ function splitLog(text: string): string[] {
   return chunks
 }
 
-export function buildLogStatements(
+function logStatements(
   db: D1Database,
   buildId: string,
   text: string,
@@ -36,7 +37,7 @@ export function buildLogStatements(
     ? "HAVING EXISTS (SELECT 1 FROM image_builds WHERE id = ? AND state = 'running')"
     : ''
   return [
-    ...splitLog(hideMachineTokens(text)).map((chunk) =>
+    ...splitLog(text).map((chunk) =>
       db
         .prepare(
           `INSERT INTO image_build_logs (build_id, event_number, occurred_at, text)
@@ -52,4 +53,31 @@ export function buildLogStatements(
     ),
     ...buildLogRetentionStatements(db, buildId, now),
   ]
+}
+
+export function buildLogStatements(
+  db: D1Database,
+  buildId: string,
+  text: string,
+  now: number,
+  onlyWhileRunning = false,
+): D1PreparedStatement[] {
+  return logStatements(
+    db,
+    buildId,
+    hideMachineTokens(text),
+    now,
+    onlyWhileRunning,
+  )
+}
+
+export function buildCommandLogStatements(
+  db: D1Database,
+  buildId: string,
+  output: RedactedCommandOutput,
+  now: number,
+): D1PreparedStatement[] {
+  return output.parts
+    .filter(Boolean)
+    .flatMap((text) => logStatements(db, buildId, text, now))
 }

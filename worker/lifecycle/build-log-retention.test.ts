@@ -10,6 +10,7 @@ import {
   saveBuildOutput,
   writeBuildLog,
 } from './build-data'
+import { RedactedCommandOutput } from './build-output-redaction'
 import { buildEventsResponse } from './build-stream'
 import { startImageBuild } from './image-builds'
 
@@ -36,7 +37,7 @@ it('bounds accumulated output and streams retained ends with the omitted byte co
     await saveBuildOutput(
       db,
       id,
-      {
+      RedactedCommandOutput.redact({
         processId: 7,
         state: 'running',
         running: true,
@@ -49,7 +50,7 @@ it('bounds accumulated output and streams retained ends with the omitted byte co
         stdoutNextOffset: (index + 1) * 2_097_152,
         stderrNextOffset: 0,
         more: false,
-      },
+      }),
       TEST_TIME + index,
     )
     const stored = await db
