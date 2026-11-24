@@ -776,30 +776,37 @@ Evidence: `.context/new-tab-workspace-state-reads/impl/m5-report.md`.
 
 Depends on: 1, 2, 3, 4, 5
 
-- [ ] Run the early checks first: `npm run format:check` and
+Evidence: `.context/new-tab-workspace-state-reads/impl/` (`m6-stress/`,
+`smoke/`, and the `m*-evidence/` and `fix-r*-evidence/` folders).
+Reviews: `.context/reviews/calummoore/object-memory-new-tab-state-reads-cesn/`.
+
+- [x] Run the early checks first: `npm run format:check` and
       `npm run lint`.
-- [ ] Run the targeted tests of Milestones 2 to 5.
-- [ ] Save the failure that each new test showed before its code, and the
+- [x] Run the targeted tests of Milestones 2 to 5.
+- [x] Save the failure that each new test showed before its code, and the
       run time of each new test, under
       `.context/new-tab-workspace-state-reads/`.
-- [ ] Run each new asynchronous test 10 times. Save the pass counts in the
+- [x] Run each new asynchronous test 10 times. Save the pass counts in the
       same folder.
-- [ ] Run one stress proof with a long history and large file reports.
+- [x] Run one stress proof with a long history and large file reports.
       Show that a normal new tab asks for no stream from event 0, and that
       an older client still replays within the 8 MiB bound of PR #477.
       Show that the recovery loads no file chunk and keeps a fixed memory.
       Measure the wait of the first read after the deploy. Save the result
       under `.context/new-tab-workspace-state-reads/`. Add no timing or
       heap test.
-- [ ] Smoke-test with `npm run dev`: a new tab, a reload, a kept return,
+- [x] Smoke-test with `npm run dev`: a new tab, a reload, a kept return,
       the failed repair notices, the port list after a stop, the `/` skill
       list, and both Files lists. Save a screenshot under
-      `.context/new-tab-workspace-state-reads/`.
-- [ ] Commit with Conventional Commits and push the branch. CI runs the
+      `.context/new-tab-workspace-state-reads/`. Limit: the dev pages
+      store no skills report and have no stop control, so the browser did
+      not show the `/` skill list from the seed or the port list after a
+      stop. Only tests cover those two.
+- [x] Commit with Conventional Commits and push the branch. CI runs the
       complete gate, as Cal said on 23 November 2026, so the orchestrator
       runs no local `npm run check`. The plan changes no Cargo file, so the
       Rust checks run only if one changes.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -819,3 +826,4 @@ Depends on: 1, 2, 3, 4, 5
 - [ ] After the deploy, open a workspace with a long history in a new tab
       on `conductive.build`. Check that both streams start after their
       read cutoffs, and that the notices and the lists match an older tab.
+      Follow-up item: `plans/follow-ups/new-tab-state-reads-deployed-check.md`.
