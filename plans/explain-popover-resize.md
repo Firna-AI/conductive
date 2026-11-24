@@ -366,10 +366,10 @@ Depends on: 2
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests, `npm run check`, and the Rust checks only if
+- [x] Run the targeted tests, `npm run check`, and the Rust checks only if
       the Cargo workspace changed.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -381,7 +381,7 @@ Depends on: every other milestone
       assertions. Then delete the record and its type `PanelState`.
       Milestone 3 kept the record as a converter, and the review of
       24 November 2026 found it.
-- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+- [x] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
