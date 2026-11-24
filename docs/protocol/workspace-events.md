@@ -111,10 +111,14 @@ the change that gives a new tab the state of a workspace from reads.
 - The rebuild does not stop the chat or the reports of the agent runner.
 - Reason: a read without the state sends the tab back to a full replay.
   Cost: the first read after such a change can wait for the rebuild.
-- A failed read gives no cutoff. When the tab still follows a stream
-  after a failed read, that stream starts with a full replay. After a
-  reply of an older Worker without this state, the stream also starts
-  with a full replay.
+- A read that fails with no cutoff, such as after a network error or a
+  refused request, gives no state. When the tab still follows a stream
+  after such a read, that stream starts with a full replay. After a reply
+  of an older Worker without this state, the stream also starts with a
+  full replay.
+- A Files read of a list that has no report yet answers that the list is
+  unavailable, and it still gives its cutoff. That cutoff counts as the
+  cutoff of the read.
 - A failed Files read does not stop the updates of the other Files list.
   A report in the stream can fill the failed list.
 - The device keeps none of this state on its disk, as
