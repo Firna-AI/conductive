@@ -750,6 +750,51 @@ Milestone 4 on 23 November 2026, as agent calls:
   Worker back across it. The pull request names this as a breaking change
   for a rollback.
 
+These are agent calls of the orchestrator of Milestone 6, made on 24
+November 2026.
+
+- The provider interface splits in two. `MachineProvider` keeps the life of
+  a computer and the desktop. `ProviderWork` keeps the provider commands,
+  file reads, and private ports as the provider path. `SandboxProvider` is
+  the union of both until Milestone 9. Reason: the converter of this
+  milestone and the consumers of Milestones 7 and 8 still use the provider
+  path.
+- `MachineChannel` is the interface of the commands on one computer.
+  Milestone 7 adds the file reads and the streams to it. The socket class of
+  Milestone 4 is now `HostConnection`. Reason: this plan gives the name
+  `MachineChannel` to the interface.
+- Each new command goes to the host connection of the workspace. It goes
+  through the provider path only when the machine object refuses it before
+  a send: no open host connection of the current version, no token record,
+  or no machine binding. Reason: a command then never runs twice, and a
+  computer without the host program keeps working.
+- A started command keeps the path that started it. Each saved job keeps
+  this route beside its process ID. A job without a route reads as the
+  provider path. Reason: the process IDs of the two paths differ, and the
+  jobs that run at the deploy stay readable.
+- A transient host error gets the handling of a transient provider error.
+  A status read of a host command that finds no connection reads again
+  later, within the time limits of its job. Reason:
+  [Operations](../docs/protocol/host-connection.md#operations) says that the
+  Worker reads the status after the host program connects again.
+- The start-run records count a host command call with the provider calls,
+  and a host status read as a poll, under `host.*` names. A refused host
+  attempt counts too. Reason: the counts stay comparable across the change,
+  with no D1 change.
+- The host channel serves the computer that holds the newest machine token
+  of the workspace. Each consumer keeps its D1 checks that its sandbox is
+  the current sandbox of the workspace. Reason: each create and each resume
+  issue a new token and close the older connection.
+- After a failed access check, a saved host command of Continue or of a
+  repository change settles only while the workspace record still names its
+  computer. Otherwise the job ends with the kept error. A provider command
+  still settles on its saved sandbox. Reason: the host connection of a
+  workspace belongs to its current computer.
+- The restarts, the local-work read, and the attachment copy check the
+  workspace and its sandbox again before each command. Reason:
+  [Orgs and workspaces](../docs/protocol/isolation.md#orgs-and-workspaces)
+  asks for a check in the records before each sandbox call.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -874,12 +919,20 @@ Depends on: 4
 
 Depends on: 4
 
-- [ ] Split `SandboxProvider` into `MachineProvider` and `MachineChannel`.
-- [ ] Add the host channel. Keep the provider path as a converter for a
+- [x] Split `SandboxProvider` into `MachineProvider` and `MachineChannel`.
+      Branch: `calummoore/own-computers-milestone-6-commands-over-7v7g`.
+- [x] Add the host channel. Keep the provider path as a converter for a
       computer that does not open the host connection.
-- [ ] Move the start steps, Continue, the repository change, the retention
+      Branch: `calummoore/own-computers-milestone-6-commands-over-7v7g`.
+- [x] Move the start steps, Continue, the repository change, the retention
       command, the restarts, and the attachment downloads to the channel.
-- [ ] Move each test with every assertion.
+      Branch: `calummoore/own-computers-milestone-6-commands-over-7v7g`.
+- [x] Move each test with every assertion.
+      Branch: `calummoore/own-computers-milestone-6-commands-over-7v7g`.
+
+Evidence and reports: `.context/own-computers/m6/`,
+`.context/own-computers/reports/`, and the review folder
+`.context/reviews/calummoore/own-computers-milestone-6-commands-over-7v7g/`.
 
 ## Milestone 7: Terminal, previews, and files over the host connection
 
