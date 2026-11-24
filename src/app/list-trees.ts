@@ -150,3 +150,27 @@ export function treeRows(rows: readonly ListRow[]): TreeRow[] {
   }
   return trees
 }
+
+/**
+ * The rows that a section shows, as `treeRows` gives them. An open section
+ * shows each row. A collapsed section shows only the row of the open
+ * workspace, when it holds that workspace, so the open workspace stays in
+ * sight. That row shows as a top-level row, with no indent and no guide
+ * lines, because the list shows no other row of its tree. It keeps its
+ * tree and its place, so a drag of it counts the places of the section.
+ */
+export function shownTreeRows(
+  rows: readonly ListRow[],
+  collapsed: boolean,
+  selectedId: string | null,
+): TreeRow[] {
+  const all = treeRows(rows)
+  if (!collapsed) return all
+  return all
+    .filter(({ row }) => row.workspace.id === selectedId)
+    .map((shown) => ({
+      ...shown,
+      row: { ...shown.row, depth: 0 },
+      lines: { last: false, through: [], hasNested: false },
+    }))
+}

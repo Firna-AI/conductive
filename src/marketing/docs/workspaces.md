@@ -195,7 +195,7 @@ A sub-workspace is a workspace nested under another workspace, its parent.
 A tree contains a top-level workspace and all sub-workspaces nested under it.
 Sub-workspaces follow their parent when it moves between sections.
 Each tree stays open in the list.
-Collapsing a section hides all workspaces in it.
+Collapsing a section hides the workspaces in it, except the workspace that you have open.
 
 Drag a top-level workspace to move its whole tree between sections.
 Drag the header of a section to move the section to another place in the list.
