@@ -5,15 +5,19 @@ import { convertFilesProjection } from './bucket-convert'
 import {
   BUCKET_LAYOUT,
   FILES_KEY,
-  bucketListChunkKeys,
   parseBucketManifest,
   type BucketManifest,
   type ListKind,
 } from './bucket-layout'
 import { readBucketList } from './bucket-read'
+import { deleteBucketList } from './bucket-write'
 import { invalidFileResponse } from './errors'
 import { natural, parseChanges, parseTree } from './parsers'
-import { legacyChunkKeys, readStoredText } from './stored-chunks'
+import {
+  deleteStoredChunks,
+  legacyChunkKeys,
+  readStoredText,
+} from './stored-chunks'
 
 export interface FilesReader {
   get(key: string): Promise<unknown>
@@ -22,7 +26,7 @@ export interface FilesReader {
 
 export interface FilesTransaction extends FilesReader {
   put(key: string, value: unknown): Promise<void>
-  delete(key: string): Promise<void>
+  delete(key: string): Promise<boolean>
 }
 
 export interface FilesStorage extends FilesReader {
@@ -67,9 +71,7 @@ export function durableFilesStorage(
         work({
           ...durableFilesReader(transaction),
           put: (key, value) => transaction.put(key, value),
-          delete: async (key) => {
-            await transaction.delete(key)
-          },
+          delete: (key) => transaction.delete(key),
         }),
       ),
   }
@@ -171,11 +173,13 @@ export function markFilesMoved(storage: FilesStorage): Promise<void> {
             ...previous,
             changesChunks: 0,
           })
-    const changesKeys =
-      previous.layout === BUCKET_LAYOUT
-        ? bucketListChunkKeys('changes', previous.changes)
-        : legacyChunkKeys('changes', previous.changesChunks)
-    for (const key of changesKeys) await transaction.delete(key)
+    if (previous.layout === BUCKET_LAYOUT)
+      await deleteBucketList(transaction, 'changes', previous.changes)
+    else
+      await deleteStoredChunks(
+        transaction,
+        legacyChunkKeys('changes', previous.changesChunks),
+      )
     if (manifest.tree)
       manifest.tree = {
         ...manifest.tree,

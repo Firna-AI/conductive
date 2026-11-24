@@ -12,9 +12,7 @@ export function chatFilesStorage(data: ChatData): FilesStorage {
         ),
       ),
     put: (key, value) => data.put(key, value),
-    async delete(key) {
-      await data.delete(key)
-    },
+    delete: (key) => data.delete(key),
   }
   return {
     get: transaction.get,

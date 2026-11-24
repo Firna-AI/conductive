@@ -1,3 +1,4 @@
+import { HttpError } from '../http'
 import {
   BUCKET_COUNT,
   BUCKET_HASH,
@@ -14,7 +15,12 @@ import {
   type ListKind,
 } from './bucket-layout'
 import { invalidFileResponse } from './errors'
-import { chunkKeys, readStoredText } from './stored-chunks'
+import {
+  chunkKeys,
+  deleteStoredChunks,
+  readStoredText,
+  warnDiscardedChunks,
+} from './stored-chunks'
 import type { FilesReader, FilesTransaction } from './storage'
 
 export function emptyBucketManifest({
@@ -34,11 +40,31 @@ export function emptyBucketManifest({
   }
 }
 
+export async function deleteBucketList(
+  transaction: FilesTransaction,
+  kind: ListKind,
+  list: BucketList | null,
+): Promise<void> {
+  if (!list) return
+  await deleteStoredChunks(
+    transaction,
+    chunkKeys(list.orderChunks, (index) => orderKey(kind, index)),
+  )
+  for (const [bucket, { chunks }] of list.buckets.entries()) {
+    if (chunks === 0) continue
+    await deleteStoredChunks(
+      transaction,
+      chunkKeys(chunks, (index) => bucketKey(kind, bucket, index)),
+    )
+  }
+}
+
 async function writeText(
   transaction: FilesTransaction,
   keyAt: (index: number) => string,
   text: string,
   previousChunks: number,
+  previousTextUnreadable = false,
 ): Promise<number> {
   const chunks = Math.ceil(text.length / CHUNK_CHARACTERS)
   for (let index = 0; index < chunks; index++) {
@@ -48,8 +74,11 @@ async function writeText(
       text.slice(start, start + CHUNK_CHARACTERS),
     )
   }
-  for (let index = chunks; index < previousChunks; index++)
-    await transaction.delete(keyAt(index))
+  const deletedAll = await deleteStoredChunks(
+    transaction,
+    chunkKeys(previousChunks, keyAt, chunks),
+  )
+  if (deletedAll && previousTextUnreadable) warnDiscardedChunks()
   return chunks
 }
 
@@ -102,7 +131,7 @@ export function writeOrder(
   transaction: FilesTransaction,
   kind: ListKind,
   order: string,
-  previousOrder: string,
+  previousOrder: string | null,
   previousChunks: number,
 ): Promise<number> {
   if (
@@ -115,6 +144,7 @@ export function writeOrder(
     (index) => orderKey(kind, index),
     order,
     previousChunks,
+    previousOrder === null,
   )
 }
 
@@ -147,7 +177,17 @@ export async function writeBucketList(
     )
   }
   const previousOrder = previous
-    ? await readOrderText(transaction, kind, previous)
+    ? await readOrderText(transaction, kind, previous).catch(
+        (error: unknown) => {
+          if (
+            error instanceof HttpError &&
+            error.status === 502 &&
+            error.code === 'file_unavailable'
+          )
+            return null
+          throw error
+        },
+      )
     : ''
   const orderChunks = await writeOrder(
     transaction,

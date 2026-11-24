@@ -1,10 +1,8 @@
 import { afterAll, beforeAll, expect, it, vi } from 'vitest'
 
 import {
-  BUCKET_SYMBOLS,
   FILES_KEY,
   bucketKey,
-  bucketOf,
   orderKey,
   type BucketList,
   type BucketManifest,
@@ -243,27 +241,6 @@ it('rejects a damaged bucket manifest before writing a tree mark', async () => {
   await expect(storage.get(FILES_KEY)).resolves.toStrictEqual(
     original[FILES_KEY],
   )
-})
-
-it('rejects a tree delta when the stored order points to an empty bucket', async () => {
-  const storage = runtime.storage('delta-damaged-order')
-  const entry = fileEntry('b')
-  const bucket = bucketOf(entry.path)
-  const original = await writeBucketProjection(storage, projection, {
-    corrupt(_manifest, updates) {
-      updates[treeOrder] = BUCKET_SYMBOLS[bucket]
-    },
-  })
-
-  await expect(
-    new FilesState(storage).apply('stream', {
-      type: 'files.changed',
-      delta: { revision: 2, changes: [{ operation: 'upsert', entry }] },
-    }),
-  ).rejects.toMatchObject(readError)
-  await expect(
-    storage.getMany([...Object.keys(original), bucketKey('tree', bucket, 0)]),
-  ).resolves.toStrictEqual(new Map(Object.entries(original)))
 })
 
 it('stops legacy reads and conversion after one batch when the first chunk is missing', async () => {

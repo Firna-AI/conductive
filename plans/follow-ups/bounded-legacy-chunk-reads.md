@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-23, wider fix split from finding 1 of the review of PR #674 (branch `calummoore/memory-projection-reader-release-jrq9`).
-- **Location:** `partChunkKeys` and its callers in `worker/files/report-storage.ts` (`storedPart`, `storedParts`, `storedReportKeys`). `readBucketList` and its private `readChunks` in `worker/files/bucket-read.ts`.
+- **Location:** `readTreeBucket` and `retainOrder` in `worker/files/bucket-delta.ts`, `readOrderText` in `worker/files/bucket-write.ts`. `partChunkKeys` and its callers in `worker/files/report-storage.ts` (`storedPart`, `storedParts`, `storedReportKeys`). `readBucketList` and its private `readChunks` in `worker/files/bucket-read.ts`.
 - **Reason:** Runner report part reads build all their keys before the first read. The bucket projection reader has a separate copy of the batched read and string checks.
 
 **Terms**
@@ -16,7 +16,9 @@
 
 **Impact if no action:** A damaged report part can reset the workspace Durable Object instead of giving the invalid file response. A change to the projection batch size or chunk checks needs two edits.
 
-**Root question:** How can projections and report parts share bounded chunk reads?
+**Also in scope (finding 81 of the same branch review, 24 November 2026):** the bucket writer repeats three damage checks of the reader: `readTreeBucket` (`worker/files/bucket-delta.ts`) repeats the bucket text parse of `bucket-read.ts`, `readOrderText` (`worker/files/bucket-write.ts`) repeats the order length check, and `retainOrder` (`bucket-delta.ts`) repeats the symbol and offset checks. When `readBucketList` moves onto `readStoredChunks`, give the reader and the writer one bucket text parser and one order check. Keep the writer damage table in the writer tests.
+
+**Root question:** How can projections and report parts share bounded chunk reads and the bucket damage checks?
 
 **Options:**
 - **A.** Use `readStoredChunks` for `readBucketList`, `storedPart`, and `storedParts`. Keep the bucket list order and the existing invalid file response. Check the key list that `storedReportKeys` builds for cleanup. Effort: Small.

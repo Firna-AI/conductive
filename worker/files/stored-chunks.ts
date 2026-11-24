@@ -1,11 +1,16 @@
 import { FILES_KEY, type ListKind } from './bucket-layout'
+import { warnWorker } from '../warnings'
 import { invalidFileResponse } from './errors'
-import type { FilesReader } from './storage'
+import type { FilesReader, FilesTransaction } from './storage'
 
 const CHUNKS_PER_READ = 64
 
-export function* chunkKeys(count: number, keyAt: (index: number) => string) {
-  for (let index = 0; index < count; index++) yield keyAt(index)
+export function* chunkKeys(
+  count: number,
+  keyAt: (index: number) => string,
+  start = 0,
+) {
+  for (let index = start; index < count; index++) yield keyAt(index)
 }
 
 export function legacyChunkKeys(kind: ListKind, count: number) {
@@ -38,6 +43,22 @@ export async function* readStoredChunks(
     }
   }
   if (batch.length > 0) yield* readBatch(storage, batch)
+}
+
+export async function deleteStoredChunks(
+  transaction: FilesTransaction,
+  keys: Iterable<string>,
+): Promise<boolean> {
+  for (const key of keys) {
+    if (await transaction.delete(key)) continue
+    warnDiscardedChunks()
+    return false
+  }
+  return true
+}
+
+export function warnDiscardedChunks(): void {
+  warnWorker({ kind: 'files_projection_chunks_discarded' })
 }
 
 export async function readStoredText(

@@ -41,6 +41,8 @@ export const SIMPLE_WARNINGS = {
     'A runner hello had an invalid file server announcement. It counts as no file server.',
   workspace_alarm_failed:
     'Workspace alarm work failed. Its durable deadline will retry.',
+  files_projection_chunks_discarded:
+    'A file projection write discarded damaged chunks.',
   start_record_failed:
     'A job step record of a start could not be saved. The start goes on without it.',
   start_record_send_failed:

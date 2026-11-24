@@ -95,8 +95,12 @@ export async function createFilesStorage() {
               removals.delete(key)
             },
             async delete(key) {
+              if (removals.has(key)) return false
+              const existed =
+                updates.has(key) || (await storage.get(key)) !== undefined
               updates.delete(key)
               removals.add(key)
+              return existed
             },
           })
           if (updates.size === 0 && removals.size === 0) return result

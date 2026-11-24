@@ -20,6 +20,7 @@ Create one `WorkspaceFiles` instance, called `files` here, for each workspace Du
 Pass `durableFilesStorage(ctx.storage)` and a unique request ID function to its constructor.
 The adapter provides `get` and `getMany` for reads.
 Its `transaction` callback provides `get`, `getMany`, `put`, and `delete` in one storage transaction.
+The `delete` call reports whether it removed a key.
 Each chunk has at most 65,536 JavaScript string characters.
 This bounds each stored value without limiting repository size.
 The projection is the last complete tree and branch changes that the API serves.
@@ -37,7 +38,8 @@ The stored projection has one of two layouts.
 The old layout stores each list as one JSON text in chunks.
 The bucket layout splits each list into 64 buckets by a hash of the item path, with an order text for the list order.
 This module reads both layouts and writes list data in the bucket layout.
-A full report writes buckets with changed digests and writes the order text when it changes.
+A full report writes buckets with changed digests.
+It writes the order text when it changes or when it cannot read the stored order text.
 A tree delta reads its affected buckets one at a time. A remove visits every tree bucket because a folder's entries can be in any bucket.
 A connection reset updates the manifest. An unavailable-tree mark and a repository move update the manifest of a bucket projection without reading list items.
 The first list write or tree mark of an old projection converts retained lists one entry at a time.
@@ -46,6 +48,8 @@ A repository move converts the old tree and deletes the old Changes chunks.
 The same transaction writes the bucket data and manifest and removes the old keys.
 The reader release can read this layout and converts it back to the old layout on its next write after a rollback.
 A damaged projection gives HTTP 502 `file_unavailable` when read.
+A write that only discards damaged chunks finishes and logs a warning.
+Cleanup stops at the first missing key in each chunk sequence.
 
 Runner file events reach this module through one of two integrations.
 The combined integration joins report parts in the runner transaction of the chat backend.

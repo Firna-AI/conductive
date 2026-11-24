@@ -37,7 +37,7 @@ export function observeFilesStorage(source: FilesStorage) {
           },
           async delete(key) {
             removals.push(key)
-            await transaction.delete(key)
+            return transaction.delete(key)
           },
         })
         if (Object.keys(updates).length > 0 || removals.length > 0)
