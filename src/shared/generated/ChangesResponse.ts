@@ -32,7 +32,8 @@ export type ChangesResponse = {
    */
   summary: ChangesResponseSummary
   /**
-   * File and line totals for the omitted changes. Legacy reports leave this absent.
+   * File and line totals for the omitted changes.
+   * Absent when the count is unknown, as from an older runner.
    */
   omitted?: ChangesResponseSummary
 }

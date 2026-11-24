@@ -1,6 +1,7 @@
 //! Compare the last emitted tree, with full scans for content and diff refreshes.
 
 use std::collections::{HashMap, HashSet};
+use std::ptr;
 use std::sync::Arc;
 
 use cnd_runner_interface::file_changes::ChangesResponse;
@@ -37,6 +38,26 @@ impl TreeHistory {
             selection,
             listed_changes,
         }
+    }
+
+    /// A limited Changes list needs matching diff history for per-path refreshes.
+    pub(super) fn can_use_delta(
+        &self,
+        published_changes: &RepositorySnapshot,
+        current: &RepositorySnapshot,
+        changed_files_limit: usize,
+    ) -> bool {
+        if published_changes.changes.files.len() <= changed_files_limit
+            && current.changes.files.len() <= changed_files_limit
+        {
+            return true;
+        }
+        let tree = self.source.as_ref();
+        ptr::eq(tree, published_changes)
+            || (tree.base_commit == published_changes.base_commit
+                && tree.changes.base_branch == published_changes.changes.base_branch
+                && tree.changes.files == published_changes.changes.files
+                && tree.identities == published_changes.identities)
     }
 
     /// Apply the whole update in one delta when its membership or refreshes require it.

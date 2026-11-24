@@ -90,13 +90,8 @@ number names a dated record, as
   screenshots there for the members, who then need no terminal to open
   them. A separate list for the folder beside All files was rejected,
   because it needs a second report and a second view for the same files.
-- The tree report has a limit, as
-  [Report limits](file-reports.md#report-limits) says. Up to 5,000 of the
-  entries that remain after the changed files go to the files that Git
-  ignores in the folder. They get more when the other entries of the
-  repository need fewer, as
-  [Which entries stay](file-reports.md#which-entries-stay) says
-  (Cal, 23 November 2026).
+- The tree report keeps the entries of the folder within its limit, as
+  [Which entries stay](file-reports.md#which-entries-stay) says.
 - So in a large repository, All files and the list of `@` can leave out
   some files of the folder.
 - The exclude file holds the rule once, also after many starts. The rule

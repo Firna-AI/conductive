@@ -18,9 +18,9 @@ decision number names a dated record, as
 - **Omitted totals:** the number of omitted entries of a tree report, or
   the number of omitted files of a changes report with the lines that
   they add and remove.
-- **Context-only entry:** an ignored file under `.context/` that only the
-  scan of the [context folder](repository-folders.md#the-context-folder)
-  adds to the tree.
+- **Context-only entry:** a file or a folder that only the scan of the
+  [context folder](repository-folders.md#the-context-folder) adds to the
+  tree.
 
 ## Report limits
 
@@ -106,8 +106,9 @@ decision number names a dated record, as
   so it still accepts the report of a new runner.
 - Each part of a full report of a new runner carries its omitted totals,
   with zeros when the report omits nothing.
-- A report without omitted totals comes from an older runner, which
-  claims no limit. Its omitted totals are unknown, not zero.
+- Omitted totals that a full report or a saved list does not carry are
+  unknown, not zero. A later full report sets both totals. A tree delta
+  with `omittedEntryCount` sets the tree count.
 - Every part of one report repeats the same omitted totals.
 - The workspace publishes the omitted totals only with the complete
   report. So a pending part changes no count of a panel.
@@ -183,8 +184,13 @@ decision number names a dated record, as
   - The tree omits entries before or after an update that changes which
     entries it lists, and that update does not fit one delta.
   - The refreshes of an update do not fit one delta.
+  - The scans behind the last tree and the last changes report differ, and
+    a changes list omits files. A repair of only one report kind can cause
+    this.
 - So a reader never sees a part of such an update. Each other large update
   uses several deltas, as [Parts and revisions](#parts-and-revisions) says.
+- Reason for a full tree when the two scans differ: it makes every reader
+  read each open file and diff again, also an older reader.
 - The runner compares the complete changes scan before it cuts the list.
   So an edit of only omitted files still sends a new changes report.
 
@@ -202,6 +208,6 @@ decision number names a dated record, as
   because the summary matches the listed changes.
 - An older Mac app drops the new fields too. It keeps its rows and its
   totals, but it cannot show the new notices.
-- A saved list without omitted totals, such as after a rollback of the
-  Worker and a new upgrade, gets no zeros in their place. Only a new
-  complete report sets its totals.
+- An example: a list that the previous Worker saved during a rollback
+  carries no omitted totals. After the next upgrade, they are unknown,
+  not zero, as [Omitted totals](#omitted-totals) says.

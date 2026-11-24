@@ -72,7 +72,8 @@ pub struct FileTreeResponse {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub unavailable: Option<WireTrue>,
-    /// Entries left out of the complete tree. Legacy reports leave this absent.
+    /// Entries left out of the complete tree.
+    /// Absent when the count is unknown, as from an older runner.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional, type = "number")]
     pub omitted_entry_count: Option<u64>,

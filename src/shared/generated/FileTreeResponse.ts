@@ -16,7 +16,8 @@ export type FileTreeResponse = {
    */
   unavailable?: WireTrue
   /**
-   * Entries left out of the complete tree. Legacy reports leave this absent.
+   * Entries left out of the complete tree.
+   * Absent when the count is unknown, as from an older runner.
    */
   omittedEntryCount?: number
   /**

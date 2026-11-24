@@ -162,7 +162,13 @@ impl FileReporter {
         let changes_response = select_changes(&current.changes, self.limits.changed_files)?;
         if kind != Some(FileReportKind::Changes) {
             let tree = TreeHistory::new(current.clone(), &changes_response, self.limits);
-            let previous = state.tree.as_ref().filter(|_| !full && !state.unavailable);
+            let previous = state.tree.as_ref().filter(|tree| {
+                !full
+                    && !state.unavailable
+                    && state.changes.as_deref().is_none_or(|published| {
+                        tree.can_use_delta(published, &current, self.limits.changed_files)
+                    })
+            });
             let parts = tree.parts(previous, state.revisions.tree + 1, self.filter.as_ref())?;
             if !self.emit_parts(state, parts, command_id.clone()).await? {
                 return Ok(());

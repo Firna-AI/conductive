@@ -396,6 +396,10 @@ The existing Worker must still accept the emitted reports at this milestone's en
 The implementor report, test costs, and failure proofs are `.context/runner-file-report-limits/m3-report.md` and `m3-checks/`.
 The current-Worker compatibility check is in `.context/runner-file-report-limits/compat/`.
 
+- **Orchestrator call, 24 November 2026, review finding 15:** When the scans behind the last emitted tree and the last emitted changes report differ, such as after a repair of only one report kind, and a changes list omits files, the next tree update is one full bounded tree. A full tree makes every reader read each open file and diff again. A repair still sends only its own kind. Reason: the per-path refresh plan needs both histories from one scan, and a full tree is always a valid report.
+- **Orchestrator call, 24 November 2026, review finding 16:** The priority pass skips a listed change whose tree entry is an unmarked folder. Changed submodules and files on disk keep priority.
+- Review round 5 confirmed findings 15 to 19. The fix round applied 15, 16, 17, and 18. Finding 19 keeps the current exact sums.
+
 ## Milestone 4: Worker metadata and compatibility
 
 Depends on: Milestone 3, and the tab-state pull request merged into `main`. The memory pull request #675 merged on 24 November 2026. Cal releases this milestone.
@@ -413,7 +417,7 @@ Preserve omission metadata through the merged bucket projection, full report ass
 - [ ] Serve optional fields inside existing tree and changes payloads. Preserve any event numbers introduced by the tab-state plan.
 - [ ] Extend existing Worker integration tests for multipart join, omitted totals, reload, reconnect, explicit-zero replacement, and legacy missing fields.
 - [ ] Use one-time fixtures to check new runner to previous Worker, old runner to new Worker, and previous reader to new stored data.
-- [ ] Check rollback and re-upgrade with a saved no-field projection and an in-flight report. Preserve unknown counts or repair the report, rather than inventing zeros.
+- [ ] Check rollback and re-upgrade with a saved no-field projection and an in-flight report. Preserve unknown counts or repair the report, rather than inventing zeros. Also check that a tree delta with `omittedEntryCount` sets the count of a saved tree without one.
 - [ ] Include masked multipart publication and failed-part repair in the existing chat report coverage.
 - [ ] Run `npm run test -- worker/files` and the affected `worker/chat` report and output-filter tests.
 

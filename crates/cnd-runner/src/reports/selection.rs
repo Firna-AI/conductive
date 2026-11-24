@@ -1,9 +1,9 @@
 //! Select bounded reports from complete repository scans before filtering.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use cnd_runner_interface::file_changes::{ChangesResponse, FILE_CHANGES_REPORT_MAX_FILES};
-use cnd_runner_interface::file_tree::{FILE_TREE_REPORT_MAX_ENTRIES, FileEntry};
+use cnd_runner_interface::file_tree::{FILE_TREE_REPORT_MAX_ENTRIES, FileEntry, FileEntryKind};
 
 use crate::error::{Error, Result};
 use crate::repository::changes::summarize_changes;
@@ -63,7 +63,7 @@ pub(super) struct TreeSelection {
 
 struct TreePaths<'a> {
     source: &'a RepositorySnapshot,
-    available: HashSet<&'a str>,
+    available: HashMap<&'a str, &'a FileEntry>,
     kept: HashSet<&'a str>,
 }
 
@@ -73,7 +73,7 @@ impl<'a> TreePaths<'a> {
         let mut missing = Vec::new();
         let mut current = Some(path);
         while let Some(path) = current.filter(|path| !self.kept.contains(path)) {
-            if self.kept.len() + missing.len() == limit || !self.available.contains(path) {
+            if self.kept.len() + missing.len() == limit || !self.available.contains_key(path) {
                 return;
             }
             missing.push(path);
@@ -111,13 +111,18 @@ pub(super) fn select_tree(
         available: source
             .entries
             .iter()
-            .map(|entry| entry.path.as_str())
+            .map(|entry| (entry.path.as_str(), entry))
             .collect(),
         kept: HashSet::with_capacity(limits.tree_entries),
     };
     for file in &changes.files {
-        if let Some(&path) = paths.available.get(file.changed_file.path.as_str()) {
-            paths.keep(path, limits.tree_entries);
+        if let Some(entry) = paths
+            .available
+            .get(file.changed_file.path.as_str())
+            .copied()
+            && (entry.kind == FileEntryKind::File || entry.change.is_some())
+        {
+            paths.keep(&entry.path, limits.tree_entries);
         }
     }
     let context_slots = limits

@@ -117,6 +117,40 @@ async fn keeps_priority_files_with_ancestors_and_skips_an_oversized_closure() {
 }
 
 #[tokio::test]
+async fn tree_priority_keeps_changed_submodules_and_files_that_remain_on_disk() {
+    let mut current = named_snapshot(&["a-ordinary", "m-replacement", "y-submodule", "z-on-disk"]);
+    current.entries[1].kind = FileEntryKind::Directory;
+    current.entries[2].kind = FileEntryKind::Directory;
+    current.entries[2].change = Some(ChangeKind::Modified);
+    current.entries[3].change = Some(ChangeKind::Deleted);
+    current.changes.files = vec![
+        changed_file("m-replacement", 0, 1, true),
+        changed_file("y-submodule", 0, 0, true),
+        changed_file("z-on-disk", 0, 2, true),
+    ];
+    current.changes.files[0].changed_file.change = ChangeKind::Deleted;
+    current.changes.files[2].changed_file.change = ChangeKind::Deleted;
+    let h = Fixture::with_limits(
+        current,
+        ReportLimits {
+            tree_entries: 2,
+            ..ReportLimits::default()
+        },
+    );
+
+    h.files
+        .refresh(true, Some(FileReportKind::Tree), None)
+        .await
+        .unwrap();
+    let events = h.take_reports();
+    let [RunnerFileEvent::FilesSnapshot { tree }] = events.as_slice() else {
+        panic!("expected a bounded full tree");
+    };
+    assert_eq!(paths(&tree.entries), ["y-submodule", "z-on-disk"]);
+    assert_eq!(tree.omitted_entry_count, Some(2));
+}
+
+#[tokio::test]
 async fn context_and_repository_groups_use_path_order_and_share_unused_slots() {
     let limits = ReportLimits {
         tree_entries: 5,

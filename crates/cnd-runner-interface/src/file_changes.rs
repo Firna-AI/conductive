@@ -108,7 +108,8 @@ pub struct ChangesResponse {
     pub files: Vec<BranchChangedFile>,
     /// File and line totals for the listed changes.
     pub summary: ChangesResponseSummary,
-    /// File and line totals for the omitted changes. Legacy reports leave this absent.
+    /// File and line totals for the omitted changes.
+    /// Absent when the count is unknown, as from an older runner.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub omitted: Option<ChangesResponseSummary>,
