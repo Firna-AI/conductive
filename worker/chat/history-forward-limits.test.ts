@@ -1,19 +1,16 @@
 import { Buffer } from 'node:buffer'
-import { expect, it, vi } from 'vitest'
+import { expect, it } from 'vitest'
 import type { FileEvent } from '../../src/shared/files'
-import { historyMemory } from './history-memory.test-support'
+import { seedLegacyHistory } from './history-memory.test-support'
 import { HistoryPages } from './history-pages'
-import {
-  legacyHistory,
-  sessionAnswer,
-} from './history-session-index.test-support'
+import { sessionAnswer } from './history-session-index.test-support'
 import {
   historySessionKey,
   SESSION_INDEX_THROUGH,
 } from './history-session-keys'
+import { nativeChatStore } from './native-store.test-support'
 import { CHAT_EVENT_PREFIX, chatEventKey } from './storage-keys'
 import { firstStopRequester } from './stop-request'
-import { ChatStore } from './store'
 import type { StoredTurn } from './types'
 import type { WorkspaceEvent } from './workspace-events'
 
@@ -51,7 +48,7 @@ function delta(name: string, legacyField = '') {
 }
 
 it('includes the event that brings a forward page to exactly 4 MiB of stored JSON', async () => {
-  const { storage } = historyMemory()
+  const { storage } = await nativeChatStore()
   const first = title('First')
   const nameOffset =
     JSON.stringify(delta('')).indexOf('"name":""') + '"name":"'.length
@@ -59,7 +56,7 @@ it('includes the event that brings a forward page to exactly 4 MiB of stored JSO
   const name = 'x'.repeat(65_535 - nameOffset) + '🙂"\\\n'
   const padding = pageBytes - eventBytes(1, first) - eventBytes(2, delta(name))
   const file = delta(name, 'x'.repeat(padding))
-  await legacyHistory(storage, [
+  await seedLegacyHistory(storage, [
     first,
     file,
     title('Next'),
@@ -95,8 +92,8 @@ it('includes the event that brings a forward page to exactly 4 MiB of stored JSO
 })
 
 it('returns an oversized first event on its own forward page and resumes after it', async () => {
-  const { storage } = historyMemory()
-  await legacyHistory(storage, [
+  const { storage } = await nativeChatStore()
+  await seedLegacyHistory(storage, [
     delta('x'.repeat(pageBytes)),
     title('Next'),
     title('Last'),
@@ -115,17 +112,22 @@ it('returns an oversized first event on its own forward page and resumes after i
 })
 
 it('prepares legacy compaction through the cutoff with four-record storage lists', async () => {
-  const { storage } = historyMemory()
-  await legacyHistory(
+  const { storage, setStorageHooks } = await nativeChatStore()
+  await seedLegacyHistory(
     storage,
     Array.from({ length: 10 }, (_, index) => title(String(index))),
     false,
   )
-  const list = vi.spyOn(storage, 'list')
+  const lists: DurableObjectListOptions[] = []
+  await setStorageHooks({
+    afterList: async (options) => {
+      lists.push(options)
+    },
+  })
   const pages = new HistoryPages(storage)
   await pages.prepare(9)
   expect(
-    list.mock.calls.map(([{ prefix, startAfter, limit }]) => ({
+    lists.map(({ prefix, startAfter, limit }) => ({
       prefix,
       startAfter,
       limit,
@@ -140,19 +142,20 @@ it('prepares legacy compaction through the cutoff with four-record storage lists
 })
 
 it('includes a crossing event in indexed history and keeps later events across missing bodies', async () => {
-  const { storage } = historyMemory()
+  const { storage } = await nativeChatStore()
   const text = 'x'.repeat(100_000)
   const events = Array.from({ length: 47 }, (_, i) => ({
     ...sessionAnswer(`answer-${i}`),
     text,
   }))
-  await legacyHistory(storage, events)
-  for (let number = 1; number <= 47; number++)
-    await storage.put(historySessionKey('session', number), number)
-  await storage.put(SESSION_INDEX_THROUGH, 47)
-  await storage.delete(chatEventKey(3))
-  await storage.delete(chatEventKey(40))
-  await storage.delete(chatEventKey(45))
+  await seedLegacyHistory(storage, events)
+  await storage.put({
+    ...Object.fromEntries(
+      events.map((_, i) => [historySessionKey('session', i + 1), i + 1]),
+    ),
+    [SESSION_INDEX_THROUGH]: 47,
+  })
+  await storage.delete([3, 40, 45].map(chatEventKey))
 
   const pages = new HistoryPages(storage)
   const first = await pages.read(0, 46, { sessionId: 'session' })
@@ -182,14 +185,14 @@ it('includes a crossing event in indexed history and keeps later events across m
 })
 
 it('advances an empty write-transaction fallback page and finds the first stop requester on a later page', async () => {
-  const { storage } = historyMemory()
+  const { storage, store } = await nativeChatStore()
   const stop = (requestedById: string): WorkspaceEvent => ({
     type: 'turn.stop-requested',
     sessionId: 'session',
     turnId: 'turn',
     requestedById,
   })
-  await legacyHistory(storage, [
+  await seedLegacyHistory(storage, [
     ...Array.from({ length: 4_100 }, (_, index): WorkspaceEvent => ({
       type: 'turn.thinking',
       sessionId: 'other',
@@ -206,7 +209,6 @@ it('advances an empty write-transaction fallback page and finds the first stop r
     messageIds: [],
     closeAfterStop: false,
   }
-  const store = new ChatStore(storage, () => 25)
   const result = await store.change(
     'workspace',
     async (view) => ({

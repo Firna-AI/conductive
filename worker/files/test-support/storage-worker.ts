@@ -10,15 +10,6 @@ interface StorageWorkerEnv {
   FILES: DurableObjectNamespace<StoredFiles>
 }
 
-class CommitFailure extends Error {
-  readonly staged: Record<string, unknown>
-
-  constructor(staged: Record<string, unknown>) {
-    super('Test storage commit failed')
-    this.staged = staged
-  }
-}
-
 class BucketWriteFailure extends Error {
   readonly keys: string[]
 
@@ -53,8 +44,6 @@ export class StoredFiles extends DurableObject<StorageWorkerEnv> {
         throw new Error('Invalid storage write request')
       }
       const removals = readKeys(value.removals)
-      if (url.searchParams.has('failCommit'))
-        return this.abortCommit(value.updates, removals)
       await writeStorageRecord(this.files, value.updates, removals)
       return new Response(null, { status: 204 })
     }
@@ -94,29 +83,6 @@ export class StoredFiles extends DurableObject<StorageWorkerEnv> {
       if (!(error instanceof BucketWriteFailure)) throw error
       return Response.json(error.keys, { status: 409 })
     }
-  }
-
-  private async abortCommit(
-    updates: Readonly<Record<string, unknown>>,
-    removals: readonly string[],
-  ): Promise<Response> {
-    const storage = this.ctx.storage
-    const files = durableFilesStorage({
-      get: storage.get.bind(storage),
-      transaction: (operation) =>
-        storage.transaction(async (transaction) => {
-          await operation(transaction)
-          const staged = await transaction.list<unknown>({ prefix: FILES_KEY })
-          throw new CommitFailure(Object.fromEntries(staged))
-        }),
-    })
-    try {
-      await writeStorageRecord(files, updates, removals)
-    } catch (error) {
-      if (!(error instanceof CommitFailure)) throw error
-      return Response.json(error.staged, { status: 409 })
-    }
-    throw new Error('Expected the storage transaction to fail')
   }
 
   private async inspect(): Promise<Response> {

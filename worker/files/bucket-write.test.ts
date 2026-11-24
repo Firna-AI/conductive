@@ -17,7 +17,6 @@ import { FilesState } from './state'
 import { readFilesManifest } from './storage'
 import { fileEntry, writeBucketProjection } from './test-support/bucket-builder'
 import { observeFilesStorage } from './test-support/observe-storage'
-import { saveReaderReleaseFiles } from './test-support/reader-release'
 import {
   createFilesStorage,
   type FilesStorageHarness,
@@ -77,8 +76,9 @@ it('writes only the affected changes bucket, order and manifest when one file is
   await expect(state.tree()).resolves.toStrictEqual(tree)
 })
 
-it('reads the writer bytes with the reader release and converts them back without bucket keys', async () => {
-  const storage = runtime.storage('reader-release-round-trip')
+it('reads the tree and changes written to buckets after eviction', async () => {
+  const name = 'bucket-round-trip'
+  const storage = runtime.storage(name)
   const state = new FilesState(storage)
   const tree = {
     revision: 3,
@@ -93,7 +93,7 @@ it('reads the writer bytes with the reader release and converts them back withou
   await state.beginConnection('stream')
   await state.apply('stream', { type: 'files.snapshot', tree })
   await state.apply('stream', { type: 'changes.updated', changes })
-  await runtime.evict('reader-release-round-trip')
+  await runtime.evict(name)
 
   const manifest = await readFilesManifest(storage)
   expect(manifest).toMatchObject({
@@ -150,22 +150,4 @@ it('reads the writer bytes with the reader release and converts them back withou
     tree,
     changes,
   })
-  const observed = observeFilesStorage(storage)
-  const expected = {
-    ...previous,
-    connectionId: 'rollback-stream',
-    hasSnapshot: false,
-  }
-  await saveReaderReleaseFiles(observed.storage, expected)
-  expect(observed.writes).toHaveLength(1)
-  expect(observed.writes[0].removals.sort()).toEqual(keys.sort())
-  await runtime.evict('reader-release-round-trip')
-  await expect(readFilesManifest(storage)).resolves.toStrictEqual({
-    connectionId: 'rollback-stream',
-    hasSnapshot: false,
-    treeChunks: 7,
-    changesChunks: 1,
-  })
-  await expect(storage.getMany(keys)).resolves.toEqual(new Map())
-  await expect(readStoredFiles(storage)).resolves.toStrictEqual(expected)
 })

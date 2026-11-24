@@ -11,9 +11,12 @@ import {
 import { FilesState } from './state'
 import { markFilesMoved, readFilesManifest, type FilesStorage } from './storage'
 import { legacyChunkKeys } from './stored-chunks'
-import { fileEntry, writeBucketProjection } from './test-support/bucket-builder'
+import {
+  fileEntry,
+  writeBucketProjection,
+  writeOldProjection,
+} from './test-support/bucket-builder'
 import { observeFilesStorage } from './test-support/observe-storage'
-import { saveReaderReleaseFiles } from './test-support/reader-release'
 import {
   createFilesStorage,
   type FilesStorageHarness,
@@ -76,7 +79,7 @@ it('converts an old tree and changes during a standalone delta and preserves ord
   } as const
   const metadata = { nested: [{ escaped: '\\"[}]' }] }
   const oldTree = { metadata, ...tree }
-  await saveReaderReleaseFiles(storage, { ...projection, tree: oldTree })
+  await writeOldProjection(storage, { ...projection, tree: oldTree })
   await expect(readStoredFiles(storage)).resolves.toStrictEqual({
     ...projection,
     tree,
@@ -126,8 +129,13 @@ it.each(marks)(
   '$name converts the old layout before marking the tree',
   async ({ name, mark, changes }) => {
     const storage = runtime.storage(name)
-    await saveReaderReleaseFiles(storage, projection)
-    await mark(storage)
+    await writeOldProjection(storage, projection)
+    const observed = observeFilesStorage(storage)
+    await mark(observed.storage)
+    const changesWrites = observed.writes
+      .flatMap(({ updates }) => Object.keys(updates))
+      .filter((key) => key.startsWith(`${FILES_KEY}:changes:`))
+    expect(changesWrites).toHaveLength(changes === null ? 0 : 2)
     await expect(readFilesManifest(storage)).resolves.toMatchObject({
       layout: BUCKET_LAYOUT,
       treeChunks: 0,
@@ -149,7 +157,7 @@ it.each(marks)(
 
 it('keeps a stale delta in the old layout and resets the connection without reading list chunks', async () => {
   const storage = runtime.storage('legacy-connect')
-  await saveReaderReleaseFiles(storage, projection)
+  await writeOldProjection(storage, projection)
   const observed = observeFilesStorage(storage)
   const state = new FilesState(observed.storage)
   await expect(
@@ -186,7 +194,7 @@ it.each(['old', 'bucket'] as const)(
     const storage = runtime.storage(name)
     let originalKeys: string[]
     if (layout === 'old') {
-      await saveReaderReleaseFiles(storage, projection)
+      await writeOldProjection(storage, projection)
       originalKeys = [
         FILES_KEY,
         ...legacyChunkKeys('tree', 1),

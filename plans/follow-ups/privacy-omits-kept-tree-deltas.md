@@ -20,7 +20,7 @@
 
 **Options:**
 - **A.** Keep the sentence. It describes the projection, not the history. Effort: Small.
-- **B.** Change it to "It keeps the last file list, each change to that list, and the last summary of changes of each workspace." Update the effective date rules as `AGENTS.md` says for the Privacy page. Effort: Small.
+- **B.** Change it to "It keeps the last file list, each change to that list, and the last summary of changes of each workspace." Update the effective date as the Privacy notice says in [Changes to this notice](../../src/marketing/privacy.ts#L263). Effort: Small.
 
 **Left out:** A full rewrite of the data section. The rest of the section is accurate.
 

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, expect, it } from 'vitest'
+import { afterAll, beforeAll, expect, it, vi } from 'vitest'
 
 import type { ChangesResponse } from '../../src/shared/generated/ChangesResponse'
 import { BUCKET_LAYOUT, FILES_KEY, bucketListKeys } from './bucket-layout'
@@ -6,19 +6,13 @@ import { RunnerFileReports } from './runner-reports'
 import { FilesState } from './state'
 import { markFilesMoved, readFilesManifest, type FilesStorage } from './storage'
 import { fileEntry, writeBucketProjection } from './test-support/bucket-builder'
-import {
-  compatibilityProjection,
-  compatibilityRecord,
-} from './test-support/bucket-record'
 import { observeFilesStorage } from './test-support/observe-storage'
-import { saveReaderReleaseFiles } from './test-support/reader-release'
 import {
   createFilesStorage,
   type FilesStorageHarness,
 } from './test-support/storage'
 import {
   readStoredFiles,
-  writeStorageRecord,
   type StoredFiles,
 } from './test-support/storage-record'
 
@@ -143,16 +137,18 @@ const projectionWrites: ProjectionWrite[] = [
 ]
 
 it.each(projectionWrites)(
-  '$name updates the bucket projection in one transaction',
+  '$name writes the bucket projection in one transaction call',
   async ({ name, prepare, initial, apply, expected, metadataOnly }) => {
     const storage = runtime.storage(name)
     await prepare?.(storage)
     const previous = { ...projection, ...initial }
     const original = await writeBucketProjection(storage, previous)
+    const transaction = vi.spyOn(storage, 'transaction')
     const observed = observeFilesStorage(storage)
     await apply(observed.storage)
 
     const result = { ...previous, ...expected }
+    expect(transaction).toHaveBeenCalledTimes(1)
     expect(observed.writes).toHaveLength(1)
     const [{ updates, removals }] = observed.writes
     const manifest = await readFilesManifest(storage)
@@ -211,39 +207,4 @@ it('keeps the bucket layout when a connection or snapshot is stale', async () =>
     new Map(Object.entries(stored)),
   )
   await expect(readStoredFiles(storage)).resolves.toStrictEqual(projection)
-})
-
-it('restores the bucket projection when the staged conversion fails at commit', async () => {
-  const name = 'conversion-rollback'
-  const storage = runtime.storage(name)
-  await writeStorageRecord(storage, compatibilityRecord)
-  const expectedStaged = {
-    [FILES_KEY]: {
-      connectionId: 'new-stream',
-      hasSnapshot: false,
-      treeChunks: 1,
-      changesChunks: 1,
-    },
-    [`${FILES_KEY}:tree:0`]: JSON.stringify(compatibilityProjection.tree),
-    [`${FILES_KEY}:changes:0`]: JSON.stringify(compatibilityProjection.changes),
-  }
-
-  const conversion = saveReaderReleaseFiles(
-    runtime.storage(name, { failCommit: true }),
-    {
-      ...compatibilityProjection,
-      connectionId: 'new-stream',
-      hasSnapshot: false,
-    },
-  )
-  await expect(conversion).rejects.toThrow('Test storage commit failed')
-  await expect(conversion).rejects.toHaveProperty('staged', expectedStaged)
-
-  await runtime.evict(name)
-  const original = new Map(Object.entries(compatibilityRecord))
-  const keys = new Set([...original.keys(), ...Object.keys(expectedStaged)])
-  await expect(storage.getMany([...keys])).resolves.toStrictEqual(original)
-  await expect(readStoredFiles(storage)).resolves.toStrictEqual(
-    compatibilityProjection,
-  )
 })

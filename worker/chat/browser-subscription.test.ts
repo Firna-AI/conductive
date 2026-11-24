@@ -2,8 +2,8 @@ import { expect, it } from 'vitest'
 import { HttpError } from '../http'
 import { BrowserTabs } from './browser-tabs'
 import { subscribeBrowser } from './browser-subscription'
-import { historyMemory } from './history-memory.test-support'
-import { legacyHistory } from './history-session-index.test-support'
+import { seedLegacyHistory } from './history-memory.test-support'
+import { nativeChatStore } from './native-store.test-support'
 import { ChatStore } from './store'
 import type {
   WorkspaceEvent,
@@ -21,9 +21,9 @@ const access = {
  * after 4,196,247 UTF-8 bytes. The final list contains three more events.
  */
 async function storedWorkspace() {
-  const { storage } = historyMemory()
+  const { storage } = await nativeChatStore()
   const name = '🙂'.repeat(1_000)
-  await legacyHistory(
+  await seedLegacyHistory(
     storage,
     Array.from({ length: 1_025 }, (): WorkspaceEvent => ({
       type: 'workspace.title',

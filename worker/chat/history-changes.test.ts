@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest'
 import type { BranchChangedFile } from '../../src/shared/generated/BranchChangedFile'
 import type { FileEvent } from '../../src/shared/files'
+import { checkCommitBoundaries } from './commit-boundary.test-support'
 import { SESSION_INDEX_THROUGH } from './history-session-keys'
 import { legacyHistory } from './history-session-index.test-support'
 import { nativeChatStore } from './native-store.test-support'
@@ -57,48 +58,62 @@ function watermarks(data: ChatData) {
   )
 }
 
-it('replaces a changes list and all its chunks while keeping the tree and deltas', async () => {
-  const { storage, store } = await nativeChatStore()
-  const files = grownEntries
-    .slice(0, 240)
-    .map(({ path, displayPath }): BranchChangedFile => ({
-      path,
-      displayPath,
-      change: 'modified',
-      added: 1,
-      removed: 0,
-      uncommitted: true,
-    }))
-  const firstDelta = delta(2, 'old.txt')
-  const newestTree = tree(3)
-  const secondDelta = delta(4, 'new.txt')
-  const newestChanges = changesList('second')
-  await append(store, [
-    tree(1),
-    changesList('first', files),
-    firstDelta,
-    newestTree,
-    secondDelta,
-  ])
-  const chunkPrefix = chatKey('history-chunk', '')
-  expect((await storage.list({ prefix: chunkPrefix })).size).toBe(19)
+it('replaces a changes list and its chunks in one commit while keeping the tree and deltas', async () => {
+  await checkCommitBoundaries(async () => {
+    const { actor, storage, store, failNextCommit, clearFaults } =
+      await nativeChatStore()
+    const files = grownEntries
+      .slice(0, 240)
+      .map(({ path, displayPath }): BranchChangedFile => ({
+        path,
+        displayPath,
+        change: 'modified',
+        added: 1,
+        removed: 0,
+        uncommitted: true,
+      }))
+    const oldChanges = changesList('first', files)
+    const newestChanges = changesList('second')
+    const retained = [delta(2, 'old.txt'), tree(3), delta(4, 'new.txt')]
+    await append(store, [tree(1), oldChanges, ...retained])
 
-  await append(store, [newestChanges])
-
-  const history = await store.read('workspace', (view) => view.history(0))
-  expect(history.throughEventNumber).toBe(6)
-  expect(history.events.map(({ eventNumber }) => eventNumber)).toEqual([
-    3, 4, 5, 6,
-  ])
-  expect(history.events.map(({ event }) => event)).toEqual([
-    firstDelta,
-    newestTree,
-    secondDelta,
-    newestChanges,
-  ])
-  expect(await storage.get(chatEventKey(2))).toBeUndefined()
-  expect((await storage.list({ prefix: chunkPrefix })).size).toBe(0)
-  expect(await storage.get(NEWEST_CHANGES)).toBe(6)
+    const chunkPrefix = chatKey('history-chunk', '')
+    return {
+      failNextCommit,
+      clearFaults,
+      action: async (error) => {
+        await expect(append(store, [newestChanges])).rejects.toThrow(error)
+      },
+      read: async () => {
+        const history = await store.read('workspace', (view) => view.history(0))
+        return {
+          through: history.throughEventNumber,
+          eventNumbers: history.events.map(({ eventNumber }) => eventNumber),
+          events: history.events.map(({ event }) => event),
+          latestChanges: await storage.get(NEWEST_CHANGES),
+          hasOldEvent: (await storage.get(chatEventKey(2))) !== undefined,
+          chunks: (await storage.list({ prefix: chunkPrefix })).size,
+        }
+      },
+      before: {
+        through: 5,
+        eventNumbers: [2, 3, 4, 5],
+        events: [oldChanges, ...retained],
+        latestChanges: 2,
+        hasOldEvent: true,
+        chunks: 19,
+      },
+      after: {
+        through: 6,
+        eventNumbers: [3, 4, 5, 6],
+        events: [...retained, newestChanges],
+        latestChanges: 6,
+        hasOldEvent: false,
+        chunks: 0,
+      },
+      restart: actor.crash,
+    }
+  })
 })
 
 it.each([

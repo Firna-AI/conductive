@@ -5,14 +5,17 @@ import type { FileTreeResponse } from '../../src/shared/generated/FileTreeRespon
 import { isRecord } from '../http'
 import { FILES_KEY, bucketDigest, bucketOf } from './bucket-layout'
 import { FilesState } from './state'
-import { fileEntry, writeBucketProjection } from './test-support/bucket-builder'
+import {
+  fileEntry,
+  writeBucketProjection,
+  writeOldProjection,
+} from './test-support/bucket-builder'
 import {
   compatibilityChangesBuckets,
   compatibilityProjection,
   compatibilityRecord,
   compatibilityTreeBuckets,
 } from './test-support/bucket-record'
-import { saveReaderReleaseFiles } from './test-support/reader-release'
 import {
   createFilesStorage,
   type FilesStorageHarness,
@@ -188,7 +191,7 @@ it.each(['old', 'bucket'] as const)(
     const storage = runtime.storage(`independent-${layout}`)
     let keys: string[]
     if (layout === 'old') {
-      await saveReaderReleaseFiles(storage, projection)
+      await writeOldProjection(storage, projection)
       keys = [`${FILES_KEY}:tree:0`, `${FILES_KEY}:changes:0`]
     } else {
       keys = Object.keys(await writeBucketProjection(storage, projection))

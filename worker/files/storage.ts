@@ -164,9 +164,18 @@ export function markFilesMoved(storage: FilesStorage): Promise<void> {
         : previous.treeChunks > 0 || previous.changesChunks > 0
     if (!hasLists) return
 
-    const manifest = await convertFilesProjection(transaction, previous)
-    for (const key of bucketListChunkKeys('changes', manifest.changes))
-      await transaction.delete(key)
+    const manifest =
+      previous.layout === BUCKET_LAYOUT
+        ? previous
+        : await convertFilesProjection(transaction, {
+            ...previous,
+            changesChunks: 0,
+          })
+    const changesKeys =
+      previous.layout === BUCKET_LAYOUT
+        ? bucketListChunkKeys('changes', previous.changes)
+        : legacyChunkKeys('changes', previous.changesChunks)
+    for (const key of changesKeys) await transaction.delete(key)
     if (manifest.tree)
       manifest.tree = {
         ...manifest.tree,

@@ -21,6 +21,10 @@ async function* readBatch(storage: FilesReader, keys: readonly string[]) {
   }
 }
 
+/**
+ * Reads chunks in batches. `readBucketList` in `bucket-read.ts` has its own
+ * batched chunk reader.
+ */
 export async function* readStoredChunks(
   storage: FilesReader,
   keys: Iterable<string>,

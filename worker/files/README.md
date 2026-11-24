@@ -40,7 +40,9 @@ This module reads both layouts and writes list data in the bucket layout.
 A full report writes buckets with changed digests and writes the order text when it changes.
 A tree delta reads its affected buckets one at a time. A remove visits every tree bucket because a folder's entries can be in any bucket.
 A connection reset updates the manifest. An unavailable-tree mark and a repository move update the manifest of a bucket projection without reading list items.
-The first list write or tree mark of an old projection reads its old chunks in bounded batches and converts one entry at a time.
+The first list write or tree mark of an old projection converts retained lists one entry at a time.
+It reads the old chunks in bounded batches.
+A repository move converts the old tree and deletes the old Changes chunks.
 The same transaction writes the bucket data and manifest and removes the old keys.
 The reader release can read this layout and converts it back to the old layout on its next write after a rollback.
 A damaged projection gives HTTP 502 `file_unavailable` when read.
@@ -215,11 +217,13 @@ Chat history remains readable through its separate access path.
 ## Development
 
 Run `npm run test -- worker/files` from the repository root with Node 24.
-The tests that use `createFilesStorage` in `test-support/storage.ts` run SQLite Durable Object storage in Miniflare.
+`createFilesStorage` in `test-support/storage.ts` runs the transaction callback on a staged copy in Node.
+The adapter sends the staged writes to SQLite Durable Object storage in Miniflare.
 Its `evict` evicts the object, so that a test can check a reload.
 The bucket reader tests use `writeBucketProjection` in `test-support/bucket-builder.ts` and a fixed record with literal keys, symbols, and manifest values.
 The writer tests check which buckets each operation reads and writes.
-They check conversion in both directions and inject a failure during a standalone write to check rollback.
+They check conversion from old records to buckets and inject a failure during a standalone write to check rollback.
+[files-projection-commit.test.ts](../chat/files-projection-commit.test.ts) checks connection resets and repository moves at both native chat commit boundaries.
 `report-storage.test.ts` uses the native SQLite storage of the production workspace object.
 It checks that a part stored as one value stays readable, and that each removal also removes the chunks.
 The API tests use local D1, the existing fake runner, and FakeBoat.
