@@ -38,6 +38,7 @@ import { prepareStartSuccess, runnerStartConnected } from './start-completion'
 import { finishArchivedStart, recoverArchivedStart } from './archive-start'
 import { publishStartCompletion } from './start-result'
 import { enqueueWorkspaceStart } from './start-admission'
+import { queueStartAfterStop } from './start-after-stop'
 import { advanceStartPhases } from './start-advance'
 import type { QueueTurn } from '../chat/queue-turn'
 import {
@@ -86,6 +87,16 @@ export class WorkspaceStartCoordinator {
       this.storage,
       job,
       intent,
+    )
+  }
+
+  /** Queues the start that a pending stop held, once that stop ends. */
+  async startAfterStop(): Promise<void> {
+    await queueStartAfterStop(
+      this.storage,
+      await this.endpoint.readLifecycle(),
+      this.dependencies.now(),
+      (job, intent) => this.enqueue(job, intent),
     )
   }
 

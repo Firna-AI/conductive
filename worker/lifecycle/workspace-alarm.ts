@@ -215,6 +215,7 @@ export async function runWorkspaceAlarm(input: {
     if (requested('lifecycle') || state?.startStop === 'pending') {
       try {
         if (await lifecycle.alarm()) await input.restart?.()
+        await input.starts.startAfterStop()
         if (!state) await alarms.set('lifecycle', null)
       } catch {
         const current = await lifecycle.read()
