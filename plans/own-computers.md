@@ -812,6 +812,111 @@ November 2026.
   required and trimmed. Two computers can have the same name. Reason: no
   requirement makes the names unique.
 
+These are agent calls of the orchestrator of Milestone 11, made on 24
+November 2026.
+
+- The crate `cnd-computer` holds the computer mode. `conductive computer
+  run` is the service. `conductive computer check` prints the health
+  report: one line for each need of the server and of Podman without root,
+  and a failure when a need is missing. `conductive computer enroll --code`
+  makes the code exchange and saves the computer token. `conductive
+  computer service` writes the user unit and starts it. Reason: the install
+  and an admin then use the same checks, and the code exchange is tested
+  Rust code.
+- The Worker serves the install script at `/install-computer` on the
+  marketing hostname, from `image/computer/install.sh`. The script runs as
+  a user who can use sudo. It checks Linux on x86_64, systemd, Podman 4 or
+  later, `newuidmap` and `newgidmap`, and cgroups v2. It makes the user
+  `conductive` with subordinate IDs, delegates the cpu, memory, and pids
+  controllers to the user manager of that user, and turns on lingering. It
+  installs the program of the newest release under the home of that user,
+  then runs check, enroll, and service as that user. Each step can run
+  again. Reason: Podman without root needs these settings.
+- The install script checks only the digest of the first program, as the
+  bootstrap of a cloud build does. The program checks the signature of
+  each later release. Reason: the token that writes the release bucket
+  also deploys the Worker that serves the script, so a signature check in
+  the script stops no holder of that token.
+- `ComputerRelease.digest` is the SHA-256 digest of the program archive of
+  the release: the `sha256` of its signed newest-version JSON. The program
+  makes that JSON again from the version and the digest with the function
+  of the packager, and checks its signature. Reason: each release then has
+  a fixed address and a signature check, with no new published file.
+- The updater gets a pinned install: `conductive update check --bootstrap
+  --release <version> --digest <sha256>`. The bootstrap operation and the
+  build of the container base image use it. Reason: the updater installs
+  only the newest release today, and the bootstrap installs the release of
+  the Worker.
+- `image/computer/Containerfile` builds the container base image in two
+  stages. The stage `tools` runs the install scripts of the E2B template
+  unchanged on `ubuntu:24.04`, with systemd as the first process, the user
+  `user` with sudo, and a build stub of `systemctl` that skips the reload
+  and the starts. The last stage installs the pinned release. Reason: the
+  E2B template and own computers then have one source for their base, and
+  no unit can start during an image build.
+- A separate job of the deploy run builds the container base image after
+  the release publish. It saves the image with `podman save --format
+  oci-archive`, signs it with `cnd-release` and the release key, and
+  uploads it to the bucket `conductive-runner`: the archive at a key with
+  its digest, and a signed JSON file at a key that the version and the
+  digest of the release give. A rerun skips a release whose JSON file
+  exists. Reason: this needs no registry, no new secret, and no new token.
+- Each container has the Podman name `conductive-<name>`. Org images are
+  `localhost/conductive/org-<name>`, and the base image of a release is
+  `localhost/conductive/base:<version>`. A create makes and starts the
+  container, then writes its env file. A start starts a stopped container,
+  keeps a running one, and writes the env file. A get gives `missing` for
+  an unknown container. A delete of an unknown container succeeds. A start,
+  a stop, a save, or a bootstrap of an unknown container replies
+  `not_found`. A create of a name that exists, and a save to an image that
+  exists, reply `already_exists`. A bootstrap of a stopped container
+  replies `invalid_request`. Reason: the provider path also makes and
+  starts a sandbox in one call, and gives the env at a create and at a
+  resume.
+- Each container runs systemd with `--systemd=always`, the CPU and memory
+  limits of the request, at most the size of the server, and `/tmp` on an
+  anonymous volume. Reason: `/tmp` is on the disk of a cloud computer too,
+  and a volume stays out of each saved image.
+- The env file is `/run/ascii-secrets/env.sh` in the running container,
+  owned by `user`, with mode 0600. The computer writes it with `podman
+  exec`, with the content on standard input. No value goes into a command
+  argument or the container settings. Reason: `/run` is in memory, so no
+  saved image holds the env, and `podman commit` keeps the container
+  settings.
+- The bootstrap operation checks the signature and the digest of the
+  release, copies its program into the running container, installs the
+  release with the pinned install, confirms it with `update started` as a
+  build does, and restarts only the host service. Reason: the host program
+  then runs the new release, and the runner keeps its turns. The updater
+  change of Milestone 9 can replace the confirmation.
+- The user unit uses `KillMode=process`. Reason: a check on 24 November
+  2026 showed that a stop of a unit with the default kills the `conmon`
+  process of each container, and `podman stop` then hangs.
+- The computer mode checks for a new release every 10 minutes. It checks
+  the signature and the digest, installs the program under
+  `~/.local/share/conductive/versions/`, switches `current`, and exits
+  while no request runs, so that systemd starts the new release. A new
+  release that exits 5 times before it runs 60 seconds or gets a welcome
+  goes back to the previous release, which then never installs it again.
+  Reason: a release that stops at its start would stop all later updates.
+  A release that runs but cannot connect stays, because an outage of the
+  Worker must not refuse a good release.
+- The computer mode accepts a plain `http` origin or release server only
+  on a loopback host. Reason: the local Worker serves HTTP for tests, and a
+  token on a loopback socket stays on the machine.
+- After a failed attempt, the computer mode waits 1 to 30 seconds with
+  jitter. It waits 60 seconds after a close for an unsupported version,
+  and 5 minutes after a refusal with HTTP 401. Reason: a revoked token
+  gets the same refusal at each attempt.
+- The hello gives the available vCPUs, the total memory, and the system as
+  `NAME VERSION_ID · <architecture>` from `/etc/os-release`, at most 256
+  characters with no control character. Reason: the mockups show
+  "Ubuntu 24.04 · x86_64", and the Worker refuses longer text.
+- On the computer, a create, a save, and a bootstrap end after 14 minutes,
+  and other operations after 50 seconds, with `error internal`. Both limits
+  end before the limit of the Worker. The operations on one container run
+  one at a time, and the downloads of one base image are shared.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -1161,10 +1266,22 @@ Depends on: 3, 10
 - [ ] Add the computer mode of `conductive`: the install command, the
       rootless Podman check, the systemd user service, and the health
       report.
+      Branch: calummoore/own-computers-milestone-11-host-program-3jbp
 - [ ] Publish the signed container base image with each deploy.
+      Branch: calummoore/own-computers-milestone-11-host-program-3jbp
 - [ ] Add the container operations, with the bootstrap operation.
+      Branch: calummoore/own-computers-milestone-11-host-program-3jbp
 - [ ] Report the vCPUs, the memory, and the system of the computer at each
       connection, for the Own computers tab.
+      Branch: calummoore/own-computers-milestone-11-host-program-3jbp
+- [ ] Let the computer mode update itself with each release, after a check
+      of the signature, as
+      [The computer connection](../docs/protocol/own-computers.md#the-computer-connection)
+      says.
+      Branch: calummoore/own-computers-milestone-11-host-program-3jbp
+- [ ] Test the computer mode against a local Worker and Podman without
+      root. Save the results under `.context/own-computers/m11/`.
+      Branch: calummoore/own-computers-milestone-11-host-program-3jbp
 
 ## Milestone 12: Workspaces on own computers
 
