@@ -104,6 +104,8 @@ describe('Explain by a selection', () => {
         quote: 'Manual entry still works',
         before: 'The checkout form now suggests addresses. ',
         after: '.',
+        // The app chooses a new ID for each start.
+        promptId: expect.any(String),
       },
     ])
     const tabs = tabNames()
@@ -154,6 +156,7 @@ describe('Explain by a selection', () => {
       quote: 'manual fields',
       before: 'Add address autocomplete to the checkout form. Keep the ',
       after: ' as a fallback.',
+      promptId: expect.any(String),
     })
   })
 

@@ -17,10 +17,12 @@ const noneSent: readonly string[] = []
  * quote and Close in its header and no Expand, because no tab exists before
  * Send. Its chat is empty, screen readers hear Ask as its name, and the
  * field of the question takes the focus as it opens. Send is off while the
- * field holds only white space, and busy while the start waits. On a
- * computer it keeps to the box over the kept quote, and on a phone it is
- * the sheet at half height. While the cloud computer does not run, the
- * field stays, because Send starts the cloud computer.
+ * field holds only white space, and busy while the start waits. After
+ * Send, the field takes the focus, also from Send after a press or a key on
+ * it, so the member types on while the start waits. On a computer it keeps
+ * to the box over the kept quote, and on a phone it is the sheet at half
+ * height. While the cloud computer does not run, the field stays, because
+ * Send starts the cloud computer.
  */
 export function AskPopover(props: {
   ask: UnsentAsk
@@ -34,6 +36,10 @@ export function AskPopover(props: {
 }) {
   const field = useRef<FieldHandle>(null)
   const { ask } = props
+  const send = () => {
+    props.onSend()
+    field.current?.focus()
+  }
   return (
     <ExplainPopover
       anchor={props.anchor}
@@ -55,9 +61,9 @@ export function AskPopover(props: {
           <AskField
             handle={field}
             onChangeText={props.onChangeText}
-            onSend={props.onSend}
+            onSend={send}
             ready={canSend(ask)}
-            sending={ask.question !== null}
+            sending={ask.start?.waits === true}
             text={ask.text}
           />
         }

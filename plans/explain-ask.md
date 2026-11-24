@@ -52,7 +52,10 @@ Design calls of the agent, on 24 November 2026:
   no attachments. Reason: the follow-up field has no attach button either.
 - Close, Escape, or a press outside before Send drops the typed text. The
   focus then goes back to the chat of the parent session. Reason: nothing
-  started, so no session holds a draft.
+  started, so no session holds a draft. Narrowed by the later calls of the
+  documentation milestone: only Close and Escape give the focus to the
+  chat, a press outside moves no focus, and on a phone a press outside
+  keeps the sheet open.
 - A failed start keeps the unsent popover open with its text. The parent
   chat shows the notice of a failed Explain. Reason: the member loses no
   typed text.
@@ -145,6 +148,62 @@ Design calls of the agent, on 24 November 2026:
   - The Explain README says that the chat does not show Ask yet. Milestone
     4 removes that sentence and adds Ask to its Key code and Tests.
     Reason: a README marks nothing as built that is not built.
+- Calls of the orchestrator on the findings of the first review, on 24
+  November 2026:
+  - One store operation moves the text typed during the wait of an Ask: it
+    puts that text before the text of the draft of the new explanation,
+    and the files and a send that waits stay. The move runs once, when the
+    chat shows the written prompt or at the reply, whichever comes first.
+    Reason: a late reply replaced the text that the member typed in the
+    new tab.
+  - Each write to an Ask names its parent session. A press, a change, and
+    a close act on the Ask of the shown session, and the outcome of a
+    start acts on the Ask of its own parent session. Reason: a new Ask, a
+    press on Explain, or a mark in another session erased the question of
+    a failed start. The unsent Ask moves into the chat store after the
+    merge.
+  - Each start of Explain and of Ask sends a `promptId`, which the Worker
+    gives to the written prompt, and a repeat with the same ID gives the
+    same explanation. After a failure with no answer or a server error,
+    the chat waits for that written prompt. When the chat shows it, the
+    notice and the question go, and the unsent popover becomes the popover
+    of the new explanation. A refusal is a real failure. A Send of the
+    same question sends the same `promptId`. Reason: the rule of
+    [Messages](../docs/protocol/messages-and-attachments.md#messages) for
+    a lost reply. A match by text was rejected, because two Asks about
+    the same passage can have the same text.
+  - After Send, the field of the question takes the focus through its
+    handle, also after a press or a key on Send. Reason: Send kept the
+    focus.
+  - The protocol says that the fast mode of an explanation is off unless
+    its start request turns it on, as for `create_session`, with no change
+    of the code. Reason: the route of Explain took a choice on `main`.
+  - Close and Escape give the focus to the chat, and a press outside moves
+    no focus. `explain-popover.md` states the rule of a press outside once,
+    and the mockup copy gives only the result of a close before Send.
+    Reason: the docs gave rules that did not agree.
+  - The popover of the explanation that an Ask started opens only while
+    the parent session shows. Reason: a late reply closed a popover or a
+    menu that the member opened in another session.
+  - The fake start of the Ask tests shows the new session and its written
+    prompt in the stream before its reply, as the Worker does. Reason:
+    without these events, no test showed the faults of a late reply.
+- Agent calls of the fix of the first review, on 24 November 2026:
+  - After a refused start, the chat waits for no written prompt of it, and
+    the next Send is a new start with a new `promptId`. Reason: a refusal,
+    such as `message_id_conflict`, can say that the ID belongs to another
+    start.
+  - A Send keeps the `promptId` only for the same question, without the
+    white space at its ends. Reason: the Worker refuses another start
+    under the same ID.
+  - When the chat shows the written prompt of a start that failed, the
+    question leaves the field while the field still starts with it, and
+    the rest of the text goes into the draft. A field that no longer starts
+    with the question gives all of its text. Reason: the member loses no
+    typed text.
+  - A start of Explain whose written prompt the chat already shows at a
+    server error counts as started, so its popover opens and no notice
+    shows. Reason: the start did happen.
 
 Contract owners:
 

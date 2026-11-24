@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { explainSessionPath } from '../../shared/sessions'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import {
   askedText,
@@ -32,12 +33,17 @@ async function failingChat() {
 type Chat = Awaited<ReturnType<typeof failingChat>>
 
 /** The stream shows the message of the member with this client ID. */
-function accept(chat: Chat, messageId: string, text: string): void {
+function accept(
+  chat: Chat,
+  messageId: string,
+  text: string,
+  sessionId: string = id,
+): void {
   chat.emit({
     type: 'message.accepted',
     message: {
       id: messageId,
-      sessionId: id,
+      sessionId,
       sender: {
         id: 'cal',
         githubLogin: 'calummoore',
@@ -142,5 +148,60 @@ describe('a failed send whose message still arrives', () => {
     streamLinked(chat)
     expect(chat.controller.getSnapshot().notice).toBeNull()
     expect(chat.draftOf(id)).toMatchObject({ text: '', sendId: null })
+  })
+})
+
+const explainPath = explainSessionPath(FAKE_IDS.org, FAKE_IDS.workspace, id)
+const isStart = (request: Request) =>
+  request.method === 'POST' && new URL(request.url).pathname === explainPath
+const quote = {
+  messageId: 'answer-1',
+  quote: 'Manual entry still works',
+  before: '',
+  after: '',
+}
+const prompt = 'Explain "Manual entry still works"'
+
+/** A chat whose starts of an explanation fail with a server error. */
+async function failingStarts(hold?: (request: Request) => boolean) {
+  const chat = chatFor({
+    conversation: 'history',
+    hold,
+    answer: async (request) => (isStart(request) ? serverError() : null),
+  })
+  await chat.controller.start()
+  return chat
+}
+
+describe('a failed start of an explanation whose written prompt still arrives', () => {
+  it('names the written prompt with a new ID, and drops the notice when the stream shows it later', async () => {
+    const chat = await failingStarts()
+    const outcome = await chat.controller.explain(id, quote)
+    const failed = notice(chat)?.title
+    accept(chat, 'client-1', prompt, 'explain-new')
+    expect({
+      outcome,
+      failed,
+      bodies: await chat.bodies('POST', explainPath),
+      notice: notice(chat),
+    }).toEqual({
+      outcome: { kind: 'unknown' },
+      failed: "The explanation didn't start",
+      bodies: [{ ...quote, promptId: 'client-1' }],
+      notice: null,
+    })
+  })
+
+  it('gives the explanation and no notice when the stream showed the written prompt before a server error', async () => {
+    const chat = await failingStarts(isStart)
+    const starting = chat.controller.explain(id, quote)
+    await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
+    accept(chat, 'client-1', prompt, 'explain-new')
+    chat.held.splice(0, 1)[0]()
+    expect(await starting).toEqual({
+      kind: 'started',
+      sessionId: 'explain-new',
+    })
+    expect(notice(chat)).toBeNull()
   })
 })

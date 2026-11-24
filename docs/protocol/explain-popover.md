@@ -104,6 +104,9 @@ marks and the popover at `app/chat/explain`.
   press in a part that the popover opens, such as a menu, keeps it too.
   The user chose this on 23 November 2026. Reason: the popover then closes
   as the other panels and menus of the app do.
+- A press outside moves no focus, so the focus goes where the press puts
+  it. This holds for each popover, also for an unsent popover. Reason: the
+  member chose that place with the press.
 
 ### Keys and focus
 

@@ -134,7 +134,7 @@ async function explain(backend: DevBackend, parent: Session, request: Request) {
   const heading = asked || `Explain "${firstLine}"`
   backend.count += 1
   return accept(backend, session, {
-    id: `dev-explain-${backend.count}`,
+    id: text(body.promptId) || `dev-explain-${backend.count}`,
     text: `${heading}\n\nKeep the answer short, because it shows in a small popover.`,
     attachments: [],
     choice,

@@ -106,6 +106,19 @@ export function failSend(draft: Draft, failed: FailedSend): Draft {
   }
 }
 
+/**
+ * The draft after text that arrives late joins it, such as the text that the
+ * member typed in the unsent popover of an Ask while its start waited. That
+ * text came first, so it goes before the text of the draft. The files and a
+ * send that waits stay. A changed draft is a new message, as after an edit,
+ * so the client ID of a failed send goes.
+ */
+export function withEarlierText(draft: Draft, text: string): Draft {
+  if (text === '') return draft
+  const parts = [text, draft.text].filter((part) => part !== '')
+  return { ...draft, text: parts.join('\n'), sendId: null }
+}
+
 /** A stopped chat ends its files and removes their marks in the same snapshot. */
 function endDraftFiles(draft: Draft): Draft {
   return {

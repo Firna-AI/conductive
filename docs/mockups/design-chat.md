@@ -248,11 +248,10 @@ port previews.
     and place by its kept text. On a phone it is the same sheet at half
     height. Its header shows the quote and the close button, with no
     Expand, because no session exists yet. Its chat is empty, and the field
-    at its foot has the focus, with Send off while it is empty. Close,
-    Escape, or a press outside drops the question and starts nothing. After
-    Send, the field is empty again for a follow-up, the text takes its
-    mark, and the popover shows the chat of the new session as for
-    Explain.
+    at its foot has the focus, with Send off while it is empty. A close
+    before Send drops the question and starts nothing. After Send, the
+    field is empty again for a follow-up, the text takes its mark, and the
+    popover shows the chat of the new session as for Explain.
 - `FollowUpField` draws the box at the foot of the popover: one line that
   grows to four, Stop while a turn runs, and Send. A follow-up is a message
   of the session, so while a turn runs it steers that turn. The box has no

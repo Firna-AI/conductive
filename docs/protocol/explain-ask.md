@@ -23,9 +23,9 @@ at `app/chat/explain/ask`, with its flow at
   in the main composer was left out too, because it gives no popover and
   no mark.
 - An Ask is an explanation. So it has the anchor, the mark with its states,
-  and the default login of each explanation, and its fast mode is off.
-  Reason: the user asked for Ask to work as Explain does, apart from the
-  question.
+  the default login, and the fast mode rule of each explanation, as
+  [The explanation](explain.md#the-explanation) says. Reason: the user
+  asked for Ask to work as Explain does, apart from the question.
 
 ## The selection of an Ask
 
@@ -73,30 +73,58 @@ at `app/chat/explain/ask`, with its flow at
   [The explanation](explain.md#the-explanation) says.
 - Send stays busy while the start waits. So a second press starts no
   second explanation.
-- The field empties at Send and keeps the focus. It takes input at once,
-  also while the start waits. Reason: the composer clears at once in the
-  same way, as [Messages](messages-and-attachments.md#messages) says.
+- The field empties at Send and has the focus, also when the member
+  pressed Send. It takes input at once, also while the start waits.
+  Reason: the composer clears at once in the same way, as
+  [Messages](messages-and-attachments.md#messages) says.
+- The explanation has started when the chat shows its written prompt or
+  gets the reply of the start, whichever comes first.
 - When the explanation starts, the quote takes its mark, and the unsent
   popover becomes the popover of the new explanation. Its header then
   shows Expand.
 - Text that the member typed while the start waited goes into the draft of
-  the new explanation. So the follow-up field of its popover shows that
-  text.
+  the new explanation, before any text that the draft already holds. The
+  files of that draft stay. So the follow-up field of its popover shows
+  that text, and text that the member typed in the tab of the explanation
+  stays.
 - When the start fails, the unsent popover stays open. The question goes
   back into the field, before any text that the member typed during the
   wait. The parent chat shows the notice of a failed Explain. Reason: the
   member loses no typed text, as with a message that the Worker refuses.
+- A start that fails with no answer or with a server error can still have
+  reached the Worker, as [Messages](messages-and-attachments.md#messages)
+  says for a send. When the chat later shows its written prompt, the
+  explanation did start. The notice then goes, and the question leaves the
+  field. The unsent popover becomes the popover of the new explanation, and
+  the rest of the text of the field goes into its draft. Reason: a notice
+  and a question of a start that the chat shows tell the member to start
+  it a second time.
+- A Send of the same question after such a failure is the same start
+  again, so no second explanation starts when the first start reached the
+  Worker. A start that the Worker refused is a real failure, so the next
+  Send is a new start.
 - Close and Escape close the unsent popover. On a computer, a press
   outside it closes it too, as
   [Expand and Close](explain-popover.md#expand-and-close) says for each
   popover.
 - A close before Send drops the question and starts nothing, so no tab
-  opens. The focus then goes back to the chat of the parent session.
-  Reason: nothing started, so no session holds a draft.
+  opens. Reason: nothing started, so no session holds a draft.
+- After Close or Escape, the focus goes to the chat of the parent session.
+  A press outside moves no focus, as
+  [Expand and Close](explain-popover.md#expand-and-close) says. Reason: the
+  chat is the place that the protocol names, and no control of the popover
+  stays.
 - A close while the start waits stops nothing, because the request has
-  gone. The reply then opens the popover of the new explanation, as the
-  reply of Explain does. A failed start opens the unsent popover again,
-  with the question in the field. Reason: the member loses no typed text.
+  gone. When the explanation starts, its popover opens, as the reply of
+  Explain opens it. A failed start opens the unsent popover again, with
+  the question in the field. Reason: the member loses no typed text.
+- The popover of the new explanation opens only while the parent session
+  shows. A popover or a menu that the member opened in another session
+  stays. Reason: a late reply never changes what another session shows.
+- A start that fails while another session shows opens the unsent popover
+  again when the parent session shows. An Ask, a press on Explain, or a
+  popover in another session leaves that question as it is. Reason: the
+  member loses no typed text.
 - Before Send, another popover that opens in its place drops the question
   in the same way, because at most one popover is open, as
   [Keys and focus](explain-popover.md#keys-and-focus) says.

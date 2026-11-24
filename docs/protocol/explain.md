@@ -160,10 +160,12 @@ gives the look of each part.
   [The default login](org-logins.md#the-default-login) says. It takes the
   saved default model and effort of that member, or the default choice of
   the app when the member saved none.
-- Fast mode is off for an explanation, also when the saved default has it
-  on. Reason: Explain and Ask do not spend a login at the higher price of
-  [fast mode](fast-mode.md), as a session that `create_session` starts
-  does not.
+- The fast mode of an explanation is off unless its start request turns it
+  on, also when the saved default has it on, as
+  [Start a session](session-calls.md#start-a-session) says for
+  `create_session`. Explain and Ask in the app do not turn it on. Reason:
+  an explanation does not spend a login at the higher price of
+  [fast mode](fast-mode.md) unless its request asks for it.
 - The written prompt is a normal message, so it follows the rules of
   [Messages](messages-and-attachments.md#messages). It also starts the cloud
   computer when the workspace does not run, in the same cases and with the

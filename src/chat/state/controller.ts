@@ -27,7 +27,12 @@ import {
 import { addToChat, takeMention } from './mention-actions'
 import { chooseModel } from './model-actions'
 import { draftFileSource } from './draft-file-source'
-import { explainQuote, sendFollowUp } from './explain-actions'
+import {
+  addEarlierText,
+  explainQuote,
+  sendFollowUp,
+  type ExplainOutcome,
+} from './explain-actions'
 import { sendPrompt, type PromptOutcome } from './prompt-actions'
 import { moveTab } from './tab-actions'
 import type { TabPlace } from './tab-order'
@@ -121,16 +126,21 @@ export class ChatController extends ChatRuns {
   readonly takeMention = (request: MentionRequest) =>
     takeMention(this.context, request)
   /**
-   * Starts an explanation of a quote, as `explainQuote` says, and gives the
-   * ID of its session. A read-only workspace starts none.
+   * Starts an explanation of a quote, as `explainQuote` says, and gives how
+   * it ended. A read-only workspace starts none.
    */
   readonly explain = (
     parentId: string,
     request: ExplainSessionRequest,
-  ): Promise<string | null> =>
+  ): Promise<ExplainOutcome> =>
     this.readOnly()
-      ? Promise.resolve(null)
+      ? Promise.resolve({ kind: 'refused' })
       : explainQuote(this.context, parentId, request)
+  /** A new ID for the written prompt of a start, as `explainQuote` says. */
+  readonly newPromptId = (): string => this.context.newId()
+  /** Puts late text before the draft of a session, as `addEarlierText` says. */
+  readonly addEarlierText = (sessionId: string, text: string) =>
+    addEarlierText(this.context, sessionId, text)
   /**
    * Sends the draft of a session from the popover of an explanation, `view`,
    * as `sendFollowUp` says.

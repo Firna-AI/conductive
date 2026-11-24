@@ -15,6 +15,24 @@ export function shownMessageIds(snapshot: ChatSnapshot): Set<string> {
 }
 
 /**
+ * The session whose transcript shows the member message with this client
+ * ID, if any, such as the written prompt of an explanation that the app
+ * named.
+ */
+export function sessionShowing(
+  snapshot: ChatSnapshot,
+  messageId: string,
+): string | null {
+  for (const [sessionId, state] of Object.entries(snapshot.sessionStates)) {
+    const shown = state.transcript.items.some(
+      (item) => item.kind === 'user' && item.message.id === messageId,
+    )
+    if (shown) return sessionId
+  }
+  return null
+}
+
+/**
  * The snapshot after a transcript shows messages whose send failed. A send
  * with no answer, or with a server error, can still reach the Worker, as
  * `isRefusal` says. When a transcript then shows the message by its client

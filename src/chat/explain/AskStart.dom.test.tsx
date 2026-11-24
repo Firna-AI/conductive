@@ -1,4 +1,5 @@
 // @vitest-environment happy-dom
+import { act } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import {
   byLabel,
@@ -15,15 +16,14 @@ import {
   typeText,
   waitFor,
 } from '../../test-support/mount'
+import { answerStarts, startBodies } from './ask-start-kit'
 import {
-  answerStarts,
   askBody,
   askQuote,
   openAsk,
   question,
   questionField,
   selectQuote,
-  startBodies,
 } from './ask-test-kit'
 import { mountChat, readHighlights } from './explain-test-kit'
 
@@ -35,7 +35,7 @@ describe('Ask by a selection', () => {
   it('opens the unsent popover with the quote kept and the field focused, keeps Send off for white space, and Send starts the explanation of the question', async () => {
     const highlights = readHighlights()
     const { server } = await mountChat({
-      setup: (fake) => answerStarts(fake, [{ starts: true }]),
+      setup: (fake) => answerStarts(fake, [{ ends: 'started' }]),
     })
     const ask = await selectQuote()
     const explain = byRole('button', 'Explain')
@@ -89,15 +89,18 @@ describe('Ask by a selection', () => {
     })
   })
 
-  it('empties the field at Send, keeps Send busy while the start waits, and gives the text typed during the wait to the follow-up field of the new explanation, with the focus', async () => {
+  it('empties the field at Send and gives it the focus from a focused Send, keeps Send busy while the start waits, and gives the text typed during the wait to the follow-up field of the new explanation, with the focus', async () => {
     const reply = deferred()
     const { server } = await mountChat({
       setup: (fake) =>
-        answerStarts(fake, [{ waits: reply.promise, starts: true }]),
+        answerStarts(fake, [{ accepts: reply.promise, ends: 'started' }]),
     })
     const popover = await openAsk()
     await typeText(questionField(popover), question)
-    await press(byRole('button', 'Send', popover))
+    // A key or a click on a focused Send leaves the focus on Send.
+    const send = byRole('button', 'Send', popover)
+    await act(async () => send.focus())
+    await press(send)
     const field = questionField(popover)
     const sent = {
       field: messageText(field),
@@ -131,7 +134,7 @@ describe('Ask by a selection', () => {
     const reply = deferred()
     await mountChat({
       setup: (fake) =>
-        answerStarts(fake, [{ waits: reply.promise, starts: false }]),
+        answerStarts(fake, [{ accepts: reply.promise, ends: 'refused' }]),
     })
     const popover = await openAsk()
     await typeText(questionField(popover), question)
@@ -161,7 +164,7 @@ describe('Ask by a selection', () => {
   it('keeps the field of the question while the cloud computer is stopped, and Send starts the explanation', async () => {
     const { server } = await mountChat({
       workspaceState: 'stopped',
-      setup: (fake) => answerStarts(fake, [{ starts: true }]),
+      setup: (fake) => answerStarts(fake, [{ ends: 'started' }]),
     })
     const popover = await openAsk()
     expect({

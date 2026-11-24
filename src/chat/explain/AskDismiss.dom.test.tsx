@@ -10,8 +10,8 @@ import {
   typeText,
   waitFor,
 } from '../../test-support/mount'
+import { answerStarts, startBodies, startPromptIds } from './ask-start-kit'
 import {
-  answerStarts,
   askBody,
   openAsk,
   parentAnswer,
@@ -19,7 +19,6 @@ import {
   question,
   questionField,
   selectQuote,
-  startBodies,
 } from './ask-test-kit'
 import { mountChat, readHighlights } from './explain-test-kit'
 import { explained, openFromMark } from './popover-test-kit'
@@ -37,7 +36,7 @@ async function openWithQuestion(): Promise<HTMLElement> {
 }
 
 describe('a close of the unsent popover', () => {
-  it('drops the question and starts nothing at Escape, at a press outside, when a mark opens its popover in its place, and at a change of the shown session', async () => {
+  it('drops the question and starts nothing at Escape, at a press outside, which moves no focus, when a mark opens its popover in its place, and at a change of the shown session', async () => {
     const highlights = readHighlights()
     const other = explained('explain-1', 'checkout form')
     const { server } = await mountChat({ stored: other.events })
@@ -51,7 +50,10 @@ describe('a close of the unsent popover', () => {
     const reopened = messageText(questionField(await openAsk()))
     await typeText(questionField(byRole('dialog', 'Ask')), question)
     await pointerDown(parentAnswer())
-    const outside = queryByRole('dialog', 'Ask')
+    const outside = {
+      popover: queryByRole('dialog', 'Ask'),
+      focus: document.activeElement === byRole('region', 'Chat'),
+    }
     await openWithQuestion()
     await openFromMark('Explain "checkout form"', 'Ready')
     const replaced = queryByRole('dialog', 'Ask')
@@ -68,21 +70,21 @@ describe('a close of the unsent popover', () => {
     }).toEqual({
       escaped: { popover: null, kept: [], focus: true },
       reopened: '',
-      outside: null,
+      outside: { popover: null, focus: false },
       replaced: null,
       session: null,
       bodies: [],
     })
   })
 
-  it('stops nothing while the start waits: a failed start opens the unsent popover again with the question, and a start opens the popover of the new explanation', async () => {
+  it('stops nothing while the start waits: a failed start opens the unsent popover again with the question, its Send is the same start again, and a start opens the popover of the new explanation', async () => {
     const failing = deferred()
     const starting = deferred()
     const { server } = await mountChat({
       setup: (fake) =>
         answerStarts(fake, [
-          { waits: failing.promise, starts: false },
-          { waits: starting.promise, starts: true },
+          { accepts: failing.promise, ends: 'failed' },
+          { accepts: starting.promise, ends: 'started' },
         ]),
     })
     const popover = await openWithQuestion()
@@ -109,12 +111,16 @@ describe('a close of the unsent popover', () => {
       closedAgain,
       focus: document.activeElement === shown,
       bodies: await startBodies(server),
+      // A server error can come after the start, so the Send of the same
+      // question names the same written prompt.
+      prompts: new Set(await startPromptIds(server)).size,
     }).toEqual({
       closed: null,
       field: question,
       closedAgain: null,
       focus: true,
       bodies: [askBody, askBody],
+      prompts: 1,
     })
   })
 

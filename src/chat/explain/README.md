@@ -54,9 +54,14 @@ for the screens.
 - The key of Explain the selection is offered only while Explain shows.
 - A press calls `ChatController.explain`, which posts the selection to the
   route of the Worker with no choice, so the saved default of the member
-  applies. Its reply shows the tab of the explanation at once, through
-  `takeReply`, and the popover opens. A failure shows a notice in the
-  parent chat.
+  applies, and with a new `promptId`, the ID of the written prompt. Its
+  reply shows the tab of the explanation at once, through `takeReply`, and
+  the popover opens. A failure shows a notice in the parent chat. A
+  failure with no answer or a server error can still have reached the
+  Worker. A start whose written prompt a transcript already shows then
+  counts as started. Else the notice names the written prompt, so it goes
+  when a transcript shows it, as `withLateSends` says. `explainQuote` gives
+  the outcome, an `ExplainOutcome`.
 - A mark finds its quote in the text of its message with the text around
   it, which picks among repeats. A quote that no longer matches as it is
   matches with each run of white space as one space. When the text holds
@@ -122,8 +127,8 @@ for the screens.
 
 The code of Ask follows these rules, and
 [Explain: Ask](../../../docs/protocol/explain-ask.md) gives its
-requirements. `useAsk` holds the unsent Ask, and `ask-state.ts` gives each
-of its steps.
+requirements. `useAsk` holds the unsent Ask of each parent session, and
+`ask-state.ts` gives each of its steps.
 
 - Ask follows Explain in the bar of `FloatingExplain` and in `PhoneExplain`,
   and it shows whenever Explain shows. It follows Explain in the order of
@@ -152,35 +157,53 @@ of its steps.
 - While the cloud computer does not run, the field stays, and the bar of
   `sandboxParts` takes no place there. Send starts the cloud computer, as
   a press on Explain does.
-- Send calls `ChatController.explain` with the saved selection and the
-  question. Send is busy while the start waits, as Explain is, so a second
-  press starts nothing. While a start of Explain or of Ask waits, the other
-  button of the bar is off, so one start waits at a time.
-- The field empties at Send and keeps the focus, and it takes input while
-  the start waits, as the composer clears at once after a send.
-- The reply shows the tab of the explanation through `takeReply`. The
-  popover of the new explanation then takes the place of the unsent
-  popover. Text typed while the start waited goes into the draft of the
-  new explanation, so its follow-up field shows that text. When the unsent
-  popover still showed at the reply, that field takes the focus. After a
-  close during the wait, the new popover takes the focus, as for Explain.
+- Send calls `ChatController.explain` with the saved selection, the
+  question, and the `promptId` that `nextStart` gives. Send is busy while
+  the start waits, as Explain is, so a second press starts nothing. While
+  a start of Explain or of Ask waits, the other button of the bar is off,
+  so one start waits at a time.
+- The field empties at Send and takes the focus through the handle that
+  `AskPopover` owns, also after a press or a key on Send. It takes input
+  while the start waits, as the composer clears at once after a send.
+- A start settles once: when a transcript shows its written prompt by its
+  `promptId`, as `shownStarts` finds it, or at the reply, whichever comes
+  first. The text typed while the start waited then goes into the draft of
+  the new explanation through `ChatController.addEarlierText`, before the
+  text of that draft, and its files and a send that waits stay. So the
+  follow-up field shows that text, and text typed in the tab stays.
+- The popover of the new explanation then takes the place of the unsent
+  popover, only while the parent session shows, so a popover or a menu of
+  another session stays. When the unsent popover still showed, its
+  follow-up field takes the focus. After a close during the wait, the new
+  popover takes the focus, as for Explain.
 - The popover of the new explanation hides the written prompt, as for
   Explain, so it does not show the question.
 - A failed start keeps the unsent popover open. The question goes back
   into the field, before any text typed during the wait, as a refused
   message goes back into the composer. The parent chat shows the notice
   of a failed Explain, `explainFailedTitle`.
+- A start that failed with no answer or a server error stays in the Ask.
+  A Send of the same question sends its `promptId` again. When a
+  transcript later shows its written prompt, the Ask settles: the notice
+  goes, the question leaves the field, as `movedText` says, and the rest
+  of the text goes into the draft. After a refusal, the next Send is a new
+  start.
 - Before Send, Close, Escape, and on a computer a press outside drop the
   unsent popover with its question, and they start nothing. Another
   popover that opens in its place, and a move away from the session of the
   Ask, drop it in the same way. A sheet on a phone stays open at a press
   outside. Close and Escape give the focus to the chat, the `ChatPane`
-  section, which takes the focus only from code.
-- A close while the start waits stops nothing: the reply opens the popover
-  of the new explanation, and a failed start opens the unsent popover
-  again. The popover shows only over the chat of the session of the Ask,
+  section, which takes the focus only from code. A press outside moves no
+  focus.
+- A close while the start waits stops nothing: the settle opens the
+  popover of the new explanation, and a failed start opens the unsent
+  popover again. The popover shows only over the chat of the session of the Ask,
   so a failed start while another session shows opens it when that
   session shows again.
+- Each write names its parent session. A press, a change, and a close act
+  on the Ask of the shown session, and the outcome of a start acts on the
+  Ask of its own parent session. So an Ask, a press on Explain, or a
+  popover in another session leaves the Ask of a failed start as it is.
 - A read-only workspace shows no Ask.
 
 ## Tests
@@ -216,21 +239,35 @@ of its steps.
 - `AskStart.dom.test.tsx` opens the unsent popover from a selection, with
   the kept highlight and the focus in the field, Ask just after Explain,
   and Send off for white space. Send starts the explanation with the
-  question, and its popover hides the written prompt. It checks text typed
-  while the start waits, which goes into the follow-up field of the new
-  explanation, Send busy during the wait, and a failed start, which keeps
-  the unsent popover with the question before the typed text. While the
-  cloud computer is stopped, the field stays and Send starts.
+  question, and its popover hides the written prompt. It checks the focus
+  of the field after a press on a focused Send, text typed while the start
+  waits, which goes into the follow-up field of the new explanation, Send
+  busy during the wait, and a failed start, which keeps the unsent popover
+  with the question before the typed text. While the cloud computer is
+  stopped, the field stays and Send starts.
 - `AskDismiss.dom.test.tsx` drops the question at Escape, at a press
-  outside, when a mark opens its popover in its place, and at a change of
-  the shown session, with no start. A close while the start waits stops
-  nothing, and on a phone Ask stands above the composer and its sheet
-  stays open at a press outside.
+  outside, which moves no focus, when a mark opens its popover in its
+  place, and at a change of the shown session, with no start. A close
+  while the start waits stops nothing, a Send after a server error sends
+  the same `promptId`, and on a phone Ask stands above the composer and
+  its sheet stays open at a press outside.
+- `AskLate.dom.test.tsx` shows a start in the stream before its reply: the
+  Ask settles at once with the text typed during the wait, and a late
+  reply leaves the text typed in the tab of the explanation. A server
+  error after the stream showed the start shows no notice and no
+  question, and a start whose reply was lost settles when the stream shows
+  it later.
+- `AskSessions.dom.test.tsx` keeps the question of a start that failed
+  while another session showed, through a new Ask, a press on Explain, and
+  a mark there. A start that ends while another session shows keeps the
+  popover there and gives the typed text to the new explanation.
 - `explain-test-kit.tsx` and `popover-test-kit.ts` hold the chat, the
   explanations, the selection, the highlights, the press on a mark that
   opens a popover, a follow-up, and the replies of the Worker.
-  `ask-test-kit.ts` holds the starts of an Ask that the fake answers and
-  the unsent popover from a selection.
+  `ask-test-kit.ts` holds the quote, the question, and the unsent popover
+  from a selection. `ask-start-kit.ts` holds the starts of an Ask that the
+  fake answers: a start that the Worker takes shows in the stream before
+  the reply, with the `promptId` of the request, as the Worker does.
 
 ### Key code
 
@@ -238,8 +275,10 @@ of its steps.
   the menu that lie open, with `popoverView`, the popover as the view that
   sends. `explain-state.ts` gives its types. `useExplainSelection.ts` reads
   the selection.
-- `useAsk.ts`: the unsent Ask, its highlight, and Send. `ask-state.ts`: the
-  steps of an unsent Ask, such as `canSend` and `failedAsk`.
+- `useAsk.ts`: the unsent Ask of each parent session, its highlight, Send,
+  and the settle of a start. `ask-state.ts`: the steps of an unsent Ask,
+  such as `canSend`, `nextStart`, `failedAsk`, `movedText`, and
+  `shownStarts`.
 - `selection.ts`: `explainableSelection`, the selection that Explain reads.
   `text-model.ts`: `textModel`, and the places of the text in the page.
 - `explanations.ts`: `explanationsOf`, the explanations of a session with
@@ -261,4 +300,6 @@ of its steps.
   presses that keep it open.
 - `explain.module.css`: only the rules of the app, such as the highlights,
   the slots, and the places.
-- `../state/explain-actions.ts`: `explainQuote` and `sendFollowUp`.
+- `../state/explain-actions.ts`: `explainQuote` with its `ExplainOutcome`,
+  `addEarlierText`, and `sendFollowUp`. `../state/late-sends.ts`:
+  `sessionShowing`, the session whose transcript shows a member message.

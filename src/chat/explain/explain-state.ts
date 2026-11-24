@@ -58,7 +58,10 @@ export interface ExplainState {
   closeMenu: () => void
   /** The text of the field of the unsent popover changed. */
   changeQuestion: (text: string) => void
-  /** Sends the question, then opens the popover of the new explanation. */
+  /**
+   * Sends the question. When the explanation starts, its popover opens
+   * while the parent session shows, as `useAsk` says.
+   */
   sendQuestion: () => void
   /** Closes the unsent popover, as `closedAsk` says. */
   closeAsk: () => void

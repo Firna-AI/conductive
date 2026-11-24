@@ -157,3 +157,27 @@ describe('a draft that moves to another session', () => {
     expect(readyIds(chat.draftOf(id)?.files ?? [])).toEqual(['attachment-1'])
   })
 })
+
+describe('text that arrives late into a draft', () => {
+  it('goes before the text of the draft, and the files and the send that waits stay', async () => {
+    const chat = chatFor({ conversation: 'history', hold: isSend })
+    await chat.controller.start()
+    chat.controller.setDraft(id, 'Check the postcode rules.')
+    const sending = chat.controller.send(id)
+    await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
+    await pickChatFiles(chat, id, [file()])
+    chat.controller.addEarlierText(id, 'Typed while the start waited.')
+    const draft = chat.draftOf(id)
+    expect({
+      text: draft?.text,
+      files: readyIds(draft?.files ?? []),
+      sending: draft?.sending,
+    }).toEqual({
+      text: `Typed while the start waited.\n${fileMark('file-1')} `,
+      files: ['attachment-1'],
+      sending: true,
+    })
+    chat.held.splice(0, 1)[0]()
+    await sending
+  })
+})

@@ -34,7 +34,9 @@ function useSameList<T>(list: readonly T[]): readonly T[] {
  * unsent popover: the popover of another mark replaces it, and a press on
  * Explain or on Ask closes it first. It stays while the menu of overlapping
  * marks shows. While a start waits, neither Explain nor Ask starts another.
- * A change of the shown session closes the popover and the menu.
+ * A change of the shown session closes the popover and the menu. The
+ * explanation that an Ask started opens its popover only while its parent
+ * session shows, so the popover and the menu of another session stay.
  */
 export function useExplain(props: ExplainProps): ExplainState {
   const { snapshot, controller, sessionId, readOnly } = props
@@ -43,7 +45,6 @@ export function useExplain(props: ExplainProps): ExplainState {
     chat,
     sessionId !== null && !readOnly,
   )
-  const asking = useAsk(controller, sessionId)
   const [explaining, setExplaining] = useState(false)
   const [popover, setPopover] = useState<OpenPopover | null>(null)
   // The popover that lies open now, for a reply that comes later.
@@ -55,6 +56,16 @@ export function useExplain(props: ExplainProps): ExplainState {
     setPopover(null)
     setMenu(null)
   }
+  // The popover of an explanation takes the place of what lies open.
+  const showPopover = useCallback(
+    (explanationId: string, focusField: boolean) => {
+      setMenu(null)
+      setPopover({ explanationId, sessionId: explanationId, focusField })
+      void controller.readHistory(explanationId)
+    },
+    [controller],
+  )
+  const asking = useAsk({ controller, sessionId, onStarted: showPopover })
   const glyphs = useRef(new Map<string, HTMLElement>())
   const [anchor, setAnchor] = useState<HTMLElement | null>(null)
   const explanations = useSameList(
@@ -69,19 +80,13 @@ export function useExplain(props: ExplainProps): ExplainState {
     : asking.waits
       ? 'ask'
       : null
-  const { press: pressAsk, send: sendAsk, close: closeAsk } = asking
-  const showPopover = useCallback(
-    (explanationId: string, focusField: boolean) => {
-      setMenu(null)
-      closeAsk()
-      setPopover({ explanationId, sessionId: explanationId, focusField })
-      void controller.readHistory(explanationId)
-    },
-    [controller, closeAsk],
-  )
+  const { press: pressAsk, close: closeAsk } = asking
   const openPopover = useCallback(
-    (explanationId: string) => showPopover(explanationId, false),
-    [showPopover],
+    (explanationId: string) => {
+      closeAsk()
+      showPopover(explanationId, false)
+    },
+    [closeAsk, showPopover],
   )
   const explain = useCallback(() => {
     if (!selection || !sessionId || starting !== null) return
@@ -91,12 +96,12 @@ export function useExplain(props: ExplainProps): ExplainState {
     setExplaining(true)
     void controller
       .explain(sessionId, { messageId, quote, before, after })
-      .then((id) => {
+      .then((outcome) => {
         setExplaining(false)
-        if (id === null) return
+        if (outcome.kind !== 'started') return
         document.getSelection()?.removeAllRanges()
         clearSelection()
-        openPopover(id)
+        openPopover(outcome.sessionId)
       })
   }, [
     controller,
@@ -112,17 +117,12 @@ export function useExplain(props: ExplainProps): ExplainState {
   // press ends it at once, with its handles and menu on a phone.
   const ask = useCallback(() => {
     if (!selection || !sessionId || starting !== null) return
-    pressAsk(selection, sessionId)
+    pressAsk(selection)
     setPopover(null)
     setMenu(null)
     document.getSelection()?.removeAllRanges()
     clearSelection()
   }, [selection, sessionId, starting, clearSelection, pressAsk])
-  const sendQuestion = useCallback(() => {
-    void sendAsk().then((started) => {
-      if (started) showPopover(started.id, started.typing)
-    })
-  }, [sendAsk, showPopover])
   useShortcutOffer('explain-selection', selection ? explain : null)
   const noteGlyph = useCallback((id: string, element: HTMLElement | null) => {
     if (element) glyphs.current.set(id, element)
@@ -201,7 +201,7 @@ export function useExplain(props: ExplainProps): ExplainState {
     },
     closeMenu: () => setMenu(null),
     changeQuestion: asking.change,
-    sendQuestion,
+    sendQuestion: asking.send,
     closeAsk,
   }
 }
