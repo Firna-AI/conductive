@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from branch `calummoore/sandbox-start-issue-secrets-q3is`, review round 1, the wider fix of finding 5.
-- **Location:** `apply`, `rollback`, and `restore_parts` in `crates/cnd-cli/src/update/engine.rs` and `crates/cnd-cli/src/update/repair.rs`.
+- **Location:** `apply` in `crates/cnd-cli/src/update/engine.rs`, `apply_release` and `rollback` in `crates/cnd-cli/src/update/activation.rs`, and `restore_parts` in `crates/cnd-cli/src/update/repair.rs`.
 - **Reason:** the branch adds a regression test for the fallback case, and the refactor waits for the decision in `plans/follow-ups/update-staged-release-missing-part.md`, which can change the selection.
 
 - **Source:** Review. **Category:** Code structure.

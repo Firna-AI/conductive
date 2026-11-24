@@ -836,7 +836,10 @@ November 2026.
   user, and turns on lingering. It
   installs the program of the newest release under the home of that user,
   then runs check, enroll, and service as that user. Each step can run
-  again. Reason: Podman without root needs these settings.
+  again. A rerun reuses a runnable installed program and moves no
+  `current`, so the signed trial of the updater stays the only way to
+  replace an installed program (review finding 82). Reason: Podman without
+  root needs these settings.
 - The install script checks only the digest of the first program. The
   program checks the signature of
   each later release. Reason: the token that writes the release bucket
@@ -1172,7 +1175,7 @@ The second options check gave most of these TODOs. Its report is in
       machine that connects with an older host version.
 - [ ] Keep each install across a stop. Today an install that no runner
       confirms rolls back at the next runner start, and its version is then
-      rejected (`crates/cnd-cli/src/update/engine.rs:40-70`). The new
+      rejected (`rollback` in `crates/cnd-cli/src/update/activation.rs`). The new
       updater marks a release that no runner started yet, and its next
       apply starts that release. Test a brief-start install, then a resume.
 - [ ] Record the host protocol version of each machine at each connection.
