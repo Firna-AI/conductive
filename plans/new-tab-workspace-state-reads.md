@@ -1,6 +1,6 @@
 # New tabs read workspace state
 
-Status: Active. On branch `calummoore/object-memory-new-tab-state-reads-cesn`, no pull request yet. Cal approved the implementation on 23 November 2026. Implementation waits for the merge of the memory plan, as "Order with the other plans" says. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `calummoore/object-memory-new-tab-state-reads-cesn`, no pull request yet. Cal approved the implementation on 23 November 2026. The memory plan merged as PR #675 on 24 November 2026, and the root coordinator gave the start signal on that day. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Each workspace stores its events in its Durable Object, numbered from 1.
 A browser tab follows them over event sockets. Today a new tab, a reload,
@@ -43,7 +43,9 @@ pull request to that session.
 
 PR #477 merged on 22 November 2026 as `6408c9523`. On 23 November 2026
 this branch merged `main` at `48b8a3a98`, in merge commit `e34a9c5ac`.
-The merge had no conflict. The refresh audit of that day is under
+The merge had no conflict. On 24 November 2026 this branch merged `main`
+at `45d1ce51e`, after PR #675, in merge commit `bea17c1ca`, also with no
+conflict. The refresh audit of that day is under
 `.context/new-tab-workspace-state-reads/prep-2026-11-23/`.
 
 Order with the other plans: the plan for workspace object history and
@@ -399,8 +401,9 @@ records the current code in calls 5 to 9, 13, and 14.
    first. Then they wait for any recovery, as the workspace read does.
    Then they read their list inside the chat queue. Today that is
    `new FilesState(view.files)` in a chat view, as each chat transaction
-   does. After the memory plan, it is that plan's projection read over the
-   `FilesStorage` of the view. The file handler of
+   does. After the memory plan, it is that plan's projection read:
+   `readFilesManifest` and `readFileList` of `worker/files/storage.ts` over
+   the `FilesStorage` of the view. The file handler of
    `worker/files/handlers.ts` has no chat handle today, so the route gets
    the read from the chat backend, as the workspace read does. The same
    view gives the cutoff, the failed repair of that list, and the
@@ -504,7 +507,7 @@ below. Code READMEs change with the code in later milestones.
 
 - [x] Confirm that Cal merged PR #477. Merge `main` into this branch with
       the `git-merge` skill.
-- [ ] Confirm that the final pull request of the memory plan merged and
+- [x] Confirm that the final pull request of the memory plan merged and
       that the root coordinator gave the signal. Merge `main` into this
       branch with the `git-merge` skill.
 - [ ] Create `docs/protocol/workspace-events.md`. Move the Events section
@@ -536,12 +539,18 @@ below. Code READMEs change with the code in later milestones.
 - [ ] Link the new page from `lost-workspace-updates.md`, where it says
       when a notice clears, and from `skill-mentions.md`, where it says
       that each tab gets the latest skill report.
-- [ ] Add the new page to `docs/architecture/protocol-docs.md` under Chat
-      and events.
+- [ ] Add the new page to the Chat index,
+      `docs/architecture/protocol-docs-chat.md`, which the memory plan split
+      from `protocol-docs.md`. Keep `chat-history.md` and `file-reports.md`
+      as they are.
 - [ ] Read both legal pages in full, `src/marketing/terms.ts` and
       `src/marketing/privacy.ts`. Read each public guide under
-      `src/marketing/docs/` in full. Update each sentence that restates a
-      changed fact. Name the result in the commit message.
+      `src/marketing/docs/` in full. List each sentence that restates a
+      changed fact. The limits plan owns edits of these files until the
+      root coordinator hands them over. So save each proposed edit under
+      `.context/new-tab-workspace-state-reads/`, send it to the root
+      coordinator, and make the edit only after the hand-over. Name the
+      result in the commit message.
 - [ ] Check each relative link of each changed Markdown file.
 
 ## Milestone 2: Worker read state and workspace seed
