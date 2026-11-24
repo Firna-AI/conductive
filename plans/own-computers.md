@@ -878,7 +878,8 @@ Depends on: 4
       Branch: calummoore/own-computers-milestone-5-speed-of-lg7b
 
 The report, the bench, and the raw results are in
-`.context/own-computers/m5/`.
+`.context/own-computers/m5/` of the Milestone 5 workspace, W-581, and in the
+description of PR #678.
 
 ## Milestone 6: Commands over the host connection
 
@@ -895,6 +896,11 @@ Depends on: 4
 
 Depends on: 5, 6
 
+- [ ] Set `TCP_NODELAY` on the host WebSocket of the host program
+      (`crates/cnd-host/src/socket/connect.rs`), with a test that the
+      socket has the option. Milestone 5 measured about one round trip of
+      delay per small message without it. This holds under every answer to
+      the speed decision of Milestone 5.
 - [ ] Move the terminal socket to a host stream to the terminal port.
 - [ ] Move the previews and the files preview to a host stream to the
       relay port. Let the relay accept a stream from the host program.
