@@ -4,7 +4,7 @@ import {
   outboundRequest,
   type OutboundRequestOptions,
 } from '../http/outbound-request'
-import { githubFailure, object } from './parsers'
+import { githubFailure, GitHubRequestError, object } from './parsers'
 
 const GITHUB_API_VERSION = '2026-03-10'
 export const GITHUB_API_BODY_BYTES = 26 * 1024 * 1024
@@ -49,7 +49,7 @@ export async function githubJson(
     return await withGitHubResponse(fetch, request, async (response) => {
       if (!response.ok) {
         void response.body?.cancel().catch(() => undefined)
-        throw githubFailure()
+        throw githubFailure(response.status)
       }
       const body =
         response.body === null
@@ -57,7 +57,8 @@ export async function githubJson(
           : await readBoundedBody(response.body, GITHUB_API_BODY_BYTES)
       return JSON.parse(new TextDecoder().decode(body))
     })
-  } catch {
+  } catch (error) {
+    if (error instanceof GitHubRequestError) throw error
     throw githubFailure()
   }
 }

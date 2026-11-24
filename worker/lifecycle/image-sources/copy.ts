@@ -4,6 +4,7 @@ import type { PrepareImageSources } from '../image-builds'
 import { revokeSourceToken } from './cleanup'
 import { refuseSourceCopy } from './copy-data'
 import { readSourceRepository } from './data'
+import { ImageSourceStepError, sourceCommandFailure } from './failure'
 import { installationToken, revokeInstallationToken } from './github-app'
 import { fetchSourceCommand } from './native-command'
 import { refusedSourceStart } from './source-commands'
@@ -21,8 +22,8 @@ export async function startSourceCopy(
   job: SourceJob,
 ) {
   const repository = input.repositories[job.sourceIndex]
-  if (!repository || !env.GITHUB_APP_PRIVATE_KEY)
-    throw new Error('Missing source access')
+  if (!repository) throw new ImageSourceStepError('repository_values')
+  if (!env.GITHUB_APP_PRIVATE_KEY) throw new ImageSourceStepError('app_key')
   const origin = new URL(env.MACHINE_ORIGIN ?? '')
   if (origin.protocol !== 'https:' || origin.origin !== env.MACHINE_ORIGIN)
     throw new Error('Missing machine origin')
@@ -53,16 +54,15 @@ export async function startSourceCopy(
     await revokeInstallationToken(dependencies.fetch, token)
     throw error
   }
+  const command = fetchSourceCommand({
+    origin: origin.origin,
+    grant,
+    buildId: job.buildId,
+    index: job.sourceIndex,
+    repository,
+  })
   try {
-    const started = await input.commands.start(
-      fetchSourceCommand({
-        origin: origin.origin,
-        grant,
-        buildId: job.buildId,
-        index: job.sourceIndex,
-        repository,
-      }),
-    )
+    const started = await input.commands.start(command)
     await setSourcePhase(
       env.DB,
       job.buildId,
@@ -71,23 +71,17 @@ export async function startSourceCopy(
       job.sourceIndex,
     )
   } catch (error) {
-    if (refusedSourceStart(error)) {
-      await refuseSourceCopy(env.DB, job)
-      if (
-        await revokeSourceToken(env, dependencies.fetch, {
-          ...job,
-          repositoryId: repository.id,
-          tokenCiphertext: ciphertext,
-        })
-      )
-        await setSourcePhase(
-          env.DB,
-          job.buildId,
-          'ready',
-          null,
-          job.sourceIndex,
-        )
-    }
+    if (!refusedSourceStart(error))
+      throw sourceCommandFailure(error, 'interrupted')
+    await refuseSourceCopy(env.DB, job)
+    if (
+      await revokeSourceToken(env, dependencies.fetch, {
+        ...job,
+        repositoryId: repository.id,
+        tokenCiphertext: ciphertext,
+      })
+    )
+      await setSourcePhase(env.DB, job.buildId, 'ready', null, job.sourceIndex)
     throw error
   }
 }

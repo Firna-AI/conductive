@@ -4,6 +4,7 @@ import {
   revokeInstallationAccessToken,
 } from '../../github/app-credentials'
 import type { SourceRepository } from './data'
+import { ImageSourceStepError } from './failure'
 import type { MetadataBatch } from './metadata-plan'
 
 export function installationToken(
@@ -23,7 +24,12 @@ export function installationToken(
     {
       fetch,
       now,
-      failure: () => new Error('Installation access is not available'),
+      failure: (githubStatus) =>
+        new ImageSourceStepError(
+          'source_token',
+          githubStatus,
+          'Installation access is not available',
+        ),
     },
   )
 }
@@ -47,7 +53,12 @@ export function metadataInstallationToken(
     {
       fetch,
       now,
-      failure: () => new Error('Repository metadata is not available'),
+      failure: (githubStatus) =>
+        new ImageSourceStepError(
+          'metadata_token',
+          githubStatus,
+          'Repository metadata is not available',
+        ),
     },
   )
 }

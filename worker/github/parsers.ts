@@ -1,11 +1,22 @@
 import { HttpError, isRecord } from '../http'
 
-export function githubFailure(): HttpError {
-  return new HttpError(
-    502,
-    'github_unavailable',
-    'GitHub is not available. Try again.',
-  )
+export class GitHubRequestError extends HttpError {
+  readonly githubStatus: number | null
+
+  constructor(githubStatus: number | null) {
+    super(502, 'github_unavailable', 'GitHub is not available. Try again.')
+    this.githubStatus = githubStatus
+  }
+}
+
+export function githubFailure(
+  githubStatus: number | null = null,
+): GitHubRequestError {
+  return new GitHubRequestError(githubStatus)
+}
+
+export function githubFailureStatus(error: unknown): number | null {
+  return error instanceof GitHubRequestError ? error.githubStatus : null
 }
 
 export function object(value: unknown): Record<string, unknown> {

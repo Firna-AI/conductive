@@ -50,8 +50,9 @@ number names a dated record, as
 - A refresh keeps the folders and the variables of the org image.
 - A build can move a repository folder to a new name. The move keeps every
   file of the folder, also untracked files such as installed dependencies.
-- A rename of a repository on GitHub moves its folder at the build that the
-  rename starts, as
+- A rename of a repository on GitHub moves its folder at the next build.
+  This is the build that the rename starts, or the next build after a
+  failed build, as
   [Repository changes on GitHub](repository-changes-on-github.md#folders)
   says.
 - A workspace keeps the folders and the variables of the org image that it

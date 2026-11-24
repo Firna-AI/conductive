@@ -98,14 +98,26 @@ folders that this doc uses. The terms are those of the
 
 ## The org image
 
-- A refresh copies each repository with the name and the default branch
-  that the org image holds. So only a build takes in a new value.
+- A refresh finds each repository of the org image by its ID. It copies
+  the repository with its saved name, default branch, and install. The
+  user chose this on 24 November 2026 (repository load decision 1).
+- Reason: a refresh then works after a rename or a move, also while the
+  newest build failed. Before, each refresh failed until a build ran, and
+  the app starts no build by itself after a failed build. So new
+  workspaces started with old commits for days.
+- The checks that guard each copy stay. They compare the values of the
+  job with the saved values, and the job now holds the saved values.
+- A repository that the org no longer saves keeps the values of the org
+  image, so its copy fails as before.
 - While the org image holds a name or a default branch that differs from
   the saved value, the app starts a build. The build runs for an admin who
   is not suspended, as an automatic refresh does. The user chose this on
   17 November 2026.
-- Reason: a refresh fails while the saved values differ from the values of
-  the org image. Without the build, new workspaces start with old commits.
+- Reason: the build moves the folder to the new name at once, as
+  [Folders](#folders) says.
+- Each start of a refresh makes it a build while the org image holds such
+  a value and the newest build succeeded. This covers the daily timer, a
+  push, and an admin who refreshes.
 - The build starts at once after the change. While a job runs, it starts
   when that job ends. When it cannot start, the next automatic refresh,
   daily or after a push, starts the build in place of the refresh.
@@ -117,9 +129,14 @@ folders that this doc uses. The terms are those of the
   [A missed repository webhook](#a-missed-repository-webhook) says.
 - A start only at the webhook was rejected. Reason: a start that failed, or
   a change during a job, then needed a manual build.
-- A refresh that finds the repository by its ID, not by its name, was
-  rejected. Reason: the checks that guard each copy of a repository then
-  change, and the folder takes the new name only at a later manual build.
+- A refresh that finds the repository by its ID was rejected on
+  17 November 2026, and chosen on 24 November 2026. The first reasons were
+  these: the checks of each copy change, and the folder takes the new name
+  only at a later build. The checks stay as they are. The folder point
+  holds only while the newest build failed.
+- A refresh that skips its run while the org image holds old values was
+  rejected. Reason: new workspaces then get no new commits until a build
+  succeeds.
 - The app starts no build when the newest build on the account of the org
   failed. The change then waits for Try again, which builds the saved
   values. Reason: the app starts no build by itself after a failed build
@@ -138,6 +155,9 @@ folders that this doc uses. The terms are those of the
   app and on GitHub.
 - Keeping the folder name of the earlier org image was rejected. Reason:
   the folder and the repository would then have two names.
+- A refresh after a rename keeps the folder and its variable. Only the
+  next build moves them. This happens when the newest build failed, so no
+  build starts at the rename.
 - An install script or a startup script that names the old folder, or the
   old variable, fails after that build. An admin updates the script.
 - Each existing workspace keeps its folders, as

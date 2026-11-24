@@ -13,6 +13,8 @@ import {
 import { cleanupBuild } from './build-execution'
 import type { ImageRuntime } from './image-builds'
 import { cleanupBuildImageSources } from './image-sources/cleanup'
+import { ImageSourceFailure } from './image-sources/materialize'
+import { readSourceRun, sourceRunFailure } from './image-sources/run-data'
 import { saveImageRetry } from './image-retry-data'
 import { scheduleIdleImage } from './image-schedule'
 import { IMAGE_BUILD_TIME_LIMIT_MS, JobTimeLimit } from './job-time-limit'
@@ -91,10 +93,21 @@ export async function handleImageBuildFailure(
       error instanceof ProviderError &&
       !transientProviderError(error)
     )
+  const sourceFailure =
+    job.phase !== 'sources'
+      ? null
+      : error instanceof ImageSourceFailure
+        ? error
+        : failure instanceof JobTimeLimit
+          ? sourceRunFailure(await readSourceRun(env.DB, buildId))
+          : null
   warnWorker({
     kind: 'image_build_failed',
     buildId: WarningId.checked(buildId),
     phase: job.phase,
+    sourceStep:
+      sourceFailure?.sourceStep ?? (job.phase === 'sources' ? 'unknown' : null),
+    githubStatus: sourceFailure?.githubStatus ?? null,
     error: errorSummary(failure),
   })
   await failBuild(env.DB, buildId, message, dependencies.now(), {

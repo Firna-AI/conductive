@@ -1,4 +1,5 @@
 import { readRepositories, type SelectedRepository } from '../settings-data'
+import { ImageSourceStepError } from './failure'
 
 export interface SourceRepository extends SelectedRepository {
   githubRepositoryId: number
@@ -32,7 +33,7 @@ export async function readSourceRepositories(
         source.installationId <= 0,
     )
   )
-    throw new Error('Repository source access is not available')
+    throw new ImageSourceStepError('repository_values')
   return result.results
 }
 
@@ -85,7 +86,7 @@ export async function readSourceRepository(
     !Number.isSafeInteger(row.installationId) ||
     row.installationId <= 0
   ) {
-    throw new Error('Repository source access is not available')
+    throw new ImageSourceStepError('repository_values')
   }
   return row
 }
