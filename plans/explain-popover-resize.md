@@ -42,9 +42,9 @@ report is in `.context/explain-popover-resize/options-check-report.md`.
 
 ### 1. Explain popover cannot change size
 
-- **Answer:** D, on 24 November 2026. The options check then added J,
-  which is D on shared handle code. The choice between D and J waits for
-  the user.
+- **Answer:** J, on 24 November 2026. The user first answered D on the
+  same day. The options check then added J, which is D on shared handle
+  code, and the user chose J.
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** Product bug.
@@ -174,7 +174,7 @@ All of these are my calls, made on 24 November 2026.
 - `src/ui/components/explain/ExplainPopover.module.css`: the width and the
   height from the custom properties, and the look of the handles, which
   the mockups share.
-- With J only: one hook in `src/shell/layout/` takes the pointer drag and
+- One hook in `src/shell/layout/` takes the pointer drag and
   the keys of `ResizeHandle.tsx` and `SplitHandle.tsx`, and the popover
   handles use it too. One stored-size class in `src/app/` takes the
   storage rule of `PanelLayout` and `ColumnSplit`, and the store of the
@@ -220,7 +220,7 @@ Tags: ui
 
 Depends on: 2
 
-- [ ] With J only: move the drag and the keys of the column handles into
+- [ ] Move the drag and the keys of the column handles into
       the shared hook, and the storage rule into the shared stored-size
       class. The tests of the column handles and of the split must pass
       with no change of what they check.
