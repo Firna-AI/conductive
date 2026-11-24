@@ -3,7 +3,8 @@
 Explain in the chat: Explain by a finished selection of text, its key, the
 marks of the explanations in the chat of their parent session, the menu of
 overlapping marks, and the popover of an explanation with its follow-up
-field. See [the chat](../README.md) for the whole chat,
+field and the handles that resize it. See [the chat](../README.md) for the
+whole chat,
 [Explain](../../../docs/protocol/explain.md) for the requirements, and the
 `app/chat/explain` pages of the
 [mockup catalogue](../../../docs/mockups/catalogue-chat-and-automations.md)
@@ -93,6 +94,30 @@ for the screens.
   a computer, CSS anchor positioning keeps it at the box of the open mark,
   and a browser without it gets the same place from `placePanel`. On a
   phone it is a sheet, which stops at the top of the chat at full height.
+- On a computer, `PopoverResize` draws the handles on the free edges of
+  the panel and their corner, as
+  [The size on a computer](../../../docs/protocol/explain-popover.md#the-size-on-a-computer)
+  says. `popover-edges.ts` finds the free edges from the boxes of the
+  panel, the mark, and the frame. It also finds the room for the width on
+  the side of the mark, where a drag of the width stops. `ExplainPopover`
+  finds them again in the next frame after each layout, scroll, and
+  resize. The handles take the pointer drag and the keys from the shared
+  handle hook in `src/shell/layout/`, which the column handles use too.
+  So a change of the steps, the keys, or the end of a drag reaches every
+  handle of the app. The handles lie inside the panel, so a press on one
+  is a press in the popover. The shared CSS of `ExplainPopover` draws
+  them, for the app and the mockups.
+- One store in `src/app/explain-size.ts` holds the chosen width and height
+  of all popovers. The panel layout holds it, so `usePanelLayout` gives
+  it. It keeps the size in the browser through the stored-size class that
+  the column widths and the split use too. A page without the panel
+  layout, such as a test kit or the chat development page, gets a store
+  of its own from a hook. `ExplainPopover` sets the size on the panel as
+  `--explain-width` and `--explain-height`, and `placePanel` uses the
+  chosen height in place of a fixed one. Each move starts from the size
+  that the panel shows, which is also the value of its handle. From the
+  first move until the popover closes, the class `fixedHeight` keeps the
+  moved height.
 - The popover shows the chat of the explanation with the parts of a tab,
   through `useSessionParts` and `TranscriptView`, with `hide` for the
   written prompt: its first message. When a turn ends, and when the
@@ -176,8 +201,15 @@ for the screens.
 - `ExplainButton.tsx`: Explain by the selection and above a phone composer.
 - `ExplainLayer.tsx`, `ExplainPopover.tsx`, `PopoverChat.tsx`,
   `PopoverParts.tsx`, `FollowUpField.tsx`: the menu, the popover, its chat,
-  its header and handle, and its field. `popover-place.ts` places it, and
-  `press-outside.ts` marks the presses that keep it open.
+  its header and the handle of the sheet, and its field.
+  `popover-place.ts` places it, and `press-outside.ts` marks the presses
+  that keep it open.
+- `PopoverResize.tsx`: the handles on the free edges of the panel and
+  their corner. `popover-edges.ts`: the free edges, and the room for the
+  width on the side of the mark.
+- `../../app/explain-size.ts`: the chosen size of all popovers, which the
+  browser keeps. The handles take the drag and the keys from the shared
+  handle hook in `../../shell/layout/`.
 - `explain.module.css`: only the rules of the app, such as the highlights,
   the slots, and the places.
 - `../state/explain-actions.ts`: `explainQuote` and `sendFollowUp`.

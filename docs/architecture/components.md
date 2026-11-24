@@ -31,8 +31,8 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   [Operator section](../protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
 - The browser stores only the panel sizes and the last workspaces. The
-  panel sizes are the widths of the sidebar and the right column, and the
-  split of the right column. The last workspaces are the address of the
+  panel sizes are the widths of the sidebar and the right column, the
+  split of the right column, and the size of the Explain popover. The last workspaces are the address of the
   last workspace page of each org, as
   [Opening an org](../protocol/org-rail-order.md#opening-an-org) says. All
   other state comes from the Worker. A tab keeps the chats that it showed in memory, as

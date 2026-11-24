@@ -163,10 +163,11 @@ the Help row of the palette opens.
   Secrets tab: an admin gets the value of one secret of the org, which the
   Worker records. Only the row of that secret shows it, until Hide, another
   reveal, a Replace of its value, or its Delete.
-- The browser keeps only the panel sizes (`panels.ts` and
-  `column-split.ts`) and the last workspaces (`last-workspaces.ts`). The
-  panel sizes are the widths of the sidebar and the right column, and the
-  split of the right column. The last workspaces hold the address of the
+- The browser keeps only the panel sizes (`panels.ts`,
+  `column-split.ts`, and `explain-size.ts`) and the last workspaces
+  (`last-workspaces.ts`). The panel sizes are the widths of the sidebar
+  and the right column, the split of the right column, and the size of
+  the Explain popover. The last workspaces hold the address of the
   last workspace page that the person opened in each org, under a key of
   the person. A browser that refuses its storage keeps them until the page
   closes.

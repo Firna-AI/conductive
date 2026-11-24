@@ -13,7 +13,9 @@ handle already takes it to full height.
 
 Contract owners:
 
-- [Explain](../docs/protocol/explain.md), section "The popover".
+- [The Explain popover](../docs/protocol/explain-popover.md), which
+  took the section "The popover" of
+  [Explain](../docs/protocol/explain.md) on 24 November 2026.
 - The [Explain README](../src/chat/explain/README.md).
 - The [chat design](../docs/mockups/design-chat.md) and the public
   [sessions guide](../src/marketing/docs/sessions-and-chat.md).
@@ -121,9 +123,11 @@ All of these are my calls, made on 24 November 2026.
 - **A panel with no shown mark** stands 64 px below the top of the frame.
   Its height also stops 12 px above the bottom of the frame. Reason:
   otherwise a tall chosen height cuts off the follow-up field.
-- **The width keeps its side.** A drag stops where the panel would no
-  longer fit on its side of the mark, so the panel never jumps to the
-  other side while it moves. A kept width shows at most as wide as the
+- **The width keeps its side.** A drag or a key move stops where the
+  panel would no longer fit on its side of the mark, so the panel never
+  jumps to the other side while it moves. The key stop was added on 24
+  November 2026 from the Milestone 2 docs work: otherwise Right or End
+  near the end of the frame moves the panel, and the arrows turn round. A kept width shows at most as wide as the
   larger room on the two sides of the mark, and at most as wide as the
   frame less the margins. Reason: a jump under the pointer loses the
   drag. A panel that fits on neither side would pass the end of the frame
@@ -249,13 +253,13 @@ such as `resized-popover-light.png`.
 
 Depends on: 1
 
-- [ ] Update "The popover" in `docs/protocol/explain.md`: the default
+- [x] Update "The popover" in `docs/protocol/explain.md`: the default
       size, the drag of the free edges and their keys, the limits, the size
       that the browser keeps, and popover resize decision 1.
-- [ ] Update the popover lines of `src/chat/explain/README.md`.
-- [ ] Update "Explain chat text" in
+- [x] Update the popover lines of `src/chat/explain/README.md`.
+- [x] Update "Explain chat text" in
       `src/marketing/docs/sessions-and-chat.md`.
-- [ ] Read the Terms and the Privacy pages in full. Update each sentence
+- [x] Read the Terms and the Privacy pages in full. Update each sentence
       that restates a changed fact.
 
 ## Milestone 3: The resize of the popover
