@@ -69,8 +69,8 @@ The numbers 313 to 320 were the next free numbers on 22 November 2026, on
 `main` and on every open branch. Decisions 313 to 315 hold Cal's answers of
 22 November 2026, with the options and the letters that Cal saw in the
 brainstorm. Decisions 316 to 320 hold Cal's later answers of the same
-day, and decisions 321 to 323 hold his answers of 23 November 2026. No
-decision is open.
+day, decisions 321 to 323 hold his answers of 23 November 2026, and
+decision 324 holds his answer of 24 November 2026. No decision is open.
 
 A second options check ran on the same day over the changed decision 318,
 decision 320, and the new design calls. It added option D to decision 318
@@ -460,6 +460,33 @@ in the org and has write access.
 - Rejected: A, a Clean up action that a member clicks, because it needs a
   new screen for an empty queue. C, the GitHub App's own token, because
   work on GitHub runs as a member (decision 50).
+
+### Decision 324: a normal Merge of a pull request with pull requests below it
+
+Chosen by Cal on 24 November 2026, from finding 16 of the review: "we
+should just show the merge stack button if there PR has things under it".
+
+- The agent's reading, recorded on 24 November 2026: when the pull request
+  of a workspace has open pull requests below it in a GitHub stack, the bar
+  shows a Merge stack button in place of the plain Merge. Its label counts
+  the pull requests that land, such as "Merge stack (3)".
+  - When no pull request below is queued, the click merges the stack
+    directly, as GitHub does, with the clicker's token and merge method.
+  - When a pull request below is queued in the same org, the click goes
+    through the queue, as Merge with N ahead does (decision 316). The queue
+    checks the queued layers first, then lands the clicked pull request
+    with them.
+  - When a pull request below is queued in another org, the bar shows no
+    Merge, and the bar line says that another org's merge queue holds a
+    pull request below. Reason: the click cannot go through that org's
+    queue, and a direct merge would land its queued work outside its
+    order.
+- The Worker checks the same landed set at each merge request, so a stale
+  bar cannot send a direct merge that lands queued work.
+- Rejected: A, refuse only a target that another org queues, because it
+  misses a member's own stack. D, a refusal with a general message,
+  because Cal chose a button that says what lands. E, a held click that
+  changes decision 322.
 
 ## Design
 
