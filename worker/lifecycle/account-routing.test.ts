@@ -4,6 +4,10 @@ import { ProviderAccountError } from '../sandbox/accounts'
 import { boatRoute } from '../sandbox/routes'
 import { setupBackendTests } from './backend-test-hooks'
 import { SOFTWARE } from './backend-test-support'
+import {
+  boatAccountHeaders,
+  boatCommandRequests,
+} from './boat-command-requests.test-support'
 import { insertBuild, publishBuild } from './build-admission-data'
 import {
   assignBuildSandbox,
@@ -29,129 +33,147 @@ function configureSecondary(fixture: ReturnType<typeof fixtureForTest>) {
   })
 }
 
-it('replays a lost allocation and resumes its disk through the stored secondary account', async () => {
-  const fixture = fixtureForTest()
-  const { runtime, org, user, repositoryId, boat } = fixture
-  configureSecondary(fixture)
-  await runtime.env.DB.prepare(
-    'UPDATE orgs SET provider_account = ? WHERE id = ?',
-  )
-    .bind('boat-second', org.id)
-    .run()
-  await seedPublishedImage(runtime.env.DB, {
-    orgId: org.id,
-    buildId: 'secondary-image-build',
-    imageName: 'secondary-image',
-    providerAccount: 'boat-second',
-    repositories: [
-      {
-        id: repositoryId,
-        orgId: org.id,
-        fullName: 'example/repository',
-        defaultBranch: 'main',
-      },
-    ],
-    software: SOFTWARE,
-    now: runtime.dependencies.now(),
-  })
-  boat.lostCreateReplies = 1
-  const created = await fixture.run(() =>
-    createWorkspace(
-      runtime,
-      org.id,
-      user,
-      { repositoryId, firstMessage: FIRST_MESSAGE },
-      user,
-      { branch: 'feature/review', startSha: 'a'.repeat(40) },
-    ),
-  )
-  const id = created.workspace.id
-  const start = fixture.starts.get(id)
-  const actor = fixture.actors.get(id)
-  if (!start || !actor) throw new Error('Missing secondary start')
-  await start.advance()
-  expect(await start.job()).toMatchObject({
-    providerAccount: 'boat-second',
-    baseBranch: 'feature/review',
-    startSha: 'a'.repeat(40),
-    createPayloadCiphertext: expect.any(String),
-  })
-  await start.restart()
-  for (let step = 0; step < 20 && (await start.job()); step++) {
-    if ((await start.job())?.phase === 'runner')
-      await actor.endpoint().reportRunnerLifecycle({ type: 'runner.ready' })
+it.each(['host', 'provider'] as const)(
+  'replays a lost allocation and resumes its disk through the stored secondary account with %s commands',
+  async (route) => {
+    const fixture = fixtureForTest()
+    const { runtime, org, user, repositoryId, boat } = fixture
+    fixture.host.autoConnect = route === 'host'
+    configureSecondary(fixture)
+    await runtime.env.DB.prepare(
+      'UPDATE orgs SET provider_account = ? WHERE id = ?',
+    )
+      .bind('boat-second', org.id)
+      .run()
+    await seedPublishedImage(runtime.env.DB, {
+      orgId: org.id,
+      buildId: 'secondary-image-build',
+      imageName: 'secondary-image',
+      providerAccount: 'boat-second',
+      repositories: [
+        {
+          id: repositoryId,
+          orgId: org.id,
+          fullName: 'example/repository',
+          defaultBranch: 'main',
+        },
+      ],
+      software: SOFTWARE,
+      now: runtime.dependencies.now(),
+    })
+    boat.lostCreateReplies = 1
+    const created = await fixture.run(() =>
+      createWorkspace(
+        runtime,
+        org.id,
+        user,
+        { repositoryId, firstMessage: FIRST_MESSAGE },
+        user,
+        { branch: 'feature/review', startSha: 'a'.repeat(40) },
+      ),
+    )
+    const id = created.workspace.id
+    const start = fixture.starts.get(id)
+    const actor = fixture.actors.get(id)
+    if (!start || !actor) throw new Error('Missing secondary start')
     await start.advance()
-  }
-  expect(await start.job()).toBeUndefined()
-  expect(await start.wait()).toEqual({ ok: true })
-  expect(await readWorkspace(runtime.env.DB, org.id, id)).toMatchObject({
-    providerAccount: 'boat-second',
-    baseBranch: 'feature/review',
-    sandboxId: 'bx_1',
-  })
-  expect(boat.starts[0]).toMatchObject({
-    env: { CONDUCTIVE_DEFAULT_BRANCH: 'feature/review' },
-  })
-  const create = boatRoute({ operation: 'create' })
-  expect(
-    boat.server.requests
-      .filter(
-        (request) =>
-          request.method === create.method &&
-          new URL(request.url).pathname.endsWith(create.path),
-      )
-      .map((request) => request.headers.get('X-Boat-Org')),
-  ).toEqual(['second-org', 'second-org'])
-  const machines = runtime.env.MACHINES
-  if (!machines) throw new Error('Missing machine binding.')
-  const failingMachines = new Proxy(machines, {
-    get(target, key) {
-      if (key !== 'get') return Reflect.get(target, key)
-      return (...input: Parameters<typeof target.get>) =>
-        new Proxy(target.get(...input), {
-          get(stub, method) {
-            if (method === 'revokeToken')
-              return async () => {
-                throw new Error('private machine token and org secret')
-              }
-            return Reflect.get(stub, method)
-          },
-        })
-    },
-  })
-  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
-  try {
-    await expect(
-      stopWorkspaceSandbox({
-        env: { ...runtime.env, MACHINES: failingMachines },
-        dependencies: runtime.dependencies,
-        orgId: org.id,
-        workspaceId: id,
-      }),
-    ).resolves.toBe('stopped')
-    expect(boat.stopIds).toEqual(['bx_1'])
-    const warning = {
-      kind: 'machine_token_revoke_failed',
-      message:
-        'The machine token could not be revoked. The stop will continue.',
+    expect(await start.job()).toMatchObject({
+      providerAccount: 'boat-second',
+      baseBranch: 'feature/review',
+      startSha: 'a'.repeat(40),
+      createPayloadCiphertext: expect.any(String),
+    })
+    await start.restart()
+    for (let step = 0; step < 20 && (await start.job()); step++) {
+      if ((await start.job())?.phase === 'runner')
+        await actor.endpoint().reportRunnerLifecycle({ type: 'runner.ready' })
+      await start.advance()
     }
-    expect(warn.mock.calls).toEqual([[warning], [warning]])
-  } finally {
-    warn.mockRestore()
-  }
-  await runtime.workspace(id).lifecycleStopped()
-  expect(
-    await fixture.run(() =>
-      resumeCompletedWorkspace(runtime, org.id, id, user.id),
-    ),
-  ).toMatchObject({ workspace: { state: 'ready' } })
-  expect(boat.resumeIds).toEqual(['bx_1'])
-  expect(
-    new Set(
-      boat.server.requests.map((request) => request.headers.get('X-Boat-Org')),
-    ),
-  ).toEqual(new Set(['second-org']))
-})
+    expect(await start.job()).toBeUndefined()
+    expect(await start.wait()).toEqual({ ok: true })
+    expect(await readWorkspace(runtime.env.DB, org.id, id)).toMatchObject({
+      providerAccount: 'boat-second',
+      baseBranch: 'feature/review',
+      sandboxId: 'bx_1',
+    })
+    expect(boat.starts[0]).toMatchObject({
+      env: { CONDUCTIVE_DEFAULT_BRANCH: 'feature/review' },
+    })
+    const calls = boatCommandRequests(boat.server.requests, 'bx_1')
+    const expectedAccounts =
+      route === 'provider'
+        ? ['second-org', 'second-org', 'second-org', 'second-org']
+        : []
+    expect({
+      commands: boatAccountHeaders(calls.commands),
+      statuses: boatAccountHeaders(calls.statuses),
+    }).toEqual({ commands: expectedAccounts, statuses: expectedAccounts })
+    expect(
+      fixture.host.commandRequests.filter(({ detached }) => detached),
+    ).toHaveLength(route === 'host' ? 4 : 0)
+    const create = boatRoute({ operation: 'create' })
+    expect(
+      boat.server.requests
+        .filter(
+          (request) =>
+            request.method === create.method &&
+            new URL(request.url).pathname.endsWith(create.path),
+        )
+        .map((request) => request.headers.get('X-Boat-Org')),
+    ).toEqual(['second-org', 'second-org'])
+    const machines = runtime.env.MACHINES
+    if (!machines) throw new Error('Missing machine binding.')
+    const failingMachines = new Proxy(machines, {
+      get(target, key) {
+        if (key !== 'get') return Reflect.get(target, key)
+        return (...input: Parameters<typeof target.get>) =>
+          new Proxy(target.get(...input), {
+            get(stub, method) {
+              if (method === 'revokeToken')
+                return async () => {
+                  throw new Error('private machine token and org secret')
+                }
+              return Reflect.get(stub, method)
+            },
+          })
+      },
+    })
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    try {
+      await expect(
+        stopWorkspaceSandbox({
+          env: { ...runtime.env, MACHINES: failingMachines },
+          dependencies: runtime.dependencies,
+          orgId: org.id,
+          workspaceId: id,
+        }),
+      ).resolves.toBe('stopped')
+      expect(boat.stopIds).toEqual(['bx_1'])
+      const warning = {
+        kind: 'machine_token_revoke_failed',
+        message:
+          'The machine token could not be revoked. The stop will continue.',
+      }
+      expect(warn.mock.calls).toEqual([[warning], [warning]])
+    } finally {
+      warn.mockRestore()
+    }
+    await runtime.workspace(id).lifecycleStopped()
+    expect(
+      await fixture.run(() =>
+        resumeCompletedWorkspace(runtime, org.id, id, user.id),
+      ),
+    ).toMatchObject({ workspace: { state: 'ready' } })
+    expect(boat.resumeIds).toEqual(['bx_1'])
+    expect(
+      new Set(
+        boat.server.requests.map((request) =>
+          request.headers.get('X-Boat-Org'),
+        ),
+      ),
+    ).toEqual(new Set(['second-org']))
+  },
+)
 
 it('uses the cleanup account and retains an unknown account without a provider request', async () => {
   const fixture = fixtureForTest()

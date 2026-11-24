@@ -187,8 +187,9 @@ runs after a good move. It never runs Git again.
 - The settle command then copies the context folder again, for a file
   that a turn attached during the change. It writes the new folder to
   `/run/conductive/repository` for new terminals, and sets
-  `CONDUCTIVE_REPOSITORY_DIR` in the global tmux environment. A failure of
-  this step only warns.
+  `CONDUCTIVE_REPOSITORY_DIR` in the global tmux environment. It uses the
+  workspace machine channel and the records check from the same publication
+  attempt. A failed setup or command only warns.
 - It schedules a GitHub read of the new binding and ends the reservation.
   The job then sends `repository.move` to a connected runner, as
   [the runner check](../chat/key-code.md) says, and flushes the held turns.

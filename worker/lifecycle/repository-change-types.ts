@@ -72,9 +72,8 @@ export interface RepositoryChangeJob {
   publication?: { after: number; through: number }
   failure?: { status: number; code: string; message: string }
   /**
-   * When the first failed step after the move happened: a failed branch
-   * read of the new folder, or a failed publication. A job of an older
-   * deploy has no value, and its next failure sets it.
+   * The time of the first failed advance. See `retries` in `repository-change.ts`.
+   * A job of an older deploy has no value until its next failure.
    */
   failingSince?: number
   cancelled?: true

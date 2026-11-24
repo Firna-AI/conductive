@@ -132,7 +132,9 @@ fetches the selected base branch into a bare staging repository under
   deadline of the sandbox to the stop time plus 60 seconds, as
   [The stop time](README.md#the-stop-time) says. Each command starts detached, and
   the job keeps its process ID, its route, and its output offsets for the
-  later steps. Each status read uses that route.
+  later steps. Each status read uses that route. If host status stays
+  unavailable, [lost-process recovery](continue-failures.md#failures-and-recovery)
+  reattaches to the command journal after bounded retries.
 
 ## The move
 

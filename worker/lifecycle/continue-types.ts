@@ -59,6 +59,7 @@ export interface ContinueJob {
   phase: (typeof CONTINUE_PHASES)[number]
   processId: number | null
   commandRoute?: CommandRoute
+  hostStatusFailingSince?: number
   commandStarted: boolean
   resumeQueued: boolean
   fetchId: string

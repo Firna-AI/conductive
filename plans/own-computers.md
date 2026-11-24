@@ -799,6 +799,27 @@ November 2026.
   before each poll of a long download could pass the D1 query limit of one
   invocation. Review finding 102 of this milestone changed the first form
   of this call, which also read D1 before each status read.
+- A repository change counts every failed advance of a started fetch or
+  move, also a failed reattach through its command journal, under its
+  10-minute end rule. A status read that says the command still runs
+  clears the saved time. Reason:
+  [A failed change](../docs/protocol/repository-change.md#a-failed-change)
+  says that a change that never ends holds the workspace. The host path
+  added failures that the first end rule did not count. Review finding 103.
+- A Continue command that the host started, whose status reads fail with
+  a transient host error for 2 minutes, takes the lost-process path: a
+  branch read for a move, then a reattach through its command journal as a
+  new command. That command goes through the machine channel, so the
+  provider path serves it while the host stays away. Continue still has no
+  end rule. Reason: the host connection can stay away while the provider
+  still reaches the computer, and 2 minutes cover the host program's
+  60-second idle limit and its reconnect, well before the provider
+  auto-stop. Review finding 8.
+- The settle step after a repository change uses the records check of its
+  publication attempt, and a failure of any part of it only warns. Reason:
+  a second read could hold a finished change, and the settle command is a
+  new command, so it must not go straight to the provider path. Review
+  finding 107.
 
 These are agent calls of the orchestrator of Milestone 10, made on 24
 November 2026.

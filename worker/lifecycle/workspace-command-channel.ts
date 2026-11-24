@@ -30,7 +30,7 @@ export function workspaceCommandChannel(
   )
 }
 
-/** A started command still needs settlement after a failed access check. */
+/** Selects a channel for settling an already started command after an access failure. */
 export async function settlementCommandChannel(
   env: AppEnv,
   job: WorkspaceCommandTarget,

@@ -1,5 +1,6 @@
 import { HttpError } from '../http'
-import type { MachineChannel } from '../machines/channel'
+import type { CommandStatus, MachineChannel } from '../machines/channel'
+import { isTransientHostError } from '../machines/errors'
 import { providerForAccount } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { lifecycleCommand } from './command-intents'
@@ -22,6 +23,10 @@ import {
   workspaceCommandChannel,
 } from './workspace-command-channel'
 
+// Two minutes covers the host's 60-second idle limit and a reconnect, well
+// before the sandbox auto-stop of at least 16 minutes.
+const HOST_STATUS_WAIT_MS = 120_000
+
 async function completeCommand(progress: ContinueProgress, job: ContinueJob) {
   progress.scope = null
   if (job.phase === 'fetch' && (job.cancelled || job.failure)) {
@@ -32,6 +37,7 @@ async function completeCommand(progress: ContinueProgress, job: ContinueJob) {
   job.phase = job.phase === 'fetch' ? 'move' : 'publish'
   job.processId = null
   delete job.commandRoute
+  delete job.hostStatusFailingSince
   job.commandStarted = false
   job.stdoutOffset = 0
   job.stderrOffset = 0
@@ -147,10 +153,24 @@ async function step(
     }
     return false
   }
-  const status = await channel.getCommandStatus(
-    { processId: job.processId, route: job.commandRoute ?? 'provider' },
-    { stdoutOffset: job.stdoutOffset, stderrOffset: job.stderrOffset },
-  )
+  let status: CommandStatus
+  try {
+    status = await channel.getCommandStatus(
+      { processId: job.processId, route: job.commandRoute ?? 'provider' },
+      { stdoutOffset: job.stdoutOffset, stderrOffset: job.stderrOffset },
+    )
+  } catch (error) {
+    if (job.commandRoute !== 'host' || !isTransientHostError(error)) throw error
+    progress.scope = null
+    const now = options.dependencies.now()
+    if (job.hostStatusFailingSince === undefined) {
+      job.hostStatusFailingSince = now
+      await progress.save(job)
+    }
+    if (now - job.hostStatusFailingSince < HOST_STATUS_WAIT_MS) throw error
+    return recoverLostCommand(channel, progress, job)
+  }
+  delete job.hostStatusFailingSince
   if (status.state !== 'running') progress.scope = null
   job.stdoutOffset = status.stdoutNextOffset
   job.stderrOffset = status.stderrNextOffset
@@ -158,14 +178,7 @@ async function step(
     job.stopCause = continueCommandStopCause(job.phase, status)
   await progress.save(job)
   if (status.more || status.running) return false
-  if (status.state === 'lost') {
-    if (job.phase === 'move' && (await switchedBranch(channel, progress, job)))
-      return true
-    job.processId = null
-    delete job.commandRoute
-    await progress.save(job)
-    return false
-  }
+  if (status.state === 'lost') return recoverLostCommand(channel, progress, job)
   if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut) {
     if (job.phase === 'move' && (await switchedBranch(channel, progress, job)))
       return true
@@ -173,6 +186,20 @@ async function step(
     return false
   }
   return true
+}
+
+async function recoverLostCommand(
+  channel: MachineChannel,
+  progress: ContinueProgress,
+  job: ContinueJob,
+): Promise<boolean> {
+  if (job.phase === 'move' && (await switchedBranch(channel, progress, job)))
+    return true
+  job.processId = null
+  delete job.commandRoute
+  delete job.hostStatusFailingSince
+  await progress.save(job)
+  return false
 }
 
 async function switchedBranch(

@@ -277,7 +277,9 @@ the persisted resource records and the retained computer ledger.
   workspace, sandbox, and provider account of its job. After a failed
   access check, `settlementCommandChannel` gives that channel only while
   the workspace record still names the saved sandbox and account.
-  Otherwise only a command on the provider route can still settle.
+  Otherwise only a started command on the provider route can still settle.
+  The command that updates folders after publication uses the workspace
+  machine channel with the records check from that publication attempt.
 
 [Key code](key-code.md) lists the entry points of the lifecycle code, and
 the guides that give the entry points of each part.

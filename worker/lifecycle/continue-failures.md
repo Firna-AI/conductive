@@ -37,6 +37,12 @@ Continue job, its recovery, and the stop cause that each stop saves.
 - A fetch that ends after a cancel or a kept error ends the job with that
   error. A move that ended well goes on to its publication, also after a
   cancel.
+- The first transient failure to read host status saves its time in the
+  job. Continue retries the status read for two minutes. Any status reply
+  clears the time. If the read still fails at the limit, Continue follows
+  lost-process recovery. The recovery command goes through the machine
+  channel and can reattach through the saved provider account when the
+  host is away. The original process ID is used only on its starting route.
 - After a lost start reply from the host or the provider, or a lost
   process, Continue only reattaches to the saved command journal. A lost
   process is a `lost` status, or a provider 404 for a command on the
