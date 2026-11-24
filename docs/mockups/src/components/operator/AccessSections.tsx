@@ -26,16 +26,18 @@ import {
 import { disableCodeWords } from '../../../../../src/ui/components/operator/codeCopy'
 import { CodeStateText, CopyableCode } from './codes'
 import { InlineLink, TargetList, TargetRow } from './targets'
+import { linkTo, type DrawnPages } from './drawnPages'
 import { defined } from '../../defined'
 import styles from '../../../../../src/ui/components/operator/AccessSections.module.css'
 
 /**
  * How the user got app access, with a link to the code or its owner. An
  * org invitation links to the org and to the admin who sent it. An approval
- * and open sign-up name the operator.
+ * and open sign-up name the operator. With `pages`, each link opens only
+ * the drawn page of its record, and a record without one shows as text.
  */
-function WayInText(props: { way: WayIn }) {
-  const { way } = props
+function WayInText(props: { way: WayIn; pages?: DrawnPages }) {
+  const { way, pages } = props
   switch (way.kind) {
     case 'approval':
       return <>{wayInWords.approvedBy(way.by)}</>
@@ -43,23 +45,35 @@ function WayInText(props: { way: WayIn }) {
       return (
         <>
           {wayInWords.inviteCode}{' '}
-          <InlineLink to={paths.operatorCodesSearch}>{way.label}</InlineLink>
+          <InlineLink
+            to={linkTo(pages, 'codes', way.label, paths.operatorCodesSearch)}
+          >
+            {way.label}
+          </InlineLink>
         </>
       )
     case 'referral-code':
       return (
         <>
           {wayInWords.referralCodeOf}{' '}
-          <InlineLink to={paths.operatorUser}>@{way.owner}</InlineLink>
+          <InlineLink
+            to={linkTo(pages, 'users', way.owner, paths.operatorUser)}
+          >
+            @{way.owner}
+          </InlineLink>
         </>
       )
     case 'org-invitation':
       return (
         <>
           {wayInWords.orgInvitationTo}{' '}
-          <InlineLink to={paths.operatorOrg}>{way.org}</InlineLink>{' '}
+          <InlineLink to={linkTo(pages, 'orgs', way.org, paths.operatorOrg)}>
+            {way.org}
+          </InlineLink>{' '}
           {wayInWords.from}{' '}
-          <InlineLink to={paths.operatorUser}>@{way.by}</InlineLink>
+          <InlineLink to={linkTo(pages, 'users', way.by, paths.operatorUser)}>
+            @{way.by}
+          </InlineLink>
         </>
       )
     case 'open-sign-up':
@@ -109,14 +123,19 @@ function EmailState(props: { email: ApprovalEmailNote }) {
 
 /**
  * How and when the user got app access. After an approval, it also says
- * whether the approval email went.
+ * whether the approval email went. `pages` limits the links of the way in
+ * to the drawn pages of their records.
  */
 export function AppAccessSection(props: {
   access: Extract<AppAccess, { state: 'granted' }>
+  pages?: DrawnPages
 }) {
   const { since, way } = props.access
   const rows: Detail[] = [
-    { term: accessTerms.how, value: <WayInText way={way} /> },
+    {
+      term: accessTerms.how,
+      value: <WayInText pages={props.pages} way={way} />,
+    },
     { term: accessTerms.since, value: since },
   ]
   if (way.kind === 'approval') {

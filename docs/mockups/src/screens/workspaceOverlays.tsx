@@ -160,13 +160,19 @@ function rowMenuSheet(state: WorkspaceState, viewport: Viewport): ReactNode {
  * the tabs that the viewport shows, the tab whose menu is open, if any, and
  * whether the workspace is read-only, which leaves items out of that menu.
  * Desktop draws the workspace menu of the header at the pointer in the
- * header, and a phone as a sheet.
+ * header, and a phone as a sheet. `phoneApp` is the mark of the phone apps,
+ * whose service views open the pages of the phone apps.
  */
 export function workspaceOverlay(
   state: WorkspaceState,
   workspace: Workspace,
   viewport: Viewport,
-  row: { tabs: readonly WorkspaceTab[]; menuTab?: string; readOnly: boolean },
+  row: {
+    tabs: readonly WorkspaceTab[]
+    menuTab?: string
+    readOnly: boolean
+    phoneApp: boolean
+  },
 ): ReactNode {
   const mobile = viewport === 'mobile'
   switch (state.overlay) {
@@ -174,7 +180,7 @@ export function workspaceOverlay(
       return (
         explainOverlay(state, viewport, row.readOnly) ??
         capabilitiesSheet(state, viewport) ??
-        serviceOverlay(state, viewport) ??
+        serviceOverlay(state, viewport, row.phoneApp) ??
         (mobile ? rowMenuSheet(state, viewport) : null)
       )
     case 'restarting':

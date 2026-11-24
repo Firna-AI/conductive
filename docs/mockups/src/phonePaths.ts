@@ -24,6 +24,9 @@ export const phonePaths = {
   lockScreen: 'phone-app/lock-screen',
   browser: 'phone-app/browser',
   browserTool: 'phone-app/browser/tool',
+  browserToolLog: 'phone-app/browser/tool/log',
+  browserToolEmptyLog: 'phone-app/browser/tool/log-empty',
+  browserToolMenu: 'phone-app/browser/tool/menu',
   browserOpening: 'phone-app/browser/opening',
   browserDesktop: 'phone-app/browser/desktop',
 } as const

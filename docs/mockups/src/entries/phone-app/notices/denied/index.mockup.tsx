@@ -1,20 +1,27 @@
 import { defineScreen } from '@mokly/mokly'
 import { PhoneApp } from '../../../../components/phone/PhoneApp'
 import { AccountScreen } from '../../../../screens/AccountScreen'
-import { accountGeneral, accountSchema } from '../../../../screens/accountState'
+import {
+  deniedPreferences,
+  phonePreferences,
+  phonePreferencesSchema,
+} from '../../../../screens/phonePreferences'
 
 export const phoneNoticesDenied = defineScreen({
   title: 'Notices off',
   description:
     'Cal answered Don’t Allow, so the system keeps the notices of the app off, and the app cannot ask again. The Preferences tab of the Account page of the phone app starts with the Notices section: what the notices are for, the state Off, the line that the notices are off in the settings of this device, and Open device settings, which opens the page of the app in the settings of the phone. Favourites and New workspaces follow, as in the web app. The desktop view shows the same tab on a tablet.',
   rationale:
-    'After a denial only the settings of the phone can turn the notices on, so the section names that place and gives the one action that opens it. The words say "device", because a tablet shows the same section. The web app and the Mac app get no push notices (decision 1 F of the Expo app plan), so they show no Notices section. The section comes first, because it is the one setting of the tab that only the phone apps have, and so a phone shows it without a scroll. The page marks the phone apps, so the Preferences tab opens the page of the same notices setting.',
+    'After a denial only the settings of the phone can turn the notices on, so the section names that place and gives the one action that opens it. The words say "device", because a tablet shows the same section. The web app and the Mac app get no push notices (decision 1 F of the Expo app plan), so they show no Notices section. The section comes first, because it is the one setting of the tab that only the phone apps have, and so a phone shows it without a scroll. The page marks the phone apps, so the Preferences tab opens the page of the same notices setting. Keyboard shortcuts shows with no link, because the phone apps have no page for it yet. The controls of the page offer only the notices and the states that Preferences shares with the web app, so no control draws a tab of the web app inside the phone apps.',
   relatedDocs: ['docs/mockups/phone-app.md'],
-  propSchema: accountSchema,
-  props: { ...accountGeneral, tab: 'preferences', notices: 'denied' },
+  propSchema: phonePreferencesSchema,
+  props: deniedPreferences,
   render: (props, context) => (
     <PhoneApp>
-      <AccountScreen state={props} viewport={context.viewport} />
+      <AccountScreen
+        state={phonePreferences(props)}
+        viewport={context.viewport}
+      />
     </PhoneApp>
   ),
   variants: [

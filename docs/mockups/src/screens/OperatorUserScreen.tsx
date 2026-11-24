@@ -8,6 +8,7 @@ import { OperatorPage } from '../components/operator/OperatorPage'
 import type { QuestionTarget } from '../../../../src/ui/components/operator/operatorCopy'
 import { SuspendDialog } from '../components/operator/SuspendDialog'
 import { UserDetails } from '../components/operator/UserDetails'
+import { drawnPages } from '../components/operator/drawnPages'
 import { deletionUserPages } from '../fixtures/deletionRequests'
 import { accessPages } from '../fixtures/operatorAccessPages'
 import { userPages, type UserPage } from '../fixtures/operatorUserPages'
@@ -230,6 +231,10 @@ export function OperatorUserScreen(props: {
       <UserDetails
         disableCode={
           page === 'active' ? paths.operatorUserDisableCode : undefined
+        }
+        pages={
+          // The pages of the Deletions tab link a record only to its page.
+          Object.hasOwn(deletionUserPages, page) ? drawnPages : undefined
         }
         user={user}
       />

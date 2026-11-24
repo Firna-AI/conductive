@@ -298,6 +298,14 @@ The mockups of Milestone 1 added these calls, also mine, on 23 November
   app checks its version at each start, before the sign-in. Reason: a
   minimum above the version in the store locks people out, and a check
   after GitHub wastes the sign-in.
+- **The Terms revision of a phone sign-in.** The reply of the version
+  check also gives the current revision of the Terms. The sign-in carries
+  that revision, so the Worker shows no consent page before GitHub, also
+  to an old copy of the app. If the revision changes between the check
+  and the press, the auth session returns to the app, which shows the
+  failed sign-in. That return gives the current revision, so the next
+  press carries it. Reason: the agreement of the app links the current
+  text on the app host, and the consent page of the Worker links the site.
 - **Offline.** The offline page shows only when the app starts without a
   connection and has nothing to show. A later drop keeps the open view,
   and each view shows the failure that it shows in a browser.
@@ -321,7 +329,9 @@ The mockups of Milestone 1 added these calls, also mine, on 23 November
   Mac.
 - **Previews in the phone apps.** The Preview tool of a phone app shows no
   page in a frame. Each port and each service opens its preview in the
-  in-app browser.
+  in-app browser. The Preview of an HTML file tab opens in the in-app
+  browser too, because its files preview also runs code on the preview
+  domain.
 - **Terms and Privacy in the phone apps.** The phone apps open Terms and
   Privacy in the in-app browser, on pages of the app host. These pages
   show the shared legal text with no site header, no site footer, and no
@@ -395,11 +405,15 @@ Depends on: 1
       platform its own minimum version, which rises only after the store
       of that platform offers a newer version. The app checks its version
       at each start, before the sign-in.
+- [ ] Record in `docs/protocol/phone-app.md` the answer of the user on
+      keyboard shortcuts in the phone apps: the Keyboard shortcuts tab and
+      the key hints of the tablet layout.
 - [ ] Write `docs/protocol/phone-sign-in.md` from decision 8 C. Add the
       30-day phone session to `docs/protocol/access-and-security.md`. The
       auth session opens an address of the app first, so that the alert
-      of iOS names the app and not GitHub. Say what the auth session shows
-      when the app does not know the current revision of the Terms.
+      of iOS names the app and not GitHub. The sign-in carries the Terms
+      revision from the reply of the version check, as the design call of
+      the Terms revision of a phone sign-in says.
 - [ ] Write `docs/protocol/notifications.md` from decisions 2, 3, and 5.
 - [ ] Update `docs/protocol/secret-requests.md` for notices, from decision 2.
 - [ ] Update `docs/protocol/waitlist.md` and
@@ -462,6 +476,9 @@ Depends on: 2
       `worker/security/desktop-auth.ts`.
 - [ ] Add the refresh route: rotation, reuse detection, the 30-day limit,
       and the check of the Terms revision.
+- [ ] Give the reply of the version check the current Terms revision.
+      Return the auth session to the app with the current revision when
+      the revision of a sign-in is no longer current.
 - [ ] Accept the bearer token in `worker/security/gate.ts` for a request
       with no cookie. Keep the browser and Mac rules as they are.
 - [ ] Serve the universal link files for app addresses.
@@ -560,6 +577,8 @@ Depends on: 5, 6, 9
 - [ ] Open previews in the in-app browser with the grant. Open the
       desktop stream in the same way only when Desktop returns to the app,
       as `phone-app/browser/desktop` shows.
+- [ ] Open the Preview of an HTML file tab in the in-app browser with its
+      grant, as port previews open.
 - [ ] Add the minimum version check.
 
 ## Milestone 22: The phone apps
@@ -584,7 +603,9 @@ deletion request of Milestone 8 for the store rules.
 - [ ] Give the page after a GitHub App install words that fit a phone
       app. Its words in `src/ui/screens/githubSetupCopy.ts` send the
       person back to the Mac app. The Worker shows the same page to each
-      client.
+      client. Its wordmark links the home page of the site, so a phone app
+      that reaches it needs the rule of
+      `plans/follow-ups/phone-app-site-links.md`.
 - [ ] Build, sign, and upload both apps in `.github/workflows/release.yml`
       at each release, beside the Mac app, as decision 10 says. Keep the
       keys in a GitHub environment. Check that the Mac runner has Xcode

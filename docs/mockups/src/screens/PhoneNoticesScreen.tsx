@@ -6,7 +6,7 @@ import { SystemAlertOver } from '../components/phone/SystemAlert'
 import { paths } from '../paths'
 import { phonePaths } from '../phonePaths'
 import { AccountScreen } from './AccountScreen'
-import { accountGeneral } from './accountState'
+import { deniedPreferences, phonePreferences } from './phonePreferences'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { readyWorkspace, type WorkspaceState } from './workspaceState'
 
@@ -72,11 +72,10 @@ function NoticesView(props: { state: PhoneNoticesState; viewport: Viewport }) {
           words={systemAlertCopy}
         >
           <AccountScreen
-            state={{
-              ...accountGeneral,
-              tab: 'preferences',
+            state={phonePreferences({
+              ...deniedPreferences,
               notices: 'not-now',
-            }}
+            })}
             viewport={viewport}
           />
         </SystemAlertOver>

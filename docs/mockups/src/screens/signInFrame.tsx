@@ -4,7 +4,10 @@ import { classes } from '../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { mobileFrame } from '../entries/components/layout/AppFrame.mockup'
 import { useMacApp } from '../../../../src/ui/components/mac/MacApp'
-import { LegalLinks, type LegalPages } from '../components/marketing/LegalLinks'
+import {
+  LegalLinks,
+  type LegalTargets,
+} from '../components/marketing/LegalLinks'
 import { Wordmark } from '../components/marketing/Wordmark'
 import { paths } from '../paths'
 import { signInCopy } from '../../../../src/ui/screens/signInCopy'
@@ -44,9 +47,9 @@ function Header(props: { phoneApp: boolean }) {
 /**
  * The foot of the page: the way back to the home page of the site, and
  * the legal links. A phone app keeps only the legal links. `legal` gives
- * the pages that they open.
+ * where they lead.
  */
-function Foot(props: { phoneApp: boolean; legal: LegalPages | undefined }) {
+function Foot(props: { phoneApp: boolean; legal: LegalTargets | undefined }) {
   return (
     <footer className={styles.footer}>
       {props.phoneApp ? null : (
@@ -82,10 +85,11 @@ export function SignInFrame(props: {
   /** A page without a foot, such as a page that stops a phone app. */
   bare?: boolean
   /**
-   * The pages that the legal links of the foot open, such as those of a
-   * phone app. Without it, they open the legal pages of the site.
+   * Where the legal links of the foot lead: the pages of a phone app, or
+   * `still` for links that open nothing. Without it, they open the legal
+   * pages of the site.
    */
-  legal?: LegalPages
+  legal?: LegalTargets
   children: ReactNode
 }) {
   const mobile = props.viewport === 'mobile'

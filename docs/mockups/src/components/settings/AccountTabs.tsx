@@ -1,5 +1,5 @@
 import type { ShortcutHost } from '../../fixtures/shortcutHosts'
-import { defined } from '../../defined'
+import { defined, plainData } from '../../defined'
 import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
 import { paths } from '../../paths'
 import { phonePaths } from '../../phonePaths'
@@ -12,14 +12,21 @@ export type AccountTab =
   'general' | 'agents' | 'preferences' | 'shortcuts' | 'stats' | 'this-mac'
 
 /**
- * The pages of Preferences in the phone apps, one for each setting of the
- * notices of the device, because the phone apps start the tab with the
- * Notices section. The web app opens `paths.accountPreferences`.
+ * The pages of the tabs that the phone apps open in place of the web
+ * pages. Preferences opens the page of the notices setting of the device,
+ * because the phone apps start the tab with the Notices section. Keyboard
+ * shortcuts has no page of the phone apps yet, so the map holds none, and
+ * the tab shows with no link. The other tabs open the shared pages.
  */
-const phonePreferencesPages: Readonly<Record<NoticeSetting, string>> = {
-  denied: phonePaths.noticesDenied,
-  'not-now': phonePaths.noticesNotNow,
-  on: phonePaths.noticesOn,
+const phoneTabPages: {
+  preferences: Readonly<Record<NoticeSetting, string>>
+  shortcuts?: string
+} = {
+  preferences: {
+    denied: phonePaths.noticesDenied,
+    'not-now': phonePaths.noticesNotNow,
+    on: phonePaths.noticesOn,
+  },
 }
 
 /**
@@ -27,9 +34,10 @@ const phonePreferencesPages: Readonly<Record<NoticeSetting, string>> = {
  * the sign-in, GitHub, and the invite code, Agents, with the logins of
  * Claude and Codex, Preferences, Keyboard shortcuts, and Stats.
  * Keyboard shortcuts links to the tab of the host. The Mac app adds This
- * Mac last. In the phone apps, Preferences links to the page of the
- * `notices` setting of the device. `flow` moves a tab that
- * does not fit to a second line, for a phone.
+ * Mac last. In the phone apps, a tab opens its page in `phoneTabPages`,
+ * such as the page of the `notices` setting of the device, or shows with
+ * no link. `flow` moves a tab that does not fit to a second line, for a
+ * phone.
  */
 export function AccountTabs(props: {
   tab: AccountTab
@@ -38,10 +46,13 @@ export function AccountTabs(props: {
   phoneApp?: boolean
   notices?: NoticeSetting
 }) {
-  const preferences =
-    props.phoneApp && props.notices
-      ? phonePreferencesPages[props.notices]
-      : paths.accountPreferences
+  const phone = props.phoneApp === true
+  const preferences = phone
+    ? props.notices && phoneTabPages.preferences[props.notices]
+    : paths.accountPreferences
+  const shortcuts = phone
+    ? phoneTabPages.shortcuts
+    : shortcutPages[props.host].tab
   const tabs: LinkTab[] = [
     {
       label: 'General',
@@ -60,7 +71,7 @@ export function AccountTabs(props: {
     },
     {
       label: 'Keyboard shortcuts',
-      to: shortcutPages[props.host].tab,
+      to: shortcuts,
       selected: props.tab === 'shortcuts',
     },
     {
@@ -80,7 +91,7 @@ export function AccountTabs(props: {
     <linkTabs.Component
       label="Account"
       moklyInstance="account-tabs"
-      tabs={tabs}
+      tabs={plainData(tabs)}
       {...defined({ flow: props.flow })}
     />
   )

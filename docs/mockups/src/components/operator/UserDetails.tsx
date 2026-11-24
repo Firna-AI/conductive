@@ -14,6 +14,7 @@ import {
 } from '../../../../../src/ui/components/operator/operatorCopy'
 import { TargetList, TargetRow } from './targets'
 import { DeletionNotice } from './deletions'
+import { linkTo, type DrawnPages } from './drawnPages'
 
 /**
  * The notice at the top of the page: the suspension of a suspended user,
@@ -62,6 +63,11 @@ export function UserDetails(props: {
   user: UserPage
   /** The question before the disable of the referral code. */
   disableCode?: string
+  /**
+   * The drawn pages of the records that the page names. With it, an org
+   * or a person without a drawn page shows as text.
+   */
+  pages?: DrawnPages
 }) {
   const { user } = props
   return (
@@ -86,7 +92,7 @@ export function UserDetails(props: {
         />
       </section.Component>
       {user.access.state === 'granted' ? (
-        <AppAccessSection access={user.access} />
+        <AppAccessSection access={user.access} pages={props.pages} />
       ) : null}
       {user.referral ? (
         <ReferralSection code={user.referral} disable={props.disableCode} />
@@ -99,7 +105,7 @@ export function UserDetails(props: {
                 end={org.role}
                 key={org.name}
                 target={{ kind: 'org', name: org.name, initials: org.initials }}
-                to={paths.operatorOrg}
+                to={linkTo(props.pages, 'orgs', org.name, paths.operatorOrg)}
               />
             ))}
           </TargetList>

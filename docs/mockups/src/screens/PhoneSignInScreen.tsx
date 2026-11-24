@@ -5,9 +5,13 @@ import { useSharedUiTheme } from '@firna/ui/theme'
 import { termsAgreement } from '../../../../src/marketing/legal-text'
 import { githubMark } from '../entries/components/common/GitHubMark.mockup'
 import { notice } from '../entries/components/common/Notice.mockup'
-import { ScreenLink } from '../components/common/ScreenLink'
+import { Linked } from '../components/common/ScreenLink'
 import { CatalogueText } from '../components/marketing/CatalogueText'
-import { phoneLegalPages } from '../components/phone/phoneLegalPages'
+import type { LegalTargets } from '../components/marketing/LegalLinks'
+import {
+  phoneLegalPages,
+  phoneLegalReturn,
+} from '../components/phone/phoneLegalPages'
 import {
   phoneSignInCopy as copy,
   signInAlertCopy,
@@ -44,15 +48,19 @@ type OfferStage = Exclude<PhoneSignInState['stage'], 'waiting'>
  * The agreement to the terms, and Continue with GitHub, which opens GitHub
  * in the auth session of the system. iOS asks first, so it leads to the
  * alert. Terms and Privacy open on the app host in the in-app browser, as
- * the legal links of the foot do.
+ * the legal links of the foot do. `legal` and `to` give the destinations
+ * of the links, or none.
  */
-function ContinueWithGitHub() {
+function ContinueWithGitHub(props: {
+  legal: LegalTargets
+  to: string | undefined
+}) {
   return (
     <>
       <p className={styles.agreement}>
-        <CatalogueText legal={phoneLegalPages} text={termsAgreement} />
+        <CatalogueText legal={props.legal} text={termsAgreement} />
       </p>
-      <ScreenLink asChild to={phonePaths.signInAsk}>
+      <Linked to={props.to}>
         <Button
           block
           iconNode={
@@ -68,7 +76,7 @@ function ContinueWithGitHub() {
         >
           {signInCopy.action}
         </Button>
-      </ScreenLink>
+      </Linked>
     </>
   )
 }
@@ -95,14 +103,16 @@ const headings = {
 } as const satisfies Record<OfferStage, { title: string; text: string }>
 
 /** The card that offers the sign-in, with a notice after a failed handoff. */
-function Offer(props: { stage: OfferStage }) {
+function Offer(props: { stage: OfferStage; legal: LegalTargets }) {
   const words = headings[props.stage]
+  // `ask` draws the alert over the start card, so only the start links to it.
+  const to = props.stage === 'start' ? phonePaths.signInAsk : undefined
   return (
     <>
       <h1 className={styles.title}>{words.title}</h1>
       <p className={styles.text}>{words.text}</p>
       {props.stage === 'failed' ? <Failed /> : null}
-      <ContinueWithGitHub />
+      <ContinueWithGitHub legal={props.legal} to={to} />
     </>
   )
 }
@@ -137,15 +147,21 @@ export function PhoneSignInScreen(props: {
   viewport: Viewport
 }) {
   const { stage } = props.state
+  // Done of the legal pages shows one stage, so only that stage links them.
+  const legal = stage === phoneLegalReturn.stage ? phoneLegalPages : 'still'
   const frame = (
     <signInFrame.Component
       label={stage === 'waiting' ? copy.waiting.title : headings[stage].title}
-      legal={phoneLegalPages}
+      legal={legal}
       moklyInstance="phone-sign-in-frame"
       phoneApp
       viewport={props.viewport}
     >
-      {stage === 'waiting' ? <Finishing /> : <Offer stage={stage} />}
+      {stage === 'waiting' ? (
+        <Finishing />
+      ) : (
+        <Offer legal={legal} stage={stage} />
+      )}
     </signInFrame.Component>
   )
   if (stage !== 'ask') return frame

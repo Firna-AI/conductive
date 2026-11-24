@@ -22,20 +22,33 @@ draw live in `src/components/phone/`.
 `PhoneApp` in `src/components/phone/` marks the screens inside it as the
 phone apps, as `MacApp` marks the Mac app. A `phone-app` page that draws a
 shared screen of `app`, such as the workspace or the Account page, wraps
-the screen in the mark. The screen passes the mark to its tab parts as
-their `phoneApp` prop, so each tab opens the page of the phone apps where
-one exists:
+the screen in the mark. The screen passes the mark to its registered
+parts as their `phoneApp` prop: the tab parts, and `toolContent`, the
+tool of the tools panel. So each control opens the page of the phone apps
+where one exists:
 
 - The Preview tab of a phone and of the tools panel opens
   `phone-app/browser/tool`.
 - Preferences opens the page of the notices setting of the device:
-  `phone-app/notices/denied`, or its `not-now` or `on` variant.
+  `phone-app/notices/denied`, or its `not-now` or `on` variant. Keyboard
+  shortcuts has no page in the phone apps yet, so it shows with no link.
 - A port of the Preview tool opens `phone-app/browser/opening`.
+  `toolContent` passes that page as data to the Preview tool, to its list
+  of servers, and to the rows of the services.
+- Show log and the menu of a service open the views over
+  `phone-app/browser/tool`. Close and Cancel of such a view show the tool
+  again. Try again of a list that did not load shows the tool too.
 
-The other tabs open the shared pages of `app`, as the tabs of the Mac app
-do. Each part keeps its pages of the phone apps in a map beside its web
-pages. A screen of the web app passes no mark, so its parts do not
-change.
+On a phone page, a link opens a phone page or a shared page that the
+phone apps show in the same way, or it has no link. The other tabs open
+the shared pages of `app`, as the tabs of the Mac app do. Each part keeps
+its pages of the phone apps in a map beside its web pages. A control
+whose page that map does not hold shows with no link, such as Stop, and
+the session that started a service. A screen of the web app passes no
+mark, so its parts do not change. `phone-app/browser/tool` and
+`phone-app/notices/denied` have schemas of their own, so their controls
+offer no state that only the web app draws: no preview inside the app,
+and no tab of the web app.
 
 ## Sign-in
 
@@ -64,7 +77,14 @@ the home page. The links to Terms and Privacy stay, in the agreement and
 in the foot. The screen gives both places one set of pages,
 `phoneLegalPages` in `src/components/phone/`. They open Terms and Privacy
 on the app host in the in-app browser, as `phone-app/browser/terms` shows,
-so no link leads to the home page or the pricing page. Its variants:
+so no link leads to the home page or the pricing page. In the app, Done of
+those pages shows the stage that opened them. The catalogue draws that
+Done only for the start, as `phoneLegalReturn` beside `phoneLegalPages`
+gives. So only the start links them. The other stages show Terms and
+Privacy with their look and no destination: the `still` form of the
+`legal` prop of `SignInFrame` and of `CatalogueText`. Continue with GitHub
+at `failed` and `ended` has no destination either, because `ask` draws the
+alert over the start card. Its variants:
 
 - `ask` has the alert of iOS over the start, before the auth session
   opens. iOS writes its words: “Conductive” Wants to Use
@@ -79,16 +99,23 @@ so no link leads to the home page or the pricing page. Its variants:
   back to the app before then.
 - `failed` has a handoff that the app could not finish: the one-use code
   expired after 60 seconds, the code was already used, or the exchange did
-  not reach the server. A danger notice above the agreement says that the
-  sign-in did not finish. Continue with GitHub starts a new sign-in. The
-  errors of the GitHub step do not reach this state, because they show in
-  the sheet.
+  not reach the server. It also covers a revision of the Terms that
+  changed during the sign-in. The app gets the current revision at each
+  start, in the reply of the version check, and the sign-in carries it,
+  from a design call of 24 November 2026. When the revision changes
+  between that check and the press, the auth session returns to the app,
+  which shows this state. A danger notice above the agreement says that
+  the sign-in did not finish. Continue with GitHub starts a new sign-in.
+  The errors of the GitHub step do not reach this state, because they show
+  in the sheet.
 - `ended` has the sign-in after the phone was signed out, with the title
   Sign in again. Its words hold for each cause: the 30 days ended, a
   refresh found a new revision of the Terms, or an operator suspended the
-  account. The agreement above Continue with GitHub asks for the current
-  Terms, as on every sign-in. The words name no session, because a session
-  in the app is a chat with an agent.
+  account. The agreement above Continue with GitHub asks in the app for
+  the agreement to the current Terms, as on every sign-in. The sign-in
+  carries the current revision, so no consent page shows before GitHub.
+  The words name no session, because a session in the app is a chat with
+  an agent.
 
 The flow `user-flows/phone-sign-in` goes from the start, through `ask`
 and `waiting`, to the workspace list of `app/shell`, where the phone is
@@ -228,7 +255,11 @@ the in-app browser, on its own random host of the preview domain,
   to the preview. The catalogue draws the page of one server only, so
   every port opens `opening`, whose host is the same for every port. The
   desktop layout of a tablet has no Preview tab in its centre row. The web
-  app keeps its frame and its tabs, as `app/tools/preview` shows.
+  app keeps its frame and its tabs, as `app/tools/preview` shows. Its
+  variants have the views over the tool: `log` has the log of `web`,
+  `log-empty` has the log of `worker`, which has printed nothing yet, and
+  `menu` has the menu of `web`, with Restart and Stop. A phone shows each
+  one in a sheet, and a tablet in a dialog, or the menu beside its button.
 - `opening` has the page of the authorizer, on
   `authorize.conductive.page`, while a preview opens, as
   `app/tools/preview-opening` draws it. Its `failed` variant has a preview
@@ -245,8 +276,10 @@ the in-app browser, on its own random host of the preview domain,
   plan of 23 November 2026 chose these pages of the app host. The page
   shows the shared legal text, as the Terms page of the site does, with
   no header or footer of the site and no wordmark link. So no link leads
-  to the home page or the pricing page. Done shows the sign-in again. Its
-  `privacy` variant has the Privacy notice. `AppLegalPage` in
+  to the home page or the pricing page. Done shows the stage of the
+  sign-in that opened the page. The catalogue links the page only from the
+  start, so its Done shows the start. Its `privacy` variant has the Privacy
+  notice. `AppLegalPage` in
   `src/components/phone/` draws the text.
 
 `InAppBrowserScreen` in `src/screens/` draws the pages with

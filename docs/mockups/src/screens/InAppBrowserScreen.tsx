@@ -3,6 +3,7 @@ import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { appDomain } from '../../../../src/shared/brand'
 import { AppLegalPage } from '../components/phone/AppLegalPage'
 import { InAppBrowser } from '../components/phone/InAppBrowser'
+import { phoneLegalReturn } from '../components/phone/phoneLegalPages'
 import { DesktopPicture } from '../components/tools/DesktopView'
 import { storefrontPage } from '../entries/components/tools/StorefrontPage.mockup'
 import {
@@ -76,7 +77,7 @@ function pageOf(state: InAppBrowserState, viewport: Viewport): BrowserPage {
       return {
         host: appDomain,
         content: <AppLegalPage page={state.page} viewport={viewport} />,
-        doneTo: phonePaths.signIn,
+        doneTo: phoneLegalReturn.path,
       }
   }
 }

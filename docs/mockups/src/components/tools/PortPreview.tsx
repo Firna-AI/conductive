@@ -118,7 +118,11 @@ export function PreviewActions(props: { href?: string; expandTo?: string }) {
  * label. After "+", no tab is current, and the port form lists the servers
  * that have no preview yet.
  */
-function PhonePreview(props: { adding: boolean; services?: PreviewServices }) {
+function PhonePreview(props: {
+  adding: boolean
+  services?: PreviewServices
+  portPage?: string
+}) {
   const { adding, services } = props
   return (
     <div className={styles.preview}>
@@ -152,7 +156,10 @@ function PhonePreview(props: { adding: boolean; services?: PreviewServices }) {
         <serverList.Component
           moklyInstance="server-list"
           servers={services?.servers ?? unopened()}
-          {...defined({ services: services?.section })}
+          {...defined({
+            portPage: props.portPage,
+            services: services?.section,
+          })}
         />
       ) : (
         <div className={styles.frame}>
@@ -175,6 +182,7 @@ function PhonePreview(props: { adding: boolean; services?: PreviewServices }) {
 function PanelPreview(props: {
   shown: number | null
   services?: PreviewServices
+  portPage?: string
 }) {
   return (
     <div className={styles.preview}>
@@ -182,7 +190,10 @@ function PanelPreview(props: {
         current={props.shown}
         moklyInstance="server-list"
         servers={props.services?.servers ?? detectedServers}
-        {...defined({ services: props.services?.section })}
+        {...defined({
+          portPage: props.portPage,
+          services: props.services?.section,
+        })}
       />
     </div>
   )
@@ -199,7 +210,8 @@ function unopened() {
  * its port in the centre row. On desktop, "+" and its `adding` state do not exist, so
  * `adding` draws the open previews. Each list shows `services` above its
  * servers, also when the runner reports no server, because a service can
- * listen on no port.
+ * listen on no port. `portPage` is the page that a press on a port of a
+ * list opens, in place of its Preview tab, such as in the phone apps.
  */
 export function PreviewTool(props: {
   state: PreviewState
@@ -207,18 +219,27 @@ export function PreviewTool(props: {
   /** The port of the Preview tab that shows on desktop, or null. */
   shownPort: number | null
   services?: PreviewServices
+  portPage?: string
 }) {
-  const { services } = props
+  const { services, portPage } = props
   const open = props.frame ? (
-    <PhonePreview adding={props.state === 'adding'} services={services} />
+    <PhonePreview
+      adding={props.state === 'adding'}
+      portPage={portPage}
+      services={services}
+    />
   ) : (
-    <PanelPreview services={services} shown={props.shownPort} />
+    <PanelPreview
+      portPage={portPage}
+      services={services}
+      shown={props.shownPort}
+    />
   )
   const list = (
     <serverList.Component
       moklyInstance="server-list"
       servers={services?.servers ?? detectedServers}
-      {...defined({ services: services?.section })}
+      {...defined({ portPage, services: services?.section })}
     />
   )
   switch (props.state) {
@@ -232,7 +253,7 @@ export function PreviewTool(props: {
         <serverList.Component
           moklyInstance="server-list"
           servers={[]}
-          {...defined({ services: services.section })}
+          {...defined({ portPage, services: services.section })}
         />
       ) : (
         <portMessage.Component

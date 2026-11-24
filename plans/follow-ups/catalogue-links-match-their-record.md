@@ -2,8 +2,8 @@
 
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-23, from pull request #671, branch `calummoore/universal-expo-app-milestone-1-mockups-emjd`, review item 9, the blocked wider fix of review findings 2 and 3.
-- **Location:** `docs/mockups/src/components/operator/targetPages.ts:12` and `:17`, `docs/mockups/src/components/tools/PortForm.tsx:48`, `docs/mockups/src/components/tools/ServiceList.tsx:64`, `docs/mockups/src/components/settings/OrgSections.tsx:165`, and `docs/mockups/src/components/settings/DeleteOrgDialog.tsx:27`.
+- **Added:** 2026-11-23, from pull request #671, branch `calummoore/universal-expo-app-milestone-1-mockups-emjd`, review item 9, the blocked wider fix of review findings 2, 3, and 12.
+- **Location:** `docs/mockups/src/components/operator/targetPages.ts:5`, `:12`, and `:17`, `docs/mockups/src/components/operator/UserDetails.tsx:102`, `docs/mockups/src/components/operator/AccessSections.tsx:53` and `:62`, `docs/mockups/src/components/operator/codes.tsx:125`, `docs/mockups/src/components/operator/LargestOrgs.tsx:30`, `docs/mockups/src/components/operator/OrgDetails.tsx:82`, `docs/mockups/src/components/tools/PortForm.tsx:48`, `docs/mockups/src/components/tools/ServiceList.tsx:64`, `docs/mockups/src/components/settings/OrgSections.tsx:165`, and `docs/mockups/src/components/settings/DeleteOrgDialog.tsx:27`.
 - **Reason:** the fix changes mockups that are on `origin/main`, and only the user can approve that.
 
 - **Source:** Review. **Category:** mockup.
@@ -13,15 +13,17 @@
 - **Background:**
   - Several lists of the catalogue send every item to one sample page:
     - Every operator link to a user without a saved page opens the page of Dana Kim, from `userPagePath` in `docs/mockups/src/components/operator/targetPages.ts`, added in commit `e37cdd409`. `@kt-null` in Long runs also opens it, although his page exists at `app/operator/user/access/org-invitation`, because `drawnUserPages` has no entry for him.
+    - Every active org opens the page of Hexwave, from `orgPagePaths` in `docs/mockups/src/components/operator/targetPages.ts`. Rhino Data on the Orgs tab is one example.
+    - Some operator parts pass a fixed path and go around `userPagePath`: `UserDetails.tsx:102` sends Rhino Data to Hexwave on the invite-code page of a user, `AccessSections.tsx:53` and `:62` send `@vex-ops` to Dana Kim on the org-invitation page, and `codes.tsx:125`, `LargestOrgs.tsx:30`, and `OrgDetails.tsx:82` link the one saved org or user page.
     - Every port of the web Preview tool opens the preview of port 3000, since commit `27f888f4a`.
     - Delete org on `app/org-settings/colour` opens its question over the default colour, and Cancel returns to `app/org-settings`.
-  - The phone mockups of 23 November 2026 already follow one rule: a link opens a page that the catalogue draws for the same record and state, and an item without such a page shows without a link. The Deletions tab, the phone Preview tool, the deletion question, and the lock screen follow it.
+  - The phone and deletion mockups of 23 and 24 November 2026 follow one rule: a link opens a page that the catalogue draws for the same record and state, and an item without such a page shows without a link. The Deletions tab and the deletion pages of users, the phone Preview tool with its service views, the deletion question, the legal pages of the phone sign-in, and the lock screen follow it.
 - **Problem:** A press on an item of these lists shows the page of another person, another port, or another state.
 - **Impact if no action:** readers of the catalogue see mismatched pages, and new mockups copy the pattern.
 - **Root question:** How does each link of the catalogue open a page that shows the same record and state as the item that the reader pressed?
 - **Options:**
   - **A.** Change nothing in the existing lists. Effort: Small.
-  - **B.** Apply the rule to the existing lists. Replace the fallback of `userPagePath` with the rule, add `kt-null` to `drawnUserPages`, give the web port rows a destination for each port, and give Delete org its question for each state or no link. State the rule under "How a screen is built" in `docs/mockups/README.md`. Effort: Medium.
+  - **B.** Apply the rule to the existing lists. Make the operator link parts take the record, not a path, and find its page through one lookup of the drawn pages, so that no caller can pass the page of another record. Replace the fallbacks of `userPagePath` and `orgPagePaths` with the rule, add `kt-null` to `drawnUserPages`, give the web port rows a destination for each port, and give Delete org its question for each state or no link. State the rule under "How a screen is built" in `docs/mockups/README.md`. Effort: Medium.
   - **C.** Draw a saved page for each item of those lists. Effort: Large.
 - **Left out:** a check of the built catalogue for mismatched links, because a structural option exists, and a new check needs the user.
 - **Wider fix:** B.

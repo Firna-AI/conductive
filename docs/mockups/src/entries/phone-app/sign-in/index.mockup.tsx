@@ -32,7 +32,7 @@ export const phoneAppSignIn = defineScreen({
       slug: 'waiting',
       title: 'Finishing the sign-in',
       description:
-        'GitHub signed the person in, and the auth session closed. The session handed the one-use code back, and the app exchanges it for its own sign-in. The card shows Signing in with a spinner, and no button. Then the app opens.',
+        'GitHub signed the person in, and the auth session closed. The session handed the one-use code back, and the app exchanges it for its own sign-in. The card shows Signing in with a spinner, and no button. Then the app opens. Terms and Privacy in the foot open the same pages as on the start, and their Done shows this stage again in the app. The catalogue draws that Done only for the start, so the links here have no destination.',
       rationale:
         'The sheet of GitHub covers the app until GitHub ends, so the person cannot come back to the app before then. Only the exchange runs after it, so the card needs no Cancel. A close of the sheet returns to the start, with no error. The errors of the GitHub step show in the sheet, as they show in the browser for the Mac app.',
       props: { stage: 'waiting' },
@@ -42,18 +42,18 @@ export const phoneAppSignIn = defineScreen({
       slug: 'failed',
       title: 'Sign-in did not finish',
       description:
-        'The auth session handed the sign-in back, but the app could not finish it. The one-use code expired after 60 seconds, the code was already used, or the exchange did not reach the server. A danger notice above the agreement says that the sign-in did not finish. Continue with GitHub starts a new sign-in.',
+        'The auth session handed the sign-in back, but the app could not finish it. The one-use code expired after 60 seconds, the code was already used, or the exchange did not reach the server. The app also shows this state when the Terms got a new revision during the sign-in, after the app read the current revision at its start. Then the auth session returns to the app with no sign-in. A danger notice above the agreement says that the sign-in did not finish. Continue with GitHub starts a new sign-in, and iOS shows its alert first, as over the start. Terms and Privacy open the same pages as on the start, and their Done shows this stage again in the app. The catalogue draws those next views only for the start, so this stage shows the links and Continue with GitHub with no destination.',
       rationale:
-        'Each cause has the same recovery, a new sign-in, so one notice serves them all. The notice names no code, because the person never sees one. The errors of the GitHub step itself, such as a cancel on GitHub or a suspended account, show in the sheet of the auth session. So this state covers only the exchange after GitHub. The Mac app also lets the person start again after a failed exchange.',
+        'Each cause has the same recovery, a new sign-in, so one notice serves them all. The notice names no code, because the person never sees one. A design call of 24 November 2026: the app gets the current revision of the Terms at each start, in the reply of the version check, and the sign-in carries that revision. So the Worker shows no consent page before GitHub. When the revision changes between the check and the press, the Worker sends the auth session back to the app, which shows this state. The errors of the GitHub step itself, such as a cancel on GitHub or a suspended account, show in the sheet of the auth session. The Mac app also lets the person start again after a failed exchange.',
       props: { stage: 'failed' },
     },
     {
       slug: 'ended',
       title: 'Signed out',
       description:
-        'The phone was signed out, so the app shows the sign-in again, with the title Sign in again. The causes: the 30 days of the phone sign-in ended, a refresh found a new revision of the Terms, or an operator suspended the account. The words hold for each cause. The agreement to the current Terms sits above Continue with GitHub, as on every sign-in.',
+        'The phone was signed out, so the app shows the sign-in again, with the title Sign in again. The causes: the 30 days of the phone sign-in ended, a refresh found a new revision of the Terms, or an operator suspended the account. The words hold for each cause. The agreement above Continue with GitHub asks in the app for the agreement to the current Terms, as on every sign-in, so no consent page shows before GitHub. Continue with GitHub opens the alert of iOS first, as over the start. Terms and Privacy open the same pages as on the start, and their Done shows this stage again in the app. The catalogue draws those next views only for the start, so this stage shows the links and Continue with GitHub with no destination.',
       rationale:
-        'Decision 8 C keeps a phone signed in for up to 30 days, and each refresh checks the revision of the Terms. A refresh with a new revision fails, and the phone shows the sign-in with the agreement. A suspension ends the sign-in at once, and the GitHub step then refuses the person in the sheet of the auth session. One set of words needs no cause from the server, and the agreement covers a new revision. The words name no session, because a session in the app is a chat with an agent.',
+        'Decision 8 C keeps a phone signed in for up to 30 days, and each refresh checks the revision of the Terms. A refresh with a new revision fails, and the phone shows the sign-in with the agreement. A design call of 24 November 2026: the app gets the current revision of the Terms at each start, in the reply of the version check, and the sign-in carries that revision. So the agreement in the app covers a new revision, and the Worker shows no consent page in the auth session. A suspension ends the sign-in at once, and the GitHub step then refuses the person in the sheet of the auth session. One set of words needs no cause from the server. The words name no session, because a session in the app is a chat with an agent.',
       props: { stage: 'ended' },
     },
   ],

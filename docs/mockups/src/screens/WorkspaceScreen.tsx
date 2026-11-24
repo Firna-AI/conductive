@@ -8,6 +8,7 @@ import {
 } from '../entries/components/layout/AppFrame.mockup'
 import { acmeRail } from '../components/layout/OrgRail'
 import { useMacApp } from '../../../../src/ui/components/mac/MacApp'
+import { usePhoneAppProp } from '../components/phone/PhoneApp'
 import { ChatMarks } from '../components/explain/chatMarks'
 import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import { checksActions } from '../entries/components/workspace/BarActions.mockup'
@@ -78,6 +79,7 @@ export function WorkspaceScreen(props: {
 }) {
   const { viewport, picker: pickerPart } = props
   const mac = useMacApp()
+  const phoneApp = usePhoneAppProp()
   const {
     state,
     open,
@@ -159,6 +161,7 @@ export function WorkspaceScreen(props: {
           tabs,
           menuTab: row.menuTab,
           readOnly,
+          phoneApp: phoneApp.phoneApp === true,
         })}
       {copyToast(state, viewport)}
     </ChatWorkspaces>
@@ -204,6 +207,7 @@ export function WorkspaceScreen(props: {
       moklyInstance="tool-content"
       state={state}
       viewport={viewport}
+      {...phoneApp}
     />
   )
   const toast = workspaceToast(state, workspace, viewport)

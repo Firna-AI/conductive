@@ -68,17 +68,25 @@ export const toolContent = defineComponent({
   slug: 'tool-content',
   title: 'Tool content',
   description:
-    'The tool of the tools panel in a state: Terminal, Preview, or Desktop, or the sandbox state while the sandbox is down. Its own page shows the Terminal of the ready workspace.',
-  relatedDocs: ['docs/mockups/catalogue-workspace-tools.md'],
+    'The tool of the tools panel in a state: Terminal, Preview, or Desktop, or the sandbox state while the sandbox is down. In the phone apps each port of the Preview tool opens the in-app browser, and the controls of the services open the pages of the phone apps. Its own page shows the Terminal of the ready workspace.',
+  relatedDocs: [
+    'docs/mockups/catalogue-workspace-tools.md',
+    'docs/mockups/phone-app.md',
+  ],
   propSchema: {
     type: 'object',
     additionalProperties: false,
     required: ['state'],
-    properties: stateProperties,
+    properties: {
+      ...stateProperties,
+      /** The tool of the phone apps, which opens no preview inside the app. */
+      phoneApp: { type: 'boolean' },
+    },
   } as const,
   props: { state: readyWorkspace },
   render: (props, context) => (
     <ToolContent
+      phoneApp={props.phoneApp}
       state={props.state}
       viewport={props.viewport ?? context.viewport}
     />
@@ -95,6 +103,21 @@ export const toolContent = defineComponent({
       title: 'Sandbox stopped',
       description: 'The sandbox state in place of the tool.',
       props: { state: { ...readyWorkspace, sandbox: 'stopped' } },
+    },
+    {
+      slug: 'phone-app',
+      title: 'Phone apps',
+      description:
+        'The Preview tool of the phone apps, with the services and the servers. Each port opens the page of the authorizer in the in-app browser. Show log and the menu open the views of the phone apps, and a control without such a view shows without a link.',
+      props: {
+        state: {
+          ...readyWorkspace,
+          tool: 'preview',
+          ports: 'detected',
+          services: 'running',
+        },
+        phoneApp: true,
+      },
     },
   ],
 })

@@ -9,6 +9,13 @@ export type LegalPages = {
   readonly privacy: string
 }
 
+/**
+ * Where the legal links lead: the catalogue page of each legal page, or
+ * `still`, which keeps their look and opens nothing, as `StillLinks` does.
+ * A screen uses `still` where no drawn page leads back to it.
+ */
+export type LegalTargets = LegalPages | 'still'
+
 /** The legal pages of the site, as the user chose for decision 35. */
 const sitePages: LegalPages = { terms: paths.terms, privacy: paths.privacy }
 
@@ -20,12 +27,12 @@ const legalLinks = [
 
 /**
  * The legal pages in a row, which wraps on a narrow screen. `pages` gives
- * other pages for the same links, such as those of a phone app. Without
- * it, the links open the legal pages of the site.
+ * other targets for the same links, such as the pages of a phone app or
+ * `still`. Without it, the links open the legal pages of the site.
  */
 export function LegalLinks(props: {
   align?: 'start' | 'center'
-  pages?: LegalPages
+  pages?: LegalTargets
 }) {
   const pages = props.pages ?? sitePages
   return (
@@ -33,15 +40,21 @@ export function LegalLinks(props: {
       aria-label="Legal"
       className={classes(styles.row, props.align === 'center' && styles.center)}
     >
-      {legalLinks.map((link) => (
-        <ScreenLink
-          className={styles.link}
-          key={link.page}
-          to={pages[link.page]}
-        >
-          {link.label}
-        </ScreenLink>
-      ))}
+      {legalLinks.map((link) =>
+        pages === 'still' ? (
+          <span className={styles.link} key={link.page}>
+            {link.label}
+          </span>
+        ) : (
+          <ScreenLink
+            className={styles.link}
+            key={link.page}
+            to={pages[link.page]}
+          >
+            {link.label}
+          </ScreenLink>
+        ),
+      )}
     </nav>
   )
 }

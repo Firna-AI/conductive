@@ -1,6 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
 import { updateAppCopy } from '../../../components/phone/appStopCopy'
-import { phoneLegalPages } from '../../../components/phone/phoneLegalPages'
 import { SignInFrame } from '../../../screens/signInFrame'
 import { signInCopy } from '../../../../../../src/ui/screens/signInCopy'
 import { waitlistCopy } from '../../../../../../src/ui/screens/waitlistCopy'
@@ -34,17 +33,23 @@ export const signInFrame = defineComponent({
       /** A page without a foot, such as a page that stops a phone app. */
       bare: { type: 'boolean' },
       /**
-       * The pages that the legal links of the foot open, such as those of
-       * a phone app. Without it, they open the legal pages of the site.
+       * Where the legal links of the foot lead: the pages of a phone app,
+       * or `still` for links that keep their look and open nothing.
+       * Without it, they open the legal pages of the site.
        */
       legal: {
-        type: 'object',
-        additionalProperties: false,
-        required: ['terms', 'privacy'],
-        properties: {
-          terms: { type: 'string' },
-          privacy: { type: 'string' },
-        },
+        anyOf: [
+          {
+            type: 'object',
+            additionalProperties: false,
+            required: ['terms', 'privacy'],
+            properties: {
+              terms: { type: 'string' },
+              privacy: { type: 'string' },
+            },
+          },
+          { const: 'still' },
+        ],
       },
     },
   } as const,
@@ -81,10 +86,10 @@ export const signInFrame = defineComponent({
       slug: 'phone-app',
       title: 'Phone app',
       description:
-        'The page in a phone app, with the words of the sign-in. The wordmark is no link, and the foot has only the legal links. They open Terms and Privacy on the app host in the in-app browser, because a phone app links to no page of the site.',
+        'The page in a phone app, with the words of the sign-in. The wordmark is no link, and the foot has only the legal links, because a phone app links to no page of the site. On the start of the phone sign-in, they open Terms and Privacy on the app host in the in-app browser. Done of those pages shows the start, so this page shows the links with no destination.',
       props: {
         label: signInCopy.title,
-        legal: phoneLegalPages,
+        legal: 'still',
         phoneApp: true,
       },
       slots: {

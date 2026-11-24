@@ -6,6 +6,7 @@ import {
   SquareTerminal,
 } from 'lucide-react'
 import { loadFailure } from '../../entries/components/common/LoadFailure.mockup'
+import { defined } from '../../defined'
 import a11y from '../../../../../src/ui/components/common/a11y.module.css'
 import { IconButton } from '../../../../../src/ui/components/common/actions'
 import { classes } from '../../../../../src/ui/components/common/classes'
@@ -19,7 +20,7 @@ import {
   serviceSourceText,
   type ServiceEntry,
 } from '../../../../../src/ui/components/tools/serviceCopy'
-import { usePreviewPage } from './previewLink'
+import { previewPages } from './previewLink'
 import { serviceMenu } from './serviceMenu'
 import {
   ServiceState,
@@ -48,20 +49,21 @@ function Linked(props: { to?: string; children: ReactElement }) {
 
 /**
  * The ports of a service as small buttons that open their previews. The
- * port of the Preview tab that shows is the current one.
+ * port of the Preview tab that shows is the current one. `to` is the page
+ * that a press opens.
  */
 function ServicePorts(props: {
   ports: readonly number[]
   current: number | null
+  to: string
 }) {
-  const preview = usePreviewPage()
   if (props.ports.length === 0) {
     return <span className={styles.noPort}>{servicesCopy.noPort}</span>
   }
   return (
     <>
       {props.ports.map((port) => (
-        <ScreenLink asChild key={port} to={preview}>
+        <ScreenLink asChild key={port} to={props.to}>
           <button
             aria-current={port === props.current ? 'page' : undefined}
             aria-label={serviceControlCopy.port(port)}
@@ -123,6 +125,7 @@ function ServiceRow(props: {
   current: number | null
   controls: boolean
   links: ServiceLinks
+  portPage: string
   menu?: OpenServiceMenu
 }) {
   const { service, links } = props
@@ -183,7 +186,11 @@ function ServiceRow(props: {
         <ServiceSourceLine service={service} to={links.source} />
       </div>
       <div className={styles.ports}>
-        <ServicePorts current={props.current} ports={service.ports} />
+        <ServicePorts
+          current={props.current}
+          ports={service.ports}
+          to={props.portPage}
+        />
       </div>
     </li>
   )
@@ -200,6 +207,8 @@ export function ToolHeading(props: { children: string }) {
  * the list that failed, the notice of data that did not load takes the
  * place of the rows, with the message of the server and Try again.
  * `current` is the port of the Preview tab that shows, on desktop.
+ * `portPage` is the page that a press on a port opens: by default its
+ * Preview tab in the web app.
  */
 export function ServiceSection(props: {
   services: readonly ServiceEntry[]
@@ -207,8 +216,12 @@ export function ServiceSection(props: {
   controls: boolean
   linksFor: (service: ServiceEntry) => ServiceLinks
   menu?: OpenServiceMenu
-  /** A first read that failed, and the screen of the list after Try again. */
-  failed?: { retryTo: string }
+  /**
+   * A first read that failed, and the screen of the list after Try again,
+   * where the mockups draw one.
+   */
+  failed?: { retryTo?: string }
+  portPage?: string
 }) {
   return (
     <section aria-label={servicesCopy.heading} className={styles.section}>
@@ -218,7 +231,7 @@ export function ServiceSection(props: {
           <loadFailure.Component
             moklyInstance="services-load-failure"
             title={servicesCopy.loadFailed}
-            to={props.failed.retryTo}
+            {...defined({ to: props.failed.retryTo })}
           />
         </div>
       ) : props.services.length === 0 ? (
@@ -232,6 +245,7 @@ export function ServiceSection(props: {
               key={service.name}
               links={props.linksFor(service)}
               menu={props.menu}
+              portPage={props.portPage ?? previewPages.web}
               service={service}
             />
           ))}

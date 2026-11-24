@@ -13,16 +13,13 @@ export function PhoneApp(props: { children: ReactNode }) {
   )
 }
 
-/** Whether the screen is a screen of the phone apps. */
-export function usePhoneApp(): boolean {
-  return useContext(PhoneAppContext)
-}
-
 /**
  * The mark of the phone apps as the optional prop of a registered part,
- * such as the tabs of a phone, whose links open the pages of the phone
- * apps. A screen of another app gets no prop, so its parts do not change.
+ * such as the tabs of a phone or the tool of the tools panel, whose links
+ * open the pages of the phone apps. A screen of another app gets no prop,
+ * so its parts do not change. A part reads the mark only from this prop,
+ * so that Changes compares it.
  */
 export function usePhoneAppProp(): { phoneApp?: true } {
-  return usePhoneApp() ? { phoneApp: true } : {}
+  return useContext(PhoneAppContext) ? { phoneApp: true } : {}
 }

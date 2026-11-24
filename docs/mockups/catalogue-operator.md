@@ -220,7 +220,12 @@ of `app/operator/user` and kept their paths:
   email address and Hexwave, where he is a member. Its `noor-a` and
   `rho-9` variants have the pages of Noor Aziz and Rhea Okafor with their
   requests. Each row of the Deletions tab and its page come from one
-  record, so the person and the day stay the same.
+  record, so the person and the day stay the same. These pages link an
+  org, a person, or a code only to its own page, from one lookup of the
+  pages that the catalogue draws. Hexwave and the invite code Launch week
+  keep their links. The catalogue draws no page for Rhino Data or for
+  `@vex-ops`, so their names show as text on the pages of Rhea Okafor and
+  Kai Tanaka. In the app, each of them opens its page.
 
 The child pages of `app/operator/codes`:
 
