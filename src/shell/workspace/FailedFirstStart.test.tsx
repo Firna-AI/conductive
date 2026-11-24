@@ -56,7 +56,7 @@ const resumeLine = `POST ${workspacePaths.resume(org, createdId)}`
 function createdEvent(event: WorkspaceEvent, server: FakeApiServer) {
   const envelope = {
     workspaceId: createdId,
-    eventNumber: lastEvent(server) + 1,
+    eventNumber: lastEvent(server, createdId) + 1,
     occurredAt: FAKE_TIME,
     event,
   }

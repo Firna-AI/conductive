@@ -47,10 +47,7 @@ export function recordingSocket(server: FakeApiServer) {
     open: (target, handlers) => {
       opens.push(target.afterEventNumber)
       connected += 1
-      const close = server.events.subscribe(
-        target.afterEventNumber,
-        handlers.message,
-      )
+      const close = server.events.open(target, handlers)
       return () => {
         connected -= 1
         close()
@@ -65,8 +62,8 @@ export function emit(server: FakeApiServer, event: WorkspaceEvent) {
 }
 
 /** The number of the newest stored event of the workspace. */
-export const lastEvent = (server: FakeApiServer) =>
-  server.events.history(Number.MAX_SAFE_INTEGER).throughEventNumber
+export const lastEvent = (server: FakeApiServer, workspaceId: string = id) =>
+  server.events.last(workspaceId)
 
 /** The whole app in a tab, on a memory address bar that the test moves. */
 export function mountTab(app: AppModel) {

@@ -60,6 +60,8 @@ export interface FakeApiOptions {
    * with the recorded replies of every workspace of the list.
    */
   subWorkspaces?: boolean
+  /** The workspace replies of an older Worker, for a scripted replay. */
+  legacyWorkspaceRead?: boolean
 }
 
 /**
@@ -123,8 +125,9 @@ export class FakeApiServer implements FakeRouteWriter {
       fakeGitHubSummary(options),
       options.workspaceStates,
       subWorkspaces,
+      options.legacyWorkspaceRead ? undefined : this.events,
     )
-    fakeToolRoutes(this, options.banner ?? 'ready-to-merge', paths)
+    fakeToolRoutes(this, this.events, options.banner ?? 'ready-to-merge', paths)
     const { workspaces, created } = workspaceFixtures(options.workspaceState)
     const listed = subWorkspaces
       ? withSubWorkspaces(workspaces.workspaces)
@@ -191,8 +194,9 @@ export class FakeApiServer implements FakeRouteWriter {
     this.requests.push(request.clone())
     const url = new URL(request.url)
     const key = routeKey(request.method, request.url)
-    const response = await this.replies.get(key)
-    if (typeof response === 'function') return response(request)
+    const reply = this.replies.get(key)
+    if (typeof reply === 'function') return reply(request)
+    const response = await reply
     if (response) return response.clone()
     const terminal = this.terminals.fetch(request)
     if (terminal) return terminal
@@ -201,7 +205,7 @@ export class FakeApiServer implements FakeRouteWriter {
       FAKE_ORIGIN,
     ).pathname
     if (request.method === 'GET' && url.pathname === historyPath) {
-      const history = this.events.history()
+      const history = this.events.history(0, FAKE_IDS.workspace)
       const through = Number(
         url.searchParams.get('through') ?? history.throughEventNumber,
       )

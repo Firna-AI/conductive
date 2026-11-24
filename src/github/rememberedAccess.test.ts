@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest'
 import { createApiClient } from '../app/api/client'
-import { ManualDelay } from '../app/test-kit'
+import { ManualDelay, requestLines } from '../app/test-kit'
 import { Store } from '../app/store'
 import { githubPaths, type GitHubCapabilities } from '../shared/github'
 import { FakeApiServer } from '../test-support/fake-api'
@@ -12,6 +12,7 @@ import { createContinueActions } from './continueActions'
 import { createGitHubActions } from './githubActions'
 import type { FetchLike } from './githubClient'
 import type { GitHubState } from './githubStore'
+import { barWorkspaceStream } from './storeDoubles'
 import { snapshotOf } from './testing'
 
 const target = { orgId: FAKE_IDS.org, workspaceId: FAKE_IDS.workspace }
@@ -34,7 +35,11 @@ function memoryOf(start: GitHubCapabilities | undefined) {
   return { kept, memory }
 }
 
-function barFor(fetch: FetchLike, access?: AccessMemory): BarActions {
+function barFor(
+  fetch: FetchLike,
+  access?: AccessMemory,
+  stream = barWorkspaceStream().stream,
+): BarActions {
   return new BarActions({
     branch: 'calummoore/checkout-autocomplete',
     github: createGitHubActions(fetch, target),
@@ -46,8 +51,8 @@ function barFor(fetch: FetchLike, access?: AccessMemory): BarActions {
       snapshot: snapshotOf('ready-to-merge'),
     }),
     refreshGitHub: () => undefined,
-    streamLast: new Store(0),
-    reconnects: new Store(0),
+    streamLast: stream.last,
+    reconnects: stream.reconnects,
     ...(access ? { access } : {}),
   })
 }
@@ -55,17 +60,21 @@ function barFor(fetch: FetchLike, access?: AccessMemory): BarActions {
 const accessOf = (actions: BarActions): CapabilityState =>
   actions.getSnapshot().capabilities
 
-it('shows the remembered access at once, then keeps the fresh answer', async () => {
+it('shows remembered access through the seed, then keeps the first fresh answer', async () => {
+  const server = new FakeApiServer()
   const { kept, memory } = memoryOf(remembered)
-  const actions = barFor(new FakeApiServer().fetch, memory)
+  const { stream, start } = barWorkspaceStream()
+  const actions = barFor(server.fetch, memory, stream)
   const first = accessOf(actions)
   actions.connect()
+  start(19)
   await vi.waitFor(
     () => expect(kept.value).toEqual({ canWrite: true, mergeMethod: 'squash' }),
     shortly,
   )
 
   expect(first).toEqual({ status: 'ready', capabilities: remembered })
+  expect(requestLines(server)).toEqual([`GET ${capabilitiesPath}`])
   expect(accessOf(actions)).toEqual({
     status: 'ready',
     capabilities: { canWrite: true, mergeMethod: 'squash' },

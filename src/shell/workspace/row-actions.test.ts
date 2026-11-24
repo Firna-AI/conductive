@@ -42,7 +42,7 @@ const before: Workspace = {
 const owner = { ...before.owner, id: 'new-owner' }
 
 async function setup() {
-  const server = new FakeApiServer()
+  const server = new FakeApiServer({ legacyWorkspaceRead: true })
   const held = new HeldRequests(server)
   const events = new RecordingEvents()
   const app = new AppModel(testServices(server, { fetch: held.fetch, events }))

@@ -630,88 +630,95 @@ that plan merges first, this milestone merges `main` first.
 The tree and changes routes give their cutoff, their failed repair, and the
 repository. The app ignores the new member, so the product works as before.
 
-- [ ] Merge `main` first when the limits plan merged. Read the lists
+- [x] Merge `main` first when the limits plan merged. Read the lists
       through the memory plan's projection read over the `FilesStorage` of
       the chat view. Parse no private key.
-- [ ] Give the file routes a read through the chat backend, as call 8
+- [x] Give the file routes a read through the chat backend, as call 8
       says. Read the tree and the changes inside the chat queue. Take the
       cutoff, the failed repair, and the repository from the same view.
-- [ ] Add `stateRead` to both replies and to the authorized 503
+- [x] Add `stateRead` to both replies and to the authorized 503
       `file_unavailable` body. The routes wait for the recovery when one
       must run, after the request gates. Keep the root bodies, the 503
       status, and the 502 `invalidFileResponse()`. Keep each optional field
       of the list bodies unchanged.
-- [ ] Keep the request gates and the output filter. Hold the queue for no
+- [x] Keep the request gates and the output filter. Hold the queue for no
       provider or runner I/O.
-- [ ] Add tests in `worker/features/files-routes.test.ts`, and the gate
+- [x] Add tests in `worker/features/files-routes.test.ts`, and the gate
       and 503 cases in `worker/files/handlers.test.ts`:
-  - [ ] The cutoff, the list, and the failed repair come from one view
+  - [x] The cutoff, the list, and the failed repair come from one view
         while a runner report commits beside the read.
-  - [ ] A 503 for a missing list carries `stateRead`.
-  - [ ] A read during a recovery waits for it, and then carries
+  - [x] A 503 for a missing list carries `stateRead`.
+  - [x] A read during a recovery waits for it, and then carries
         `stateRead`.
-  - [ ] The gates and the output filter refuse and filter as before. An
+  - [x] The gates and the output filter refuse and filter as before. An
         unauthorized request starts no recovery.
-- [ ] Update `worker/files/README.md`.
+- [x] Update `worker/files/README.md`.
 
 ## Milestone 4: App workspace seed
 
 Depends on: 2
 
 A new model starts its stream after the cutoff of its read, and each part
-of the stream takes the seed. The full replay stays only for a reply
-without a seed, from an older Worker.
+of the stream takes the seed. A reply without a readable seed uses a full
+replay. A failed read keeps the existing recovery.
 
-- [ ] Parse `seed` in `readOrderedWorkspaceResponse`. Keep a reply without
+Design calls for this milestone, 24 November 2026. An unreadable seed
+leaves the ordered detail usable. Only a complete seed can replace state
+through the cutoff. The Preview store replaces a list read that began
+before the seed, so the older-Worker and failed-read paths keep their reads.
+
+Evidence: `.context/new-tab-workspace-state-reads/impl/m4-report.md`.
+
+- [x] Parse `seed` in `readOrderedWorkspaceResponse`. Keep a reply without
       it valid.
-- [ ] Add the baseline call to `WorkspaceStream` of `src/app/events.ts`,
+- [x] Add the baseline call to `WorkspaceStream` of `src/app/events.ts`,
       and the order of call 9 to `WorkspaceModel.openVisit`, after
       `confirm(read)`, with its generation checks.
-- [ ] Move `HeaderNotices` to take the seeded failures with their first
+- [x] Move `HeaderNotices` to take the seeded failures with their first
       times. Keep Dismiss for each view.
-- [ ] Move `ToolEvents` to keep the seeded port event and port failure.
+- [x] Move `ToolEvents` to keep the seeded port event and port failure.
       Keep each revoke after the cutoff.
-- [ ] Move `WorkspaceSkills` to take the seeded skills event.
-- [ ] Move the Preview store to the list read of call 12.
-- [ ] Move `githubSubscribe` to the empty history of call 11. Keep the
+- [x] Move `WorkspaceSkills` to take the seeded skills event.
+- [x] Move the Preview store to the list read of call 12.
+- [x] Move `githubSubscribe` to the empty history of call 11. Keep the
       stored and fresh reads of `GitHubStore` and their order.
-- [ ] Keep the kept models and stores on their own cursors, as call 10
+- [x] Keep the kept models and stores on their own cursors, as call 10
       says.
-- [ ] Move the development fake and `src/test-support/` to give the seed,
+- [x] Move the development fake and `src/test-support/` to give the seed,
       and to honour the cutoff of each socket. The workspace routes are
-      `src/test-support/fake-workspace-routes.ts`, which answers event 0
-      today, `src/app/dev/workspace-routes.ts`, and
+      `src/test-support/fake-workspace-routes.ts`,
+      `src/app/dev/workspace-routes.ts`, and
       `src/shell/workspace/dev/dev-first-start.ts`. The socket fake is
       `src/test-support/fake-events.ts`, with `src/app/test-kit.ts` and
       `src/shell/workspace/kept-test-kit.tsx`.
-- [ ] Add tests at the lowest level that fails without the change. Use
+- [x] Add tests at the lowest level that fails without the change. Use
       `src/app/events.test.ts`, `workspace-open.test.ts`,
       `workspace-order.test.ts`, `workspace-read-marks.test.ts`,
       `workspace-restore-visit.test.ts`, and `replay-socket.test.ts`:
-  - [ ] The socket opens after the cutoff, and the seed applies before
+  - [x] The socket opens after the cutoff, and the seed applies before
         the first event.
-  - [ ] An event between the read and the socket arrives once.
-  - [ ] A page, a gap, and a reconnect after a seeded start lose nothing.
-  - [ ] A close while the read waits seeds nothing and opens nothing.
-  - [ ] An Archive or a Restore during the read keeps its floor.
-  - [ ] `last` and the read marks equal the cutoff after the seed.
-  - [ ] A reply without a seed, as from an older Worker, replays from
+  - [x] An event between the read and the socket arrives once.
+  - [x] A page, a gap, and a reconnect after a seeded start lose nothing.
+  - [x] A close while the read waits seeds nothing and opens nothing.
+  - [x] An Archive or a Restore during the read keeps its floor.
+  - [x] `last` and the read marks equal the cutoff after the seed.
+  - [x] A reply without a seed, as from an older Worker, replays from
         event 0.
-- [ ] Add the cases to `HeaderNotices.test.tsx`, `tool-events.test.ts`,
+- [x] Add the cases to `HeaderNotices.test.tsx`, `tool-events.test.ts`,
       `workspace-skills.test.ts`, `github-events.test.ts`,
       `previewsState.test.ts`, `KeptWorkspace.test.tsx`,
       `WorkspaceMacBar.test.tsx`, and the bar control tests
       `src/github/barActions.test.ts`, `barReady.test.ts`, and
       `rememberedAccess.test.ts`:
-  - [ ] A seeded notice keeps its first time, and Dismiss hides it.
-  - [ ] The `/` list shows the seeded skill lists, and null lists show
+  - [x] A seeded notice keeps its first time, and Dismiss hides it.
+  - [x] The `/` list shows the seeded skill lists, and null lists show
         as unavailable.
-  - [ ] A list read that started before the seed cannot show a revoked
+  - [x] A list read that started before the seed cannot show a revoked
         preview.
-  - [ ] `GitHubStore` reads its stored and fresh state with an empty
+  - [x] `GitHubStore` reads its stored and fresh state with an empty
         history.
-  - [ ] A kept return resumes from its own cursor and keeps its revokes.
-- [ ] Update `src/app/README.md`, `src/app/data-lifecycle.md`,
+  - [x] A kept return resumes from its own cursor and keeps its revokes.
+- [x] Update `src/app/README.md`, `src/app/data-lifecycle.md`,
       `src/app/dev-fake.md`, `src/shell/workspace/README.md`,
       `repair-notices.md`, `kept-workspace.md`, `development-page.md`,
       `screen-parts.md`, `src/github/README.md`, `src/chat/device/README.md`,

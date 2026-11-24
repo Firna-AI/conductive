@@ -20,7 +20,8 @@ import {
 } from '../shared/previews'
 import { servicePaths } from '../shared/services'
 import type { FakeRouteWriter } from './fake-api-routes'
-import { FAKE_IDS } from './fixtures/core'
+import type { FakeWorkspaceEvents } from './fake-events'
+import { FAKE_IDS, FAKE_TIME } from './fixtures/core'
 import {
   MASKED_GONE_PATH,
   MASKED_SEED_PATH,
@@ -136,6 +137,7 @@ export function fakeFilesPreview(
 
 export function fakeToolRoutes(
   routes: FakeRouteWriter,
+  events: FakeWorkspaceEvents,
   banner: BannerState,
   paths: PathState = 'plain',
 ) {
@@ -205,7 +207,15 @@ export function fakeToolRoutes(
       201,
     )
   }
-  routes.json('GET', previewsPath(org, id), data.previews)
+  routes.handle('GET', previewsPath(org, id), async () =>
+    Response.json({
+      previews: data.previews.previews.filter(
+        (preview) =>
+          preview.expiresAt > FAKE_TIME &&
+          !events.previewRevoked(id, preview.id),
+      ),
+    }),
+  )
   routes.json('POST', previewsPath(org, id), data.preview, 201)
   fakeFilesPreview(routes, 'open')
   routes.empty('DELETE', previewPath(org, id, FAKE_IDS.preview))

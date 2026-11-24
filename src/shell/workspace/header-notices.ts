@@ -1,4 +1,5 @@
 import type { RunnerReportKind } from '../../shared/generated/RunnerReportKind'
+import type { WorkspaceSeed } from '../../shared/workspace-state-read'
 import type { StreamEnvelope } from '../../app/api/read-events'
 import type { WorkspaceStream } from '../../app/events'
 import { Store } from '../../app/store'
@@ -45,7 +46,7 @@ function failedRepair(envelope: StreamEnvelope): HeaderNotice | null {
  * time of the first one.
  *
  * Dismiss hides a notice in this view only. The failure stays, so a new view
- * or a new tab shows it again. A new tab reads it from the stored history. A
+ * or a new tab shows it again. A new tab reads it with the workspace. A
  * tab that keeps the store calls `newView` when the workspace shows again.
  * The next failure after a full report shows again here too.
  */
@@ -57,13 +58,14 @@ export class HeaderNotices {
 
   /**
    * Follows the ordered events of the workspace. Call it before the stream
-   * starts, so that the stored history counts.
+   * starts, so that the seed or the stored history counts.
    */
   follow(stream: WorkspaceStream): () => void {
-    const stop = stream.subscribe((envelope) => this.take(envelope))
-    return () => {
-      stop()
-    }
+    return stream.subscribe(
+      (envelope) => this.take(envelope),
+      undefined,
+      (seed) => this.seed(seed.failures),
+    )
   }
 
   /** Starts a new view: each failed repair shows again, also a dismissed one. */
@@ -78,6 +80,14 @@ export class HeaderNotices {
     if (!this.failed.has(kind) || this.dismissed.has(kind)) return
     this.dismissed.add(kind)
     this.publish()
+  }
+
+  private seed(failures: WorkspaceSeed['failures']): void {
+    for (const kind of order) {
+      const failure = failures[kind]
+      if (failure) this.failed.set(kind, failure.occurredAt)
+    }
+    if (this.failed.size > 0) this.publish()
   }
 
   private take(envelope: StreamEnvelope): void {

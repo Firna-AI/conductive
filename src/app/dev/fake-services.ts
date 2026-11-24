@@ -4,7 +4,7 @@ import { devOrgOrderRoute } from '../../test-support/dev-org-order-route'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { API_PATHS } from '../../shared/api'
 import { createApiClient } from '../api/client'
-import { browserDelay, type WorkspaceEventSource } from '../events'
+import { browserDelay } from '../events'
 import {
   windowFocus,
   windowHost,
@@ -115,13 +115,9 @@ export function createFakeServices(search: string): AppServices {
     },
     attachmentMessageFetch(backend, server.fetch),
   )
-  const events: WorkspaceEventSource = {
-    open: (target, handlers) =>
-      server.events.subscribe(target.afterEventNumber, handlers.message),
-  }
   return {
     api: createApiClient(fetch, devFileTransport(fetch, search)),
-    events,
+    events: server.events,
     now,
     delay: browserDelay,
     onFocus: windowFocus(window),

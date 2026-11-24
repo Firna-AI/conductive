@@ -24,9 +24,14 @@ the workspace screen draws, as
 
 ## The phone page
 
-- The tool lists the open previews from the API. It keeps the latest
-  `ports.updated` report of the workspace events, with the servers that
-  listen in the cloud computer. A null report means no report.
+- The tool lists the open previews from the API. It takes the latest
+  port report and its failed repair from the workspace seed. Later
+  `ports.updated` events give the servers that listen in the cloud computer.
+  A null list clears the report.
+- A new list read starts after the workspace seed applies. If a read
+  already started, the store discards its result and reads again. The API
+  leaves revoked and expired previews out of this list. The store keeps
+  revokes that arrive after the cutoff, including on a kept return.
 - With no preview, the tool shows the port form. "+" shows the same form
   beside the tabs of the open previews.
 - The form lists each reported server that has no tab, as a button with its

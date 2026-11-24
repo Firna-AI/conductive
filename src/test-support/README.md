@@ -22,10 +22,14 @@ const response = await server.fetch(workspacesPath('acme'))
 ```
 
 Inject `server.fetch` where the screen's API client takes `fetch`.
-Inject `server.events.subscribe` through a callback for the screen's event adapter.
-For example, use `server.events.subscribe(0, onMessage)`.
-The first message contains stored history. Later `emit` calls send live events.
-Use the last event number instead of zero to exercise a reconnect.
+Give the app `events: server.events` to open a socket for its workspace
+and cursor. The first message contains history after that cursor. Later
+`emit` calls send live events of that workspace. A raw consumer can use
+`server.events.subscribe(after, onMessage, workspaceId)`.
+
+The workspace GET gives the cutoff and seed from that workspace's log.
+Resume gives the cutoff. Set `legacyWorkspaceRead: true` when a test
+scripts a full replay independently of that log.
 
 The `omitted-data` conversation has a Unicode tool excerpt and a capped turn file list.
 Both records include positive omission counts.

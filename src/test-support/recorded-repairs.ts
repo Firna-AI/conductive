@@ -78,8 +78,7 @@ export function nextEnvelope(
   event: WorkspaceEvent,
   occurredAt: number,
 ): WorkspaceEventEnvelope {
-  // The filter keeps no event, so the call copies no history.
-  const last = events.history(Number.MAX_SAFE_INTEGER).throughEventNumber
+  const last = events.last(FAKE_IDS.workspace)
   return {
     workspaceId: FAKE_IDS.workspace,
     eventNumber: last + 1,

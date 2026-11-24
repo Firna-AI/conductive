@@ -93,7 +93,6 @@ describe('a workspace that the tab showed', () => {
     await settle()
     // The model, the chat, and the files each keep their own socket.
     expect(socket.opens.slice(first)).toEqual([kept, kept, kept])
-    // The events that arrived while away also get their read mark.
     expect(chatRequests(server, before).sort()).toEqual(
       [...returnReads, `PUT ${workspacePaths.read(org, id)}`].sort(),
     )
@@ -168,7 +167,7 @@ describe('a workspace that the tab showed', () => {
     const other = mountTab(await startedApp(server, { events: second.source }))
     await settle()
     expect(draftOf(other.view)).toBe('')
-    expect(second.opens[0]).toBe(0)
+    expect(second.opens[0]).toBe(lastEvent(server))
     expect(chatRequests(server, before)).toContain(
       `GET ${sessionsPath(org, id)}`,
     )

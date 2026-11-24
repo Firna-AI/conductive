@@ -1,11 +1,8 @@
-import type { ListeningPort } from '../../shared/generated/ListeningPort'
 import type { WorkspaceEvent } from '../../shared/events'
-import type { PortsUpdated } from '../../shared/ports'
 import {
   count,
   items,
   maybeNested,
-  maybeText,
   nested,
   ParseError,
   record,
@@ -68,28 +65,6 @@ function readShellEvent(event: JsonObject): ShellEvent | null {
       return { type: 'workspace.title', name: text(event, 'name') }
     default:
       return null
-  }
-}
-
-function readListeningPort(value: unknown): ListeningPort {
-  const port = record(value, 'port')
-  return {
-    port: count(port, 'port'),
-    name: maybeText(port, 'name'),
-    folder: maybeText(port, 'folder'),
-  }
-}
-
-/**
- * The servers that listen in the sandbox, from the raw payload of a
- * `ports.updated` event. A null list means that the workspace has no
- * current report, such as after a stop.
- */
-export function readPortsUpdated(event: JsonObject): PortsUpdated {
-  return {
-    type: 'ports.updated',
-    ports:
-      event.ports === null ? null : items(event, 'ports', readListeningPort),
   }
 }
 

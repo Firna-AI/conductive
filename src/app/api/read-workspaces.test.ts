@@ -161,3 +161,59 @@ it('keeps the response fields used by shell creation, chat streams, and the Memb
   }
   expect(readChatEnvelope(envelope)).toEqual(envelope)
 })
+
+it('reads the workspace seed at its cutoff and still gives chat the ordered detail', () => {
+  const { detail: fixture } = workspaceFixtures()
+  const detail = {
+    ...fixture,
+    workspace: {
+      ...fixture.workspace,
+      owner: senderSnapshot(fixture.workspace.owner),
+    },
+    eventNumber: 71,
+  }
+  const seed = {
+    ports: {
+      eventNumber: 51,
+      occurredAt: 1_800_000_000_000,
+      event: { type: 'ports.updated', ports: null },
+    },
+    skills: {
+      eventNumber: 66,
+      occurredAt: 1_800_000_001_000,
+      event: { type: 'skills.updated', skills: null },
+    },
+    failures: {
+      'workspace.title': {
+        eventNumber: 64,
+        occurredAt: 1_800_000_000_500,
+        event: {
+          type: 'runner.event-refused',
+          streamId: 'runner-1',
+          runnerEventNumber: 18,
+          runnerEventType: 'workspace.title',
+          reason: 'too_large',
+          sessionId: null,
+          turnId: null,
+          repairFailed: true,
+        },
+      },
+      'start.updated': null,
+      'ports.updated': null,
+    },
+  }
+  expect(readOrderedWorkspaceResponse({ ...detail, seed })).toEqual({
+    ...detail,
+    seed,
+  })
+  expect(readChatWorkspace({ ...detail, seed })).toEqual(detail)
+  for (const invalid of [
+    { ...seed, skills: { ...seed.skills, eventNumber: 72 } },
+    { ...seed, ports: { ...seed.ports, event: { type: 'ports.updated' } } },
+    { ...seed, failures: { 'workspace.title': null } },
+  ]) {
+    expect(readOrderedWorkspaceResponse({ ...detail, seed: invalid })).toEqual(
+      detail,
+    )
+  }
+})
