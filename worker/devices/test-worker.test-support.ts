@@ -132,3 +132,5 @@ export default {
     return app.fetch(request, env)
   },
 }
+
+export { Machine } from '../machines/machine'

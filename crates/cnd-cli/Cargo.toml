@@ -13,6 +13,7 @@ name = "conductive"
 path = "src/main.rs"
 
 [dependencies]
+cnd-host = { workspace = true }
 cnd-runner = { workspace = true }
 cnd-services = { workspace = true }
 cnd-runner-interface = { workspace = true }
@@ -35,6 +36,7 @@ tracing-subscriber = "0.3.23"
 serde = { version = "1.0.229", features = ["derive"] }
 uuid = { version = "1.29.2", features = ["v4"] }
 rustix = { version = "1.1.6", features = ["process"] }
+rustls = { version = "0.23.46", features = ["aws_lc_rs"] }
 
 [build-dependencies]
 cnd-release = { workspace = true }

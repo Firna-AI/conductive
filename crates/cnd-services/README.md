@@ -32,7 +32,8 @@ The helper and pipes survive a runner restart.
 
 The environment comes from an isolated read of frozen startup settings,
 basic user/project variables, and explicit values. It inherits no caller
-environment. Fixed app credentials and turn context are removed.
+environment. Fixed app credentials, including the machine and workspace
+tokens, and turn context are removed.
 Arbitrary org keys and installed repository paths stay available.
 Explicit values are local inputs and never appear as a result map.
 

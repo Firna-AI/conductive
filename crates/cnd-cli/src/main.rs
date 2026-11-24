@@ -9,6 +9,7 @@ use crate::cli::Cli;
 mod cli;
 mod command;
 mod error;
+mod host_command;
 mod release;
 mod runner_command;
 mod runner_round;
@@ -21,6 +22,7 @@ mod update_command;
 
 #[tokio::main]
 async fn main() -> ExitCode {
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
     tracing_subscriber::fmt()
         .with_writer(std::io::stderr)
         .with_target(false)

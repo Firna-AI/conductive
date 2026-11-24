@@ -214,6 +214,8 @@ export class WorkspaceArchive {
           (next) => this.save(next),
           () => readArchiveResource(env.DB, state.workspaceId),
           configuredProviderAccount(env, state.providerAccount).kind === 'boat',
+          env,
+          dependencies,
         )
         await this.save(state)
         await writeArchiveDisk(env.DB, row, state.sandboxId, state.stoppedAt)

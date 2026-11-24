@@ -22,6 +22,7 @@ import { runLifecycleHook } from './lifecycle-runner'
 import { requireOrgAdmin } from './permissions'
 import { cancelRestoreRequest } from './restore-data'
 import type { MembersHooks } from './route'
+import { revokeComputerMachineToken } from '../machines/revoke'
 
 export async function deleteOrg(
   env: AppEnv,
@@ -120,7 +121,20 @@ export async function stopDeletedOrgResources(
         dependencies.fetch,
         resource.providerAccount,
       )
+      await revokeComputerMachineToken(env, orgId, {
+        sandboxId: resource.id,
+        providerAccount: resource.providerAccount,
+      })
       await ignoreAlreadyRemoved(() => provider.stop(resource.id))
+      await revokeComputerMachineToken(
+        env,
+        orgId,
+        {
+          sandboxId: resource.id,
+          providerAccount: resource.providerAccount,
+        },
+        'retry',
+      )
     } catch (error) {
       failures.push(error)
       continue

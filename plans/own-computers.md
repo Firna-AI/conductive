@@ -694,6 +694,62 @@ mockups of Milestone 8a showed.
   this contract, so it draws the same until Milestones 12 and 13 use the
   fields.
 
+These are agent calls, made on 23 November 2026, for Milestone 4.
+
+- The machine object of a workspace has the name of its workspace. A build
+  machine gets its own name in Milestone 8. Reason: the token must exist
+  before the provider names the sandbox, and a workspace has one sandbox at
+  a time.
+- The machine object keeps the digest of the token, its owner, and a
+  generation in its own storage, with no D1 change. The token holds the ID
+  of its object, and the route opens only an ID that the namespace made.
+  Reason: no request then needs a D1 read before the digest check, and a
+  forged ID opens no object.
+- Each machine token starts with a fixed prefix, and the start log hides
+  each match of its pattern. Reason: the Worker keeps no copy of the token,
+  so it cannot add the token to the secrets of the start log.
+- A create keeps its machine token in the encrypted create payload until
+  the create completes, as it keeps the workspace token. A resume gets its
+  token just before the provider call. Reason: a replayed create must give
+  the sandbox the token of the stored digest.
+- The Worker revokes the token just before each stop request, and at each
+  physical stop that it observes, also at the end of a disk-retention run
+  and of an archive maintenance run. A display state of `stopped` or
+  `error` alone revokes nothing, because the computer can still run: during
+  such a run, and after a failed restart. A failed revoke warns and lets
+  the stop go on. Where nothing observes a later stop, the retry of that
+  path repeats it. Reason: no token then outlives a stop, and a running
+  computer keeps its connection. The review of Milestone 4 changed the
+  first form of this call, which revoked at each publication of a stopped
+  display state.
+- The host program ends a connection attempt after 60 seconds, and each
+  operation except a command run and a stream open after 30 seconds.
+  Reason: a stalled handshake or a stuck file system must not stop the
+  reconnects or fill the operation slots.
+- The host program and its commands run as the sandbox user, as the
+  provider commands do. A restart of the host program ends its started
+  commands, and their status then reads lost.
+- The release installer starts the host service when it does not run, and
+  never restarts it. Reason: a restart ends the commands and the streams of
+  the host connection, also an install command that runs over it.
+- A large message travels in parts, and stream data travels in binary
+  frames with credit for each stream. Reason: a WebSocket message has a
+  size limit, and a Durable Object has little memory.
+- The host program sends a ping that the machine object answers without
+  waking. Reason: a quiet connection then stays open, and the host program
+  finds a silent drop.
+
+The orchestrator of the primary branch answered three scope questions of
+Milestone 4 on 23 November 2026, as agent calls:
+
+- The service manager of the runner removes the machine token from the env
+  of each user service, with a test, in Milestone 4.
+- The host runtime constants and the frame reader live in `src/shared/`, as
+  the repository rule says.
+- The new Durable Object migration is accepted. Cloudflare cannot roll the
+  Worker back across it. The pull request names this as a breaking change
+  for a rollback.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -780,19 +836,29 @@ Depends on: 2
 
 The host mode, the machine object, and the route. No consumer uses them yet.
 
-- [ ] Add the host protocol types to `crates/cnd-runner-interface/`, and
+- [x] Add the host protocol types to `crates/cnd-runner-interface/`, and
       regenerate `src/shared/generated/`.
-- [ ] Add the host mode to `conductive`, with its system service and its
+      Branch: calummoore/own-computers-milestone-4-host-r5ki
+- [x] Add the host mode to `conductive`, with its system service and its
       reconnect. The release installer starts the host service at each
       apply, because today it starts no stopped service
       (`image/install.md:186-187`).
-- [ ] Add the machine token at create and resume, and keep its hash.
+      Branch: calummoore/own-computers-milestone-4-host-r5ki
+- [x] Add the machine token at create and resume, and keep its hash.
       Revoke it at each stop of the machine, and let a new connection with
       the token replace the open one (own computer decision 11 B).
-- [ ] Add the `/v1/host` route and the machine object.
-- [ ] Add the operations and the streams to a fixed list of local ports.
-- [ ] Test each operation, a dropped connection, a wrong token, and an
-      unknown protocol version.
+      Branch: calummoore/own-computers-milestone-4-host-r5ki
+- [x] Add the `/v1/host` route and the machine object.
+      Branch: calummoore/own-computers-milestone-4-host-r5ki
+- [x] Add the operations and the streams to a fixed list of local ports.
+      Branch: calummoore/own-computers-milestone-4-host-r5ki
+- [x] Test each operation, a dropped connection, a wrong token, the token
+      of a stopped machine, and an unknown protocol version.
+      Branch: calummoore/own-computers-milestone-4-host-r5ki
+
+Evidence and review reports: `.context/own-computers/` and
+`.context/reviews/calummoore/own-computers-milestone-4-host-r5ki/`. Two
+review rounds ran. Every finding is fixed on the branch.
 
 ## Milestone 5: Speed of previews and the terminal
 

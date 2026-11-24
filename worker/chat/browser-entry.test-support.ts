@@ -259,3 +259,6 @@ export class Workspace extends ProductionWorkspace {
     })
   }
 }
+
+/** @public Miniflare loads this class by its export name. */
+export { Machine } from '../machines/machine'

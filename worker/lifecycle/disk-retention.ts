@@ -28,6 +28,8 @@ import {
   type RetentionCommandPort,
 } from './retention-command'
 import { stopRetention } from './retention-stop'
+import { machineEnvironment, workspaceMachineOwner } from '../machines/client'
+import { revokeMachineTokenOnStop } from '../machines/revoke'
 
 /** The caller serializes this action with user starts in the workspace object. */
 export async function keepWorkspaceDisk(
@@ -61,6 +63,11 @@ export async function keepWorkspaceDisk(
     throw error
   }
   progress = await expireRetention(context, progress, deadlineAt)
+  if (status === 'stopped' && progress.phase !== 'stop')
+    await revokeMachineTokenOnStop(
+      env,
+      workspaceMachineOwner(orgId, workspaceId),
+    )
   if (progress.phase === 'stop')
     return stopRetention(
       context,
@@ -122,7 +129,18 @@ export async function keepWorkspaceDisk(
         workspaceId,
         settings.envVarsCiphertext,
       )
-      await provider.resume(sandboxId, runtimeEnv, 1_800)
+      await provider.resume(
+        sandboxId,
+        {
+          ...runtimeEnv,
+          ...(await machineEnvironment(
+            env,
+            workspaceMachineOwner(orgId, workspaceId),
+            context.dependencies.randomToken,
+          )),
+        },
+        1_800,
+      )
     }
     await setRetention(env.DB, workspaceId, 'wait')
     return { done: false, error: null }

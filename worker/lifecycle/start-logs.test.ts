@@ -6,6 +6,14 @@ import { durableStartStorage } from './start-storage'
 import { readStartLog } from './start-log-storage'
 import type { WorkspaceStartJob } from './start-types'
 import { readSavedScript } from './saved-script'
+import { MaskedStartLog } from './masked-start-log'
+
+it('hides every machine token without a saved secrets list', () => {
+  const token = `cndm1.${'a'.repeat(64)}.${'S'.repeat(43)}`
+  expect(MaskedStartLog.mask(`first ${token} second ${token}`, []).text).toBe(
+    'first [hidden] second [hidden]',
+  )
+})
 
 it('masks split and short secrets without changing an inserted start-log marker', async () => {
   const env = { BOAT_KEY_ENCRYPTION_KEY: btoa('e'.repeat(32)) }

@@ -59,7 +59,7 @@ command start. For a workspace object, it:
   [The start loop](start-loop.md) says
 - finishes Archive initialization and uncertain allocation recovery before normal start work,
   also after the Restore window, until the workspace row holds the recovered ID
-- stops and retains archived sandboxes, bridges an old disk without secrets, and deletes at the archive deadline.
+- stops and retains archived sandboxes, bridges an old disk with only a machine token, and deletes at the archive deadline.
   A failed Archive step tries again after 30 seconds, and each further failure doubles the wait, up to 1 hour.
   The wait is at least the `Retry-After` of a Boat error, up to the same hour. The D1 repair time moves
   with it, so the repair Cron Trigger does not wake the step early. A step that succeeds ends the wait.
@@ -111,6 +111,8 @@ and stderr boundary stays hidden. Only `MaskedStartLog.mask` can create a
 `MaskedStartLog`, because the constructor is private. Internal RPC carries
 only encrypted log data, and the caller decrypts and masks it again.
 Browser responses keep the plain string log of the shared contract.
+The masker also hides every machine token by its fixed pattern. It needs
+no saved copy of that token in the log's secret list.
 
 The `fetch` of the class opens the workspace event socket at
 `workspaceEventsPath` of `src/shared/events.ts`. Forward the browser's

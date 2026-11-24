@@ -56,3 +56,5 @@ export default {
     return app.fetch(request, env, context)
   },
 }
+
+export { Machine } from '../../machines/machine'

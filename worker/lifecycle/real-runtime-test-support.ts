@@ -1,3 +1,4 @@
+import type { Machine } from '../machines/machine'
 import { Miniflare, Response as RuntimeResponse, WebSocket } from 'miniflare'
 
 import { workspaceEventsPath } from '../../src/shared/events'
@@ -24,6 +25,7 @@ export function runtimeBundle(): Promise<string> {
 
 interface RuntimeBindings {
   DB: D1Database
+  MACHINES: DurableObjectNamespace<Machine>
   WORKSPACES: DurableObjectNamespace<WorkspaceRuntimeFixture>
 }
 
@@ -50,12 +52,18 @@ export async function realRuntimeFixture(bundle: string) {
               'enable_request_signal',
             ],
             exports: {
+              Machine: { type: 'durable-object', storage: 'sqlite' },
               WorkspaceRuntimeFixture: {
                 type: 'durable-object',
                 storage: 'sqlite',
               },
             },
             env: {
+              MACHINES: {
+                type: 'durable-object',
+                worker: 'workspace-runtime-test',
+                exportName: 'Machine',
+              },
               WORKSPACES: {
                 type: 'durable-object',
                 worker: 'workspace-runtime-test',
@@ -112,6 +120,7 @@ export async function realRuntimeFixture(bundle: string) {
   const database = bindings.DB
   const env: LifecycleEnvironment = {
     DB: database,
+    MACHINES: bindings.MACHINES,
     WORKSPACES: bindings.WORKSPACES,
     APP_ORIGIN: 'https://app.conductive.test',
     MACHINE_ORIGIN: 'https://machine.conductive.test',
@@ -262,6 +271,7 @@ export async function realRuntimeFixture(bundle: string) {
       await runtime.dispose()
       runtime = create()
       bindings = await runtime.getBindings<RuntimeBindings>()
+      env.MACHINES = bindings.MACHINES
       env.DB = bindings.DB
       env.WORKSPACES = bindings.WORKSPACES
     },

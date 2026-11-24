@@ -1,3 +1,5 @@
+import { MACHINE_TOKEN_PATTERN } from '../machines/authorization'
+
 /** Only the masker can construct a log that is safe to release. */
 export class MaskedStartLog {
   private readonly value: string
@@ -7,7 +9,10 @@ export class MaskedStartLog {
   }
 
   static mask(value: string, secrets: readonly string[]): MaskedStartLog {
-    const ordered = [...secrets]
+    const ordered = [
+      ...secrets,
+      ...(value.match(new RegExp(MACHINE_TOKEN_PATTERN, 'g')) ?? []),
+    ]
       .filter(Boolean)
       .sort((a, b) => b.length - a.length)
     let result = ''

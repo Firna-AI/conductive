@@ -22,6 +22,7 @@ import { gatewayWorkspaceAllowed } from './model-gateway/workspace-access'
 import { route, routeDevice } from './routes'
 import { workspaceBinding } from './app-api/workspace-state'
 import { routeChat, routeRunner } from './chat/router'
+import { routeHost } from './machines/route'
 import { isDeviceAppPath, isDeviceMachinePath } from './devices/paths'
 import { routeMacCommand } from './tools/mac-command'
 import { appOrigin } from './security/app-origin'
@@ -197,6 +198,8 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           if (gatewayResponse) return respond(gatewayResponse)
           const runnerResponse = await routeRunner(request, env)
           if (runnerResponse) return respond(runnerResponse)
+          const hostResponse = await routeHost(request, env)
+          if (hostResponse) return respond(hostResponse)
         }
         if (surface !== 'app' || !path.startsWith('/api/')) {
           return privateResponse(hostStub(surface))

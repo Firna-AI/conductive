@@ -61,3 +61,5 @@ export class Workspace extends FeatureWorkspace {
 }
 
 export default createApp({ now: () => DEVICE_TEST_NOW })
+
+export { Machine } from '../machines/machine'

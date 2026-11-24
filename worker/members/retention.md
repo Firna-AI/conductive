@@ -11,7 +11,12 @@ It applies that filter to the initial disk list and the final deadline check.
 Restore still installs every workspace receiver. Other provider kinds receive no retention alarm.
 A restart must be due at its stored keepalive date.
 Each stop, keepalive date, and restart write matches its sandbox by the sandbox ID and the provider account together.
-It resumes with `noEnv` and empty env vars, then stops the sandbox.
+It resumes with `noEnv`, the machine origin, and a new machine token, then stops the sandbox.
+The stop attempts to revoke the machine token before it calls the provider.
+A failed revoke warns and lets the stop continue.
+After the observed stop, a failed revoke throws and keeps the stop pending.
+The existing cleanup retry repeats the revoke before it records completion.
+This also applies when the retry takes over through the pending resource stop queue.
 It supplies no workspace token, agent login, or org secret.
 Keep runner, preview, user startup, and agent access suspended in retention mode.
 Before the resume, Members journals a pending stop for crash recovery.

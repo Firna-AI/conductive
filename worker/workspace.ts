@@ -1,7 +1,6 @@
-import { readChatWorkspaceResponse } from './chat/workspace-response'
 import type { WorkspaceCompositionEnv } from './chat/workspace-integration'
 import type { WorkspaceChatResolvers } from './chat/workspace-resolvers'
-import { AgentSessionWorkspace } from './tools/workspace'
+import { WorkspaceView } from './workspace-view'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ToolPreviewCall } from './tools/services'
 import { WorkspaceFeatures } from './features/workspace'
@@ -14,7 +13,6 @@ import type { WorkspaceDisk } from './members/maintenance-contract'
 import type { ImageCoordinatorState } from './lifecycle/image-timers'
 import type { GitHubRefresh, GitHubWorkspace } from './github/contracts'
 import { hostSurface } from './hosts'
-import { workspaceUpdate } from './chat/workspace-update'
 import { featureResult } from './features/result'
 import { archiveWorkspace } from './lifecycle/archive-workspace'
 import type { WorkspaceContinue } from './lifecycle/continue'
@@ -27,7 +25,7 @@ import type { ConnectionScheduler } from './security/connection-access'
 import { WorkspaceAlarmRunner } from './features/workspace-alarm'
 import { retryAutomationReport } from './chat/automation-run'
 
-export class Workspace extends AgentSessionWorkspace {
+export class Workspace extends WorkspaceView {
   private readonly features: WorkspaceFeatures
   private readonly github: WorkspaceGitHub
   private readonly members: WorkspaceMembersReceiver
@@ -167,37 +165,6 @@ export class Workspace extends AgentSessionWorkspace {
         ),
       ),
     )
-  }
-
-  readChatWorkspaceResponse(
-    orgId: string,
-    workspaceId: string,
-    origin: string,
-  ) {
-    return this.chat.runLifecycle(() =>
-      readChatWorkspaceResponse(
-        this.env,
-        this.chat.store,
-        orgId,
-        workspaceId,
-        origin,
-        () => this.controller.readLifecycle(),
-        () => this.controller.readLifecycleStartLog(),
-      ),
-    )
-  }
-
-  async publishWorkspaceMetadata(
-    orgId: string,
-    workspaceId: string,
-  ): Promise<void> {
-    if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id)) return
-    await this.chat.runLifecycle(async () => {
-      await this.chat.commitWorkspaceEvent(
-        workspaceId,
-        await workspaceUpdate(this.env.DB, orgId, workspaceId),
-      )
-    })
   }
 
   alarm(): Promise<void> {

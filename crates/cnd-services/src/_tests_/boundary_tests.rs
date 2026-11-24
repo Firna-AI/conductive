@@ -10,6 +10,8 @@ use crate::logs::rotating::{LogFilesMock, LogTransaction, LogTransactionMock, Ro
 use crate::ownership::{CgroupPorts, ProcessesMock};
 use crate::ports::{Logs, OwnedPorts, StartupEnvironment};
 
+use super::support::{Fixture, start};
+
 #[tokio::test]
 async fn clean_startup_keeps_org_project_values_and_removes_only_fixed_context() {
     let settings = Arc::new(Unimock::new((
@@ -24,6 +26,7 @@ async fn clean_startup_keeps_org_project_values_and_removes_only_fixed_context()
             .returns(Ok(BTreeMap::from([
                 ("WORKSPACE_TOKEN".into(), "private".into()),
                 ("CONDUCTIVE_WORKSPACE_TOKEN".into(), "private".into()),
+                ("CONDUCTIVE_MACHINE_TOKEN".into(), "machine-private".into()),
                 ("CONDUCTIVE_TURN_ID".into(), "turn".into()),
                 ("GIT_AUTHOR_EMAIL".into(), "author".into()),
                 ("CONDUCTIVE_WORKSPACE_ID".into(), "workspace".into()),
@@ -36,8 +39,14 @@ async fn clean_startup_keeps_org_project_values_and_removes_only_fixed_context()
             ]))),
     )));
     let clean: Arc<dyn StartupEnvironment> = Arc::new(CleanEnvironment { settings });
+    let fixture = Fixture::with_environment(clean);
+    fixture
+        .manager
+        .call(start("clean", "web", "server"))
+        .await
+        .unwrap();
     assert_eq!(
-        clean.read().await.unwrap(),
+        fixture.world.lock().unwrap().prepared[0].environment,
         BTreeMap::from([
             ("HOME".into(), "/home/user".into()),
             ("PATH".into(), "/basic/bin".into()),
@@ -47,6 +56,8 @@ async fn clean_startup_keeps_org_project_values_and_removes_only_fixed_context()
                 "/home/user/code/project".into()
             ),
             ("ORG_SECRET".into(), "frozen".into()),
+            ("PWD".into(), "/home/user/code/app/100%literal".into()),
+            ("EXPLICIT".into(), "kept".into()),
         ])
     );
 }

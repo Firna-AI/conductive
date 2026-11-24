@@ -11,6 +11,8 @@ use crate::update_command::UpdateArgs;
 /// Command families served by the Conductive program.
 #[derive(Debug, Subcommand)]
 pub(crate) enum Command {
+    /// Open the outbound machine connection for commands, files, and local streams.
+    Host,
     /// Run agent sessions through the private SDK helper.
     Runner,
     /// Execute a private service record after the system manager changes user.
@@ -52,6 +54,7 @@ pub(crate) enum Command {
 impl fmt::Display for Command {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = match self {
+            Self::Host => "host",
             Self::Runner => "runner",
             Self::ServiceExec { .. } => "service-exec",
             Self::Relay => "relay",

@@ -212,3 +212,5 @@ export class Workspace extends ProductionWorkspace {
     })
   }
 }
+
+export { Machine } from '../machines/machine'

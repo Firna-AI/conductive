@@ -38,8 +38,16 @@ export async function deviceFixture(options: { entry?: string } = {}) {
         config: {
           name: 'device-tests',
           compatibilityDate: '2026-11-06',
-          exports: { Workspace: { type: 'durable-object', storage: 'sqlite' } },
+          exports: {
+            Workspace: { type: 'durable-object', storage: 'sqlite' },
+            Machine: { type: 'durable-object', storage: 'sqlite' },
+          },
           env: {
+            MACHINES: {
+              type: 'durable-object',
+              worker: 'device-tests',
+              exportName: 'Machine',
+            },
             DB: { type: 'd1', id: TEST_D1_ID },
             WORKSPACES: {
               type: 'durable-object',

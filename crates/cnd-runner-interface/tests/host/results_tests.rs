@@ -1,0 +1,90 @@
+//! Every operation result, fixed error code, and detached command state.
+
+use cnd_runner_interface::host::results::HostResult;
+
+host_wire!(
+    command_result,
+    HostResult,
+    r#"{"kind":"command.result","exitCode":0,"stdout":"hello\n","stderr":"","timedOut":false}"#
+);
+host_wire!(
+    command_timeout,
+    HostResult,
+    r#"{"kind":"command.result","exitCode":null,"stdout":"","stderr":"","timedOut":true}"#
+);
+host_wire!(
+    command_started,
+    HostResult,
+    r#"{"kind":"command.started","processId":9007199254740991}"#
+);
+host_wire!(
+    command_running,
+    HostResult,
+    r#"{"kind":"command.status","processId":123,"state":"running","running":true,"exitCode":null,"timedOut":null,"stdout":"€","stderr":"","stdoutNextOffset":3,"stderrNextOffset":0,"more":true}"#
+);
+host_wire!(
+    command_exited,
+    HostResult,
+    r#"{"kind":"command.status","processId":123,"state":"exited","running":false,"exitCode":137,"timedOut":false,"stdout":"","stderr":"error\n","stdoutNextOffset":3,"stderrNextOffset":6,"more":false}"#
+);
+host_wire!(
+    command_lost,
+    HostResult,
+    r#"{"kind":"command.status","processId":123,"state":"lost","running":false,"exitCode":null,"timedOut":null,"stdout":"","stderr":"","stdoutNextOffset":0,"stderrNextOffset":0,"more":false}"#
+);
+host_wire!(
+    file_info,
+    HostResult,
+    r#"{"kind":"file.info","path":"/home/user/file.txt","sizeBytes":3,"isDirectory":false}"#
+);
+host_wire!(
+    file_content,
+    HostResult,
+    r#"{"kind":"file.content","path":"/home/user/file.txt","sizeBytes":3,"encoding":"base64","content":"YWJj"}"#
+);
+host_wire!(
+    file_too_large,
+    HostResult,
+    r#"{"kind":"file.too_large","sizeBytes":5242881,"limitBytes":5242880}"#
+);
+host_wire!(
+    stream_opened,
+    HostResult,
+    r#"{"kind":"stream.opened","streamId":9}"#
+);
+host_wire!(
+    invalid_request,
+    HostResult,
+    r#"{"kind":"error","code":"invalid_request"}"#
+);
+host_wire!(
+    not_found,
+    HostResult,
+    r#"{"kind":"error","code":"not_found"}"#
+);
+host_wire!(
+    permission_denied,
+    HostResult,
+    r#"{"kind":"error","code":"permission_denied"}"#
+);
+host_wire!(
+    is_directory,
+    HostResult,
+    r#"{"kind":"error","code":"is_directory"}"#
+);
+host_wire!(
+    output_too_large,
+    HostResult,
+    r#"{"kind":"error","code":"output_too_large"}"#
+);
+host_wire!(
+    port_unavailable,
+    HostResult,
+    r#"{"kind":"error","code":"port_unavailable"}"#
+);
+host_wire!(busy, HostResult, r#"{"kind":"error","code":"busy"}"#);
+host_wire!(
+    internal,
+    HostResult,
+    r#"{"kind":"error","code":"internal"}"#
+);

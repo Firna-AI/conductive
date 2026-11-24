@@ -32,6 +32,7 @@ impl StartupEnvironment for CleanEnvironment {
         for name in [
             "WORKSPACE_TOKEN",
             "CONDUCTIVE_WORKSPACE_TOKEN",
+            "CONDUCTIVE_MACHINE_TOKEN",
             "CONDUCTIVE_TURN_ID",
             "CONDUCTIVE_SESSION_ID",
             "CONDUCTIVE_MACHINE_ORIGIN",

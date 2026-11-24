@@ -1,3 +1,4 @@
+import { revokeMachineTokenOnStop } from '../machines/revoke'
 import type { AppDependencies, AppEnv } from '../env'
 import { requireActiveUser, readWorkspaceAccessStop } from '../data/user-access'
 import { providerForAccount } from '../sandbox/client'
@@ -8,6 +9,7 @@ import {
 } from './cleanup-provider'
 import { markResourceStopped } from './deletion-data'
 import type { LifecycleOwnership } from './lifecycle-contract'
+import { machineEnvironment, workspaceMachineOwner } from '../machines/client'
 import type {
   DeletedOrgMaintenance,
   DeletedOrgRetention,
@@ -92,7 +94,15 @@ export function deletedOrgRetention(
       try {
         const access = await readWorkspaceAccessStop(env.DB, workspaceId)
         if (access) await requireActiveUser(env.DB, access.ownerUserId, orgId)
-        await provider.resume(disk.sandboxId, {}, ttlSeconds)
+        await provider.resume(
+          disk.sandboxId,
+          await machineEnvironment(
+            env,
+            workspaceMachineOwner(orgId, workspaceId),
+            dependencies.randomToken,
+          ),
+          ttlSeconds,
+        )
         await ownership.renew()
         if (
           !(await markDiskResumed(
@@ -111,7 +121,16 @@ export function deletedOrgRetention(
         resumeFailure = { error }
       }
       await ownership.renew()
+      await revokeMachineTokenOnStop(
+        env,
+        workspaceMachineOwner(orgId, workspaceId),
+      )
       await ignoreAlreadyRemoved(() => provider.stop(disk.sandboxId))
+      await revokeMachineTokenOnStop(
+        env,
+        workspaceMachineOwner(orgId, workspaceId),
+        'retry',
+      )
       await ownership.renew()
       if (
         !(await markResourceStopped(

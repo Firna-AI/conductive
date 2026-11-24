@@ -9,6 +9,7 @@ import {
 import type { WorkspaceStorage } from './platform-storage'
 import { providerState } from './provider-state'
 import { replyOrCurrentState } from './workspace-actions'
+import { revokeComputerMachineToken } from '../machines/revoke'
 
 export const COMPUTER_STOP_TASK_KEY = 'lifecycle:computer-stops'
 
@@ -83,6 +84,7 @@ export class ComputerStopTask {
             this.dependencies.fetch,
             computer.providerAccount,
           )
+          await revokeComputerMachineToken(this.env, work.orgId, computer)
           const reply = await replyOrCurrentState(provider, id, () =>
             provider.stop(id),
           )

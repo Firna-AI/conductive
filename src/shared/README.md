@@ -1,10 +1,10 @@
 # Shared contracts
 
-These modules define the browser API, the runner protocol, and the pure
+These modules define the browser API, the host and runner protocols, and the pure
 transcript fold that the browser and the Worker share.
 They use JSON values and TypeScript types.
 The [runner interface crate](../../crates/cnd-runner-interface/README.md)
-owns runner messages, agent chat events, workspace tool requests and replies,
+owns host and runner messages, agent chat events, workspace tool requests and replies,
 and each type they use.
 `ts-rs` writes those types into `generated/`. Import each generated file
 directly. Keep the runtime readers, constants, and helpers in TypeScript.
@@ -286,6 +286,11 @@ per-target outer alias and no credential.
 
 ### Key Code
 
+- [Host constants](host.ts) define the host path, version, local stream ports,
+  transport budgets, ping interval, and close codes.
+- [Host frames](host-frames.ts) encode and decode binary stream data and
+  message parts through the generated `HostFrame` type. The codec has no
+  Cloudflare dependency and preserves raw bytes across UTF-8 part boundaries.
 - [Workspace lifecycle helpers](workspaces.ts) share `WORKSPACE_RESTORE_MS`,
   `workspaceRestoreUntil`, and `workspaceRemovedAt` between the Worker and
   the app. `workspaceRemovedAt(archivedAt, now)` returns the removal time

@@ -95,7 +95,8 @@ The runner restart takes the same lock. The download never holds this lock.
 Activation checks again that the program is missing, applies the release,
 and confirms the initial installation with `update started`.
 This confirmation clears the first pending marker, which has no previous release.
-The new units take effect at the next runner start. Bootstrap starts no unit.
+The runner unit changes take effect at the next runner start.
+Bootstrap starts the host service when it does not run.
 
 ## Disk flushes
 
@@ -188,21 +189,25 @@ That program serves workspace commands, MCP, previews, Git credentials, and rele
 The credential alias `/usr/local/bin/conductive-git-credential` links to the
 same program and selects `git-credential`.
 It runs
-`systemctl daemon-reload` and enables the runner, relay, terminal, and
-check timer. It changes no package, and it starts no stopped service.
+`systemctl daemon-reload` and enables the host, runner, relay, terminal, and
+check timer. It changes no package.
 A changed start of a running unit, such as its commands, user, or
 environment, applies only at the next start of that unit. The reload
 applies a changed `OOMPolicy` of a running unit at once.
-Last, it restarts the relay when the relay runs, without waiting.
+Then it restarts the relay when the relay runs, without waiting.
 Boat starts the relay at boot, before the runner pre-start step applies a
 release, so the relay otherwise keeps the release that was active at boot.
 The socket holds port 7682 during the restart. A failed restart prints a
 warning, and the installer still succeeds.
+Last, it runs `systemctl --no-block start conductive-host.service`.
+This starts a stopped host program and keeps a running host program in use.
+A failed start prints a warning, and the installer still succeeds.
 
 The release units are:
 
 - `conductive-update-check.service`: root background download.
 - `conductive-update-check.timer`: boot checks and a check every 10 minutes.
+- `conductive-host.service`: outbound machine connection as `user`, with private runtime command records.
 - `conductive-runner.service`: root activation in pre-start, then the Rust runner as `user`.
 - `conductive-preview-relay.service` and `.socket`: Rust relay as `user`.
 - `conductive-terminal.service` and `conductive-terminal-sessions.service`: terminal services as `user`.
@@ -213,8 +218,9 @@ A running runner also runs apply itself, through `sudo -n`, when its
 workspace is idle and its own release is confirmed. It then executes the new
 `current/system/runner-start.sh` in the same process, as the
 [runner service guide](../runner/service/README.md) says. The apply runs
-the same system installer, which restarts no unit. So the relay and
-terminal keep their running release until they start again.
+the same system installer, which restarts a running relay and starts a
+stopped host program. A running host program and the terminal keep their
+release until their next start.
 The runner, relay, and terminal entry points use `current/system/`.
 The runner executes `/opt/conductive/current/conductive runner`. It resolves
 its private Node and SDK helper beside that executable. The relay executes

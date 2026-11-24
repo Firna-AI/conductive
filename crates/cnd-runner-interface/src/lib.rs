@@ -8,6 +8,7 @@ pub mod file_changes;
 pub mod file_server;
 pub mod file_tree;
 pub mod files;
+pub mod host;
 pub mod json;
 pub mod messages;
 pub mod ports;

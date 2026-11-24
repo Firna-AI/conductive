@@ -25,6 +25,8 @@ import { WorkspaceStartError } from './workspace-start'
 import { revokeWorkspaceToken } from './tokens'
 import { creationAdmissionResponse } from './creation-admission-response'
 import { detachFailedSandbox } from './failed-workspace-data'
+import { revokeMachineTokenOnStop } from '../machines/revoke'
+import { workspaceMachineOwner } from '../machines/client'
 
 export type ResumeStartFailure = (
   error: { code: string; message: string; log: null },
@@ -141,6 +143,10 @@ export async function finishFailedStart(
       cleanupPending = true
     }
   }
+  await revokeMachineTokenOnStop(
+    env,
+    workspaceMachineOwner(job.orgId, job.workspaceId),
+  )
   if (sandboxId)
     await recordSandboxCleanup(env.DB, {
       workspaceId: job.workspaceId,

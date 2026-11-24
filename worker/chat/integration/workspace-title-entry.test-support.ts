@@ -66,3 +66,5 @@ export class Workspace extends ProductionWorkspace {
 }
 
 export default app
+
+export { Machine } from '../../machines/machine'

@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 
 import { ProviderAccountError } from '../sandbox/accounts'
 import { boatRoute } from '../sandbox/routes'
@@ -102,12 +102,43 @@ it('replays a lost allocation and resumes its disk through the stored secondary 
       )
       .map((request) => request.headers.get('X-Boat-Org')),
   ).toEqual(['second-org', 'second-org'])
-  await stopWorkspaceSandbox({
-    env: runtime.env,
-    dependencies: runtime.dependencies,
-    orgId: org.id,
-    workspaceId: id,
+  const machines = runtime.env.MACHINES
+  if (!machines) throw new Error('Missing machine binding.')
+  const failingMachines = new Proxy(machines, {
+    get(target, key) {
+      if (key !== 'get') return Reflect.get(target, key)
+      return (...input: Parameters<typeof target.get>) =>
+        new Proxy(target.get(...input), {
+          get(stub, method) {
+            if (method === 'revokeToken')
+              return async () => {
+                throw new Error('private machine token and org secret')
+              }
+            return Reflect.get(stub, method)
+          },
+        })
+    },
   })
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+  try {
+    await expect(
+      stopWorkspaceSandbox({
+        env: { ...runtime.env, MACHINES: failingMachines },
+        dependencies: runtime.dependencies,
+        orgId: org.id,
+        workspaceId: id,
+      }),
+    ).resolves.toBe('stopped')
+    expect(boat.stopIds).toEqual(['bx_1'])
+    const warning = {
+      kind: 'machine_token_revoke_failed',
+      message:
+        'The machine token could not be revoked. The stop will continue.',
+    }
+    expect(warn.mock.calls).toEqual([[warning], [warning]])
+  } finally {
+    warn.mockRestore()
+  }
   await runtime.workspace(id).lifecycleStopped()
   expect(
     await fixture.run(() =>

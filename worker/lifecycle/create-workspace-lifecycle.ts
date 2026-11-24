@@ -9,6 +9,8 @@ import { WorkspaceStateProjection } from './workspace-state-projection'
 import { isFailedRestart } from './durable-restart'
 import { hasRetentionAttempt, isConfirmedStopped } from './confirmed-stop'
 import { clearRetention } from './retention-data'
+import { revokeMachineTokenOnStop } from '../machines/revoke'
+import { workspaceMachineOwner } from '../machines/client'
 import {
   extendWorkspaceDeadline,
   stopWorkspaceSandbox,
@@ -47,8 +49,13 @@ export function createWorkspaceLifecycle(
     {
       idleMs: () => idleStop.ms(),
       changed: async (state, publish) => {
-        if (isConfirmedStopped(state) && !hasRetentionAttempt(state))
+        if (isConfirmedStopped(state) && !hasRetentionAttempt(state)) {
+          await revokeMachineTokenOnStop(
+            env,
+            workspaceMachineOwner(state.orgId, state.workspaceId),
+          )
           await clearRetention(env.DB, state.workspaceId)
+        }
         const projected = await projection.changed(publish)
         if (state.state === 'stopped' || state.state === 'error') {
           const restartFailed = isFailedRestart(state)

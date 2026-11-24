@@ -1,0 +1,21 @@
+[Unit]
+Description=Conductive host connection
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=user
+Group=user
+WorkingDirectory=/home/user
+ExecStart=/opt/conductive/current/conductive host
+Restart=always
+RestartSec=2
+KillMode=control-group
+OOMPolicy=continue
+RuntimeDirectory=conductive-host
+RuntimeDirectoryMode=0700
+RuntimeDirectoryPreserve=yes
+
+[Install]
+WantedBy=multi-user.target

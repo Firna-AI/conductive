@@ -13,6 +13,7 @@ use cnd_runner_interface::services::local::{
 use cnd_runner_interface::services::process::ServiceTarget;
 
 use crate::manager::state::{Dependencies, SavedManager, ServiceManager};
+use crate::ports::StartupEnvironment;
 use crate::records::{CompletedRun, LaunchRecord, Registry, UnitStatus};
 
 use super::effects;
@@ -51,11 +52,24 @@ impl Fixture {
     }
 
     pub(super) fn with(stopping: bool, reading: bool, waiting: bool) -> Self {
+        Self::configured(stopping, reading, waiting, None)
+    }
+
+    pub(super) fn with_environment(environment: Arc<dyn StartupEnvironment>) -> Self {
+        Self::configured(false, false, false, Some(environment))
+    }
+
+    fn configured(
+        stopping: bool,
+        reading: bool,
+        waiting: bool,
+        environment: Option<Arc<dyn StartupEnvironment>>,
+    ) -> Self {
         let world = Arc::new(Mutex::new(World {
             boot: "boot".into(),
             ..World::default()
         }));
-        let effects = dependencies(world.clone(), stopping, reading, waiting);
+        let effects = dependencies(world.clone(), stopping, reading, waiting, environment);
         let manager = Arc::new(SavedManager::new(effects.clone()));
         Self {
             world,
@@ -104,6 +118,7 @@ fn dependencies(
     stopping: bool,
     reading: bool,
     waiting: bool,
+    environment: Option<Arc<dyn StartupEnvironment>>,
 ) -> Dependencies {
     Dependencies {
         units: effects::units(world.clone(), stopping),
@@ -111,7 +126,7 @@ fn dependencies(
         runtime: effects::runtime(world.clone(), waiting),
         ports: effects::ports(world.clone()),
         logs: effects::logs(world, reading),
-        environment: effects::environment(),
+        environment: environment.unwrap_or_else(effects::environment),
         home: PathBuf::from("/home/user"),
         repository: PathBuf::from("/home/user/code/app"),
     }

@@ -5,6 +5,7 @@ if [ -f /run/ascii-secrets/env.sh ]; then
   . /run/ascii-secrets/env.sh
   set +a
 fi
+unset CONDUCTIVE_MACHINE_TOKEN
 test "${CONDUCTIVE_DISK_KEEPALIVE:-0}" != 1 || exit 0
 if [ -z "${WORKSPACE_TOKEN:-}" ] || [ -z "${CONDUCTIVE_WORKSPACE_ID:-}" ]; then
   exit 0

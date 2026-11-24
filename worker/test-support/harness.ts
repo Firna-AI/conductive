@@ -47,6 +47,7 @@ export async function createHarness(
     await applyMigrations(db, { before: options.migrationsBefore })
   const env: AppEnv = {
     DB: db,
+    MACHINES: native.bindings.MACHINES,
     CHAT_ATTACHMENTS: attachments,
     ...variables,
   }

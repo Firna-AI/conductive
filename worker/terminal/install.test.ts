@@ -58,4 +58,10 @@ it('ships terminal units that preserve private runtime storage and run the relea
     /systemctl enable [^\n]*conductive-terminal\.service\n/,
   )
   expect(installer).not.toMatch(/systemctl (?:start|restart) /)
+  expect(installer).toContain(
+    'systemctl --no-block start conductive-host.service',
+  )
+  expect(installer).not.toMatch(
+    /(?:restart|try-restart) conductive-host\.service/,
+  )
 })

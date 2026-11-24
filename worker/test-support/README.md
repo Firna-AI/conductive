@@ -24,6 +24,11 @@ Crash resets the object like Restart, but it does not close the connections or w
 Use it to end work in progress, as an out-of-memory reset does. Hold that work outside a storage transaction, because a held transaction blocks the reset call.
 Instance identity checks prove that reconstruction creates a fresh object.
 Production request timeouts stay unchanged.
+Each runtime that runs a workspace also exports `Machine` and supplies
+`MACHINES`. The [machine tests](../machines/README.md#development) use a real
+host WebSocket. Their test caller is another Durable Object, so RPC streams
+stay inside one I/O context across reads and writes. Plain calls release
+their RPC sessions before a hibernation check.
 
 Await Reset, Restart, and Crash before later calls to the object, because the context reset can interrupt them.
 An interrupted call can get a text error from the runtime instead of JSON.

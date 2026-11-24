@@ -69,6 +69,8 @@ export const SIMPLE_WARNINGS = {
     'Could not update the repository values that a GitHub webhook named. The next webhook checks again.',
   github_repository_token_revoke_failed:
     'Could not revoke the token of a repository read. It expires within 1 hour.',
+  machine_token_revoke_failed:
+    'The machine token could not be revoked. The stop will continue.',
   approval_email_retry_failed:
     'The retry of approval emails failed. It runs again at the next timer.',
   feedback_send_cleanup_failed:

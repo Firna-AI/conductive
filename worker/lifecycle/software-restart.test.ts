@@ -6,6 +6,9 @@ import { SOFTWARE_RESTART_LIMIT_MS } from './durable-restart'
 import { IDLE_MS } from './durable-types'
 import { RESTART_COMMAND, UPDATE_CHECK_COMMAND } from './software-restart'
 import { readyWorkspace } from './software-restart.test-support'
+import { workspaceMachineOwner } from '../machines/client'
+import { machineTokenStatus } from '../machines/token.test-support'
+import { record, string } from '../chat/inputs'
 
 const fixtureForTest = setupBackendTests()
 
@@ -42,6 +45,11 @@ it('restarts with the installed software when the update check fails', async () 
 it('shows the error state with Try again when the restart command fails, and still stops when idle', async () => {
   const { fixture, workspaceId, restart, lifecycle } =
     await readyWorkspace(fixtureForTest())
+  const token = string(
+    record(fixture.boat.starts[0].env).CONDUCTIVE_MACHINE_TOKEN,
+  )
+  const owner = workspaceMachineOwner(fixture.org.id, workspaceId)
+  expect(await machineTokenStatus(fixture.harness.env, owner, token)).toBe(101)
   fixture.boat.synchronousExitCode = 1
   const error = await refusal(restart())
   expect([error.status, error.code]).toEqual([502, 'restart_failed'])
@@ -55,10 +63,12 @@ it('shows the error state with Try again when the restart command fails, and sti
   expect((await lifecycle())?.softwareRestartAt).toBeUndefined()
   // The cloud computer still runs for Try again, and it keeps its idle stop.
   expect(fixture.boat.stopIds).toEqual([])
+  expect(await machineTokenStatus(fixture.harness.env, owner, token)).toBe(101)
   const idleAt = ((await lifecycle())?.lastActivityAt ?? 0) + IDLE_MS
   await fixture.advanceTo(idleAt, workspaceId)
   expect(fixture.boat.stopIds).toEqual(['bx_1'])
   expect((await lifecycle())?.state).toBe('stopped')
+  expect(await machineTokenStatus(fixture.harness.env, owner, token)).toBe(401)
 })
 
 it('ends a restart whose runner is not ready within the time limit', async () => {

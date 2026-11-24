@@ -47,9 +47,15 @@
     "run_worker_first": true,
   },
   "durable_objects": {
-    "bindings": [{ "name": "WORKSPACES", "class_name": "Workspace" }],
+    "bindings": [
+      { "name": "WORKSPACES", "class_name": "Workspace" },
+      { "name": "MACHINES", "class_name": "Machine" },
+    ],
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Workspace"] }],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Workspace"] },
+    { "tag": "v2", "new_sqlite_classes": ["Machine"] },
+  ],
   "d1_databases": [
     {
       "binding": "DB",

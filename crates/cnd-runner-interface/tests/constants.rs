@@ -5,6 +5,7 @@
     reason = "Missing runtime constants must stop the test."
 )]
 
+use cnd_runner_interface::host::{limits, literals::HostStreamPort};
 use cnd_runner_interface::services::logs;
 use cnd_runner_interface::{chat_events, file_tree, files, ports, runner_handshake, skills};
 
@@ -91,11 +92,7 @@ fn typescript_and_rust_share_protocol_version_and_budgets() {
         ),
     ];
     for (source, name, expected) in constants {
-        let prefix = format!("export const {name} = ");
-        let line = source
-            .lines()
-            .find_map(|line| line.strip_prefix(&prefix))
-            .unwrap();
+        let line = constant_value(source, name);
         let literal: String = line
             .chars()
             .take_while(|c| c.is_ascii_digit() || *c == '_')
@@ -103,4 +100,93 @@ fn typescript_and_rust_share_protocol_version_and_budgets() {
             .collect();
         assert_eq!(literal.parse::<u64>().unwrap(), expected, "{name}");
     }
+}
+
+#[test]
+fn typescript_and_rust_share_host_constants() {
+    let host = include_str!("../../../src/shared/host.ts");
+    let constants = [
+        (
+            "HOST_PROTOCOL_VERSION",
+            u64::from(limits::HOST_PROTOCOL_VERSION),
+        ),
+        (
+            "HOST_MESSAGE_PART_BYTES",
+            limits::HOST_MESSAGE_PART_BYTES as u64,
+        ),
+        (
+            "HOST_STREAM_FRAME_BYTES",
+            limits::HOST_STREAM_FRAME_BYTES as u64,
+        ),
+        (
+            "HOST_STREAM_WINDOW_BYTES",
+            limits::HOST_STREAM_WINDOW_BYTES as u64,
+        ),
+        (
+            "HOST_REQUEST_MAX_BYTES",
+            limits::HOST_REQUEST_MAX_BYTES as u64,
+        ),
+        ("HOST_REPLY_MAX_BYTES", limits::HOST_REPLY_MAX_BYTES as u64),
+        (
+            "HOST_COMMAND_REPLY_MAX_BYTES",
+            limits::HOST_COMMAND_REPLY_MAX_BYTES as u64,
+        ),
+        (
+            "HOST_FILE_READ_MAX_BYTES",
+            limits::HOST_FILE_READ_MAX_BYTES as u64,
+        ),
+        (
+            "HOST_MAX_PENDING_REQUESTS",
+            limits::HOST_MAX_PENDING_REQUESTS as u64,
+        ),
+        (
+            "HOST_MAX_OPEN_STREAMS",
+            limits::HOST_MAX_OPEN_STREAMS as u64,
+        ),
+        (
+            "HOST_CLOSE_REPLACED",
+            u64::from(limits::HOST_CLOSE_REPLACED),
+        ),
+        (
+            "HOST_CLOSE_TOKEN_CHANGED",
+            u64::from(limits::HOST_CLOSE_TOKEN_CHANGED),
+        ),
+        (
+            "HOST_CLOSE_UNSUPPORTED_VERSION",
+            u64::from(limits::HOST_CLOSE_UNSUPPORTED_VERSION),
+        ),
+    ];
+    for (name, expected) in constants {
+        let value = constant_value(host, name).replace('_', "");
+        assert_eq!(value.parse::<u64>().unwrap(), expected, "{name}");
+    }
+    assert_eq!(
+        constant_value(host, "HOST_PATH").trim_matches('\''),
+        limits::HOST_PATH
+    );
+    let ports: Vec<HostStreamPort> =
+        serde_json::from_str(constant_value(host, "HOST_STREAM_PORTS")).unwrap();
+    assert_eq!(
+        ports,
+        [HostStreamPort::Terminal, HostStreamPort::PreviewRelay]
+    );
+    assert_eq!(
+        limits::HOST_FILE_READ_MAX_BYTES as u64,
+        files::FILE_READ_MAX_BYTES
+    );
+}
+
+fn constant_value<'a>(source: &'a str, name: &str) -> &'a str {
+    let declaration = format!("export const {name}");
+    source
+        .lines()
+        .find_map(|line| {
+            let rest = line.strip_prefix(&declaration)?;
+            if !rest.starts_with([' ', ':']) {
+                return None;
+            }
+            let (_, value) = rest.split_once('=')?;
+            Some(value.trim().trim_end_matches(';'))
+        })
+        .unwrap()
 }

@@ -1,5 +1,7 @@
 import { Miniflare, Response as RuntimeResponse } from 'miniflare'
 
+import type { Machine } from '../machines/machine'
+
 import type { HttpFetch } from '../env'
 import type { TurnTokenEndpoint } from '../model-gateway/types'
 import { workspaceLifecycleEndpoint } from '../lifecycle/workspace-transport'
@@ -22,6 +24,7 @@ const EXPORT_NAME = 'NativeWorkspace'
 
 interface NativeBindings {
   DB: D1Database
+  MACHINES: DurableObjectNamespace<Machine>
   CHAT_ATTACHMENTS: R2Bucket
   WORKSPACES: DurableObjectNamespace<NativeWorkspace>
 }
@@ -47,9 +50,15 @@ export async function createNativeRuntime(
           name: WORKER_NAME,
           compatibilityDate: '2026-11-06',
           exports: {
+            Machine: { type: 'durable-object', storage: 'sqlite' },
             [EXPORT_NAME]: { type: 'durable-object', storage: 'sqlite' },
           },
           env: {
+            MACHINES: {
+              type: 'durable-object',
+              worker: WORKER_NAME,
+              exportName: 'Machine',
+            },
             ...Object.fromEntries(
               Object.entries(environment).map(([key, value]) => [
                 key,

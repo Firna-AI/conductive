@@ -7,7 +7,7 @@ This guide belongs to the [workspace lifecycle](README.md).
 The lifecycle code reads `LifecycleEnvironment` from
 [`runtime.ts`](runtime.ts). [Deployment inputs](../../docs/deployment.md)
 gives each binding, variable, and secret that it reads, such as
-`WORKSPACES`, `MACHINE_ORIGIN`, `BOAT_API_KEY`, `BOAT_ORG_ID`,
+`WORKSPACES`, `MACHINES`, `MACHINE_ORIGIN`, `BOAT_API_KEY`, `BOAT_ORG_ID`,
 `GITHUB_APP_PRIVATE_KEY`, and optional `CONDUCTIVE_RELEASE_SERVER`.
 
 Each provider start captures the encrypted org env values and their secret
@@ -16,5 +16,10 @@ that capture. No private org-value list goes into the runner environment.
 A running sandbox keeps its capture after later org setting changes.
 The ordinary disk retention resume of a workspace that is not archived
 also replaces the saved capture.
-The maintenance resume of a retained archived disk gets no env values, so
-it keeps the saved capture.
+The maintenance resume of a retained archived disk gets only the machine
+origin and a new machine token. It gets no org env value or workspace
+token, so it keeps the saved capture. Deleted-org disk retention uses the
+same machine-only env. Each stop attempts to revoke that token. A failed
+revoke warns and lets the stop continue.
+The token stays valid during maintenance. Observed physical stops revoke it again.
+Archive and deleted-org maintenance retry an observed-stop revoke failure before completion.
