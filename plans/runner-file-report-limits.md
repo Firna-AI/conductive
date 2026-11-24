@@ -1,6 +1,6 @@
 # Runner file report limits
 
-Status: Active. On branch `calummoore/object-memory-runner-report-limits-0m1g`, no pull request yet. Cal approved implementation on 23 November 2026. Milestone 1 is complete. Milestone 2 waits for the memory plan's final pull request to merge into `main`, then for Cal's next stage message. Milestone 4 also waits for that pull request. The pull request that completes the work deletes this plan.
+Status: Active. On branch `calummoore/object-memory-runner-report-limits-0m1g`, no pull request yet. Cal approved implementation on 23 November 2026. Milestone 1 is complete. Milestones 2 and 3 are in progress. Milestone 4 waits for the tab-state pull request to merge into `main`, and Cal releases it. The pull request that completes the work deletes this plan.
 
 Conductive keeps the latest file tree and branch changes in each workspace's Durable Object.
 One object has a 128 MB memory limit.
@@ -18,6 +18,7 @@ The other two memory plans own history reads, projection buckets, and initial ta
 
 Contract owners:
 
+- [File reports](../docs/protocol/file-reports.md), the report requirements.
 - [Workspace tools](../docs/protocol/workspace-tools.md#files-and-changes).
 - [Agent runner](../docs/protocol/agent-runner.md#the-agent-runner).
 - [Repository folders](../docs/protocol/repository-folders.md#the-context-folder).
@@ -292,9 +293,11 @@ Item 1 F is in force. A change, such as shallow entries first inside each group,
 - **Orchestrator call, 20 November 2026:** Milestone 4 waits for the memory plan's pull request to merge into `main`. It owns the overlapping report assembly and storage refactor.
 - **Orchestrator call, 20 November 2026:** Omission fields live inside tree and changes payloads. The tab-state plan owns response event numbers and route freshness.
 
-The dependency is [workspace object history and files memory](https://app.conductive.build/orgs/X6K5FFR3yoqyD5D1WfZdCk4GCk8QNz65J_GzQ5WkiOM/workspaces/Zo7I3oIgOjg3QDhgTuwotI7KXJDK4QI0bv28NeKhTDs).
-Its branch is `calummoore/object-memory-history-and-files-state-14g5`.
-Record its pull request link when available.
+The dependency was [workspace object history and files memory](https://app.conductive.build/orgs/X6K5FFR3yoqyD5D1WfZdCk4GCk8QNz65J_GzQ5WkiOM/workspaces/Zo7I3oIgOjg3QDhgTuwotI7KXJDK4QI0bv28NeKhTDs).
+Its pull request #675 merged into `main` on 24 November 2026 as `45d1ce51e`.
+It added bounded history pages, 4 KiB file descriptors, the bucket projection, transaction-callback file storage, per-part fields, and final path checks.
+It moved the report requirements to `docs/protocol/file-reports.md`.
+This branch merged that `main` on 24 November 2026 in `429da5335`, with no conflict.
 Take that merged code as the starting point for Worker edits.
 Do not reimplement its 64 path-hash buckets or its last-part path validation.
 
@@ -343,21 +346,24 @@ Review round 4 confirmed findings 11, 13, and 14, and its check removed finding 
 Depends on: Milestone 1, and the memory plan's final pull request merged into `main`.
 
 - **Orchestrator call, 23 November 2026, at Cal's instruction:** The memory plan also edits `runner/file-reports.md`, `docs/protocol/workspace-tools.md`, and `worker/files/README.md`. So Milestone 2 starts only after that pull request merges and this branch merges `main`.
+- **Cal, 24 November 2026:** Milestone 2 is released. Report semantics go in `docs/protocol/file-reports.md`. Create no competing split from the old `workspace-tools.md` content. This stage owns the edits of the legal pages and the public guides until Milestone 2 finishes.
+- **Cal, 24 November 2026:** The tab-state workspace owns `workspace-events.md`, the Events split of `chat-and-events.md`, `lost-workspace-updates.md`, `skill-mentions.md`, and the Chat protocol index. Do not edit them. Send a needed link line to Cal's root session for a sequential handover.
+- **Cal, 24 November 2026:** A code-area README changes with the milestone that changes its code, unless a useful new boundary fact exists earlier.
 
 State the chosen limits, omitted totals, selection, mention coverage, and compatible report rules before the implementation starts.
 
-- [ ] Update `docs/protocol/workspace-tools.md` with the new meaning of complete reports and summaries, notices, tree updates, and selection rules.
+- [ ] Update `docs/protocol/file-reports.md` with the new meaning of complete reports and summaries, tree updates, and selection rules. Update the Files and changes section of `docs/protocol/workspace-tools.md` for the panel totals and notices.
 - [ ] Keep part identity, revision, atomic replacement, refusal, reconnect, and repair rules intact.
 - [ ] State omission-count delta semantics, empty count-only deltas, absent-path refreshes, and omitted-diff refresh after a base change.
 - [ ] State the new-runner rollout boundary. Keep unlimited legacy trees and changes readable until their runner updates.
-- [ ] Split report requirements into a linked protocol page if the edited document exceeds the documentation skill's length target.
+- [ ] Keep report semantics in `docs/protocol/file-reports.md`. Split it into a linked child page only if it exceeds the documentation skill's length target. Create no second report page.
 - [ ] Update the context coverage statements in `repository-folders.md`, `file-mentions.md`, and `file-mentions-answers.md` for the approved selection.
 - [ ] Keep `file-row-menu.md` aligned with the approved mention coverage and Add to chat rule.
 - [ ] Update the full-report references in `agent-runner.md`, `runner/file-reports.md`, and `runner/event-limits.md`. Preserve the independent 200-file turn limit.
 - [ ] Update `src/marketing/docs/files-and-changes.md` with the two limits, totals, notices, and the terminal or agent as the route to omitted files.
 - [ ] Read both legal pages in full, including imported sections of `src/marketing/terms.ts` and `src/marketing/privacy.ts`. Update each sentence that restates a changed fact.
 - [ ] Read every guide under `src/marketing/docs/` in full. Update each sentence that restates a changed fact, including mention and attachment coverage.
-- [ ] Update relevant READMEs and `src/files/store.md` for useful boundary or entry-point changes. Keep requirements in protocol docs and mechanics in code.
+- [ ] Leave code-area READMEs and `src/files/store.md` to the milestone that changes their code, unless a useful new boundary fact needs one now. Keep requirements in protocol docs and mechanics in code.
 - [ ] Check every changed Markdown link. Save the reading checklist under `.context/runner-file-report-limits/docs-check.md`.
 
 ## Milestone 3: Runner limits and generated types
@@ -377,15 +383,17 @@ The existing Worker must still accept the emitted reports at this milestone's en
 - [ ] Keep the existing whole-entry, 256 KiB, 512-change, restart, and resend assertions.
 - [ ] Extend wire serialization cases for absent fields, explicit zeros, and nonzero metadata. Verify the previous Worker's retained-summary check accepts new report samples.
 - [ ] Run `cargo run -p cnd-runner-interface --example export_bindings`. Commit generated output without hand edits.
+- [ ] Update `crates/cnd-runner/README.md` and `crates/cnd-runner-interface/README.md` for useful entry-point or boundary changes.
 - [ ] Run `cargo test -p cnd-runner-interface` and `cargo test -p cnd-runner`. Record test costs and assertion-failure proof for new cases.
 
 ## Milestone 4: Worker metadata and compatibility
 
-Depends on: Milestone 3, and the pull request for "workspace object history and files memory" merged into `main`.
+Depends on: Milestone 3, and the tab-state pull request merged into `main`. The memory pull request #675 merged on 24 November 2026. Cal releases this milestone.
 
 Preserve omission metadata through the merged bucket projection, full report assembly, filtering, storage, and API publication.
 
 - [ ] Read and integrate the merged memory change before editing `worker/files/runner-reports.ts` or projection storage.
+- [ ] Update `worker/files/README.md` for useful boundary changes.
 - [ ] Extend `worker/files/parsers.ts` and `runner-input.ts` to retain optional metadata while accepting legacy reports.
 - [ ] Check repeated metadata when the report completes. Keep the retained-summary equality check and existing repair behavior.
 - [ ] Preserve both legacy lists without a Worker cutoff. Check that a legacy report above 1,000 changes still refreshes an open diff after a base-only change.
@@ -415,6 +423,7 @@ Render the approved mockups with real retained lists and omitted totals.
 - [ ] Show the limited-coverage words in the no-match line of the `@` list while the tree is limited, as `app/file-mentions/list/limited` draws.
 - [ ] Format the counts of the Changes tab, the Changes summary, and both `DiffStat` copies with one shared count formatter in `src/ui/`. Move the mockup copies of the format in `docs/mockups/src/components/files/listNoticeCopy.ts` and `docs/mockups/src/components/common/LinkTabs.tsx` to that formatter.
 - [ ] Extend existing parser, tree, synchronization, and panel tests at the lowest level that protects each changed requirement.
+- [ ] Update `src/files/README.md` and `src/files/store.md` for useful boundary changes.
 - [ ] Run `npm run test -- src/files` and only the affected mention or row-menu tests.
 - [ ] Smoke-test the real panels against controlled reports on desktop and phone. Save PNG screenshots under `.context/runner-file-report-limits/`.
 
