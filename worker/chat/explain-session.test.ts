@@ -15,6 +15,7 @@ import {
 } from '../test-support/harness'
 import { CLAUDE, CODEX, WORKSPACE_ID } from './harness.test-support'
 import {
+  ASK_INPUT,
   EXPLAIN_INPUT,
   explanationFixture,
 } from './explain-session.test-support'
@@ -29,6 +30,94 @@ beforeEach(async () => {
 })
 afterAll(async () => {
   await harness.dispose()
+})
+
+it('accepts one prompt for concurrent starts with the same ID', async () => {
+  const { fixture, parent, explain, startAsk } =
+    await explanationFixture(harness)
+  const [first, repeat] = await Promise.all([startAsk(), explain(ASK_INPUT)])
+  expect(first.message.id).toBe('explanation-prompt')
+  expect(repeat.status).toBe(201)
+  expect(await repeat.json()).toEqual(first)
+  const listed: SessionsResponse = await (
+    await fixture.fetch(sessionsPath(fixture.org.id, WORKSPACE_ID))
+  ).json()
+  expect(listed.sessions.map(({ id }) => id).sort()).toEqual(
+    [parent.id, first.session.id].sort(),
+  )
+})
+
+it('returns the existing explanation after the model default changes and both sessions close', async () => {
+  const { fixture, parent, explain, startAsk, close } =
+    await explanationFixture(harness)
+  const first = await startAsk()
+  await saveAccountDefault(fixture.env.DB, fixture.member.id, CODEX, TEST_TIME)
+  expect((await close(first.session.id)).status).toBe(200)
+  expect((await close(parent.id)).status).toBe(200)
+  const before = (await fixture.snapshot()).records
+  const repeat = await explain(ASK_INPUT)
+  expect(repeat.status).toBe(201)
+  expect(await repeat.json()).toMatchObject({
+    session: { id: first.session.id, closedAt: TEST_TIME, choice: CLAUDE },
+    message: first.message,
+  })
+  expect((await fixture.snapshot()).records).toEqual(before)
+})
+
+it.each([
+  ['quote', { quote: 'Another selection' }],
+  ['question', { question: 'What does it do?' }],
+  ['anchor message', { messageId: 'another-parent-message' }],
+] as const)(
+  'refuses a different %s under the same prompt ID',
+  async (_, change) => {
+    const { explain, startAsk } = await explanationFixture(harness)
+    await startAsk()
+    const response = await explain({ ...ASK_INPUT, ...change })
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({
+      error: { code: 'message_id_conflict' },
+    })
+  },
+)
+
+it('refuses the same prompt ID from another member', async () => {
+  const { fixture, explain, startAsk } = await explanationFixture(harness)
+  await startAsk()
+  const response = await explain(ASK_INPUT, fixture.ownerCookie)
+  expect(response.status).toBe(409)
+  expect(await response.json()).toMatchObject({
+    error: { code: 'message_id_conflict' },
+  })
+})
+
+it('refuses the ID of a later message that copies the prompt text', async () => {
+  const { fixture, explain, startAsk } = await explanationFixture(harness)
+  const first = await startAsk()
+  await fixture.send(
+    first.session.id,
+    'copied-prompt',
+    fixture.memberCookie,
+    CLAUDE,
+    first.message.text,
+  )
+  const response = await explain({ ...ASK_INPUT, promptId: 'copied-prompt' })
+  expect(response.status).toBe(409)
+  expect(await response.json()).toMatchObject({
+    error: { code: 'message_id_conflict' },
+  })
+})
+
+it.each([
+  ['empty', ''],
+  ['non-string', 42],
+])('refuses a prompt ID that is %s', async (_, promptId) => {
+  const { explain } = await explanationFixture(harness)
+  const response = await explain({ ...EXPLAIN_INPUT, promptId })
+  expect(response.status).toBe(400)
+  expect(await response.json()).toMatchObject({
+    error: { code: 'invalid_input' },
+  })
 })
 
 it('starts an open anchored session, writes its prompt and title, and dispatches the queued member message', async () => {

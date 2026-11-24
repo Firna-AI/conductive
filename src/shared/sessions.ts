@@ -32,6 +32,12 @@ export interface ExplainSessionRequest extends Omit<
   choice?: AgentChoice
   /** The member's question at the start of the written prompt. */
   question?: string
+  /**
+   * The ID that the app chooses for the written prompt. A repeat of the
+   * same start with the same ID gives the explanation that it started, so
+   * a start whose reply was lost never starts a second explanation.
+   */
+  promptId?: string
 }
 
 export type ExplainSessionResponse = SendMessageResponse

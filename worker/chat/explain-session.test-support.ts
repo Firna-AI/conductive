@@ -1,4 +1,8 @@
-import { explainSessionPath } from '../../src/shared/sessions'
+import {
+  explainSessionPath,
+  sessionPaths,
+  type ExplainSessionResponse,
+} from '../../src/shared/sessions'
 import type { TestHarness } from '../test-support/harness'
 import {
   CLAUDE,
@@ -14,6 +18,12 @@ export const EXPLAIN_INPUT = {
   after: 'After',
 }
 
+export const ASK_INPUT = {
+  ...EXPLAIN_INPUT,
+  promptId: 'explanation-prompt',
+  question: 'Why is this selected?',
+}
+
 export async function explanationFixture(harness: TestHarness) {
   const fixture = await createChatFixture(harness)
   await fixture.setEnvironment({
@@ -26,11 +36,29 @@ export async function explanationFixture(harness: TestHarness) {
   const parent = await fixture.createSession()
   await fixture.send(parent.id, EXPLAIN_INPUT.messageId)
   const path = explainSessionPath(fixture.org.id, WORKSPACE_ID, parent.id)
+  const explain = (
+    body: unknown = EXPLAIN_INPUT,
+    cookie = fixture.memberCookie,
+  ) => fixture.fetch(path, body, cookie)
   return {
     fixture,
     parent,
     path,
-    explain: (body: unknown = EXPLAIN_INPUT) =>
-      fixture.fetch(path, body, fixture.memberCookie),
+    explain,
+    startAsk: async (): Promise<ExplainSessionResponse> => {
+      const response = await explain(ASK_INPUT)
+      if (response.status !== 201)
+        throw new Error(
+          `Ask returned ${response.status}: ${await response.text()}`,
+        )
+      return response.json()
+    },
+    close: (sessionId: string) =>
+      fixture.fetch(
+        sessionPaths.close(fixture.org.id, WORKSPACE_ID, sessionId),
+        {
+          stopRunningTurn: false,
+        },
+      ),
   }
 }

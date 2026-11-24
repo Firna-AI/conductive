@@ -39,10 +39,10 @@ export async function existingMessage(
       'Send the changed message with a new message ID.',
     )
   }
-  return responseFor(transaction, existing)
+  return responseForMessage(transaction, existing)
 }
 
-async function responseFor(
+export async function responseForMessage(
   transaction: ChatTransaction,
   message: UserMessage,
 ): Promise<SendMessageResponse> {
@@ -126,7 +126,7 @@ export async function acceptMessage(
   await transaction.emit({ type: 'message.accepted', message })
   await transaction.saveSession(session)
   await transaction.emit({ type: 'session.updated', session })
-  return responseFor(transaction, message)
+  return responseForMessage(transaction, message)
 }
 
 export async function markSent(

@@ -1,3 +1,4 @@
+import type { SessionAnchor } from '../../src/shared/generated/SessionAnchor'
 import type {
   ExplainSessionRequest,
   ExplainSessionResponse,
@@ -13,7 +14,7 @@ import { ownerPreference } from '../tools/store'
 import { finishedAgentMessage } from './agent-message'
 import { explanationPrompt } from './explain-prompt'
 import { choice, identifier, invalidInput, record, string } from './inputs'
-import { acceptMessage } from './messages'
+import { acceptMessage, responseForMessage } from './messages'
 import type { ChatOperation } from './operation'
 import { SessionLogins } from './session-login'
 import { sessionFor } from './session-record'
@@ -42,6 +43,9 @@ function explanationInput(body: unknown): ExplainSessionRequest {
     before: before.slice(Math.max(0, before.length - contextLimit)),
     after: string(input.after).slice(0, contextLimit),
     ...(input.choice === undefined ? {} : { choice: choice(input.choice) }),
+    ...(input.promptId === undefined
+      ? {}
+      : { promptId: identifier(input.promptId) }),
   }
   if (input.question === undefined) return request
   const question = string(input.question).trim()
@@ -59,6 +63,55 @@ async function requireMessage(
   throw new HttpError(404, 'message_not_found', 'The message is not available.')
 }
 
+async function firstAcceptedMessageId(
+  transaction: ChatTransaction,
+  sessionId: string,
+) {
+  let after = 0
+  while (true) {
+    const page = await transaction.history(after, transaction.eventNumber, {
+      sessionId,
+      budget: { bytes: 1 },
+    })
+    const event = page.events[0]?.event
+    if (event?.type === 'message.accepted') return event.message.id
+    if (!page.hasMore) return undefined
+    after = page.nextAfterEventNumber
+  }
+}
+
+async function existingExplanation(
+  transaction: ChatTransaction,
+  promptId: string,
+  userId: string,
+  anchor: SessionAnchor,
+  text: string,
+): Promise<ExplainSessionResponse | null> {
+  const message = await transaction.message(promptId)
+  if (!message) return null
+  const session = await transaction.session(message.sessionId)
+  const stored = session?.anchor
+  if (
+    message.sender.id !== userId ||
+    message.text !== text ||
+    !stored ||
+    stored.parentSessionId !== anchor.parentSessionId ||
+    stored.messageId !== anchor.messageId ||
+    stored.quote !== anchor.quote ||
+    stored.before !== anchor.before ||
+    stored.after !== anchor.after ||
+    // A later message from the same sender can copy the first prompt's text.
+    (await firstAcceptedMessageId(transaction, message.sessionId)) !== promptId
+  ) {
+    throw new HttpError(
+      409,
+      'message_id_conflict',
+      'Send the changed message with a new message ID.',
+    )
+  }
+  return responseForMessage(transaction, message)
+}
+
 export async function explainSession(
   operation: ChatOperation,
   parentSessionId: string,
@@ -68,9 +121,29 @@ export async function explainSession(
   presentation: WorkspaceLinkContext,
 ): Promise<ExplainSessionResponse> {
   const input = explanationInput(context.body)
+  const { messageId, quote, before, after, promptId } = input
+  const anchor = { parentSessionId, messageId, quote, before, after }
+  const text = explanationPrompt(
+    input,
+    sessionLink(
+      presentation.origin,
+      presentation.orgId,
+      operation.workspaceId,
+      parentSessionId,
+    ),
+  )
+  const findExisting =
+    promptId === undefined
+      ? undefined
+      : (view: ChatTransaction) =>
+          existingExplanation(view, promptId, context.user.id, anchor, text)
+  if (findExisting) {
+    const existing = await operation.read(findExisting)
+    if (existing) return existing
+  }
   await operation.read(async (view) => {
     await sessionFor(view, parentSessionId)
-    await requireMessage(view, parentSessionId, input.messageId)
+    await requireMessage(view, parentSessionId, messageId)
   })
   // Fast mode stays off unless the request asks for it, as a session that
   // `create_session` starts: a press on Explain does not spend a login at
@@ -92,18 +165,9 @@ export async function explainSession(
       'agent_login_required',
       'Connect your agent login to send a message.',
     )
-  const { messageId, quote, before, after } = input
-  const anchor = { parentSessionId, messageId, quote, before, after }
-  const text = explanationPrompt(
-    input,
-    sessionLink(
-      presentation.origin,
-      presentation.orgId,
-      operation.workspaceId,
-      parentSessionId,
-    ),
-  )
   return operation.change(async (transaction) => {
+    const existing = await findExisting?.(transaction)
+    if (existing) return existing
     const session = await createSession(
       transaction,
       selected,
@@ -118,7 +182,7 @@ export async function explainSession(
       transaction,
       session.id,
       {
-        id: dependencies.randomId(),
+        id: promptId ?? dependencies.randomId(),
         text,
         choice: selected,
         attachmentIds: [],
