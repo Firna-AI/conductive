@@ -53,11 +53,14 @@ export function classReader(
   }
 
   function choice(node: ts.Expression, left: Reading, right: Reading): Reading {
+    const leftModule = hasModule(left)
+    const rightModule = hasModule(right)
     if (!left.readable || !right.readable)
-      return single(node, false, hasModule(left) || hasModule(right))
+      return single(node, false, leftModule || rightModule)
+    if (leftModule !== rightModule) return leftModule ? left : right
     if (left.values.length !== right.values.length)
       return left.values.length > right.values.length ? left : right
-    return hasModule(left) ? left : right
+    return leftModule ? left : right
   }
 
   function identifier(node: ts.Identifier): Reading {

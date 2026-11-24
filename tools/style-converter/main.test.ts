@@ -28,14 +28,38 @@ test('writes a new output tree and protects files and nonempty folders', () => {
     mkdirSync(join(root, 'area', 'sub'), { recursive: true })
     writeFileSync(
       join(root, 'area', 'sub', 'StatusText.module.css'),
-      '.row { display: flex }',
+      '.row {\n  display: flex;\n  letter-spacing: var(--ui-tracking-label);\n}',
     )
     writeFileSync(
       join(root, 'area', 'sub', 'StatusText.tsx'),
       "import s from './StatusText.module.css'\nexport const view = <div className={`${s.row} active`} />",
     )
     writeFileSync(
+      join(root, 'area', 'sub', 'getStatusClass.ts'),
+      "import s from './StatusText.module.css'\nexport const getStatusClass = <T>(value: T) => cx(s.row, s.active, value)",
+    )
+    writeFileSync(
+      join(root, 'area', 'sub', 'OtherView.vue'),
+      "import s from './StatusText.module.css'",
+    )
+    writeFileSync(
+      join(root, 'area', 'sub', 'Notes.md'),
+      'See `StatusText.module.css` for the style rules.',
+    )
+    writeFileSync(
+      join(root, 'area', 'sub', 'OtherView.tsx'),
+      'export const view = <div className={buildClass()} />',
+    )
+    writeFileSync(
+      join(root, 'area', 'sub', 'Broken.module.css'),
+      '.a.b { composes: other; width: 3px }',
+    )
+    writeFileSync(
       join(root, 'area', 'sub', 'StatusText.test.tsx'),
+      "import s from './StatusText.module.css'; cx(s.a, s.b)",
+    )
+    writeFileSync(
+      join(root, 'area', 'sub', 'StatusText.spec.js'),
       "import s from './StatusText.module.css'; cx(s.a, s.b)",
     )
     mkdirSync(guarded)
@@ -63,27 +87,45 @@ test('writes a new output tree and protects files and nonempty folders', () => {
 
     const result = run('area', '--out', 'drafts')
     expect(result.status).toBe(0)
-    expect(result.stdout).toBe(`CSS Modules 1
+    expect(result.stdout).toBe(`CSS Modules 2
 Drafts 1
 Declarations converted 1
-Declarations listed 0
+Declarations listed 3
 Classes with the row default 1
 Check by hand 0
-Joins 1 in 1 file
-Class values to check by hand 0
+Joins 2 in 2 files
+Class values to check by hand 1
+Unscanned files with CSS Module paths 1
 Report drafts/report.md
 `)
     expect(readdirSync(out).sort()).toEqual(['report.md', 'sub'])
+    expect(readdirSync(join(out, 'sub'))).toEqual(['StatusText.styles.ts'])
     const draft = readFileSync(join(out, 'sub', 'StatusText.styles.ts'), 'utf8')
     expect(draft).toContain('export function statusTextStyles()')
     expect(draft).toContain("flexDirection: 'row'")
     const report = readFileSync(join(out, 'report.md'), 'utf8')
     expect(report).toContain('- Area `area`\n')
     expect(report).toContain('## `area/sub/StatusText.module.css`\n')
+    expect(report).toContain('## `area/sub/Broken.module.css`\n')
+    expect(report).toContain('- Line 1 · `Entire file` · Cannot read file')
+    expect(report).toContain(
+      '- Line 3 · `.row` · `letter-spacing: var(--ui-tracking-label)` · em unit\n',
+    )
     expect(report).toContain(
       '- `area/sub/StatusText.tsx` · Line 2 · `s.row`, `active`\n',
     )
+    expect(report).toContain(
+      '- `area/sub/getStatusClass.ts` · Line 2 · `s.row`, `s.active`, `value`\n',
+    )
+    expect(report).toContain(
+      '## Class values to check by hand\n\n- `area/sub/OtherView.tsx` · Line 1 · `buildClass()`\n',
+    )
+    expect(report).toContain(
+      '## Unscanned files with CSS Module paths\n\n- `area/sub/OtherView.vue`\n',
+    )
     expect(report).not.toContain('StatusText.test.tsx')
+    expect(report).not.toContain('StatusText.spec.js')
+    expect(report).not.toContain('Notes.md')
     const help = run('--help')
     expect(help.status).toBe(0)
     expect(help.stdout).toContain(

@@ -1,3 +1,5 @@
+import { getPropertyName } from 'css-to-react-native'
+
 const sides = ['Top', 'Right', 'Bottom', 'Left']
 
 export const groups: Readonly<Record<string, readonly string[]>> = {
@@ -17,6 +19,7 @@ export const groups: Readonly<Record<string, readonly string[]>> = {
 
 const sideGroups: Readonly<Record<string, readonly string[]>> = {
   ...groups,
+  borderStyle: sides.map((side) => `border${side}Style`),
   marginBlock: ['marginTop', 'marginBottom'],
   marginInline: ['marginLeft', 'marginRight'],
   paddingBlock: ['paddingTop', 'paddingBottom'],
@@ -27,31 +30,34 @@ const sideGroups: Readonly<Record<string, readonly string[]>> = {
   paddingVertical: ['paddingTop', 'paddingBottom'],
 }
 
-const shorthandKeys: Readonly<Record<string, readonly string[]>> = {
-  ...sideGroups,
-  ...Object.fromEntries(
-    sides.map((side) => {
-      const key = `border${side}`
-      return [key, [`${key}Width`, `${key}Color`]]
-    }),
-  ),
-  background: ['backgroundColor'],
-  border: [...groups.borderWidth, ...groups.borderColor, 'borderStyle'],
-  outline: ['outlineWidth', 'outlineColor', 'outlineStyle'],
-  flex: ['flexGrow', 'flexShrink', 'flexBasis'],
-  flexFlow: ['flexDirection', 'flexWrap'],
-  textDecoration: [
-    'textDecorationLine',
-    'textDecorationStyle',
-    'textDecorationColor',
+export const foldedKeys = {
+  borderStyle: [
+    'border-top-style',
+    'border-right-style',
+    'border-bottom-style',
+    'border-left-style',
   ],
-  textShadow: ['textShadowOffset', 'textShadowRadius', 'textShadowColor'],
-}
+  overflow: ['overflow-x', 'overflow-y'],
+} as const
+
+const foldedLonghands = new Map(
+  Object.entries(foldedKeys).flatMap(([key, names]) =>
+    names.map((name): [string, string] => [name, key]),
+  ),
+)
 
 export function sideKeys(key: string): readonly string[] | undefined {
   return Object.hasOwn(sideGroups, key) ? sideGroups[key] : undefined
 }
 
-export function longhandKeys(key: string): readonly string[] {
-  return Object.hasOwn(shorthandKeys, key) ? shorthandKeys[key] : [key]
+export function cssPropertyName(key: string): string {
+  return key.replace(/[A-Z]/g, (part) => '-' + part.toLowerCase())
+}
+
+export function foldedKey(longhand: string): string | undefined {
+  return foldedLonghands.get(longhand)
+}
+
+export function nativeKey(longhand: string): string {
+  return foldedKey(longhand) ?? getPropertyName(longhand)
 }

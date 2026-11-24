@@ -265,7 +265,7 @@ test('lists a token use whose type conflicts with its first use', () => {
   })
 })
 
-test('lists a solid side border that would use an earlier dashed border style', () => {
+test('lists both declarations when solid and dashed borders win on different sides', () => {
   const { listed, classes } = convertCss(
     file,
     '.a { border: 1px dashed transparent; border-top: 2px solid var(--ui-border); }',
@@ -275,17 +275,16 @@ test('lists a solid side border that would use an earlier dashed border style', 
       kind: 'declaration',
       line: 1,
       selector: '.a',
+      text: 'border: 1px dashed transparent',
+      reasons: ['sideBorderStyle'],
+    },
+    {
+      kind: 'declaration',
+      line: 1,
+      selector: '.a',
       text: 'border-top: 2px solid var(--ui-border)',
       reasons: ['sideBorderStyle'],
     },
   ])
-  expect(Object.fromEntries(classes?.get('a') ?? [])).toEqual({
-    borderRightWidth: 1,
-    borderBottomWidth: 1,
-    borderLeftWidth: 1,
-    borderRightColor: 'transparent',
-    borderBottomColor: 'transparent',
-    borderLeftColor: 'transparent',
-    borderStyle: 'dashed',
-  })
+  expect(Object.fromEntries(classes?.get('a') ?? [])).toEqual({})
 })

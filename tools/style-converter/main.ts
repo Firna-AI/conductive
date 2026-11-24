@@ -101,7 +101,7 @@ async function main() {
   ensureEmpty(out)
   const drafts: [string, string][] = []
   const modules: ModuleReport[] = []
-  const scan: ClassScan = { joins: [], checks: [] }
+  const scan: ClassScan = { joins: [], checks: [], unscanned: [] }
   for (const file of sourceFiles(area)) {
     const name = relative(file)
     if (file.endsWith('.module.css')) {
@@ -120,10 +120,14 @@ async function main() {
           await renderDraft(name, conversion.classes),
         ])
       }
-    } else if (file.endsWith('.tsx') && !file.endsWith('.test.tsx')) {
+    } else if (
+      path.extname(file).toLowerCase() !== '.css' &&
+      !/\.(test|spec)\./.test(path.basename(file))
+    ) {
       const found = findClassJoins(name, readFileSync(file, 'utf8'))
       scan.joins.push(...found.joins)
       scan.checks.push(...found.checks)
+      scan.unscanned.push(...found.unscanned)
     }
   }
   const report = path.join(out, 'report.md')

@@ -25,6 +25,7 @@ test('writes the counts, source lines, reasons and class join in the run report'
 - Check by hand 0
 - Joins 1 in 1 file
 - Class values to check by hand 1
+- Unscanned files with CSS Module paths 0
 
 ## Listed declarations by reason
 
@@ -55,5 +56,9 @@ None.
 ## Class values to check by hand
 
 - \`src/demo/Example.tsx\` · Line 3 · \`buildClass()\`
+
+## Unscanned files with CSS Module paths
+
+None.
 `)
 })

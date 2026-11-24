@@ -7,12 +7,14 @@ import {
   withoutComments,
   type SourcePart,
 } from './css-text.ts'
+import { declarationNamesAgree } from './declaration-names.ts'
 import type { Reason } from './reasons.ts'
 import { selectorReasons } from './selectors.ts'
 
 type SourceLocation = { line: number; selector: string }
 export type CssDeclaration = {
   line: number
+  offset: number
   text: string
   name: string
   value: string
@@ -55,6 +57,7 @@ function declaration(
   const flag = /!\s*important$/i
   return {
     line: lineAt(part.offset),
+    offset: part.offset,
     text: part.text,
     name: name.startsWith('--') ? name : name.toLowerCase(),
     value: value.replace(flag, '').trimEnd(),
@@ -184,14 +187,11 @@ function addRule(
   const declarations = allDeclarations(statements, lineAt)
   const parsed = rule?.type === 'style' ? rule.value : undefined
   const selectors = sourceSelectors(part, lineAt)
-  const count =
-    (parsed?.declarations?.declarations?.length ?? 0) +
-    (parsed?.declarations?.importantDeclarations?.length ?? 0)
   const sameSelectors = parsed?.selectors.length === selectors.length
   const readable =
     sameSelectors &&
-    count === declarations.length &&
-    statements.length === declarations.length
+    statements.length === declarations.length &&
+    declarationNamesAgree(parsed?.declarations, declarations)
 
   for (const [offset, at] of selectors.entries()) {
     const selector = sameSelectors ? parsed?.selectors[offset] : undefined

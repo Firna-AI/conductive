@@ -59,6 +59,21 @@ const cases: [string, string, string[][]][] = [
     'classes(styles.row, editing ? "idle" : cx(styles.editable, card.card))',
     [['styles.row', 'styles.editable', 'card.card']],
   ],
+  [
+    'module fallback in a nullish choice',
+    'classes((wide ? "wide roomy" : undefined) ?? styles.row, "base")',
+    [['styles.row', '"base"']],
+  ],
+  [
+    'module fallback in an OR choice',
+    'cx((wide ? "wide roomy" : "") || styles.row, "base")',
+    [['styles.row', '"base"']],
+  ],
+  [
+    'module branch of a nested ternary',
+    'classes(on ? "x y z" : (edit ? "x y" : styles.row), styles.base)',
+    [['styles.row', 'styles.base']],
+  ],
   ['ternary selects one class', 'editing ? styles.row : styles.editable', []],
   ['template with spaces', '` ${styles.row} `', []],
   ['classes without a module', 'classes(props.className, "hidden")', []],

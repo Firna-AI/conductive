@@ -1,3 +1,5 @@
+import { basename, extname } from 'node:path'
+
 import ts from 'typescript'
 
 import { classReader } from './class-values.ts'
@@ -5,7 +7,23 @@ import { classReader } from './class-values.ts'
 type ClassJoin = { file: string; line: number; values: string[] }
 type ClassValueCheck = { file: string; line: number; expression: string }
 
-export type ClassScan = { joins: ClassJoin[]; checks: ClassValueCheck[] }
+export type ClassScan = {
+  joins: ClassJoin[]
+  checks: ClassValueCheck[]
+  unscanned: string[]
+}
+
+const sourceExtensions = new Set([
+  '.ts',
+  '.tsx',
+  '.mts',
+  '.cts',
+  '.js',
+  '.jsx',
+  '.mjs',
+  '.cjs',
+])
+const quotedModulePath = /(['"])(?:(?!\1)[^\r\n])*\.module\.css\1/
 
 function checkBindings(tree: ts.SourceFile) {
   const host: ts.CompilerHost = {
@@ -22,7 +40,7 @@ function checkBindings(tree: ts.SourceFile) {
   return ts
     .createProgram({
       rootNames: [tree.fileName],
-      options: { noResolve: true, noLib: true, types: [] },
+      options: { allowJs: true, noResolve: true, noLib: true, types: [] },
       host,
     })
     .getTypeChecker()
@@ -52,17 +70,20 @@ function classExpression(
   return ts.isJsxExpression(value) ? value.expression : value
 }
 
-export function findClassJoins(file: string, tsx: string): ClassScan {
+export function findClassJoins(file: string, source: string): ClassScan {
+  const result: ClassScan = { joins: [], checks: [], unscanned: [] }
+  if (!sourceExtensions.has(extname(file).toLowerCase())) {
+    if (quotedModulePath.test(source)) result.unscanned.push(file)
+    return result
+  }
   const tree = ts.createSourceFile(
-    '/view.tsx',
-    tsx,
+    '/' + basename(file),
+    source,
     ts.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.TSX,
   )
-  const result: ClassScan = { joins: [], checks: [] }
   const imports = moduleImports(tree)
-  if (imports.length === 0 && !tsx.includes('className')) return result
+  if (imports.length === 0 && !source.includes('className')) return result
   const checker = checkBindings(tree)
   const modules = new Set(
     imports.map((name) => checker.getSymbolAtLocation(name)),

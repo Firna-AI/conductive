@@ -103,6 +103,7 @@ export function renderReport(
     `Check by hand ${checks}`,
     `Joins ${joins.length} in ${files} ${files === 1 ? 'file' : 'files'}`,
     `Class values to check by hand ${scan.checks.length}`,
+    `Unscanned files with CSS Module paths ${scan.unscanned.length}`,
   ]
   const table = Object.entries(reasons).flatMap(([key, [title, action]]) => {
     const entry = [...counts].find(([reason]) => reason === key)
@@ -151,5 +152,8 @@ export function renderReport(
   for (const { file, line, expression } of scan.checks)
     lines.push(`- ${inline(file)} · Line ${line} · ${inline(expression)}`)
   if (scan.checks.length === 0) lines.push('None.')
+  lines.push('', '## Unscanned files with CSS Module paths', '')
+  for (const file of scan.unscanned) lines.push(`- ${inline(file)}`)
+  if (scan.unscanned.length === 0) lines.push('None.')
   return { text: lines.join('\n') + '\n', summary }
 }

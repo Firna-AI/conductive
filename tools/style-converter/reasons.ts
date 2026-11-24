@@ -65,6 +65,10 @@ export const reasons = {
     'Side border style',
     'React Native sets one border style for all sides.',
   ],
+  overflowAxes: [
+    'Overflow axes',
+    'React Native sets one overflow value for both axes.',
+  ],
   shorthandDefault: [
     'Implicit shorthand value',
     'Set the missing values from the CSS context.',

@@ -6,7 +6,7 @@ import {
   nativeLiteral,
   numericLength,
 } from './native-properties.ts'
-import { sideKeys } from './property-keys.ts'
+import { cssPropertyName, nativeKey, sideKeys } from './property-keys.ts'
 import type { Reason } from './reasons.ts'
 import { isColorKey, type StyleEntry } from './style-values.ts'
 import { cssNumber, type ValueSource } from './value-source.ts'
@@ -20,12 +20,13 @@ export function entry(
   text: string,
   source: ValueSource,
 ): StyleEntry | Reason {
+  const styleKey = nativeKey(cssPropertyName(key))
   const token = source.tokens.get(text)
-  if (token) return acceptsScalarToken(key) ? [key, token] : 'tokenType'
+  if (token) return acceptsScalarToken(styleKey) ? [key, token] : 'tokenType'
   for (const marker of source.tokens.keys()) {
     if (text.includes(marker)) return 'parseValue'
   }
-  const value = nativeLiteral(key, text)
+  const value = nativeLiteral(styleKey, text)
   if (value !== undefined) return [key, value]
   return isColorKey(key) ? 'colorValue' : 'nativeValue'
 }
@@ -55,7 +56,6 @@ export function stroke(
 ): StyleEntry[] | Reason {
   const width = `${key}Width`
   const color = `${key}Color`
-  const side = key !== 'border' && key !== 'outline'
   const text = source.text.toLowerCase()
   if (text === 'none' || numericLength(text) === 0) return [[width, 0]]
 
@@ -76,9 +76,18 @@ export function stroke(
   if (typeof thickness === 'string') return thickness
   const paint = entry(color, tint ?? remaining, source)
   if (typeof paint === 'string') return paint
-  const result = [thickness, paint]
-  if (!side) result.push([`${key}Style`, style])
-  return result
+  return [thickness, paint, [`${key}Style`, style]]
+}
+
+export function overflow(source: ValueSource): StyleEntry[] | Reason {
+  const words = wordsOf(source)
+  if (words.length === 0 || words.length > 2) return 'nativeValue'
+  const [x, y = x] = words
+  const horizontal = entry('overflowX', x, source)
+  if (typeof horizontal === 'string') return horizontal
+  const vertical = entry('overflowY', y, source)
+  if (typeof vertical === 'string') return vertical
+  return [horizontal, vertical]
 }
 
 export function flexFlow(source: ValueSource): StyleEntry[] | Reason {
