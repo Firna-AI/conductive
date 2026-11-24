@@ -58,10 +58,14 @@ Then the script does these steps:
 4. It turns on lingering for the user, so that its user manager runs from
    boot, with no login. It waits up to 30 seconds for the bus of that
    manager.
-5. It reads the `version` and the `sha256` of the newest release for
-   `x86_64-unknown-linux-musl` from the release server. It downloads the
-   program archive of that release and checks its SHA-256 digest.
-6. As the user `conductive`, it puts the program in the release store
+5. As the user `conductive`, it runs `--version` on the installed program
+   at `current/conductive`. If the command succeeds and prints
+   `conductive <version>`, the script uses that program. If the program is
+   missing or cannot run, the script reads the `version` and `sha256` of
+   the newest release for `x86_64-unknown-linux-musl` and downloads its
+   program archive.
+6. When the script downloads a program, it checks the archive's SHA-256
+   digest. As the user `conductive`, it puts the program in the release store
    `.local/share/conductive/` in the home of the user, at
    `versions/<version>/conductive`. Then it points the link `current` at
    that version. Each change is a rename, so a stopped install leaves no
@@ -73,17 +77,19 @@ Then the script does these steps:
    step writes the user unit and starts it.
 8. It prints the commands that show the state and the log of the service.
 
-The script checks no signature of the first program. It checks only the
-digest from the newest-version JSON. The program checks the signature of
-each later release, as
-[The computer connection](../../docs/protocol/own-computers.md#the-computer-connection)
-says.
+For a first install or a repair, the script uses the digest from the
+newest-version JSON. The updater checks the signature of each later
+release and completes a trial before it changes `current`. See
+[The computer connection](../../docs/protocol/own-computers.md#the-computer-connection).
 
 The script sends the code to `computer enroll` on standard input. When
 the health report shows a failed check, the script stops. The admin then
 fixes the server and runs the command again. A second run keeps the user,
-its ID ranges, and the drop-in file. If the code exchange fails, read the
-reason that `computer enroll` prints.
+its ID ranges, and the drop-in file. It keeps `current` when the installed
+program can run, even if the code exchange fails. If the program is
+missing or cannot run, the script prints a warning and installs the
+newest release. If the code exchange fails, read the reason that
+`computer enroll` prints.
 
 The script reads the newest-version JSON with `awk`, so each key must be
 on its own line, as the release packager writes it.

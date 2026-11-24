@@ -98,7 +98,9 @@ as_computer() {
 }
 
 prepare_user() {
+  account_existed=1
   if ! account="$(getent passwd conductive)"; then
+    account_existed=0
     as_root useradd --create-home --home-dir /home/conductive --shell /usr/sbin/nologin --user-group conductive ||
       fail 'Could not create the conductive user.'
     account="$(getent passwd conductive)" || fail 'Could not find the conductive user.'
@@ -241,8 +243,24 @@ install_release() {
   ' sh "$version" < "$temporary/conductive" || fail 'Could not install the Conductive program.'
 }
 
-enroll_and_start() {
+prepare_program() {
   program="$computer_home/.local/share/conductive/current/conductive"
+  if as_computer timeout -k 1 10 "$program" --version </dev/null \
+    > "$temporary/program-version" 2>/dev/null &&
+    LC_ALL=C awk '
+      /^conductive 0\.0\.[1-9][0-9]*$/ { valid = 1 }
+      END { exit !(NR == 1 && valid) }
+    ' "$temporary/program-version"; then
+    return
+  fi
+
+  if [ "$account_existed" = 1 ]; then
+    printf '%s\n' 'The Conductive program is missing or cannot run. Installing the newest release.' >&2
+  fi
+  install_release
+}
+
+enroll_and_start() {
   if report="$(as_computer "$program" computer check)"; then
     printf '%s\n' "$report"
   else
@@ -287,7 +305,7 @@ main() {
   trap 'rm -rf -- "$temporary"' 0
   trap 'fail "The installation was interrupted."' HUP INT TERM
   prepare_manager
-  install_release
+  prepare_program
   enroll_and_start
   show_result
 }
