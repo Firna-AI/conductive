@@ -16,7 +16,7 @@ function same(left: ExplainSelection | null, right: ExplainSelection | null) {
   )
 }
 
-/** The focus is on Explain, which Tab reaches from the selection. */
+/** The focus is on Explain or Ask, which Tab reaches from the selection. */
 function onExplain(): boolean {
   const focus = document.activeElement
   return (
@@ -29,7 +29,7 @@ function onExplain(): boolean {
  * messages carry `chat`, or null. A selection that a pointer still draws
  * is not finished, so Explain shows when the pointer lets go. A selection
  * that the keyboard makes shows Explain at once. While the focus is on
- * Explain, the last selection stays, so Tab and a press keep it.
+ * Explain or Ask, the last selection stays, so Tab and a press keep it.
  */
 export function useExplainSelection(
   chat: string,

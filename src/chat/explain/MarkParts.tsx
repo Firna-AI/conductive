@@ -73,9 +73,10 @@ export function WholeMarks(props: {
 
 /**
  * The box of the mark whose popover is open, over the text of the mark, or
- * over the whole message for a mark that covers it. The popover keeps to
- * it: by CSS anchor positioning, or by its place in a browser without it.
- * It takes no pointer and draws nothing.
+ * over the whole message for a mark that covers it. An unsent Ask has it
+ * over the quote that it keeps. The popover keeps to it: by CSS anchor
+ * positioning, or by its place in a browser without it. It takes no
+ * pointer and draws nothing.
  */
 export function AnchorBox(props: {
   root: RefObject<HTMLElement | null>

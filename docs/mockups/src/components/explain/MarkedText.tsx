@@ -8,7 +8,6 @@ import { PhoneSelectionEnd, PhoneSelectionStart } from './PhoneSelection'
 import type { MessageMarks, TextMark, TextSpan } from './chatMarks'
 import { markLabel } from '../../../../../src/ui/components/explain/explainCopy'
 import styles from '../../../../../src/ui/components/explain/MarkedText.module.css'
-import ask from './Ask.module.css'
 
 type Placed = { span: TextSpan; start: number; end: number }
 
@@ -184,7 +183,7 @@ function SelectionBox(props: {
 }) {
   const touch = useTouch()
   return (
-    <span className={classes(styles.selected, props.kept && ask.kept)}>
+    <span className={classes(styles.selected, props.kept && styles.kept)}>
       {props.children}
       {props.by && !touch ? props.by : null}
     </span>

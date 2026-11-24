@@ -1,10 +1,10 @@
 # Explain
 
-Explain in the chat: Explain by a finished selection of text, its key, the
-marks of the explanations in the chat of their parent session, the menu of
-overlapping marks, and the popover of an explanation with its follow-up
-field. [Ask](#ask) gives the rules for the code of Ask, which the chat does
-not show yet. See [the chat](../README.md) for the whole chat,
+Explain in the chat: Explain and Ask by a finished selection of text, the
+key of Explain, the marks of the explanations in the chat of their parent
+session, the menu of overlapping marks, and the popover of an explanation
+with its follow-up field. [Ask](#ask) gives the rules for the code of Ask
+and its unsent popover. See [the chat](../README.md) for the whole chat,
 [Explain](../../../docs/protocol/explain.md) with its pages
 [Explain: Ask](../../../docs/protocol/explain-ask.md) and
 [Explain: the mark and the popover](../../../docs/protocol/explain-popover.md)
@@ -21,8 +21,9 @@ for the screens.
   that only the app needs, such as the spoken name of the follow-up field
   or the whole-message mark of a bubble, goes into those shared files too,
   so one source serves both. `explain.module.css` holds only what the app
-  does: the highlights, the slots and the buttons of the states, the box of
-  the open mark, and the places of Explain and of the popover.
+  does: the highlights of the marks and of the quote of an unsent Ask, the
+  slots and the buttons of the states, the box that the popover keeps to,
+  and the places of the bar of Explain and Ask and of the popover.
 - Only the chat of the shown session tab gives `ExplainContext`, from
   `useExplain` in `SessionChat`. So the popover and any other chat show no
   Explain and no marks of their own.
@@ -44,11 +45,12 @@ for the screens.
   notice, shows none. A selection that a mouse still draws shows none
   until the mouse lets go. The quote leaves out white space at its ends,
   and the text on each side keeps at most 300 characters.
-- On a computer, Explain floats in the message, over the middle of the
-  selection, or over its end in a member message. With no room above the
-  selection, it goes under it. It follows the selection in the order of
-  Tab, and the selection stays while the focus is on it. On a phone,
-  Explain stands above the composer. A read-only workspace shows none.
+- On a computer, the bar of Explain and Ask floats in the message, over the
+  middle of the selection, or over its end in a member message. With no
+  room above the selection, it goes under it. It follows the selection in
+  the order of Tab, and the selection stays while the focus is on it. On a
+  phone, the bar stands above the composer. A read-only workspace shows
+  none.
 - The key of Explain the selection is offered only while Explain shows.
 - A press calls `ChatController.explain`, which posts the selection to the
   route of the Worker with no choice, so the saved default of the member
@@ -118,52 +120,67 @@ for the screens.
 
 ### Ask
 
-The chat does not show Ask yet. The code of Ask follows these rules, and
+The code of Ask follows these rules, and
 [Explain: Ask](../../../docs/protocol/explain-ask.md) gives its
-requirements.
+requirements. `useAsk` holds the unsent Ask, and `ask-state.ts` gives each
+of its steps.
 
 - Ask follows Explain in the bar of `FloatingExplain` and in `PhoneExplain`,
   and it shows whenever Explain shows. It follows Explain in the order of
   Tab. It offers no shortcut.
 - A press on Ask saves the selection that Explain reads: the message, the
-  quote, the text around it, and the range of the quote. The focus then
-  moves into the field, which ends the selection of the page. So the
+  quote, the text around it, and a copy of the range of the quote. Then it
+  ends the selection of the page, and the field takes the focus. So the
   unsent popover and Send use the saved selection, never the selection of
-  the page.
+  the page, and a phone shows no handles and no selection menu.
 - While the unsent popover is open, the saved range keeps a highlight in
-  the colours of a selection. It draws through the CSS Custom Highlight
-  API, as the fill of a mark does, so the text that React draws stays its
-  own. It is no mark, so it has no state button and takes no press.
-- The unsent popover lies where the popover of an explanation lies. On a
-  computer, it keeps to a box over the highlighted quote, drawn as the box
-  of the open mark is. On a phone, it is the sheet at half height. It
-  counts as the one open popover, so the rules of the open popover above
-  hold for it.
+  the colours of a selection, the layer `kept`. It draws through the CSS
+  Custom Highlight API, as the fill of a mark does, so the text that React
+  draws stays its own. It is no mark, so it has no state button and takes
+  no press.
+- The unsent popover, `AskPopover`, lies where the popover of an
+  explanation lies. On a computer, it keeps to a box over the highlighted
+  quote, which `AnchorBox` draws as it draws the box of the open mark. On a
+  phone, it is the sheet at half height. It counts as the one open popover,
+  so the rules of the open popover above hold for it.
 - It uses `ExplainPopover` with the quote and Close, and no Expand. Its
-  chat is empty, and screen readers hear `askLabel` as its name. Its field
-  shows `askPlaceholder`, takes text only, and grows to four lines. Send
-  stays off while the text holds only white space.
+  chat is empty, and screen readers hear `askLabel` as its name. Its field,
+  `AskField`, looks as the follow-up field looks. It shows `askPlaceholder`,
+  screen readers hear `questionLabel` as its name, it takes text only, and
+  it grows to four lines. Send stays off while the text holds only white
+  space, as `canSend` says.
 - While the cloud computer does not run, the field stays, and the bar of
   `sandboxParts` takes no place there. Send starts the cloud computer, as
   a press on Explain does.
 - Send calls `ChatController.explain` with the saved selection and the
   question. Send is busy while the start waits, as Explain is, so a second
-  press starts nothing.
+  press starts nothing. While a start of Explain or of Ask waits, the other
+  button of the bar is off, so one start waits at a time.
 - The field empties at Send and keeps the focus, and it takes input while
   the start waits, as the composer clears at once after a send.
 - The reply shows the tab of the explanation through `takeReply`. The
   popover of the new explanation then takes the place of the unsent
   popover. Text typed while the start waited goes into the draft of the
-  new explanation, so its follow-up field shows that text, with the focus.
+  new explanation, so its follow-up field shows that text. When the unsent
+  popover still showed at the reply, that field takes the focus. After a
+  close during the wait, the new popover takes the focus, as for Explain.
+- The popover of the new explanation hides the written prompt, as for
+  Explain, so it does not show the question.
 - A failed start keeps the unsent popover open. The question goes back
   into the field, before any text typed during the wait, as a refused
   message goes back into the composer. The parent chat shows the notice
   of a failed Explain, `explainFailedTitle`.
 - Before Send, Close, Escape, and on a computer a press outside drop the
-  unsent popover with its question, and they start nothing. The focus then
-  goes back to the chat of the parent session. Another popover that opens
-  in its place, and a change of the shown session, drop it in the same
-  way. A sheet on a phone stays open at a press outside.
+  unsent popover with its question, and they start nothing. Another
+  popover that opens in its place, and a move away from the session of the
+  Ask, drop it in the same way. A sheet on a phone stays open at a press
+  outside. Close and Escape give the focus to the chat, the `ChatPane`
+  section, which takes the focus only from code.
+- A close while the start waits stops nothing: the reply opens the popover
+  of the new explanation, and a failed start opens the unsent popover
+  again. The popover shows only over the chat of the session of the Ask,
+  so a failed start while another session shows opens it when that
+  session shows again.
 - A read-only workspace shows no Ask.
 
 ## Tests
@@ -196,30 +213,52 @@ requirements.
   the member typed while the reply waited, follows the linked session of
   Try again, and keeps the popover of another explanation that the member
   opened while the reply waited.
+- `AskStart.dom.test.tsx` opens the unsent popover from a selection, with
+  the kept highlight and the focus in the field, Ask just after Explain,
+  and Send off for white space. Send starts the explanation with the
+  question, and its popover hides the written prompt. It checks text typed
+  while the start waits, which goes into the follow-up field of the new
+  explanation, Send busy during the wait, and a failed start, which keeps
+  the unsent popover with the question before the typed text. While the
+  cloud computer is stopped, the field stays and Send starts.
+- `AskDismiss.dom.test.tsx` drops the question at Escape, at a press
+  outside, when a mark opens its popover in its place, and at a change of
+  the shown session, with no start. A close while the start waits stops
+  nothing, and on a phone Ask stands above the composer and its sheet
+  stays open at a press outside.
 - `explain-test-kit.tsx` and `popover-test-kit.ts` hold the chat, the
   explanations, the selection, the highlights, the press on a mark that
   opens a popover, a follow-up, and the replies of the Worker.
+  `ask-test-kit.ts` holds the starts of an Ask that the fake answers and
+  the unsent popover from a selection.
 
 ### Key code
 
 - `useExplain.ts`: the marks, the selection, the key, and the popover and
   the menu that lie open, with `popoverView`, the popover as the view that
-  sends. `useExplainSelection.ts` reads the selection.
+  sends. `explain-state.ts` gives its types. `useExplainSelection.ts` reads
+  the selection.
+- `useAsk.ts`: the unsent Ask, its highlight, and Send. `ask-state.ts`: the
+  steps of an unsent Ask, such as `canSend` and `failedAsk`.
 - `selection.ts`: `explainableSelection`, the selection that Explain reads.
   `text-model.ts`: `textModel`, and the places of the text in the page.
 - `explanations.ts`: `explanationsOf`, the explanations of a session with
   the state of each mark. `quote-match.ts`: `findQuote`.
 - `MarkedMessage.tsx` and `MarkParts.tsx`: the text of a message with its
   marks, the buttons of the states with the shared `MarkGlyph`, the
-  whole-message mark, and the box of the open mark. `mark-layout.ts` and
-  `useMarks.ts` lay the marks out, and `highlights.ts` draws their fill.
+  whole-message mark, and the box of the open mark or of the kept quote of
+  an Ask. `mark-layout.ts` and `useMarks.ts` lay the marks out, and
+  `highlights.ts` draws their fill and the kept quote.
   `useMarks.ts` also gives `markRegions` and `marksAt`, where the press and
   the pointer find the marks.
-- `ExplainButton.tsx`: Explain by the selection and above a phone composer.
+- `ExplainButton.tsx`: the bar of Explain and Ask by the selection and
+  above a phone composer.
 - `ExplainLayer.tsx`, `ExplainPopover.tsx`, `PopoverChat.tsx`,
   `PopoverParts.tsx`, `FollowUpField.tsx`: the menu, the popover, its chat,
-  its header and handle, and its field. `popover-place.ts` places it, and
-  `press-outside.ts` marks the presses that keep it open.
+  its header and handle, and its field. `AskPopover.tsx` and
+  `AskField.tsx`: the unsent popover and the field of the question.
+  `popover-place.ts` places the popover, and `press-outside.ts` marks the
+  presses that keep it open.
 - `explain.module.css`: only the rules of the app, such as the highlights,
   the slots, and the places.
 - `../state/explain-actions.ts`: `explainQuote` and `sendFollowUp`.

@@ -1,6 +1,6 @@
 /*
- * The Explain button, which floats just above a selection, over the other
- * parts of the chat.
+ * Explain and Ask, which float in one bar just above a selection, over the
+ * other parts of the chat.
  */
 .above {
   position: absolute;
@@ -25,6 +25,18 @@
   border-radius: var(--ui-radius-md);
   box-shadow: 0 6px 18px var(--ui-shadow);
   white-space: nowrap;
+}
+
+/*
+ * The floating bar of a selection: Explain, then Ask, as plain buttons in
+ * one raised box with the outline and the fill of a menu. The `float` rule
+ * gives its corners and its shadow, and the place rules place it.
+ */
+.bar {
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--ui-border2);
+  background: var(--ui-composer);
 }
 
 /*

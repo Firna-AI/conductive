@@ -4,6 +4,7 @@ import {
   useState,
   type KeyboardEvent,
   type ReactNode,
+  type RefObject,
 } from 'react'
 import {
   anchorsInCss,
@@ -28,23 +29,27 @@ import { keepsPopover } from './press-outside'
  * to full height, where it stops under the tab row. It opens at full height
  * while a request waits for a member, and the chat scrolls its mark into
  * view above it. The parent chat stays live, so no dim lies over the app.
- * The popover takes the focus when it opens, and Escape or Close closes it
- * and gives the focus back to its mark. On a computer, a press outside it
+ * The popover takes the focus when it opens, or gives it to `field` when
+ * that field shows. Escape and Close call `onClose`, which gives the focus
+ * back to the mark of an explanation. On a computer, a press outside it
  * closes it too, and the focus goes where the press puts it. A press in
  * the Explain layer or on a mark keeps it, as `keepPopover` says.
  */
 export function ExplainPopover(props: {
-  /** The title of the explanation, which names the popover. */
+  /** The title of the explanation, or Ask before Send, which names it. */
   title: string
   quote: string
   mobile: boolean
-  /** The box of the open mark, if it shows. */
+  /** The box of the open mark or of the kept quote, if it shows. */
   anchor: HTMLElement | null
   /** A request of the session waits for a member. */
   waits: boolean
   /** The chat, whose top the sheet stops at at full height. */
   stopAt: HTMLElement | null
-  onExpand: () => void
+  /** The field that takes the focus as the popover opens, if it shows. */
+  field?: RefObject<{ focus: () => void } | null>
+  /** Shows the tab of the explanation. An unsent Ask has none. */
+  onExpand?: () => void
   onClose: () => void
   /** Closes the popover at a press outside it, and moves no focus. */
   onPressOutside: () => void
@@ -53,8 +58,13 @@ export function ExplainPopover(props: {
   const ref = useRef<HTMLElement>(null)
   const [height, setHeight] = useState<'half' | 'full' | null>(null)
   const full = height === 'full' || (height === null && props.waits)
+  // The popover takes the focus once, as it opens, so the field of the
+  // first render counts. The parts inside lay out first, so it shows by now.
+  const opening = useRef(props.field)
   useLayoutEffect(() => {
-    ref.current?.focus({ preventScroll: true })
+    const field = opening.current?.current
+    if (field) field.focus()
+    else ref.current?.focus({ preventScroll: true })
   }, [])
   usePanelPlace(ref, props.anchor, !props.mobile && !anchorsInCss())
   useMarkAboveSheet(ref, props.anchor, props.mobile)

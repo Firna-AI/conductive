@@ -14,11 +14,12 @@ import styles from './explain.module.css'
  * The top of the popover: the quote that it explains, then Expand and the
  * close button. The quote keeps to two lines, and its tooltip holds all of
  * it. The popover shows no written prompt, so the quote names what the
- * chat under it is about.
+ * chat under it is about. An unsent Ask has no tab, so it has no Expand,
+ * and the close button keeps its place at the end.
  */
 export function PopoverHeader(props: {
   quote: string
-  onExpand: () => void
+  onExpand?: () => void
   onClose: () => void
 }) {
   return (
@@ -26,11 +27,13 @@ export function PopoverHeader(props: {
       <p className={popover.quote} title={props.quote}>
         “{props.quote}”
       </p>
-      <IconButton
-        icon={Maximize2}
-        label={expandLabel}
-        onPress={props.onExpand}
-      />
+      {props.onExpand ? (
+        <IconButton
+          icon={Maximize2}
+          label={expandLabel}
+          onPress={props.onExpand}
+        />
+      ) : null}
       <IconButton icon={X} label={closeLabel} onPress={props.onClose} />
     </div>
   )

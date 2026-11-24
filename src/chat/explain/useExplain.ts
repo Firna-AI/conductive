@@ -1,58 +1,17 @@
 import { useCallback, useId, useMemo, useRef, useState } from 'react'
 import { useShortcutOffer } from '../../shell/shortcuts/shortcut-context'
 import { useLatest } from '../components/chip-field/use-latest'
-import type { ChatSnapshot } from '../state/chat-snapshot'
-import type { ChatController } from '../state/controller'
-import type { SendingView } from '../state/linked-replies'
 import type { MenuPoint } from '../ui/Menu'
-import type { ExplainView } from './explain-context'
-import { byMessage, explanationsOf, type Explanation } from './explanations'
+import type { ExplainView, StartWait } from './explain-context'
+import type {
+  ExplainProps,
+  ExplainState,
+  OpenMarkMenu,
+  OpenPopover,
+} from './explain-state'
+import { byMessage, explanationsOf } from './explanations'
+import { useAsk } from './useAsk'
 import { useExplainSelection } from './useExplainSelection'
-
-/** The popover that lies open over the chat of its parent session. */
-export interface OpenPopover {
-  explanationId: string
-  /**
-   * The session whose chat the popover shows: the explanation, or a linked
-   * session that a follow-up of the popover opened.
-   */
-  sessionId: string
-}
-
-/** The menu of the explanations whose marks overlap at a press. */
-interface OpenMarkMenu {
-  ids: readonly string[]
-  at: MenuPoint
-}
-
-export interface ExplainProps {
-  snapshot: ChatSnapshot
-  controller: ChatController
-  /** The shown session, whose chat holds the marks. */
-  sessionId: string | null
-  readOnly: boolean
-  mobile: boolean
-}
-
-/** The state of Explain in the chat of the shown session tab. */
-export interface ExplainState {
-  view: ExplainView | null
-  explanations: readonly Explanation[]
-  popover: OpenPopover | null
-  /** The box of the open mark, which the popover keeps to. */
-  anchor: HTMLElement | null
-  menu: OpenMarkMenu | null
-  openPopover: (explanationId: string) => void
-  /**
-   * The popover of an explanation as the view that sends a follow-up or Try
-   * again, as `SendingView` says. It shows a session only while it lies
-   * open on that explanation, so a late reply leaves the popover of another
-   * explanation as it is.
-   */
-  popoverView: (explanationId: string) => SendingView
-  closePopover: (focusMark: boolean) => void
-  closeMenu: () => void
-}
 
 /**
  * The same list as the last render while its content is the same, so a
@@ -69,11 +28,13 @@ function useSameList<T>(list: readonly T[]): readonly T[] {
 
 /**
  * Explain in the chat of the shown session tab: the marks of the
- * explanations of that session, the finished selection with Explain by it,
- * its key, and the popover and the menu that lie open. At most one popover
- * is open: the popover of another mark replaces it, and a press on Explain
- * closes it first. It stays while the menu of overlapping marks shows. A
- * change of the shown session closes both.
+ * explanations of that session, the finished selection with Explain and Ask
+ * by it, the key of Explain, the unsent Ask of `useAsk`, and the popover and
+ * the menu that lie open. At most one popover is open, also when it is the
+ * unsent popover: the popover of another mark replaces it, and a press on
+ * Explain or on Ask closes it first. It stays while the menu of overlapping
+ * marks shows. While a start waits, neither Explain nor Ask starts another.
+ * A change of the shown session closes the popover and the menu.
  */
 export function useExplain(props: ExplainProps): ExplainState {
   const { snapshot, controller, sessionId, readOnly } = props
@@ -82,7 +43,8 @@ export function useExplain(props: ExplainProps): ExplainState {
     chat,
     sessionId !== null && !readOnly,
   )
-  const [starting, setStarting] = useState(false)
+  const asking = useAsk(controller, sessionId)
+  const [explaining, setExplaining] = useState(false)
   const [popover, setPopover] = useState<OpenPopover | null>(null)
   // The popover that lies open now, for a reply that comes later.
   const latest = useLatest(popover)
@@ -102,29 +64,65 @@ export function useExplain(props: ExplainProps): ExplainState {
     ),
   )
   const marks = useMemo(() => byMessage(explanations), [explanations])
-  const openPopover = useCallback(
-    (explanationId: string) => {
+  const starting: StartWait = explaining
+    ? 'explain'
+    : asking.waits
+      ? 'ask'
+      : null
+  const { press: pressAsk, send: sendAsk, close: closeAsk } = asking
+  const showPopover = useCallback(
+    (explanationId: string, focusField: boolean) => {
       setMenu(null)
-      setPopover({ explanationId, sessionId: explanationId })
+      closeAsk()
+      setPopover({ explanationId, sessionId: explanationId, focusField })
       void controller.readHistory(explanationId)
     },
-    [controller],
+    [controller, closeAsk],
+  )
+  const openPopover = useCallback(
+    (explanationId: string) => showPopover(explanationId, false),
+    [showPopover],
   )
   const explain = useCallback(() => {
-    if (!selection || !sessionId || starting) return
+    if (!selection || !sessionId || starting !== null) return
     const { messageId, quote, before, after } = selection
     setPopover(null)
-    setStarting(true)
+    closeAsk()
+    setExplaining(true)
     void controller
       .explain(sessionId, { messageId, quote, before, after })
       .then((id) => {
-        setStarting(false)
+        setExplaining(false)
         if (id === null) return
         document.getSelection()?.removeAllRanges()
         clearSelection()
         openPopover(id)
       })
-  }, [controller, selection, sessionId, starting, clearSelection, openPopover])
+  }, [
+    controller,
+    selection,
+    sessionId,
+    starting,
+    clearSelection,
+    openPopover,
+    closeAsk,
+  ])
+  // The press saves the selection first. The field of the unsent popover
+  // then takes the focus, which ends the selection of the page, so the
+  // press ends it at once, with its handles and menu on a phone.
+  const ask = useCallback(() => {
+    if (!selection || !sessionId || starting !== null) return
+    pressAsk(selection, sessionId)
+    setPopover(null)
+    setMenu(null)
+    document.getSelection()?.removeAllRanges()
+    clearSelection()
+  }, [selection, sessionId, starting, clearSelection, pressAsk])
+  const sendQuestion = useCallback(() => {
+    void sendAsk().then((started) => {
+      if (started) showPopover(started.id, started.typing)
+    })
+  }, [sendAsk, showPopover])
   useShortcutOffer('explain-selection', selection ? explain : null)
   const noteGlyph = useCallback((id: string, element: HTMLElement | null) => {
     if (element) glyphs.current.set(id, element)
@@ -136,6 +134,7 @@ export function useExplain(props: ExplainProps): ExplainState {
   )
   const floating = !props.mobile && !readOnly
   const open = popover?.explanationId ?? null
+  const kept = asking.shown?.kept ?? null
   // One view while nothing in it changes, so the marked messages of the
   // chat do not draw again for each streamed part of an answer.
   const view = useMemo<ExplainView | null>(
@@ -148,7 +147,9 @@ export function useExplain(props: ExplainProps): ExplainState {
             floating,
             starting,
             open,
+            kept,
             explain,
+            ask,
             openPopover,
             openMenu,
             noteGlyph,
@@ -163,7 +164,9 @@ export function useExplain(props: ExplainProps): ExplainState {
       floating,
       starting,
       open,
+      kept,
       explain,
+      ask,
       openPopover,
       openMenu,
       noteGlyph,
@@ -173,6 +176,7 @@ export function useExplain(props: ExplainProps): ExplainState {
     view,
     explanations,
     popover,
+    unsent: asking.shown,
     anchor,
     menu,
     openPopover,
@@ -196,5 +200,8 @@ export function useExplain(props: ExplainProps): ExplainState {
       if (focusMark && id) glyphs.current.get(id)?.focus()
     },
     closeMenu: () => setMenu(null),
+    changeQuestion: asking.change,
+    sendQuestion,
+    closeAsk,
   }
 }

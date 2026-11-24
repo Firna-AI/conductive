@@ -1,15 +1,16 @@
 /*
  * The rules of Explain that only the app has: the highlights that draw the
- * marks, the slots and the buttons of their states, the box of the open
- * mark, and the places of Explain and of the popover. The look comes from
- * the shared `MarkedText`, `ExplainButton`, `ExplainPopover`, and
- * `FollowUpField` modules.
+ * marks and the quote of an unsent Ask, the slots and the buttons of the
+ * states, the box that the popover keeps to, and the places of the bar of
+ * Explain and Ask and of the popover. The look comes from the shared
+ * `MarkedText`, `ExplainButton`, `ExplainPopover`, and `FollowUpField`
+ * modules.
  */
 
 /*
  * The text of a message that Explain reads. It holds the state of each mark,
- * Explain by a selection, and the box of the open mark, so it sets their
- * place.
+ * the bar of Explain and Ask by a selection, and the box that the popover
+ * keeps to, so it sets their place.
  */
 .message {
   position: relative;
@@ -33,6 +34,16 @@
 ::highlight(explain-hover),
 ::highlight(explain-active) {
   background-color: var(--ui-warning-border);
+}
+
+/*
+ * The quote of an unsent Ask, in the colours of a selection, as the shared
+ * `.selection` draws it. The focus is in the field of the popover, so the
+ * page has no selection of its own, and the text shows no handles.
+ */
+::highlight(explain-kept) {
+  background-color: Highlight;
+  color: HighlightText;
 }
 
 /*
@@ -76,14 +87,20 @@
   position: static;
 }
 
-/* The box of the open mark, which the popover keeps to. It draws nothing. */
+/*
+ * The box of the open mark, or of the quote of an unsent Ask, which the
+ * popover keeps to. It draws nothing.
+ */
 .anchor {
   position: absolute;
   pointer-events: none;
   anchor-name: --explain-mark;
 }
 
-/* Explain floats over the text of the message, at the place of the app. */
+/*
+ * The bar of Explain and Ask floats over the text of the message, at the
+ * place of the app.
+ */
 .floating {
   position: absolute;
   z-index: 5;

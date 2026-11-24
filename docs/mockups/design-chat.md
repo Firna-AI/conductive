@@ -167,9 +167,9 @@ Explain does after the member writes a question. They live in
 `explainCopy.ts`, and the styles of `MarkedText`, `ExplainButton`,
 `ExplainPopover`, and `FollowUpField` too. These files live in
 [`src/ui/components/explain/`](../../src/ui/components/explain/).
-`Ask.module.css` in `src/components/explain/` holds the looks that only
-the mockups draw so far: the bar of Explain and Ask, and the kept text of
-an Ask before Send. They move to the shared styles when the app draws Ask.
+The shared styles of `ExplainButton` and `MarkedText` also hold the looks
+of Ask: the bar of Explain and Ask, and the kept text of an Ask before
+Send.
 The docs call the panel by the mark a popover, because "preview" names
 port previews.
 

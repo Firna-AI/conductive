@@ -74,9 +74,9 @@ function useDraftFiles(controller: ChatController, draftId: string) {
  * closed session that an archived workspace shows keeps its link too. A
  * read-only workspace, archived or of a suspended org, shows no composer
  * and no control that writes. The messages show the marks of their
- * explanations, and a finished selection in one of them shows Explain, as
- * `useExplain` says: by the selection on a computer, and above the composer
- * on a phone.
+ * explanations, and a finished selection in one of them shows Explain and
+ * Ask, as `useExplain` says: by the selection on a computer, and above the
+ * composer on a phone.
  */
 export function SessionChat(props: SessionChatProps) {
   const { snapshot, controller } = props
@@ -131,8 +131,9 @@ export function SessionChat(props: SessionChatProps) {
   const phoneExplain =
     props.mobile && explain.view?.selection && !readOnly ? (
       <PhoneExplain
-        busy={explain.view.starting}
-        onPress={explain.view.explain}
+        onAsk={explain.view.ask}
+        onExplain={explain.view.explain}
+        starting={explain.view.starting}
       />
     ) : null
   const footer = (

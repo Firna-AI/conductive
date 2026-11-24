@@ -20,6 +20,12 @@ export const askLabel = 'Ask'
 /** The text of the empty field of an Ask before Send. */
 export const askPlaceholder = 'Ask about this text'
 
+/**
+ * The spoken name of the field of an Ask before Send, where the member
+ * writes the question.
+ */
+export const questionLabel = 'Question'
+
 /** The action of the popover that shows the tab of the explanation. */
 export const expandLabel = 'Expand'
 

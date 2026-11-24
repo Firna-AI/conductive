@@ -1,9 +1,10 @@
-import { useMemo } from 'react'
+import { useMemo, type Ref } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
 import { popoverChatLabel } from '../../ui/components/explain/explainCopy'
 import { modelLabel } from '../../shared/agents'
 import { turnCopy } from '../../shared/transcript/turn-words'
 import { ChatPane } from '../components/ChatPane'
+import type { FieldHandle } from '../components/chip-field/focus-plugins'
 import {
   ActionNotice,
   BlockNotice,
@@ -50,6 +51,8 @@ export interface PopoverChatProps {
   onSend: () => void
   /** Sends the message of a failed turn again, as `ChatController.retry` does. */
   onRetry: (messageId: string) => void
+  /** The handle that moves the focus into the follow-up field. */
+  field?: Ref<FieldHandle>
 }
 
 /**
@@ -160,6 +163,7 @@ export function PopoverChat(props: PopoverChatProps) {
           blocked={block !== null}
           draft={state.draft}
           files={files}
+          handle={props.field}
           onChangeText={(text) => controller.setDraft(sessionId, text)}
           onSend={props.onSend}
           onStop={() => void controller.interrupt(sessionId)}

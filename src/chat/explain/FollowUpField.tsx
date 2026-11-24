@@ -1,7 +1,9 @@
+import type { Ref } from 'react'
 import { filesWait } from '../../app/draft-files'
 import { useShortcutOffer } from '../../shell/shortcuts/shortcut-context'
 import type { FieldFiles } from '../components/chip-field/attached-files'
 import { ChipTextField } from '../components/chip-field/ChipTextField'
+import type { FieldHandle } from '../components/chip-field/focus-plugins'
 import { SendButton, StopButton } from '../components/ComposerButtons'
 import { useSendKey } from '../components/send-key'
 import type { Draft } from '../state/chat-snapshot'
@@ -27,6 +29,8 @@ export function FollowUpField(props: {
   stopping: boolean
   /** A notice says why a message cannot go yet, so Send is off. */
   blocked: boolean
+  /** The handle that moves the focus into the field. */
+  handle?: Ref<FieldHandle>
   onChangeText: (text: string) => void
   onSend: () => void
   onStop: () => void
@@ -45,6 +49,7 @@ export function FollowUpField(props: {
         <ChipTextField
           caretAtEnd
           files={props.files}
+          handle={props.handle}
           label={followUpLabel}
           lines={1}
           maxLines={4}

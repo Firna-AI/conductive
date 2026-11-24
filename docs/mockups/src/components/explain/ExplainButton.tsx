@@ -8,7 +8,6 @@ import {
   explainLabel,
 } from '../../../../../src/ui/components/explain/explainCopy'
 import styles from '../../../../../src/ui/components/explain/ExplainButton.module.css'
-import ask from './Ask.module.css'
 
 /**
  * Where the bar by a selection lines up: `middle` over the middle of the
@@ -58,7 +57,7 @@ export function FloatingExplain(props: BarLinks & { align: ByAlign }) {
         styles.float,
         styles.above,
         styles[props.align],
-        ask.bar,
+        styles.bar,
       )}
     >
       <Actions askTo={props.askTo} explainTo={props.explainTo} />
@@ -76,7 +75,7 @@ export function PhoneExplain(props: BarLinks) {
   if (!useTouch()) return null
   return (
     <div className={styles.phoneRow}>
-      <span className={classes(styles.float, styles.phoneFloat, ask.bar)}>
+      <span className={classes(styles.float, styles.phoneFloat, styles.bar)}>
         <Actions askTo={props.askTo} explainTo={props.explainTo} />
       </span>
     </div>

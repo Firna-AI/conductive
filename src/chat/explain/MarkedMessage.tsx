@@ -99,6 +99,8 @@ function Marked(props: MarkedMessageProps & { view: ExplainView }) {
     .join('\n')
   const selection =
     view.selection?.messageId === props.messageId ? view.selection : null
+  const kept =
+    shown && view.kept?.messageId === props.messageId ? view.kept : null
   return (
     <div
       className={classes(
@@ -128,19 +130,20 @@ function Marked(props: MarkedMessageProps & { view: ExplainView }) {
           mark.id,
         ),
       )}
-      {placedOpen || wholeOpen ? (
+      {placedOpen || wholeOpen || kept ? (
         <AnchorBox
           onElement={view.noteAnchor}
-          range={placedOpen?.range ?? null}
+          range={placedOpen?.range ?? kept?.range ?? null}
           root={root}
         />
       ) : null}
       {selection && view.floating ? (
         <FloatingExplain
           align={props.align}
-          busy={view.starting}
-          onPress={view.explain}
+          onAsk={view.ask}
+          onExplain={view.explain}
           range={selection.range}
+          starting={view.starting}
         />
       ) : null}
     </div>
@@ -149,14 +152,15 @@ function Marked(props: MarkedMessageProps & { view: ExplainView }) {
 
 /**
  * The text of one member message or agent message in the chat of the shown
- * session tab, with the marks of its explanations and Explain by a finished
- * selection in it. A mark is a highlight of its quote with the state of its
- * explanation at its end, and a press on it opens its popover, or the menu
- * of the marks that overlap there. A mark whose text no longer matches
- * covers the whole message, and a press on any of its text opens it, except
- * in a message that folds. The press and the pointer find the marks in the
- * same regions, as `markRegions` says. Outside that chat, such as in a
- * popover, the text shows as it is.
+ * session tab, with the marks of its explanations and Explain and Ask by a
+ * finished selection in it. A mark is a highlight of its quote with the
+ * state of its explanation at its end, and a press on it opens its popover,
+ * or the menu of the marks that overlap there. A mark whose text no longer
+ * matches covers the whole message, and a press on any of its text opens
+ * it, except in a message that folds. The press and the pointer find the
+ * marks in the same regions, as `markRegions` says. The box that the
+ * popover keeps to lies over the open mark, or over the quote of an unsent
+ * Ask. Outside that chat, such as in a popover, the text shows as it is.
  */
 export function MarkedMessage(props: MarkedMessageProps) {
   const view = useContext(ExplainContext)

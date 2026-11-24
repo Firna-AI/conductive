@@ -64,6 +64,16 @@ a.mark:hover,
 }
 
 /*
+ * The text of an Ask before Send. The focus is in the field of the popover,
+ * so the page has no selection, and the text keeps the colours of a
+ * selection with no handles. It names the anchor that the popover keeps
+ * to, as the open mark does.
+ */
+.kept {
+  anchor-name: --explain-mark;
+}
+
+/*
  * The whole selection, which the Explain button places itself against. It
  * takes no room of its own in the text.
  */

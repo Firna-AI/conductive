@@ -61,6 +61,7 @@ export function ChatPane({
         props.compact && styles.compact,
       )}
       ref={ref}
+      tabIndex={-1}
     >
       {props.empty ? (
         <div className={styles.empty}>{props.empty}</div>

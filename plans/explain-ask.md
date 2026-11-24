@@ -103,6 +103,11 @@ Design calls of the agent, on 24 November 2026:
     popover again with the question. Reason: the reply of Explain always
     opens its popover, and the member loses no typed text. Call of the
     orchestrator.
+  - A close of the unsent popover by Close or Escape gives the focus to
+    the chat of the parent session, which takes it only from code. A press
+    outside leaves the focus where the press puts it. Reason: the chat is
+    the place that the protocol names, and no control of it stays. Call
+    of the orchestrator.
   - White space alone counts as no text, so Send stays off. Reason: the
     follow-up field does the same, and the Worker refuses a blank
     question.
@@ -206,22 +211,22 @@ Tags: ui
 
 Depends on: 3
 
-- [ ] Add Ask after Explain in `FloatingExplain` and `PhoneExplain`, with
+- [x] Add Ask after Explain in `FloatingExplain` and `PhoneExplain`, with
       its word in `src/ui/components/explain/explainCopy.ts`.
-- [ ] Move the two rules of `docs/mockups/src/components/explain/Ask.module.css`
+- [x] Move the two rules of `docs/mockups/src/components/explain/Ask.module.css`
       into the shared styles of `src/ui/components/explain/`: the bar into
       `ExplainButton.module.css` and the kept text into
       `MarkedText.module.css`. Delete `Ask.module.css`.
-- [ ] Add the unsent Ask to `useExplain`: the saved selection, its
+- [x] Add the unsent Ask to `useExplain`: the saved selection, its
       highlight, and the place of the popover.
-- [ ] Draw the unsent popover in `ExplainLayer`, with `ExplainPopover` and
+- [x] Draw the unsent popover in `ExplainLayer`, with `ExplainPopover` and
       a field for the question. Send calls `ChatController.explain` with
       the question, then opens the popover of the new explanation.
-- [ ] Add DOM tests: Ask from a selection, Send off while empty, Escape
+- [x] Add DOM tests: Ask from a selection, Send off while empty, Escape
       and a press outside before Send, a failed start that keeps the text,
       text typed while the start waits, a close while the start waits,
       and the phone.
-- [ ] Check the change in a browser and save screenshots under
+- [x] Check the change in a browser and save screenshots under
       `.context/explain-ask/`.
 
 ## Milestone 5: Verification, commit, review, and pull request
