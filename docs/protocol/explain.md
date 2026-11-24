@@ -238,7 +238,8 @@ in the design of the chat gives the look of each part.
   the turn.
 - A request of the agent that waits for a member, such as a secret request,
   shows in the popover as it shows at the end of a session tab.
-- The chat scrolls inside the popover, and its newest line stays in view.
+- The chat scrolls inside the popover. While a turn runs, its newest line
+  stays in view.
 - When a turn ends, the chat shows the top of its answer, so the member
   reads the answer from its start. The popover also opens there on an ended
   turn. An answer that fits in the popover keeps the newest line in view. A

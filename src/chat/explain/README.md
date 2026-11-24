@@ -141,10 +141,13 @@ for the screens.
   row opens its own popover. On a
   phone, the sheet stays open.
 - `PopoverChat.dom.test.tsx` shows the bar of a stopped cloud computer in
-  place of the follow-up field, shows the top of a long answer when the
-  popover opens on an ended turn and when the turn ends, with the layout
-  of `layOutChat`, and moves the time of a running
+  place of the follow-up field, and moves the time of a running
   explanation on with a fake clock while its parent session is idle.
+- `PopoverAnswerTop.dom.test.tsx` lays the chat of the popover out with
+  `layOutChat`. It shows the top of a long answer when the popover opens
+  on an ended turn and when the turn ends. It keeps the place of a reader
+  higher up, and the bottom for a newer short answer under an older long
+  one.
 - `PopoverLinked.dom.test.tsx` follows a linked session with the text that
   the member typed while the reply waited, follows the linked session of
   Try again, and keeps the popover of another explanation that the member

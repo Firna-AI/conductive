@@ -1,0 +1,31 @@
+# Popover answer top lost when the panel resizes
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from the branch `calummoore/auto-scroll-final-message-knfd`, finding 2 of review round 1.
+- **Location:** `src/chat/components/reading-place.ts`, `answerTop` and its effect in `useReadingPlace`. `src/chat/explain/MarkParts.tsx`, where the open mark registers its box. `src/chat/explain/popover-place.ts`, `placePanel` and `usePanelPlace`.
+- **Reason:** The case needs a desktop browser without CSS anchor positioning, loaded history, and limited room by the mark, or a resize before the member scrolls.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Explain popover:** the small chat panel by a marked quote, which shows the chat of an explanation session.
+  - **Fallback positioning:** on a desktop browser without CSS anchor positioning, `placePanel` measures the room by the mark and sets the place and the height of the panel.
+  - **Reading-place keeper:** `ReadingPlace` in `src/chat/components/reading-place.ts`, which keeps the row that the reader reads in place for each change of size. The chat scrolls in a box that keeps its bottom in place.
+- **Background:**
+  - When a turn ends, or the popover opens on an ended turn, the popover chat shows the top of the answer, while the chat is at the bottom (`docs/protocol/explain.md`, asked by the user on 24 November 2026). The keeper places the answer once for each new answer ID.
+  - A reopened popover can show a finished answer from history at once. With fallback positioning, the panel can get its final height only after the marked text registers its box, which is after the first placement.
+- **Problem:** The keeper places the answer at the first height. If the answer fits then, the chat stays at the bottom and the keeper notes no row. When the panel then shrinks, the box keeps its bottom, and the start of the answer goes above the view. A long answer loses its first lines by the amount of the shrink. Any other change of size before the member scrolls, such as a window resize or a notice in the footer, has the same effect. A simulated layout confirmed that the answer start moved above the view after a resize.
+- **Impact if no action:** In this case, the member reopens a finished explanation and sees the end of its answer, or a cut start.
+- **Root question:** How can the popover keep the start of the answer in view, from its placement until the member scrolls, when the panel or the answer changes size?
+- **Options:**
+  - **A.** Delay the first placement until fallback positioning signals that it has sized the panel. Effort: Small.
+  - **B.** Repeat the first placement on each resize while the popover opens. Stop when the member scrolls or the opening ends. Effort: Medium.
+  - **C.** Size the fallback panel before its chat mounts. Effort: Medium.
+  - **D.** Keep the start of the answer as the place of the keeper until the member scrolls the popover chat or sends a message. After each change of size of the box or the transcript, show the start again when the answer does not fit, or the bottom when it fits. The keeper must tell a scroll of the member from its own scroll, for example through wheel, touch, and key events. `layOutChat` in `src/chat/components/reading-place-test-kit.tsx` needs a box height that changes, and the test needs a resize observer that calls back. One sentence in `docs/protocol/explain.md` states the rule. Effort: Medium.
+  - **E.** Let the popover chat flow from the top while no turn runs, so that the browser keeps the top of the view when the box shrinks. Every keeper function assumes the reversed box, so each needs a second flow. Effort: Large.
+- **Left out:** A fixed delay, because it fails when the mark registers late. Keeping the read row through a change of size of the box alone, because an answer that fit at first leaves no row to keep. Scroll snapping on the answer row, because it pulls a reader who reads higher up.
+- **Wider fix:** D. It does not need to know when fallback positioning sizes the panel. C, the first recommendation of the review, is a direct fix for that detail only.
+- **Previous examples:** Commit `42c238a0c`, which fixed the follow-up field that this variable-height popover pushed out of view.
+- **Related:** `plans/follow-ups/explain-answer-top-misses-split-answer.md` changes the same placement, which row it targets. One change can do both.
+- **Recommendation:** D. It keeps the start of the answer through each change of size until the member scrolls, whatever the cause, and it lives in the keeper, which already observes both sizes.
+- **Action:** fix after merge, apply D, because the defect needs an unusual browser, timing, or resize, which is rare.
