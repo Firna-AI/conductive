@@ -93,9 +93,12 @@ export class WorkspaceStartCoordinator {
   /** Queues the start that a pending stop held, once that stop ends. */
   async startAfterStop(): Promise<void> {
     await queueStartAfterStop(
-      this.storage,
-      await this.endpoint.readLifecycle(),
-      this.dependencies.now(),
+      {
+        db: this.env.DB,
+        storage: this.storage,
+        state: await this.endpoint.readLifecycle(),
+        now: this.dependencies.now(),
+      },
       (job, intent) => this.enqueue(job, intent),
     )
   }

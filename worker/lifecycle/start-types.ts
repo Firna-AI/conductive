@@ -132,7 +132,8 @@ export interface StartJobStorage {
     intent: WorkspaceStartIntent,
     epoch: number,
   ): Promise<void>
-  takeAfterStop(): Promise<StartAfterStop | undefined>
+  heldAfterStop(): Promise<StartAfterStop | undefined>
+  clearAfterStop(): Promise<void>
   update(job: WorkspaceStartJob): Promise<void>
   retry(
     attempt: string,
