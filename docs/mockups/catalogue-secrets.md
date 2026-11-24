@@ -151,4 +151,6 @@ composer, while the tool call waits. Its child pages:
 
 `user-flows/secret-request` goes from the request above the composer,
 through the late request in the chat and the late Allow of Priya, to the
-run of the new turn for Cal.
+run of the new turn for Cal. `user-flows/open-a-notice` goes from the
+notice of a request on the lock screen of a phone to `app/secret-requests`,
+as [the phone apps](phone-app.md#the-lock-screen) give.

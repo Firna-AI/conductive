@@ -1,0 +1,16 @@
+/*
+ * The page of the desktop stream: the desktop of the sandbox in the middle
+ * of a dark stage, as the stream draws it in every colour scheme. The
+ * desktop keeps its shape and fits both sides of the page.
+ */
+.stream {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0b0d10;
+  container-type: size;
+}
+
+.picture {
+  width: min(calc(100cqw - 20px), calc((100cqh - 20px) * 1.6));
+}

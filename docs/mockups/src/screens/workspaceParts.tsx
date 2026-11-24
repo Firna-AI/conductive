@@ -4,6 +4,7 @@ import { filePage } from '../entries/components/files/FilePage.mockup'
 import { filesPanel } from '../entries/components/files/FilesPanel.mockup'
 import { desktopView } from '../entries/components/tools/DesktopView.mockup'
 import { previewTool } from '../entries/components/tools/PortPreview.mockup'
+import { previewPages } from '../components/tools/previewLink'
 import { terminalTool } from '../entries/components/tools/TerminalTool.mockup'
 import { sandboxPanel } from '../entries/components/workspace/SandboxNotice.mockup'
 import {
@@ -188,10 +189,16 @@ function TerminalContent(props: { state: WorkspaceState; viewport: Viewport }) {
   )
 }
 
-/** The tool of the tools panel, or the sandbox state while it is down. */
+/**
+ * The tool of the tools panel, or the sandbox state while it is down.
+ * Under the mark of the phone apps, `phoneApp`, each port of the Preview
+ * tool opens the page of the phone apps, which the tool gets as data, and
+ * the controls of the services open the pages of the phone apps.
+ */
 export function ToolContent(props: {
   state: WorkspaceState
   viewport: Viewport
+  phoneApp?: boolean
 }) {
   const { state } = props
   const mobile = props.viewport === 'mobile'
@@ -211,8 +218,14 @@ export function ToolContent(props: {
       return <TerminalContent state={state} viewport={props.viewport} />
     case 'preview': {
       // The services section is React content, so it goes in a slot, and
-      // the servers beside it go as data.
-      const services = previewServicesOf(state, props.viewport)
+      // the servers beside it go as data. The web app passes no port page,
+      // so each port opens its Preview tab.
+      const phoneApp = props.phoneApp === true
+      const portPage = phoneApp ? previewPages.phone : undefined
+      const services = previewServicesOf(state, props.viewport, {
+        phoneApp,
+        portPage,
+      })
       return (
         <previewTool.Component
           frame={mobile}
@@ -220,6 +233,7 @@ export function ToolContent(props: {
           shownPort={state.tab === 'preview' ? openPort : null}
           state={state.ports}
           {...defined({
+            portPage,
             services: services?.section,
             servers: services?.servers && plainData(services.servers),
           })}

@@ -4,7 +4,7 @@ import { useSharedUiTheme } from '@firna/ui/theme'
 import { RotateCw } from 'lucide-react'
 import { ActionButton } from '../../../../../src/ui/components/common/actions'
 import { ConfirmDialog } from '../../../../../src/ui/components/common/ConfirmDialog'
-import { ScreenLink } from '../common/ScreenLink'
+import { Linked } from '../common/ScreenLink'
 import {
   serviceLogCopy,
   type ServiceEntry,
@@ -69,13 +69,13 @@ function LogBody(props: { name: string; read: ServiceLogRead }) {
  * shows the state of the service, then the end of its output as plain
  * text, which the cloud computer filters. Reload reads the end again, and
  * Try again takes its place after a failed read. `closeTo` is the screen
- * of Close: the list under the log.
+ * of Close: the list under the log, where the mockups draw it.
  */
 export function ServiceLogView(props: {
   service: ServiceEntry
   read: ServiceLogRead
   viewport: Viewport
-  closeTo: string
+  closeTo?: string
 }) {
   const { service, read } = props
   const failed = read.kind === 'failed'
@@ -86,9 +86,9 @@ export function ServiceLogView(props: {
           <ActionButton busy={read.kind === 'loading'} icon={RotateCw}>
             {failed ? serviceLogCopy.retry : serviceLogCopy.reload}
           </ActionButton>
-          <ScreenLink asChild to={props.closeTo}>
+          <Linked to={props.closeTo}>
             <ActionButton tone="primary">{serviceLogCopy.close}</ActionButton>
-          </ScreenLink>
+          </Linked>
         </>
       }
       title={serviceLogCopy.title(service.name)}

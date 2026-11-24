@@ -47,6 +47,11 @@ export type UserPage = {
   access: AppAccess
   /** Each user with app access has a referral code. */
   referral?: ReferralCode
+  /**
+   * The day when the user requested the deletion of their account, while
+   * the request waits for an operator.
+   */
+  deletionRequested?: string
 }
 
 const dana = {

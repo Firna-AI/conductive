@@ -26,8 +26,8 @@ them in. Its pages:
   its code. Its child page `app/sign-in/join/failed` has the waitlist after
   the code of the link did not work, here a used-up code, and its `paused`
   variant has the pause.
-- `app/account` shows the invite code of the user at the end of the
-  General tab, with 3 of 5 invites left. Its child page `app/account/invites` has the
+- `app/account` shows the invite code of the user on the General tab,
+  before Delete account, with 3 of 5 invites left. Its child page `app/account/invites` has the
   pause, and its variants have every invite used, a code that an
   operator turned off, and `open-sign-up`, whose notice says that anyone
   can sign up now and that the invites stay for later.
@@ -87,7 +87,8 @@ mark shows under the login. A phone keeps the org, the run length, and
 the state mark. For a suspended owner, it adds the login and the mark
 under the org. The Orgs and Users tabs come from
 decision 147, and they find a suspended org or user. The Waitlist and
-Invite codes tabs come from decision 160. The Providers tab and the
+Invite codes tabs come from decision 160. The Deletions tab comes from
+decision 4 A of the universal Expo app plan. The Providers tab and the
 account of each org come from e2b decision 222, and operator screens name
 each account by its ID, from e2b decision 221. An e2b decision is a decision of the change that adds E2B as the second sandbox provider. Its child
 pages:
@@ -120,6 +121,15 @@ pages:
 - `app/operator/waitlist` has the Waitlist tab: the people who wait, oldest
   first, a search, the question before Approve, the list after two
   approvals, one with its email not sent yet, and an empty waitlist.
+- `app/operator/deletions` has the Deletions tab, after Waitlist: the
+  account deletion requests that wait, oldest first, each with the user
+  and the day of the request: Kai Tanaka, Noor Aziz, and Rhea Okafor. Each
+  login opens the page of that person with the request, as
+  `app/operator/user/deletion` and its variants draw it. The rows show no
+  email address.
+  Its `empty` variant has no request. The tab has no search, and it offers
+  no action on a request, because the plan has not decided how an
+  operator completes one.
 - `app/operator/codes` has the Invite codes tab: Sign-ups with the state
   of the waitlist, Turn off the waitlist, and Pause sign-ups, the search,
   and the invite codes with their uses and states.
@@ -204,6 +214,18 @@ of `app/operator/user` and kept their paths:
   variant has a person who waited and got app access at their next visit.
 - `app/operator/user/referral` has the question before the disable of a
   referral code. Its `disabled` variant has the disabled code.
+- `app/operator/user/deletion` has the page of Kai Tanaka after he
+  requested the deletion of his account. A notice at the top gives the day
+  of the request, and offers no action. The rest is his page, with his
+  email address and Hexwave, where he is a member. Its `noor-a` and
+  `rho-9` variants have the pages of Noor Aziz and Rhea Okafor with their
+  requests. Each row of the Deletions tab and its page come from one
+  record, so the person and the day stay the same. These pages link an
+  org, a person, or a code only to its own page, from one lookup of the
+  pages that the catalogue draws. Hexwave and the invite code Launch week
+  keep their links. The catalogue draws no page for Rhino Data or for
+  `@vex-ops`, so their names show as text on the pages of Rhea Okafor and
+  Kai Tanaka. In the app, each of them opens its page.
 
 The child pages of `app/operator/codes`:
 

@@ -7,6 +7,7 @@ import {
   personAvatar,
 } from '../../entries/components/orgs/OrgTile.mockup'
 import styles from '../../../../../src/ui/components/operator/targets.module.css'
+import plain from './plainName.module.css'
 
 /** A user or an org of the operator pages, as a list row names it. */
 export type Target = { kind: 'user' | 'org'; name: string; initials: string }
@@ -68,8 +69,13 @@ export function ProfileLink(props: { login: string }) {
   )
 }
 
-/** A link inside a line of text, such as the owner of a referral code. */
-export function InlineLink(props: { to: string; children: ReactNode }) {
+/**
+ * A link inside a line of text, such as the owner of a referral code.
+ * Without `to`, the catalogue draws no page for the record, so the words
+ * show as plain text.
+ */
+export function InlineLink(props: { to?: string; children: ReactNode }) {
+  if (!props.to) return <>{props.children}</>
   return (
     <ScreenLink className={styles.inlineLink} to={props.to}>
       {props.children}
@@ -80,18 +86,25 @@ export function InlineLink(props: { to: string; children: ReactNode }) {
 /**
  * A row of a list that names a user or an org: its mark, its name as a
  * link, a muted line under it, and an end, such as a role or a count.
+ * Without `to`, the catalogue draws no page for the record, so its name
+ * shows as text.
  */
 export function TargetRow(props: {
   target: Target
-  to: string
+  to?: string
   detail?: ReactNode
   end?: ReactNode
 }) {
+  const name = targetName(props.target)
   return (
     <li className={styles.row}>
       <TargetMark target={props.target} />
       <span className={styles.text}>
-        <NameLink to={props.to}>{targetName(props.target)}</NameLink>
+        {props.to ? (
+          <NameLink to={props.to}>{name}</NameLink>
+        ) : (
+          <span className={plain.name}>{name}</span>
+        )}
         {props.detail ? (
           <span className={styles.detail}>{props.detail}</span>
         ) : null}

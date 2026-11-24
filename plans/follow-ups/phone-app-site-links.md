@@ -1,0 +1,32 @@
+# Phone app links still reach the site frame
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-23, from pull request #671, branch `calummoore/universal-expo-app-milestone-1-mockups-emjd`, review item 17, the wider fixes of review findings 5 and 10.
+- **Location:** `src/marketing/pages/app-host/terms-consent.astro`, `src/marketing/pages/app-host/github-setup/[outcome].astro:26`, `docs/mockups/src/components/marketing/LegalLinks.tsx`, `docs/mockups/src/components/marketing/CatalogueText.tsx`, `src/ui/components/settings/skillsTrustCopy.ts:28`, and the phone-app context of `docs/mockups/src/components/tools/`.
+- **Reason:** the recommended option changes the pages of the app host for every client, which are on `origin/main`, and only the user can approve that.
+
+- **Source:** Review. **Category:** mockup.
+- **Terms:**
+  - **Phone apps:** the iOS app and the Android app that the Expo app builds. The `phone-app` folder of the mockup catalogue draws the states that only they have.
+  - **Site frame:** the header and the footer of the pages of the marketing site. `docs/protocol/pricing.md` requires that they link Pricing.
+  - **In-app browser:** the browser view of the system that opens over a phone app, with Done.
+- **Background:**
+  - A design call of the universal Expo app plan, of 23 November 2026, says that no pricing or checkout shows in the phone apps.
+  - The phone sign-in links Terms and Privacy to pages of the app host without the site frame, in the in-app browser. Its sign-in frame takes these destinations as props.
+  - Other shared parts still link to pages of the site from phone pages. "How trust works" in the Cloud computer settings opens the public docs, from `src/ui/components/settings/skillsTrustCopy.ts:28`. The docs have the site frame, so a phone app reaches Pricing in two taps.
+  - The pages of the app host that the Worker serves also link the site: the consent page before GitHub, `src/marketing/pages/app-host/terms-consent.astro`, and the page after a GitHub App install, whose wordmark links the home page at `src/marketing/pages/app-host/github-setup/[outcome].astro:26`. A phone app reaches the second page after an install. A design call of 24 November 2026 keeps the consent page out of the phone sign-in: the version check gives the current Terms revision, and the sign-in carries it.
+  - The phone mockups already mark the phone app with one context that the shared tab parts read.
+- **Problem:** Each shared part keeps its own web destination. A phone page that draws such a part links to the site frame with Pricing.
+- **Impact if no action:** the phone mockups, and Milestone 22 after them, keep paths to Pricing that the design call rules out.
+- **Root question:** Which page does each link from a phone page to the site open, so that no path reaches the home page or Pricing?
+- **Options:**
+  - **A.** Fix each link where a phone page draws it, with a prop, as the sign-in frame does. Effort: Medium.
+  - **B.** Give the phone-app context one map of destinations for each link to the site. `SignInFrame`, `LegalLinks`, `CatalogueText`, and the guide links read it. Terms and Privacy go to the pages of the app host. The home page, Pricing, and the docs get no link, or a page without the site frame. Add a design call that lists each page of the site that a phone app opens. Effort: Medium.
+  - **D.** Do B, and give the pages of the app host, such as the consent page and the page after a GitHub App install, no link to the site frame for any client. It changes `app/sign-in/terms`, `app/sign-in/github-setup`, and their Astro pages on `origin/main`, and the Mac app and the browser then lose the link to the home page there. Effort: Medium.
+  - **C.** Show each such page in a screen of the app, not in a browser. An old copy of the app then shows old words. Effort: Large.
+- **Left out:** removing Pricing from the site frame for all visitors, because `docs/protocol/pricing.md` requires it.
+- **Wider fix:** D, because a new shared part reads the same map, and a new page of the app host follows the same rule.
+- **Previous examples:** the phone sign-in linked Terms and Privacy to the framed marketing pages, until the fix of review finding 5 of pull request #671.
+- **Recommendation:** D. One map keeps every phone page away from the site frame, and the pages of the app host are the only ones that a phone app reaches in a browser it does not control. B alone leaves the page after a GitHub App install with its link to the home page.
+- **Action:** ask the user, because D changes pages on `origin/main` for every client. B alone can go after the merge without the user.

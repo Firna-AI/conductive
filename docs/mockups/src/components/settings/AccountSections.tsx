@@ -6,9 +6,29 @@ import { agentList } from '../../entries/components/settings/AgentList.mockup'
 import { Connected, type LoginShares, type OpenAgentForm } from './AgentList'
 import type { UnusableLogin } from './LoginNotUsable'
 import type { OrgLoginUse } from '../../../../../src/ui/components/settings/OrgLoginLines'
-import { section } from '../../entries/components/settings/Section.mockup'
+import {
+  section,
+  sectionText,
+} from '../../entries/components/settings/Section.mockup'
 import { defined } from '../../defined'
 import styles from '../../../../../src/ui/components/settings/AccountSections.module.css'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
+import { Linked } from '../common/ScreenLink'
+import { accountDeletionCopy as deletionCopy } from './accountDeletionCopy'
+
+/**
+ * The states of the deletion request of the account: the section with its
+ * button, the question over General, the question while the request runs,
+ * the question after a request that failed, and the section after the
+ * request.
+ */
+export const accountDeletionStates = [
+  'ready',
+  'confirm',
+  'sending',
+  'failed',
+  'requested',
+] as const
 
 /** The person signed in, with GitHub, and the way to sign out. */
 export function SignInSection() {
@@ -108,5 +128,57 @@ export function AgentsSection(props: {
         })}
       />
     </section.Component>
+  )
+}
+
+/**
+ * The request of an account deletion, at the end of General, from
+ * decision 4 A of the universal Expo app plan. Request account deletion
+ * asks first. After the request, the section gives the day of the request
+ * in place of the button, also on a later visit. `requested` is that day.
+ * `requestTo` is the question that the button opens. Without it, the
+ * button shows without a link.
+ */
+export function DeletionSection(props: {
+  requested?: string
+  requestTo?: string
+}) {
+  if (props.requested) {
+    return (
+      <section.Component
+        moklyInstance="deletion-section"
+        status={
+          <statusText.Component
+            icon="hourglass"
+            label={deletionCopy.requested}
+            moklyInstance="deletion-requested"
+            tone="muted"
+          />
+        }
+        title={deletionCopy.title}
+      >
+        <sectionText.Component moklyInstance="deletion-requested-text" status>
+          {deletionCopy.requestedText(props.requested)}
+        </sectionText.Component>
+      </section.Component>
+    )
+  }
+  return (
+    <section.Component
+      actions={
+        <Linked to={props.requestTo}>
+          <actionButton.Component
+            icon="trash-2"
+            moklyInstance="request-deletion"
+            tone="danger"
+          >
+            {deletionCopy.request}
+          </actionButton.Component>
+        </Linked>
+      }
+      description={deletionCopy.description}
+      moklyInstance="deletion-section"
+      title={deletionCopy.title}
+    />
   )
 }

@@ -1,9 +1,7 @@
 import { defineScreen } from '@mokly/mokly'
+import { macCommandWorkspace } from '../../../screens/waitingWorkspaces'
 import { WorkspaceScreen } from '../../../screens/WorkspaceScreen'
-import {
-  readyWorkspace,
-  workspaceStateSchema,
-} from '../../../screens/workspaceState'
+import { workspaceStateSchema } from '../../../screens/workspaceState'
 
 const flow = ['user-flows/mac-command']
 
@@ -15,7 +13,7 @@ export const macCommandsInChat = defineScreen({
     'The request goes to the Mac of the person who sent the turn, as decision 62 says, so the message names that Mac. Every member who opens the workspace sees the state of the command. Only the Mac app can allow a command on the Mac, so a browser shows no choices.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
-  props: { ...readyWorkspace, conversation: 'mac-waiting' },
+  props: macCommandWorkspace,
   useCasePaths: flow,
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />

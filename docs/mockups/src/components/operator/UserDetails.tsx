@@ -13,6 +13,8 @@ import {
   suspendedUserBody,
 } from '../../../../../src/ui/components/operator/operatorCopy'
 import { TargetList, TargetRow } from './targets'
+import { DeletionNotice } from './deletions'
+import { linkTo, type DrawnPages } from './drawnPages'
 
 /**
  * The notice at the top of the page: the suspension of a suspended user,
@@ -54,17 +56,24 @@ function UserNotice(props: { user: UserPage }) {
  * roles. Each org opens the page of that org. A user
  * without a name on GitHub has no Name row, and a person who waits has no
  * app access, code, or org yet. The Email row gives the primary verified
- * email on GitHub, or says that the account has none.
+ * email on GitHub, or says that the account has none. A notice gives the
+ * day of a deletion request that waits.
  */
 export function UserDetails(props: {
   user: UserPage
   /** The question before the disable of the referral code. */
   disableCode?: string
+  /**
+   * The drawn pages of the records that the page names. With it, an org
+   * or a person without a drawn page shows as text.
+   */
+  pages?: DrawnPages
 }) {
   const { user } = props
   return (
     <>
       <UserNotice user={user} />
+      <DeletionNotice user={user} />
       <section.Component moklyInstance="details-section" title="Details">
         <detailList.Component
           moklyInstance="user-details-list"
@@ -83,7 +92,7 @@ export function UserDetails(props: {
         />
       </section.Component>
       {user.access.state === 'granted' ? (
-        <AppAccessSection access={user.access} />
+        <AppAccessSection access={user.access} pages={props.pages} />
       ) : null}
       {user.referral ? (
         <ReferralSection code={user.referral} disable={props.disableCode} />
@@ -96,7 +105,7 @@ export function UserDetails(props: {
                 end={org.role}
                 key={org.name}
                 target={{ kind: 'org', name: org.name, initials: org.initials }}
-                to={paths.operatorOrg}
+                to={linkTo(props.pages, 'orgs', org.name, paths.operatorOrg)}
               />
             ))}
           </TargetList>

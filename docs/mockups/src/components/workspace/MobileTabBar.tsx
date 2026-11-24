@@ -1,13 +1,17 @@
 import { ScreenLink } from '../common/ScreenLink'
 import { classes } from '../../../../../src/ui/components/common/classes'
-import { mobileTabs, type MobileTabKey } from './tools'
+import { mobileTabs, tabPage, type MobileTabKey } from './tools'
 import styles from '../../../../../src/ui/components/workspace/MobileTabBar.module.css'
 
 /**
  * The workspace tabs of a phone: the chat, the files, and each tool that
- * the app offers.
+ * the app offers. In the phone apps a tab opens the page of the phone
+ * apps, where it has one, such as the Preview tool.
  */
-export function MobileTabBar(props: { selected: MobileTabKey }) {
+export function MobileTabBar(props: {
+  selected: MobileTabKey
+  phoneApp?: boolean
+}) {
   return (
     <nav aria-label="Workspace" className={styles.bar}>
       {mobileTabs.map((tab) => {
@@ -18,7 +22,7 @@ export function MobileTabBar(props: { selected: MobileTabKey }) {
             aria-current={selected ? 'page' : undefined}
             className={classes(styles.tab, selected && styles.selected)}
             key={tab.key}
-            to={tab.to}
+            to={tabPage(tab, props.phoneApp ?? false)}
           >
             <span className={styles.icon}>
               <Icon size={19} strokeWidth={selected ? 2.2 : 1.8} />

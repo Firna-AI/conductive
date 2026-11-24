@@ -25,6 +25,8 @@ Contract owners:
 - [Waitlist](../docs/protocol/waitlist.md) and
   [Access and security](../docs/protocol/access-and-security.md), for
   account deletion.
+- [Operator section](../docs/protocol/operator-section.md), for the list
+  of deletion requests.
 - [Secret requests](../docs/protocol/secret-requests.md), for notices.
 - The [UI README](../src/ui/README.md).
 
@@ -231,7 +233,13 @@ Each call is mine, made on 23 November 2026.
   terminal of equal scope exists.
 - **Previews open in the in-app browser** with the 60-second grant, as the
   Mac app opens them in the browser. The desktop stream does the same.
-  Reason: code in a preview never runs with the app session.
+  Reason: code in a preview never runs with the app session. The app
+  hides Desktop from every user today, as `app/tools/desktop` says, so the
+  stream follows only when Desktop returns. The stream address today is
+  an address of the provider with a 10-minute token, from
+  `worker/desktop/handler.ts`. The bar of the in-app browser would show
+  that host, so the return of the stream on a phone needs a grant on the
+  preview domain first.
 - **The page gets no bridge to native code on the Mac.** The Mac main
   process does not change.
 - **Phones follow the phone mockups.** Reason: decision 15 A of
@@ -265,6 +273,80 @@ Each call is mine, made on 23 November 2026.
 - **Store accounts:** the user gives the Apple and Google developer
   accounts, the publisher name, and a GitHub account with app access for
   App Review. Milestone 22 waits for them.
+
+The mockups of Milestone 1 added these calls, also mine, on 23 November
+2026. `docs/mockups/phone-app.md` gives the pages that show them.
+
+- **The phone apps in the mockups.** The catalogue gets a `phone-app`
+  folder beside `mac-app`, for the states that only the phone apps have.
+  Its desktop views show a tablet, which follows the desktop layout. The
+  surfaces of the system follow iOS. Reason: a tablet is the only wide
+  screen of a phone app, and Android uses the same words.
+- **Sign-in in the auth session of the system.** The phone apps open
+  GitHub with ASWebAuthenticationSession on iOS and with Custom Tabs on
+  Android. iOS first shows its alert that the app wants to use the domain
+  of the app to sign in. A close of the sheet returns to the start with no
+  error. The errors of the GitHub step show in the sheet, as the Mac app
+  shows them in the browser. Reason: the common pattern for native apps,
+  from RFC 8252. The person stays in the app, the session reports a
+  cancel, and it shares the sign-in of the system browser.
+- **A phone session that ends** shows "Sign in again" with the agreement
+  to the current Terms. The words hold for each cause: the end of the 30
+  days, a new revision of the Terms, and a suspension.
+- **The minimum version.** Each platform has its own minimum version. It
+  rises only after the store of that platform offers a newer version. The
+  app checks its version at each start, before the sign-in. Reason: a
+  minimum above the version in the store locks people out, and a check
+  after GitHub wastes the sign-in.
+- **The Terms revision of a phone sign-in.** The reply of the version
+  check also gives the current revision of the Terms. The sign-in carries
+  that revision, so the Worker shows no consent page before GitHub, also
+  to an old copy of the app. If the revision changes between the check
+  and the press, the auth session returns to the app, which shows the
+  failed sign-in. That return gives the current revision, so the next
+  press carries it. Reason: the agreement of the app links the current
+  text on the app host, and the consent page of the Worker links the site.
+- **Offline.** The offline page shows only when the app starts without a
+  connection and has nothing to show. A later drop keeps the open view,
+  and each view shows the failure that it shows in a browser.
+- **The ask for notices.** The phone app asks once, after the member sends
+  the first message of a turn in the app. The ask lies over the workspace.
+  Preferences of the phone app gets a Notices section: on, off after Not
+  now, or off in the settings of the device. Reason: a notice first helps
+  then, and the system lets the app ask only once. Android 12 and older
+  have no permission, so there the same ask decides whether the app
+  registers for notices.
+- **The words of a notice.** Under the workspace name, a notice says
+  "Needs approval", "Needs a secret", "Needs an answer", "Turn finished",
+  or "Turn failed". A press opens the workspace. Only the Mac app can
+  allow a command on the Mac, so the phone shows that request without its
+  choices, as the web app does. The phone notice still goes, beside the
+  notice of macOS, because the member can be away from the Mac.
+- **Who gets a notice.** A notice of work that waits goes to the member
+  who sent the turn, as the notice of a turn that ends does. No notice
+  shows while the app shows that workspace. Reason: decision 2 A chose
+  the fewest notices, and only the sender can allow a command on their
+  Mac.
+- **Previews in the phone apps.** The Preview tool of a phone app shows no
+  page in a frame. Each port and each service opens its preview in the
+  in-app browser. The Preview of an HTML file tab opens in the in-app
+  browser too, because its files preview also runs code on the preview
+  domain.
+- **Terms and Privacy in the phone apps.** The phone apps open Terms and
+  Privacy in the in-app browser, on pages of the app host. These pages
+  show the shared legal text with no site header, no site footer, and no
+  wordmark link. Reason: the frame of the legal pages of the site links
+  Pricing, and no pricing shows in the phone apps.
+- **The deletion request in the mockups.** Each General tab of the
+  Account ends with Delete account and Request account deletion. A
+  question asks first. After the request, the section gives its day. What
+  the person may do and learn until the deletion is complete waits for
+  the user.
+- **The Deletions tab.** The operator section gets a Deletions tab after
+  Waitlist. It lists the requests that wait, oldest first, with the person
+  and the day. A row opens the page of the user, which shows the request.
+  The tab shows no email address, as
+  [Operator section](../docs/protocol/operator-section.md) says.
 
 The orchestrator of the Milestone 27 workspace made the calls below on
 23 November 2026, for the style converter. Milestone 9 may change them.
@@ -310,38 +392,68 @@ Depends on: none
 The phone mockups already show every screen. This milestone adds the
 states that only the native apps and the new decisions have.
 
-- [ ] Draw phone sign-in in the system browser: start, wait, failed
-      handoff, and signed in.
-- [ ] Draw the ask for notice permission, and the denied state.
-- [ ] Draw a notice on the lock screen for each event of decision 2, with
-      the text of decision 3.
-- [ ] Draw "Request account deletion" on the Account page: the button, the
+- [x] Draw phone sign-in in the system browser: start, wait, failed
+      handoff, and signed in. Branch:
+      `calummoore/universal-expo-app-milestone-1-mockups-emjd`.
+- [x] Draw the ask for notice permission, and the denied state. Branch:
+      `calummoore/universal-expo-app-milestone-1-mockups-emjd`.
+- [x] Draw a notice on the lock screen for each event of decision 2, with
+      the text of decision 3. Branch:
+      `calummoore/universal-expo-app-milestone-1-mockups-emjd`.
+- [x] Draw "Request account deletion" on the Account page: the button, the
       confirm dialog, and the requested state, on phone and desktop.
-- [ ] Draw the list of deletion requests in the operator section.
-- [ ] Draw the "Update the app" screen and the offline screen.
-- [ ] Draw a preview and the desktop stream in the in-app browser.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+      Branch: `calummoore/universal-expo-app-milestone-1-mockups-emjd`.
+- [x] Draw the list of deletion requests in the operator section. Branch:
+      `calummoore/universal-expo-app-milestone-1-mockups-emjd`.
+- [x] Draw the "Update the app" screen and the offline screen. Branch:
+      `calummoore/universal-expo-app-milestone-1-mockups-emjd`.
+- [x] Draw a preview and the desktop stream in the in-app browser.
+      Branch: `calummoore/universal-expo-app-milestone-1-mockups-emjd`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages. Branch:
+      `calummoore/universal-expo-app-milestone-1-mockups-emjd`.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. Branch:
+      `calummoore/universal-expo-app-milestone-1-mockups-emjd`.
+
+The reports, the checks, and the screenshots of this milestone are in
+`.context/universal-expo-app/m1/`. Five questions that the mockups found
+wait for the user, in the pull request of this branch: deletion on the
+waitlist, the question event of decision 2, the time until a deletion,
+the orgs of an only admin, and how an operator completes a request.
 
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
 - [ ] Write `docs/protocol/phone-app.md`: the platforms, the native parts,
-      previews, updates, the minimum version, and old copies.
+      previews, updates, the minimum version, and old copies. Give each
+      platform its own minimum version, which rises only after the store
+      of that platform offers a newer version. The app checks its version
+      at each start, before the sign-in.
+- [ ] Record in `docs/protocol/phone-app.md` the answer of the user on
+      keyboard shortcuts in the phone apps: the Keyboard shortcuts tab and
+      the key hints of the tablet layout.
 - [ ] Write `docs/protocol/phone-sign-in.md` from decision 8 C. Add the
-      30-day phone session to `docs/protocol/access-and-security.md`.
+      30-day phone session to `docs/protocol/access-and-security.md`. The
+      auth session opens an address of the app first, so that the alert
+      of iOS names the app and not GitHub. The sign-in carries the Terms
+      revision from the reply of the version check, as the design call of
+      the Terms revision of a phone sign-in says.
 - [ ] Write `docs/protocol/notifications.md` from decisions 2, 3, and 5.
 - [ ] Update `docs/protocol/secret-requests.md` for notices, from decision 2.
 - [ ] Update `docs/protocol/waitlist.md` and
       `docs/protocol/access-and-security.md` for the deletion request.
       Check Apple's text against a request flow first.
+- [ ] Add the Deletions tab to `docs/protocol/operator-section.md`, as
+      `app/operator/deletions` shows.
 - [ ] Update `docs/architecture.md` and `docs/architecture/` for the new
       clients, the Expo build, and the push sender.
 - [ ] Read the Terms and the Privacy page in full. Update each sentence
       that restates a changed fact. Name Expo as a processor. Set the
-      effective date when the Terms text changes.
+      effective date when the Terms text changes. The pages tell people to
+      write to the legal address for a deletion today. Name the request
+      on the Account page, and keep the address for a person who cannot
+      sign in.
 - [ ] Read each public guide in `src/marketing/docs/` in full. Update each
       sentence that restates a changed fact. Add a guide for the phone
       apps.
@@ -389,6 +501,9 @@ Depends on: 2
       `worker/security/desktop-auth.ts`.
 - [ ] Add the refresh route: rotation, reuse detection, the 30-day limit,
       and the check of the Terms revision.
+- [ ] Give the reply of the version check the current Terms revision.
+      Return the auth session to the app with the current revision when
+      the revision of a sign-in is no longer current.
 - [ ] Accept the bearer token in `worker/security/gate.ts` for a request
       with no cookie. Keep the browser and Mac rules as they are.
 - [ ] Serve the universal link files for app addresses.
@@ -491,8 +606,11 @@ Depends on: 5, 6, 9
       token and the refresh of decision 8 C, sockets, secure storage,
       focus, visibility, links, and the clipboard.
 - [ ] Register for push notices, and open the workspace of a tapped notice.
-- [ ] Open previews and the desktop stream in the in-app browser with the
-      grant.
+- [ ] Open previews in the in-app browser with the grant. Open the
+      desktop stream in the same way only when Desktop returns to the app,
+      as `phone-app/browser/desktop` shows.
+- [ ] Open the Preview of an HTML file tab in the in-app browser with its
+      grant, as port previews open.
 - [ ] Add the minimum version check.
 
 ## Milestone 22: The phone apps
@@ -508,6 +626,18 @@ deletion request of Milestone 8 for the store rules.
       yet stay out of the phone apps until their milestone.
 - [ ] Add sign-in, the notice permission, "Update the app", and the
       offline screen, as the mockups show.
+- [ ] Show the waitlist and the sign-in of a join link in the frame of a
+      phone app, with no link to the home page or the pricing page of the
+      site, as `docs/mockups/design.md` says for `SignInFrame`.
+- [ ] Build the pages of Terms and Privacy for the phone apps on the app
+      host, with no site header and no site footer, and open them in the
+      in-app browser, as `phone-app/browser/terms` shows.
+- [ ] Give the page after a GitHub App install words that fit a phone
+      app. Its words in `src/ui/screens/githubSetupCopy.ts` send the
+      person back to the Mac app. The Worker shows the same page to each
+      client. Its wordmark links the home page of the site, so a phone app
+      that reaches it needs the rule of
+      `plans/follow-ups/phone-app-site-links.md`.
 - [ ] Build, sign, and upload both apps in `.github/workflows/release.yml`
       at each release, beside the Mac app, as decision 10 says. Keep the
       keys in a GitHub environment. Check that the Mac runner has Xcode

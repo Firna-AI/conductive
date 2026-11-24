@@ -38,6 +38,11 @@ export const previewTool = defineComponent({
        * holds. Without it, the list shows its servers as with no services.
        */
       servers: { type: 'array', items: serverSchema },
+      /**
+       * The page that a press on a port of a list opens, in place of its
+       * Preview tab, as the phone apps give it.
+       */
+      portPage: { type: 'string' },
     },
   } as const,
   slots: ['services'],
@@ -45,6 +50,7 @@ export const previewTool = defineComponent({
   render: (props, context) => (
     <PreviewTool
       frame={props.frame ?? context.viewport === 'mobile'}
+      portPage={props.portPage}
       services={
         props.services === undefined
           ? undefined

@@ -258,8 +258,9 @@ sign-in gives app access, from decision 230. This is open sign-up.
   as `app/sign-in/join/failed` shows. A person who already has app access
   uses no code, and the app opens as usual.
 - Each user with app access has an invite code with 5 invites. The
-  Account page shows it at the end, after what every org shares, so that
-  the form of an agent stays near the top on a phone. It gives the invite
+  Account page shows it after what every org shares, so that the form of
+  an agent stays near the top on a phone. Only Deleted orgs and Delete
+  account follow it. It gives the invite
   link with Copy, the code alone, and how many invites are left, as
   `app/account` shows.
   During the pause, the link stays under a notice. A code that is used up

@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { Files, Globe, MessageSquare, SquareTerminal } from 'lucide-react'
 import { paths } from '../../paths'
+import { phonePaths } from '../../phonePaths'
 
 /**
  * The tools that the tools panel can show. The app hides Desktop and keeps
@@ -44,3 +45,17 @@ export const mobileTabs: readonly MobileTab[] = [
   { key: 'files', label: 'Files', icon: Files, to: paths.filesAll },
   ...toolTabs,
 ]
+
+/**
+ * The pages that the tabs open in the phone apps, where they differ from
+ * the web pages above. The Preview tool of the phone apps opens each
+ * preview in the in-app browser, so it has its own page.
+ */
+const phoneTabPages: Readonly<Partial<Record<MobileTabKey, string>>> = {
+  preview: phonePaths.browserTool,
+}
+
+/** The page that a tab opens: in the phone apps, or else in the web app. */
+export function tabPage(tab: MobileTab, phoneApp: boolean): string {
+  return (phoneApp ? phoneTabPages[tab.key] : undefined) ?? tab.to
+}

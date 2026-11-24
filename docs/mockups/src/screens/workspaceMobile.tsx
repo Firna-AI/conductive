@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { BarModel } from '../../../../src/ui/components/workspace/barModel'
+import { usePhoneAppProp } from '../components/phone/PhoneApp'
 import type { MobileTabKey } from '../components/workspace/tools'
 import { plainData } from '../defined'
 import { mobileFrame } from '../entries/components/layout/AppFrame.mockup'
@@ -10,7 +11,8 @@ import { pullRequestRow } from '../entries/components/workspace/PullRequestBar.m
  * An open workspace on a phone: its header, the row of its pull request,
  * the body with one view at a time, and the tabs that switch the view. An
  * archived workspace shows only its chat, without the row and the tabs.
- * The overlay and the toast lie over the whole screen.
+ * The overlay and the toast lie over the whole screen. In the phone apps
+ * the tabs take the mark of the phone apps.
  */
 export function WorkspaceMobile(props: {
   header: ReactNode
@@ -23,6 +25,7 @@ export function WorkspaceMobile(props: {
   overlay: ReactNode
   toast: ReactNode
 }) {
+  const phoneApp = usePhoneAppProp()
   return (
     <mobileFrame.Component>
       {props.header}
@@ -37,6 +40,7 @@ export function WorkspaceMobile(props: {
         <mobileTabBar.Component
           moklyInstance="mobile-tab-bar"
           selected={props.selected}
+          {...phoneApp}
         />
       )}
       {props.overlay}

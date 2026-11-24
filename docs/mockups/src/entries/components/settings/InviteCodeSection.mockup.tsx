@@ -7,7 +7,7 @@ export const inviteCodeSection = defineComponent({
   slug: 'invite-code-section',
   title: 'Invite code section',
   description:
-    'The invite code of the user, at the end of the General tab of the account: the invite link with Copy, the code, and how many of the invites are left. During the pause of sign-ups, and during open sign-up, a notice says so, and the link stays. A code that is used up or turned off shows no link. Its own page shows a code with invites left.',
+    'The invite code of the user, on the General tab of the account: the invite link with Copy, the code, and how many of the invites are left. During the pause of sign-ups, and during open sign-up, a notice says so, and the link stays. A code that is used up or turned off shows no link. Its own page shows a code with invites left.',
   relatedDocs: ['docs/mockups/orgs-and-logins.md'],
   propSchema: {
     type: 'object',

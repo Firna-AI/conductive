@@ -1,1 +1,10 @@
-{ "order": ["marketing", "app", "mac-app", "user-flows", "components"] }
+{
+  "order": [
+    "marketing",
+    "app",
+    "mac-app",
+    "phone-app",
+    "user-flows",
+    "components"
+  ]
+}

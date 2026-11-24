@@ -40,6 +40,7 @@ import {
 } from '../fixtures/services'
 import { workspaceSessions } from '../fixtures/sessions'
 import { paths } from '../paths'
+import { phonePaths } from '../phonePaths'
 import { servicePaths } from '../servicePaths'
 import { serviceControls } from './serviceState'
 import type { WorkspaceState } from './workspaceState'
@@ -66,27 +67,54 @@ function servicesOf(state: WorkspaceState): readonly ServiceEntry[] | null {
   return state.services === 'unsupported' ? null : lists[state.services]
 }
 
+/**
+ * The pages that the controls of the services and of the views over them
+ * open: the list, the menu of `web`, a log, the result of a Stop, and the
+ * chat of the session that started a service.
+ */
+type ServicePages = Partial<Record<keyof typeof servicePaths, string>> & {
+  sessions?: Readonly<Record<string, string>>
+}
+
+/**
+ * The pages of the web app, and beside them the pages of the phone apps,
+ * where the catalogue draws one. The web pages draw the Preview of the web
+ * app, so under the mark of the phone apps a control whose page the phone
+ * map does not hold shows without a link.
+ */
+const servicePages: Readonly<Record<'web' | 'phone', ServicePages>> = {
+  web: {
+    ...servicePaths,
+    sessions: {
+      [workspaceSessions[0].key]: paths.app,
+      [workspaceSessions[1].key]: paths.sessionChips,
+    },
+  },
+  phone: {
+    list: phonePaths.browserTool,
+    menu: phonePaths.browserToolMenu,
+    log: phonePaths.browserToolLog,
+    emptyLog: phonePaths.browserToolEmptyLog,
+  },
+}
+
 /** The screens that the drawn controls of a row lead to. */
-function linksFor(service: ServiceEntry): ServiceLinks {
+function linksFor(pages: ServicePages, service: ServiceEntry): ServiceLinks {
   const failedForMemory =
     service.phase.kind === 'failed' &&
     service.phase.result.kind === 'out_of_memory'
-  const logs: Readonly<Record<string, string>> = {
-    [webService.name]: servicePaths.log,
-    [workerService.name]: servicePaths.emptyLog,
+  const logs: Readonly<Record<string, string | undefined>> = {
+    [webService.name]: pages.log,
+    [workerService.name]: pages.emptyLog,
   }
   const source = service.source
-  const sessions: Readonly<Record<string, string>> = {
-    [workspaceSessions[0].key]: paths.app,
-    [workspaceSessions[1].key]: paths.sessionChips,
-  }
   const session = workspaceSessions.find(
     (each) => source.kind === 'session' && each.title === source.title,
   )
   return {
-    menu: service.name === webService.name ? servicePaths.menu : undefined,
-    log: failedForMemory ? servicePaths.memoryLog : logs[service.name],
-    source: session ? sessions[session.key] : undefined,
+    menu: service.name === webService.name ? pages.menu : undefined,
+    log: failedForMemory ? pages.memoryLog : logs[service.name],
+    source: session ? pages.sessions?.[session.key] : undefined,
   }
 }
 
@@ -115,45 +143,54 @@ function serversBeside(
   return [...others, ...unnamed]
 }
 
-/** The services above the servers of the Preview tool, when the report has them. */
+/**
+ * The services above the servers of the Preview tool, when the report has
+ * them. Under the mark of the phone apps, `phoneApp`, the controls open
+ * the pages of the phone apps, and each port opens `portPage`.
+ */
 export function previewServicesOf(
   state: WorkspaceState,
   viewport: Viewport,
+  phone: { phoneApp: boolean; portPage?: string },
 ): PreviewServices | undefined {
   const services = servicesOf(state)
   if (services === null) return undefined
-  const phone = viewport === 'mobile'
-  const shown = !phone && state.tab === 'preview' ? openPort : null
+  const pages = servicePages[phone.phoneApp ? 'phone' : 'web']
+  const mobile = viewport === 'mobile'
+  const shown = !mobile && state.tab === 'preview' ? openPort : null
   const controls = serviceControls(state)
   const menu =
     controls && state.serviceView === 'menu'
-      ? { name: webService.name, anchored: !phone }
+      ? { name: webService.name, anchored: !mobile }
       : undefined
   // Try again of a read that failed shows the list that it reads.
   const failed =
-    state.services === 'load-failed'
-      ? { retryTo: servicePaths.list }
-      : undefined
+    state.services === 'load-failed' ? { retryTo: pages.list } : undefined
   return {
     section: (
       <ServiceSection
         controls={controls}
         current={shown}
         failed={failed}
-        linksFor={linksFor}
+        linksFor={(service) => linksFor(pages, service)}
         menu={menu}
+        portPage={phone.portPage}
         services={services}
       />
     ),
-    servers: serversBeside(state, services, phone),
+    servers: serversBeside(state, services, mobile),
   }
 }
 
-/** The log of `web` in one state of its read. */
-function webLogView(read: ServiceLogRead, viewport: Viewport): ReactNode {
+/** The log of `web` in one state of its read, which Close leaves. */
+function webLogView(
+  read: ServiceLogRead,
+  viewport: Viewport,
+  closeTo: string | undefined,
+): ReactNode {
   return (
     <ServiceLogView
-      closeTo={servicePaths.list}
+      closeTo={closeTo}
       read={read}
       service={webService}
       viewport={viewport}
@@ -165,17 +202,21 @@ function webLogView(read: ServiceLogRead, viewport: Viewport): ReactNode {
  * What lies over the workspace for its services: the sheet of the menu of
  * `web` on a phone, the question before its Stop, a log, or the toast of a
  * result. Desktop draws the menu beside its button, in the row. Without
- * the right to restart the software, no menu and no question opens.
+ * the right to restart the software, no menu and no question opens. Under
+ * the mark of the phone apps, `phoneApp`, the controls open the pages of
+ * the phone apps.
  */
 export function serviceOverlay(
   state: WorkspaceState,
   viewport: Viewport,
+  phoneApp: boolean,
 ): ReactNode {
   const services = servicesOf(state)
   const web = services?.find((each) => each.name === webService.name)
   if (!services || !web) return null
   const name = web.name
   const controls = serviceControls(state)
+  const pages = servicePages[phoneApp ? 'phone' : 'web']
   switch (state.serviceView) {
     case 'none':
       return null
@@ -186,9 +227,9 @@ export function serviceOverlay(
     case 'stop':
       return controls ? (
         <StopServiceDialog
-          cancelTo={servicePaths.list}
+          cancelTo={pages.list}
           service={web}
-          stopTo={servicePaths.stopping}
+          stopTo={pages.stopping}
           viewport={viewport}
         />
       ) : null
@@ -196,18 +237,20 @@ export function serviceOverlay(
       return webLogView(
         { kind: 'lines', lines: webLog, omitted: true },
         viewport,
+        pages.list,
       )
     case 'log-loading':
-      return webLogView({ kind: 'loading' }, viewport)
+      return webLogView({ kind: 'loading' }, viewport, pages.list)
     case 'log-failed':
       return webLogView(
         { kind: 'failed', message: sandboxNotAnswering },
         viewport,
+        pages.list,
       )
     case 'log-empty':
       return (
         <ServiceLogView
-          closeTo={servicePaths.list}
+          closeTo={pages.list}
           read={{ kind: 'empty' }}
           service={workerService}
           viewport={viewport}
@@ -216,7 +259,7 @@ export function serviceOverlay(
     case 'log-memory':
       return (
         <ServiceLogView
-          closeTo={servicePaths.memory}
+          closeTo={pages.memory}
           read={{ kind: 'lines', lines: memoryLog, omitted: true }}
           service={memoryService}
           viewport={viewport}

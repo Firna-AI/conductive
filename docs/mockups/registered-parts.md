@@ -99,7 +99,12 @@ screen, and no entry under Affected screens. Examples are the Mac app
 state, the touch sizes, and the workspaces of the chat. `ShortcutTip`
 draws its key by the Mac app state, and `ActionButton` takes its touch
 height from the touch sizes, and none of their own pages shows those
-states. Check such a change on the screens that draw it.
+states. Check such a change on the screens that draw it. The mark of the
+phone apps avoids the gap: a screen reads it from React context, then
+passes it to the tab parts and to `toolContent` as their `phoneApp` prop.
+`toolContent` passes the page of a port as data to the Preview tool and
+to its list of servers. So Changes lists an edit of a phone page of these
+parts, as their `phone-app` variants show.
 
 ## The build
 

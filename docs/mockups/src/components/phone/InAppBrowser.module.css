@@ -1,0 +1,128 @@
+/* The in-app browser of the system, which covers the whole app. */
+.browser {
+  display: flex;
+  flex-direction: column;
+  height: var(--ui-screen-height);
+  overflow: hidden;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-sans);
+}
+
+/* Done at the start, the host in the middle, and Reload at the end. */
+.bar {
+  display: grid;
+  flex-shrink: 0;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+  box-sizing: border-box;
+}
+
+.start,
+.end {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.start {
+  justify-self: start;
+}
+
+.end {
+  justify-self: end;
+}
+
+/* A link makes Done an anchor, so it centres its label itself. */
+.done {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: var(--ui-link);
+  font: inherit;
+  font-size: var(--ui-text-xl);
+  font-weight: var(--ui-weight-strong);
+  cursor: pointer;
+}
+
+/* The host of the page in a soft pill, with the lock of a secure page. */
+.address {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 7px 12px;
+  border-radius: 10px;
+  background: var(--ui-soft);
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+}
+
+.host {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tool {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ui-radius-lg);
+  background: none;
+  color: var(--ui-link);
+  cursor: pointer;
+}
+
+.tool:disabled {
+  color: var(--ui-faint);
+  cursor: default;
+}
+
+/*
+ * The page of the browser. A page that fills the screen of its own fills
+ * this box: the height of a screen is the height of the box here.
+ */
+.page {
+  --ui-screen-height: 100%;
+
+  display: flex;
+  position: relative;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.page > * {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Back, Forward, Share, and Open in browser, above the home indicator. */
+.toolbar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-around;
+  padding: 4px 12px 22px;
+  border-top: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+}
+
+.tablet .bar {
+  min-height: 56px;
+  padding: 6px 14px;
+}

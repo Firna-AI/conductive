@@ -12,6 +12,7 @@
     "own-endpoint",
     "endpoint-models",
     "invites",
-    "deleted-orgs"
+    "deleted-orgs",
+    "deletion"
   ]
 }

@@ -1,0 +1,8 @@
+/*
+ * A legal page in the page of the in-app browser. The browser gives it its
+ * height, and the text scrolls inside it.
+ */
+.page {
+  overflow-y: auto;
+  background: var(--ui-surface);
+}

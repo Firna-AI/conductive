@@ -4,6 +4,7 @@
     "sign-up",
     "open-sign-up",
     "join",
+    "phone-sign-in",
     "create-workspace",
     "create-workspace-dialog",
     "retry-first-start",
@@ -16,6 +17,7 @@
     "switch-org-account",
     "mac-command",
     "secret-request",
+    "open-a-notice",
     "create-automation",
     "link-a-workspace",
     "merge-and-continue",
@@ -27,6 +29,7 @@
     "explain-chat-text",
     "drop-a-file",
     "open-a-local-server",
+    "open-a-preview-on-a-phone",
     "stop-a-service",
     "restart-a-service",
     "read-a-failed-service-log"

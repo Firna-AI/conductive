@@ -7,7 +7,7 @@ import {
 } from '../../../../../src/ui/components/common/ConfirmDialog'
 import { FailureToast } from '../common/FailureToast'
 import { Menu } from '../../../../../src/ui/components/common/Menu'
-import { ScreenLink } from '../common/ScreenLink'
+import { Linked } from '../common/ScreenLink'
 import { Sheet } from '../../../../../src/ui/components/common/Sheet'
 import { ToastLayer } from '../common/ToastLayer'
 import {
@@ -34,26 +34,27 @@ export function ServiceMenuSheet(props: { service: ServiceEntry }) {
 /**
  * The question before Stop. A Stop ends the service for every member, so
  * it asks first, as the close of a terminal does. Restart asks nothing.
- * `cancelTo` and `stopTo` are the screens of Cancel and Stop.
+ * `cancelTo` and `stopTo` are the screens of Cancel and Stop, where the
+ * mockups draw them.
  */
 export function StopServiceDialog(props: {
   service: ServiceEntry
   viewport: Viewport
-  cancelTo: string
-  stopTo: string
+  cancelTo?: string
+  stopTo?: string
 }) {
   return (
     <ConfirmDialog
       actions={
         <>
-          <ScreenLink asChild to={props.cancelTo}>
+          <Linked to={props.cancelTo}>
             <ActionButton>{servicesCopy.cancel}</ActionButton>
-          </ScreenLink>
-          <ScreenLink asChild to={props.stopTo}>
+          </Linked>
+          <Linked to={props.stopTo}>
             <ActionButton icon={Square} tone="danger">
               {servicesCopy.stop}
             </ActionButton>
-          </ScreenLink>
+          </Linked>
         </>
       }
       title={serviceControlCopy.stopTitle(props.service.name)}

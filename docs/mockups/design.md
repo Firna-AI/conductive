@@ -189,7 +189,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the rail. A phone draws the card without its outline. The waitlist uses
   the wider card, for its invitations and its code field. In the Mac app
   its header is the top bar of the window, as [the Mac app](mac-app.md)
-  gives.
+  gives. In a phone app its wordmark is no link, and its foot has only the
+  legal links. The pages that stop a phone app, Update the app and the
+  offline page, have no foot, as [the phone apps](phone-app.md) gives.
 - `CommandPalette` in `src/components/palette/` draws the command palette:
   a dialog near the top of the window over a light dim on desktop, and a
   page in place of the list on a phone. It has the search field, the tabs
@@ -269,6 +271,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   columns. A segmented control chooses how New workspace opens, with a
   helper line under it, and a narrow section puts it under its label. A
   failed save shows its error under the control.
+- General holds the GitHub sign-in, the GitHub App, and the invite code.
+  Deleted orgs follows while the person has a deleted org. Delete account
+  ends General on every account. Its Request account deletion asks first
+  with `ConfirmDialog`. After the request, the section says Requested
+  beside its title and gives the day of the request in place of the
+  button, as `app/account/deletion` shows.
 - Stats uses the parts of the operator Overview: a box of tiles, the
   workspaces by state, and the daily charts. Its tiles are Workspaces with
   the new ones of 7 days, Running now, Automations, and Orgs. Its list of
@@ -469,7 +477,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   app while the browser bars show), or the frame of a picture on the
   marketing site.
 - [The operator section](design-operator.md) gives its tabs, its tables,
-  the Waitlist tab, the codes, and the approval email. It also gives
+  the Waitlist tab, the Deletions tab, the codes, and the approval email.
+  It also gives
   Suspend, Lift, and Approve, the daily chart, the notice of a pause, and
   the waitlist switch.
 - On a phone the org settings put their six tabs in three columns, on two

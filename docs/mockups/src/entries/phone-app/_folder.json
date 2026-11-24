@@ -1,0 +1,4 @@
+{
+  "title": "Phone apps",
+  "order": ["sign-in", "notices", "lock-screen", "browser", "update", "offline"]
+}

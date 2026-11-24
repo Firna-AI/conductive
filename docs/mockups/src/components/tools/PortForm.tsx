@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import { InputFrame } from '@firna/ui/input'
 import type { ListeningPort } from '../../../../../src/shared/generated/ListeningPort'
 import { noop } from '../../../../../src/ui/noop'
-import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../../../../../src/ui/components/common/classes'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
@@ -13,6 +12,7 @@ import {
   serverDescription,
 } from '../../../../../src/ui/components/tools/previewCopy'
 import { servicesCopy } from '../../../../../src/ui/components/tools/serviceCopy'
+import { previewPages } from './previewLink'
 import { ToolHeading } from './ServiceList'
 import styles from '../../../../../src/ui/components/tools/PortForm.module.css'
 
@@ -37,14 +37,19 @@ function PortField(props: { label: string; placeholder: string }) {
  * One detected server: a button with its port, its name, and its folder.
  * A folder that does not fit keeps its end, after "…". A click opens the
  * preview of the port. On desktop it shows the Preview tab of the port
- * (decision 291), and the row of the shown tab is the current one.
+ * (decision 291), and the row of the shown tab is the current one. `to`
+ * is the page that the press opens.
  */
-function ServerRow(props: { server: ListeningPort; current: boolean }) {
+function ServerRow(props: {
+  server: ListeningPort
+  current: boolean
+  to: string
+}) {
   const { server } = props
   const description = serverDescription(server)
   return (
     <li>
-      <ScreenLink asChild to={paths.preview}>
+      <ScreenLink asChild to={props.to}>
         <button
           aria-current={props.current ? 'page' : undefined}
           aria-label={description}
@@ -72,11 +77,14 @@ function ServerRow(props: { server: ListeningPort; current: boolean }) {
  * row under them. The list scrolls when it does not fit. `current` is the
  * port of the Preview tab that shows, on desktop. `services` lies above
  * the servers, in the same scroll, and then the servers take a heading.
+ * `portPage` is the page that a press on a server opens: by default its
+ * Preview tab in the web app.
  */
 export function ServerList(props: {
   servers: readonly ListeningPort[]
   current?: number | null
   services?: ReactNode
+  portPage?: string
 }) {
   return (
     <div className={styles.list}>
@@ -93,6 +101,7 @@ export function ServerList(props: {
             current={server.port === props.current}
             key={server.port}
             server={server}
+            to={props.portPage ?? previewPages.web}
           />
         ))}
       </ul>

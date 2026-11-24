@@ -25,7 +25,7 @@ export const serverList = defineComponent({
   slug: 'server-list',
   title: 'Server list',
   description:
-    'The port form of the Preview tool with the servers of the sandbox: a button for each server with its port, its name, and its folder, then the smaller Other port row. A folder that does not fit keeps its end. The list scrolls when it does not fit. On desktop a click shows the Preview tab of the port, and the row of the shown tab is the current one. Its own page shows the servers that the runner detects.',
+    'The port form of the Preview tool with the servers of the sandbox: a button for each server with its port, its name, and its folder, then the smaller Other port row. A folder that does not fit keeps its end. The list scrolls when it does not fit. On desktop a click shows the Preview tab of the port, and the row of the shown tab is the current one. In the phone apps a click opens the page that the screen gives. Its own page shows the servers that the runner detects.',
   relatedDocs: ['docs/mockups/catalogue-workspace-tools.md'],
   propSchema: {
     type: 'object',
@@ -35,6 +35,8 @@ export const serverList = defineComponent({
       servers: { type: 'array', items: serverSchema },
       /** The port of the Preview tab that shows on desktop, or null. */
       current: { type: ['integer', 'null'] },
+      /** The page that a press on a server opens, in place of its tab. */
+      portPage: { type: 'string' },
     },
   } as const,
   slots: ['services'],
@@ -42,6 +44,7 @@ export const serverList = defineComponent({
   render: (props) => (
     <ServerList
       current={props.current}
+      portPage={props.portPage}
       servers={props.servers}
       services={props.services}
     />

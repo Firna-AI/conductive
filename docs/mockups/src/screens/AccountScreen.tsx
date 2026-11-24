@@ -7,6 +7,7 @@ import {
 import type { RailState } from '../components/layout/OrgRail'
 import { page as pagePart } from '../entries/components/layout/Page.mockup'
 import { useMacApp } from '../../../../src/ui/components/mac/MacApp'
+import { usePhoneAppProp } from '../components/phone/PhoneApp'
 // The tabs come first, so that their styles keep their place in the bundle.
 import { accountTabs } from '../entries/components/settings/AccountTabs.mockup'
 import {
@@ -26,6 +27,7 @@ import { statsTab } from '../entries/components/screens/accountStats.mockup'
 import { resetShortcutsDialog } from '../entries/components/settings/ResetShortcutsDialog.mockup'
 import { shortcutsTab } from '../entries/components/settings/ShortcutsSections.mockup'
 import { thisMacSection } from '../entries/components/settings/ThisMacSection.mockup'
+import { NoticesSection } from '../components/phone/NoticesSection'
 import { workspaceSections } from '../components/workspaces/sections'
 import { sidebar as sidebarPart } from '../entries/components/workspaces/Sidebar.mockup'
 import { fastChoice } from '../fixtures/agents'
@@ -37,8 +39,10 @@ import {
 import type { ShortcutHost } from '../fixtures/shortcutHosts'
 import { viewerMembership } from '../fixtures/members'
 import { paths } from '../paths'
+import type { DeletionPages } from '../deletionPaths'
 import type { AccountState, AccountView } from './accountState'
 import { agentsFor, hiddenModelsFor } from './accountAgents'
+import { deletionDialog, GeneralDeletion } from './accountDeletion'
 import { defined, plainData } from '../defined'
 
 const connectedRail: RailState = { orgs: orgList, current: 'account' }
@@ -49,9 +53,13 @@ const firstRunRail: RailState = { orgs: [], current: 'account', firstRun: true }
 /**
  * The General tab: the GitHub sign-in, the GitHub App that every org
  * shares, then the invite code of the user. The orgs that the user can
- * restore come last, only while one exists.
+ * restore follow, only while one exists. The request of an account
+ * deletion ends the tab. It opens its question only with `deletionPages`.
  */
-function GeneralTab(props: { state: AccountState }) {
+function GeneralTab(props: {
+  state: AccountState
+  deletionPages?: DeletionPages
+}) {
   return (
     <>
       <signInSection.Component moklyInstance="sign-in" />
@@ -69,6 +77,10 @@ function GeneralTab(props: { state: AccountState }) {
         moklyInstance="deleted-orgs"
         state={props.state.deletedOrgs}
       />
+      <GeneralDeletion
+        pages={props.deletionPages}
+        state={props.state.deletion}
+      />
     </>
   )
 }
@@ -79,11 +91,17 @@ function TabContent(props: {
   host: ShortcutHost
   changes: ShortcutChanges
   viewport: Viewport
+  deletionPages?: DeletionPages
 }) {
   const { state } = props
   switch (state.tab) {
     case 'general':
-      return <GeneralTab state={{ ...state, tab: 'general' }} />
+      return (
+        <GeneralTab
+          deletionPages={props.deletionPages}
+          state={{ ...state, tab: 'general' }}
+        />
+      )
     case 'agents':
       return (
         <agentsSection.Component
@@ -94,6 +112,9 @@ function TabContent(props: {
     case 'preferences':
       return (
         <>
+          {state.notices === undefined ? null : (
+            <NoticesSection setting={state.notices} />
+          )}
           <favouritesSection.Component
             favourites={state.favourites}
             hiddenModels={hiddenModelsFor({ ...state, tab: 'preferences' })}
@@ -133,25 +154,30 @@ function TabContent(props: {
 
 /**
  * The account, in tabs. General holds the GitHub sign-in, the GitHub App,
- * and the invite code of the user. Agents holds the logins of Claude and
- * Codex that every org shares, with the share setting of each login and
- * the host of an own endpoint. Preferences holds the favourites of the
- * model menu, then how new workspaces start: their model, and how New
- * workspace opens. Keyboard
+ * the invite code of the user, and Delete account. Agents holds the
+ * logins of Claude and Codex that every org shares, with the share
+ * setting of each login and the host of an own endpoint. Preferences
+ * holds the favourites of the model menu, then how new workspaces start:
+ * their model, and how New
+ * workspace opens. The phone apps start it with the Notices section of
+ * `state.notices`. Keyboard
  * shortcuts holds the keys of the host: the Mac app, or the browser and the
  * keyboard of `state.host`. Stats holds the person's own counts. The Mac
  * app adds This Mac, with the commands
  * that always run on this Mac. The product is free, so the page shows no
  * plan and no billing, and the sandbox provider stays out of sight. With the
  * person's changes to the shortcuts, the Search row of the Mac app's
- * sidebar shows the person's key of the palette.
+ * sidebar shows the person's key of the palette. `deletionPages` gives the
+ * pages of the deletion request, which only the default General page has.
  */
 export function AccountScreen(props: {
   state: AccountView
   viewport: Viewport
+  deletionPages?: DeletionPages
 }) {
   const { state } = props
   const mac = useMacApp()
+  const phoneApp = usePhoneAppProp()
   const host: ShortcutHost = mac ? 'mac-app' : state.host
   const changes: ShortcutChanges =
     state.shortcuts === 'edited' ? editedShortcuts : {}
@@ -170,6 +196,10 @@ export function AccountScreen(props: {
           host={host}
           moklyInstance="account-tabs"
           tab={state.tab}
+          {...phoneApp}
+          {...defined({
+            notices: phoneApp.phoneApp ? state.notices : undefined,
+          })}
         />
       }
       title="Account"
@@ -177,13 +207,15 @@ export function AccountScreen(props: {
     >
       <TabContent
         changes={changes}
+        deletionPages={props.deletionPages}
         host={host}
         state={state}
         viewport={props.viewport}
       />
     </pagePart.Component>
   )
-  // Reset all asks first: a dialog over the account, or a sheet on a phone.
+  // Reset all and the request of a deletion ask first: a dialog over the
+  // account, or a sheet on a phone.
   const dialog =
     state.tab === 'shortcuts' && state.keyChange === 'reset-all' ? (
       <resetShortcutsDialog.Component
@@ -192,7 +224,9 @@ export function AccountScreen(props: {
         moklyInstance="reset-shortcuts-dialog"
         viewport={props.viewport}
       />
-    ) : undefined
+    ) : (
+      deletionDialog(state, props.viewport, props.deletionPages)
+    )
   // The open menu of the default model lies above the page, at its picker.
   const modelMenu =
     state.tab === 'preferences' && state.modelMenu === 'open-fast' ? (

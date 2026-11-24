@@ -8,12 +8,13 @@ import {
 } from '../entries/components/layout/AppFrame.mockup'
 import { acmeRail } from '../components/layout/OrgRail'
 import { useMacApp } from '../../../../src/ui/components/mac/MacApp'
+import { usePhoneAppProp } from '../components/phone/PhoneApp'
 import { ChatMarks } from '../components/explain/chatMarks'
 import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import { checksActions } from '../entries/components/workspace/BarActions.mockup'
 import { WorkspaceMobile } from './workspaceMobile'
 import { pullRequestBar } from '../entries/components/workspace/PullRequestBar.mockup'
-import { toolsPanel } from '../entries/components/workspace/ToolsPanel.mockup'
+import { WorkspaceToolsPanel } from './workspaceToolsPanel'
 import { workspaceBody } from '../entries/components/workspace/WorkspaceBody.mockup'
 import { workspaceHeader } from '../entries/components/workspace/WorkspaceHeader.mockup'
 import { workspaceTabs } from '../entries/components/workspace/WorkspaceTabs.mockup'
@@ -78,6 +79,7 @@ export function WorkspaceScreen(props: {
 }) {
   const { viewport, picker: pickerPart } = props
   const mac = useMacApp()
+  const phoneApp = usePhoneAppProp()
   const {
     state,
     open,
@@ -159,6 +161,7 @@ export function WorkspaceScreen(props: {
           tabs,
           menuTab: row.menuTab,
           readOnly,
+          phoneApp: phoneApp.phoneApp === true,
         })}
       {copyToast(state, viewport)}
     </ChatWorkspaces>
@@ -204,6 +207,7 @@ export function WorkspaceScreen(props: {
       moklyInstance="tool-content"
       state={state}
       viewport={viewport}
+      {...phoneApp}
     />
   )
   const toast = workspaceToast(state, workspace, viewport)
@@ -286,9 +290,7 @@ export function WorkspaceScreen(props: {
           filesShare: state.resize === 'split' ? raisedSplit : undefined,
           rightWidth: state.resize === 'right' ? widenedRight : undefined,
           tools: archived ? undefined : (
-            <toolsPanel.Component moklyInstance="tools-panel" tool={state.tool}>
-              {tool}
-            </toolsPanel.Component>
+            <WorkspaceToolsPanel tool={state.tool}>{tool}</WorkspaceToolsPanel>
           ),
         })}
       />
