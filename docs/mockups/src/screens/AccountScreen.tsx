@@ -7,6 +7,7 @@ import {
 import type { RailState } from '../components/layout/OrgRail'
 import { page as pagePart } from '../entries/components/layout/Page.mockup'
 import { useMacApp } from '../../../../src/ui/components/mac/MacApp'
+import { usePhoneAppProp } from '../components/phone/PhoneApp'
 // The tabs come first, so that their styles keep their place in the bundle.
 import { accountTabs } from '../entries/components/settings/AccountTabs.mockup'
 import {
@@ -38,6 +39,7 @@ import {
 import type { ShortcutHost } from '../fixtures/shortcutHosts'
 import { viewerMembership } from '../fixtures/members'
 import { paths } from '../paths'
+import type { DeletionPages } from '../deletionPaths'
 import type { AccountState, AccountView } from './accountState'
 import { agentsFor, hiddenModelsFor } from './accountAgents'
 import { deletionDialog, GeneralDeletion } from './accountDeletion'
@@ -52,9 +54,12 @@ const firstRunRail: RailState = { orgs: [], current: 'account', firstRun: true }
  * The General tab: the GitHub sign-in, the GitHub App that every org
  * shares, then the invite code of the user. The orgs that the user can
  * restore follow, only while one exists. The request of an account
- * deletion ends the tab.
+ * deletion ends the tab. It opens its question only with `deletionPages`.
  */
-function GeneralTab(props: { state: AccountState }) {
+function GeneralTab(props: {
+  state: AccountState
+  deletionPages?: DeletionPages
+}) {
   return (
     <>
       <signInSection.Component moklyInstance="sign-in" />
@@ -72,7 +77,10 @@ function GeneralTab(props: { state: AccountState }) {
         moklyInstance="deleted-orgs"
         state={props.state.deletedOrgs}
       />
-      <GeneralDeletion state={props.state.deletion} />
+      <GeneralDeletion
+        pages={props.deletionPages}
+        state={props.state.deletion}
+      />
     </>
   )
 }
@@ -83,11 +91,17 @@ function TabContent(props: {
   host: ShortcutHost
   changes: ShortcutChanges
   viewport: Viewport
+  deletionPages?: DeletionPages
 }) {
   const { state } = props
   switch (state.tab) {
     case 'general':
-      return <GeneralTab state={{ ...state, tab: 'general' }} />
+      return (
+        <GeneralTab
+          deletionPages={props.deletionPages}
+          state={{ ...state, tab: 'general' }}
+        />
+      )
     case 'agents':
       return (
         <agentsSection.Component
@@ -153,14 +167,17 @@ function TabContent(props: {
  * that always run on this Mac. The product is free, so the page shows no
  * plan and no billing, and the sandbox provider stays out of sight. With the
  * person's changes to the shortcuts, the Search row of the Mac app's
- * sidebar shows the person's key of the palette.
+ * sidebar shows the person's key of the palette. `deletionPages` gives the
+ * pages of the deletion request, which only the default General page has.
  */
 export function AccountScreen(props: {
   state: AccountView
   viewport: Viewport
+  deletionPages?: DeletionPages
 }) {
   const { state } = props
   const mac = useMacApp()
+  const phoneApp = usePhoneAppProp()
   const host: ShortcutHost = mac ? 'mac-app' : state.host
   const changes: ShortcutChanges =
     state.shortcuts === 'edited' ? editedShortcuts : {}
@@ -179,6 +196,10 @@ export function AccountScreen(props: {
           host={host}
           moklyInstance="account-tabs"
           tab={state.tab}
+          {...phoneApp}
+          {...defined({
+            notices: phoneApp.phoneApp ? state.notices : undefined,
+          })}
         />
       }
       title="Account"
@@ -186,6 +207,7 @@ export function AccountScreen(props: {
     >
       <TabContent
         changes={changes}
+        deletionPages={props.deletionPages}
         host={host}
         state={state}
         viewport={props.viewport}
@@ -203,7 +225,7 @@ export function AccountScreen(props: {
         viewport={props.viewport}
       />
     ) : (
-      deletionDialog(state, props.viewport)
+      deletionDialog(state, props.viewport, props.deletionPages)
     )
   // The open menu of the default model lies above the page, at its picker.
   const modelMenu =

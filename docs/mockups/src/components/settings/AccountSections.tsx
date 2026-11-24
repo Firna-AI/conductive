@@ -13,8 +13,7 @@ import {
 import { defined } from '../../defined'
 import styles from '../../../../../src/ui/components/settings/AccountSections.module.css'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
-import { ScreenLink } from '../common/ScreenLink'
-import { deletionPaths } from '../../deletionPaths'
+import { Linked } from '../common/ScreenLink'
 import { accountDeletionCopy as deletionCopy } from './accountDeletionCopy'
 
 /**
@@ -137,8 +136,13 @@ export function AgentsSection(props: {
  * decision 4 A of the universal Expo app plan. Request account deletion
  * asks first. After the request, the section gives the day of the request
  * in place of the button, also on a later visit. `requested` is that day.
+ * `requestTo` is the question that the button opens. Without it, the
+ * button shows without a link.
  */
-export function DeletionSection(props: { requested?: string }) {
+export function DeletionSection(props: {
+  requested?: string
+  requestTo?: string
+}) {
   if (props.requested) {
     return (
       <section.Component
@@ -162,7 +166,7 @@ export function DeletionSection(props: { requested?: string }) {
   return (
     <section.Component
       actions={
-        <ScreenLink asChild to={deletionPaths.confirm}>
+        <Linked to={props.requestTo}>
           <actionButton.Component
             icon="trash-2"
             moklyInstance="request-deletion"
@@ -170,7 +174,7 @@ export function DeletionSection(props: { requested?: string }) {
           >
             {deletionCopy.request}
           </actionButton.Component>
-        </ScreenLink>
+        </Linked>
       }
       description={deletionCopy.description}
       moklyInstance="deletion-section"

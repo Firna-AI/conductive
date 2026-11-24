@@ -7,14 +7,7 @@ import {
 import { phonePaths } from '../../phonePaths'
 import { ScreenLink } from '../common/ScreenLink'
 import { noticesSectionCopy as copy } from './noticeCopy'
-
-/**
- * The notices of this device: off in the settings of the device after a
- * denial, off after Not now, or on.
- */
-export const noticeSettings = ['denied', 'not-now', 'on'] as const
-
-export type NoticeSetting = (typeof noticeSettings)[number]
+import type { NoticeSetting } from './noticeSettings'
 
 /**
  * The action of the section. After a denial only the settings of the

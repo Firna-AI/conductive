@@ -102,7 +102,7 @@ export const deletionSection = defineComponent({
   slug: 'deletion-section',
   title: 'Deletion section',
   description:
-    'The request of an account deletion at the end of the General tab of the account: Delete account, with what the request asks, and Request account deletion, which asks first. After the request, the section says Requested beside its title and gives the day of the request in place of the button. Its own page shows the section before a request.',
+    'The request of an account deletion at the end of the General tab of the account: Delete account, with what the request asks, and Request account deletion, which asks first. The button opens the question only when the screen gives its page, as the default General page does. Without it, the button shows without a link. After the request, the section says Requested beside its title and gives the day of the request in place of the button. Its own page shows the section before a request.',
   relatedDocs: ['docs/mockups/catalogue-account.md'],
   propSchema: {
     type: 'object',
@@ -110,9 +110,13 @@ export const deletionSection = defineComponent({
     properties: {
       /** The day of the request. Without it, the section offers the request. */
       requested: { type: 'string', minLength: 1 },
+      /** The question that the button opens. Without it, there is no link. */
+      requestTo: { type: 'string', minLength: 1 },
     },
   } as const,
-  render: (props) => <DeletionSection requested={props.requested} />,
+  render: (props) => (
+    <DeletionSection requested={props.requested} requestTo={props.requestTo} />
+  ),
   variants: [
     {
       slug: 'requested',

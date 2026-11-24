@@ -15,6 +15,7 @@
   - "When a member leaves" in `docs/protocol/orgs-and-members.md` says that the last-admin rule "also holds when the last admin deletes their account".
   - The Privacy draft in `src/marketing/privacy.ts` lets a person ask to delete their data.
   - On 9 November 2026 the user chose a waitlist. A person who waits has an account and a stored GitHub token. The waitlist screen offers no Delete account, because no route exists.
+  - On 23 November 2026 the user chose, for the phone apps, that the Account page gets "Request account deletion", and that operators complete each request. That choice rules out the self-service deletion of option C. The mockups `app/account/deletion` and `app/operator/deletions` draw the request and the list of requests. How an operator completes a request is still open, and option B below is one answer.
 - **Problem:** The contract and a protocol rule name an account deletion that the app does not have. A person can only ask for a deletion.
 - **Impact if no action:** A person who leaves the app, or who never gets in from the waitlist, keeps their account and their GitHub token until someone deletes them by hand.
 - **Root question:** How does a person get their account deleted?
@@ -25,5 +26,6 @@
 - **Left out:** A deletion that runs on its own after a time, because it adds behaviour that no request asked for.
 - **Wider fix:** None, because this is a missing feature, not a class of defect.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/account-deletion-pending-state.md` holds what a request promises until the deletion ends. Its confirmation email waits for the step that completes a request, which this item chooses.
 - **Recommendation:** B. It meets the request rule of the Privacy draft with one action in the operator section. C gives people the most control.
 - **Action:** ask the user, because each option adds or removes behaviour at a boundary.

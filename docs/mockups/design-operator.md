@@ -57,8 +57,9 @@ the account choice of an operator on Create org.
   place with Approved and the state of its email, in plain words.
 - The Deletions tab lists the account deletion requests that wait, oldest
   first, as the Waitlist tab lists the people who wait. Each row gives the
-  initials disc, the login as a link to the page of the user, the name,
-  and the day of the request. A phone keeps both columns. The rows show
+  initials disc, the login as a link to the page of that person with the
+  request, the name, and the day of the request. A phone keeps both
+  columns. The rows show
   no email address, as the rows of the Users and Waitlist tabs show none.
   The page of the user gives the day of the request in a notice at the
   top. Neither the tab nor the notice offers an action on a request. The

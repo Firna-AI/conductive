@@ -1,6 +1,7 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { NoticeAsk } from '../components/phone/NoticeAsk'
 import { systemAlertCopy } from '../components/phone/noticeCopy'
+import { PhoneApp } from '../components/phone/PhoneApp'
 import { SystemAlertOver } from '../components/phone/SystemAlert'
 import { paths } from '../paths'
 import { phonePaths } from '../phonePaths'
@@ -35,18 +36,8 @@ const askWorkspace: WorkspaceState = {
   banner: 'none',
 }
 
-/**
- * The ask for notices of the phone app and the permission alert of the
- * system. The app asks once, after the member sends the first message of
- * a turn, in a sheet on a phone and in a dialog on a tablet. Turn on
- * notices opens the alert of the system, which lies over the whole
- * screen. After Not now, the Notices section of Preferences opens the
- * same alert.
- */
-export function PhoneNoticesScreen(props: {
-  state: PhoneNoticesState
-  viewport: Viewport
-}) {
+/** The ask over the workspace, or the alert over the workspace or Preferences. */
+function NoticesView(props: { state: PhoneNoticesState; viewport: Viewport }) {
   const { viewport } = props
   switch (props.state.view) {
     case 'ask':
@@ -91,4 +82,23 @@ export function PhoneNoticesScreen(props: {
         </SystemAlertOver>
       )
   }
+}
+
+/**
+ * The ask for notices of the phone app and the permission alert of the
+ * system. The app asks once, after the member sends the first message of
+ * a turn, in a sheet on a phone and in a dialog on a tablet. Turn on
+ * notices opens the alert of the system, which lies over the whole
+ * screen. After Not now, the Notices section of Preferences opens the
+ * same alert. The screens under them mark the phone apps.
+ */
+export function PhoneNoticesScreen(props: {
+  state: PhoneNoticesState
+  viewport: Viewport
+}) {
+  return (
+    <PhoneApp>
+      <NoticesView state={props.state} viewport={props.viewport} />
+    </PhoneApp>
+  )
 }

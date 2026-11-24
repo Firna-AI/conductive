@@ -1,6 +1,7 @@
 import { defineScreen } from '@mokly/mokly'
 import { AccountScreen } from '../../../screens/AccountScreen'
 import { accountGeneral, accountSchema } from '../../../screens/accountState'
+import { generalDeletionPages } from '../../../deletionPaths'
 
 export const account = defineScreen({
   title: 'Account',
@@ -12,6 +13,10 @@ export const account = defineScreen({
   propSchema: accountSchema,
   props: accountGeneral,
   render: (props, context) => (
-    <AccountScreen state={props} viewport={context.viewport} />
+    <AccountScreen
+      deletionPages={generalDeletionPages}
+      state={props}
+      viewport={context.viewport}
+    />
   ),
 })

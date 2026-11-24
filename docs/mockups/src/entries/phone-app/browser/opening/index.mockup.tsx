@@ -13,6 +13,7 @@ export const phoneBrowserOpening = defineScreen({
   relatedDocs: ['docs/mockups/phone-app.md'],
   propSchema: inAppBrowserSchema,
   props: { page: 'opening' },
+  useCasePaths: ['user-flows/open-a-preview-on-a-phone'],
   render: (props, context) => (
     <InAppBrowserScreen state={props} viewport={context.viewport} />
   ),

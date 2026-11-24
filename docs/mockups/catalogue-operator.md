@@ -123,8 +123,10 @@ pages:
   approvals, one with its email not sent yet, and an empty waitlist.
 - `app/operator/deletions` has the Deletions tab, after Waitlist: the
   account deletion requests that wait, oldest first, each with the user
-  and the day of the request. Each login opens the page of the user, as
-  `app/operator/user/deletion` draws it. The rows show no email address.
+  and the day of the request: Kai Tanaka, Noor Aziz, and Rhea Okafor. Each
+  login opens the page of that person with the request, as
+  `app/operator/user/deletion` and its variants draw it. The rows show no
+  email address.
   Its `empty` variant has no request. The tab has no search, and it offers
   no action on a request, because the plan has not decided how an
   operator completes one.
@@ -212,10 +214,13 @@ of `app/operator/user` and kept their paths:
   variant has a person who waited and got app access at their next visit.
 - `app/operator/user/referral` has the question before the disable of a
   referral code. Its `disabled` variant has the disabled code.
-- `app/operator/user/deletion` has the page of Dana Kim after she
-  requested the deletion of her account. A notice at the top gives the day
-  of the request, and offers no action. The rest is her page in use, with
-  her email address and her orgs with her role in each.
+- `app/operator/user/deletion` has the page of Kai Tanaka after he
+  requested the deletion of his account. A notice at the top gives the day
+  of the request, and offers no action. The rest is his page, with his
+  email address and Hexwave, where he is a member. Its `noor-a` and
+  `rho-9` variants have the pages of Noor Aziz and Rhea Okafor with their
+  requests. Each row of the Deletions tab and its page come from one
+  record, so the person and the day stay the same.
 
 The child pages of `app/operator/codes`:
 

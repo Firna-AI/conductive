@@ -1,14 +1,13 @@
 import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { account } from '../../fixtures/orgs'
 import { requestFailure } from '../../fixtures/deletionRequests'
-import { deletionPaths } from '../../deletionPaths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import {
   confirmDialog,
   dialogText,
 } from '../../entries/components/common/ConfirmDialog.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
-import { ScreenLink } from '../common/ScreenLink'
+import { Linked } from '../common/ScreenLink'
 import { accountDeletionCopy as copy } from './accountDeletionCopy'
 
 /**
@@ -25,11 +24,15 @@ export type DeletionQuestion = (typeof deletionQuestions)[number]
  * says that nobody can undo the deletion. While the request runs, the
  * question stays open: a spinner leads Request deletion, and Cancel is
  * off. A request that failed keeps the question open with its error, so
- * the person can try again.
+ * the person can try again. `cancelTo` is the page under the question, and
+ * `requestedTo` is the section after the request. Without them, the
+ * actions show without a link.
  */
 export function AccountDeletionDialog(props: {
   state: DeletionQuestion
   viewport: Viewport
+  cancelTo?: string
+  requestedTo?: string
 }) {
   const busy = props.state === 'sending'
   const cancel = (
@@ -57,12 +60,8 @@ export function AccountDeletionDialog(props: {
           </>
         ) : (
           <>
-            <ScreenLink asChild to={deletionPaths.account}>
-              {cancel}
-            </ScreenLink>
-            <ScreenLink asChild to={deletionPaths.requested}>
-              {confirm}
-            </ScreenLink>
+            <Linked to={props.cancelTo}>{cancel}</Linked>
+            <Linked to={props.requestedTo}>{confirm}</Linked>
           </>
         )
       }

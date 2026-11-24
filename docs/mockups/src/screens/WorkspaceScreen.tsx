@@ -13,7 +13,7 @@ import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotic
 import { checksActions } from '../entries/components/workspace/BarActions.mockup'
 import { WorkspaceMobile } from './workspaceMobile'
 import { pullRequestBar } from '../entries/components/workspace/PullRequestBar.mockup'
-import { toolsPanel } from '../entries/components/workspace/ToolsPanel.mockup'
+import { WorkspaceToolsPanel } from './workspaceToolsPanel'
 import { workspaceBody } from '../entries/components/workspace/WorkspaceBody.mockup'
 import { workspaceHeader } from '../entries/components/workspace/WorkspaceHeader.mockup'
 import { workspaceTabs } from '../entries/components/workspace/WorkspaceTabs.mockup'
@@ -286,9 +286,7 @@ export function WorkspaceScreen(props: {
           filesShare: state.resize === 'split' ? raisedSplit : undefined,
           rightWidth: state.resize === 'right' ? widenedRight : undefined,
           tools: archived ? undefined : (
-            <toolsPanel.Component moklyInstance="tools-panel" tool={state.tool}>
-              {tool}
-            </toolsPanel.Component>
+            <WorkspaceToolsPanel tool={state.tool}>{tool}</WorkspaceToolsPanel>
           ),
         })}
       />

@@ -59,7 +59,8 @@ function SystemAlert(props: {
 /**
  * A screen of the app with an alert of the system over it, such as the
  * permission alert of notices or the alert before the sign-in. The alert
- * lies above every layer of the app, so it covers the whole screen.
+ * lies above every layer of the app, so it covers the whole screen. The
+ * screen under it is inert, so no press or keyboard focus reaches it.
  */
 export function SystemAlertOver(props: {
   words: SystemAlertWords
@@ -69,7 +70,9 @@ export function SystemAlertOver(props: {
 }) {
   return (
     <div className={styles.over}>
-      {props.children}
+      <div className={styles.behind} inert>
+        {props.children}
+      </div>
       <SystemAlert
         allowTo={props.allowTo}
         denyTo={props.denyTo}

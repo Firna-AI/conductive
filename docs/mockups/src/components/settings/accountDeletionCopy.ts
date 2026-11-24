@@ -3,10 +3,7 @@ import { productName } from '../../../../../src/shared/brand'
 /**
  * The words of the account deletion request at the end of General, from
  * decision 4 A of the universal Expo app plan. Only the mockups draw them
- * so far. The words hold under each open question of the plan: they name
- * no time until the deletion, no withdrawal, nothing about orgs and
- * workspaces, nothing about the use of the account until the deletion,
- * and no email.
+ * so far.
  */
 export const accountDeletionCopy = {
   title: 'Delete account',

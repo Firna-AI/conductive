@@ -1,5 +1,6 @@
 import { defineComponent } from '@mokly/mokly'
 import { updateAppCopy } from '../../../components/phone/appStopCopy'
+import { phoneLegalPages } from '../../../components/phone/phoneLegalPages'
 import { SignInFrame } from '../../../screens/signInFrame'
 import { signInCopy } from '../../../../../../src/ui/screens/signInCopy'
 import { waitlistCopy } from '../../../../../../src/ui/screens/waitlistCopy'
@@ -15,7 +16,7 @@ export const signInFrame = defineComponent({
   slug: 'sign-in-frame',
   title: 'Sign-in frame',
   description:
-    'The page of the app before the app opens, for the sign-in, the sign-in of a join link, and the waitlist: the wordmark, one card in the middle, and the legal links at the foot. It stands alone, without the rail. A phone draws the card without its outline. In the Mac app the header is the top bar of the window. In a phone app the wordmark is no link, and the foot has only the legal links. A page that stops a phone app has no foot. A screen supplies the card, so its own page shows an empty card.',
+    'The page of the app before the app opens, for the sign-in, the sign-in of a join link, and the waitlist: the wordmark, one card in the middle, and the legal links at the foot. It stands alone, without the rail. A phone draws the card without its outline. In the Mac app the header is the top bar of the window. In a phone app the wordmark is no link, and the foot has only the legal links, which open the legal pages of the app host in the in-app browser. A page that stops a phone app has no foot. A screen supplies the card, so its own page shows an empty card.',
   relatedDocs: ['docs/mockups/orgs-and-logins.md', 'docs/mockups/phone-app.md'],
   propSchema: {
     type: 'object',
@@ -32,6 +33,19 @@ export const signInFrame = defineComponent({
       phoneApp: { type: 'boolean' },
       /** A page without a foot, such as a page that stops a phone app. */
       bare: { type: 'boolean' },
+      /**
+       * The pages that the legal links of the foot open, such as those of
+       * a phone app. Without it, they open the legal pages of the site.
+       */
+      legal: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['terms', 'privacy'],
+        properties: {
+          terms: { type: 'string' },
+          privacy: { type: 'string' },
+        },
+      },
     },
   } as const,
   slots: ['children'],
@@ -40,6 +54,7 @@ export const signInFrame = defineComponent({
     <SignInFrame
       bare={props.bare}
       label={props.label}
+      legal={props.legal}
       phoneApp={props.phoneApp}
       viewport={props.viewport ?? context.viewport}
       wide={props.wide}
@@ -66,8 +81,12 @@ export const signInFrame = defineComponent({
       slug: 'phone-app',
       title: 'Phone app',
       description:
-        'The page in a phone app, with the words of the sign-in. The wordmark is no link, and the foot has only the legal links, because a phone app links to no other page of the site.',
-      props: { label: signInCopy.title, phoneApp: true },
+        'The page in a phone app, with the words of the sign-in. The wordmark is no link, and the foot has only the legal links. They open Terms and Privacy on the app host in the in-app browser, because a phone app links to no page of the site.',
+      props: {
+        label: signInCopy.title,
+        legal: phoneLegalPages,
+        phoneApp: true,
+      },
       slots: {
         children: (
           <>

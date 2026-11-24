@@ -19,6 +19,24 @@ draw live in `src/components/phone/`.
 - The phone apps show no pricing and no checkout. So no page of a phone
   app links to the home page or the pricing page of the site.
 
+`PhoneApp` in `src/components/phone/` marks the screens inside it as the
+phone apps, as `MacApp` marks the Mac app. A `phone-app` page that draws a
+shared screen of `app`, such as the workspace or the Account page, wraps
+the screen in the mark. The screen passes the mark to its tab parts as
+their `phoneApp` prop, so each tab opens the page of the phone apps where
+one exists:
+
+- The Preview tab of a phone and of the tools panel opens
+  `phone-app/browser/tool`.
+- Preferences opens the page of the notices setting of the device:
+  `phone-app/notices/denied`, or its `not-now` or `on` variant.
+- A port of the Preview tool opens `phone-app/browser/opening`.
+
+The other tabs open the shared pages of `app`, as the tabs of the Mac app
+do. Each part keeps its pages of the phone apps in a map beside its web
+pages. A screen of the web app passes no mark, so its parts do not
+change.
+
 ## Sign-in
 
 The phone apps sign in with GitHub in the auth session of the system,
@@ -42,8 +60,11 @@ nobody is signed in. Its card is the sign-in of the app: the title, the
 text, the agreement to the Terms, and Continue with GitHub.
 `PhoneSignInScreen` in `src/screens/` draws the card in `SignInFrame` with
 `phoneApp`. So the wordmark is no link, and the foot has no way back to
-the home page. The links to Terms and Privacy stay, and they open in the
-in-app browser. Its variants:
+the home page. The links to Terms and Privacy stay, in the agreement and
+in the foot. The screen gives both places one set of pages,
+`phoneLegalPages` in `src/components/phone/`. They open Terms and Privacy
+on the app host in the in-app browser, as `phone-app/browser/terms` shows,
+so no link leads to the home page or the pricing page. Its variants:
 
 - `ask` has the alert of iOS over the start, before the auth session
   opens. iOS writes its words: “Conductive” Wants to Use
@@ -165,16 +186,23 @@ desktop view shows the lock screen of a tablet in landscape, with the
 time on the left and the notices on the right.
 
 A press on a notice opens its workspace. The notice of the secret request
-opens `app/secret-requests`, where the phone can answer the request. A
-notice of an approval opens the workspace too. Only the Mac app can allow
-a command on the Mac, so the phone shows the command that waits without
-its choices, as `app/mac-commands` shows.
+opens `app/secret-requests`, where the phone can answer the request. The
+notice of the approval opens `app/mac-commands`. Only the Mac app can
+allow a command on the Mac, so the phone shows the command that waits
+without its choices. Each notice that opens a page takes its title from
+the state of that page, so the notice and the page always name the same
+workspace. Both pages show Checkout address autocomplete, so two notices
+name it. The other notices have no page, and each names another
+workspace of Acme.
 
 The flow `user-flows/open-a-notice` goes from the notice of the secret
 request on the lock screen to the request above the composer in
 `app/secret-requests`. `PhoneLockScreen` in `src/screens/` draws the page
-with `LockScreen` in `src/components/phone/`, and
-`src/fixtures/phoneNotices.ts` holds the notices and the time.
+with `LockScreen` in `src/components/phone/`. It takes the titles from
+the states in `src/screens/waitingWorkspaces.ts`, which the entries of
+the two pages use too. `src/fixtures/phoneNotices.ts` holds the order and
+the age of each notice, the workspaces of the notices without a page, and
+the time.
 
 ## The in-app browser
 
@@ -194,10 +222,13 @@ the in-app browser, on its own random host of the preview domain,
 
 - `tool` has the Preview tool of the phone app. It lists the services,
   the servers, and the Other port row, as the web app does. It shows no
-  page in a frame, no tabs of open previews, and no "+". A press on a
-  port opens the in-app browser. The desktop layout of a tablet has no
-  Preview tab in its centre row. The web app keeps its frame and its
-  tabs, as `app/tools/preview` shows.
+  page in a frame, no tabs of open previews, and no "+". The Preview tab
+  of a phone opens it. A press on any port opens the in-app browser on
+  the page of the authorizer, as `opening` shows, and the page then goes
+  to the preview. The catalogue draws the page of one server only, so
+  every port opens `opening`, whose host is the same for every port. The
+  desktop layout of a tablet has no Preview tab in its centre row. The web
+  app keeps its frame and its tabs, as `app/tools/preview` shows.
 - `opening` has the page of the authorizer, on
   `authorize.conductive.page`, while a preview opens, as
   `app/tools/preview-opening` draws it. Its `failed` variant has a preview
@@ -209,10 +240,22 @@ the in-app browser, on its own random host of the preview domain,
   stream has an address of the provider of the cloud computer, which no
   screen names. So the host in the bar stands for an address of the app on
   the preview domain.
+- `terms` has Terms on the app host, `app.conductive.build`, which the
+  Terms links of the phone sign-in open. A design call of the Expo app
+  plan of 23 November 2026 chose these pages of the app host. The page
+  shows the shared legal text, as the Terms page of the site does, with
+  no header or footer of the site and no wordmark link. So no link leads
+  to the home page or the pricing page. Done shows the sign-in again. Its
+  `privacy` variant has the Privacy notice. `AppLegalPage` in
+  `src/components/phone/` draws the text.
 
 `InAppBrowserScreen` in `src/screens/` draws the pages with
 `InAppBrowser` in `src/components/phone/`, and `browserCopy.ts` beside it
-holds the words of its bars. `PreviewOpensAt` in
-`src/components/tools/previewLink.tsx` sets the page that a port of the
-Preview tool opens. The web app keeps the Preview tab, and the tool of the
-phone app opens the in-app browser.
+holds the words of its bars. Each page holds its host, its content, and
+the screen that Done shows. `usePreviewPage` in
+`src/components/tools/previewLink.ts` gives the page that a port of the
+Preview tool opens: the Preview tab in the web app, and `opening` under
+the mark of the phone apps.
+
+The flow `user-flows/open-a-preview-on-a-phone` goes from `tool`, through
+`opening`, to `phone-app/browser`.

@@ -29,6 +29,7 @@
     "explain-chat-text",
     "drop-a-file",
     "open-a-local-server",
+    "open-a-preview-on-a-phone",
     "stop-a-service",
     "restart-a-service",
     "read-a-failed-service-log"

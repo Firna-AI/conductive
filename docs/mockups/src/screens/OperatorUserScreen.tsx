@@ -26,7 +26,8 @@ export const operatorUserSchema = {
      * by an invite code, a referral code, an org invitation, or as an
      * operator; the approval of Kenji, whose email never went; a new
      * sign-in and a person who waited, both let in by open sign-up; and
-     * Dana Kim in use, after she requested the deletion of her account.
+     * each person of the Deletions tab, Kai Tanaka, Noor Aziz, and Rhea
+     * Okafor, with their deletion request.
      */
     page: {
       enum: [
@@ -45,7 +46,9 @@ export const operatorUserSchema = {
         'emailNotSent',
         'openSignUp',
         'openSignUpWaited',
-        'deletion',
+        'deletionKai',
+        'deletionNoor',
+        'deletionRhea',
       ],
     },
     /**

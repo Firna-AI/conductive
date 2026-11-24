@@ -59,16 +59,18 @@ tabs are links, as the tabs of the org settings are. Its child pages:
   decision 4 A of the universal Expo app plan. The Delete account section
   ends General, after Deleted orgs, with Request account deletion. Its
   canonical screen is General, as `app/account` shows it, and the page
-  holds the states of the request. Its `confirm` variant has the question: a
+  holds the states of the request. The flow of the request starts from
+  the default General page: on `app/account` and on this page, Request
+  account deletion opens the question. The other pages of General, such
+  as `app/account/setup` and `app/account/deleted-orgs`, show the button
+  without a link, so that the question never lies over other facts of the
+  account. Its `confirm` variant has the question: a
   dialog on desktop, and a sheet on a phone. Its `sending` variant has the
   question while the request runs, with a spinner in Request deletion and
   Cancel off. Its `failed` variant has a request that did not reach the
   server: the question stays open with the error. Its `requested` variant
   has the section after the request, with Requested beside the title and
-  the day of the request in place of the button. The words name no time
-  until the deletion, no way to withdraw a request, nothing about orgs and
-  workspaces, nothing about the use of the account until the deletion,
-  and no email, because the plan has not decided them yet.
+  the day of the request in place of the button.
 - `app/account/shortcuts` shows the Keyboard shortcuts tab in a browser, as
   [the keyboard shortcuts page](catalogue-shortcuts.md) gives.
 - `app/account/stats` shows the Stats tab, after Keyboard shortcuts. The

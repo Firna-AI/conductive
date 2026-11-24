@@ -3,6 +3,14 @@
   position: relative;
 }
 
+/*
+ * The inert screen of the app under the alert. It draws no box, so the
+ * screen keeps its layout.
+ */
+.behind {
+  display: contents;
+}
+
 /* The alert of the system lies above every layer of the app. */
 .layer {
   display: flex;

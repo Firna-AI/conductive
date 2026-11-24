@@ -7,6 +7,7 @@ import { githubMark } from '../entries/components/common/GitHubMark.mockup'
 import { notice } from '../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { CatalogueText } from '../components/marketing/CatalogueText'
+import { phoneLegalPages } from '../components/phone/phoneLegalPages'
 import {
   phoneSignInCopy as copy,
   signInAlertCopy,
@@ -42,13 +43,14 @@ type OfferStage = Exclude<PhoneSignInState['stage'], 'waiting'>
 /**
  * The agreement to the terms, and Continue with GitHub, which opens GitHub
  * in the auth session of the system. iOS asks first, so it leads to the
- * alert. Terms and Privacy open in the in-app browser.
+ * alert. Terms and Privacy open on the app host in the in-app browser, as
+ * the legal links of the foot do.
  */
 function ContinueWithGitHub() {
   return (
     <>
       <p className={styles.agreement}>
-        <CatalogueText text={termsAgreement} />
+        <CatalogueText legal={phoneLegalPages} text={termsAgreement} />
       </p>
       <ScreenLink asChild to={phonePaths.signInAsk}>
         <Button
@@ -138,6 +140,7 @@ export function PhoneSignInScreen(props: {
   const frame = (
     <signInFrame.Component
       label={stage === 'waiting' ? copy.waiting.title : headings[stage].title}
+      legal={phoneLegalPages}
       moklyInstance="phone-sign-in-frame"
       phoneApp
       viewport={props.viewport}

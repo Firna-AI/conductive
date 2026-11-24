@@ -8,7 +8,7 @@ import { deletedOrgStates } from '../components/settings/DeletedOrgsSection'
 import { accountDeletionStates } from '../components/settings/AccountSections'
 import { browserHosts } from '../fixtures/shortcutHosts'
 import { favouriteSectionStates } from '../fixtures/favourites'
-import { noticeSettings } from '../components/phone/NoticesSection'
+import { noticeSettings } from '../components/phone/noticeSettings'
 
 export const accountSchema = {
   type: 'object',

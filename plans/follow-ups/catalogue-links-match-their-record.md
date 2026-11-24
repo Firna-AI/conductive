@@ -1,0 +1,30 @@
+# Catalogue links open another record's page
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-23, from pull request #671, branch `calummoore/universal-expo-app-milestone-1-mockups-emjd`, review item 9, the blocked wider fix of review findings 2 and 3.
+- **Location:** `docs/mockups/src/components/operator/targetPages.ts:12` and `:17`, `docs/mockups/src/components/tools/PortForm.tsx:48`, `docs/mockups/src/components/tools/ServiceList.tsx:64`, `docs/mockups/src/components/settings/OrgSections.tsx:165`, and `docs/mockups/src/components/settings/DeleteOrgDialog.tsx:27`.
+- **Reason:** the fix changes mockups that are on `origin/main`, and only the user can approve that.
+
+- **Source:** Review. **Category:** mockup.
+- **Terms:**
+  - **Saved page:** a view that the static catalogue draws for one state, at its own path. A link of the catalogue opens one fixed saved page.
+  - **`Linked`:** the helper in `docs/mockups/src/components/common/ScreenLink.tsx` that shows a control alone when it gets no destination.
+- **Background:**
+  - Several lists of the catalogue send every item to one sample page:
+    - Every operator link to a user without a saved page opens the page of Dana Kim, from `userPagePath` in `docs/mockups/src/components/operator/targetPages.ts`, added in commit `e37cdd409`. `@kt-null` in Long runs also opens it, although his page exists at `app/operator/user/access/org-invitation`, because `drawnUserPages` has no entry for him.
+    - Every port of the web Preview tool opens the preview of port 3000, since commit `27f888f4a`.
+    - Delete org on `app/org-settings/colour` opens its question over the default colour, and Cancel returns to `app/org-settings`.
+  - The phone mockups of 23 November 2026 already follow one rule: a link opens a page that the catalogue draws for the same record and state, and an item without such a page shows without a link. The Deletions tab, the phone Preview tool, the deletion question, and the lock screen follow it.
+- **Problem:** A press on an item of these lists shows the page of another person, another port, or another state.
+- **Impact if no action:** readers of the catalogue see mismatched pages, and new mockups copy the pattern.
+- **Root question:** How does each link of the catalogue open a page that shows the same record and state as the item that the reader pressed?
+- **Options:**
+  - **A.** Change nothing in the existing lists. Effort: Small.
+  - **B.** Apply the rule to the existing lists. Replace the fallback of `userPagePath` with the rule, add `kt-null` to `drawnUserPages`, give the web port rows a destination for each port, and give Delete org its question for each state or no link. State the rule under "How a screen is built" in `docs/mockups/README.md`. Effort: Medium.
+  - **C.** Draw a saved page for each item of those lists. Effort: Large.
+- **Left out:** a check of the built catalogue for mismatched links, because a structural option exists, and a new check needs the user.
+- **Wider fix:** B.
+- **Previous examples:** commit `e37cdd409`, commit `27f888f4a`, and Delete org on the colour page.
+- **Recommendation:** B. It removes the wrong pages at a medium cost, and the rule keeps new lists right. B changes operator links that show today, such as `@mira-s` on the Users tab and five rows of Long runs, which then show without a link.
+- **Action:** ask the user, because B changes mockups that are on `origin/main`.

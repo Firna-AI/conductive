@@ -3,6 +3,7 @@ import {
   AccountTabs,
   type AccountTab,
 } from '../../../components/settings/AccountTabs'
+import { noticeSettings } from '../../../components/phone/noticeSettings'
 import { shortcutHosts } from '../common/shortcutSchemas'
 
 /** The pages of the account, as `AccountTab` lists them. */
@@ -20,8 +21,8 @@ export const accountTabs = defineComponent({
   slug: 'account-tabs',
   title: 'Account tabs',
   description:
-    'The pages of the account as tabs that link to each one: General, Agents, Preferences, Keyboard shortcuts, and Stats. Keyboard shortcuts links to the tab of the host. The Mac app adds This Mac last. On a phone, a tab that does not fit moves to a second line. Its own page shows General in a browser.',
-  relatedDocs: ['docs/mockups/design.md'],
+    'The pages of the account as tabs that link to each one: General, Agents, Preferences, Keyboard shortcuts, and Stats. Keyboard shortcuts links to the tab of the host. The Mac app adds This Mac last. In the phone apps, Preferences links to the page of the notices setting of the device. On a phone, a tab that does not fit moves to a second line. Its own page shows General in a browser.',
+  relatedDocs: ['docs/mockups/design.md', 'docs/mockups/phone-app.md'],
   propSchema: {
     type: 'object',
     additionalProperties: false,
@@ -32,11 +33,21 @@ export const accountTabs = defineComponent({
       host: { enum: shortcutHosts },
       /** A tab that does not fit moves to a second line, for a phone. */
       flow: { type: 'boolean' },
+      /** The tabs of the phone apps, whose Preferences has its own pages. */
+      phoneApp: { type: 'boolean' },
+      /** The notices setting of the device, which Preferences opens. */
+      notices: { enum: noticeSettings },
     },
   } as const,
   props: { tab: 'general', host: 'chrome-mac' },
   render: (props) => (
-    <AccountTabs flow={props.flow} host={props.host} tab={props.tab} />
+    <AccountTabs
+      flow={props.flow}
+      host={props.host}
+      notices={props.notices}
+      phoneApp={props.phoneApp}
+      tab={props.tab}
+    />
   ),
   variants: [
     {
@@ -51,6 +62,18 @@ export const accountTabs = defineComponent({
       description:
         'The tabs of a phone, where a tab that does not fit moves to a second line.',
       props: { tab: 'stats', flow: true },
+    },
+    {
+      slug: 'phone-app',
+      title: 'Phone apps',
+      description:
+        'The tabs of the phone apps, with Preferences shown. Preferences links to the page of the notices setting of the device, here notices off after a denial.',
+      props: {
+        tab: 'preferences',
+        flow: true,
+        phoneApp: true,
+        notices: 'denied',
+      },
     },
   ],
 })

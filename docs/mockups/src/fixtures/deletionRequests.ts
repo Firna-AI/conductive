@@ -1,10 +1,14 @@
 /**
  * The requests of an account deletion, from decision 4 A of the universal
  * Expo app plan: a person requests the deletion on their Account page, and
- * an operator completes each request. The people come from the Users tab
- * of the operator section.
+ * an operator completes each request. Each request of the Deletions tab is
+ * one record: the person, the day of the request, and the page of that
+ * person. Its row, the page of the person with the request, and the link
+ * between them all come from that record.
  */
-import { userPages, type UserPage } from './operatorUserPages'
+import { deletionPaths } from '../deletionPaths'
+import { accessPages } from './operatorAccessPages'
+import type { UserPage } from './operatorUserPages'
 
 /** The request of Cal, the person signed in, on his Account page. */
 export const accountRequest = {
@@ -19,30 +23,55 @@ export const accountRequest = {
 export const requestFailure =
   "The app can't reach the server. Check the connection, then try again."
 
-/** A request in the Deletions tab: the person, and the day of the request. */
+/** A request that waits for an operator. */
 export type DeletionRequest = {
-  login: string
-  /** The name on GitHub, which some accounts do not give. */
-  name?: string
-  initials: string
-  /** The day of the request, in the format of the Joined column. */
+  /** The page of the person, as the operator opens it without a request. */
+  user: UserPage
+  /** The day of the request, as the row and the page of the person give it. */
   day: string
+  /** The page of the person with the request, which the row opens. */
+  page: string
 }
 
 /**
- * The requests that wait for an operator, oldest first. @vex-ops gives no
- * name on GitHub.
+ * The requests that wait, oldest first, by the state of the page of a user
+ * that draws each person. Each person has their own page in the operator
+ * section, and none of them is the only admin of an org with other
+ * members: Kai Tanaka is a member of Hexwave, Noor Aziz has no org yet,
+ * and Rhea Okafor is the only member of Rhino Data.
  */
-export const deletionRequests: readonly DeletionRequest[] = [
-  { login: 'li-wei', name: 'Li Wei', initials: 'LW', day: '2 Nov' },
-  { login: 'vex-ops', initials: 'V', day: '5 Nov' },
-  { login: 'dana-k', name: 'Dana Kim', initials: 'DK', day: '7 Nov' },
-]
+const requests = {
+  deletionKai: {
+    user: accessPages.orgInvitation,
+    day: '7 Nov',
+    page: deletionPaths.requesterKai,
+  },
+  deletionNoor: {
+    user: accessPages.openSignUpWaited,
+    day: '8 Nov',
+    page: deletionPaths.requesterNoor,
+  },
+  deletionRhea: {
+    user: accessPages.inviteCode,
+    day: '8 Nov',
+    page: deletionPaths.requesterRhea,
+  },
+} as const satisfies Record<string, DeletionRequest>
 
-/**
- * The page of Dana Kim after her request, as the operator opens it from the
- * Deletions tab. The rest of the page is her page in use.
- */
-export const deletionUserPages = {
-  deletion: { ...userPages.active, deletionRequested: '7 Nov 2026' },
-} as const satisfies Record<string, UserPage>
+/** The rows of the Deletions tab, oldest first. */
+export const deletionRequests: readonly DeletionRequest[] =
+  Object.values(requests)
+
+/** The page of a person with their request, as their row opens it. */
+function withRequest(request: DeletionRequest): UserPage {
+  return { ...request.user, deletionRequested: request.day }
+}
+
+/** The page of each person with their request, by its state. */
+export const deletionUserPages: Readonly<
+  Record<keyof typeof requests, UserPage>
+> = {
+  deletionKai: withRequest(requests.deletionKai),
+  deletionNoor: withRequest(requests.deletionNoor),
+  deletionRhea: withRequest(requests.deletionRhea),
+}

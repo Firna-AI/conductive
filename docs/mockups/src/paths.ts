@@ -277,6 +277,7 @@ export const paths = {
   macPalette: 'mac-app/command-palette',
   macPaletteActions: 'mac-app/command-palette/actions',
   macPaletteSettings: 'mac-app/command-palette/settings',
+  macCommands: 'app/mac-commands',
   macDenied: 'app/mac-commands/denied',
   macDone: 'app/mac-commands/done',
   capabilities: 'app/capabilities',

@@ -1,18 +1,23 @@
 import { defineScreen } from '@mokly/mokly'
 import { AccountScreen } from '../../../../screens/AccountScreen'
 import { accountGeneral, accountSchema } from '../../../../screens/accountState'
+import { generalDeletionPages } from '../../../../deletionPaths'
 
 export const accountDeletion = defineScreen({
   title: 'Request account deletion',
   description:
-    'The General tab ends with Delete account. It says that the person asks Conductive to delete the account, and that a deletion cannot be undone. Request account deletion, in the danger tone, opens the question. The section comes after the invite code, and after Deleted orgs while the person has a deleted org. Every account has the section, so each page of General shows it, as app/account does. This page holds the states of the request. The phone apps show the same page as a phone browser.',
+    'The General tab ends with Delete account. It says that the person asks Conductive to delete the account, and that a deletion cannot be undone. Request account deletion, in the danger tone, opens the question. The section comes after the invite code, and after Deleted orgs while the person has a deleted org. Every account has the section, so each page of General shows it, as app/account does. This page holds the states of the request. The flow of the request starts from the default General page: on app/account and on this page, Request account deletion opens the question. The other pages of General show the button without a link. The phone apps show the same page as a phone browser.',
   rationale:
-    'The user chose option A of decision 4 of the universal Expo app plan on 23 November 2026: the Account page gets Request account deletion, and operators complete each request. The phone apps need it for the rules of the stores, as that plan says. The section comes last, as Delete org comes last on the General tab of an org, because it is the one action that ends the account. The words say what the request does. They leave open what the plan leaves open: when the deletion happens, whether a person can withdraw a request, what happens to the orgs and the workspaces of the person, whether the account works until the deletion, and which email goes out. The words name the product, not an operator, as the other words of the account do.',
+    'The user chose option A of decision 4 of the universal Expo app plan on 23 November 2026: the Account page gets Request account deletion, and operators complete each request. The phone apps need it for the rules of the stores, as that plan says. The section comes last, as Delete org comes last on the General tab of an org, because it is the one action that ends the account. The words say what the request does. The words name the product, not an operator, as the other words of the account do. The flow starts from the default General page only, so that the question always lies over the same facts of the account.',
   relatedDocs: [],
   propSchema: accountSchema,
   props: accountGeneral,
   render: (props, context) => (
-    <AccountScreen state={props} viewport={context.viewport} />
+    <AccountScreen
+      deletionPages={generalDeletionPages}
+      state={props}
+      viewport={context.viewport}
+    />
   ),
   variants: [
     {
@@ -48,7 +53,7 @@ export const accountDeletion = defineScreen({
       description:
         'After the request, the section says Requested beside its title, with an hourglass. In place of the button, a line gives the day of the request. A later visit to the page shows the same section.',
       rationale:
-        'The section says only what happened and when, so its words hold under each open question of the plan. It offers no way to withdraw the request, because the plan has not decided whether a person can do that. The line is a status line, so a screen reader reads it when it shows.',
+        'The section says only what happened and when. It offers no way to withdraw the request. The line is a status line, so a screen reader reads it when it shows.',
       props: { deletion: 'requested' },
     },
   ],

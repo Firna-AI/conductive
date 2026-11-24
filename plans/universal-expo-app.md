@@ -322,11 +322,16 @@ The mockups of Milestone 1 added these calls, also mine, on 23 November
 - **Previews in the phone apps.** The Preview tool of a phone app shows no
   page in a frame. Each port and each service opens its preview in the
   in-app browser.
+- **Terms and Privacy in the phone apps.** The phone apps open Terms and
+  Privacy in the in-app browser, on pages of the app host. These pages
+  show the shared legal text with no site header, no site footer, and no
+  wordmark link. Reason: the frame of the legal pages of the site links
+  Pricing, and no pricing shows in the phone apps.
 - **The deletion request in the mockups.** Each General tab of the
   Account ends with Delete account and Request account deletion. A
-  question asks first. After the request, the section gives its day. The
-  account keeps working until the deletion, no email goes out, and the app
-  offers no withdrawal. Reason: decision 4 A asks for no more.
+  question asks first. After the request, the section gives its day. What
+  the person may do and learn until the deletion is complete waits for
+  the user.
 - **The Deletions tab.** The operator section gets a Deletions tab after
   Waitlist. It lists the requests that wait, oldest first, with the person
   and the day. A row opens the page of the user, which shows the request.
@@ -393,7 +398,8 @@ Depends on: 1
 - [ ] Write `docs/protocol/phone-sign-in.md` from decision 8 C. Add the
       30-day phone session to `docs/protocol/access-and-security.md`. The
       auth session opens an address of the app first, so that the alert
-      of iOS names the app and not GitHub.
+      of iOS names the app and not GitHub. Say what the auth session shows
+      when the app does not know the current revision of the Terms.
 - [ ] Write `docs/protocol/notifications.md` from decisions 2, 3, and 5.
 - [ ] Update `docs/protocol/secret-requests.md` for notices, from decision 2.
 - [ ] Update `docs/protocol/waitlist.md` and
@@ -570,8 +576,11 @@ deletion request of Milestone 8 for the store rules.
 - [ ] Add sign-in, the notice permission, "Update the app", and the
       offline screen, as the mockups show.
 - [ ] Show the waitlist and the sign-in of a join link in the frame of a
-      phone app, with no link to the site, as `docs/mockups/design.md`
-      says for `SignInFrame`.
+      phone app, with no link to the home page or the pricing page of the
+      site, as `docs/mockups/design.md` says for `SignInFrame`.
+- [ ] Build the pages of Terms and Privacy for the phone apps on the app
+      host, with no site header and no site footer, and open them in the
+      in-app browser, as `phone-app/browser/terms` shows.
 - [ ] Give the page after a GitHub App install words that fit a phone
       app. Its words in `src/ui/screens/githubSetupCopy.ts` send the
       person back to the Mac app. The Worker shows the same page to each

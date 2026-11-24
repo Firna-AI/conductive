@@ -15,7 +15,7 @@ export const accountDeletionDialog = defineComponent({
   slug: 'account-deletion-dialog',
   title: 'Account deletion dialog',
   description:
-    'The question before the request of an account deletion: it names the account, says that the product deletes it after the request, and that nobody can undo the deletion. Then Cancel and Request deletion. While the request runs, a spinner leads Request deletion, and Cancel is off. A request that failed keeps the question open, with its error. On a phone the dialog opens as a sheet. Its own page shows the question.',
+    'The question before the request of an account deletion: it names the account, says that the product deletes it after the request, and that nobody can undo the deletion. Then Cancel and Request deletion. While the request runs, a spinner leads Request deletion, and Cancel is off. A request that failed keeps the question open, with its error. Cancel and Request deletion open their pages only when the screen gives them. On a phone the dialog opens as a sheet. Its own page shows the question.',
   relatedDocs: ['docs/mockups/catalogue-account.md'],
   propSchema: {
     type: 'object',
@@ -26,11 +26,17 @@ export const accountDeletionDialog = defineComponent({
       state: { enum: deletionQuestions },
       /** The viewport of the screen, when it differs from the view. */
       viewport: { enum: viewports },
+      /** The page under the question, which Cancel opens. */
+      cancelTo: { type: 'string', minLength: 1 },
+      /** The section after the request, which Request deletion opens. */
+      requestedTo: { type: 'string', minLength: 1 },
     },
   } as const,
   props: { state: 'ask' },
   render: (props, context) => (
     <AccountDeletionDialog
+      cancelTo={props.cancelTo}
+      requestedTo={props.requestedTo}
       state={props.state}
       viewport={props.viewport ?? context.viewport}
     />

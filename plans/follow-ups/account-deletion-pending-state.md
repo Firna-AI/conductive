@@ -1,0 +1,33 @@
+# What a deletion request promises until it ends
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-23, from pull request #671, branch `calummoore/universal-expo-app-milestone-1-mockups-emjd`, review finding 1.
+- **Location:** `docs/mockups/src/entries/app/account/deletion/index.mockup.tsx`, `docs/mockups/src/components/settings/accountDeletionCopy.ts`, and `plans/universal-expo-app.md`, under Milestones 2, 7, and 8.
+- **Reason:** each option adds or removes behaviour at the boundary, and the user decides which one.
+
+- **Source:** Review. **Category:** docs or spec.
+- **Terms:**
+  - **Deletion request:** the request that "Request account deletion" on the General tab of the Account page sends. An operator completes it later.
+  - **Pending deletion:** a deletion request that the person sent and that an operator has not completed yet.
+- **Background:**
+  - On 23 November 2026 the user chose that the Account page gets "Request account deletion", and that operators complete each request. The phone apps need it, because Apple asks each app that creates accounts to let people start the deletion in the app.
+  - The mockup `app/account/deletion` draws the section, the question before the request, and the requested state. The requested state gives only the day of the request.
+  - Apple's guidance for guideline 5.1.1(v), "Offering account deletion in your app", covers a deletion that a person completes by hand. It says: "Inform the person how long it will take to delete the account and provide a confirmation when the deletion is complete."
+  - After the deletion, the person has no account and no Account page. So only a message outside the app can confirm the deletion.
+  - Today a request changes nothing else: the person keeps the account, and no email goes out.
+- **Problem:** No requirement says what a person may do, and what Conductive tells them, from the request until the deletion is complete. That covers access to the account, a confirmation, and a withdrawal.
+- **Impact if no action:** The protocol and the implementation can follow different rules. A deletion with no confirmation risks a refusal at App Review.
+- **Root question:** What may a person do, and what does Conductive tell them, from the request until the deletion is complete?
+- **Options:**
+  - **A.** Keep the account working, send no email, and offer no withdrawal. The Account page alone shows the request. Effort: Small.
+  - **B.** Keep the account working, and send a receipt at the request with a contact address for corrections. Effort: Medium.
+  - **C.** Keep the account working, and allow a withdrawal until an operator starts the deletion. The app must handle a withdrawal and a start in either order. Effort: Large.
+  - **D.** Keep the account working, and offer no withdrawal in the app. Send one email when the deletion is complete, to the primary verified email of the GitHub account, which the approval email of the waitlist also uses. The requested state says that this email will come. An account without a verified email gets no such promise. Effort: Medium.
+  - **E.** Lock the account at the request. End its sessions, and show only the day of the request and Sign out at each sign-in. Confirm the deletion by email, as D does. The person can then no longer hand over an org, and a request that the owner did not make locks the owner out. Effort: Large.
+- **Left out:** a record of the deleted GitHub account that shows the deletion at the next sign-in, because Apple asks to delete the entire record.
+- **Wider fix:** None, because this is one missing requirement, not a class of defect.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/account-deletion-has-no-route.md` holds how an operator deletes an account. The email of D waits for that step. The rule of the last admin in `docs/protocol/orgs-and-members.md` needs access after the request, which E removes.
+- **Recommendation:** D. It keeps the light request of the mockup, and it gives the confirmation that Apple asks for. A risks a refusal at App Review.
+- **Action:** ask the user, because D adds a confirmation email at the boundary that no requirement covers, and E trades the access of the person against the handover of their orgs.

@@ -42,7 +42,7 @@ export function OperatorDeletionsScreen(props: {
           columns={deletionColumns}
           empty={deletionCopy.empty.title}
           more={false}
-          rowKey={(request) => request.login}
+          rowKey={(request) => request.user.login}
           rows={deletionRequests}
           summary={deletionCopy.summary(deletionRequests.length)}
           title={deletionCopy.title}

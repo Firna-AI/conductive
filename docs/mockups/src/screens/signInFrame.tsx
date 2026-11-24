@@ -4,7 +4,7 @@ import { classes } from '../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { mobileFrame } from '../entries/components/layout/AppFrame.mockup'
 import { useMacApp } from '../../../../src/ui/components/mac/MacApp'
-import { LegalLinks } from '../components/marketing/LegalLinks'
+import { LegalLinks, type LegalPages } from '../components/marketing/LegalLinks'
 import { Wordmark } from '../components/marketing/Wordmark'
 import { paths } from '../paths'
 import { signInCopy } from '../../../../src/ui/screens/signInCopy'
@@ -43,9 +43,10 @@ function Header(props: { phoneApp: boolean }) {
 
 /**
  * The foot of the page: the way back to the home page of the site, and
- * the legal links. A phone app keeps only the legal links.
+ * the legal links. A phone app keeps only the legal links. `legal` gives
+ * the pages that they open.
  */
-function Foot(props: { phoneApp: boolean }) {
+function Foot(props: { phoneApp: boolean; legal: LegalPages | undefined }) {
   return (
     <footer className={styles.footer}>
       {props.phoneApp ? null : (
@@ -53,7 +54,7 @@ function Foot(props: { phoneApp: boolean }) {
           {signInCopy.home}
         </ScreenLink>
       )}
-      <LegalLinks align="center" />
+      <LegalLinks align="center" pages={props.legal} />
     </footer>
   )
 }
@@ -63,9 +64,9 @@ function Foot(props: { phoneApp: boolean }) {
  * middle, and the legal links at the foot. The sign-in, the sign-in of a
  * join link, and the waitlist share it. It stands alone, without the rail,
  * because the person has no org and no app access yet. A phone draws the
- * card without its outline. A phone app links to no page of the site
- * except the legal pages, and the pages that stop a phone app, such as
- * Update the app, have no foot.
+ * card without its outline. A phone app passes the legal pages of the app
+ * host as `legal`, so its page links to no page of the site. The pages
+ * that stop a phone app, such as Update the app, have no foot.
  */
 export function SignInFrame(props: {
   /** The name of the card, for assistive technology. */
@@ -80,6 +81,11 @@ export function SignInFrame(props: {
   phoneApp?: boolean
   /** A page without a foot, such as a page that stops a phone app. */
   bare?: boolean
+  /**
+   * The pages that the legal links of the foot open, such as those of a
+   * phone app. Without it, they open the legal pages of the site.
+   */
+  legal?: LegalPages
   children: ReactNode
 }) {
   const mobile = props.viewport === 'mobile'
@@ -95,7 +101,7 @@ export function SignInFrame(props: {
           {props.children}
         </section>
       </div>
-      {props.bare ? null : <Foot phoneApp={phoneApp} />}
+      {props.bare ? null : <Foot legal={props.legal} phoneApp={phoneApp} />}
     </div>
   )
   if (mobile) return <mobileFrame.Component>{page}</mobileFrame.Component>

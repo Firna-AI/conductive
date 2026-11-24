@@ -2,7 +2,6 @@ import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { TableCell, type TableColumn } from '@firna/ui/table'
 import type { DeletionRequest } from '../../fixtures/deletionRequests'
 import type { UserPage } from '../../fixtures/operatorUserPages'
-import { deletionPaths } from '../../deletionPaths'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { section } from '../../entries/components/settings/Section.mockup'
@@ -26,30 +25,26 @@ export const deletionColumns: Readonly<Record<Viewport, TableColumn[]>> = {
 
 /**
  * The cells of a row: the initials disc, the login as a link to the page
- * of the user, the name, and the day of the request. The row shows no
- * email address, because the section shows one only on the page of a
- * user. The catalogue draws the page of Dana Kim, so each row opens it.
+ * of the person with the request, the name, and the day of the request.
+ * The row shows no email address, because the section shows one only on
+ * the page of a user. The person, the day, and the link come from one
+ * record, so the row and the page that it opens agree.
  */
 export function deletionCell(request: DeletionRequest, key: string) {
   if (key === 'requested') {
     return <TableCell muted>{request.day}</TableCell>
   }
+  const { user } = request
   return (
     <NameCell
-      detail={request.name}
+      detail={user.name}
       mark={
         <TargetMark
           size={22}
-          target={{
-            kind: 'user',
-            name: request.login,
-            initials: request.initials,
-          }}
+          target={{ kind: 'user', name: user.login, initials: user.initials }}
         />
       }
-      name={
-        <NameLink to={deletionPaths.operatorUser}>@{request.login}</NameLink>
-      }
+      name={<NameLink to={request.page}>@{user.login}</NameLink>}
     />
   )
 }
