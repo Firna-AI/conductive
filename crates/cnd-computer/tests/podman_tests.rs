@@ -243,10 +243,9 @@ async fn check_native(folder: &Path) {
             .contains(r#"update check --bootstrap --release "$1" --digest "$2" --server "$3""#)
     );
     assert!(calls[20][7].contains(r#""$program" update apply"#));
-    assert!(
-        calls[20][7]
-            .contains(r#"if [ "$(readlink /opt/conductive/current)" != "versions/$1" ]; then"#)
-    );
+    assert!(calls[20][7].contains(
+        r#"if [ "$(readlink -f /opt/conductive/current)" != "/opt/conductive/versions/$1" ]; then"#
+    ));
     assert!(calls[20][7].contains("current/conductive update started"));
     assert!(calls[20][7].contains("systemctl restart conductive-host.service"));
     assert_eq!(

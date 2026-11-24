@@ -33,9 +33,9 @@ apply() {
     /opt/conductive/current/conductive update started
 }
 apply
-if [ "$(readlink /opt/conductive/current)" != "versions/$1" ]; then
+if [ "$(readlink -f /opt/conductive/current)" != "/opt/conductive/versions/$1" ]; then
     apply
 fi
-test "$(readlink /opt/conductive/current)" = "versions/$1"
+test "$(readlink -f /opt/conductive/current)" = "/opt/conductive/versions/$1"
 systemctl restart conductive-host.service
 "#;
