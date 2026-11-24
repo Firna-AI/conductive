@@ -800,6 +800,68 @@ November 2026.
   invocation. Review finding 102 of this milestone changed the first form
   of this call, which also read D1 before each status read.
 
+These are agent calls of the orchestrator of Milestone 10, made on 24
+November 2026.
+
+- The Worker code of own computers lives in `worker/own-computers/`. The
+  computer object is the Durable Object class `OwnComputer` in the binding
+  `OWN_COMPUTERS`, with the Wrangler migration `v3`. Reason: the code
+  already calls each sandbox a computer, as the computer ledger does. The
+  word "own" keeps the two apart.
+- D1 holds each own computer in the table `own_computers`, with its org,
+  its name, its add, its one-time code, the digest of its computer token,
+  its connections, its reported size, its limit, its build request, and
+  its removal. `workspaces`, `org_images`, and `automations` get a nullable
+  `computer_id`. Milestone 12 chooses how two own computers of one org
+  keep their rows in `org_images`, because its key is the org and the
+  provider account.
+- A removal keeps the row and marks it removed. Reason: each workspace on
+  a removed computer keeps its chat, and its refused start names the
+  computer. The org purge deletes the rows with the org.
+- The one-time code has 16 characters of Crockford base32 in four groups,
+  as the mockups show: 80 random bits. D1 keeps its digest for the lookup,
+  and the code encrypted for Show command, until the code is used. Reason:
+  Close keeps the code, and an install on the server can still run with
+  it, so Show command must show the same code.
+- The computer gives its code with `POST /v1/computer` on the machine
+  hostname. The reply holds the computer token, and the code stops working
+  at once. The computer saves the token, then opens the computer
+  connection with it. Reason: the computer then holds its token before its
+  first connection. When a reply is lost, the computer stays not
+  connected, and New code gives it a new code.
+- New code works for each computer that never connected. It replaces the
+  code, and it revokes a computer token that never opened a connection.
+  Reason: it then also covers a lost reply before the old code expires.
+- The computer token has the form of the machine token, with the prefix
+  `cndc1.`. The route opens only an object ID that the namespace made. The
+  object finds its computer by the digest of the token in D1, in one
+  serialized step with the accept. Reason: a removal clears the digest
+  before it closes the connection, so no connection opens after it.
+- A new connection with the computer token replaces the open one, as on
+  the host connection. Reason: a reconnect after a silent drop must not
+  wait for a timeout.
+- The computer connection has its own protocol version 1. The hello gives
+  the vCPUs, the memory in bytes, and the system. The Worker refuses each
+  other version before any operation. A large request uses the message
+  parts of the host frame codec. The connection has no streams. Reason: a
+  container create can carry the env vars of a workspace.
+- The first welcomed connection records the first connection, sets the
+  limit to the default, and records a build request of the app. A later
+  connection changes only the reported size. Reason: a new size must not
+  change the limit that an admin set.
+- The default limit is the vCPUs divided by 4 or the memory divided by
+  8 GiB, the smaller of the two, rounded down, and at least 1. Reason: a
+  cloud computer has 4 vCPU and 8192 MiB.
+- The limit is a whole number of 1 or more. Reason: a computer with no
+  place makes each start on it wait and then fail.
+- The build route of one computer records a build request on that
+  computer. Milestone 12 runs the request, at once on a connected computer
+  or at its next connection. Reason: a build of an offline computer must
+  wait for its connection.
+- The name of a computer follows the rule of the other names of an org:
+  required and trimmed. Two computers can have the same name. Reason: no
+  requirement makes the names unique.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -1130,17 +1192,25 @@ Depends on: 8a, 9
 
 Depends on: 4
 
-- [ ] Add a D1 migration for the own computers of each org, their token
+- [x] Add a D1 migration for the own computers of each org, their token
       hashes, and the computer ID of each workspace, org image, and
       automation. Keep the previous Worker working on the new schema.
-- [ ] Add the admin routes: add with a one-time code, list, set the limit,
+      Branch: calummoore/own-computers-milestone-10-own-computer-hena
+- [x] Add the admin routes: add with a one-time code, list, set the limit,
       and remove.
-- [ ] Add the admin routes that the mockups show: a new code for a
+      Branch: calummoore/own-computers-milestone-10-own-computer-hena
+- [x] Add the admin routes that the mockups show: a new code for a
       computer that waits, the removal of a computer that never connected,
       and a build of one computer.
-- [ ] Add the `/v1/computer` route and the computer object.
-- [ ] Test the org check, a stolen code, a removed computer, and a member
+      Branch: calummoore/own-computers-milestone-10-own-computer-hena
+- [x] Add the `/v1/computer` route and the computer object.
+      Branch: calummoore/own-computers-milestone-10-own-computer-hena
+- [x] Test the org check, a stolen code, a removed computer, and a member
       who is not an admin.
+      Branch: calummoore/own-computers-milestone-10-own-computer-hena
+
+Evidence and review reports: `.context/own-computers/m10/` and
+`.context/reviews/calummoore/own-computers-milestone-10-own-computer-hena/`.
 
 ## Milestone 11: The host program on an own computer
 

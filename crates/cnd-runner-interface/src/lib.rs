@@ -4,6 +4,7 @@ pub mod agents;
 pub mod api;
 pub mod chat_events;
 pub mod commit_author;
+pub mod computer;
 pub mod file_changes;
 pub mod file_server;
 pub mod file_tree;

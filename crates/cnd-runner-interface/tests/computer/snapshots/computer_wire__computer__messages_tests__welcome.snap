@@ -1,0 +1,8 @@
+---
+source: crates/cnd-runner-interface/tests/computer/messages_tests.rs
+expression: message
+---
+{
+  "type": "welcome",
+  "computerProtocolVersion": 1
+}

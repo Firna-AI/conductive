@@ -1,7 +1,7 @@
 # cnd-runner-interface
 
-This crate owns Conductive's host, runner, SDK helper, agent chat event, and
-workspace tool types. Depend on it when Rust code sends or reads these messages.
+This crate owns Conductive's computer, host, runner, SDK helper, agent chat
+event, and workspace tool types. Depend on it when Rust code sends or reads these messages.
 The Worker, web app, Mac app, and SDK helper import its generated TypeScript.
 
 ## Responsibilities
@@ -9,6 +9,7 @@ The Worker, web app, Mac app, and SDK helper import its generated TypeScript.
 - Keep the current runner JSON wire format stable.
 - Define protocol version 2 and workspace tool messages and their dependent types once.
 - Define the independent host protocol version 1 and its binary frame codec.
+- Define computer protocol version 1, enrollment, and the fixed container operations.
 - Generate TypeScript with serde names, optional fields, and read-only arrays.
 
 ## What This Crate Does
@@ -78,6 +79,10 @@ limits. It keeps message parts as bytes, because a part can split a UTF-8
 code point. `HostFrame` also generates the TypeScript view used by the
 shared codec. The host protocol does not change the runner protocol.
 
+The `computer` modules define enrollment, resource reports, operations,
+and typed results for an own computer. The computer connection uses the
+message parts of the host frame codec.
+
 Optional fields omit `None`. Required nullable fields serialize `None` as null.
 Literal booleans and the protocol version preserve their exact JSON values.
 Wire integers use JSON numbers within JavaScript's safe integer range.
@@ -124,10 +129,15 @@ Wire tests cover message forms and optional or nullable fields.
 Service tests use the public JSON decoder and typed serializers.
 Constant tests compare the TypeScript runtime limits with their Rust constants.
 Host wire snapshots cover both message directions and each operation and result.
+Computer wire snapshots cover enrollment, both message directions, and each operation and result.
 Rust and TypeScript frame tests use the same golden bytes.
 
 ### Key Code
 
+- [Computer enrollment](src/computer/enrollment.rs) defines the token reply.
+- [Computer messages](src/computer/messages.rs) define the resource report and both directions of the connection.
+- [Computer operations](src/computer/operations.rs) and [results](src/computer/results.rs) define the fixed container and image contracts.
+- [Computer literals](src/computer/literals.rs) and [limits](src/computer/limits.rs) define the path, version, budgets, and close codes.
 - [Host messages](src/host/messages.rs) define `HostToWorker` and `WorkerToHost`.
 - [Host operations](src/host/operations.rs) and [results](src/host/results.rs) define the fixed command, file, and stream contracts.
 - [Host literals](src/host/literals.rs) define the exact welcome version, route, and local stream ports.
@@ -168,6 +178,7 @@ Rust and TypeScript frame tests use the same golden bytes.
 
 ### Related Docs
 
+- [Own computers](../../docs/protocol/own-computers.md#the-computer-connection)
 - [Host connection protocol](../../docs/protocol/host-connection.md)
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
 - [File server protocol](../../docs/protocol/file-server.md)

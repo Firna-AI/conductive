@@ -26,6 +26,7 @@ import { feedbackRoute } from './app-api/feedback'
 import { branchesRoute } from './app-api/branches'
 import { secretsRoute } from './app-api/secrets'
 import { capabilitiesRoute } from './app-api/capabilities'
+import { ownComputersRoute } from './own-computers/admin'
 
 export { routeDevice } from './devices/router'
 
@@ -37,6 +38,13 @@ export async function route(
   codexTasks: CodexTaskOwner,
   execution?: Pick<ExecutionContext, 'waitUntil'>,
 ): Promise<Response> {
+  const ownComputers = await ownComputersRoute(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (ownComputers) return ownComputers
   const secrets = await secretsRoute(request, env, context, dependencies)
   if (secrets) return secrets
   const capabilities = await capabilitiesRoute(

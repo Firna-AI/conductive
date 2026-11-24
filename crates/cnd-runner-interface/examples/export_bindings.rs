@@ -5,10 +5,10 @@ use std::{env, error::Error, fs, path::Path, process::Command};
 use ts_rs::{Config, TS};
 
 use cnd_runner_interface::{
-    agents, api, chat_events, commit_author, file_changes, file_tree, files, host, messages, ports,
-    preview_ingress, provider_events, runner, runner_commands, runner_credentials, runner_files,
-    runner_handshake, runner_repository, sdk_helper, sdk_helper_options, services, skills, tools,
-    workspaces,
+    agents, api, chat_events, commit_author, computer, file_changes, file_tree, files, host,
+    messages, ports, preview_ingress, provider_events, runner, runner_commands, runner_credentials,
+    runner_files, runner_handshake, runner_repository, sdk_helper, sdk_helper_options, services,
+    skills, tools, workspaces,
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -31,6 +31,19 @@ fn main() -> Result<(), Box<dyn Error>> {
     chat_events::TurnSpeed::export_all(&cfg)?;
     chat_events::TurnEventContext::export_all(&cfg)?;
     commit_author::CommitAuthor::export_all(&cfg)?;
+    computer::enrollment::ComputerEnrollment::export_all(&cfg)?;
+    computer::literals::ComputerPath::export_all(&cfg)?;
+    computer::literals::ComputerProtocolVersion::export_all(&cfg)?;
+    computer::messages::ComputerResources::export_all(&cfg)?;
+    computer::messages::ComputerToWorker::export_all(&cfg)?;
+    computer::messages::WorkerToComputer::export_all(&cfg)?;
+    computer::operations::ComputerOperation::export_all(&cfg)?;
+    computer::operations::ComputerRelease::export_all(&cfg)?;
+    computer::operations::ContainerEnvVar::export_all(&cfg)?;
+    computer::operations::ContainerImage::export_all(&cfg)?;
+    computer::results::ComputerErrorCode::export_all(&cfg)?;
+    computer::results::ComputerResult::export_all(&cfg)?;
+    computer::results::ContainerState::export_all(&cfg)?;
     file_changes::BranchChangedFile::export_all(&cfg)?;
     file_changes::ChangeKind::export_all(&cfg)?;
     file_changes::ChangedFile::export_all(&cfg)?;

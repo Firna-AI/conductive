@@ -1,0 +1,23 @@
+---
+source: crates/cnd-runner-interface/tests/computer/operations_tests.rs
+expression: message
+---
+{
+  "kind": "container.create",
+  "container": "workspace-1",
+  "image": {
+    "kind": "base",
+    "release": {
+      "version": "0.0.42",
+      "digest": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+    }
+  },
+  "env": [
+    {
+      "name": "LANG",
+      "value": "en_US.UTF-8"
+    }
+  ],
+  "cpus": 4,
+  "memoryBytes": 8589934592
+}

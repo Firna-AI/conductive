@@ -50,11 +50,13 @@
     "bindings": [
       { "name": "WORKSPACES", "class_name": "Workspace" },
       { "name": "MACHINES", "class_name": "Machine" },
+      { "name": "OWN_COMPUTERS", "class_name": "OwnComputer" },
     ],
   },
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["Workspace"] },
     { "tag": "v2", "new_sqlite_classes": ["Machine"] },
+    { "tag": "v3", "new_sqlite_classes": ["OwnComputer"] },
   ],
   "d1_databases": [
     {

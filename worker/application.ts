@@ -23,6 +23,7 @@ import { route, routeDevice } from './routes'
 import { workspaceBinding } from './app-api/workspace-state'
 import { routeChat, routeRunner } from './chat/router'
 import { routeHost } from './machines/route'
+import { routeComputer } from './own-computers/route'
 import { isDeviceAppPath, isDeviceMachinePath } from './devices/paths'
 import { routeMacCommand } from './tools/mac-command'
 import { appOrigin } from './security/app-origin'
@@ -200,6 +201,12 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           if (runnerResponse) return respond(runnerResponse)
           const hostResponse = await routeHost(request, env)
           if (hostResponse) return respond(hostResponse)
+          const computerResponse = await routeComputer(
+            request,
+            env,
+            dependencies.now,
+          )
+          if (computerResponse) return respond(computerResponse)
         }
         if (surface !== 'app' || !path.startsWith('/api/')) {
           return privateResponse(hostStub(surface))

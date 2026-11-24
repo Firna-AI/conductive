@@ -1,0 +1,9 @@
+---
+source: crates/cnd-runner-interface/tests/computer/operations_tests.rs
+expression: message
+---
+{
+  "kind": "image.save",
+  "container": "workspace-1",
+  "image": "acme-image"
+}
