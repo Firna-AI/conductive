@@ -36,24 +36,24 @@ function toneOf(github: GitHubSummary | null, status: ActivityStatus) {
 }
 
 /**
- * Whether a light runs around the ring: while the agent works, and while
- * the checks run, so that the mark waits on something and the user does
- * not need to act. Needs input keeps its pulse, because the user must act.
- * An archived mark stays still.
+ * Whether a light runs around the ring: while the agent works, while the
+ * cloud computer starts, and while the checks run, so that the mark waits
+ * on something and the user does not need to act. Needs input keeps its
+ * pulse, because the user must act. An archived mark stays still.
  */
 function chases(github: GitHubSummary | null, status: ActivityStatus) {
-  if (status === 'working') return true
+  if (status === 'working' || status === 'starting') return true
   if (status === 'input' || status === 'archived') return false
   return github === 'checks-running'
 }
 
 /**
- * How one cell looks. While the agent works or the checks run, a light
- * runs around the ring and the centre stays dim. While the agent needs
- * input, the whole grid pulses in blue. Without motion, the ring of a working
- * agent or the middle column stays lit, and running checks light the whole
- * grid. Every other state is still: lit in the colour of the GitHub state,
- * or dim.
+ * How one cell looks. While the agent works, the cloud computer starts, or
+ * the checks run, a light runs around the ring and the centre stays dim.
+ * While the agent needs input, the whole grid pulses in blue. Without
+ * motion, the ring of a working agent or a start, or the middle column,
+ * stays lit, and running checks light the whole grid. Every other state is
+ * still: lit in the colour of the GitHub state, or dim.
  */
 function cellOf(
   github: GitHubSummary | null,
@@ -69,7 +69,9 @@ function cellOf(
       : {
           className: classes(
             styles.cell,
-            status !== 'working' && styles.litWhenStill,
+            status !== 'working' &&
+              status !== 'starting' &&
+              styles.litWhenStill,
           ),
         }
   }
@@ -84,12 +86,12 @@ function cellOf(
       }
     case 'unread':
     case 'ready':
-    case 'starting':
     case 'stopped':
     case 'error':
       return { className: classes(styles.cell, github !== null && styles.lit) }
-    // `chases` already took the working agent.
+    // `chases` already took the working agent and the start.
     case 'working':
+    case 'starting':
     case 'archived':
       return { className: styles.cell }
   }
@@ -102,7 +104,8 @@ function cellOf(
  * purple a merge, and amber a merge conflict, requested changes, or a
  * block. Running checks and a draft are grey. A mark without a GitHub state
  * is dim grey.
- * A light runs around the ring while the agent works or the checks run.
+ * A light runs around the ring while the agent works, the cloud computer
+ * starts, or the checks run.
  * While the agent needs input, the mark turns blue and pulses, whatever the
  * GitHub state. Every other mark is still. It imports no fixture value, so
  * the app uses it too.
