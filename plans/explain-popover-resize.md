@@ -140,9 +140,11 @@ All of these are my calls, made on 24 November 2026.
   for every handle of the app.
 - **Look.** The handles draw the hairline and grip of the column handles
   on hover, on focus, and while a drag runs. They lie inside the card,
-  because the card cuts off what passes its edge. The grip uses the
-  strong neutral border colour, not the accent, because it sits on the
-  edge of a card. The pointer shows the resize cursor of each edge.
+  because the card cuts off what passes its edge. Neither takes the
+  accent, because they sit on the edge of a card. The hairline uses the
+  strong neutral border colour, and the grip uses the muted ink, as
+  "A grip in the muted ink" below says. The pointer shows the resize
+  cursor of each edge.
 - **Labels.** The handles are named "Resize the height of the panel" and
   "Resize the width of the panel", in
   `src/ui/components/explain/explainCopy.ts`.
@@ -152,6 +154,36 @@ All of these are my calls, made on 24 November 2026.
   nothing in the workspace.
 - **A drag that ends where it started** stores nothing, as on the column
   handles.
+
+The mockups of Milestone 1 showed the problems that the next calls
+settle. These are my calls too, made on 24 November 2026.
+
+- **Each move starts from the shown size.** A move of a handle, by the
+  pointer or by a key, starts from the size that the panel shows. A move
+  of the height stops at the room on the side of the mark. The value of
+  a handle is the size that shows. Reason: the room by the mark often
+  caps a kept height. The catalogue frame, 718 px high, shows only 416 px
+  of a kept 600 px below the mark. A move from the kept size would then
+  change nothing that the member sees. The column handles also start
+  from the width that shows.
+- **A key keeps the height too.** From the first move of a handle, by a
+  drag or by a key, until the popover closes, the panel keeps the chosen
+  height. Reason: over a short answer, a key that changes only the
+  highest height moves nothing that the member sees.
+- **The width handle lies over the scrollbar.** The width handle on the
+  right edge covers the outer 7 px of the scrollbar of the chat, which
+  lies at that edge. A press there starts a drag of the width, and the
+  rest of the scrollbar still works. Reason: the handle must lie inside
+  the card, and a gap at the edge for the scrollbar would push the chat
+  away from the edge of the card.
+- **A grip in the muted ink.** The grip takes the muted ink colour,
+  `--ui-muted`, in place of the strong neutral border colour of the first
+  look, and it lies on the hairline. Reason: the grip is the only focus
+  mark of a handle. The border colour stands out only about 1.5:1 from
+  the card, so the focused height handle of the mockups was hard to see,
+  most of all in dark. The muted ink stands out about 6:1 in both
+  schemes, and it is not the accent. On the hairline, the grip keeps
+  3 px clear of the follow-up field.
 
 ## Components
 
@@ -173,7 +205,16 @@ All of these are my calls, made on 24 November 2026.
   height in place of the fixed 420 px.
 - `src/ui/components/explain/ExplainPopover.module.css`: the width and the
   height from the custom properties, and the look of the handles, which
-  the mockups share.
+  the mockups share. `.panel` reads `--explain-width` and
+  `--explain-height`, with 400 px and 420 px as defaults. `fixedHeight`
+  holds the chosen height. `edge` with `edgeTop`, `edgeBottom`,
+  `edgeLeft`, or `edgeRight` draws an edge handle. `corner` with
+  `cornerTopLeft`, `cornerTopRight`, `cornerBottomLeft`, or
+  `cornerBottomRight` draws the corner. `resizing` marks the handle of a
+  drag that runs.
+- `docs/mockups/src/components/explain/PopoverResize.tsx`: the handles of
+  the mockup popover below its mark, with the default size and the ranges
+  for now.
 - One hook in `src/shell/layout/` takes the pointer drag and
   the keys of `ResizeHandle.tsx` and `SplitHandle.tsx`, and the popover
   handles use it too. One stored-size class in `src/app/` takes the
@@ -188,18 +229,21 @@ Depends on: none
 
 The chat mockups show a resized popover with a focused handle.
 
-- [ ] Add the handles to the mockup popover in
+- [x] Add the handles to the mockup popover in
       `docs/mockups/src/components/explain/ExplainPopover.tsx`, with the
       shared CSS. Draw them at rest, and the height handle with focus.
-- [ ] Add the state `popover-resized` to `explainOpen` in
+- [x] Add the state `popover-resized` to `explainOpen` in
       `docs/mockups/src/screens/explainState.ts`. It draws the panel at
       560 px by 600 px with the height handle in focus. Add its page under
       `docs/mockups/src/entries/app/chat/explain/popover/resized/`.
-- [ ] Update the popover lines of `docs/mockups/design-chat.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages at
+- [x] Update the popover lines of `docs/mockups/design-chat.md`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages at
       `http://127.0.0.1:4173`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+The screenshots of the smoke test are in `.context/explain-popover-resize/`,
+such as `resized-popover-light.png`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -226,6 +270,14 @@ Depends on: 2
       with no change of what they check.
 - [ ] Add the store of the chosen size, with its tests for the storage,
       the limits, a drag, and the keys.
+- [ ] Keep one copy of the default size and the ranges of the handles.
+      `docs/mockups/src/components/explain/PopoverResize.tsx` has them
+      now. Move them where the store and the mockup handles can both
+      import them, such as `src/ui/components/explain/`.
+- [ ] Start each move of a handle, by the pointer or by a key, from the
+      size that the panel shows. Stop a move of the height at the room on
+      the side of the mark. Test both, with a kept height that the room
+      caps.
 - [ ] Add `popover-edges.ts` with its tests for each placement, the
       panel with no shown mark, and the room of the width.
 - [ ] Add the handles and wire them into `ExplainPopover.tsx`, the shared
@@ -236,7 +288,8 @@ Depends on: 2
 - [ ] Update the comments of `ExplainPopover.tsx` and of the shared CSS.
 - [ ] Check in a browser with anchor positioning: below and above the
       mark, at the end of the frame, with no shown mark, and a narrow
-      window. Check the fallback by a forced `placePanel`. Save the
+      window. Check the fallback by a forced `placePanel`. Check that the
+      scrollbar of the chat still drags beside the width handle. Save the
       screenshots under `.context/explain-popover-resize/`.
 
 ## Milestone 4: Verification, commit, review, and pull request
