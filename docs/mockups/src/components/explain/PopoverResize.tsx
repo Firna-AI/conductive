@@ -1,20 +1,16 @@
-import type { CSSProperties } from 'react'
 import { classes } from '../../../../../src/ui/components/common/classes'
-import type { PanelWidth } from '../../../../../src/ui/components/layout/ResizeHandle'
 import {
   resizeHeightLabel,
   resizeWidthLabel,
 } from '../../../../../src/ui/components/explain/explainCopy'
 import styles from '../../../../../src/ui/components/explain/ExplainPopover.module.css'
-
-/** The width of the panel by default, and the range of a drag, in px. */
-const panelWidth: PanelWidth = { value: 400, min: 320, max: 720 }
-
-/** The highest height of the panel by default, and the range of a drag. */
-const panelHeight: PanelWidth = { value: 420, min: 200, max: 960 }
+import {
+  popoverHeight,
+  popoverWidth,
+} from '../../../../../src/ui/components/explain/popoverSize'
 
 /** The handle on the edge that changes the height, or the width. */
-export type ResizeAxis = 'height' | 'width'
+type ResizeAxis = 'height' | 'width'
 
 /**
  * The panel of a computer after the member resized it: the size that the
@@ -25,18 +21,6 @@ export type ResizedPanel = {
   /** The highest height, which the panel keeps until it closes. */
   readonly height: number
   readonly focus?: ResizeAxis
-}
-
-/** The style that hands the chosen size of the panel to its CSS. */
-type PanelSizeStyle = CSSProperties &
-  Record<'--explain-width' | '--explain-height', string>
-
-/** The CSS custom properties of the size that the member chose. */
-export function panelSizeStyle(size: ResizedPanel): PanelSizeStyle {
-  return {
-    '--explain-width': `${size.width}px`,
-    '--explain-height': `${size.height}px`,
-  }
 }
 
 /**
@@ -50,7 +34,7 @@ function EdgeHandle(props: {
   focused: boolean
 }) {
   const height = props.axis === 'height'
-  const range = height ? panelHeight : panelWidth
+  const range = height ? popoverHeight : popoverWidth
   return (
     <div
       aria-label={height ? resizeHeightLabel : resizeWidthLabel}
@@ -83,12 +67,12 @@ export function PopoverResize(props: { resized?: ResizedPanel }) {
       <EdgeHandle
         axis="height"
         focused={resized?.focus === 'height'}
-        value={resized?.height ?? panelHeight.value}
+        value={resized?.height ?? popoverHeight.value}
       />
       <EdgeHandle
         axis="width"
         focused={resized?.focus === 'width'}
-        value={resized?.width ?? panelWidth.value}
+        value={resized?.width ?? popoverWidth.value}
       />
       <div
         aria-hidden

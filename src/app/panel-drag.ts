@@ -1,3 +1,5 @@
+import type { PanelWidth } from '../ui/components/layout/ResizeHandle'
+
 /**
  * A move of the edge of a panel: by some px, or some percent for the split
  * of the right column, or to one end of its range.
@@ -9,6 +11,28 @@ export interface PanelDrag {
   move(by: number): void
   /** Ends the drag at its last move. A second call changes nothing. */
   end(): void
+}
+
+/**
+ * The size in whole px after a move from `from`, the size that the panel
+ * shows. The size stays in a range that holds `from`: the range of the
+ * panel, widened to `from` when the layout shows the panel outside it. So a
+ * shrink never grows the panel, and Home and End go to the ends of that
+ * range. `top` stops a move under the top of the range, such as at the room
+ * beside the mark of the Explain popover. The handles of the columns and of
+ * the popover all use this one rule.
+ */
+export function moveInRange(
+  range: PanelWidth,
+  from: number,
+  move: PanelMove,
+  top = Infinity,
+): number {
+  const shown = Math.round(from)
+  const low = Math.min(range.min, shown)
+  const high = Math.max(Math.min(range.max, Math.floor(top)), shown)
+  const target = 'by' in move ? shown + move.by : move.to === 'min' ? low : high
+  return Math.min(high, Math.max(low, Math.round(target)))
 }
 
 /**

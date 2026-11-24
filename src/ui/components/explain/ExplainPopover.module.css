@@ -8,10 +8,13 @@
  * end of the mark. Its width and its highest height are the size that the
  * member chose with its handles, `--explain-width` and `--explain-height`,
  * or 400 px by 420 px, and its chat scrolls inside it. In a low frame it
- * takes only the room on its side of the mark, less its margins. It has
- * the full hairline outline of every card of the app and the shadow of a
- * menu. It takes the focus as it opens, as a dialog does, with no ring
- * around the whole card.
+ * takes only the room on its side of the mark, less the 12 px of its
+ * margins, `--explain-gap`. It has the full hairline outline of every card
+ * of the app and the shadow of a menu. It takes the focus as it opens, as a
+ * dialog does, with no ring around the whole card. The app sets
+ * `--explain-gap` and `--explain-area`, the side of the mark that the panel
+ * tries first, for the places of its own, whatever the order of the style
+ * sheets.
  */
 .panel {
   display: flex;
@@ -19,7 +22,10 @@
   z-index: 20;
   flex-direction: column;
   width: var(--explain-width, 400px);
-  max-height: min(var(--explain-height, 420px), calc(100% - 12px));
+  max-height: min(
+    var(--explain-height, 420px),
+    calc(100% - var(--explain-gap, 12px))
+  );
   margin: 6px 0;
   overflow: hidden;
   border: 1px solid var(--ui-border2);
@@ -29,7 +35,7 @@
   box-sizing: border-box;
   outline: none;
   position-anchor: --explain-mark;
-  position-area: block-end span-inline-end;
+  position-area: var(--explain-area, block-end span-inline-end);
   position-try-fallbacks:
     flip-block,
     flip-inline,
@@ -79,8 +85,8 @@
 }
 
 /*
- * From the first move of a handle until the popover closes, the panel
- * keeps the chosen height, so its edge follows the pointer and the keys
+ * From the first move of its height until the popover closes, the panel
+ * keeps the moved height, so its edge follows the pointer and the keys
  * also over a short chat. The room on its side of the mark still caps it.
  */
 .fixedHeight {

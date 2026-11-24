@@ -10,11 +10,8 @@ import {
   expandLabel,
 } from '../../../../../src/ui/components/explain/explainCopy'
 import styles from '../../../../../src/ui/components/explain/ExplainPopover.module.css'
-import {
-  panelSizeStyle,
-  PopoverResize,
-  type ResizedPanel,
-} from './PopoverResize'
+import { popoverSizeStyle } from '../../../../../src/ui/components/explain/popoverSize'
+import { PopoverResize, type ResizedPanel } from './PopoverResize'
 
 /**
  * The height of the sheet of a phone: half the screen, as it opens, or the
@@ -101,7 +98,7 @@ export function ExplainPopover(props: {
       aria-label={props.title}
       className={classes(styles.panel, resized && styles.fixedHeight)}
       role="dialog"
-      style={resized ? panelSizeStyle(resized) : undefined}
+      style={resized ? popoverSizeStyle(resized) : undefined}
     >
       {header}
       {body}

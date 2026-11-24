@@ -234,9 +234,10 @@ previews.
     at its side, and the corner between them. A drag of a handle changes
     the size of the panel: the width from 320 px to 720 px, and the
     highest height from 200 px to 960 px. The browser keeps one size for
-    all popovers. From the first move of a handle until the popover
-    closes, the panel keeps the chosen height. A move starts from the size
-    that shows, and the room by the mark stops a move of the height. Each
+    all popovers. From the first move of its height, by the edge above or
+    below the chat or by the corner, until the popover closes, the panel
+    keeps the moved height. A move starts from the size that shows, and
+    the room by the mark stops a move of the height. Each
     edge handle is a separator in the order of Tab, after the follow-up
     field. Its name is "Resize the height of the panel" or "Resize the
     width of the panel". Up and Down move the height handle, and Left and

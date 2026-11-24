@@ -3,7 +3,9 @@
  * marks, the slots and the buttons of their states, the box of the open
  * mark, and the places of Explain and of the popover. The look comes from
  * the shared `MarkedText`, `ExplainButton`, `ExplainPopover`, and
- * `FollowUpField` modules.
+ * `FollowUpField` modules. The places of the popover set the custom
+ * properties that the shared `.panel` reads, so they apply whatever the
+ * order of the two style sheets.
  */
 
 /*
@@ -89,10 +91,25 @@
   z-index: 5;
 }
 
-/* A panel whose mark does not show stands at the top right of the frame. */
+/*
+ * A panel whose mark does not show stands at the top right of the frame.
+ * Its height stops 12 px above the bottom of the frame, so its follow-up
+ * field stays in view: it leaves 64 px above it, its top margin of 6 px,
+ * and 12 px under it.
+ */
 .unanchored {
+  --explain-gap: 82px;
   top: 64px;
   right: 16px;
+}
+
+/*
+ * From a move of its width until it closes, a panel that ends at the end of
+ * its mark tries that side first. So a narrower panel does not jump to the
+ * start of the mark, and each arrow key keeps its direction.
+ */
+.endFirst {
+  --explain-area: block-end span-inline-start;
 }
 
 /* The root of the popover and the menu, which draws no box of its own. */

@@ -4,11 +4,11 @@ import {
   type PanelWidth,
 } from '../ui/components/layout/ResizeHandle'
 import { ColumnSplit } from './column-split'
-import { panelDrag, type PanelDrag, type PanelMove } from './panel-drag'
+import { ExplainSize } from './explain-size'
+import { moveInRange, type PanelDrag, type PanelMove } from './panel-drag'
 import type { KeyValueStorage } from './services'
-import { Store } from './store'
-
-export type { PanelDrag, PanelMove } from './panel-drag'
+import { derived, Store, type Readable } from './store'
+import { StoredSize, wholePx } from './stored-size'
 
 export type Panel = 'sidebar' | 'right'
 
@@ -26,33 +26,17 @@ const storageKeys: Readonly<Record<Panel, string>> = {
 /** `null` means that the user has not chosen a width, so the layout's own applies. */
 export type PanelState = Readonly<Record<Panel, number | null>>
 
-function readWidth(storage: KeyValueStorage | null, panel: Panel) {
-  let stored: string | null
-  try {
-    stored = storage?.getItem(storageKeys[panel]) ?? null
-  } catch {
-    return null
-  }
-  if (stored === null || !/^\d+$/.test(stored)) return null
-  const width = Number(stored)
-  if (width === 0) return null
-  // A width under the range comes from a panel that the layout showed
-  // narrower than its range, where the user chose it. It comes back as it is.
-  return Math.min(panelRanges[panel].max, width)
-}
-
 /**
  * The layout of the panels that the user chooses: the widths of the
  * sidebar and the right column, the split of the right column between the
- * file lists and the tools, and whether the sidebar and the right column
- * show. The
- * browser keeps the widths and the split, as it keeps the last workspaces
- * of `last-workspaces.ts`. When the browser refuses its storage, they last
- * until the page closes. Whether the sidebar and the right column show
- * always lasts until the page closes.
+ * file lists and the tools, the size of the Explain popovers, and whether
+ * the sidebar and the right column show. The browser keeps the widths, the
+ * split, and the size of the popovers through `StoredSize`. When the
+ * browser refuses its storage, they last until the page closes. Whether the
+ * sidebar and the right column show always lasts until the page closes.
  */
 export class PanelLayout {
-  readonly widths: Store<PanelState>
+  readonly widths: Readable<PanelState>
   /**
    * The right column shows. The toggle at the end of the workspace header
    * hides it and shows it again, for every workspace of the tab.
@@ -65,20 +49,26 @@ export class PanelLayout {
   readonly sidebarShown = new Store(true)
   /** The split of the right column between the file lists and the tools. */
   readonly split: ColumnSplit
-  private readonly storage: KeyValueStorage | null
+  /** The size of the Explain popovers, which the member chooses with their handles. */
+  readonly explain: ExplainSize
+  private readonly sizes: Readonly<Record<Panel, StoredSize>>
 
   constructor(storage: KeyValueStorage | null) {
-    this.storage = storage
     this.split = new ColumnSplit(storage)
-    this.widths = new Store<PanelState>({
-      sidebar: readWidth(storage, 'sidebar'),
-      right: readWidth(storage, 'right'),
-    })
+    this.explain = new ExplainSize(storage)
+    const stored = (panel: Panel) =>
+      new StoredSize(storage, storageKeys[panel], wholePx(panelRanges[panel]))
+    this.sizes = { sidebar: stored('sidebar'), right: stored('right') }
+    this.widths = derived(
+      this.sizes.sidebar.chosen,
+      this.sizes.right.chosen,
+      (sidebar, right) => ({ sidebar, right }),
+    )
   }
 
   /** The width now: the user's, or the default of the panel. */
   width(panel: Panel): number {
-    return this.widths.get()[panel] ?? panelRanges[panel].value
+    return this.sizes[panel].chosen.get() ?? panelRanges[panel].value
   }
 
   /** Hides the sidebar, or shows it again. */
@@ -92,26 +82,16 @@ export class PanelLayout {
   }
 
   /**
-   * The width after a move from `from`, the width that the panel shows. The
-   * width stays in a range that holds `from`: the range of the panel,
-   * widened to `from` when the layout shows the panel outside it. So a
-   * shrink never widens a panel, and Home and End go to the ends of that
-   * range. The keys and the drag all use this one rule.
+   * The width after a move from `from`, the width that the panel shows, as
+   * `moveInRange` says. The keys and the drag all use this one rule.
    */
   next(panel: Panel, from: number, move: PanelMove): number {
-    const range = panelRanges[panel]
-    const shown = Math.round(from)
-    const low = Math.min(range.min, shown)
-    const high = Math.max(range.max, shown)
-    const target =
-      'by' in move ? shown + move.by : move.to === 'min' ? low : high
-    return Math.min(high, Math.max(low, Math.round(target)))
+    return moveInRange(panelRanges[panel], from, move)
   }
 
   /** One step of the keys. A step that ends at `from` changes and stores nothing. */
   step(panel: Panel, from: number, move: PanelMove): void {
-    const width = this.next(panel, from, move)
-    if (width !== Math.round(from)) this.keep(panel, width)
+    this.sizes[panel].step(Math.round(from), this.next(panel, from, move))
   }
 
   /**
@@ -120,27 +100,8 @@ export class PanelLayout {
    * width from before the drag, and stores nothing.
    */
   drag(panel: Panel, from: number): PanelDrag {
-    return panelDrag({
-      start: Math.round(from),
-      before: this.widths.get()[panel],
-      next: (by) => this.next(panel, from, { by }),
-      put: (width) => this.put(panel, width),
-      keep: (width) => this.keep(panel, width),
-    })
-  }
-
-  private put(panel: Panel, width: number | null): void {
-    if (this.widths.get()[panel] === width) return
-    this.widths.change((current) => ({ ...current, [panel]: width }))
-  }
-
-  /** Shows a width, and keeps it in the browser for the next page load. */
-  private keep(panel: Panel, width: number): void {
-    this.put(panel, width)
-    try {
-      this.storage?.setItem(storageKeys[panel], String(width))
-    } catch {
-      // The width still applies while the page stays open.
-    }
+    return this.sizes[panel].drag(Math.round(from), (by) =>
+      this.next(panel, from, { by }),
+    )
   }
 }

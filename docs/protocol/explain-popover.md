@@ -126,9 +126,16 @@ popover. Its pull request keeps the record.
   popover a panel by its mark.
 - The chosen height is a highest height, as the default is. So a short
   answer still shows in a low panel.
-- From the first move of a handle, by a drag or a key, until the popover
-  closes, the panel keeps the moved height. Reason: the edge then follows
-  the pointer, and each key changes what the member sees.
+- From the first move of its height, by the height handle or the corner,
+  by a drag or a key, until the popover closes, the panel keeps the moved
+  height. A move of the width alone keeps the height as it was. Reason:
+  the edge then follows the pointer, and each key changes what the member
+  sees.
+- A grow from a panel that shows lower or narrower than the range goes at
+  least to the smallest size of the range, or to the room where the room
+  is smaller. The browser keeps a size in the range. Reason: a short
+  answer shows a low panel, and the next popovers must not open smaller
+  than the range.
 - Each move starts from the size that the panel shows, also where the
   room by the mark shows less than the chosen height.
 - A move of the width, by a drag or by a key, never moves the panel to

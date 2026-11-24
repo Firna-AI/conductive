@@ -112,7 +112,10 @@ the Help row of the command palette opens.
 - A focused divider takes only its own keys, through `dividerKey` of the
   shortcut model: Left and Right, alone or with Shift for a larger step,
   and Home and End alone. A key with other modifiers, such as ⌥⌘←, goes to
-  its shortcut.
+  its shortcut. Every divider and every handle of the Explain popover
+  takes its drag and its keys from `useResizeHandle` of
+  `src/shell/layout/`. A divider or a handle that lies across takes Up and
+  Down in place of Left and Right.
 - On desktop, the toggle at the end of the workspace header hides the
   right column and shows it again, and so does the key of Hide or show the
   right column. The choice holds for every workspace of the tab until the

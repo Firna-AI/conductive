@@ -189,6 +189,37 @@ settle. These are my calls too, made on 24 November 2026.
   schemes, and it is not the accent. On the hairline, the grip keeps
   3 px clear of the follow-up field.
 
+The work of Milestone 3 settled the next calls. These are my calls too,
+made on 24 November 2026.
+
+- **The moved height starts with a move of the height.** The panel keeps
+  its moved height from the first move of the height handle or of the
+  corner. A move of the width alone leaves the height to the chat. Reason:
+  only a move of the height has a moved height to keep, and a fixed height
+  after a move of the width makes a short answer jump to the chosen
+  height.
+- **A narrower panel keeps its side too.** Each move of the width makes
+  the side of the mark that the panel shows the side that it tries first,
+  until the popover closes. Reason: a panel at the end of its mark that
+  gets narrower fits at the start again, and it would jump there. A
+  panel with no shown mark keeps no side, so its mark, when it shows
+  again, gets the usual place.
+- **The popover keeps its own moved size.** While a drag runs, the open
+  popover shows the dragged size, and the chosen size of all popovers
+  changes only at each key step and at the end of each drag. Reason: a
+  drag back to its start must show the panel as before, also over a
+  short answer, whose panel is lower than the chosen height.
+
+- **A grow from under the range.** A grow from a panel that shows
+  smaller than the range goes at least to the smallest size, or to the
+  room where the room is smaller, and the browser keeps a size in the
+  range. My call, on 24 November 2026, from Milestone 3. Reason: the
+  protocol sets the range, and one key on a 150 px panel kept 158 px.
+- **Only a move of the height fixes the height.** The protocol sentence
+  now says so. My call, on 24 November 2026, from Milestone 3. Reason:
+  the reason of that rule, an edge that follows the pointer, applies only
+  to a move of the height.
+
 ## Components
 
 - `src/app/panels.ts` and a new `src/app/explain-size.ts`: the store of
@@ -200,7 +231,8 @@ settle. These are my calls too, made on 24 November 2026.
   the panel, the mark, and the frame, and the room for the width on the
   side of the mark.
 - `src/chat/explain/PopoverResize.tsx`: the three handles, with the drag
-  and the keys.
+  and the keys. `src/chat/explain/usePopoverResize.ts`: the size of the
+  panel, the side that it keeps, and the moves of its handles.
 - `src/chat/explain/ExplainPopover.tsx`: it sets the chosen size as CSS
   custom properties of the panel, finds the free edges after each layout,
   scroll, and resize in the next frame, and shows the handles on a
@@ -219,11 +251,12 @@ settle. These are my calls too, made on 24 November 2026.
 - `docs/mockups/src/components/explain/PopoverResize.tsx`: the handles of
   the mockup popover below its mark, with the default size and the ranges
   for now.
-- One hook in `src/shell/layout/` takes the pointer drag and
-  the keys of `ResizeHandle.tsx` and `SplitHandle.tsx`, and the popover
-  handles use it too. One stored-size class in `src/app/` takes the
-  storage rule of `PanelLayout` and `ColumnSplit`, and the store of the
-  popover size uses it.
+- One hook, `useResizeHandle` in `src/shell/layout/useResizeHandle.ts`,
+  takes the pointer drag and the keys of `ResizeHandle.tsx` and
+  `SplitHandle.tsx`, and the popover handles use it too. One stored-size
+  class, `StoredSize` in `src/app/stored-size.ts`, takes the storage rule
+  of `PanelLayout` and `ColumnSplit`, and the store of the popover size
+  uses it.
 
 ## Milestone 1: Mockups
 
@@ -268,33 +301,40 @@ Tags: ui
 
 Depends on: 2
 
-- [ ] Move the drag and the keys of the column handles into
+- [x] Move the drag and the keys of the column handles into
       the shared hook, and the storage rule into the shared stored-size
       class. The tests of the column handles and of the split must pass
       with no change of what they check.
-- [ ] Add the store of the chosen size, with its tests for the storage,
+- [x] Add the store of the chosen size, with its tests for the storage,
       the limits, a drag, and the keys.
-- [ ] Keep one copy of the default size and the ranges of the handles.
+- [x] Keep one copy of the default size and the ranges of the handles.
       `docs/mockups/src/components/explain/PopoverResize.tsx` has them
       now. Move them where the store and the mockup handles can both
       import them, such as `src/ui/components/explain/`.
-- [ ] Start each move of a handle, by the pointer or by a key, from the
+- [x] Start each move of a handle, by the pointer or by a key, from the
       size that the panel shows. Stop a move of the height at the room on
       the side of the mark. Test both, with a kept height that the room
       caps.
-- [ ] Add `popover-edges.ts` with its tests for each placement, the
+- [x] Add `popover-edges.ts` with its tests for each placement, the
       panel with no shown mark, and the room of the width.
-- [ ] Add the handles and wire them into `ExplainPopover.tsx`, the shared
+- [x] Add the handles and wire them into `ExplainPopover.tsx`, the shared
       CSS, and `placePanel`.
-- [ ] Add DOM tests: the handles show on a computer and not on a phone,
+- [x] Add DOM tests: the handles show on a computer and not on a phone,
       a key changes the size and the storage, and a press on a handle
       keeps the popover open.
-- [ ] Update the comments of `ExplainPopover.tsx` and of the shared CSS.
-- [ ] Check in a browser with anchor positioning: below and above the
+- [x] Update the comments of `ExplainPopover.tsx` and of the shared CSS.
+- [x] Check in a browser with anchor positioning: below and above the
       mark, at the end of the frame, with no shown mark, and a narrow
       window. Check the fallback by a forced `placePanel`. Check that the
       scrollbar of the chat still drags beside the width handle. Save the
       screenshots under `.context/explain-popover-resize/`.
+- [x] Find the free edges again in the next frames until the layout
+      settles, and when the pointer or the focus comes into the panel.
+      The browser check found the handles on the wrong edges after a
+      resize of the window, because the page laid its columns out again
+      one frame later, with no event for the popover.
+- [x] Make the mockup type `ResizeAxis` local. The exports check rejects
+      it as an export that no module imports.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
