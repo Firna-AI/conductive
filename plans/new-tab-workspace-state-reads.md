@@ -510,48 +510,52 @@ below. Code READMEs change with the code in later milestones.
 - [x] Confirm that the final pull request of the memory plan merged and
       that the root coordinator gave the signal. Merge `main` into this
       branch with the `git-merge` skill.
-- [ ] Create `docs/protocol/workspace-events.md`. Move the Events section
+- [x] Create `docs/protocol/workspace-events.md`. Move the Events section
       of `chat-and-events.md` to it, with the lines of PR #477 and of the
       memory plan. Keep `## Events` in `chat-and-events.md` with one link
       line.
-- [ ] In the new page, state these requirements:
-  - [ ] A new tab and a reload get the current state of a workspace from
+- [x] In the new page, state these requirements:
+  - [x] A new tab and a reload get the current state of a workspace from
         reads. Each stream starts after the event number of its read.
-  - [ ] The workspace read gives the newest port list, or no report, the
+  - [x] The workspace read gives the newest port list, or no report, the
         newest skill lists, or no report, and each open failed repair of
         the name, the start steps, and the port list, with the time of its
         first failure.
-  - [ ] Each Files read gives its list, its failed repair, and the
+  - [x] Each Files read gives its list, its failed repair, and the
         repository at its own cutoff.
-  - [ ] Each read gives this state with its cutoff. It never leaves the
+  - [x] Each read gives this state with its cutoff. It never leaves the
         state out to answer sooner.
-  - [ ] A read failure without a cutoff keeps the existing replay recovery.
+  - [x] A read failure without a cutoff keeps the existing replay recovery.
         It does not stop updates of another Files list.
-  - [ ] A failure keeps its first time until a full report of its kind, or
+  - [x] A failure keeps its first time until a full report of its kind, or
         until its repair ends. The null list of a stop ends the notice of
         the port list. A later failure then shows with its own time.
-  - [ ] A return to a kept workspace gets only the events after its own
+  - [x] A return to a kept workspace gets only the events after its own
         last event.
-  - [ ] Older Mac apps keep the full replay, and the Worker keeps serving
+  - [x] Older Mac apps keep the full replay, and the Worker keeps serving
         it, with the bound of each connection.
-  - [ ] Decision 1 stands next to its requirement, with A and C and the
+  - [x] Decision 1 stands next to its requirement, with A and C and the
         reasons that rejected them.
-- [ ] Link the new page from `lost-workspace-updates.md`, where it says
+- [x] Link the new page from `lost-workspace-updates.md`, where it says
       when a notice clears, and from `skill-mentions.md`, where it says
       that each tab gets the latest skill report.
-- [ ] Add the new page to the Chat index,
+- [x] Add the new page to the Chat index,
       `docs/architecture/protocol-docs-chat.md`, which the memory plan split
       from `protocol-docs.md`. Keep `chat-history.md` and `file-reports.md`
       as they are.
-- [ ] Read both legal pages in full, `src/marketing/terms.ts` and
+- [x] Split `## The sources of the skills` of `skill-mentions.md` into
+      `docs/protocol/skill-sources.md`, because the new link passed the
+      length target. Keep the heading with one link line.
+- [x] Read both legal pages in full, `src/marketing/terms.ts` and
       `src/marketing/privacy.ts`. Read each public guide under
       `src/marketing/docs/` in full. List each sentence that restates a
       changed fact. The limits plan owns edits of these files until the
       root coordinator hands them over. So save each proposed edit under
       `.context/new-tab-workspace-state-reads/`, send it to the root
       coordinator, and make the edit only after the hand-over. Name the
-      result in the commit message.
-- [ ] Check each relative link of each changed Markdown file.
+      result in the commit message. Result on 24 November 2026: no
+      sentence restates a changed fact, so no edit waits.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 2: Worker read state and workspace seed
 

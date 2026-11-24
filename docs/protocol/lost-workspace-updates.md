@@ -18,6 +18,8 @@ decision number names a dated record, as
 - The browser shows nothing for that marker. A notice shows beside the
   affected data only when the repair fails. A newer complete report of that
   kind clears the notice.
+  [Notices of a failed repair](workspace-events.md#notices-of-a-failed-repair)
+  states the time that a notice gives and when the notice ends.
 - Reason: only the latest full report matters. A notice for each lost update
   was rejected.
 - The request is a `report.refresh` command with a `commandId` and a `kind`.

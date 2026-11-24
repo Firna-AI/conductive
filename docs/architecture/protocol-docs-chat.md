@@ -28,6 +28,9 @@ This page lists the protocol docs that belong to
 - [Skill mentions](../protocol/skill-mentions.md): the list of `/` in the
   composer, the skill chips and their text, and the skills report of the
   runner that fills the list.
+  - [Skill sources](../protocol/skill-sources.md): the skills that each
+    agent loads, the skills that the runner reports, and the order of the
+    list.
 - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
   its events and their limits, its turns, what an out-of-memory kill ends,
   the background work of Claude turns with its note and its time limit,
@@ -53,5 +56,10 @@ This page lists the protocol docs that belong to
     a copy.
   - [Transcript reads by agents](../protocol/transcript-reads.md): the
     route of `read_session`, and the parts of a long text.
+- [Workspace events](../protocol/workspace-events.md): the events that
+  each tab gets and their order, the stored history that each connection
+  sends, the reads and the cutoffs that give a new tab the state of a
+  workspace, the time and the end of each notice of a failed repair, the
+  workspaces that a tab keeps, and older apps.
 - [Chat history](../protocol/chat-history.md): how the stored history
   keeps agent messages, tool calls, and file reports.
