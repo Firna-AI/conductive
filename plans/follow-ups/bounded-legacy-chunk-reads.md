@@ -1,31 +1,29 @@
-# Old projection and report part reads build every key
+# Report part reads build every chunk key
 
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-23, wider fix split from finding 1 of the review of PR #674 (branch `calummoore/memory-projection-reader-release-jrq9`).
-- **Location:** `readChunks` in `worker/files/storage.ts:95-115` and `partChunkKeys` and its callers in `worker/files/report-storage.ts:30` (`storedPart`, `storedParts`, `storedReportKeys`).
-- **Reason:** The reader release had to keep the old-layout reader unchanged, so it fixed the bounded read only for the bucket layout.
+- **Location:** `partChunkKeys` and its callers in `worker/files/report-storage.ts:30` (`storedPart`, `storedParts`, `storedReportKeys`).
+- **Reason:** The projection writer uses bounded reads for old projection chunks. Runner report part reads still build all their keys before the first read.
 
 **Terms**
-- **Projection:** the last file tree and changes list that the workspace Durable Object keeps under `files:state:v1`.
-- **Old layout:** each list stored as one JSON text in chunks `files:state:v1:<kind>:<i>`, with the chunk count in the manifest.
 - **Report part:** one stored part of a multipart runner file report under `files:runner:v1:<kind>:<part>`, with its chunk count in a part manifest.
 
-**Background:** The bucket reader of `worker/files/bucket-read.ts` reads chunks in batches of 64 keys and stops at the first missing chunk. The old-layout `readChunks` and the report part readers build the whole key list from the stored count first. A review check measured a 128 MB heap crash of the workspace object when a damaged count of about 2,000,000 chunks was stored.
+**Background:** `worker/files/stored-chunks.ts` reads old projection chunks in batches of at most 64 keys. It stops at the first missing chunk. The report part readers still build the full key list from the stored count. A review check of the former projection reader measured a 128 MB heap crash of the workspace object with a damaged count of about 2,000,000 chunks.
 
 **Problem:** A damaged stored chunk count makes the Worker allocate every key before its first read.
 
 **Impact if no action:** A damaged record can reset the workspace Durable Object instead of giving the invalid file response. Valid data is not affected.
 
-**Root question:** How do all chunk readers of `worker/files/` stop early on damaged counts?
+**Root question:** How do the report part readers stop early on damaged counts?
 
 **Options:**
-- **A.** Move the batched reader of `bucket-read.ts` to one shared helper, and use it in `readChunks`, `storedPart`, and `storedParts`. Effort: Small.
+- **A.** Use the batched reader in `worker/files/stored-chunks.ts` for the reads of `storedPart` and `storedParts`. Check the key list that `storedReportKeys` builds for cleanup. Effort: Small.
 - **B.** Cap the stored chunk count at parse time. Effort: Small. It adds a new rejection, which needs the user.
 
 **Left out:** None.
 
-**Wider fix:** A is the structural fix: one bounded chunk reader for every chunked value of `worker/files/`.
+**Wider fix:** A shares bounded chunk reads between old projections and runner report parts.
 
 **Recommendation:** A.
 

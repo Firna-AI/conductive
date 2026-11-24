@@ -5,7 +5,6 @@ import type { FileTreeResponse } from '../../src/shared/generated/FileTreeRespon
 import { isRecord } from '../http'
 import { FILES_KEY, bucketDigest, bucketOf } from './bucket-layout'
 import { FilesState } from './state'
-import { loadFiles, saveFiles, type StoredFiles } from './storage'
 import { fileEntry, writeBucketProjection } from './test-support/bucket-builder'
 import {
   compatibilityChangesBuckets,
@@ -13,10 +12,16 @@ import {
   compatibilityRecord,
   compatibilityTreeBuckets,
 } from './test-support/bucket-record'
+import { saveReaderReleaseFiles } from './test-support/reader-release'
 import {
   createFilesStorage,
   type FilesStorageHarness,
 } from './test-support/storage'
+import {
+  readStoredFiles,
+  writeStorageRecord,
+  type StoredFiles,
+} from './test-support/storage-record'
 
 let runtime: FilesStorageHarness
 beforeAll(async () => {
@@ -64,9 +69,9 @@ it('uses UTF-8 for bucket numbers and SHA-256 digests', async () => {
 
 it('reads the literal record across all 64 buckets', async () => {
   const storage = runtime.storage('literal-bucket-record')
-  await storage.write(compatibilityRecord, [])
+  await writeStorageRecord(storage, compatibilityRecord)
 
-  await expect(loadFiles(storage)).resolves.toStrictEqual(
+  await expect(readStoredFiles(storage)).resolves.toStrictEqual(
     compatibilityProjection,
   )
   const state = new FilesState(storage)
@@ -121,7 +126,7 @@ it('reads list order, split bucket JSON, and optional fields', async () => {
     changesOrderChunks: 1,
   })
   await runtime.evict('ordered-lists')
-  await expect(loadFiles(storage)).resolves.toStrictEqual({
+  await expect(readStoredFiles(storage)).resolves.toStrictEqual({
     ...projection,
     tree,
   })
@@ -145,8 +150,8 @@ it('reads empty lists and distinguishes them from absent lists', async () => {
   await expect(runtime.inspect('empty-lists')).resolves.toMatchObject({
     chunks: 0,
   })
-  await expect(loadFiles(emptyStorage)).resolves.toStrictEqual(empty)
-  await expect(loadFiles(absentStorage)).resolves.toStrictEqual(absent)
+  await expect(readStoredFiles(emptyStorage)).resolves.toStrictEqual(empty)
+  await expect(readStoredFiles(absentStorage)).resolves.toStrictEqual(absent)
 })
 
 it('reads the last item across an order chunk boundary', async () => {
@@ -183,7 +188,7 @@ it.each(['old', 'bucket'] as const)(
     const storage = runtime.storage(`independent-${layout}`)
     let keys: string[]
     if (layout === 'old') {
-      await saveFiles(storage, projection)
+      await saveReaderReleaseFiles(storage, projection)
       keys = [`${FILES_KEY}:tree:0`, `${FILES_KEY}:changes:0`]
     } else {
       keys = Object.keys(await writeBucketProjection(storage, projection))

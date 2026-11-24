@@ -15,7 +15,8 @@ import {
   type BucketManifest,
   type ListKind,
 } from '../bucket-layout'
-import type { FilesStorage, StoredFiles } from '../storage'
+import type { FilesStorage } from '../storage'
+import { writeStorageRecord, type StoredFiles } from './storage-record'
 
 type BucketFor = (path: string) => number
 
@@ -105,6 +106,6 @@ export async function writeBucketProjection(
   }
   updates[FILES_KEY] = manifest
   corrupt?.(manifest, updates)
-  await storage.write(updates, [])
+  await writeStorageRecord(storage, updates)
   return updates
 }

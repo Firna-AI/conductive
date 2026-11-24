@@ -1,24 +1,26 @@
-import { afterAll, beforeAll, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, expect, it } from 'vitest'
 
 import type { ChangesResponse } from '../../src/shared/generated/ChangesResponse'
-import { FILES_KEY } from './bucket-layout'
+import { BUCKET_LAYOUT, FILES_KEY, bucketListKeys } from './bucket-layout'
 import { RunnerFileReports } from './runner-reports'
 import { FilesState } from './state'
-import {
-  loadFiles,
-  markFilesMoved,
-  type FilesStorage,
-  type StoredFiles,
-} from './storage'
+import { markFilesMoved, readFilesManifest, type FilesStorage } from './storage'
 import { fileEntry, writeBucketProjection } from './test-support/bucket-builder'
 import {
   compatibilityProjection,
   compatibilityRecord,
 } from './test-support/bucket-record'
+import { observeFilesStorage } from './test-support/observe-storage'
+import { saveReaderReleaseFiles } from './test-support/reader-release'
 import {
   createFilesStorage,
   type FilesStorageHarness,
 } from './test-support/storage'
+import {
+  readStoredFiles,
+  writeStorageRecord,
+  type StoredFiles,
+} from './test-support/storage-record'
 
 let runtime: FilesStorageHarness
 beforeAll(async () => {
@@ -53,18 +55,20 @@ const nextChanges = {
   summary: { files: 1, added: 3, removed: 0 },
 } satisfies ChangesResponse
 
-interface Conversion {
+interface ProjectionWrite {
   name: string
   prepare?: (storage: FilesStorage) => Promise<void>
   initial?: Partial<StoredFiles>
-  convert: (storage: FilesStorage) => Promise<unknown>
+  apply: (storage: FilesStorage) => Promise<unknown>
+  metadataOnly?: boolean
   expected: Partial<StoredFiles>
 }
 
-const conversions: Conversion[] = [
+const projectionWrites: ProjectionWrite[] = [
   {
     name: 'FilesState.beginConnection',
-    convert: (storage) => new FilesState(storage).beginConnection('new-stream'),
+    apply: (storage) => new FilesState(storage).beginConnection('new-stream'),
+    metadataOnly: true,
     expected: { connectionId: 'new-stream', hasSnapshot: false },
   },
   {
@@ -76,7 +80,7 @@ const conversions: Conversion[] = [
         entries: [{ ...fileEntry('a'), name: 'a'.repeat(65_536) }],
       },
     },
-    convert: (storage) =>
+    apply: (storage) =>
       new FilesState(storage).apply(stream, {
         type: 'files.snapshot',
         tree: nextTree,
@@ -85,7 +89,7 @@ const conversions: Conversion[] = [
   },
   {
     name: 'files.changed',
-    convert: (storage) =>
+    apply: (storage) =>
       new FilesState(storage).apply(stream, {
         type: 'files.changed',
         delta: {
@@ -99,7 +103,7 @@ const conversions: Conversion[] = [
   },
   {
     name: 'changes.updated',
-    convert: (storage) =>
+    apply: (storage) =>
       new FilesState(storage).apply(stream, {
         type: 'changes.updated',
         changes: nextChanges,
@@ -108,25 +112,28 @@ const conversions: Conversion[] = [
   },
   {
     name: 'files.unavailable',
-    convert: (storage) =>
+    apply: (storage) =>
       new FilesState(storage).apply(stream, { type: 'files.unavailable' }),
+    metadataOnly: true,
     expected: { tree: { ...tree, unavailable: true } },
   },
   {
     name: 'markFilesMoved',
-    convert: markFilesMoved,
+    apply: markFilesMoved,
+    metadataOnly: true,
     expected: { tree: { ...tree, unavailable: true }, changes: null },
   },
   {
     name: 'RunnerFileReports.beginStream',
-    convert: (storage) =>
+    apply: (storage) =>
       new RunnerFileReports(storage).beginStream('new-runner-stream'),
+    metadataOnly: true,
     expected: { connectionId: 'new-runner-stream', hasSnapshot: false },
   },
   {
     name: 'RunnerFileReports.accept',
     prepare: (storage) => new RunnerFileReports(storage).beginStream(stream),
-    convert: (storage) =>
+    apply: (storage) =>
       new RunnerFileReports(storage).accept({
         type: 'changes.updated',
         changes: { ...nextChanges, revision: 1, partNumber: 1, partCount: 1 },
@@ -135,55 +142,61 @@ const conversions: Conversion[] = [
   },
 ]
 
-it.each(conversions)(
-  '$name converts the projection to the old layout in one write',
-  async ({ name, prepare, initial, convert, expected }) => {
+it.each(projectionWrites)(
+  '$name updates the bucket projection in one transaction',
+  async ({ name, prepare, initial, apply, expected, metadataOnly }) => {
     const storage = runtime.storage(name)
     await prepare?.(storage)
     const previous = { ...projection, ...initial }
     const original = await writeBucketProjection(storage, previous)
-    const write = vi.fn(storage.write)
-    await convert({ ...storage, write })
+    const observed = observeFilesStorage(storage)
+    await apply(observed.storage)
 
     const result = { ...previous, ...expected }
-    const legacyManifest = {
+    expect(observed.writes).toHaveLength(1)
+    const [{ updates, removals }] = observed.writes
+    const manifest = await readFilesManifest(storage)
+    expect(updates[FILES_KEY]).toStrictEqual(manifest)
+    expect(manifest).toMatchObject({
       connectionId: result.connectionId,
       hasSnapshot: result.hasSnapshot,
-      treeChunks: 1,
-      changesChunks: result.changes === null ? 0 : 1,
-    }
-    const projectionWrites = write.mock.calls.filter(([updates, removals]) =>
-      [...Object.keys(updates), ...removals].some(
-        (key) => key === FILES_KEY || key.startsWith(`${FILES_KEY}:`),
-      ),
-    )
-    expect(projectionWrites).toHaveLength(1)
-    const [[updates, removals]] = projectionWrites
-    expect(updates[FILES_KEY]).toStrictEqual(legacyManifest)
-    expect([...removals].sort()).toStrictEqual(
-      Object.keys(original)
-        .filter((key) => key !== FILES_KEY)
-        .sort(),
-    )
+      layout: BUCKET_LAYOUT,
+      treeChunks: 0,
+      changesChunks: 0,
+    })
+    expect(
+      observed.reads.flat().some((key) => key.startsWith(`${FILES_KEY}:`)),
+    ).toBe(!metadataOnly)
+    expect(
+      Object.keys(updates).some((key) => key.startsWith(`${FILES_KEY}:`)),
+    ).toBe(!metadataOnly)
+    if (manifest.layout !== BUCKET_LAYOUT)
+      throw new Error('Expected bucket layout')
+    const retained = new Set([
+      ...bucketListKeys('tree', manifest.tree),
+      ...bucketListKeys('changes', manifest.changes),
+    ])
+    const obsolete = Object.keys(original)
+      .filter((key) => key !== FILES_KEY && !retained.has(key))
+      .sort()
+    expect([...removals].sort()).toStrictEqual(obsolete)
     await expect(runtime.inspect(name)).resolves.toMatchObject({
-      treeChunks: legacyManifest.treeChunks,
-      changesChunks: legacyManifest.changesChunks,
-      treeBucketChunks: 0,
-      changesBucketChunks: 0,
-      treeOrderChunks: 0,
-      changesOrderChunks: 0,
+      treeChunks: 0,
+      changesChunks: 0,
+      chunks: retained.size,
     })
     await runtime.evict(name)
-    await expect(storage.get(FILES_KEY)).resolves.toStrictEqual(legacyManifest)
-    await expect(loadFiles(storage)).resolves.toStrictEqual(result)
+    await expect(storage.get(FILES_KEY)).resolves.toStrictEqual(manifest)
+    await expect(storage.getMany(obsolete)).resolves.toStrictEqual(new Map())
+    await expect(readStoredFiles(storage)).resolves.toStrictEqual(result)
   },
 )
 
 it('keeps the bucket layout when a connection or snapshot is stale', async () => {
   const storage = runtime.storage('stale-snapshot')
   const stored = await writeBucketProjection(storage, projection)
-  const write = vi.fn(storage.write)
-  const state = new FilesState({ ...storage, write })
+  const observed = observeFilesStorage(storage)
+  const state = new FilesState(observed.storage)
   await expect(
     state.apply('old-stream', { type: 'files.unavailable' }),
   ).resolves.toBe(false)
@@ -193,17 +206,17 @@ it('keeps the bucket layout when a connection or snapshot is stale', async () =>
       tree: { revision: 3, entries: [] },
     }),
   ).resolves.toBe(false)
-  expect(write).not.toHaveBeenCalled()
+  expect(observed.writes).toEqual([])
   await expect(storage.getMany(Object.keys(stored))).resolves.toStrictEqual(
     new Map(Object.entries(stored)),
   )
-  await expect(loadFiles(storage)).resolves.toStrictEqual(projection)
+  await expect(readStoredFiles(storage)).resolves.toStrictEqual(projection)
 })
 
 it('restores the bucket projection when the staged conversion fails at commit', async () => {
   const name = 'conversion-rollback'
   const storage = runtime.storage(name)
-  await storage.write(compatibilityRecord, [])
+  await writeStorageRecord(storage, compatibilityRecord)
   const expectedStaged = {
     [FILES_KEY]: {
       connectionId: 'new-stream',
@@ -215,8 +228,14 @@ it('restores the bucket projection when the staged conversion fails at commit', 
     [`${FILES_KEY}:changes:0`]: JSON.stringify(compatibilityProjection.changes),
   }
 
-  const state = new FilesState(runtime.storage(name, { failCommit: true }))
-  const conversion = state.beginConnection('new-stream')
+  const conversion = saveReaderReleaseFiles(
+    runtime.storage(name, { failCommit: true }),
+    {
+      ...compatibilityProjection,
+      connectionId: 'new-stream',
+      hasSnapshot: false,
+    },
+  )
   await expect(conversion).rejects.toThrow('Test storage commit failed')
   await expect(conversion).rejects.toHaveProperty('staged', expectedStaged)
 
@@ -224,7 +243,7 @@ it('restores the bucket projection when the staged conversion fails at commit', 
   const original = new Map(Object.entries(compatibilityRecord))
   const keys = new Set([...original.keys(), ...Object.keys(expectedStaged)])
   await expect(storage.getMany([...keys])).resolves.toStrictEqual(original)
-  await expect(loadFiles(storage)).resolves.toStrictEqual(
+  await expect(readStoredFiles(storage)).resolves.toStrictEqual(
     compatibilityProjection,
   )
 })

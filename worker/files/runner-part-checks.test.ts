@@ -14,6 +14,8 @@ import {
 import { InvalidRunnerReport, RunnerFileReports } from './runner-reports'
 import { FilesState } from './state'
 import type { FilesStorage } from './storage'
+import { observeFilesStorage } from './test-support/observe-storage'
+import { writeStorageRecord } from './test-support/storage-record'
 
 function changesPart(
   partNumber: number,
@@ -43,20 +45,10 @@ function changesPart(
 
 async function trackedReports() {
   const storage = chatFilesStorage((await nativeChatStore()).storage)
-  const reads: string[] = []
-  const reports = new RunnerFileReports({
-    ...storage,
-    get(key) {
-      reads.push(key)
-      return storage.get(key)
-    },
-    getMany(keys) {
-      reads.push(...keys)
-      return storage.getMany(keys)
-    },
-  })
+  const observed = observeFilesStorage(storage)
+  const reports = new RunnerFileReports(observed.storage)
   await reports.beginStream('stream')
-  return { storage, reports, reads }
+  return { storage, reports, reads: observed.reads }
 }
 
 async function seedChanges(
@@ -65,26 +57,23 @@ async function seedChanges(
   fields?: unknown,
 ) {
   const updates = reportPartUpdates('changes', 1, first)
-  await storage.write(
-    {
-      [REPORT_KEY]: {
-        streamId: 'stream',
-        tree: emptySequence(),
-        changes: {
-          appliedRevision: 0,
-          seen: true,
-          report: {
-            revision: 1,
-            partCount: first.changes.partCount,
-            through: 1,
-            ...(fields === undefined ? {} : { fields }),
-          },
+  await writeStorageRecord(storage, {
+    [REPORT_KEY]: {
+      streamId: 'stream',
+      tree: emptySequence(),
+      changes: {
+        appliedRevision: 0,
+        seen: true,
+        report: {
+          revision: 1,
+          partCount: first.changes.partCount,
+          through: 1,
+          ...(fields === undefined ? {} : { fields }),
         },
       },
-      ...updates,
     },
-    [],
-  )
+    ...updates,
+  })
   return Object.keys(updates)
 }
 
@@ -93,12 +82,12 @@ it('reads only assembly state for a middle tree or changes part', async () => {
   await reports.accept(changesPart(1, 3))
   reads.length = 0
   expect(await reports.accept(changesPart(2, 3))).toBeNull()
-  expect(reads).toEqual([REPORT_KEY])
+  expect(reads.flat()).toEqual([REPORT_KEY])
 
   await reports.accept(snapshot(1, 1, 3, ['first']))
   reads.length = 0
   expect(await reports.accept(snapshot(1, 2, 3, ['middle']))).toBeNull()
-  expect(reads).toEqual([REPORT_KEY])
+  expect(reads.flat()).toEqual([REPORT_KEY])
 })
 
 it.each([
@@ -130,7 +119,7 @@ it('reads part one once to restore comparison fields in a previous Worker state'
   const middle = changesPart(2, 4, { displayBaseBranch: 'second' })
   reads.length = 0
   await expect(reports.accept(middle)).resolves.toBeNull()
-  expect(reads).toEqual([REPORT_KEY, ...firstKeys])
+  expect(reads.flat()).toEqual([REPORT_KEY, ...firstKeys])
   expect((await loadReportState(storage))?.changes.report).toStrictEqual({
     revision: 1,
     partCount: 4,
@@ -145,7 +134,7 @@ it('reads part one once to restore comparison fields in a previous Worker state'
   const third = changesPart(3, 4)
   reads.length = 0
   expect(await reports.accept(third)).toBeNull()
-  expect(reads).toEqual([REPORT_KEY])
+  expect(reads.flat()).toEqual([REPORT_KEY])
 
   const earlierKeys = [
     ...firstKeys,
@@ -154,9 +143,12 @@ it('reads part one once to restore comparison fields in a previous Worker state'
   ].sort()
   reads.length = 0
   const completed = await reports.accept(changesPart(4, 4))
-  expect(reads.filter((key) => earlierKeys.includes(key)).sort()).toEqual(
-    earlierKeys,
-  )
+  expect(
+    reads
+      .flat()
+      .filter((key) => earlierKeys.includes(key))
+      .sort(),
+  ).toEqual(earlierKeys)
   expect(completed).toMatchObject({
     type: 'changes.updated',
     changes: {
@@ -186,7 +178,9 @@ it('loads part one once when fields are malformed on arrival of the last part', 
       summary: { files: 2, added: 2, removed: 0 },
     },
   })
-  expect(reads.filter((key) => firstKeys.includes(key))).toEqual(firstKeys)
+  expect(reads.flat().filter((key) => firstKeys.includes(key))).toEqual(
+    firstKeys,
+  )
 })
 
 it('refuses a different base branch when resuming a previous Worker report', async () => {

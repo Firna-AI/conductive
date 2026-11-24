@@ -3,7 +3,7 @@ import type { RunnerFileEvent } from '../../src/shared/generated/RunnerFileEvent
 import { isRecord } from '../http'
 import { natural } from './parsers'
 import { parseRunnerFileEvent } from './runner-input'
-import type { FilesStorage } from './storage'
+import type { FilesReader } from './storage'
 
 export type ReportKind = 'tree' | 'changes'
 export interface ChangesPartFields {
@@ -122,7 +122,7 @@ function sequence(value: unknown, kind: ReportKind): ReportSequence {
 }
 
 export async function loadReportState(
-  storage: FilesStorage,
+  storage: FilesReader,
 ): Promise<ReportState | null> {
   const value = await storage.get(REPORT_KEY)
   if (value === undefined) return null
@@ -150,7 +150,7 @@ function partChunks(value: unknown): number {
 
 /** Include every chunk when a report is replaced, refused, or changes streams. */
 export async function storedReportKeys(
-  storage: FilesStorage,
+  storage: FilesReader,
   kind: ReportKind,
   report: ReportProgress | null,
 ): Promise<string[]> {
@@ -183,7 +183,7 @@ export function reportPartUpdates(
 }
 
 async function readPart(
-  storage: FilesStorage,
+  storage: FilesReader,
   key: string,
   value: unknown,
 ): Promise<RunnerFileEvent> {
@@ -202,7 +202,7 @@ async function readPart(
 }
 
 export async function storedPart(
-  storage: FilesStorage,
+  storage: FilesReader,
   kind: ReportKind,
   partNumber: number,
 ): Promise<RunnerFileEvent> {
@@ -211,7 +211,7 @@ export async function storedPart(
 }
 
 export async function storedParts(
-  storage: FilesStorage,
+  storage: FilesReader,
   kind: ReportKind,
   report: ReportProgress,
   firstPart?: RunnerFileEvent,

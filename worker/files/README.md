@@ -18,8 +18,8 @@ It reads the captured checkout folder from D1.
 
 Create one `WorkspaceFiles` instance, called `files` here, for each workspace Durable Object.
 Pass `durableFilesStorage(ctx.storage)` and a unique request ID function to its constructor.
-The storage adapter commits a manifest and JSON chunks in one storage transaction.
-Its interface provides `get`, `getMany`, and an atomic `write` of updates and removals.
+The adapter provides `get` and `getMany` for reads.
+Its `transaction` callback provides `get`, `getMany`, `put`, and `delete` in one storage transaction.
 Each chunk has at most 65,536 JavaScript string characters.
 This bounds each stored value without limiting repository size.
 The projection is the last complete tree and branch changes that the API serves.
@@ -36,12 +36,14 @@ A delta or an incomplete report keeps it.
 The stored projection has one of two layouts.
 The old layout stores each list as one JSON text in chunks.
 The bucket layout splits each list into 64 buckets by a hash of the item path, with an order text for the list order.
-The doc comment in [bucket-layout.ts](bucket-layout.ts) defines the bucket layout.
-A later Worker release writes the bucket layout.
-This module reads both layouts, so a Worker rollback from that release keeps working.
-Each write of the projection stores the old layout.
-When the stored projection has the bucket layout, the same atomic write removes its bucket and order keys.
-A damaged bucket layout gives the same HTTP 502 `file_unavailable` error as a damaged old layout.
+This module reads both layouts and writes list data in the bucket layout.
+A full report writes buckets with changed digests and writes the order text when it changes.
+A tree delta reads its affected buckets one at a time. A remove visits every tree bucket because a folder's entries can be in any bucket.
+A connection reset updates the manifest. An unavailable-tree mark and a repository move update the manifest of a bucket projection without reading list items.
+The first list write or tree mark of an old projection reads its old chunks in bounded batches and converts one entry at a time.
+The same transaction writes the bucket data and manifest and removes the old keys.
+The reader release can read this layout and converts it back to the old layout on its next write after a rollback.
+A damaged projection gives HTTP 502 `file_unavailable` when read.
 
 Runner file events reach this module through one of two integrations.
 The combined integration joins report parts in the runner transaction of the chat backend.
@@ -51,7 +53,7 @@ The standalone integration takes only complete reports.
 
 The [chat backend](../chat/integration/README.md#milestone-9-files) owns the runner stream, its cursor, and its confirmations.
 It creates `RunnerFileReports` on `ChatTransaction.files`.
-That adapter writes in the chat transaction of the runner message.
+That adapter runs the files transaction callback in the chat transaction of the runner message.
 So the assembly state, the projection, the history event, and the cursor commit together before the confirm.
 
 On each `hello`, the chat backend calls `beginStream(streamId)`.
@@ -215,10 +217,9 @@ Chat history remains readable through its separate access path.
 Run `npm run test -- worker/files` from the repository root with Node 24.
 The tests that use `createFilesStorage` in `test-support/storage.ts` run SQLite Durable Object storage in Miniflare.
 Its `evict` evicts the object, so that a test can check a reload.
-This module does not write the bucket layout.
-So the `bucket-*.test.ts` files write it with `writeBucketProjection` in `test-support/bucket-builder.ts`.
-`test-support/bucket-record.ts` holds one fixed record with literal keys, symbols, and manifest values, so a change of the stored format fails a test.
-`bucket-rollback.test.ts` checks that each write changes a stored bucket layout back to the old layout in one atomic write.
+The bucket reader tests use `writeBucketProjection` in `test-support/bucket-builder.ts` and a fixed record with literal keys, symbols, and manifest values.
+The writer tests check which buckets each operation reads and writes.
+They check conversion in both directions and inject a failure during a standalone write to check rollback.
 `report-storage.test.ts` uses the native SQLite storage of the production workspace object.
 It checks that a part stored as one value stays readable, and that each removal also removes the chunks.
 The API tests use local D1, the existing fake runner, and FakeBoat.
@@ -242,9 +243,12 @@ The D1 workspace schema holds the base branch.
   Its `storedReportKeys` lists each part key and chunk key that a removal needs.
 - [report-generation.ts](report-generation.ts) reads the newest stored revision and the incomplete revision of a report kind for repair checks.
 - [runner-input.ts](runner-input.ts) parses a runner file event with its revision and part fields.
-- [storage.ts](storage.ts) adapts Durable Object storage and writes the chunks atomically. Its `saveFiles` writes the projection in the old layout. Its `readFilesManifest` and `readFileList` read the manifest and one list, in either layout.
+- `readFilesManifest` and `readFileList` read the manifest and one list in either layout. `markFilesMoved` marks the projection after a repository move. [storage.ts](storage.ts)
 - [bucket-layout.ts](bucket-layout.ts) defines the bucket layout in its doc comment and parses the bucket manifest.
 - [bucket-read.ts](bucket-read.ts) reads one list of the bucket layout from its buckets and its order text.
+- `writeBucketList` writes changed buckets and list order. [bucket-write.ts](bucket-write.ts)
+- `writeTreeDelta` applies an ordered tree delta. [bucket-delta.ts](bucket-delta.ts)
+- `convertFilesProjection` converts old lists during the transaction that changes the projection. [bucket-convert.ts](bucket-convert.ts)
 - [runner.ts](runner.ts) matches file and diff commands to their results.
 - [boat.ts](boat.ts) converts the provider's file read result for the browser.
 - [data.ts](data.ts) reads the workspace and repository relationship from D1, with the sandbox ID and its provider account.

@@ -41,7 +41,7 @@ export async function createFilesStorage() {
   })
   return {
     storage(name: string, { failCommit = false } = {}): FilesStorage {
-      return {
+      const storage: FilesStorage = {
         async get(key) {
           const response = await runtime.dispatchFetch(
             `https://storage.test/?${new URLSearchParams({ name, key })}`,
@@ -51,6 +51,7 @@ export async function createFilesStorage() {
           return value.value
         },
         async getMany(keys) {
+          if (keys.length === 0) return new Map()
           const response = await runtime.dispatchFetch(
             `https://storage.test/?${new URLSearchParams({ name })}`,
             { method: 'POST', body: JSON.stringify({ keys }) },
@@ -70,12 +71,46 @@ export async function createFilesStorage() {
           }
           return entries
         },
-        async write(updates, removals) {
+        async transaction(work) {
+          const updates = new Map<string, unknown>()
+          const removals = new Set<string>()
+          const result = await work({
+            get: (key) => {
+              if (removals.has(key)) return Promise.resolve(undefined)
+              if (updates.has(key)) return Promise.resolve(updates.get(key))
+              return storage.get(key)
+            },
+            async getMany(keys) {
+              const stored = await storage.getMany(
+                keys.filter((key) => !updates.has(key) && !removals.has(key)),
+              )
+              const values = new Map(stored)
+              for (const key of keys) {
+                if (updates.has(key)) values.set(key, updates.get(key))
+              }
+              return values
+            },
+            async put(key, value) {
+              updates.set(key, value)
+              removals.delete(key)
+            },
+            async delete(key) {
+              updates.delete(key)
+              removals.add(key)
+            },
+          })
+          if (updates.size === 0 && removals.size === 0) return result
           const query = new URLSearchParams({ name })
           if (failCommit) query.set('failCommit', '1')
           const response = await runtime.dispatchFetch(
             `https://storage.test/?${query}`,
-            { method: 'PUT', body: JSON.stringify({ updates, removals }) },
+            {
+              method: 'PUT',
+              body: JSON.stringify({
+                updates: Object.fromEntries(updates),
+                removals: [...removals],
+              }),
+            },
           )
           if (failCommit && response.status === 409) {
             const staged: unknown = await response.json()
@@ -85,13 +120,38 @@ export async function createFilesStorage() {
           }
           if (response.status !== 204)
             throw new Error('Test storage write failed')
+          return result
         },
       }
+      return storage
     },
     evict: (name: string) =>
       runtime.unsafeEvictDurableObject('files-storage-tests', 'StoredFiles', {
         name,
       }),
+    async apply(
+      name: string,
+      connectionId: string,
+      event: unknown,
+      failAfterBucketWrites?: number,
+    ) {
+      const response = await runtime.dispatchFetch(
+        `https://storage.test/?${new URLSearchParams({ name })}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ connectionId, event, failAfterBucketWrites }),
+        },
+      )
+      const result: unknown = await response.json()
+      if (response.status === 409) {
+        throw Object.assign(new Error('Test bucket write failed'), {
+          keys: result,
+        })
+      }
+      if (response.status !== 200 || typeof result !== 'boolean')
+        throw new Error('Invalid standalone apply response')
+      return result
+    },
     async inspect(name: string): Promise<unknown> {
       return (
         await runtime.dispatchFetch(

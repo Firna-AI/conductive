@@ -16,6 +16,7 @@ import { storedReportPartKeys } from './report-storage.test-support'
 import { RunnerFileReports } from './runner-reports'
 import { FilesState } from './state'
 import type { FilesStorage } from './storage'
+import { writeStorageRecord } from './test-support/storage-record'
 
 async function expectRemoved(storage: FilesStorage, keys: readonly string[]) {
   expect(keys.length).toBeGreaterThan(0)
@@ -32,13 +33,10 @@ it('reads old report parts and removes obsolete chunks on replacement, refusal, 
   if (!state) throw new Error('Missing report state.')
   state.tree.report = { revision: 1, partCount: 2, through: 1 }
   state.tree.seen = true
-  await storage.write(
-    {
-      [REPORT_KEY]: state,
-      [partKey('tree', 1)]: snapshot(1, 1, 2, ['legacy-first']),
-    },
-    [],
-  )
+  await writeStorageRecord(storage, {
+    [REPORT_KEY]: state,
+    [partKey('tree', 1)]: snapshot(1, 1, 2, ['legacy-first']),
+  })
   await reports.accept(snapshot(1, 2, 2, ['legacy-last']))
   const previousTree = {
     revision: 1,

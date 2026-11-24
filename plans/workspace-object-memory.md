@@ -797,50 +797,52 @@ the path labels, the list order, and the absent optional counts.
 
 - [x] Merge `main` into this branch after Milestone 2 merges. Confirm that
       the layout module is the merged reader.
-- [ ] Give `FilesStorage` the transaction callback of design call 13. Move
+- [x] Give `FilesStorage` the transaction callback of design call 13. Move
       each consumer of `write`, then delete `write`. This includes the
       adapter in `worker/chat/files-storage.ts`, which the approved plan
       includes.
-- [ ] Write full reports as design call 11 says. Write tree deltas as
+- [x] Write full reports as design call 11 says. Write tree deltas as
       design call 10 says.
-- [ ] Write `beginConnection`, `files.unavailable`, and `markFilesMoved` as
+- [x] Write `beginConnection`, `files.unavailable`, and `markFilesMoved` as
       design call 12 says. Keep `markFilesMoved` callable in the
       publication transaction of a repository change.
-- [ ] Convert old projections with bounded memory, as design call 14 says.
+- [x] Convert old projections with bounded memory, as design call 14 says.
       A small delta or an unavailable mark must not call the whole-list
       loader. Publish the new manifest only with the complete conversion.
-- [ ] Delete the whole-list `saveFiles` and the convert-back write of
+- [x] Delete the whole-list `saveFiles` and the convert-back write of
       Milestone 2.
-- [ ] Keep one projection read over a supplied `FilesStorage`. It uses
+- [x] Keep one projection read over a supplied `FilesStorage`. It uses
       only `get` and `getMany`, and it adds no queue task.
-- [ ] Add tests:
-  - [ ] Each case of `worker/files/state.test.ts` passes unchanged. This
+- [x] Add tests:
+  - [x] Each case of `worker/files/state.test.ts` passes unchanged. This
         includes the order of 20,000 entries after a reload.
-  - [ ] Two upserts of existing paths read and write only their buckets and
+  - [x] Two upserts of existing paths read and write only their buckets and
         the manifest. An insertion also updates the order text.
-  - [ ] A delta with a remove reads each bucket once, one at a time. It
+  - [x] A delta with a remove reads each bucket once, one at a time. It
         removes the entries of a folder from each bucket.
-  - [ ] These sequences give the result of the old `Map` code: a remove
+  - [x] These sequences give the result of the old `Map` code: a remove
         and then an upsert of the same path, an upsert and then a remove of
         its folder, a move onto an existing path, and a move and then a new
         item at the old path.
-  - [ ] A changes list with one added file writes only its bucket, the
+  - [x] A changes list with one added file writes only its bucket, the
         order text, and the manifest.
-  - [ ] An error after some bucket writes of a standalone apply leaves the
+  - [x] An error after some bucket writes of a standalone apply leaves the
         stored projection unchanged.
-  - [ ] An old-layout projection reads correctly through the supported
+  - [x] An old-layout projection reads correctly through the supported
         reader. Keep its existing value and metadata assertions.
-  - [ ] A read in a chat queue task returns the same lists.
-- [ ] When decision 2 chooses A, add its follow-up item under
+  - [x] A read in a chat queue task returns the same lists.
+- [x] When decision 2 chooses A, add its follow-up item under
       `plans/follow-ups/`.
-- [ ] Update the [files README](../worker/files/README.md) and the
+- [x] Update the [files README](../worker/files/README.md) and the
       [chat backend integration README](../worker/chat/integration/README.md)
       where they name the storage adapter.
-- [ ] Run the targeted tests: `npm run test -- worker/files`, then
+- [x] Run the targeted tests: `npm run test -- worker/files`, then
       `worker/chat/runner-file-parts.test.ts`,
       `runner-files-durable.test.ts`, `runner-grown-reports.test.ts`,
       `runner-connection-files.test.ts`, `unavailable-files.test.ts`, and
       `worker/lifecycle/repository-change-native.test.ts`.
+Evidence: `.context/workspace-object-memory/m6-*.log` and
+`m6-test-times.tsv`.
 
 ## Milestone 7: Verification
 

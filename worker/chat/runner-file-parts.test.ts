@@ -18,7 +18,7 @@ function fileStorage(
           ),
         ),
       ),
-    write: async () => {
+    transaction: async () => {
       throw new Error('Read only projection')
     },
   }
