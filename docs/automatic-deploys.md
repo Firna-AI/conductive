@@ -17,8 +17,9 @@ does not wait for CI. So a commit on `main` goes live also when its CI run
 fails. [CI](../AGENTS.md#ci) says how a commit reaches `main`.
 
 - Deploys run one at a time. A new push never cancels a running deploy.
-- A run that waits for a new software image keeps the next run waiting,
-  for up to 15 minutes more, as [Steps of a run](#steps-of-a-run) says.
+- The next deploy waits for all jobs in the current run. This includes
+  the software image wait and the `container-base` job in
+  [Steps of a run](#steps-of-a-run).
 - GitHub keeps only the newest waiting run. So a burst of merges deploys
   the newest commit.
 - Each run first checks that its commit is still the head of `main`.
@@ -27,13 +28,14 @@ fails. [CI](../AGENTS.md#ci) says how a commit reaches `main`.
   and that run deploys the head with the head's own steps.
 - When a run cannot look up the head of `main`, it warns and deploys its
   own commit.
-- A re-run of only some jobs, such as Re-run failed jobs, also deploys
-  nothing. It starts a new run on `main`, because a re-run keeps the
-  outputs of the jobs that passed. Re-run all jobs retries the deploy in
-  the same run. Both also retry a software image that was not ready.
+- A partial re-run of the Worker deploy or the software image check
+  starts a new run on `main`. GitHub keeps the outputs of the jobs that
+  passed. Re-run all jobs retries the deploy in the same run. Both also
+  retry a software image that was not ready. For a container base image
+  retry, see [When a deploy fails](#when-a-deploy-fails).
 - GitHub sends a failure alert to the person who starts a run. A run that
-  the workflow starts has no such person. So after a re-run, look at the
-  new run in GitHub Actions.
+  the workflow starts has no such person. When a re-run starts a new run
+  on `main`, check that new run in GitHub Actions.
 
 ## GitHub settings
 
@@ -144,8 +146,13 @@ Each run takes these steps, in this order:
    that version is already ready, the step ends at once. When the image is
    not ready at the end of the step, a later job fails the run, and the
    summary names the cause.
+11. After the deploy job succeeds, `container-base` publishes the signed
+    container base image for that job's release version and digest. If
+    the release's base image JSON already exists, the job skips the
+    build. For upload steps, see
+    [The container base image in each deploy](deployment/runner-archive.md#the-container-base-image-in-each-deploy).
 
-A failed step stops the run, except a failed deploy of the egress Worker.
+A failed step stops its job, except a failed deploy of the egress Worker.
 An app build error stops the run before it changes anything live.
 
 - The `--var` option sets only `CONDUCTIVE_DEPLOY_TOKEN_SHA256`.
@@ -202,6 +209,10 @@ A failed run does not roll back.
   org without an org image then install the app's own software, until a
   later run makes the software image. Re-run all jobs or Re-run failed
   jobs tries again with a new deploy. The next push also tries again.
+- If the container base image fails to publish, the Worker and its release
+  stay live. The release has no published container base image. If this
+  is the only failure, select Re-run failed jobs. GitHub re-runs only
+  `container-base` with the deploy's original release version and digest.
 - A failed upload leaves the previous Worker on the new schema until the
   next deploy, as
   [Migrations and the previous Worker](#migrations-and-the-previous-worker)

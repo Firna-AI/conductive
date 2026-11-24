@@ -249,13 +249,9 @@ enroll_and_start() {
     printf '%s\n' "$report" >&2
     fail 'Fix the failed checks above, then run the install command again.'
   fi
-  # Keep the code out of the command arguments that sudo logs.
-  # shellcheck disable=SC2016
-  if ! printf '%s\n' "$code" | as_computer sh -c '
-    IFS= read -r code || exit 1
-    exec "$1" computer enroll --code "$code" --origin "$2" --release-server "$3"
-  ' sh "$program" "$origin" "$release_server"; then
-    fail 'A code works once within 1 hour. Select New code in the app to get a new command.'
+  if ! printf '%s\n' "$code" |
+    as_computer "$program" computer enroll --origin "$origin" --release-server "$release_server"; then
+    fail 'The own computer could not exchange its code. Read the message above.'
   fi
   as_computer "$program" computer service || fail 'Could not start the Conductive service.'
 }

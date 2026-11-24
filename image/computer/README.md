@@ -34,8 +34,10 @@ script after the next deploy of the Worker.
 | `--release-server` | The base URL of the release files. The default is `https://runner.conductive.build`. |
 
 Each URL must use HTTPS, or HTTP with the host `127.0.0.1`, `localhost`,
-or `[::1]`. It can have a port and a path. It cannot have a user name, a
-query, or a fragment.
+or `[::1]`. Each can have a port. A user name, a query, or a fragment
+makes either URL invalid. The computer uses only the scheme, host, and
+port of `--origin`. It ignores its path. The `--release-server` URL can
+have a path prefix.
 
 Before it changes anything, the script checks the server. The needs are
 Linux on x86_64, systemd as the init system, Podman 4 or later, cgroups
@@ -77,12 +79,11 @@ each later release, as
 [The computer connection](../../docs/protocol/own-computers.md#the-computer-connection)
 says.
 
-The script sends the code through standard input to a shell that runs
-`computer enroll`. So the command line that `sudo` logs does not hold the
-code. When the health report shows a failed check, the script stops. The
-admin then fixes the server and runs the command again. A second run keeps
-the user, its ID ranges, and the drop-in file. When the enroll fails, the
-script asks for a new code from the app.
+The script sends the code to `computer enroll` on standard input. When
+the health report shows a failed check, the script stops. The admin then
+fixes the server and runs the command again. A second run keeps the user,
+its ID ranges, and the drop-in file. If the code exchange fails, read the
+reason that `computer enroll` prints.
 
 The script reads the newest-version JSON with `awk`, so each key must be
 on its own line, as the release packager writes it.
@@ -239,8 +240,9 @@ podman exec base-check systemctl --failed
 podman rm -f base-check
 ```
 
-The first `podman exec` can fail while systemd starts. Run it again after
-some seconds. `systemctl --failed` lists `docker.service` and
+During boot, `systemctl is-system-running --wait` can fail to reach the
+systemd bus. Run that command again after a few seconds.
+`systemctl --failed` lists `docker.service` and
 `docker.socket`, as [Checks and limits](#checks-and-limits) says.
 [Developer scripts](../developer-scripts.md#development) gives the
 typecheck and the lint of the TypeScript files.

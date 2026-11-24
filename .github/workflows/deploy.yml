@@ -542,10 +542,9 @@ jobs:
 
   container-base:
     name: Publish the container base image
-    needs: [check, deploy]
+    needs: deploy
     if: >-
-      ${{ !cancelled() && github.ref == 'refs/heads/main' && needs.deploy.result == 'success' &&
-      needs.check.outputs.attempt == github.run_attempt }}
+      ${{ !cancelled() && github.ref == 'refs/heads/main' && needs.deploy.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     permissions:
