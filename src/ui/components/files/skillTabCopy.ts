@@ -1,10 +1,9 @@
-import type { Agent } from '../../../../../src/shared/generated/Agent'
+import type { Agent } from '../../../shared/generated/Agent'
 
 /**
  * The words of the tab of a skill: the agent of the skill in the header,
  * the line while the text loads, the notices in place of the text, and the
- * failure of the read with its button. This module imports no fixture, so
- * it can move to the shared UI when the app draws the tab.
+ * failure of the read with its button. The app and the mockups share them.
  */
 export const skillTabCopy = {
   /**

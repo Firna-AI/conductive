@@ -116,6 +116,12 @@ and no resume at open. The reader stays the same while the tab keeps its
 files store, so a return, stop, or resume keeps its cached results. Picture
 reads call only the file client and cannot start or resume the sandbox.
 
+## The skill tabs
+
+[The skill tabs](skill-tabs.md) gives the skill tabs of the centre: their
+place in the saved view, their address, the page of a skill and its read,
+and the skill chips that open them.
+
 ## The tools part
 
 [The tools part](tools-part.md) gives the Terminal and Preview tools of

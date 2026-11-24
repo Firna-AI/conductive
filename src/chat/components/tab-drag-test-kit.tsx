@@ -126,13 +126,17 @@ export function fileTabs(
   copyPath?: (path: string) => void,
 ): RenderTab {
   return (host) => {
-    // These rows hold no Preview tab, so each host tab is a file or a diff.
-    if (host.kind === 'preview') throw new Error('No Preview tab here')
+    // These rows hold no Preview or skill tab, so each host tab is a file
+    // or a diff.
+    if (host.kind === 'preview' || host.kind === 'skill') {
+      throw new Error('Only file and diff tabs here')
+    }
     const tab = host
     const label = labelOf(tab.path)
     const isTemporary =
       temporary !== null &&
       temporary.kind === tab.kind &&
+      'path' in temporary &&
       temporary.path === tab.path
     return {
       title: fileTabName(tab, label),

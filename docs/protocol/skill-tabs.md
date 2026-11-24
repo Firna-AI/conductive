@@ -158,7 +158,8 @@ skill tab at `app/skill-mentions/tab`, the chips that open it at
 
 - One notice takes the place of the text in each case below. A notice
   keeps the header. Each notice has the look of the empty state of a file
-  tab: an icon, a title, and one sentence.
+  tab: an icon, a title, and one sentence. The notice of a failed read has
+  an icon, a title, and Try again.
   - While the read runs, a spinner and "Opening the skill" show.
   - When the read finds no such skill: "This skill was removed or
     renamed", with "Type / in a message to see the current skills."
@@ -167,6 +168,15 @@ skill tab at `app/skill-mentions/tab`, the chips that open it at
   - When the runner of the current start has no skill reads: "Restart to
     open this skill", with "Opening a skill needs newer cloud computer
     software. Select Restart in the workspace header."
+  - When the read fails for a cause without a notice of its own, such as
+    a runner that cannot read the file, a lost runner connection, or an
+    error of the Worker: the alert icon, "This skill didn't open", and Try
+    again, with no sentence, as a file tab shows "This file didn't open".
+    Try again reads the text again.
+- Reason: every tab has a failure state, and Try again repeats the read.
+  The notice of a removed skill for each failure was rejected, because it
+  gives a wrong cause. A spinner that keeps reading was rejected, because a
+  lasting failure never ends.
 - The notice for older software has no button of its own, as the notice of
   an HTML file in [Older software](html-file-preview.md#older-software).
   Reason: Restart downloads the newest release before it restarts the

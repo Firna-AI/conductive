@@ -92,6 +92,13 @@ mount the chat.
   `mentions/mention-skills.ts`: loading, unavailable, or the list of each
   agent. The shell gives `WorkspaceSkills`, which follows the
   `skills.updated` events of the workspace stream.
+  `skillTabs` opens the skill tab of a skill chip, and gives its address:
+  a press on the name of a chip of the composer, or on the whole chip of a
+  sent message. The chip names the skill of the agent of the model of the
+  composer, or of the choice of the sent message, else of the other agent,
+  as [Skill chips](../../docs/protocol/skill-mentions.md#skill-chips)
+  says. The shell gives the navigation of its skill tabs. Without
+  `skillTabs`, a skill chip opens nothing.
   Without `mentions`, the composer has no list of `@` and no list of `/`,
   and a message shows each skill text as text. A message then shows each
   mention of a file or a folder of the workspace as text, as

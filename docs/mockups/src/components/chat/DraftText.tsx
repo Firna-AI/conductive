@@ -12,9 +12,10 @@ import { useChatWorkspaces } from './chatWorkspaces'
 import type { ChipUpload } from '../../../../../src/ui/components/chat/DraftFileChip'
 import { entryName } from '../../../../../src/ui/components/chat/entryPaths'
 import { FileChip } from '../../../../../src/ui/components/chat/FileChip'
+import { SkillChip } from '../../../../../src/ui/components/chat/SkillChip'
+import { noop } from '../../../../../src/ui/noop'
 import { LinkChip } from './LinkChip'
 import { iconOf } from './MentionChip'
-import { DraftSkillChip } from './DraftSkillChip'
 import { linkTarget, type LinkTarget, type RowLinks } from './workspaceLinks'
 import styles from '../../../../../src/ui/components/chat/DraftText.module.css'
 
@@ -135,7 +136,7 @@ function uploadOf(file: Attachment): ChipUpload {
  * which a pointer turns into a × that removes it. In the app a press on
  * the name of a file chip opens the file, and a press on the name of an
  * attached file opens nothing. A press on the name of a skill chip opens
- * the skill in the temporary tab, as `DraftSkillChip` says.
+ * the skill in the temporary tab, as the shared `SkillChip` says.
  *
  * `files` are the files of the draft, by the draft IDs of their marks. A
  * view runs no script, so `caret` draws the caret at that index of the
@@ -204,8 +205,9 @@ export function DraftText(props: {
           case 'skill':
             return (
               <span contentEditable={false} key={index}>
-                <DraftSkillChip
+                <SkillChip
                   namePointer={props.namePointer === true && first}
+                  onOpen={noop}
                   removal={{ name: item.skill.name, pointer }}
                   skill={item.skill}
                 />

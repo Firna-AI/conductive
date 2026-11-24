@@ -1,10 +1,10 @@
 import { SessionChip } from '../../ui/components/chat/SessionChip'
-import { SkillChip } from '../../ui/components/chat/SkillChip'
 import {
   WorkspaceChip,
   type ChipOpener,
 } from '../../ui/components/chat/WorkspaceChip'
 import { routes } from '../../app/router'
+import type { Agent } from '../../shared/generated/Agent'
 import type { Attachment } from '../../shared/generated/Attachment'
 import { sessionLink } from '../../shared/session-link'
 import { isPlainClick } from '../../shell/ui/AppLink'
@@ -16,6 +16,7 @@ import type { SkillLookup } from './chat-tokens'
 import { AttachmentLink, FileLink } from './FileChips'
 import { chipOf, useChatLinks } from './LinksContext'
 import { sessionChipOf, useLinkedSession } from './session-links'
+import { SkillLink } from './SkillLink'
 import { CodeText, WebLinkText } from './WebLinkText'
 import { sessionTarget, type LinkTarget } from './workspace-links'
 
@@ -70,9 +71,10 @@ export function SessionLinkText(props: {
 
 /**
  * One part of a sent message. A file and an attached file draw through the
- * chips of `FileChips.tsx`.
+ * chips of `FileChips.tsx`, and a skill through `SkillLink`, which names
+ * the skill of `agent` first.
  */
-function Part(props: { part: ChatPart; opens: boolean }) {
+function Part(props: { part: ChatPart; opens: boolean; agent?: Agent }) {
   const { part } = props
   if (part.kind === 'text') return part.text
   if (part.kind === 'code') return <CodeText part={part} />
@@ -81,11 +83,8 @@ function Part(props: { part: ChatPart; opens: boolean }) {
   if (part.kind === 'attachment') {
     return <AttachmentLink opens={props.opens} part={part} />
   }
-  if (part.kind === 'skill') {
-    // A press on a skill chip opens nothing. Its title is the description.
-    const { name, description } = part.skill
-    return <SkillChip mention={part.source} skill={{ name, description }} />
-  }
+  if (part.kind === 'skill')
+    return <SkillLink agent={props.agent} part={part} />
   return <LinkChip target={part.target} />
 }
 
@@ -101,13 +100,17 @@ export function useEntryLookup(read: boolean): EntryLookup | undefined {
 
 /**
  * The lookup of the skill texts of a message, while the chat has skill
- * lists. Without a list, such as while it loads or in an archived
- * workspace, each skill text stays text.
+ * lists. The list of `agent` comes first, so a chip names the skill of the
+ * agent that the message went to when it has one. Without a list, such as
+ * while it loads or in an archived workspace, each skill text stays text.
  */
-function useSkillLookup(read: boolean): SkillLookup | undefined {
+function useSkillLookup(
+  read: boolean,
+  agent: Agent | undefined,
+): SkillLookup | undefined {
   const skills = useMentionSkills(read)
   if (skills?.state !== 'ready') return undefined
-  return (name) => findSkill(skills, name)
+  return (name) => findSkill(skills, name, agent)
 }
 
 /** How the chat reads the text of a sent message. */
@@ -119,6 +122,11 @@ export interface TextReading {
    * message of a member. An answer keeps its skill texts as text.
    */
   skills?: boolean
+  /**
+   * The agent that the message went to. A skill chip names the skill of
+   * this agent when it has one, else the skill of the other agent.
+   */
+  agent?: Agent
   /** The files of a sent message. The mention of each is its chip. */
   attachments?: readonly Attachment[]
 }
@@ -134,7 +142,7 @@ export function useChatParts(text: string, reading: TextReading): ChatPart[] {
   const { links } = useChatLinks()
   const lookup = useEntryLookup(reading.mentions === true && text.includes('@'))
   const { linkOf } = useTextLinks()
-  const skills = useSkillLookup(reading.skills ?? false)
+  const skills = useSkillLookup(reading.skills ?? false, reading.agent)
   return chatParts(text, links, {
     web: linkOf,
     mentions: lookup,
@@ -146,14 +154,16 @@ export function useChatParts(text: string, reading: TextReading): ChatPart[] {
 /**
  * Draws the parts of a sent message: text, code, chips, and links. `opens`
  * says whether the chip of an attached file opens its copy: only after its
- * message went out to the agent.
+ * message went out to the agent. A skill chip opens the skill of `agent`,
+ * the agent that the message went to, as `SkillLink` says.
  */
 export function ChatText(props: {
   parts: readonly ChatPart[]
   opens?: boolean
+  agent?: Agent
 }) {
   const opens = props.opens ?? false
   return props.parts.map((part, index) => (
-    <Part key={index} opens={opens} part={part} />
+    <Part agent={props.agent} key={index} opens={opens} part={part} />
   ))
 }

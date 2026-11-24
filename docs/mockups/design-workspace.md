@@ -156,9 +156,13 @@ the bars of the cloud computer.
   - A read that failed for another cause shows the failure of a file tab:
     the alert icon, "This skill didn't open", and Try again, with no
     sentence under the title. Try again reads the text again.
-  - `skillTabCopy.ts` beside the page holds the words of the agent label,
-    of the notices, and of Try again. It imports no fixture, so it can
-    move to the shared UI with the page.
+  - The shared `skillTabCopy.ts` in
+    [`src/ui/components/files/`](../../src/ui/components/files/) holds the
+    words of the agent label, of the notices, and of Try again, and the
+    shared `SkillPage.module.css` beside it holds the styles of the
+    header. The app draws its skill tab with them. `SkillPage` itself
+    stays here, because it draws the fixtures of `plans` with the
+    registered parts of the mockups.
   - On a phone the skill is a page of the Files tab, which leads back to
     All files, as a file does.
 - `TerminalTabs` in `src/components/tools/` draws the terminals of a

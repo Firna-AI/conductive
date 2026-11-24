@@ -20,6 +20,7 @@ import {
 } from './branch-routes'
 import type { DevQueue } from './queue-routes'
 import { SECRET_SCENARIOS, type SecretScenario } from './secret-request-seed'
+import { DEV_SKILL_READS, type DevSkillRead } from './skill-tab-routes'
 
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
 
@@ -164,6 +165,13 @@ export interface DevOptions {
   mergeQueue: DevQueue | null
   /** The notes of capability changes in `checkout-autocomplete`, or null. */
   capabilities: CapabilityScenario | null
+  /**
+   * `checkout-autocomplete` has a skills report and two sent messages with
+   * skill chips, whose skill tabs read the texts of the dev fake.
+   */
+  skillChips: boolean
+  /** The answer of each skill read in place of the text, or null. */
+  skillRead: DevSkillRead | null
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -232,6 +240,10 @@ export function readDevOptions(search: string): DevOptions {
     secrets: pick(params, 'secrets', SECRET_SCENARIOS) ?? null,
     mergeQueue: pick(params, 'mergeQueue', MERGE_QUEUES) ?? null,
     capabilities: pick(params, 'capabilities', CAPABILITY_SCENARIOS) ?? null,
+    skillChips:
+      params.get('skillChips') === '1' ||
+      pick(params, 'skillRead', DEV_SKILL_READS) !== undefined,
+    skillRead: pick(params, 'skillRead', DEV_SKILL_READS) ?? null,
   }
 }
 

@@ -288,6 +288,27 @@ Each call below is my call, made on 2026-11-24 unless it says otherwise.
     notices page keeps at most five screens. Found by the mockups on
     2026-11-24.
 
+- **App calls of the app milestone.** Each call below was made on
+  2026-11-24 by the app milestone, and the orchestrator checked it.
+  - The app keeps skill tabs in its own tab row with a `skill` kind of
+    `WorkspaceTab` and `TemporaryTab`. `src/chat/api/view-skills.ts` moves
+    them into the skill fields of the view route before each save. Reason:
+    every move and close then handles one list. The route and the stored
+    view still never hold a skill tab in `tabs`.
+  - Each skill tab keeps its view, Preview or Source, in memory until it
+    closes. A reload starts in Preview.
+  - The tooltip of a skill tab names the agent, such as "plans, Claude
+    skill".
+  - A repository change keeps skill tabs, as the Worker keeps them. A
+    skill that the new repository lacks shows the notice of a removed
+    skill.
+  - A waiting message carries its model choice, so its chips name the
+    agent of the message before the stream shows it.
+  - A `computer_stopped` or `computer_starting` reply shows the loading
+    line until the state of the cloud computer takes its place.
+  - The close of the shown skill tab shows the next skill tab, else the
+    one before, else the chat, as for file and Preview tabs.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -445,40 +466,41 @@ Depends on: 2a, 4
 
 Make the chips pressable and show the skill tab.
 
-- [ ] Give `SkillChip` an opener in a sent message and in the composer
+- [x] Give `SkillChip` an opener in a sent message and in the composer
       field. A plain press opens the skill tab. The chip in the composer
       stays one unit of the text. In the composer field, the name is the
       part that opens, as `onOpen` of `FileChip` makes it. Then draw the
       mockups with it, in place of their part `DraftSkillChip`. Found by
       the mockups on 2026-11-24.
-- [ ] Add the skill tab kind to the view, the tab row, and the temporary
+- [x] Add the skill tab kind to the view, the tab row, and the temporary
       tab, with a keep as for a file tab.
-- [ ] Add the address `skills/<agent>/<name>` of a skill tab to the
+- [x] Add the address `skills/<agent>/<name>` of a skill tab to the
       router, so that Back, a reload, and a link open it.
-- [ ] Add the skill tab view: the header, the Preview view with the
+- [x] Add the skill tab view: the header, the Preview view with the
       Markdown view of the files, the Source view, and the notices. The
       header takes the name and the description from the skills list.
       Move the words of `skillTabCopy.ts` and the styles of
       `SkillPage.module.css` from `docs/mockups/src/components/files/` to
       `src/ui/components/files/`, so that the app and the mockups share
       them. Found by the mockups on 2026-11-24.
-- [ ] Start a stopped cloud computer at the open of a skill tab, as at the
+- [x] Start a stopped cloud computer at the open of a skill tab, as at the
       open of a file tab (decision 247). Found by the mockups on
       2026-11-24.
-- [ ] Read the text each time the tab shows, and after each skills report
+- [x] Read the text each time the tab shows, and after each skills report
       while it shows.
-- [ ] Show "This skill didn't open" with Try again for a failed read, as
+- [x] Show "This skill didn't open" with Try again for a failed read, as
       the mockup of Milestone 2a draws it. Add the notice to the Notices
       section of `docs/protocol/skill-tabs.md` in the same change. The doc
       says each notice has "an icon, a title, and one sentence". Word the
       failed notice as an icon, a title, and Try again.
-- [ ] Update `src/chat/text-key-code.md` and `src/chat/integration.md`,
+- [x] Update `src/chat/text-key-code.md` and `src/chat/integration.md`,
       which say that a skill chip opens nothing.
-- [ ] Add DOM tests: a press in a sent message and in the composer, the
+- [x] Add DOM tests: a press in a sent message and in the composer, the
       agent choice, the temporary tab and its keep, each notice, and the
       tab menu.
-- [ ] Check the screen in a browser against the mockups. Save the
+- [x] Check the screen in a browser against the mockups. Save the
       screenshots under `.context/skill-tabs/`.
+      Evidence: `.context/skill-tabs/m5/`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 

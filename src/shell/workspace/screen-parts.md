@@ -45,9 +45,10 @@ says.
   `composerFocus`, so the message field takes the focus when it shows, as
   [Chat integration](../../chat/integration.md) says. A phone gets no
   request, so no keyboard opens on its own.
-- On desktop, the chat shows the file, diff, and Preview tabs of the
-  saved view among the session tabs, in the one order of the tab row.
-  [Preview tabs](tools-part.md#preview-tabs) gives the Preview tabs. A
+- On desktop, the chat shows the file, diff, Preview, and skill tabs of
+  the saved view among the session tabs, in the one order of the tab row.
+  [Preview tabs](tools-part.md#preview-tabs) gives the Preview tabs, and
+  [The skill tabs](skill-tabs.md) gives the skill tabs. A
   file or diff tab moves by drag and with its tab menu, as a session tab
   does, as [the chat](../../chat/README.md#rules-for-this-code) says. The
   file or diff tab of the address shows in place of the chat of the
@@ -85,7 +86,8 @@ says.
   them from the one connection of the screen, also on a phone before a
   visit to Files. A file chip opens the file tab, as a
   press in All files does. A folder chip opens the folder in All files and
-  shows the right column on desktop, or the Files tab on a phone.
+  shows the right column on desktop, or the Files tab on a phone. A skill
+  chip opens the skill tab, as [The skill tabs](skill-tabs.md) says.
 - An archived workspace shows no file tabs and no file page, and its chat
   gets no files.
 - A record of the workspace with another repository closes each file and

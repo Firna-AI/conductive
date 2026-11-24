@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import type { FilesTab } from '../../../files/navigation'
 import type {
+  SkillTab,
   TemporaryTab,
   WorkspaceTab,
   WorkspaceView,
@@ -53,6 +54,23 @@ describe('the temporary tab of the saved view', () => {
         path: 'src/app/checkout/useAddressAutocomplete.ts',
       }),
     )
+  })
+
+  test('a press on a skill with no tab replaces a temporary file tab in its place, and a press on a file then replaces the temporary skill tab', () => {
+    const plans: SkillTab = { kind: 'skill', agent: 'claude', name: 'plans' }
+    const view = viewOf([first, readme, second], second, {
+      kind: 'file',
+      path: 'README.md',
+    })
+    const skill = withActiveTab(view, plans)
+
+    expect({ skill, file: withActiveTab(skill, form) }).toEqual({
+      skill: viewOf([first, plans, second], plans, plans),
+      file: viewOf([first, form, second], form, {
+        kind: 'file',
+        path: 'src/app/checkout/AddressForm.tsx',
+      }),
+    })
   })
 
   test('a press on a file that has a tab shows it, a switch of mode keeps the tab in its place, and neither changes the mark', () => {

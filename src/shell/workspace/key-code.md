@@ -96,6 +96,8 @@ this guide.
   scrolls a file tab and a diff tab, shows the chat, and checks that each
   tab gives its offset back. A tab that the user closes opens at the top
   again.
+- `skills/`: the skill tabs, their page, and their read, as
+  [The skill tabs](skill-tabs.md) says.
 - `app-features.tsx`: the shell's own files, pull request, and owner
   parts, which `useFeatures` puts under the parts of the host. The screen
   draws its own tools panel when the host gives no `tools` part.

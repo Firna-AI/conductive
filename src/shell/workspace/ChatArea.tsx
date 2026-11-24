@@ -30,6 +30,7 @@ import {
 } from './previews/page-frames'
 import { usePreviewCentre } from './previews/preview-centre'
 import { filesCenter } from './files/files-features'
+import { useSkillCentre } from './skills/skill-centre'
 import { SandboxBar } from './SandboxNotice'
 import { StartingCard } from './StartingCard'
 import { ChatColumn } from './WorkspaceColumns'
@@ -59,12 +60,12 @@ function useComposerFocus(
 
 /**
  * The kept chat of the workspace, with the parts that the shell draws, and
- * the open files and Preview tabs: their tabs at their places in the tab
- * row, and `content`, a file or diff tab in place of the chat of the
- * session. A Preview tab that the address shows takes that place too, and
- * the pages of the Preview tabs stay loaded under it. On desktop, so do the
- * pages of the tabs of HTML files. It pre-loads the Capabilities of the
- * workspace, so their control opens at once.
+ * the open files, Preview, and skill tabs: their tabs at their places in
+ * the tab row, and `content`, a file or diff tab in place of the chat of
+ * the session. A Preview or skill tab that the address shows takes that
+ * place too, and the pages of the Preview tabs stay loaded under it. On
+ * desktop, so do the pages of the tabs of HTML files. It pre-loads the
+ * Capabilities of the workspace, so their control opens at once.
  */
 function KeptChat(props: {
   context: WorkspaceContext
@@ -77,11 +78,16 @@ function KeptChat(props: {
   const go = useGo()
   const clock = useMemo(() => ({ now: services.now }), [services])
   const previews = usePreviewCentre(context)
-  const content = props.content ?? previews.content
+  const skills = useSkillCentre(context)
+  const content = props.content ?? previews.content ?? skills.content
   const files = useChatFiles(context, content)
   const fileTab = files.renderTab
   const renderTab: RenderTab | undefined = fileTab
-    ? (tab) => (tab.kind === 'preview' ? previews.renderTab(tab) : fileTab(tab))
+    ? (tab) => {
+        if (tab.kind === 'preview') return previews.renderTab(tab)
+        if (tab.kind === 'skill') return skills.renderTab(tab)
+        return fileTab(tab)
+      }
     : undefined
   const phone = context.viewport === 'phone'
   const focus = useComposerFocus(context.workspace.id, phone)

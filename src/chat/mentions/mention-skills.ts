@@ -47,6 +47,32 @@ export function agentSkills(
   return skills.state === 'ready' ? skills.lists[agent] : []
 }
 
+/** A skill of a list, with the agent whose list holds it. */
+export interface ListedSkill {
+  agent: Agent
+  skill: AgentSkill
+}
+
+/**
+ * The skill of either agent that a skill text names, with its agent, or
+ * undefined. The list of `agent` comes first, so a chip names the skill of
+ * that agent when it has one, and the skill of the other agent otherwise.
+ */
+export function findListedSkill(
+  skills: MentionSkills,
+  name: string,
+  agent: Agent = 'claude',
+): ListedSkill | undefined {
+  if (skills.state !== 'ready') return undefined
+  const other: Agent = agent === 'claude' ? 'codex' : 'claude'
+  const named = (skill: AgentSkill) => skill.name === name
+  for (const each of [agent, other]) {
+    const skill = skills.lists[each].find(named)
+    if (skill) return { agent: each, skill }
+  }
+  return undefined
+}
+
 /**
  * The skill of either agent that a skill text names, or undefined. The
  * list of `agent` comes first, so its description gives the title.
@@ -56,8 +82,5 @@ export function findSkill(
   name: string,
   agent: Agent = 'claude',
 ): AgentSkill | undefined {
-  if (skills.state !== 'ready') return undefined
-  const other: Agent = agent === 'claude' ? 'codex' : 'claude'
-  const named = (skill: AgentSkill) => skill.name === name
-  return skills.lists[agent].find(named) ?? skills.lists[other].find(named)
+  return findListedSkill(skills, name, agent)?.skill
 }

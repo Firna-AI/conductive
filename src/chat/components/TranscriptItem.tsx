@@ -31,22 +31,27 @@ import type { StopFacts } from './turn-facts'
  * file chip, each skill text of a listed skill is a skill chip, and each
  * mention of a file of the message is the chip of that
  * file, at its place. That chip opens the copy of the file only after the
- * message went out to the agent. The files that no chip shows stay under
- * the message.
+ * message went out to the agent. A skill chip names the skill of the agent
+ * of the choice of the message, and opens its skill tab. The files that no
+ * chip shows stay under the message.
  */
 export function UserBubble(props: {
-  message: Pick<UserMessage, 'id' | 'text' | 'attachments' | 'state'>
+  message: Pick<UserMessage, 'id' | 'text' | 'attachments' | 'state' | 'choice'>
   /** The message is in the transcript, so Explain can mark its text. */
   accepted?: boolean
 }) {
   const { message } = props
+  const { agent } = message.choice
   const parts = useChatParts(message.text, {
     mentions: true,
     skills: true,
+    agent,
     attachments: message.attachments,
   })
   const listed = filesWithoutChip(parts, message.attachments)
-  const text = <ChatText opens={message.state === 'sent'} parts={parts} />
+  const text = (
+    <ChatText agent={agent} opens={message.state === 'sent'} parts={parts} />
+  )
   return (
     <div className={styles.user}>
       <div className={classes(styles.bubble, controls.lines)}>

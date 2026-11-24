@@ -37,7 +37,14 @@ it('keeps saved selection and tab order across socket history pages and a later 
     active: 'autocomplete',
     view: saved,
   })
-  expect.soft(await chat.bodies('PUT', viewPath)).toEqual([viewToWire(later)])
+  expect.soft(await chat.bodies('PUT', viewPath)).toEqual([
+    {
+      ...viewToWire(later),
+      skillTabs: [],
+      activeSkill: null,
+      temporarySkill: null,
+    },
+  ])
   expect.soft(await chat.savedView()).toEqual(later)
   chat.server.json('GET', sessionsPath(org, ws), {
     eventNumber: 40,

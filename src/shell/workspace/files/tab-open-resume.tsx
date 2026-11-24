@@ -21,10 +21,11 @@ function resumesAtTabOpen(context: WorkspaceContext): boolean {
 }
 
 /**
- * Resumes the sandbox at each visit that opens a file, diff, or Preview
- * tab, so that the tab can read its file or open its preview, as
- * `useTabVisits` says. The address of the screen at its first show starts
- * nothing here, because the open of the workspace resumes the sandbox.
+ * Resumes the sandbox at each visit that opens a file, diff, Preview, or
+ * skill tab, so that the tab can read its file or its skill, or open its
+ * preview, as `useTabVisits` says. The address of the screen at its first
+ * show starts nothing here, because the open of the workspace resumes the
+ * sandbox.
  */
 export function ResumeOnTabOpen(props: { context: WorkspaceContext }): null {
   const resumeIfDown = () => {

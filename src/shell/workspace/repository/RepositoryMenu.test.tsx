@@ -153,6 +153,9 @@ describe('the repository menu in the header', () => {
         temporaryTab: null,
         previewTabs: [],
         activePreview: null,
+        skillTabs: [],
+        activeSkill: null,
+        temporarySkill: null,
       },
     })
   })

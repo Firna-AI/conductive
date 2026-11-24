@@ -4,6 +4,8 @@ import { useSharedUiTheme } from '@firna/ui/theme'
 import { ChevronLeft } from 'lucide-react'
 import type { Agent } from '../../../../../src/shared/generated/Agent'
 import { SkillIcon } from '../../../../../src/ui/components/chat/SkillChip'
+import { skillTabCopy } from '../../../../../src/ui/components/files/skillTabCopy'
+import styles from '../../../../../src/ui/components/files/SkillPage.module.css'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { codeView } from '../../entries/components/files/CodeView.mockup'
@@ -18,9 +20,7 @@ import { skillPaths } from '../../skillPaths'
 import { ScreenLink } from '../common/ScreenLink'
 import type { BackLink } from '../layout/Page'
 import { ViewSwitch } from './FilePage'
-import { skillTabCopy } from './skillTabCopy'
 import fileStyles from './FilePage.module.css'
-import styles from './SkillPage.module.css'
 
 /**
  * What a skill tab shows under its header: the Markdown body in Preview,

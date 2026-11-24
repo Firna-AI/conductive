@@ -5,7 +5,10 @@
   color: var(--ui-muted);
 }
 
-/* The name of a chip in a message box, which opens the file on a press. */
+/*
+ * The name of a chip in a message box, which opens the file or the skill on
+ * a press.
+ */
 .open {
   margin: 0;
   padding: 0;
@@ -16,7 +19,9 @@
   cursor: pointer;
 }
 
-.open:hover {
+/* A view of the mockups has no pointer, so `.pointer` draws its hover. */
+.open:hover,
+.pointer {
   text-decoration: underline;
 }
 

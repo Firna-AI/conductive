@@ -59,7 +59,7 @@ export interface Draft {
  */
 export type PendingMessage = Pick<
   UserMessage,
-  'id' | 'text' | 'attachments' | 'state'
+  'id' | 'text' | 'attachments' | 'state' | 'choice'
 >
 
 export interface SessionState {
