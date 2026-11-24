@@ -142,8 +142,9 @@ provider calls.
   the machine origin in the env of the create. Before each create request,
   it issues the digest of that token to the machine object. So each replay
   sends the same token.
-- D1 clears the saved token when the attempt saves its sandbox ID or
-  reaches `done`.
+- `saveSoftwareImage` clears the saved token when the attempt has a
+  sandbox ID or reaches `done`. Unlike `image_build_jobs`, the table has
+  no trigger that clears it for other writers.
 - An allocation that the previous Worker began has no saved token. Its
   create sends no env var, so its commands keep the provider path.
 - The software command saves its process ID with its route, and each status
