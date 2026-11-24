@@ -11,8 +11,6 @@ import { nextEnvelope } from '../../../test-support/recorded-repairs'
 const { org, workspace: id } = FAKE_IDS
 
 export const plans: SkillIdentity = { agent: 'claude', name: 'plans' }
-export const claudeReview: SkillIdentity = { agent: 'claude', name: 'review' }
-export const codexReview: SkillIdentity = { agent: 'codex', name: 'review' }
 
 /** The description of `plans` in the skills report. */
 export const plansDescription = 'Use before you write or change a plan file.'

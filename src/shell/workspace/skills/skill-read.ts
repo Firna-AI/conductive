@@ -45,7 +45,7 @@ export interface SkillSource {
  * Reads the text of one skill of the workspace by its agent and its name.
  * It sends no path. It never throws: a failure is an error of the result.
  */
-export async function readSkillText(
+async function readSkillText(
   source: SkillSource,
   skill: SkillIdentity,
   signal: AbortSignal,
