@@ -186,7 +186,7 @@ list of `MemberRepositoriesTab` when its caller gives `builds`. It names
 the repositories that the org image lacks or still holds, from
 `repositoryChangesOf` in `../app/repository-changes.ts`, with the shared
 words of `repositoryChangeCopy.ts`, as
-[The repository notice](../../docs/protocol/org-image.md#the-repository-notice)
+[The repository notice](../../docs/protocol/org-image-repositories.md#the-repository-notice)
 says. It has no button. A member of an org in use reads who can act, and
 in a suspended org it names no admin. The history of the card stays closed
 while a change of the install script or of the repositories waits for a

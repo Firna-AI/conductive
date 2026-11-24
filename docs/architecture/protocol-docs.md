@@ -175,6 +175,9 @@ This page lists each protocol doc and what it covers.
   Account page, its counts of the person signed in, and its reads.
 - [Org image](../protocol/org-image.md): the org image, its builds and its
   refreshes, and the first build of a new org.
+  - [Repository changes of the org image](../protocol/org-image-repositories.md):
+    the waiting and the removed repositories, the adds and the removals of
+    an admin, their builds, and the repository notice.
 - [Agents and sessions](../protocol/agents-and-sessions.md): the agents and
   their logins, the sessions, and the names of workspaces and sessions.
   - [The tab row](../protocol/tab-row.md): the order of the tabs of the

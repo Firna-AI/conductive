@@ -176,8 +176,10 @@ the folder of this page.
   send limit.
 - `../shell/ui/Dialog.tsx` and `Sheet.tsx`: their optional `initial` names
   the part that takes the focus as they open. The Feedback dialog passes
-  its message box. `Sheet` puts its content in the scrolling `.body` of
-  the shared `Sheet.module.css`.
+  its message box. Their optional `returnFocus` places the focus as they
+  close, such as on the next row after Remove of a repository took away
+  the row of the trigger. `Sheet` puts its content in the scrolling
+  `.body` of the shared `Sheet.module.css`.
 - [feedbackCopy.ts](../ui/components/feedback/feedbackCopy.ts):
   the words of the row, the dialog, and the toast that the app and the
   mockups share. Its `sendLimitBody` gives the words of a send over the

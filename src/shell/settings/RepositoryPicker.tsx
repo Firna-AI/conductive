@@ -1,3 +1,4 @@
+import type { RefCallback } from 'react'
 import { Check, Pencil } from 'lucide-react'
 import {
   compareRepositoryNames,
@@ -10,18 +11,29 @@ import { ChoiceActions, RepositorySearch } from './RepositorySearch'
  * Edit, which opens the whole list with search, Add, and Remove, or Done,
  * which saves the changes of the edit and closes it. Done starts the
  * build of the added repositories. It shows a spinner while it saves.
+ * `buttonRef` takes the button, for an owner that moves the focus to it.
  */
 export function RepositoryEditToggle(props: {
   editing: boolean
   toggle: () => void
   busy?: boolean
+  buttonRef?: RefCallback<unknown>
 }) {
   return props.editing ? (
-    <ActionButton busy={props.busy} icon={Check} onPress={props.toggle}>
+    <ActionButton
+      busy={props.busy}
+      buttonRef={props.buttonRef}
+      icon={Check}
+      onPress={props.toggle}
+    >
       Done
     </ActionButton>
   ) : (
-    <ActionButton icon={Pencil} onPress={props.toggle}>
+    <ActionButton
+      buttonRef={props.buttonRef}
+      icon={Pencil}
+      onPress={props.toggle}
+    >
       Edit
     </ActionButton>
   )

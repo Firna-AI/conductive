@@ -29,6 +29,10 @@ import { useViewport } from './viewport'
  * its actions, and its content scrolls between them. While that content is
  * text without a control, Tab stops on it too, so the keys of the keyboard
  * scroll it. It never takes the first focus.
+ *
+ * As the question closes, the focus goes back to the element that had it,
+ * such as its trigger. `returnFocus` places it instead, such as on the next
+ * row when the write took away the row of the trigger.
  */
 export function Dialog(props: {
   title: string
@@ -40,6 +44,7 @@ export function Dialog(props: {
   action: ReactNode
   wide?: boolean
   initial?: RefObject<Focusable | null>
+  returnFocus?: () => void
 }) {
   const { busy, close } = props
   // The one dismissal of the question: Cancel, Escape, and a press
@@ -59,6 +64,7 @@ export function Dialog(props: {
       }
       close={dismiss}
       initial={props.initial}
+      returnFocus={props.returnFocus}
       title={props.title}
       wide={props.wide}
     >
@@ -101,11 +107,17 @@ function DialogFrame(props: {
   actions: ReactNode
   wide?: boolean
   initial?: RefObject<Focusable | null>
+  returnFocus?: () => void
 }) {
   const viewport = useViewport()
   if (viewport === 'phone') {
     return (
-      <Sheet close={props.close} initial={props.initial} title={props.title}>
+      <Sheet
+        close={props.close}
+        initial={props.initial}
+        returnFocus={props.returnFocus}
+        title={props.title}
+      >
         <div className={styles.sheetBody}>
           {props.children}
           <div className={styles.sheetActions}>{props.actions}</div>
@@ -121,6 +133,7 @@ function DialogFrame(props: {
           actions={props.actions}
           close={props.close}
           initial={props.initial}
+          returnFocus={props.returnFocus}
           title={props.title}
           wide={props.wide}
         >
@@ -138,10 +151,14 @@ function DialogBox(props: {
   actions: ReactNode
   wide?: boolean
   initial?: RefObject<Focusable | null>
+  returnFocus?: () => void
 }) {
   const dialog = useRef<HTMLElement>(null)
   const body = useRef<HTMLDivElement>(null)
-  useModalLayer(dialog, props.close, { initial: props.initial })
+  useModalLayer(dialog, props.close, {
+    initial: props.initial,
+    returnFocus: props.returnFocus,
+  })
   return (
     <section
       aria-label={props.title}

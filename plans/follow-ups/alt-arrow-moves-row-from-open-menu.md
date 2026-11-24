@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-22, from branch `calummoore/model-configuration-variations-v2-87rl`, the model favourites change.
-- **Location:** `src/shell/ui/useListMoves.ts:55`, `src/shell/account/FavouriteParts.tsx:112`, `src/shell/settings/RepositoryOrder.tsx:144`
+- **Location:** `src/shell/ui/useListMoves.ts:55`, `src/shell/account/FavouriteParts.tsx:112`, `src/shell/settings/RepositoryOrder.tsx:163`
 - **Reason:** The repository order on `main` has the same behaviour, so the fix belongs to the shared hook, not to the change that found it.
 
 - **Terms:**

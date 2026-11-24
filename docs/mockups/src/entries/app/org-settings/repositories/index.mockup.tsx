@@ -19,7 +19,7 @@ const editRequest =
 export const repositories = defineScreen({
   title: 'Repositories',
   description:
-    'The repositories that the org bundles into its cloud computer. The tab lists only the chosen repositories, in the order of the org, with Edit. The first one, acme/storefront, shows Default: new workspaces and automations start in it. Each row of an admin has a drag handle and a row menu. Done starts a build of the computer when the edit added a repository, and an added repository goes to the end of the order. A removed one leaves at the next build. The order page shows a move.',
+    'The repositories that the org bundles into its cloud computer. The tab lists only the chosen repositories, in the order of the org, with Edit. The first one, acme/storefront, shows Default: new workspaces and automations start in it. Each row of an admin has a drag handle and a row menu. Done starts a build of the computer when the edit added a repository, and an added repository goes to the end of the order. A removed one leaves at the next build. The order page shows a move, and Remove in the row menu, which asks first.',
   rationale: `Repositories keep their own tab, as the user asked. Waits on decisions 10 and 21, drawn as their recommended options at org level: an admin chooses the repositories of the org, from one GitHub App that every org shares. ${decisions} The notice names the repositories, so the rows of the list stay as they are. ${editRequest} ${orderRequest} ${doneRequest}`,
   relatedDocs: [],
   propSchema: orgSettingsSchema,

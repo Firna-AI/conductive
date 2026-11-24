@@ -32,10 +32,53 @@ Design calls, mine, 24 November 2026:
   wasn't removed." with the error. Reason: a failed move shows a toast in
   the same way.
 
+Design calls of the implementation, by the ui and docs implementor, 24
+November 2026:
+
+- A failed removal keeps the question open, with the toast, as the secret
+  Delete dialog does. Reason: Remove can then try again at once, and
+  Cancel still changes nothing.
+- The words of the question: "Remove acme/web?", then "New workspace no
+  longer offers it." On the first row it adds ", and acme/api becomes the
+  default". On the only row it adds ", and no new workspace can start
+  until you add a repository". Then "Its automation turns off, and only
+  its owner can turn it on again." or "Its 2 automations turn off, and
+  only their owners can turn them on again.", or no sentence for none.
+  Its confirming button is "Remove", with the X icon and the danger tone,
+  as the menu item. Reason: the words of the decision, in the form of the
+  Remove member dialog, which drops the count for one.
+- The question reads the automations of the org only while it shows. It
+  counts the active automations of the repository. While they load, or
+  when they do not load, it says "Each of its automations turns off, and
+  only its owner can turn it on again." with no number, and Remove stays
+  on. Reason: the tab shows no automations, so a read for the whole tab
+  would read them every 30 seconds for nothing. The rule without a number
+  still names the loss, and a failed read blocks no removal.
+- The question keeps the place of the row from its opening. Reason: its
+  words then do not change while it shows.
+- After a removal, the focus goes to the row that takes the place of the
+  removed row, else to the row before it, else to Edit. Reason: no list
+  shows when no row is left, and Edit is the control that adds a
+  repository again.
+- A screen reader hears "acme/web is removed" in the status of the list.
+  The words come after the question closes, because the page is inert
+  while the question shows. They stay until a move or a drag gives words
+  of its own. The status stays when no row is left.
+- The decision has the name "row-remove decision 1 E" in the protocol
+  docs. Reason: repository-order decision 2 names another record of the
+  change that added the order.
+- `docs/protocol/org-image.md` passed the 250 lines of the
+  `documentation` skill. Its "Repository changes" part moved, with no
+  change of words, to `docs/protocol/org-image-repositories.md`, where the
+  change then edited "Added repositories".
+- The mockup draws the question on the first row, which has two active
+  automations, and on the last row, which has none. The words of the only
+  row are in the description, because the page allows five screens.
+
 Contract owners:
 
 - [Repository order](../docs/protocol/repository-order.md).
-- [Org image](../docs/protocol/org-image.md#added-repositories).
+- [Repository changes of the org image](../docs/protocol/org-image-repositories.md#added-repositories).
 
 ## Decisions
 
@@ -142,6 +185,7 @@ Contract owners:
 - **Action:** ask the user, because the options trade one more step
   against a loss that the admin alone cannot undo, and the request does
   not say how to confirm.
+- **Decision:** The user chose E on 24 November 2026.
 
 The options check of 24 November 2026 added E, F, and G, corrected C,
 and found the automations. Its report is in
@@ -151,30 +195,38 @@ and found the automations. Its report is in
 
 Tags: mockup
 
-Depends on: decision 1
+Depends on: none
 
 The mockup of the row menu reads its items from
 `src/ui/components/settings/repositoryOrder.ts`, so the Remove item shows
 there once the shared list has it.
 
-- [ ] Add Remove to `repositoryMenuItems` and `repositoryMenuOf`.
-- [ ] Update the description and the rationale of the "Row menu" variant
+- [x] Add Remove to `repositoryMenuItems` and `repositoryMenuOf`.
+- [x] Update the description and the rationale of the "Row menu" variant
       in `docs/mockups/src/entries/app/org-settings/repositories/order/`.
-- [ ] Add a variant for the result of decision 1: the dialog for B or D,
-      the toast for C, or the list after the removal for A.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+- [x] Add a variant with the dialog of decision 1 E: on a row with
+      automations, and on the first row, which names the new default.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. The smoke test of the menu and of both questions,
+      on desktop and on a phone, in light and dark, found no problem.
+
+Evidence: `.context/repository-row-remove/*.png` holds the screenshots of
+the changed pages.
 
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
-- [ ] Add Remove to the row menu in `docs/protocol/repository-order.md`,
+- [x] Add Remove to the row menu in `docs/protocol/repository-order.md`,
       with the outcome of decision 1.
-- [ ] Update decision 296 in `docs/protocol/org-image.md` under "Added
+- [x] Update decision 296 in `docs/protocol/org-image.md` under "Added
       repositories" for the menu removal.
-- [ ] Read the Terms, the Privacy page, and each public guide in
+- [x] Move the "Repository changes" part of `docs/protocol/org-image.md`,
+      with no change of words, to `docs/protocol/org-image-repositories.md`,
+      because the doc passed 250 lines. Point each link to the new page,
+      and list it in `docs/architecture/protocol-docs.md`.
+- [x] Read the Terms, the Privacy page, and each public guide in
       `src/marketing/docs/` in full. Update each sentence that says how an
       admin removes a repository.
 
@@ -184,29 +236,35 @@ Tags: ui
 
 Depends on: 2
 
-- [ ] Handle the `remove` item in `src/shell/settings/RepositoryOrder.tsx`
+- [x] Handle the `remove` item in `src/shell/settings/RepositoryOrder.tsx`
       with `setRepositorySelected`, and the way of decision 1.
-- [ ] Render a dialog of decision 1 outside the `<li>` of the row. Reason:
+- [x] Render a dialog of decision 1 outside the `<li>` of the row. Reason:
       React events of a portal bubble through the React tree, so Alt and
       an arrow in the dialog would move the row.
-- [ ] Show that the removal runs until the Worker answers. The Worker can
+- [x] Show that the removal runs until the Worker answers. The Worker can
       read GitHub first, so the answer can take a moment.
-- [ ] After a removal, move the focus to the next row, or to the list
+- [x] After a removal, move the focus to the next row, or to the list
       when no row is left. Tell a screen reader that the repository is
       removed.
-- [ ] Add a mounted test in `src/shell/settings/repository-order.test.tsx`:
+- [x] Add a mounted test in `src/shell/settings/repository-order.test.tsx`:
       Remove sends the `DELETE` of the repository, the row leaves the
       list, and a failure keeps the row with a toast.
-- [ ] Update the expected menu items of the existing test.
+      The tests live in `src/shell/settings/repository-remove.test.tsx`,
+      beside it, so that each file stays short.
+- [x] Update the expected menu items of the existing test.
+
+Evidence: `.context/repository-row-remove/` holds the logs of the checks,
+the test runs, and the test times.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
 - [ ] Run the targeted tests and the complete gate named in `CLAUDE.md`.
-- [ ] Check the menu in a browser and save a screenshot under
-      `.context/repository-row-remove/`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Check the menu in a browser and save a screenshot under
+      `.context/repository-row-remove/`. The mockup catalogue draws the
+      shared menu and dialog parts.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record

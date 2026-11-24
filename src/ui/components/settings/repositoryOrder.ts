@@ -2,59 +2,90 @@ import {
   ArrowDown,
   ArrowUp,
   ArrowUpToLine,
+  X,
   type LucideIcon,
 } from 'lucide-react'
 import type { MenuEntry } from '../common/Menu'
+import { repositoryRemoval } from './repositoryRemovalCopy'
 
-/** A move of the row menu of a chosen repository. */
-type RepositoryMove = 'default' | 'up' | 'down'
+/** An action of the row menu of a chosen repository. */
+type RepositoryAction = 'default' | 'up' | 'down' | 'remove'
 
 /** One item of the row menu of a chosen repository. */
-export type RepositoryMenuItem = {
-  move: RepositoryMove
+type RepositoryMenuItem = {
+  kind: 'item'
+  action: RepositoryAction
   label: string
   icon: LucideIcon
   /** The place of the row rules out the move, so the item shows off. */
   disabled: boolean
+  tone?: 'danger'
 }
 
+/** One row of the row menu of a chosen repository: an item or a divider. */
+export type RepositoryMenuEntry = RepositoryMenuItem | { kind: 'divider' }
+
 /**
- * The row menu of a chosen repository, from repository-order decision 1 F:
- * Make default, which moves the row to the top, then Move up and Move down,
- * which move it one place. The first row has Make default and Move up off,
- * and the last row has Move down off. `place` counts the repositories
- * above the row, of `count` chosen repositories. The list holds no data of
- * a screen, so the app can import it.
+ * The row menu of a chosen repository: Make default, which moves the row
+ * to the top, then Move up and Move down, which move it one place. The
+ * first row has Make default and Move up off, and the last row has Move
+ * down off. Remove comes last, after a divider, in the danger tone, with
+ * the label and the icon of Remove in Edit. It is never off, because Edit
+ * also removes the first and the only row. `place` counts the
+ * repositories above the row, of `count` chosen repositories. The list
+ * holds no data of a screen, so the app can import it.
  */
 export function repositoryMenuItems(
   place: number,
   count: number,
-): RepositoryMenuItem[] {
+): RepositoryMenuEntry[] {
   return [
     {
-      move: 'default',
+      kind: 'item',
+      action: 'default',
       label: 'Make default',
       icon: ArrowUpToLine,
       disabled: place === 0,
     },
-    { move: 'up', label: 'Move up', icon: ArrowUp, disabled: place === 0 },
     {
-      move: 'down',
+      kind: 'item',
+      action: 'up',
+      label: 'Move up',
+      icon: ArrowUp,
+      disabled: place === 0,
+    },
+    {
+      kind: 'item',
+      action: 'down',
       label: 'Move down',
       icon: ArrowDown,
       disabled: place === count - 1,
+    },
+    { kind: 'divider' },
+    {
+      kind: 'item',
+      action: 'remove',
+      label: repositoryRemoval.item,
+      icon: X,
+      disabled: false,
+      tone: 'danger',
     },
   ]
 }
 
 /** The row menu of a chosen repository as a view draws it. */
 export function repositoryMenuOf(place: number, count: number): MenuEntry[] {
-  return repositoryMenuItems(place, count).map((item): MenuEntry => ({
-    kind: 'item',
-    label: item.label,
-    icon: item.icon,
-    disabled: item.disabled,
-  }))
+  return repositoryMenuItems(place, count).map((entry): MenuEntry =>
+    entry.kind === 'divider'
+      ? entry
+      : {
+          kind: 'item',
+          label: entry.label,
+          icon: entry.icon,
+          disabled: entry.disabled,
+          tone: entry.tone,
+        },
+  )
 }
 
 /**
