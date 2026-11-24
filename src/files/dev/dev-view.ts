@@ -59,7 +59,7 @@ const trees: readonly DevTree[] = ['latest', 'saved', 'none']
  * The lists of the mockup data: complete, or limited, as a new runner
  * reports a branch that passes the limits of its reports.
  */
-export type DevLists = 'complete' | 'limited'
+type DevLists = 'complete' | 'limited'
 
 const listStates: readonly DevLists[] = ['complete', 'limited']
 
