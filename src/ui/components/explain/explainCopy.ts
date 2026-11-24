@@ -1,14 +1,24 @@
 import { activityPresentation } from '../workspaces/status'
 
 /**
- * The words of Explain: the button by a selection, the popover of an
+ * The words of Explain: the buttons by a selection, the popover of an
  * explanation, the marks, and their menu. The docs call the panel by the
  * mark a popover, because "preview" names port previews. The screens name
- * only the action, Explain, and each explanation by its session title.
+ * only the actions, Explain and Ask, and each explanation by its session
+ * title.
  */
 
 /** The button by a finished selection in a message. */
 export const explainLabel = 'Explain'
+
+/**
+ * The button just after Explain. It opens the popover with a field, where
+ * the member writes a question about the selection before Send.
+ */
+export const askLabel = 'Ask'
+
+/** The text of the empty field of an Ask before Send. */
+export const askPlaceholder = 'Ask about this text'
 
 /** The action of the popover that shows the tab of the explanation. */
 export const expandLabel = 'Expand'

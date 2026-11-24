@@ -1,10 +1,15 @@
 /**
- * The catalogue paths of Explain, under `app/chat/explain`. They stay
- * beside the paths of the catalogue in `paths.ts`.
+ * The catalogue paths of Explain and Ask, under `app/chat/explain`. They
+ * stay beside the paths of the catalogue in `paths.ts`.
  */
 export const explainPaths = {
   answered: 'app/chat/explain',
   select: 'app/chat/explain/select',
+  ask: 'app/chat/explain/ask',
+  askTyped: 'app/chat/explain/ask/typed',
+  askSent: 'app/chat/explain/ask/sent',
+  askAnswered: 'app/chat/explain/ask/answered',
+  askTab: 'app/chat/explain/ask/tab',
   working: 'app/chat/explain/popover',
   answering: 'app/chat/explain/popover/run',
   starting: 'app/chat/explain/popover/run/starting',

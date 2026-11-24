@@ -453,8 +453,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   fold of the work of a turn. It also gives the data that the chat does
   not have, and the files that the cloud computer could not read. Its
   [Explain](design-chat.md#explain) section gives the marks in the text
-  of the chat, and the popover of an explanation: a small panel by its
-  mark on a computer, and a sheet on a phone.
+  of the chat, the bar of Explain and Ask by a selection, and the popover
+  of an explanation: a small panel by its mark on a computer, and a sheet
+  on a phone.
 - [The Markdown of replies](design-markdown.md) gives the tables, the
   headings, the quotes, the rules, the marks, the line breaks, and the
   pictures of a reply and of a file preview, and how a message line in the

@@ -25,6 +25,7 @@
     "use-a-skill",
     "open-a-file-from-an-answer",
     "explain-chat-text",
+    "ask-about-chat-text",
     "drop-a-file",
     "open-a-local-server",
     "stop-a-service",

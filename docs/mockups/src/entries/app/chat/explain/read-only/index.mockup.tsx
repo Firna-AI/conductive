@@ -8,9 +8,9 @@ import {
 export const explainReadOnly = defineScreen({
   title: 'Read-only workspace',
   description:
-    'Checkout address autocomplete is archived. The marks stay. Each shows an ended turn, because no turn runs while the cloud computer is stopped, and the failed explanation keeps its alert. Cal selected text in his first message, and no Explain shows, also on a phone. A press on a mark opens the popover to read.',
+    'Checkout address autocomplete is archived. The marks stay. Each shows an ended turn, because no turn runs while the cloud computer is stopped, and the failed explanation keeps its alert. Cal selected text in his first message, and neither Explain nor Ask shows, also on a phone. A press on a mark opens the popover to read.',
   rationale:
-    'A read-only workspace shows the marks and opens the popover to read. It starts no explanation, because an explanation starts a session.',
+    'A read-only workspace shows the marks and opens the popover to read. It starts no explanation, because an explanation starts a session, so it shows no Explain and no Ask.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: {

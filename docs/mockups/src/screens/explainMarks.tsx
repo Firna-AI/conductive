@@ -8,8 +8,8 @@ import type {
 } from '../components/explain/chatMarks'
 import { markMenuTitle } from '../../../../src/ui/components/explain/explainCopy'
 import {
-  ExplainButton,
-  PhoneExplainButton,
+  FloatingExplain,
+  PhoneExplain,
 } from '../components/explain/ExplainButton'
 import { MarkGlyph } from '../../../../src/ui/components/explain/MarkGlyph'
 import {
@@ -19,6 +19,7 @@ import {
 } from '../fixtures/explanations'
 import {
   explainReadOnly,
+  followedExplanation,
   markedExplanations,
   markState,
   parentShows,
@@ -37,7 +38,7 @@ const { count } = explanations
  * is open, and the popover keeps to it.
  */
 function textMark(state: WorkspaceState, marked: MarkedExplanation): TextMark {
-  const asked = marked.explanation === count
+  const asked = marked.explanation === followedExplanation(state)
   return {
     key: marked.explanation.key,
     title: nameLabel(marked.explanation.title),
@@ -64,9 +65,11 @@ export function overlapEntries(state: WorkspaceState): MenuEntry[] {
 }
 
 /**
- * The selection of the state, and what a computer shows by it: Explain. A
- * read-only workspace shows no button. A phone shows its own selection menu
- * and handles, and Explain above the composer.
+ * The selection of the state, and what a computer shows by it: the bar of
+ * Explain and Ask. A read-only workspace shows no bar. A phone shows its own
+ * selection menu and handles, and the bar above the composer. Before Send,
+ * an Ask keeps its text in the colours of a selection, with no handles,
+ * because the focus is in the field of its popover.
  */
 function selectionOf(
   state: WorkspaceState,
@@ -74,18 +77,32 @@ function selectionOf(
   const readOnly = explainReadOnly(state)
   switch (state.explainOpen) {
     case 'select': {
-      const to = explainPaths.working
-      const by = readOnly ? undefined : <ExplainButton align="middle" to={to} />
+      const by = readOnly ? undefined : (
+        <FloatingExplain
+          align="middle"
+          askTo={explainPaths.ask}
+          explainTo={explainPaths.working}
+        />
+      )
       return {
         message: count.message,
         span: { kind: 'selection', quote: count.quote, by, system: true },
       }
     }
     case 'select-message': {
-      const by = readOnly ? undefined : <ExplainButton align="end" />
+      const by = readOnly ? undefined : <FloatingExplain align="end" />
       return {
         message: 'ask',
         span: { kind: 'selection', quote: selectedInMessage, by, system: true },
+      }
+    }
+    case 'ask':
+    case 'ask-typed': {
+      if (readOnly) return undefined
+      const { message, quote } = explanations.question
+      return {
+        message,
+        span: { kind: 'selection', quote, system: false, kept: true },
       }
     }
     case 'none':
@@ -144,14 +161,16 @@ export function chatMarksOf(
 }
 
 /**
- * Explain on a phone, above the composer, while text of the chat of the
- * first session is selected in a workspace that can send.
+ * Explain and Ask on a phone, above the composer, while text of the chat of
+ * the first session is selected in a workspace that can send.
  */
 export function explainNotice(state: WorkspaceState): ReactNode {
   if (!parentShows(state) || explainReadOnly(state)) return undefined
   if (state.explainOpen === 'select') {
-    return <PhoneExplainButton to={explainPaths.working} />
+    return (
+      <PhoneExplain askTo={explainPaths.ask} explainTo={explainPaths.working} />
+    )
   }
-  if (state.explainOpen === 'select-message') return <PhoneExplainButton />
+  if (state.explainOpen === 'select-message') return <PhoneExplain />
   return undefined
 }

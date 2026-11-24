@@ -60,6 +60,32 @@ Design calls of the agent, on 24 November 2026:
   without it gets the written prompt of Explain, so older app tabs keep
   working. A question of only white space is refused as invalid input. The
   question has no length limit of its own, as a message has none.
+- The written prompt of an Ask gives the whole quote under "The selected
+  text", before the text with the lines around it. Reason: the first line
+  of an Ask is the question, so no other line names the quote.
+- The mockups gave these calls:
+  - The unsent popover leaves out Expand. Close keeps its place at the end
+    of the header, and Expand shows after Send. Reason: no tab exists
+    before Send, so Expand would be off in every unsent popover.
+  - Explain and Ask are plain buttons in one raised bar, with the outline,
+    the fill, and the shadow of a menu. Ask has the icon of a speech
+    bubble with a question mark. Reason: the two actions then read as one
+    tool of the selection, as in the selection tools of editors.
+  - The highlight of the unsent Ask has the colours of a selection, with
+    no handles and no selection menu on a phone. The text takes its mark
+    at Send. Reason: no explanation exists before Send, so the text must
+    not look like a mark.
+  - The empty field of the unsent Ask says "Ask about this text". Reason:
+    the quote in the header names the text.
+  - The unsent popover takes the name Ask for screen readers. Reason: it
+    has no session title before Send.
+  - After Send, the field is empty again and keeps the focus, as the
+    follow-up field. Reason: the same box sends the next message, as the
+    composer of a tab does after Send.
+  - On a phone, the unsent popover is the sheet at half height. The field
+    takes the focus, so the keyboard of the phone opens with the sheet,
+    and the chat scrolls the highlighted text into view above the sheet.
+    Reason: the sheet and the mark of Explain behave in the same way.
 
 Contract owners:
 
@@ -75,19 +101,22 @@ Depends on: none
 The mockups of Explain at `app/chat/explain` get Ask, and a new flow shows
 an Ask from the selection to the answer.
 
-- [ ] Add Ask next to Explain in `app/chat/explain/select`, in its
+- [x] Add Ask next to Explain in `app/chat/explain/select`, in its
       `message` variant, and on a phone.
-- [ ] Add `app/chat/explain/ask`: the unsent popover with the quote, an
+- [x] Add `app/chat/explain/ask`: the unsent popover with the quote, an
       empty, focused field, and Send off, by the highlighted selection.
       Add a variant with typed text and Send on, and the phone sheet.
-- [ ] Add the popover just after Send, with the question as the title of
+- [x] Add the popover just after Send, with the question as the title of
       the tab and as the first line of the written prompt in the tab.
-- [ ] Add the flow `user-flows/ask-about-chat-text`.
-- [ ] Update the Explain part of `docs/mockups/catalogue-chat-and-automations.md`
+- [x] Add the flow `user-flows/ask-about-chat-text`.
+- [x] Update the Explain part of `docs/mockups/catalogue-chat-and-automations.md`
       and [Explain](../docs/mockups/design-chat.md#explain).
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
 - [ ] Update the design and the TODOs of this plan for each problem that the
       mockups show.
+
+The screenshots and the logs of the checks of this milestone are in
+`.context/explain-ask/mockups/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -107,12 +136,12 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add the optional `question` to `ExplainSessionRequest` in
+- [x] Add the optional `question` to `ExplainSessionRequest` in
       `src/shared/sessions.ts`.
-- [ ] Read and check `question` in `explanationInput` of
+- [x] Read and check `question` in `explanationInput` of
       `worker/chat/explain-session.ts`.
-- [ ] Write the prompt of an Ask in `worker/chat/explain-prompt.ts`.
-- [ ] Test the prompt, the title, the refused blank question, and a request
+- [x] Write the prompt of an Ask in `worker/chat/explain-prompt.ts`.
+- [x] Test the prompt, the title, the refused blank question, and a request
       without a question in the Worker tests of Explain.
 
 ## Milestone 4: Ask in the chat
@@ -123,6 +152,10 @@ Depends on: 3
 
 - [ ] Add Ask after Explain in `FloatingExplain` and `PhoneExplain`, with
       its word in `src/ui/components/explain/explainCopy.ts`.
+- [ ] Move the two rules of `docs/mockups/src/components/explain/Ask.module.css`
+      into the shared styles of `src/ui/components/explain/`: the bar into
+      `ExplainButton.module.css` and the kept text into
+      `MarkedText.module.css`. Delete `Ask.module.css`.
 - [ ] Add the unsent Ask to `useExplain`: the saved selection, its
       highlight, and the place of the popover.
 - [ ] Draw the unsent popover in `ExplainLayer`, with `ExplainPopover` and

@@ -105,18 +105,23 @@ the quote, the parent session with its link, the message ID, and the quote
 with the lines around it. The quote keeps a mark in the parent chat. The
 answer shows in a small popover by the mark, and a press on the mark shows
 the popover again. The docs call the panel a popover, because "preview"
-names port previews. The canonical screen has the popover after the
-answer: below the mark on a computer, and a sheet at half height on a
-phone. The tab of the explanation stands at the end of the row, and the
-parent tab stays the shown tab. The `explainMarks`, `explainSession`, and
-`explainOpen` states of the workspace screen draw the pages. Its child
-pages:
+names port previews. Ask, which the user asked for on 24 November 2026,
+stands just after Explain. It opens the popover with a field, where the
+member writes a question before Send. The question is the first line of
+the written prompt, so it gives the title of the explanation. The
+canonical screen has the popover after the answer: below the mark on a
+computer, and a sheet at half height on a phone. The tab of the
+explanation stands at the end of the row, and the parent tab stays the
+shown tab. The `explainMarks`, `explainSession`, and `explainOpen` states
+of the workspace screen draw the pages. The `question` marks follow the
+Ask of Cal, and the `ask` and `ask-typed` values of `explainOpen` draw an
+Ask before Send. Its child pages:
 
-- `app/chat/explain/select` has Explain above the middle of a selection in
-  the answer. On a phone the selection menu of the phone stays above the
-  selection, so the button stands above the composer. Its `message`
-  variant has a selection in a member message, where the button lines up
-  with the end of the selection.
+- `app/chat/explain/select` has the bar of Explain and Ask above the
+  middle of a selection in the answer. On a phone the selection menu of
+  the phone stays above the selection, so the bar stands above the
+  composer. Its `message` variant has a selection in a member message,
+  where the bar lines up with the end of the selection.
 - `app/chat/explain/popover` has the popover just after Explain, while the
   agent works with no answer yet. Its child pages:
   - `app/chat/explain/popover/run` has the answer as it comes in. Its
@@ -133,6 +138,17 @@ pages:
   - `app/chat/explain/popover/long` has a long answer, which scrolls inside
     the popover at its highest height, and in the sheet of a phone at half
     height. Its `full` variant has the sheet of a phone at full height.
+- `app/chat/explain/ask` has the popover of an Ask before Send, by the
+  line that keeps the colours of a selection: the quote and the close
+  button, with no Expand, an empty chat, and an empty field with the focus
+  and Send off. On a phone it is a sheet at half height. Its `typed`
+  variant has the question of Cal in the field, with Send on. Its `sent`
+  variant has the popover just after Send: the mark, the working line, and
+  the tab of the explanation at the end of the row, whose title is the
+  question. Its `answered` variant has the answer. Its `tab` variant has
+  the tab of the Ask, with the written prompt as its first message: the
+  question, then the context of Explain, with the whole quote under "The
+  selected text".
 - `app/chat/explain/marks` has four marks with no popover open: one whose
   explanation waits for a member, one that runs, one that has its answer,
   and one that failed. Each open explanation has a tab at the end of the
@@ -147,11 +163,13 @@ pages:
 - `app/chat/explain/tab` has the explanation in its tab after Expand, with
   the written prompt as its first message.
 - `app/chat/explain/read-only` has an archived workspace: the marks stay,
-  and a selection shows no Explain. Its `popover` variant has the popover
-  to read, with no follow-up field.
+  and a selection shows no Explain and no Ask. Its `popover` variant has
+  the popover to read, with no follow-up field.
 
 The flow `user-flows/explain-chat-text` goes from the selection, through
-the popover and the mark, to the tab of the explanation.
+the popover and the mark, to the tab of the explanation. The flow
+`user-flows/ask-about-chat-text` goes from the selection, through the
+question and Send, to the answer and the tab of the Ask.
 
 `app/chat/lost-data` draws the data that the
 chat does not have, from decision 76: tool output and turn files that the

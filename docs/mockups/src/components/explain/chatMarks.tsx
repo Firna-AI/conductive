@@ -16,13 +16,21 @@ export type TextMark = {
 /**
  * A part of the text of one message that the chat draws over its text:
  * the mark of an explanation, or the selection of the member. `by` is what
- * a computer shows by the selection: the Explain button above it. `system`
- * draws the selection menu and the handles that a phone shows over a
- * selection.
+ * a computer shows by the selection: the bar of Explain and Ask above it.
+ * `system` draws the selection menu and the handles that a phone shows
+ * over a selection. `kept` is the text of an Ask before Send, which keeps
+ * the colours of a selection while the focus is in the field of its
+ * popover, and which the popover keeps to.
  */
 export type TextSpan =
   | { kind: 'mark'; quote: string; mark: TextMark }
-  | { kind: 'selection'; quote: string; by?: ReactNode; system: boolean }
+  | {
+      kind: 'selection'
+      quote: string
+      by?: ReactNode
+      system: boolean
+      kept?: boolean
+    }
 
 /**
  * What the chat draws over one message: its spans, the mark of an

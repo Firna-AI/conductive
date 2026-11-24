@@ -161,13 +161,17 @@ the lists of `@` and `/`.
 
 ## Explain
 
-`app/chat/explain` draws the parts of Explain. They live in
+`app/chat/explain` draws the parts of Explain, and of Ask, which works as
+Explain does after the member writes a question. They live in
 `src/components/explain/`. The app uses `MarkGlyph`, the words in
 `explainCopy.ts`, and the styles of `MarkedText`, `ExplainButton`,
 `ExplainPopover`, and `FollowUpField` too. These files live in
-[`src/ui/components/explain/`](../../src/ui/components/explain/). The
-docs call the panel by the mark a popover, because "preview" names port
-previews.
+[`src/ui/components/explain/`](../../src/ui/components/explain/).
+`Ask.module.css` in `src/components/explain/` holds the looks that only
+the mockups draw so far: the bar of Explain and Ask, and the kept text of
+an Ask before Send. They move to the shared styles when the app draws Ask.
+The docs call the panel by the mark a popover, because "preview" names
+port previews.
 
 - `MarkedText` draws a text of a message with the marks of its
   explanations and the selection of the member. `ChatMarks` gives the chat
@@ -199,14 +203,23 @@ previews.
   - The selection takes the colours of a selection of the system. On a
     phone the screen draws the handles of the phone and its selection menu
     above the selection.
-- `ExplainButton` draws Explain just above the middle of a selection,
-  raised with the shadow of a menu. So it covers none of the text that the
-  member reads next. Where the chat has no room past the selection, such
-  as in a bubble, it lines up with the end of the selection. On a phone,
-  `PhoneExplainButton` puts it above the composer, in the middle, away from
-  the selection menu and the handles of the phone. A press sends the
-  prompt that the app writes at once, and the popover opens. Explain has
-  no prompt field.
+  - Before Send, an Ask keeps its text in the colours of a selection, with
+    no handles and no selection menu, because the focus is in the field of
+    its popover. It takes no mark until Send. The kept text names the
+    anchor that the popover keeps to, as the open mark does.
+- `FloatingExplain` draws Explain, then Ask, as plain buttons in one bar
+  just above the middle of a selection. The bar has the hairline outline
+  and the fill of a menu, and the shadow of a menu. So it covers none of
+  the text that the member reads next. Where the chat has no room past the
+  selection, such as in a bubble, it lines up with the end of the
+  selection. On a phone, `PhoneExplain` puts the bar above the composer,
+  in the middle, away from the selection menu and the handles of the
+  phone. Tab reaches Explain, then Ask, and Ask has no key of its own.
+  - A press on Explain sends the prompt that the app writes at once, and
+    the popover opens. Explain has no prompt field.
+  - A press on Ask opens the popover at once, with a field for the
+    question. Nothing starts before Send. The question is the first line
+    of the written prompt, so it gives the title of the explanation.
 - `ExplainPopover` draws the popover of an explanation. Its header shows
   the quote, cut to two lines, then Expand and the close button. The
   popover shows no written prompt, so the quote names what its chat is
@@ -231,6 +244,15 @@ previews.
     handle takes it to full height, where it stops under the tab row.
     While a request waits for the member, the sheet opens at full height,
     so the request card and the chat above it both have room.
+  - Before Send, the popover of an Ask has the same width, highest height,
+    and place by its kept text. On a phone it is the same sheet at half
+    height. Its header shows the quote and the close button, with no
+    Expand, because no session exists yet. Its chat is empty, and the field
+    at its foot has the focus, with Send off while it is empty. Close,
+    Escape, or a press outside drops the question and starts nothing. After
+    Send, the field is empty again for a follow-up, the text takes its
+    mark, and the popover shows the chat of the new session as for
+    Explain.
 - `FollowUpField` draws the box at the foot of the popover: one line that
   grows to four, Stop while a turn runs, and Send. A follow-up is a message
   of the session, so while a turn runs it steers that turn. The box has no
@@ -239,4 +261,6 @@ previews.
   over the box. While the cloud computer does not run, the bar of a tab,
   `SandboxBar`, takes the place of the box and of that notice, as it takes
   the place of the composer: Resume while the cloud computer is stopped.
-  A read-only workspace shows no box and no bar.
+  A read-only workspace shows no box and no bar. Before Send, an Ask holds
+  the same box for its question, with the placeholder "Ask about this
+  text" and no Stop.

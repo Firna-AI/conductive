@@ -8,6 +8,7 @@ import { PhoneSelectionEnd, PhoneSelectionStart } from './PhoneSelection'
 import type { MessageMarks, TextMark, TextSpan } from './chatMarks'
 import { markLabel } from '../../../../../src/ui/components/explain/explainCopy'
 import styles from '../../../../../src/ui/components/explain/MarkedText.module.css'
+import ask from './Ask.module.css'
 
 type Placed = { span: TextSpan; start: number; end: number }
 
@@ -172,13 +173,18 @@ function SegmentView(props: {
 
 /**
  * The runs of a selection in one box, so that what a computer shows by the
- * selection, the Explain button, can place itself against the whole
- * selection: above its middle, or above its end.
+ * selection, the bar of Explain and Ask, can place itself against the whole
+ * selection: above its middle, or above its end. The text that an Ask
+ * keeps before Send names the anchor of its popover.
  */
-function SelectionBox(props: { by?: ReactNode; children: ReactNode }) {
+function SelectionBox(props: {
+  by?: ReactNode
+  kept: boolean
+  children: ReactNode
+}) {
   const touch = useTouch()
   return (
-    <span className={styles.selected}>
+    <span className={classes(styles.selected, props.kept && ask.kept)}>
       {props.children}
       {props.by && !touch ? props.by : null}
     </span>
@@ -218,7 +224,7 @@ export function MarkedText(props: {
   return (
     <>
       {views.slice(0, first)}
-      <SelectionBox by={selection?.by}>
+      <SelectionBox by={selection?.by} kept={selection?.kept === true}>
         {views.slice(first, last + 1)}
       </SelectionBox>
       {views.slice(last + 1)}

@@ -24,7 +24,8 @@
  * session, and both Preview tabs stay in the row with their pages loaded.
  * A phone row shows no Preview tab, so a phone shows the page on its
  * Preview page. `explanation` shows the tab of the explanation of Cal
- * after Expand, at the end of the row.
+ * after Expand, at the end of the row: the tab of his Ask with the
+ * `question` marks, else the tab of his Explain.
  */
 export const tabStates = [
   'session',

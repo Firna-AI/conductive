@@ -21,17 +21,25 @@ export type SheetHeight = 'half' | 'full'
  * The top of the popover: the quote that it explains, then Expand and the
  * close button. The quote keeps to two lines, and its title holds all of
  * it. The popover shows no written prompt, so the quote names what the
- * chat under it is about.
+ * chat under it is about. An Ask before Send has no session, so it leaves
+ * out Expand, and the close button keeps its place at the end.
  */
-function Header(props: { quote: string; expandTo?: string; closeTo?: string }) {
+function Header(props: {
+  quote: string
+  unsent: boolean
+  expandTo?: string
+  closeTo?: string
+}) {
   return (
     <div className={styles.header}>
       <p className={styles.quote} title={props.quote}>
         “{props.quote}”
       </p>
-      <Linked to={props.expandTo}>
-        <IconButton icon={Maximize2} label={expandLabel} />
-      </Linked>
+      {props.unsent ? null : (
+        <Linked to={props.expandTo}>
+          <IconButton icon={Maximize2} label={expandLabel} />
+        </Linked>
+      )}
       <Linked to={props.closeTo}>
         <IconButton icon={X} label={closeLabel} />
       </Linked>
@@ -48,13 +56,16 @@ function Header(props: { quote: string; expandTo?: string; closeTo?: string }) {
  * over the app. `children` is the chat of the explanation without its
  * written prompt, with the follow-up field at its foot. Expand shows the
  * tab of the explanation, and the close button leaves the mark with the
- * state of the explanation.
+ * state of the explanation. Before Send, the popover of an Ask is
+ * `unsent`: its chat is empty, and its field takes the question.
  */
 export function ExplainPopover(props: {
-  /** The title of the explanation, which names the popover. */
+  /** The title of the explanation, or Ask before Send, which names it. */
   title: string
   quote: string
   viewport: Viewport
+  /** An Ask before Send, with no session yet, so no Expand. */
+  unsent?: boolean
   /** The height of the sheet of a phone. A computer has one height. */
   height?: SheetHeight
   /** The screen that Expand shows, when the mockups draw it. */
@@ -68,6 +79,7 @@ export function ExplainPopover(props: {
       closeTo={props.closeTo}
       expandTo={props.expandTo}
       quote={props.quote}
+      unsent={props.unsent === true}
     />
   )
   const body = <div className={styles.body}>{props.children}</div>

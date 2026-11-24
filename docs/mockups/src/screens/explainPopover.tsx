@@ -7,6 +7,8 @@ import { Menu } from '../../../../src/ui/components/common/Menu'
 import { Notice } from '../../../../src/ui/components/common/Notice'
 import { Sheet } from '../../../../src/ui/components/common/Sheet'
 import {
+  askLabel,
+  askPlaceholder,
   markMenuTitle,
   reopenBody,
   reopenTitle,
@@ -14,26 +16,22 @@ import {
 import { ExplainPopover } from '../components/explain/ExplainPopover'
 import { FollowUpField } from '../components/explain/FollowUpField'
 import { replacesComposer } from '../../../../src/ui/components/workspace/sandboxNoticeState'
-import {
-  explanationChats,
-  promptId,
-  queuedPrompt,
-} from '../fixtures/explanationChats'
-import { explanations } from '../fixtures/explanations'
+import { explanationChatsOf, promptId } from '../fixtures/explanationChats'
+import { askQuestion, explanations } from '../fixtures/explanations'
 import { overlapEntries } from './explainMarks'
 import {
   askedSession,
   explainRuns,
+  followedExplanation,
   parentPage,
   parentShows,
+  startedWithAsk,
 } from './explainModel'
 import { explainPaths } from './explainPaths'
 import { viewerOf } from './sessionStarter'
 import { startingLogFor } from './workspaceParts'
 import { sandboxNotice } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
-
-const { count } = explanations
 
 /**
  * The chat of the explanation of Cal in its popover. It leaves out the
@@ -63,12 +61,13 @@ function popoverChat(
   const field = readOnly ? null : (
     <FollowUpField running={!starting && explainRuns(session)} />
   )
+  const chats = explanationChatsOf(followedExplanation(state))
   return (
     <ChatPane
       compact
       field={field}
       hide={promptId}
-      items={starting ? [queuedPrompt] : explanationChats[session]}
+      items={starting ? [chats.queued] : chats.stages[session]}
       notice={reopens}
       problem={problem}
       starting={startingLogFor(state)}
@@ -85,9 +84,44 @@ function popoverChat(
 function expandPage(state: WorkspaceState, readOnly: boolean) {
   if (readOnly || state.sandbox !== 'ready') return undefined
   const session = askedSession(state)
-  return session === 'answered' || session === 'closed'
-    ? explainPaths.tab
-    : undefined
+  if (session !== 'answered' && session !== 'closed') return undefined
+  return startedWithAsk(state) ? explainPaths.askTab : explainPaths.tab
+}
+
+/**
+ * The popover of an Ask before Send, by the line that keeps its highlight.
+ * Its header shows the quote and the close button. No session exists yet,
+ * so it leaves out Expand, its chat is empty, and the close button starts
+ * nothing. The field of the question has the focus, and Send is off while
+ * it is empty. A phone shows it as the sheet at half height.
+ */
+function unsentAsk(state: WorkspaceState, viewport: Viewport): ReactNode {
+  const typed = state.explainOpen === 'ask-typed'
+  const field = (
+    <FollowUpField
+      draft={typed ? askQuestion : ''}
+      focused
+      placeholder={askPlaceholder}
+      running={false}
+      sendTo={typed ? explainPaths.askSent : undefined}
+    />
+  )
+  return (
+    <ExplainPopover
+      quote={explanations.question.text}
+      title={askLabel}
+      unsent
+      viewport={viewport}
+    >
+      <ChatPane
+        compact
+        field={field}
+        items={[]}
+        viewer={viewerOf(state)}
+        viewport={viewport}
+      />
+    </ExplainPopover>
+  )
 }
 
 /**
@@ -104,7 +138,8 @@ function sheetHeight(state: WorkspaceState): 'half' | 'full' {
  * What Explain lays over the workspace: the popover of the explanation of
  * Cal, by its mark on a computer and as a sheet on a phone, and on a phone
  * the sheet of the menu of overlapping marks. A computer draws that menu by
- * the text.
+ * the text. Before Send, an Ask lays its popover by the text that it keeps.
+ * A read-only workspace shows no Ask.
  */
 export function explainOverlay(
   state: WorkspaceState,
@@ -114,19 +149,24 @@ export function explainOverlay(
   if (!parentShows(state)) return null
   switch (state.explainOpen) {
     case 'popover':
-    case 'popover-full':
+    case 'popover-full': {
+      const explanation = followedExplanation(state)
       return (
         <ExplainPopover
           closeTo={parentPage(state)}
           expandTo={expandPage(state, readOnly)}
           height={sheetHeight(state)}
-          quote={count.text}
-          title={nameLabel(count.title)}
+          quote={explanation.text}
+          title={nameLabel(explanation.title)}
           viewport={viewport}
         >
           {popoverChat(state, viewport, readOnly)}
         </ExplainPopover>
       )
+    }
+    case 'ask':
+    case 'ask-typed':
+      return readOnly ? null : unsentAsk(state, viewport)
     case 'menu':
       return viewport === 'mobile' ? (
         <Sheet title={markMenuTitle}>

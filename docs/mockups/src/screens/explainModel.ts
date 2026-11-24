@@ -30,6 +30,20 @@ export function popoverOpen(state: WorkspaceState): boolean {
   return parentShows(state) && (open === 'popover' || open === 'popover-full')
 }
 
+/** Cal started his explanation of the line with Ask and his question. */
+export function startedWithAsk(state: WorkspaceState): boolean {
+  return state.explainMarks === 'question'
+}
+
+/**
+ * The explanation of Cal about the line of the answer, which its mark, its
+ * popover, and its tab show: the one that he started with Explain, or the
+ * one that he started with Ask.
+ */
+export function followedExplanation(state: WorkspaceState): Explanation {
+  return startedWithAsk(state) ? explanations.question : explanations.count
+}
+
 /** The turn of the session runs, also while it waits for a member. */
 export function explainRuns(session: ExplainSessionState): boolean {
   switch (session) {
@@ -56,6 +70,10 @@ function allMarked(state: WorkspaceState): MarkedExplanation[] {
     case 'asked':
     case 'stale':
       return [asked]
+    case 'question':
+      return [
+        { explanation: explanations.question, session: state.explainSession },
+      ]
     case 'states':
       return [
         asked,
@@ -96,8 +114,9 @@ export function markState(session: ExplainSessionState): ExplainMarkState {
  * tab show it.
  */
 export function askedSession(state: WorkspaceState): ExplainSessionState {
+  const followed = followedExplanation(state)
   const asked = markedExplanations(state).find(
-    (marked) => marked.explanation === explanations.count,
+    (marked) => marked.explanation === followed,
   )
   return asked?.session ?? state.explainSession
 }
@@ -120,23 +139,24 @@ export function explainActivity(
  * that they opened, as each new tab opens there. The parent tab stays the
  * shown tab. An explanation whose tab is closed has none, and the tab of
  * one that runs shows the spinner. `explanation` shows the tab of Cal after
- * Expand.
+ * Expand. The tab of an Ask has the question of Cal as its title.
  */
 export function explainTabs(state: WorkspaceState): WorkspaceTab[] {
   const shown = state.tab === 'explanation'
   const open = markedExplanations(state).filter(
     (marked) => marked.session !== 'closed',
   )
-  const { count } = explanations
-  if (shown && !open.some((marked) => marked.explanation === count)) {
-    open.unshift({ explanation: count, session: 'answered' })
+  const followed = followedExplanation(state)
+  if (shown && !open.some((marked) => marked.explanation === followed)) {
+    open.unshift({ explanation: followed, session: 'answered' })
   }
+  const tabPage = startedWithAsk(state) ? explainPaths.askTab : explainPaths.tab
   return open.map(({ explanation, session }) => ({
     key: explanation.key,
     kind: 'session',
     title: nameLabel(explanation.title),
-    to: explanation === count ? explainPaths.tab : undefined,
-    selected: shown && explanation === count,
+    to: explanation === followed ? tabPage : undefined,
+    selected: shown && explanation === followed,
     running: explainRuns(session),
   }))
 }
@@ -145,9 +165,11 @@ export function explainTabs(state: WorkspaceState): WorkspaceTab[] {
  * The page of the parent chat with no popover open, where the mockups draw
  * it: the page that the close button of the popover opens, and the page
  * that the chip of the parent in the written prompt opens. The mark keeps
- * the state of the explanation there.
+ * the state of the explanation there. The mockups draw no such page for
+ * the mark of an Ask.
  */
 export function parentPage(state: WorkspaceState): string | undefined {
+  if (startedWithAsk(state)) return undefined
   if (explainReadOnly(state)) return explainPaths.readOnly
   if (state.sandbox !== 'ready') return undefined
   switch (askedSession(state)) {
@@ -166,8 +188,31 @@ export function parentPage(state: WorkspaceState): string | undefined {
   }
 }
 
+/**
+ * The page of the popover of an Ask of Cal, where the mockups draw it: just
+ * after Send, while the agent works, and after the answer.
+ */
+function askPopoverPage(state: WorkspaceState): string | undefined {
+  if (explainReadOnly(state) || state.sandbox !== 'ready') return undefined
+  switch (askedSession(state)) {
+    case 'working':
+      return explainPaths.askSent
+    case 'answered':
+      return explainPaths.askAnswered
+    case 'answering':
+    case 'follow-up':
+    case 'waiting':
+    case 'failed':
+    case 'stopped':
+    case 'long':
+    case 'closed':
+      return undefined
+  }
+}
+
 /** The page of the popover of the explanation of Cal, in its state. */
-export function popoverPageOf(state: WorkspaceState): string {
+export function popoverPageOf(state: WorkspaceState): string | undefined {
+  if (startedWithAsk(state)) return askPopoverPage(state)
   if (explainReadOnly(state)) return explainPaths.readOnlyPopover
   if (state.sandbox === 'starting') return explainPaths.starting
   if (state.sandbox === 'stopped') return explainPaths.computerStopped

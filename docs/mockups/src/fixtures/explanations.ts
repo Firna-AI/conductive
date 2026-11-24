@@ -3,7 +3,8 @@
  * of Checkout address autocomplete. An explanation is a normal session with
  * an anchor: the parent session, the message, and the quoted text with the
  * text around it. Explain sends its first message at once: a prompt that
- * the app writes, whose first line gives the title of the session.
+ * the app writes, whose first line gives the title of the session. Ask
+ * sends it after the member writes a question, which is its first line.
  */
 
 import { sessionTitleFrom } from '../../../../src/shared/session-title'
@@ -30,7 +31,7 @@ export type Explanation = {
   text: string
   /** The title of the explanation, from the first line of its prompt. */
   title: string | null
-  /** The member who pressed Explain, who started the session. */
+  /** The member who pressed Explain or Ask, who started the session. */
   starter: PersonKey
 }
 
@@ -39,22 +40,37 @@ function explainLine(text: string): string {
   return `Explain "${text}"`
 }
 
+/**
+ * The question that Cal writes in the field of an Ask about the line of
+ * `count`. It is the first line of the written prompt, so it gives the
+ * title of the session.
+ */
+export const askQuestion =
+  'Does manual entry still fill the city from the postcode?'
+
+/**
+ * An explanation of `quote`. `question` is the first line of the written
+ * prompt of an Ask. A press on Explain writes the first line itself, which
+ * names the quote.
+ */
 function explanation(
   key: string,
   message: QuotedMessage,
   quote: string,
   starter: PersonKey,
+  question?: string,
 ): Explanation {
   const text = quote.replaceAll('`', '')
-  const title = sessionTitleFrom(explainLine(text))
+  const title = sessionTitleFrom(question ?? explainLine(text))
   return { key, message, quote, text, title, starter }
 }
 
 /**
  * The explanations that the mockups draw. Cal explains `count`, a line of
- * the answer, which the flow follows. `lookup`, `proxy`, and `tests` are
- * explanations of Cal and Priya in other states, and `match` lies inside
- * the quote of `count`, so their marks overlap.
+ * the answer, which the flow of Explain follows. `question` is the Ask of
+ * Cal about the same line, which the flow of Ask follows. `lookup`,
+ * `proxy`, and `tests` are explanations of Cal and Priya in other states,
+ * and `match` lies inside the quote of `count`, so their marks overlap.
  */
 export const explanations = {
   count: explanation(
@@ -62,6 +78,13 @@ export const explanations = {
     'done',
     'Manual entry still works when there is no match.',
     'cal',
+  ),
+  question: explanation(
+    'explain-question',
+    'done',
+    'Manual entry still works when there is no match.',
+    'cal',
+    askQuestion,
   ),
   lookup: explanation(
     'explain-lookup',
@@ -102,6 +125,22 @@ const countContext = [
   'Removed the old postcode lookup, which the suggestions replace.',
 ]
 
+/** The parent session with its link, and the ID of the quoted answer. */
+function parentLines(): string[] {
+  const parent = autocompleteSessions.autocomplete
+  return [`Session: ${sessionLink(parent)}`, `Message: ${answerId}`]
+}
+
+/** The quote of `count` with the lines around it, each on its own line. */
+const contextLines = [
+  'The text with the lines around it:',
+  ...countContext.map((line) => `> ${line}`),
+]
+
+/** The last line of a written prompt, which asks for three things. */
+const requests =
+  'Read that session with `read_session` if you need more context. Change no files. Keep the answer short, because it shows in a small popover.'
+
 /**
  * The first message of the explanation of `count`, which the app writes
  * and sends at once. Its first line names the quote, so it gives the title
@@ -113,15 +152,33 @@ const countContext = [
  * message, and the tab shows it.
  */
 export function writtenPrompt(): string {
-  const parent = autocompleteSessions.autocomplete
   return [
     explainLine(explanations.count.text),
     '',
-    `Session: ${sessionLink(parent)}`,
-    `Message: ${answerId}`,
-    'The text with the lines around it:',
-    ...countContext.map((line) => `> ${line}`),
+    ...parentLines(),
+    ...contextLines,
     '',
-    'Read that session with `read_session` if you need more context. Change no files. Keep the answer short, because it shows in a small popover.',
+    requests,
+  ].join('\n')
+}
+
+/**
+ * The first message of the Ask of `question`, which the app writes when Cal
+ * presses Send. His question comes first, so it gives the title of the
+ * session. Then come the parent session and the message ID, and the whole
+ * quote under "The selected text", because no other line names it. The
+ * quote with the lines around it and the three requests follow, as in the
+ * prompt of Explain. The popover hides this message, and the tab shows it.
+ */
+export function askPrompt(): string {
+  return [
+    askQuestion,
+    '',
+    ...parentLines(),
+    'The selected text:',
+    `> ${explanations.question.text}`,
+    ...contextLines,
+    '',
+    requests,
   ].join('\n')
 }
