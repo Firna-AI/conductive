@@ -1,8 +1,9 @@
 import { expect, it, onTestFinished } from 'vitest'
+import { HeldRequests } from '../../app/test-kit'
 import type { ChangesResponse } from '../../shared/generated/ChangesResponse'
 import { filePaths, type FileEvent } from '../../shared/files'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { FAKE_FILE_PATH, toolFixtures } from '../../test-support/fixtures/tools'
 import {
   deferred,
@@ -14,7 +15,7 @@ import {
   waitUntil,
 } from '../files-test-kit'
 import { followPath } from './follow-path'
-import { versionOf, type FilesSubscribe } from './files-store'
+import { versionOf } from './files-store'
 import { ResourceLoader } from './resource-loader'
 
 const org = FAKE_IDS.org
@@ -93,6 +94,91 @@ it(
   },
 )
 
+it('refreshes an open file and diff when both first cutoffs include an edit', async () => {
+  const server = new FakeApiServer()
+  const held = new HeldRequests(server)
+  const treePath = filePaths.tree(org, id)
+  const changesPath = filePaths.changes(org, id)
+  held.hold('GET', treePath)
+  held.hold('GET', changesPath)
+  const after: number[] = []
+  const { files, tree, changes } = observeFileReads((cursor, listener) => {
+    after.push(cursor)
+    return server.events.subscribe(cursor, listener, id)
+  }, held.fetch)
+  onTestFinished(() => {
+    files.stop()
+    held.release('GET', treePath)
+    held.release('GET', changesPath)
+  })
+  files.start()
+  const file = new ResourceLoader((key, signal) =>
+    files.client.readFile(key, signal),
+  )
+  const diff = new ResourceLoader((key, signal) =>
+    files.client.readDiff(key, signal),
+  )
+  onTestFinished(followPath(files, file, path))
+  onTestFinished(followPath(files, diff, path))
+  const data = toolFixtures()
+  await waitUntil(() => {
+    expect(file.getSnapshot()).toMatchObject({
+      value: { content: data.content.content },
+    })
+    expect(diff.getSnapshot()).toMatchObject({
+      value: { newContent: data.diff.newContent },
+    })
+  })
+
+  const updated = 'changed after the first read\n'
+  server.json('GET', filePaths.content(org, id, path), {
+    ...data.content,
+    content: updated,
+    sizeBytes: updated.length,
+  })
+  server.json('GET', filePaths.diff(org, id, path), {
+    ...data.diff,
+    newContent: updated,
+    patch: '@@ -1 +1 @@\n-old\n+changed after the first read\n',
+  })
+  const edited = envelopeAfter(server, edit(3))
+  server.events.store(edited)
+  const firstVersion = versionOf(files.getSnapshot(), path)
+  held.release('GET', treePath)
+  const treeReply = await tree[0]
+  const treeVersion = versionOf(files.getSnapshot(), path)
+  server.events.store(
+    envelopeAfter(server, { type: 'changes.updated', changes: data.changes }),
+  )
+  held.release('GET', changesPath)
+  const changesReply = await changes[0]
+
+  expect({
+    cutoffs: [
+      treeReply.stateRead?.eventNumber,
+      changesReply.stateRead?.eventNumber,
+    ],
+    after,
+    treeTouched: treeVersion !== firstVersion,
+    changesTouched: versionOf(files.getSnapshot(), path) !== treeVersion,
+  }).toEqual({
+    cutoffs: [edited.eventNumber, edited.eventNumber + 1],
+    after: [edited.eventNumber],
+    treeTouched: true,
+    changesTouched: true,
+  })
+  await waitUntil(() => {
+    expect(file.getSnapshot()).toMatchObject({
+      refreshing: false,
+      value: { content: updated },
+    })
+    expect(diff.getSnapshot()).toMatchObject({
+      refreshing: false,
+      value: { newContent: updated },
+    })
+  })
+})
+
 it('refreshes a live edit before the first tree arrives', slow, async () => {
   const server = new FakeApiServer()
   const treeReply = deferred<Response>()
@@ -156,97 +242,6 @@ it('refreshes a live edit before the first tree arrives', slow, async () => {
     files.stop()
     treeReply.resolve(Response.json(data.files))
   }
-})
-
-it('replaces the seeded tree when a new runner starts at revision one', async () => {
-  const data = toolFixtures()
-  const after: number[] = []
-  let send: Parameters<FilesSubscribe>[1] = () => {}
-  const stateRead = { eventNumber: 20, repositoryId: null, failure: null }
-  const reads = observeFileReads(
-    (cursor, listener) => {
-      after.push(cursor)
-      send = listener
-      return () => {}
-    },
-    async (input) =>
-      Response.json(
-        input === filePaths.tree(org, id)
-          ? { ...data.files, revision: 58, stateRead }
-          : { ...data.changes, stateRead },
-      ),
-  )
-  onTestFinished(() => reads.files.stop())
-  reads.files.start()
-  await Promise.all([reads.tree[0], reads.changes[0]])
-  const before = reads.files.getSnapshot().tree?.revision
-  send({
-    type: 'event',
-    envelope: {
-      workspaceId: id,
-      eventNumber: 21,
-      occurredAt: FAKE_TIME,
-      event: { type: 'files.snapshot', tree: { revision: 1, entries: [] } },
-    },
-  })
-  const tree = reads.files.getSnapshot().tree
-
-  expect({ after, before, tree }).toEqual({
-    after: [20],
-    before: 58,
-    tree: { revision: 1, entries: new Map() },
-  })
-})
-
-it('opens the stream only for the new visit when a stopped read answers late', async () => {
-  const previous = deferred<Response>()
-  const after: number[] = []
-  const data = toolFixtures()
-  let previousSignal: AbortSignal | null | undefined
-  let treeReads = 0
-  const body = (eventNumber: number) => ({
-    ...data.files,
-    stateRead: { eventNumber, repositoryId: null, failure: null },
-  })
-  const reads = observeFileReads(
-    (cursor) => {
-      after.push(cursor)
-      return () => {}
-    },
-    async (input, init) => {
-      if (input !== filePaths.tree(org, id)) {
-        return Response.json({ ...data.changes, stateRead: body(6).stateRead })
-      }
-      treeReads += 1
-      if (treeReads === 1) {
-        previousSignal = init?.signal
-        return previous.promise
-      }
-      return Response.json(body(4))
-    },
-  )
-  const { files } = reads
-  onTestFinished(() => files.stop())
-  files.start()
-  await reads.changes[0]
-  files.stop()
-  const afterStop = [...after]
-  previous.resolve(Response.json({ ...body(100), revision: 77 }))
-  await reads.tree[0]
-  files.start()
-  await Promise.all([reads.tree[1], reads.changes[1]])
-
-  expect({
-    afterStop,
-    after,
-    aborted: previousSignal?.aborted,
-    revision: files.getSnapshot().tree?.revision,
-  }).toEqual({
-    afterStop: [],
-    after: [4],
-    aborted: true,
-    revision: 1,
-  })
 })
 
 it(

@@ -115,7 +115,8 @@ the change that gives a new tab the state of a workspace from reads.
   refused request, gives no state. When the tab still follows a stream
   after such a read, that stream starts with a full replay. After a reply
   of an older Worker without this state, the stream also starts with a
-  full replay.
+  full replay. The Files stream starts its replay as soon as either Files
+  read gives no cutoff, even while the other read is pending.
 - A Files read of a list that has no report yet answers that the list is
   unavailable, and it still gives its cutoff. That cutoff counts as the
   cutoff of the read.

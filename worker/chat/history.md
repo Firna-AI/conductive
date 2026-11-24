@@ -251,11 +251,10 @@ an older Worker drops the mark, even when it adds no event.
 
 [`workspace-read-recovery.ts`](workspace-read-recovery.ts) shares one
 recovery across waiting reads. The recovery fixes a cutoff and saves its
-progress after each page in a separate chat queue task. It lists at most
-four stored events at a time in reverse order. A page stops after four
-events or after it processes 1 MiB of JSON. It skips file descriptors by
-reading their metadata alone. The cause of each failed repair bounds its
-notice scan. A later full report ends that scan for its kind.
+progress after each page in a separate chat queue task. Each page uses
+one reverse list of at most four stored events. It skips file descriptors
+by reading their metadata alone. The cause of each failed repair bounds
+its notice scan. A later full report ends that scan for its kind.
 
 A page commits the next position and the reports and failures found so
 far. A read resumes there after an eviction. A write that drops the mark

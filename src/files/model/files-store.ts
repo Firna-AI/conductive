@@ -93,8 +93,13 @@ export class WorkspaceFiles {
   /** Reads the tree and the changes again where they failed. */
   retry(): void {
     if (!this.running) return
-    if (!this.sync.tree.value || this.sync.treeStale) this.read('tree')
-    if (!this.sync.changes.value) this.read('changes')
+    if (
+      (!this.sync.tree.value || this.sync.treeStale) &&
+      !this.reads.has('tree')
+    )
+      this.read('tree')
+    if (!this.sync.changes.value && !this.reads.has('changes'))
+      this.read('changes')
   }
 
   setFolderOpen(path: string, open: boolean): void {

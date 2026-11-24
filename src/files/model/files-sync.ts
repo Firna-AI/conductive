@@ -119,6 +119,7 @@ function fetchedChanges(
         error: null,
       },
     },
+    // A read with a cutoff touches every path in syncRead instead.
     touched: listedPaths(sync.changes.value, changes),
     allTouched: false,
   }
@@ -132,9 +133,11 @@ export function syncRead(
   const cutoff = result.stateRead?.eventNumber
   if (cutoff !== undefined && cutoff <= sync[list].floor) return unchanged(sync)
   if (result.ok) {
-    return list === 'tree'
-      ? fetchedTree(sync, result.value, cutoff)
-      : fetchedChanges(sync, result.value, cutoff)
+    const step =
+      list === 'tree'
+        ? fetchedTree(sync, result.value, cutoff)
+        : fetchedChanges(sync, result.value, cutoff)
+    return cutoff === undefined ? step : unknownPaths(step.sync)
   }
   if (cutoff === undefined) {
     return unchanged({
@@ -142,23 +145,17 @@ export function syncRead(
       [list]: { ...sync[list], error: result.error },
     })
   }
-  return {
-    sync: {
-      ...sync,
-      [list]: { value: null, floor: cutoff, error: result.error },
-      ...(list === 'tree'
-        ? {
-            treeUnavailable: false,
-            treeStale: false,
-            pending: sync.pending.filter(
-              (update) => update.eventNumber > cutoff,
-            ),
-          }
-        : {}),
-    },
-    touched: none,
-    allTouched: sync[list].value !== null,
-  }
+  return unknownPaths({
+    ...sync,
+    [list]: { value: null, floor: cutoff, error: result.error },
+    ...(list === 'tree'
+      ? {
+          treeUnavailable: false,
+          treeStale: false,
+          pending: sync.pending.filter((update) => update.eventNumber > cutoff),
+        }
+      : {}),
+  })
 }
 
 function syncDelta(sync: FilesSync, update: TreeUpdate): SyncStep {

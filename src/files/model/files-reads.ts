@@ -12,7 +12,7 @@ export type FileListRead =
 export class FilesReads {
   private readonly controllers = new Map<FileList, AbortController>()
   private readonly client: FilesClient
-  private initial: Partial<Record<FileList, number | null>> | null = null
+  private initial: Partial<Record<FileList, number>> | null = null
 
   constructor(client: FilesClient) {
     this.client = client
@@ -46,13 +46,18 @@ export class FilesReads {
     const settle = (read: FileListRead) => {
       if (this.controllers.get(list) !== controller) return
       this.controllers.delete(list)
-      if (initial) initial[list] = read.result.stateRead?.eventNumber ?? null
+      const cutoff = read.result.stateRead?.eventNumber
+      if (initial && cutoff !== undefined) initial[list] = cutoff
       accept(read)
       if (!initial || this.initial !== initial) return
       const { tree, changes } = initial
-      if (tree === undefined || changes === undefined) return
-      this.initial = null
-      follow(tree === null || changes === null ? 0 : Math.min(tree, changes))
+      if (cutoff === undefined) {
+        this.initial = null
+        follow(0)
+      } else if (tree !== undefined && changes !== undefined) {
+        this.initial = null
+        follow(Math.min(tree, changes))
+      }
     }
 
     if (list === 'tree') {

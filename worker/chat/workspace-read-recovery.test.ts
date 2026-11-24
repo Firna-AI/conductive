@@ -1,16 +1,16 @@
 import { expect, it } from 'vitest'
+import { jsonBytes } from '../../src/shared/event-limits'
 import type { WorkspaceNoticeKind } from '../../src/shared/workspace-state-read'
 import { heldOperation } from '../test-support/held-operation'
-import { historyMemory } from './history-memory.test-support'
 import {
   legacyHistory,
   sessionAnswer,
 } from './history-session-index.test-support'
 import { nativeChatStore } from './native-store.test-support'
 import { ReportRepairs } from './report-repairs'
-import { chatEventKey, chatKey } from './storage-keys'
+import { CHAT_META, chatEventKey, chatKey } from './storage-keys'
 import { ChatStore } from './store'
-import type { WorkspaceEvent } from './workspace-events'
+import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import {
   previousWorkerWrite,
   trackRecoveryPages,
@@ -51,7 +51,7 @@ const kinds: readonly WorkspaceNoticeKind[] = [
 ]
 
 it('recovers the first open failures and newest skills in four-record lists without loading either file descriptor', async () => {
-  const { storage } = historyMemory()
+  const { storage } = await nativeChatStore()
   const repairs = new ReportRepairs(storage)
   const oldNotice = failure('workspace.title', 1, 10, 1, 'older-stream')
   await previousWorkerWrite(storage, oldNotice.event, oldNotice.occurredAt)
@@ -110,9 +110,28 @@ it('recovers the first open failures and newest skills in four-record lists with
       },
       notice.occurredAt + 5,
     )
+  const entry = { path: '', name: 'file', kind: 'file' as const, change: null }
+  const inline = {
+    workspaceId: 'workspace',
+    eventNumber: 23,
+    occurredAt: 31,
+    event: {
+      type: 'files.changed',
+      delta: { revision: 2, changes: [{ operation: 'upsert', entry }] },
+    },
+  } satisfies WorkspaceEventEnvelope
+  // The previous writer kept file events of up to 1 MiB inline.
+  entry.path = 'x'.repeat(1_048_576 - jsonBytes(inline))
+  await storage.put(chatEventKey(inline.eventNumber), inline)
+  await storage.put(CHAT_META, {
+    workspaceId: inline.workspaceId,
+    through: inline.eventNumber,
+    commandThrough: 0,
+  })
+
   const tracked = trackRecoveryPages(storage)
   expect(await readState(new ChatStore(tracked.storage, () => 50))).toEqual({
-    eventNumber: 22,
+    eventNumber: 23,
     state: {
       repositoryId: null,
       ports: { eventNumber: 11, occurredAt: 19, event: ports },
@@ -124,6 +143,10 @@ it('recovers the first open failures and newest skills in four-record lists with
     tracked.lists.filter(({ reverse, limit }) => reverse && limit === 4),
   ).toHaveLength(6)
   expect(tracked.lists).toHaveLength(6)
+  expect(tracked.lists.map(({ end }) => end)).toEqual([
+    `${chatEventKey(23)}\u0000`,
+    ...[20, 16, 12, 8, 4].map(chatEventKey),
+  ])
   expect(
     tracked.reads.filter((key) => key.startsWith(chatKey('history-chunk', ''))),
   ).toEqual([])
@@ -167,7 +190,7 @@ it('resumes after eviction from the history page that already committed', async 
 })
 
 it('waits after a rollback write without an event and restarts when a second rollback drops the mark mid-scan', async () => {
-  const { storage } = historyMemory()
+  const { storage } = await nativeChatStore()
   const name = failure('workspace.title', 2, 21, 2)
   const { repairFailed, ...cause } = name.event
   await previousWorkerWrite(storage, { ...cause, runnerEventNumber: 1 }, 20)

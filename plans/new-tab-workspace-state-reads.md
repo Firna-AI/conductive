@@ -345,11 +345,11 @@ records the current code in calls 5 to 9, 13, and 14.
      history.
    - It uses plain backward storage lists. `HistoryPages` is not used,
      because its `prepare` loads each event with its file chunks.
-   - Each storage list asks for at most four stored events. A queued task
-     ends its page after a fixed step count or a fixed number of loaded
-     bytes, whichever comes first. Reason: a file event below the
-     descriptor threshold is stored whole, and that threshold is 1 MiB
-     before the memory plan and 4 KiB after it.
+   - **Design call, 24 November 2026.** Each page uses one storage list of
+     at most four records. Before PR #675, the Worker stored file events
+     up to 1 MiB inline. The byte stop counted records after the list
+     loaded them. Removing it avoids serializing the records again and
+     listing the rest of a page a second time.
    - It skips each stored file descriptor without its chunks. Only file
      events are stored as descriptors, and a descriptor has no event type.
      Markers, port reports, skill reports, and workspace records are

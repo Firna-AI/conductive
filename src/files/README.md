@@ -76,10 +76,10 @@ const { store: files } = useWorkspaceStore(
 
 The store reads the file routes with the `fetch` of the org's `ApiClient`.
 The Mac app reads from its own Worker. A refusal of a suspended org marks
-the org. A new store starts both list reads, then opens the app's event
-source after the smaller cutoff. The cutoff is the last workspace event
-that a read includes. If either reply has no cutoff, the stream starts
-after event 0. See
+the org. A new store starts both list reads. When both give cutoffs, the
+stream starts after the smaller cutoff. A cutoff is the last workspace
+event that a read includes. As soon as either read gives no cutoff, the
+stream starts after event 0. See
 [The state of a new tab](../../docs/protocol/workspace-events.md#the-state-of-a-new-tab).
 
 A return to a kept store shows its lists at once. The socket starts after

@@ -1,4 +1,3 @@
-import { jsonBytes } from '../../src/shared/event-limits'
 import type { WorkspaceNoticeKind } from '../../src/shared/workspace-state-read'
 import type { StoredWorkspaceEvent } from './history-storage'
 import type { QueueTurn } from './queue-turn'
@@ -28,7 +27,6 @@ import {
 
 export const READ_STATE_RECOVERY = chatKey('read-state', 'recovery')
 const PAGE_RECORDS = 4
-const PAGE_BYTES = 1_048_576
 
 type RepairBound = Pick<StoredReportRepair, 'command' | 'cause'>
 type RepairBounds = Partial<Record<WorkspaceNoticeKind, RepairBound>>
@@ -127,19 +125,14 @@ async function scanPage(
     reverse: true,
     limit: PAGE_RECORDS,
   })
-  let bytes = 0
-  let scanned = 0
   for (const [key, record] of stored) {
     // Only file events use descriptors. A full report removes its repair,
     // so a current file repair starts after its last full report.
     if ('event' in record) scanEvent(recovery, live, record)
     recovery.before = key
-    scanned++
     if (!needsHistory(recovery, live)) return true
-    bytes += jsonBytes(record)
-    if (bytes >= PAGE_BYTES) break
   }
-  return scanned === stored.size && stored.size < PAGE_RECORDS
+  return stored.size < PAGE_RECORDS
 }
 
 function sameRepair(

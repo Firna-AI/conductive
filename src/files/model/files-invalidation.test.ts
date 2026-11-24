@@ -1,9 +1,43 @@
-import { expect, it } from 'vitest'
+import { expect, it, onTestFinished } from 'vitest'
 import { filePaths, type FileEvent } from '../../shared/files'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { FAKE_FILE_PATH, toolFixtures } from '../../test-support/fixtures/tools'
 import { deferred, envelopeAfter, observeFileReads } from '../files-test-kit'
+import { versionOf } from './files-store'
+
+it('invalidates open path versions when the first tree read gives a 503 with a cutoff', async () => {
+  const { org, workspace } = FAKE_IDS
+  const changesReply = deferred<Response>()
+  const { files, tree } = observeFileReads(
+    () => () => {},
+    async (input) =>
+      input === filePaths.tree(org, workspace)
+        ? Response.json(
+            {
+              error: { code: 'file_unavailable' },
+              stateRead: { eventNumber: 6, repositoryId: null, failure: null },
+            },
+            { status: 503 },
+          )
+        : changesReply.promise,
+  )
+  onTestFinished(() => {
+    files.stop()
+    changesReply.resolve(Response.json(toolFixtures().changes))
+  })
+  const before = versionOf(files.getSnapshot(), FAKE_FILE_PATH)
+  files.start()
+  await tree[0]
+  const after = files.getSnapshot()
+
+  expect(after.tree).toBeNull()
+  expect(after.treeError).toMatchObject({
+    status: 503,
+    code: 'file_unavailable',
+  })
+  expect(versionOf(after, FAKE_FILE_PATH)).not.toBe(before)
+})
 
 it('counts each unknown-path event and each path update in one first-history publication', async () => {
   const server = new FakeApiServer()

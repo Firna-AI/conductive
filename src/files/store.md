@@ -8,10 +8,11 @@ lists, and a tree that the cloud computer could not read.
 On its first visit, `WorkspaceFiles` starts both list reads. Each reply
 can carry `stateRead` with its cutoff, its failed repair, and its
 repository. A 503 reply for an absent list can also carry `stateRead`.
-After both reads finish, the store opens its stream after the smaller
-cutoff. A failed read or an older Worker reply without a readable cutoff
-makes the stream start after event 0. The failed list can recover from
-a stream report. The other list keeps its cutoff and continues to update.
+When both reads give cutoffs, the store opens its stream after the smaller
+cutoff. As soon as a read gives no readable cutoff, the store starts its
+stream after event 0. A stream report can fill the missing list while the
+other read is still pending. The store applies that reply if its cutoff
+is above the floor of its list.
 
 Each list has an event floor. Its read cutoff sets the floor. An event
 that changes the list advances it. An event at or below a list's floor
@@ -42,6 +43,10 @@ Some events cannot name their paths:
 After such an event, each open page reads its file or diff again. The
 store collects the changes of one message: a history page, or one live
 event. Then it applies them once.
+
+A list read with a cutoff above the list's floor also refreshes every open
+file, diff, and HTML page preview. This includes a 503 with a cutoff.
+The read cannot name the paths of the events it covers.
 
 The workspace can refuse an update of a file list. After such a first
 loss, it asks the runner for a fresh full report of that list, and the
