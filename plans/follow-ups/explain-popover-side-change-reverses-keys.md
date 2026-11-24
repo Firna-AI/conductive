@@ -52,5 +52,7 @@
 - **Related:**
   - `plans/follow-ups/explain-popover-equal-width-side.md`: the same code. Both items read the side in `start()` of `usePopoverResize.ts`. Option C here and option C there are one change.
   - `plans/follow-ups/explain-popover-placement-paths-flip-apart.md`: the same code. Option C here changes both placement paths, and that item says that they choose the side 6 px apart.
+  - `plans/follow-ups/explain-popover-fallback-edge-lags-width.md`: the same code in `src/chat/explain/popover-place.ts`. If option C here sets the insets by script, it must keep the inset of the fixed edge that option B there sets.
+  - `plans/follow-ups/explain-popover-handle-edges-browser-test.md`: its browser spec can take the regression of this item, the sidebar toggle with a focused handle.
 - **Recommendation:** F. B makes every input follow the measured side, and D keeps the drawn handles on the free edge after the common toggles.
 - **Action:** fix after merge, apply F, because a Medium product bug with the likelihood Rare waits for a later branch.

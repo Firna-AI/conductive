@@ -56,5 +56,6 @@
 - **Related:**
   - `plans/follow-ups/explain-popover-side-change-reverses-keys.md`: the same code. Both items read the side in `start()` of `usePopoverResize.ts`. Option C here and option C there are one change.
   - `plans/follow-ups/explain-popover-placement-paths-flip-apart.md`: a shared wider fix. One fit test for both paths, as option C here asks, also ends the 6 px difference of that item.
+  - `plans/follow-ups/explain-popover-fallback-edge-lags-width.md`: the same code. Option B there sets the inset of the side that option C here decides.
 - **Recommendation:** C. It gives both placement paths and the handles the same side, so a tie of the boxes cannot change it.
 - **Action:** fix after merge, apply C, because the likelihood is Rare: the defect needs an exact width match, and the fix changes both placement paths.

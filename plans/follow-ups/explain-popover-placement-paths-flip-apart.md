@@ -40,5 +40,6 @@
   - `plans/follow-ups/explain-popover-equal-width-side.md`: a shared wider fix. Its option C is option C here, so one branch can fix both items.
   - `plans/follow-ups/explain-popover-side-change-reverses-keys.md`: the same code. Its option C changes both placement paths too.
   - `plans/follow-ups/panel-default-sizes-one-source.md`: the same code. That item gives the 6 px popover margin one source, and option B here adds a side margin to the same rule.
+  - `plans/follow-ups/explain-popover-fallback-edge-lags-width.md`: the same code. Its option B must keep the clamp that `placePanel` has at that time.
 - **Recommendation:** C. One fit test ends the difference for good, and it is the same change as option C of the equal-width item.
 - **Action:** fix after merge, apply C, because both rules are on origin/main outside the change that found them, and the equal-width item makes the same change.

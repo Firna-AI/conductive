@@ -1,0 +1,68 @@
+# A handle press can undo another resize
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from branch `calummoore/resize-popup-kd67`, review round 2, finding 8.
+- **Location:** `src/app/panel-drag.ts`, `panelDrag`, whose `move` and `end` write `before`. `src/app/explain-size.ts`, `PopoverSize.drag`, which takes `before` from the moved size. `src/app/stored-size.ts`, `StoredSize.drag`, which takes `before` from the chosen size. `src/shell/layout/useResizeHandle.ts:77-103`, `onPointerDown`, `onPointerMove`, and `endDrag`. `src/chat/explain/PopoverResize.tsx:64-78`, `CornerHandle`, which drags the width and the height. `src/app/explain-size.test.ts`, the tests of the size model.
+- **Reason:** The bug needs two inputs on the resize handles at the same time, which normal use does not meet.
+
+- **Terms:**
+  - **Explain popover:** the panel that `src/chat/explain/ExplainPopover.tsx` draws by the marked text in the workspace chat, with the chat of an explanation.
+  - **Shared handle hook:** `useResizeHandle` in `src/shell/layout/useResizeHandle.ts`, which turns the pointer and the keys on a handle into drags and key steps.
+  - **Shared drag:** `panelDrag` in `src/app/panel-drag.ts`, one drag of one size, which every resize handle of the app uses.
+  - **Moved size:** the size that one open popover moved to, which `PopoverSize` in `src/app/explain-size.ts` keeps until the popover closes.
+  - **Chosen size:** the size that the browser keeps for the next popovers or the next page load, which `StoredSize` in `src/app/stored-size.ts` holds.
+- **Background:**
+  - On a computer, the member resizes the popover with a width handle, a height handle, and a corner between them. On 24 November 2026, the user chose these handles on the free edges, built on one shared handle hook. The protocol names this choice popover resize decision 1 J.
+  - A touch screen with the computer layout shows the same handles. So two fingers can press two handles at once.
+  - The shared handle hook serves the column handles, the split of the right column, and the popover handles. A press starts one drag for each axis of its handle.
+  - The corner has two axes. So a press on the corner starts a drag of the width and a drag of the height.
+  - Each drag starts from the size that the panel shows at the press. It also gets `before`, the size to show again when the drag ends where it started.
+  - In the shared drag, `move` shows each new size at once with `put`. When a move comes back to the start, `move` puts `before`.
+  - `end` puts `before` when the last move came back to the start. Otherwise `end` keeps the last size with `keep`, which also stores it.
+  - Each size is a whole number of px. So a move of 0.3 px rounds back to the start.
+  - `PopoverSize.drag` takes `before` from the moved size of the open popover. `StoredSize.drag` takes `before` from the chosen size.
+  - The column handles reach `StoredSize.drag` through `PanelLayout.drag` in `src/app/panels.ts`. The split reaches it through `ColumnSplit.drag` in `src/app/column-split.ts`.
+  - A key step on a focused edge handle changes the size at once, and the browser stores it.
+  - `docs/protocol/explain-popover.md`, under "The size on a computer", says: "A drag that ends where it started stores nothing, so a press alone never changes the chosen size."
+  - The same section says that the value of each edge handle "is the size that the panel shows". It also says that the next long answer "opens at the size that the member chose".
+- **Problem:** A drag writes sizes that it computed from its start, and at its end it can put back `before`. So a press that runs while another input changes the size can write the older size back. The panel then shows a size that the browser does not keep.
+- **Evidence:**
+  - A scratch run of the size model at commit `99e872eee` gave these results. In each case, a width drag moves the panel to 460 px, and a second finger then holds the corner. The first drag ends at 500 px, and the browser stores 500 px.
+    - The corner press lifts with no move. The panel shows 460 px, and the browser keeps 500 px.
+    - The corner moves 0.3 px. The panel shows 460 px already before the corner drag ends.
+    - The corner moves 1 px. The panel shows 461 px, and the browser keeps 461 px.
+  - The same run covered a mouse press and a key step. The width handle has the focus, and the panel shows a moved width of 460 px.
+    - A mouse press on that handle, with no move, starts a drag from 460 px.
+    - An arrow key then grows the width to 468 px, and the browser stores 468 px.
+    - At the release, the panel shows 460 px, and the browser keeps 468 px.
+  - A read of the code gives the cause. The corner drag starts at 460 px, with `before` at 460 px.
+  - With no move, or with a move that rounds back to 460 px, the corner drag puts back `before`. A move of 1 px gives 461 px from that old start, and `end` keeps it.
+  - The column handles have the same defect. A still press on a focused column handle, then an arrow key, ends with the old width shown and the new width stored.
+  - There, `StoredSize.drag` takes `before` at the press, the key step stores the new width, and the release puts `before` back.
+  - This column case is older than the popover handles. Before them, origin/main had the same code in `PanelLayout.drag` of `src/app/panels.ts`.
+  - A related defect lives in the same code. A second pointer on one handle starts a new drag in `onPointerDown` of `useResizeHandle`, and it drops the running drag without its `end`.
+  - So the first drag never stores its last size, and the moves of both pointers then drive the new drag.
+  - Before the popover handles, the column handles did the same, in their own `onPointerDown` in `src/shell/layout/ResizeHandle.tsx`.
+- **Impact if no action:** The panel seems to drop part of a drag or a key step that the member saw. The browser keeps the newer size, so the next popover or the next page load shows a size that the panel did not show last.
+- **Root question:** How can an input on a size of the panel avoid undoing a change that another input made while it ran?
+- **Options:**
+  - **A.** Skip the call of `end` in the handle for a pointer that never moved. This protects this input path, and it adds state to each running handle. A move of 0.3 px or 1 px still writes, because `move` writes before `end` runs. Effort: Small.
+  - **B.** Make `end` of the shared drag write only when it has a changed size to keep. A move back already puts back the size from before the drag. Add a regression test with the two drags above. The scratch run showed that B misses a move of 0.3 px or 1 px. Effort: Small.
+  - **C.** Give each axis one active drag owner, and let the corner take both axes together. This also decides how the panel handles two moving pointers, and it covers the second pointer on one handle. Effort: Medium.
+  - **D.** Make the shared drag write only over its own last value. Effort: Small.
+    - `panelDrag` gets a new `get`, which reads the value that its `put` writes. That value is the moved size of a popover, or the chosen size of a column.
+    - `move` and `end` write only while `get` still gives the last value that this drag wrote. Before its first write, that is the value at its start.
+    - So a drag writes nothing over a size that another input set. D also fixes the column case above.
+    - Add model tests in `src/app/explain-size.test.ts` for the cases of the evidence, and one for a column size.
+    - D does not change the second pointer on one handle.
+  - **E.** Start a drag only after the pointer passes a dead zone, as `usePointerDrag` in `src/app/pointer-drag.ts` does. There, a mouse or a pen drags after a move of more than 4 px. Effort: Small.
+    - A still press and a small move then write nothing.
+    - A drag that moves past the dead zone can still write over another input.
+    - The column handles on origin/main follow the pointer from its first px. So E changes them, and it needs the user's approval.
+- **Left out:** Filter touch input down to the primary finger. That also stops a resize while the first finger rests elsewhere on the screen. It also leaves the mouse press with a key step, because a mouse is always the primary pointer.
+- **Wider fix:** D. No caller of the shared drag, the columns, the split, or the popover, can then write over a size that another input set.
+- **Previous examples:** Commit `731b1077b` of 12 November 2026 added the order of the org rail. It keeps the confirmed org list and the pending moves apart, so overlapping moves compose. No earlier case in the resize code was found.
+- **Related:** `plans/follow-ups/explain-popover-side-change-reverses-keys.md`: the same code. Its option B changes how `useResizeHandle` starts each key step and drag. Option D here changes what each drag writes, so the two changes do not conflict.
+- **Recommendation:** D. It removes the stale write at its source, also for a small move, for every caller of the shared drag.
+- **Action:** fix after merge, apply D, because the bug needs two inputs on the resize handles at the same time.
