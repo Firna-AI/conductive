@@ -137,7 +137,7 @@ export interface TreeRow {
  * row above it, or itself, the place of that row among the top-level rows,
  * and the guide lines of the row from `treeLines` of `src/shared/`.
  */
-export function treeRows(rows: readonly ListRow[]): TreeRow[] {
+function treeRows(rows: readonly ListRow[]): TreeRow[] {
   const lines = treeLines(rows)
   const trees: TreeRow[] = []
   for (const [index, row] of rows.entries()) {
