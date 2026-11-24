@@ -818,11 +818,15 @@ November 2026.
 - The crate `cnd-computer` holds the computer mode. `conductive computer
   run` is the service. `conductive computer check` prints the health
   report: one line for each need of the server and of Podman without root,
-  and a failure when a need is missing. `conductive computer enroll --code`
-  makes the code exchange and saves the computer token. `conductive
+  and a failure when a need is missing. `conductive computer enroll` reads
+  the one-time code on standard input, makes the code exchange, and saves
+  the computer token. `conductive
   computer service` writes the user unit and starts it. Reason: the install
   and an admin then use the same checks, and the code exchange is tested
-  Rust code.
+  Rust code. Review finding 2 changed the enroll command on 24 November
+  2026: its first form took the code as an argument, which other local
+  accounts can read. The form of the copied install command waits for the
+  user.
 - The Worker serves the install script at `/install-computer` on the
   marketing hostname, from `image/computer/install.sh`. The script runs as
   a user who can use sudo. It checks Linux on x86_64, systemd, Podman 4 or
@@ -833,21 +837,26 @@ November 2026.
   installs the program of the newest release under the home of that user,
   then runs check, enroll, and service as that user. Each step can run
   again. Reason: Podman without root needs these settings.
-- The install script checks only the digest of the first program, as the
-  bootstrap of a cloud build does. The program checks the signature of
+- The install script checks only the digest of the first program. The
+  program checks the signature of
   each later release. Reason: the token that writes the release bucket
   also deploys the Worker that serves the script, so a signature check in
   the script stops no holder of that token.
 - `ComputerRelease.digest` is the SHA-256 digest of the program archive of
-  the release: the `sha256` of its signed newest-version JSON. The program
-  makes that JSON again from the version and the digest with the function
-  of the packager, and checks its signature. Reason: each release then has
-  a fixed address and a signature check, with no new published file.
+  the release: the `sha256` of its signed newest-version JSON. Each release
+  also publishes those exact signed bytes at a key that its version and
+  digest give. A reader of another release fetches them, checks their
+  signature, and checks the binary, the target, the version, and the
+  digest. Reason: no reader then depends on the JSON layout that another
+  release writes. Review finding 57 changed this call on 24 November 2026:
+  its first form rebuilt the bytes from the version and the digest.
 - The updater gets a pinned install: `conductive update check --bootstrap
   --release <version> --digest <sha256>`. The bootstrap operation and the
-  build of the container base image use it. Reason: the updater installs
-  only the newest release today, and the bootstrap installs the release of
-  the Worker.
+  build of the container base image use it. `conductive update apply
+  --release <version>` activates exactly that release, and refuses when a
+  newer release is active. Reason: the updater installs and activates only
+  the newest release today, and the bootstrap installs the release of the
+  Worker. Review findings 3 and 55 added the pinned apply.
 - `image/computer/Containerfile` builds the container base image in two
   stages. The stage `tools` runs the install scripts of the E2B template
   unchanged on `ubuntu:24.04`, with systemd as the first process, the user
@@ -865,7 +874,10 @@ November 2026.
   uploads it to the bucket `conductive-runner`: the archive at a key with
   its digest, and a signed JSON file at a key that the version and the
   digest of the release give. A rerun skips a release whose JSON file
-  exists. Reason: this needs no registry, no new secret, and no new token.
+  exists. The job has no run-attempt guard, so any kind of re-run publishes
+  the fixed release of the original deploy in place. Reason: this needs no
+  registry, no new secret, and no new token, and a re-run of the job alone
+  starts no second deploy of the Worker (review finding 54).
 - Each container has the Podman name `conductive-<name>`. Org images are
   `localhost/conductive/org-<name>`, and the base image of a release is
   `localhost/conductive/base:<version>`. A create makes and starts the
@@ -875,9 +887,14 @@ November 2026.
   a stop, a save, or a bootstrap of an unknown container replies
   `not_found`. A create of a name that exists, and a save to an image that
   exists, reply `already_exists`. A bootstrap of a stopped container
-  replies `invalid_request`. Reason: the provider path also makes and
-  starts a sandbox in one call, and gives the env at a create and at a
-  resume.
+  replies `invalid_request`. A save pauses a running container itself,
+  commits it, and unpauses it, also after a failure or a cancel. An
+  operation that finds a paused container unpauses it first, and so does
+  the start of the service. A start that started a stopped container
+  stops it again when a later step fails or the request ends. Reason: the
+  provider path also makes and starts a sandbox in one call, and gives the
+  env at a create and at a resume. No operation may leave a container
+  frozen or running without its env file (review findings 4 and 7).
 - Each container runs systemd with `--systemd=always`, the CPU and memory
   limits of the request, at most the size of the server, and `/tmp` on an
   anonymous volume. Reason: `/tmp` is on the disk of a cloud computer too,
@@ -889,23 +906,33 @@ November 2026.
   saved image holds the env, and `podman commit` keeps the container
   settings.
 - The bootstrap operation checks the signature and the digest of the
-  release, copies its program into the running container, installs the
-  release with the pinned install, confirms it with `update started` as a
-  build does, and restarts only the host service. Reason: the host program
-  then runs the new release, and the runner keeps its turns. The updater
-  change of Milestone 9 can replace the confirmation.
+  release, copies its program into the running container, stages the
+  release with the pinned install, activates exactly that release with
+  `update apply --release`, confirms it with `update started` as a build
+  does, and restarts the host service. Like every apply, the system
+  installer also restarts a running preview relay, so that the relay runs
+  the active release. Reason: the host program then runs the new release,
+  and the runner keeps its turns. The updater change of Milestone 9 can
+  replace the confirmation. Review findings 3, 55, and 11 changed this call
+  on 24 November 2026. Whether a container with a newer active release
+  counts as bootstrapped waits for the user.
 - The user unit uses `KillMode=process`. Reason: a check on 24 November
   2026 showed that a stop of a unit with the default kills the `conmon`
   process of each container, and `podman stop` then hangs.
 - The computer mode checks for a new release every 10 minutes. It checks
   the signature and the digest, installs the program under
-  `~/.local/share/conductive/versions/`, switches `current`, and exits
-  while no request runs, so that systemd starts the new release. A new
-  release that exits 5 times before it runs 60 seconds or gets a welcome
-  goes back to the previous release, which then never installs it again.
-  Reason: a release that stops at its start would stop all later updates.
-  A release that runs but cannot connect stays, because an outage of the
-  Worker must not refuse a good release.
+  `~/.local/share/conductive/versions/`, records it as a trial, and exits
+  while no request runs. `current` stays on the last confirmed release. At
+  each start, that release counts a try of the trial and replaces its own
+  process with the trial. After the fifth try with no confirmation, it
+  refuses the trial, which then never installs again, and runs itself. The
+  trial confirms at its first welcome or after 60 seconds, and only then
+  moves `current` to itself. The program cache keeps only the current, the
+  previous, and the trial version. Reason: a release that stops at its
+  start would stop all later updates, and the release under trial never
+  runs the code that counts its tries (review findings 5 and 8). A release
+  that runs but cannot connect stays, because an outage of the Worker must
+  not refuse a good release.
 - The computer mode accepts a plain `http` origin or release server only
   on a loopback host. Reason: the local Worker serves HTTP for tests, and a
   token on a loopback socket stays on the machine.
