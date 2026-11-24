@@ -33,7 +33,13 @@ export async function enqueueWorkspaceStart(
   await requireActiveStartUsers(env.DB, job)
   const epoch = await storage.epoch()
   const state = await endpoint.readLifecycle()
-  if (state?.startStop === 'pending') return false
+  if (state?.startStop === 'pending') {
+    // A start must not overlap the old stop. A resume and a Try again wait
+    // for its end, as `WorkspaceStartCoordinator.startAfterStop` says.
+    if (job.kind === 'resume' || retry)
+      await storage.holdAfterStop(job, intent, epoch)
+    return false
+  }
   if (retry && (!state || !['stopped', 'error'].includes(state.state)))
     return false
   if (

@@ -290,6 +290,15 @@ create and resume. The workspace object runs that start:
   stop, so Restore leaves a pending stop to the lifecycle. So no Archive
   or Restore step reads or changes the sandbox while a cancelled start
   call can still reach the provider.
+- No start begins while a pending stop runs, so that a start never
+  overlaps the old stop. A resume or a Try again in that time, such as the
+  open just after Archive and Restore, is held in
+  [`start-after-stop.ts`](start-after-stop.ts). The newest request
+  replaces an older one. While a start is held, the lifecycle checks the
+  stop at once and then every 5 seconds, not every 30 seconds. When the
+  stop ends, the next lifecycle run queues the held start with every
+  admission check again. An Archive after the request changes the stop
+  epoch and drops it. So does a wait past the start time limit.
 - The first lifecycle prepare of each create and resume also starts the
   restore watch. After a start from a saved snapshot, Boat downloads the
   file content in the background. The

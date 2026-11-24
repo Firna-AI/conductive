@@ -8,6 +8,7 @@ import type { RepositoryLocation } from './repository-locations'
 import type { SavedScript } from './saved-script'
 import type { ProviderRetryState } from './provider-retry'
 import type { FirstWorkspaceMessage } from './workspace-runtime'
+import type { StartAfterStop } from './start-after-stop'
 
 interface WorkspaceStartData {
   workspaceId: string
@@ -125,6 +126,14 @@ export interface StartJobStorage {
     intent?: WorkspaceStartIntent,
   ): Promise<boolean>
   stop(): Promise<boolean>
+  /** Keeps a start that a pending stop refused, for the end of that stop. */
+  holdAfterStop(
+    job: WorkspaceStartJob,
+    intent: WorkspaceStartIntent,
+    epoch: number,
+  ): Promise<void>
+  heldAfterStop(): Promise<StartAfterStop | undefined>
+  clearAfterStop(): Promise<void>
   update(job: WorkspaceStartJob): Promise<void>
   retry(
     attempt: string,
