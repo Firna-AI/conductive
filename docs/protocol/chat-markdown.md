@@ -76,14 +76,14 @@ images at `app/chat/formatting`, and links at `app/chat/links`.
   breaks that [Line breaks](#line-breaks) gives.
 - A workspace link outside code shows as a chip, as
   [Messages and answers](workspace-links.md#messages-and-answers) says.
-- A `@` mention of a file or a folder of the workspace shows as a file
+- A `@` mention of a file or a folder of the file tree of the workspace shows as a file
   chip. Inline code whose whole text is the path of such an entry shows
   as a file chip too, as [Files in answers](file-mentions-answers.md#files-in-answers)
   says. A code block stays code.
-- A Markdown link or image whose target is a file of the workspace shows
+- A Markdown link or image whose target is a file of the file tree of the workspace shows
   as a link with its label, which opens the file, as
   [Files in answers](file-mentions-answers.md#files-in-answers) says.
-- A Markdown image of a PNG, JPEG, GIF, or WebP file of the workspace
+- A Markdown image of a PNG, JPEG, GIF, or WebP file of the file tree of the workspace
   shows as a small picture instead, which opens the file.
   [Pictures in answers](file-mentions-answers.md#pictures-in-answers)
   says where the picture shows, and when the image shows as the link.

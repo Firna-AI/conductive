@@ -55,8 +55,8 @@ pub enum ChangeKind {
 }
 
 /// Concatenate files in part order. Each path occurs once in the full list.
-/// Every part repeats the same baseBranch, status counts, and summary.
-/// summary.files counts the complete list, not the files in this part.
+/// Every part repeats the same base branch, status counts, and totals.
+/// The summary counts the listed files across all parts.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct RunnerChangesPart {
@@ -83,7 +83,7 @@ pub struct ChangesResponseSummary {
     pub removed: u64,
 }
 
-/// Current-branch commits held by no remote branch. Older runners omit it.
+/// A complete changes report with separate totals for listed and omitted files.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct ChangesResponse {
@@ -103,11 +103,16 @@ pub struct ChangesResponse {
     #[ts(optional)]
     #[ts(type = "number")]
     pub uncommitted_file_count: Option<u64>,
-    /// files.
+    /// Listed changes.
     #[ts(as = "ReadonlyVec<BranchChangedFile>")]
     pub files: Vec<BranchChangedFile>,
-    /// summary.
+    /// File and line totals for the listed changes.
     pub summary: ChangesResponseSummary,
+    /// File and line totals for the omitted changes.
+    /// Absent when the count is unknown, as from an older runner.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub omitted: Option<ChangesResponseSummary>,
 }
 
 /// Includes changes in the index and working tree, also untracked files.
@@ -120,3 +125,6 @@ pub struct BranchChangedFile {
     /// Includes changes in the index and working tree, also untracked files.
     pub uncommitted: bool,
 }
+
+/// Maximum changed files in a complete changes report from a new runner.
+pub const FILE_CHANGES_REPORT_MAX_FILES: u64 = 1_000;

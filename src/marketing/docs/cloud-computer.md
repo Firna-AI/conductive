@@ -53,6 +53,14 @@ If you leave the tab before **Done**, nothing changes.
 The full list has **Manage access** for the GitHub App's access on GitHub.
 Your account and the app must both be able to reach a repository to select it.
 
+To remove one repository outside **Edit**, open its **More** menu on the **Repositories** tab and choose **Remove**.
+A question then says what the removal changes.
+**New workspace** no longer offers the repository.
+Its automations turn off, and only the owner of each can turn it on again.
+If it is the first repository, the next one becomes the default.
+Select **Remove** to confirm, or **Cancel** to keep the repository.
+The removal saves at once and starts no build.
+
 Selecting **Done** after you add repositories starts one build automatically, so you can add many repositories first.
 If a build or refresh is running, one more build usually starts after it succeeds.
 When the repository notice offers **Try again**, the last build failed, and the repository waits for it.

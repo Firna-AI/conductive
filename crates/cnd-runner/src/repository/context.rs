@@ -1,6 +1,8 @@
 //! Ignored context files join only the tree; paths use English case ordering.
 
-use icu_collator::{Collator, CollatorBorrowed};
+use std::cmp::Ordering;
+
+use icu_collator::Collator;
 use icu_locale::locale;
 
 use super::entries::zero_paths;
@@ -9,8 +11,9 @@ use super::index::TemporaryIndex;
 use super::io::PathKind;
 use super::service::GitRepository;
 
-pub(super) fn path_order() -> Result<CollatorBorrowed<'static>> {
-    Collator::try_new(locale!("en").into(), Default::default()).internal()
+pub(super) fn path_order() -> Result<impl Fn(&str, &str) -> Ordering> {
+    let order = Collator::try_new(locale!("en").into(), Default::default()).internal()?;
+    Ok(move |a: &str, b: &str| order.compare(a, b).then_with(|| a.cmp(b)))
 }
 
 impl GitRepository {

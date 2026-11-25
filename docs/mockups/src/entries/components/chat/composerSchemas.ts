@@ -7,6 +7,7 @@ import { attachmentSchema } from './chatBlockSchemas'
 /** The file trees that the list of `@` finds, as `MentionTree` lists them. */
 export const mentionTrees = [
   'latest',
+  'limited',
   'loading',
   'unavailable',
 ] as const satisfies readonly MentionTree[]

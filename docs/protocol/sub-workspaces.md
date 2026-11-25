@@ -175,9 +175,11 @@ parent changes, as [Parent changes](parent-changes.md) says.
 - A tree has no collapse control. So each live sub-workspace shows while
   its section is open. Reason: the user asked that sub-workspaces always
   show.
-- A collapsed section still hides its whole tree. The count of a collapsed
-  section counts each nested row too. Reason: the count says how many
-  workspaces the section holds.
+- A collapsed section still hides its whole tree, except the row of the
+  open workspace, as [Sections](sections.md#sections) says. That row then
+  shows with no indent and no guide lines, because the list shows no other
+  row of its tree. The count of a collapsed section counts each nested row
+  too. Reason: the count says how many workspaces the section holds.
 - The rows come in tree order: each top-level row, then the rows nested
   under it. Under each row, its nested rows come oldest first. Each nested
   row comes before its own nested rows.

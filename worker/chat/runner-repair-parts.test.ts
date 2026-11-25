@@ -28,6 +28,58 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
+it('refuses different tree counts and keeps the saved count through a failed repair', async () => {
+  const fixture = await createChatFixture(harness)
+  const runner = await fixture.connect()
+  const files = new FilesState(chatFilesStorage(fixture.storage))
+  function counted(revision: number, partNumber: number, count: number) {
+    const part = snapshot(revision, partNumber, 2, [`part-${partNumber}`])
+    return { ...part, tree: { ...part.tree, omittedEntryCount: count } }
+  }
+  runner.emit(counted(1, 1, 18))
+  runner.emit(counted(1, 2, 18))
+  runner.emit(counted(2, 1, 9))
+  const refused = runner.emit(counted(2, 2, 10))
+  await fixture.drain()
+  expect(refreshCommands(runner)).toEqual([
+    {
+      type: 'report.refresh',
+      kind: 'files.snapshot',
+      commandId: expect.any(String),
+    },
+  ])
+  runner.emit(counted(3, 1, 0))
+  const legacyTail = runner.emit(snapshot(3, 2, 2, ['part-2']))
+  await fixture.drain()
+  expect(await refusedEvents(fixture)).toEqual([
+    {
+      type: 'runner.event-refused',
+      streamId: refused.streamId,
+      runnerEventNumber: refused.eventNumber,
+      runnerEventType: 'files.snapshot',
+      sessionId: null,
+      turnId: null,
+      reason: 'invalid',
+    },
+    {
+      type: 'runner.event-refused',
+      streamId: legacyTail.streamId,
+      runnerEventNumber: legacyTail.eventNumber,
+      runnerEventType: 'files.snapshot',
+      sessionId: null,
+      turnId: null,
+      reason: 'invalid',
+      repairFailed: true,
+    },
+  ])
+  expect(refreshCommands(runner)).toHaveLength(1)
+  await expect(files.tree()).resolves.toStrictEqual({
+    revision: 1,
+    omittedEntryCount: 18,
+    entries: [file('part-1'), file('part-2')],
+  })
+})
+
 it('stores a repeated tree path until the last part refuses the report and requests a repair', async () => {
   const fixture = await createChatFixture(harness)
   const runner = await fixture.connect()

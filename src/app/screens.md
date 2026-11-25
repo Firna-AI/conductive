@@ -95,7 +95,7 @@ the Help row of the command palette opens.
   that the head of the builds offers Try again or Build computer.
 - The repository notice of the Repositories and Cloud computer tabs reads
   `BuildsResponse.changes`, as
-  [The repository notice](../../docs/protocol/org-image.md#the-repository-notice)
+  [The repository notice](../../docs/protocol/org-image-repositories.md#the-repository-notice)
   says, so each of these tabs reads the builds while it shows. Its state
   comes from `repositoryWaitOf`, and its words and its look from the shared
   `repositoryChangeCopy.ts` and `RepositoryNotice.tsx`. In

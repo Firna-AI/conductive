@@ -1,6 +1,5 @@
 import type { Viewport } from '@mokly/mokly'
 import type { ComposerState } from '../components/chat/Composer'
-import type { MentionTree } from '../components/chat/FileMentionList'
 import {
   afterDropCaret,
   afterFolderDropCaret,
@@ -20,11 +19,7 @@ import { capabilityRunningConversations } from '../fixtures/capabilityConversati
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
 import { unlistedChoice, unlistedLabels } from '../fixtures/endpointModels'
 import { favouriteLists } from '../fixtures/favourites'
-import {
-  addedChipDraft,
-  mentionChipsDraft,
-  mentionDrafts,
-} from '../fixtures/fileMentions'
+import { addedChipDraft, mentionChipsDraft } from '../fixtures/fileMentions'
 import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
 import { sessionLinkDraft } from '../fixtures/sessionLinkConversations'
 import { wakeRunningConversations } from '../fixtures/wakeConversations'
@@ -32,6 +27,7 @@ import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { choiceOf } from './composerChoice'
+import { mentionListFor } from './mentionComposer'
 import { loginOwnerOf, otherStarter, sessionLoginFor } from './sessionStarter'
 import { skillChipFor, skillListFor } from './skillComposer'
 import { workspaceCapabilities } from './workspaceCapabilities'
@@ -120,17 +116,6 @@ const pointerStates = new Set<ComposerKey>([
   'workspace-link-pointer',
   'attachment-pointer',
 ])
-
-/** The draft and the tree of each state that opens the list of `@`. */
-const mentionLists: Partial<
-  Record<ComposerKey, { draft: string; tree: MentionTree }>
-> = {
-  'mention-query': { draft: mentionDrafts.query, tree: 'latest' },
-  'mention-start': { draft: mentionDrafts.start, tree: 'latest' },
-  'mention-none': { draft: mentionDrafts.none, tree: 'latest' },
-  'mention-loading': { draft: mentionDrafts.query, tree: 'loading' },
-  'mention-unavailable': { draft: mentionDrafts.query, tree: 'unavailable' },
-}
 
 /**
  * The draft of a state with chips: file chips, a skill chip, the chip of
@@ -225,7 +210,7 @@ export function composerFor(
   const nextMessage = noLogin || linkedState || unlistedPicker
   const files = fresh ? undefined : composerFiles[state.composer]
   const drop = fresh ? undefined : dropDrafts[state.composer]
-  const mention = fresh ? undefined : mentionLists[state.composer]
+  const mention = fresh ? undefined : mentionListFor(state)
   const skills = fresh ? undefined : skillListFor(state.composer)
   const chips = fresh ? undefined : chipDraft(state.composer)
   // After Add to chat, the field takes the focus on desktop only, so only

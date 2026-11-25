@@ -1,6 +1,7 @@
 import { defineScreen } from '@mokly/mokly'
 import { WorkspaceScreen } from '../../../../screens/WorkspaceScreen'
 import {
+  largeBranchState,
   readyWorkspace,
   workspaceStateSchema,
 } from '../../../../screens/workspaceState'
@@ -24,4 +25,15 @@ export const filesMarkdown = defineScreen({
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />
   ),
+  variants: [
+    {
+      slug: 'limited',
+      title: 'Beside limited lists',
+      description:
+        'The same README.md in a large branch, whose All files lists 50,000 of its 68,412 entries. The right column keeps the limited All files, with the row of README.md marked and the notice at the top. Each file link of the screen opens the limited page of its file or list: the rows and the tabs of the lists, the file tabs, and the chips of the chat. On a phone, the back link and the Files tab open the limited All files. The Checks tab and the other views of the workspace keep their standard pages.',
+      rationale:
+        'Runner file report limits keep the same lists while the member opens a file, from decision M4 = F, which Cal chose on 20 November 2026, and items 1 F, 2 B, and 3 A of 23 November 2026. One table of limited pages, which `ScreenLink` reads on a limited screen, sends each file link to its limited page. So no link drops back to the complete lists, as review finding 6 of 23 November 2026 asked.',
+      props: { ...largeBranchState },
+    },
+  ],
 })

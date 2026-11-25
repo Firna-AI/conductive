@@ -16,7 +16,7 @@
 - **Background:**
   - `publishBuild` compares the settings revision of the build with the current one, and saves the phase `cleanup-build` when the first good build is behind.
   - It also saves `cleanup-build` after each successful build or refresh that lacks a chosen repository, when the newest build succeeded.
-  - `docs/protocol/org-image.md` requires both added builds. A failed build gets none, and a refresh after a failed build gets none.
+  - `docs/protocol/org-image.md` (section "The first build") and `docs/protocol/org-image-repositories.md` (section "Added repositories") require both added builds. A failed build gets none, and a refresh after a failed build gets none.
   - `cleanupBuild` deletes the build sandbox, writes the phase `done`, and only then calls `startAddedImageBuild`, which calls `startImageBuild` with the first admin who is not suspended.
   - `pendingImageCleanup` excludes a job in `done`, so that job never runs again.
   - `startAddedImageBuild` catches each error and writes only the warning "Could not start the added cloud computer build.".

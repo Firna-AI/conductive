@@ -11,7 +11,7 @@ import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotic
 import { failedBuildOf } from '../components/settings/BuildSection'
 import { DeleteSecretDialog } from '../components/secrets/DeleteSecretDialog'
 import { deleteOrgDialog } from '../entries/components/settings/DeleteOrgDialog.mockup'
-import { RepositoryMenuSheet } from '../components/settings/RepositoryOrderList'
+import { repositoryOrderOverlay } from '../components/settings/RepositoryOrderList'
 import { settingsTabs } from '../entries/components/settings/OrgSections.mockup'
 import { sidebar as sidebarPart } from '../entries/components/workspaces/Sidebar.mockup'
 import { memberViewer, people, viewerMembership } from '../fixtures/members'
@@ -78,16 +78,18 @@ export function OrgSettingsScreen(props: {
       <DeleteSecretDialog viewport={viewport} />
     ),
   }
-  const repositoryMenu =
-    mobile &&
+  const repositoryOverlay =
     admin &&
     !suspended &&
     state.tab === 'repositories' &&
-    state.repositoryView === 'list' &&
-    state.repositoryOrder === 'menu' ? (
-      <RepositoryMenuSheet repositories={settings.repositories} />
-    ) : null
-  const dialog = dialogs[state.dialog] ?? repositoryMenu
+    state.repositoryView === 'list'
+      ? repositoryOrderOverlay(
+          state.repositoryOrder,
+          settings.repositories,
+          viewport,
+        )
+      : null
+  const dialog = dialogs[state.dialog] ?? repositoryOverlay
   const page = (
     <pagePart.Component
       subtitle="Org settings"

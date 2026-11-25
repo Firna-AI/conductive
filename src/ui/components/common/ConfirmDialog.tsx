@@ -13,6 +13,12 @@ import card from './ModalCard.module.css'
  * takes the `wide` dialog on desktop. A dialog taller than the room of the
  * window keeps its title and its actions, and its content scrolls between
  * them.
+ *
+ * The title of a phone sheet takes one line, with an ellipsis when it is
+ * longer, and a desktop title wraps between words. `wrapTitle` shows the
+ * whole title on both: the sheet gives it more lines, and a word longer
+ * than a line breaks. A question whose title is the only place that names
+ * its subject, such as a repository, gives it.
  */
 export function ConfirmDialog(props: {
   title: string
@@ -20,10 +26,11 @@ export function ConfirmDialog(props: {
   children: ReactNode
   actions: ReactNode
   wide?: boolean
+  wrapTitle?: boolean
 }) {
   if (props.viewport === 'mobile') {
     return (
-      <Sheet title={props.title}>
+      <Sheet title={props.title} wrapTitle={props.wrapTitle}>
         <div className={styles.sheetBody}>
           {props.children}
           <div className={styles.sheetActions}>{props.actions}</div>
@@ -40,7 +47,15 @@ export function ConfirmDialog(props: {
         className={classes(styles.dialog, card.card, props.wide && styles.wide)}
         role="dialog"
       >
-        <h2 className={classes(styles.title, card.head)}>{props.title}</h2>
+        <h2
+          className={classes(
+            styles.title,
+            card.head,
+            props.wrapTitle && styles.wrapTitle,
+          )}
+        >
+          {props.title}
+        </h2>
         <div className={classes(styles.body, card.body)}>{props.children}</div>
         <div className={classes(styles.actions, card.foot)}>
           {props.actions}

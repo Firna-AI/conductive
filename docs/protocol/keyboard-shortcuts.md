@@ -119,7 +119,8 @@ app.
     [Opening an org](org-rail-order.md#opening-an-org) says.
   - Open workspace 1 to 9 opens the workspace at that place among the rows
     that the workspace list shows, counted from the top. A collapsed
-    section and a closed Archived group add no row.
+    section adds only the row of the open workspace, and a closed
+    Archived group adds no row.
   - Previous workspace and Next workspace open the workspace above or
     below the open workspace, among the rows that the list shows.
   - Next workspace that needs input opens the next workspace of the list

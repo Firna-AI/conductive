@@ -137,7 +137,7 @@ export interface TreeRow {
  * row above it, or itself, the place of that row among the top-level rows,
  * and the guide lines of the row from `treeLines` of `src/shared/`.
  */
-export function treeRows(rows: readonly ListRow[]): TreeRow[] {
+function treeRows(rows: readonly ListRow[]): TreeRow[] {
   const lines = treeLines(rows)
   const trees: TreeRow[] = []
   for (const [index, row] of rows.entries()) {
@@ -149,4 +149,29 @@ export function treeRows(rows: readonly ListRow[]): TreeRow[] {
     trees.push({ row, ...tree, lines: lines[index] })
   }
   return trees
+}
+
+/**
+ * The rows that a section shows, as `treeRows` gives them. An open section
+ * shows each row. A collapsed section shows only the row of the open
+ * workspace, when it holds that workspace, so the open workspace stays in
+ * sight. That row shows as a top-level row, with no indent and no guide
+ * lines, because the list shows no other row of its tree. The list hides
+ * the places of the section, so the list moves that row by no drag and no
+ * key.
+ */
+export function shownTreeRows(
+  rows: readonly ListRow[],
+  collapsed: boolean,
+  selectedId: string | null,
+): TreeRow[] {
+  const all = treeRows(rows)
+  if (!collapsed) return all
+  return all
+    .filter(({ row }) => row.workspace.id === selectedId)
+    .map((shown) => ({
+      ...shown,
+      row: { ...shown.row, depth: 0 },
+      lines: { last: false, through: [], hasNested: false },
+    }))
 }

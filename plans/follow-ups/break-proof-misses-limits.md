@@ -24,7 +24,7 @@
   - **B.** Run a mutation tool in the gate over the changed lines. Cost: a new dev dependency and a new gate step, which the user decides. StrykerJS, the tool that `plans/follow-ups/mutation-check-of-changed-lines.md` names, has no mutator that changes a number constant, so it would not have tried the 60-second stop. Effort: Large.
 - **Left out:** A unit test of the private wait function, because the `testing` skill forbids a test of a private helper. Only these two approaches are real: the rule changes how the author proves a test, and the tool proves it by machine.
 - **Wider fix:** A.
-- **Previous examples:** The archive retry test of 2026-11-19, which the background describes.
+- **Previous examples:** The archive retry test of 2026-11-19, which the background describes. On 2026-11-24, branch `calummoore/object-memory-runner-report-limits-0m1g` found that a Worker break proof ran each test against the code before the change, so it could not show that two checks of omitted totals, one on arrival and one at the join, each refused the same mismatch. Round 8 of the same review found that the tests of the runner's refresh group covered only its operation budget, not its byte budget or its exact 512-operation edge.
 - **Related:** `plans/follow-ups/raised-constant-weakens-tests.md` adds a rule to the same section of the `testing` skill, for a test that a later raised constant weakens. One change of the skill can add both rules.
 - **Recommendation:** A. It costs one rule, and it reaches each repository that uses the shared skills.
 - **Action:** ask the user, because the rule changes the shared `testing` skill in `futex-ai/skills`, a rule in force for every repository of the user, and no user decision covers that change.

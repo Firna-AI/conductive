@@ -36,13 +36,22 @@ and the highlight of [The list](#the-list).
   [Labels of paths](tokens-and-secrets.md#secrets-that-users-enter) says.
 - The rows come from the file tree that the workspace keeps, which All
   files shows. It holds the tracked files, the untracked files that Git
-  does not ignore, every file of the
+  does not ignore, the files of the
   [context folder](repository-folders.md#the-context-folder), and their
   folders, as
   [Files and changes](workspace-tools.md#files-and-changes) says.
 - Reason: the list works while the cloud computer sleeps, and it needs no
   new route. A live search on the cloud computer with ignored files, and a
   list of ignored files beside the tree, were rejected (decision 214).
+- The tree holds only the entries that its report lists, as
+  [Which entries stay](file-reports.md#which-entries-stay) says. A path
+  that the report omits gives no row. A mention of it stays text, as for
+  each other path outside the tree (Cal, 23 November 2026).
+- Reason: one tree then serves All files, the list, the chips, the answers,
+  and Add to chat, with no new route. A read of each mentioned path, and a
+  second list that pages or searches all files, were not chosen, because
+  they add reads, routes, and states. Chips for paths without an entry
+  were not chosen, because a wrong path would then open a missing file.
 - An entry whose label hides a secret value does not show. Reason: the
   message would hold its real path.
 - An entry whose path holds a double quote or a line break does not show.
@@ -62,7 +71,9 @@ and the highlight of [The list](#the-list).
   - "Loading files…" while the tree loads
   - "The list of all files is unavailable" when the workspace has no tree,
     as All files says
-  - "Nothing matches “<query>”" when no entry matches
+  - "Nothing matches “<query>”" when no entry matches. While the tree
+    omits entries, the line goes on: "Some files are not listed, so type
+    the path or ask the agent."
 - When the workspace marks its saved tree as unavailable, the list still
   shows the entries of that tree.
 
@@ -199,8 +210,10 @@ and the highlight of [The list](#the-list).
 - A press on the chip opens the file tab of the copy, as a press on a file
   chip opens its file (decision 264 B). The press can resume a stopped
   cloud computer, as the open of each file does.
-- All files lists the copy, as it lists every file of the
+- All files lists the copy, as it lists the other files of the
   [context folder](repository-folders.md#the-context-folder).
+- When the tree report omits the copy, the chip still shows and opens it,
+  because the chip comes from the message (Cal, 23 November 2026).
 - Reason: the member sees the file again in the file tab, as each other
   file of the workspace. A chip that opens nothing was rejected, because
   the member then cannot see the file after Send. A read of the file from

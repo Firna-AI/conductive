@@ -1,3 +1,4 @@
+import { formatCount } from '../../ui/components/common/counts'
 import type { FilesNavigation, FilesTarget } from '../navigation'
 import { FilesLink } from './FilesLink'
 import { classes } from './classes'
@@ -17,7 +18,10 @@ export interface CommandKey {
 export interface LinkTab {
   label: string
   to: FilesTarget
-  /** A count after the label, such as the number of changed files. */
+  /**
+   * A count after the label, such as the number of changed files. It shows
+   * with thousands separators, such as 2,243.
+   */
   count?: number
   selected: boolean
   commandKey?: CommandKey
@@ -43,7 +47,7 @@ export function LinkTabs(props: {
         >
           {tab.label}
           {tab.count === undefined ? null : (
-            <span className={styles.count}>{tab.count}</span>
+            <span className={styles.count}>{formatCount(tab.count)}</span>
           )}
         </FilesLink>
       ))}

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { FolderGit2, GripVertical, MoreHorizontal } from 'lucide-react'
 import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import type { ReachableRepository } from '../../fixtures/repositories'
@@ -8,18 +9,28 @@ import { Menu } from '../../../../../src/ui/components/common/Menu'
 import { Sheet } from '../../../../../src/ui/components/common/Sheet'
 import {
   defaultRepositoryLabel,
-  repositoryMenuOf,
+  repositoryMenuItems,
   repositoryPlaceText,
 } from '../../../../../src/ui/components/settings/repositoryOrder'
 import list from '../../../../../src/ui/components/settings/RepositoryList.module.css'
 import styles from '../../../../../src/ui/components/settings/RepositoryOrderList.module.css'
+import { RemoveRepositoryDialog } from './RemoveRepositoryDialog'
 
 /**
  * The state of the order on the Repositories tab: the plain list, the row
  * menu of the second repository open, a drag of the last repository to the
- * top, or the list after Make default on the second repository.
+ * top, the list after Make default on the second repository, or the
+ * question after Remove in the row menu of the first or the last
+ * repository.
  */
-export const repositoryOrderStates = ['list', 'menu', 'drag', 'moved'] as const
+export const repositoryOrderStates = [
+  'list',
+  'menu',
+  'drag',
+  'moved',
+  'remove-first',
+  'remove-last',
+] as const
 export type RepositoryOrderState = (typeof repositoryOrderStates)[number]
 
 /** The chosen repositories of the fixture, in the order of the state. */
@@ -73,7 +84,7 @@ function Row(props: {
           />
           {props.menu === 'open' && props.viewport === 'desktop' ? (
             <Menu
-              entries={repositoryMenuOf(place, props.count)}
+              entries={repositoryMenuItems(place, props.count)}
               label={repository.name}
               placement="below-end"
             />
@@ -156,7 +167,7 @@ export function RepositoryOrderList(props: {
  * The row menu of the second repository on a phone: a sheet with the name
  * of the repository, which the screen draws over the page.
  */
-export function RepositoryMenuSheet(props: {
+function RepositoryMenuSheet(props: {
   repositories: readonly ReachableRepository[]
 }) {
   const rows = orderedRepositories(props.repositories, 'menu')
@@ -165,10 +176,33 @@ export function RepositoryMenuSheet(props: {
   return (
     <Sheet title={repository.name}>
       <Menu
-        entries={repositoryMenuOf(1, rows.length)}
+        entries={repositoryMenuItems(1, rows.length)}
         label={repository.name}
         placement="sheet"
       />
     </Sheet>
+  )
+}
+
+/**
+ * What the order of an admin draws over the page in its state: the row
+ * menu of a phone as a sheet, the question after Remove of the first or
+ * the last repository, or nothing.
+ */
+export function repositoryOrderOverlay(
+  state: RepositoryOrderState,
+  repositories: readonly ReachableRepository[],
+  viewport: Viewport,
+): ReactNode {
+  if (state === 'menu' && viewport === 'mobile') {
+    return <RepositoryMenuSheet repositories={repositories} />
+  }
+  if (state !== 'remove-first' && state !== 'remove-last') return null
+  return (
+    <RemoveRepositoryDialog
+      chosen={orderedRepositories(repositories, state)}
+      place={state === 'remove-first' ? 0 : -1}
+      viewport={viewport}
+    />
   )
 }

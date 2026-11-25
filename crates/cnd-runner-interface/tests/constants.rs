@@ -6,7 +6,9 @@
 )]
 
 use cnd_runner_interface::services::logs;
-use cnd_runner_interface::{chat_events, file_tree, files, ports, runner_handshake, skills};
+use cnd_runner_interface::{
+    chat_events, file_changes, file_tree, files, ports, runner_handshake, skills,
+};
 
 #[test]
 fn typescript_and_rust_share_protocol_version_and_budgets() {
@@ -76,6 +78,16 @@ fn typescript_and_rust_share_protocol_version_and_budgets() {
             file,
             "FILE_TREE_DELTA_MAX_CHANGES",
             file_tree::FILE_TREE_DELTA_MAX_CHANGES,
+        ),
+        (
+            file,
+            "FILE_TREE_REPORT_MAX_ENTRIES",
+            file_tree::FILE_TREE_REPORT_MAX_ENTRIES,
+        ),
+        (
+            file,
+            "FILE_CHANGES_REPORT_MAX_FILES",
+            file_changes::FILE_CHANGES_REPORT_MAX_FILES,
         ),
         (file, "FILE_READ_MAX_BYTES", files::FILE_READ_MAX_BYTES),
         (port, "PORT_REPORT_MAX_PORTS", ports::PORT_REPORT_MAX_PORTS),

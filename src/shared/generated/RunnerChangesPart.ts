@@ -5,8 +5,8 @@ import type { ReadonlyVec } from './ReadonlyVec.js'
 
 /**
  * Concatenate files in part order. Each path occurs once in the full list.
- * Every part repeats the same baseBranch, status counts, and summary.
- * summary.files counts the complete list, not the files in this part.
+ * Every part repeats the same base branch, status counts, and totals.
+ * The summary counts the listed files across all parts.
  */
 export type RunnerChangesPart = {
   /**
@@ -26,13 +26,18 @@ export type RunnerChangesPart = {
    */
   uncommittedFileCount?: number
   /**
-   * files.
+   * Listed changes.
    */
   files: ReadonlyVec<BranchChangedFile>
   /**
-   * summary.
+   * File and line totals for the listed changes.
    */
   summary: ChangesResponseSummary
+  /**
+   * File and line totals for the omitted changes.
+   * Absent when the count is unknown, as from an older runner.
+   */
+  omitted?: ChangesResponseSummary
   /**
    * revision.
    */

@@ -1,8 +1,9 @@
 # Files screens
 
 The Files screens show the files of a workspace branch. All files is a
-tree of every file. Changes lists the files that the branch changes
-against the base branch, under the totals of the change. A file opens as a
+tree of the files, up to the limit of its report. Changes lists the files
+that the branch changes against the base branch, up to its limit, under
+the totals of the whole change. A file opens as a
 page with rendered Markdown or text with line numbers and syntax colours.
 An image file, which is a PNG, JPEG, GIF, or WebP file, opens as a
 picture, which zooms and expands. An HTML file opens its page in a frame
@@ -12,8 +13,9 @@ diff, with the same syntax colours. The requirements are in
 and [HTML file preview](../../docs/protocol/html-file-preview.md).
 The visual spec is the `app/files` page of the
 [mockup catalogue](../../docs/mockups/README.md), `app/files/html` for the
-tab of an HTML file, and `app/chat/unavailable-files` for a tree that the
-cloud computer could not read.
+tab of an HTML file, `app/chat/unavailable-files` for a tree that the
+cloud computer could not read, and `app/files/limited` and
+`app/files/changes/limited` for lists whose reports leave out entries.
 
 `code/CodeField.tsx` shares the line numbers and the syntax colours of a
 file tab with other screens. `CodeField` is a field for code, and
@@ -31,7 +33,8 @@ The files store keeps `ChangesResponse.unpushedCommits` and
 including updates that change only a count. `parseChanges` refuses a reply
 whose count is present but is not a whole number. An older runner can omit
 either count. The store keeps it absent, so callers can distinguish an
-unknown count from zero.
+unknown count from zero. The store keeps the omitted totals of a limited
+report the same way, as [Omitted totals](store.md#omitted-totals) says.
 
 ## Integration
 
@@ -233,7 +236,7 @@ A file or a diff over the read limit shows the size and the limit that
 the backend sends, and the terminal as the way to open it. The download
 route reads a file with the same limit, so a file page offers Download
 only after a read that fits. A binary diff links to its file tab in place
-of Download.
+of Download, unless the diff deletes the file.
 
 ## Development
 

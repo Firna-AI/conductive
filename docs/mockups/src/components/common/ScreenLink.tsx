@@ -28,6 +28,11 @@ export type ScreenLinkProps = AnchorLinkProps | ControlLinkProps
 
 const LiveLinks = createContext(true)
 
+/** A table from a page of the catalogue to the page that takes its place. */
+type PageTable = ReadonlyMap<string, string>
+
+const LinkTable = createContext<PageTable>(new Map())
+
 /**
  * Turns the links of the screens inside it into plain content, for a
  * picture of a screen, such as on the marketing site. A visitor who sees the
@@ -35,6 +40,24 @@ const LiveLinks = createContext(true)
  */
 export function StillLinks(props: { children: ReactNode }) {
   return <LiveLinks.Provider value={false}>{props.children}</LiveLinks.Provider>
+}
+
+/**
+ * Sends the links of the screens inside it to other pages. A link to a page
+ * that the table names opens the page that the table gives, such as the
+ * limited page of a file page. Each other link keeps its page. Inside an
+ * enclosing table, such as the table of a workspace screen around one of
+ * its parts, the enclosing table stays, because the screen knows its whole
+ * state.
+ */
+export function LinkPages(props: { table: PageTable; children: ReactNode }) {
+  const enclosing = useContext(LinkTable)
+  if (enclosing.size > 0) return props.children
+  return (
+    <LinkTable.Provider value={props.table}>
+      {props.children}
+    </LinkTable.Provider>
+  )
 }
 
 /**
@@ -47,12 +70,14 @@ export function useOutsideHref(href: string): string | undefined {
 
 /**
  * A link to another screen of the catalogue, as Mokly's `MockLink`. Inside
+ * `LinkPages` it opens the page that the table gives for its page. Inside
  * `StillLinks` it is not a link: an anchor becomes a span with the same
  * classes, and a control stays the control.
  */
 export function ScreenLink(props: ScreenLinkProps) {
   const live = useContext(LiveLinks)
-  if (live) return <MockLink {...props} />
+  const table = useContext(LinkTable)
+  if (live) return <MockLink {...props} to={table.get(props.to) ?? props.to} />
   if (props.asChild) return props.children
   return (
     <span

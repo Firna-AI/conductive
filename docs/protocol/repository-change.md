@@ -63,7 +63,7 @@ names a decision of the change that added this action.
   check. The menu has no notes.
 - A chosen repository that this sandbox does not hold does not show. This
   holds also for a
-  [waiting repository](org-image.md#repository-changes)
+  [waiting repository](org-image-repositories.md)
   (repository change decision 4 G).
 - When the app has no record of the folders of a sandbox, no other
   repository can show, so the header shows text. Reason: the app knows no

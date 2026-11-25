@@ -61,7 +61,7 @@ The prefix `switch` names this change, as
 - **Shared assumptions:** The options check named these.
   - Each switch runs a full build on the target account. Source: the task message. It holds.
   - One record gives the account of builds and of creates. Source: the code, `create-request.ts` and `image-builds.ts`. It is not a requirement. D drops it.
-  - One job runs at a time in each org. Source: [Org image](../docs/protocol/org-image.md). It holds. Option C of switch decision 3 drops it.
+  - One job runs at a time in each org. Source: [Repository changes of the org image](../docs/protocol/org-image-repositories.md). It holds. Option C of switch decision 3 drops it.
 - **Left out:**
   - A switch now override on top of B, for an outage. In an outage, a create on the old account fails anyway, and B moves the creates as soon as the image is ready, as A does.
   - A create that falls back to the other account by itself. E2b decision 222 rejected an automatic failover and an overflow by capacity.
@@ -120,7 +120,7 @@ Changed by the options check: option E, and the recommendation changed from B to
   - **D.** The switch waits, as in A, unless the operator ends the build. The switch question shows the running build and offers to end it. Effort: Medium.
   - **E.** Added by the options check, from item 220 of the earlier plan. The switch ends a running refresh at once, but it waits for a running build. A refresh only fetches commits, and the switch build clones the newest commits anyway. Effort: Medium.
 - **Shared assumptions:** The options check named these.
-  - One job runs at a time in each org. Source: [Org image](../docs/protocol/org-image.md). It holds. C drops it.
+  - One job runs at a time in each org. Source: [Repository changes of the org image](../docs/protocol/org-image-repositories.md). It holds. C drops it.
   - A switch happens in an outage. Source: the first recommendation, carried over from the earlier plan. It does not hold, because the user's message names no outage. A, D, and E drop it.
   - The switch build redoes the work of an ended build. Source: the text of B. Under switch decision 2 C, it does not hold: the switch build runs the old inputs, so an admin's build of a new script is lost. A, D, and E drop it.
 - **Left out:**
