@@ -9,7 +9,7 @@ import { Menu } from '../../../../../src/ui/components/common/Menu'
 import { Sheet } from '../../../../../src/ui/components/common/Sheet'
 import {
   defaultRepositoryLabel,
-  repositoryMenuOf,
+  repositoryMenuItems,
   repositoryPlaceText,
 } from '../../../../../src/ui/components/settings/repositoryOrder'
 import list from '../../../../../src/ui/components/settings/RepositoryList.module.css'
@@ -84,7 +84,7 @@ function Row(props: {
           />
           {props.menu === 'open' && props.viewport === 'desktop' ? (
             <Menu
-              entries={repositoryMenuOf(place, props.count)}
+              entries={repositoryMenuItems(place, props.count)}
               label={repository.name}
               placement="below-end"
             />
@@ -176,7 +176,7 @@ function RepositoryMenuSheet(props: {
   return (
     <Sheet title={repository.name}>
       <Menu
-        entries={repositoryMenuOf(1, rows.length)}
+        entries={repositoryMenuItems(1, rows.length)}
         label={repository.name}
         placement="sheet"
       />

@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
+import { HeldRequests } from '../../app/test-kit'
 import { automationsPath } from '../../shared/automations'
 import {
   orgSettingsPaths,
@@ -14,7 +15,11 @@ import {
   queryByText,
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
+import { automationFixtures } from '../../test-support/fixtures/automations'
+import {
+  holdAnimationFrames,
+  MOUNTED_TEST_TIMEOUT,
+} from '../../test-support/mount'
 import {
   moves,
   noRepositories,
@@ -109,20 +114,76 @@ describe('Remove in the row menu of the Repositories tab', () => {
     })
   })
 
-  test('without the automations, the question gives no number, and a failed removal keeps the question and the row, and a toast gives the error', async () => {
+  test('each opening of the question reads the automations again, and gives no number until that read answers, also after an earlier read found none', async () => {
     const server = new FakeApiServer()
+    const held = new HeldRequests(server)
+    const { list } = automationFixtures(org)
+    // The owners of acme/storefront turned its automations off.
+    server.json('GET', automationsPath(org), {
+      automations: list.automations.map((automation) =>
+        automation.repositoryId === 'storefront'
+          ? { ...automation, active: false, nextRunAt: null }
+          : automation,
+      ),
+    })
+    const view = await repositoriesTab(server, { fetch: held.fetch })
+    const first = await askRemove(view, 'acme/storefront')
+    const before = textOf(first)
+    click(byRole('button', 'Cancel', first))
+    await settle()
+    // They turn them on again in another tab, and the next read waits.
+    server.json('GET', automationsPath(org), list)
+    held.hold('GET', automationsPath(org))
+    const question = await askRemove(view, 'acme/storefront')
+    const waiting = textOf(question)
+    held.release('GET', automationsPath(org))
+    await settle()
+    expect({ before, waiting, answered: textOf(question) }).toEqual({
+      before: [
+        'New workspace no longer offers it, and acme/billing-service becomes the default.',
+      ],
+      waiting: [
+        'New workspace no longer offers it, and acme/billing-service becomes the default. Each of its automations turns off, and only its owner can turn it on again.',
+      ],
+      answered: [
+        'New workspace no longer offers it, and acme/billing-service becomes the default. Its 2 automations turn off, and only their owners can turn them on again.',
+      ],
+    })
+  })
+
+  test('without the automations, the question gives no number, and nothing closes it while the removal runs, then a failed removal keeps the question and the row, a toast gives the error, and Cancel closes it', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const held = new HeldRequests(server)
+    const path = repositoryPath(org, 'marketing-site')
     const failed = {
       error: { code: 'internal', message: 'The server failed.' },
     }
     server.json('GET', automationsPath(org), failed, 500)
-    server.json('DELETE', repositoryPath(org, 'marketing-site'), failed, 500)
-    const view = await repositoriesTab(server)
+    server.json('DELETE', path, failed, 500)
+    held.hold('DELETE', path)
+    const view = await repositoriesTab(server, { fetch: held.fetch })
     const question = await askRemove(view, 'acme/marketing-site')
     const text = textOf(question)
     click(byRole('button', 'Remove', question))
     await settle()
+    const cancel = byRole('button', 'Cancel', question)
+    const running = {
+      busy: byRole('button', 'Remove', question).getAttribute('aria-busy'),
+      cancelOff:
+        cancel.hasAttribute('disabled') ||
+        cancel.getAttribute('aria-disabled') === 'true',
+    }
+    press(question, 'Escape')
+    await settle()
+    const afterEscape =
+      queryByRole('dialog', 'Remove acme/marketing-site?') === question
+    held.release('DELETE', path)
+    await settle()
     expect({
       text,
+      running,
+      afterEscape,
       open: queryByRole('dialog', 'Remove acme/marketing-site?') === question,
       rows: rows(view),
       toast: byToast("The repository wasn't removed.").textContent,
@@ -131,6 +192,8 @@ describe('Remove in the row menu of the Repositories tab', () => {
       text: [
         'New workspace no longer offers it. Each of its automations turns off, and only its owner can turn it on again.',
       ],
+      running: { busy: 'true', cancelOff: true },
+      afterEscape: true,
       open: true,
       rows: [
         'acme/storefront Default',
@@ -140,6 +203,9 @@ describe('Remove in the row menu of the Repositories tab', () => {
       toast: expect.stringContaining('The server failed.'),
       removals: 1,
     })
+    click(byRole('button', 'Cancel', question))
+    await settle()
+    expect(queryByRole('dialog', 'Remove acme/marketing-site?')).toBeNull()
   })
 
   test('Remove of the only repository says that no new workspace can start, and Edit then takes the focus', async () => {

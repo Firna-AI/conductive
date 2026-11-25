@@ -47,13 +47,16 @@ November 2026:
   Its confirming button is "Remove", with the X icon and the danger tone,
   as the menu item. Reason: the words of the decision, in the form of the
   Remove member dialog, which drops the count for one.
-- The question reads the automations of the org only while it shows. It
-  counts the active automations of the repository. While they load, or
-  when they do not load, it says "Each of its automations turns off, and
-  only its owner can turn it on again." with no number, and Remove stays
-  on. Reason: the tab shows no automations, so a read for the whole tab
-  would read them every 30 seconds for nothing. The rule without a number
-  still names the loss, and a failed read blocks no removal.
+- The question reads the automations of the org once at each opening,
+  apart from the list that other screens share. It counts the active
+  automations of the repository. Until that read answers, or when it
+  fails, it says "Each of its automations turns off, and only its owner
+  can turn it on again." with no number, and Remove stays on. Reason: the
+  tab shows no automations, so a read for the whole tab would read them
+  every 30 seconds for nothing. The rule without a number still names the
+  loss, and a failed read blocks no removal. On 25 November 2026, review
+  finding 1 A replaced the shared list, because its cached number could
+  hide the sentence.
 - The question keeps the place of the row from its opening. Reason: its
   words then do not change while it shows.
 - After a removal, the focus goes to the row that takes the place of the
@@ -88,7 +91,7 @@ Contract owners:
 - **Source:** Design.
 - **Category:** Docs or spec.
 - **Location:** `src/shell/settings/RepositoryOrder.tsx`,
-  `docs/protocol/org-image.md` under "Added repositories".
+  `docs/protocol/org-image-repositories.md` under "Added repositories".
 - **Terms:**
   - **Repository notice:** the notice above the list of the Repositories
     tab. It names the repositories that the cloud computer does not hold
@@ -150,8 +153,9 @@ Contract owners:
     toast. The admin cannot predict when the app asks. Effort: Small.
 - **Assumptions:**
   - A removal starts no build (decision 240). Source:
-    `docs/protocol/org-image.md` under "Removed repositories". Its reason
-    holds, because a removal blocks no new workspace. Kept.
+    `docs/protocol/org-image-repositories.md` under "Removed
+    repositories". Its reason holds, because a removal blocks no new
+    workspace. Kept.
   - A menu removal has every effect of a removal at Done. Source: the
     Worker code in `worker/app-api/feature-repositories-data.ts`. Its
     reason holds, because no run of such an automation can succeed. Kept.

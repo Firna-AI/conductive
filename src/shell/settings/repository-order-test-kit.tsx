@@ -13,10 +13,14 @@ export const { repositories } = repositoryFixtures(org).repositories
 
 /**
  * The Repositories tab of Acme, mounted for the role of the server, in the
- * layer where its dialogs open.
+ * layer where its dialogs open. The overrides are those of `startedApp`,
+ * such as the fetch of `HeldRequests`.
  */
-export async function repositoriesTab(server: FakeApiServer) {
-  const app = await startedApp(server)
+export async function repositoriesTab(
+  server: FakeApiServer,
+  overrides: Parameters<typeof startedApp>[1] = {},
+) {
+  const app = await startedApp(server, overrides)
   const boot = app.boot.get()
   const acme = app.orgs.get().find((item) => item.id === org)
   if (boot.state !== 'ready' || !acme) throw new Error('The app did not start.')

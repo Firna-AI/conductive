@@ -67,9 +67,12 @@ change keeps its records.
   - Each active automation of the repository turns off, and only its
     owner can turn it on again, as [Automations](automations.md) says.
     The question gives the number of these automations, and leaves the
-    sentence out when there is none. While the app does not know the
-    number, the question says that each automation of the repository
-    turns off, with no number.
+    sentence out when there is none. Only a read of the automations at
+    this opening of the question gives the number. A number from an
+    earlier read never shows. Until that read answers, or when it fails,
+    the question says that each automation of the repository turns off,
+    with no number. Reason: an automation can turn on after an earlier
+    read, such as in another tab.
   - On the first row, the question names the next repository, which
     becomes the default.
   - On the only row, the question says that no new workspace can start

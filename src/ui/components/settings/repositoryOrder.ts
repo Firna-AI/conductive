@@ -5,7 +5,6 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react'
-import type { MenuEntry } from '../common/Menu'
 import { repositoryRemoval } from './repositoryRemovalCopy'
 
 /** An action of the row menu of a chosen repository. */
@@ -33,7 +32,8 @@ export type RepositoryMenuEntry = RepositoryMenuItem | { kind: 'divider' }
  * the label and the icon of Remove in Edit. It is never off, because Edit
  * also removes the first and the only row. `place` counts the
  * repositories above the row, of `count` chosen repositories. The list
- * holds no data of a screen, so the app can import it.
+ * holds no data of a screen, so the app can import it. The mockups draw
+ * its entries as they are, and the app adds what each item does.
  */
 export function repositoryMenuItems(
   place: number,
@@ -71,21 +71,6 @@ export function repositoryMenuItems(
       tone: 'danger',
     },
   ]
-}
-
-/** The row menu of a chosen repository as a view draws it. */
-export function repositoryMenuOf(place: number, count: number): MenuEntry[] {
-  return repositoryMenuItems(place, count).map((entry): MenuEntry =>
-    entry.kind === 'divider'
-      ? entry
-      : {
-          kind: 'item',
-          label: entry.label,
-          icon: entry.icon,
-          disabled: entry.disabled,
-          tone: entry.tone,
-        },
-  )
 }
 
 /**

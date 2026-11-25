@@ -134,11 +134,7 @@ export function RepositoryOrder(props: {
       entry.kind === 'divider'
         ? entry
         : {
-            kind: 'item',
-            label: entry.label,
-            icon: entry.icon,
-            disabled: entry.disabled,
-            tone: entry.tone,
+            ...entry,
             onSelect: () => {
               if (entry.action === 'remove') removal.ask(item, place)
               else if (entry.action === 'default') moves.place(item, 0)
