@@ -2,6 +2,7 @@ import { beforeEach, expect, it } from 'vitest'
 
 import { workspaceViewPath } from '../../src/shared/workspace-view'
 import { setupBackendTests } from '../lifecycle/backend-test-hooks'
+import { interceptMembersWrite } from '../members/guarded-write.test-support'
 import { seedWorkspace } from '../members/members-test-support'
 
 const backendFixture = setupBackendTests()
@@ -75,6 +76,7 @@ it('stores skill tabs separately and keeps them when an older app saves its view
     ...withSkills,
     tabs: [session, { kind: 'preview', port: 3000 }, file],
     skillTabs: withPreview.skillTabs,
+    skillBaseTabs: [session, { kind: 'preview', port: 3000 }, file],
   })
 
   const olderView = { ...base, activeTab: file }
@@ -112,6 +114,79 @@ it('closes only the temporary skill when an older app saves a temporary file', a
       temporarySkill: null,
     },
   })
+})
+
+it('uses the skill tabs from a concurrent save when an older app saves a temporary file', async () => {
+  expect((await requestView(withSkills)).status).toBe(200)
+  const keptDuringSave = { agent: 'claude', name: 'review' }
+  const temporaryDuringSave = { agent: 'codex', name: 'review' }
+  const { harness } = backendFixture()
+  const database = harness.env.DB
+  const race = interceptMembersWrite(database, async () => {
+    const current = await requestView({
+      ...base,
+      previewTabs: [],
+      skillTabs: [
+        { ...temporaryDuringSave, place: 1 },
+        { ...keptDuringSave, place: 2 },
+      ],
+      activeSkill: temporaryDuringSave,
+      temporarySkill: temporaryDuringSave,
+    })
+    expect(current.status).toBe(200)
+  })
+  harness.env.DB = race.db
+  try {
+    const olderView = {
+      ...base,
+      activeTab: file,
+      temporaryTab: { kind: 'file', path: file.path },
+    }
+    const saved = await requestView(olderView)
+    expect(saved.status).toBe(200)
+    expect(race.calls()).toBe(1)
+    const expected = {
+      view: {
+        ...olderView,
+        skillTabs: [{ ...keptDuringSave, place: 1 }],
+        activeSkill: null,
+        temporarySkill: null,
+      },
+    }
+    expect(await saved.json()).toMatchObject(expected)
+    expect(await (await requestView()).json()).toMatchObject(expected)
+  } finally {
+    harness.env.DB = database
+  }
+})
+
+it('keeps each skill beside the surviving tabs when an older app closes a file', async () => {
+  const next = { kind: 'session', sessionId: 'next' }
+  const saved = await requestView({
+    ...withSkills,
+    tabs: [session, file, next],
+    skillTabs: [
+      { ...kept, place: 2 },
+      { ...temporary, place: 4 },
+    ],
+  })
+  expect(saved.status).toBe(200)
+  const olderView = { ...base, tabs: [session, next] }
+  const olderSave = await requestView(olderView)
+  expect(olderSave.status).toBe(200)
+  const expected = {
+    view: {
+      ...olderView,
+      skillTabs: [
+        { ...kept, place: 1 },
+        { ...temporary, place: 3 },
+      ],
+      activeSkill: temporary,
+      temporarySkill: temporary,
+    },
+  }
+  expect(await olderSave.json()).toMatchObject(expected)
+  expect(await (await requestView()).json()).toMatchObject(expected)
 })
 
 it('leaves a skill tab kept when its temporary mark is invalid or names a closed skill', async () => {

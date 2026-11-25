@@ -4,6 +4,7 @@ import type {
   WorkspaceTab,
   WorkspaceView,
 } from '../../src/shared/workspace-view'
+import { viewToWire } from '../../src/shared/workspace-view-wire'
 import {
   savedWorkspaceView,
   saveWorkspaceView,
@@ -29,25 +30,29 @@ const first: WorkspaceTab = { kind: 'session', sessionId: 'first-session' }
 const second: WorkspaceTab = { kind: 'session', sessionId: 'second-session' }
 const file: WorkspaceTab = { kind: 'file', path: 'README.md', mode: 'source' }
 const diff: WorkspaceTab = { kind: 'diff', path: 'src/app.ts' }
+const preview: WorkspaceTab = { kind: 'preview', port: 3000 }
+const kept = { agent: 'claude', name: 'review' } as const
+const temporary = { agent: 'codex', name: 'review' } as const
 
 const save = (f: Fixture, userId: string, view: WorkspaceView) =>
   saveWorkspaceView(f.env.DB, {
     workspaceId: WORKSPACE_ID,
     orgId: f.org.id,
     userId,
-    view,
+    view: viewToWire(view),
     now: 1,
   })
 
 const read = (f: Fixture, userId: string) =>
   savedWorkspaceView(f.env.DB, WORKSPACE_ID, userId)
 
-it('closes the file and diff tabs of the saved view of every member, and keeps the session tabs', async () => {
+it('closes repository tabs in every saved view and keeps the order of sessions and skills', async () => {
   const f = await repositoryChangeFixture(harness)
   await save(f, f.owner.id, {
-    tabs: [first, file, second, diff],
+    tabs: [first, file, preview, second, diff],
     activeTab: diff,
     temporaryTab: { kind: 'diff', path: 'src/app.ts' },
+    skillTabs: [{ ...kept, place: 3 }],
     fileList: 'changes',
     tool: 'preview',
   })
@@ -55,6 +60,8 @@ it('closes the file and diff tabs of the saved view of every member, and keeps t
     tabs: [file, second],
     activeTab: second,
     temporaryTab: null,
+    skillTabs: [{ ...temporary, place: 1 }],
+    temporarySkill: temporary,
     fileList: 'checks',
     tool: 'desktop',
   })
@@ -66,6 +73,9 @@ it('closes the file and diff tabs of the saved view of every member, and keeps t
     tabs: [first, second],
     activeTab: null,
     temporaryTab: null,
+    skillTabs: [{ ...kept, place: 1 }],
+    activeSkill: null,
+    temporarySkill: null,
     fileList: 'changes',
     tool: 'preview',
   })
@@ -73,6 +83,9 @@ it('closes the file and diff tabs of the saved view of every member, and keeps t
     tabs: [second],
     activeTab: second,
     temporaryTab: null,
+    skillTabs: [{ ...temporary, place: 0 }],
+    activeSkill: null,
+    temporarySkill: temporary,
     fileList: 'checks',
     tool: 'desktop',
   })

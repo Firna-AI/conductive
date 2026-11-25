@@ -27,12 +27,7 @@ import {
   workspaceBinding,
   workspaceForViewer,
 } from './workspace-state'
-import {
-  savedWorkspaceView,
-  saveWorkspaceView,
-  keepsStoredViewTabs,
-  workspaceViewSave,
-} from './workspace-view'
+import { savedWorkspaceView, saveWorkspaceView } from './workspace-view'
 
 export async function shellRoute(
   request: Request,
@@ -100,15 +95,11 @@ export async function shellRoute(
     })
   if (path === viewPath && request.method === 'PUT') {
     requireWritableWorkspace(workspace)
-    const stored = keepsStoredViewTabs(context.body)
-      ? await savedWorkspaceView(env.DB, workspaceId, userId)
-      : undefined
-    const view = workspaceViewSave(context.body, stored)
-    await saveWorkspaceView(env.DB, {
+    const view = await saveWorkspaceView(env.DB, {
       workspaceId,
       orgId,
       userId,
-      view,
+      view: context.body,
       now: dependencies.now(),
     })
     return Response.json({

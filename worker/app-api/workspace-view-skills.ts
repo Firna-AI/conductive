@@ -1,6 +1,7 @@
 import { isSkillName, type SkillIdentity } from '../../src/shared/skills'
 import type {
   SkillTabPlace,
+  WorkspaceTab,
   WorkspaceView,
 } from '../../src/shared/workspace-view'
 import { natural } from '../files/parsers'
@@ -25,7 +26,15 @@ function skillPlaces(value: unknown): SkillTabPlace[] | null {
     if (!identity) return null
     places.push({ ...identity, place: tab.place })
   }
+  const opened = new Set<string>()
   return places
+    .sort((left, right) => left.place - right.place)
+    .filter((tab) => {
+      const key = JSON.stringify([tab.agent, tab.name])
+      if (opened.has(key)) return false
+      opened.add(key)
+      return true
+    })
 }
 
 function sameSkill(left: SkillIdentity, right: SkillIdentity): boolean {
@@ -40,62 +49,89 @@ function openSkill(
   return skill && tabs.some((tab) => sameSkill(tab, skill)) ? skill : null
 }
 
-function placedSkills(
-  places: readonly SkillTabPlace[],
-  baseCount: number,
-  closed: SkillIdentity | null,
-): SkillTabPlace[] {
-  const tabs: SkillTabPlace[] = []
-  const ordered = [...places].sort((left, right) => left.place - right.place)
-  const removedPlace = closed
-    ? ordered.find((tab) => sameSkill(tab, closed))?.place
-    : undefined
-  const opened = new Set<string>()
-  let nextPlace = 0
-  for (const tab of ordered) {
-    const key = JSON.stringify([tab.agent, tab.name])
-    if (opened.has(key) || (closed && sameSkill(tab, closed))) continue
-    const desired =
-      removedPlace !== undefined && tab.place > removedPlace
-        ? tab.place - 1
-        : tab.place
-    const place = Math.min(
-      Math.max(nextPlace, desired),
-      baseCount + tabs.length,
-    )
-    tabs.push({ ...tab, place })
-    opened.add(key)
-    nextPlace = place + 1
+function tabKey(tab: WorkspaceTab): string {
+  switch (tab.kind) {
+    case 'session':
+      return `session:${tab.sessionId}`
+    case 'preview':
+      return `preview:${tab.port}`
+    case 'skill':
+      return `skill:${tab.agent}/${tab.name}`
+    default:
+      return `${tab.kind}:${tab.path}`
   }
-  return tabs
+}
+
+function tabOccurrences(tabs: readonly WorkspaceTab[]): string[] {
+  const seen = new Map<string, number>()
+  return tabs.map((tab) => {
+    const key = tabKey(tab)
+    const occurrence = seen.get(key) ?? 0
+    seen.set(key, occurrence + 1)
+    return JSON.stringify([key, occurrence])
+  })
+}
+
+function rebuildSkillPlaces(
+  skills: readonly SkillTabPlace[],
+  savedTabs: readonly WorkspaceTab[],
+  openTabs: readonly WorkspaceTab[],
+): SkillTabPlace[] {
+  const openPlaces = new Map(
+    tabOccurrences(openTabs).map((tab, index) => [tab, index]),
+  )
+  const survivingPlaces = tabOccurrences(savedTabs).map((tab) =>
+    openPlaces.get(tab),
+  )
+  const firstSurvivor = survivingPlaces.find((place) => place !== undefined)
+  let savedSlot = 0
+  let nextSavedTab = 0
+  let precedingTab: number | undefined
+  let openSlot = 0
+  return skills.map((tab, index) => {
+    // Each earlier skill occupies one place in the saved row.
+    savedSlot = Math.min(
+      Math.max(savedSlot, tab.place - index),
+      savedTabs.length,
+    )
+    while (nextSavedTab < savedSlot) {
+      precedingTab = survivingPlaces[nextSavedTab] ?? precedingTab
+      nextSavedTab += 1
+    }
+    const slot =
+      precedingTab === undefined
+        ? (firstSurvivor ?? savedSlot)
+        : precedingTab + 1
+    openSlot = Math.min(Math.max(openSlot, slot), openTabs.length)
+    return { ...tab, place: openSlot + index }
+  })
+}
+
+export function workspaceSkillPatch(
+  input: Record<string, unknown>,
+): Pick<WorkspaceView, 'skillTabs' | 'activeSkill' | 'temporarySkill'> | null {
+  if (input.skillTabs === undefined) return {}
+  const places = skillPlaces(input.skillTabs)
+  if (!places) return null
+  return {
+    skillTabs: places,
+    activeSkill: openSkill(input.activeSkill, places),
+    temporarySkill: openSkill(input.temporarySkill, places),
+  }
 }
 
 export function withWorkspaceSkills(
   base: WorkspaceView,
   input: Record<string, unknown>,
-  stored?: WorkspaceView,
+  savedTabs: readonly WorkspaceTab[],
 ): WorkspaceView | null {
-  const olderApp = input.skillTabs === undefined
-  const places = olderApp
-    ? (stored?.skillTabs ?? [])
-    : skillPlaces(input.skillTabs)
-  if (!places) return null
-  const temporary = openSkill(
-    olderApp ? stored?.temporarySkill : input.temporarySkill,
-    places,
-  )
-  const closed = olderApp && base.temporaryTab ? temporary : null
-  const skillTabs = placedSkills(places, base.tabs.length, closed)
-  if (!skillTabs.length) return base
+  const skills = workspaceSkillPatch(input)
+  if (!skills) return null
+  if (!skills.skillTabs?.length) return base
   return {
     ...base,
-    skillTabs,
-    activeSkill: base.activeTab
-      ? null
-      : openSkill(
-          olderApp ? stored?.activeSkill : input.activeSkill,
-          skillTabs,
-        ),
-    temporarySkill: base.temporaryTab ? null : temporary,
+    skillTabs: rebuildSkillPlaces(skills.skillTabs, savedTabs, base.tabs),
+    activeSkill: base.activeTab ? null : (skills.activeSkill ?? null),
+    temporarySkill: base.temporaryTab ? null : (skills.temporarySkill ?? null),
   }
 }

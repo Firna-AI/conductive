@@ -8,6 +8,7 @@ import { natural } from '../files/parsers'
 import { HttpError, isRecord } from '../http'
 
 const maxBytes = Math.min(FILE_READ_MAX_BYTES, 1_048_576)
+const readTimeoutMs = 30_000
 
 export function skillUnavailable(): HttpError {
   return new HttpError(
@@ -78,7 +79,7 @@ export class RunnerSkillReads {
   read(
     connection: Pick<RunnerConnectionState, 'id' | 'skillReads'>,
     { agent, name }: SkillIdentity,
-    send: (command: RunnerReadSkill) => Promise<boolean>,
+    send: (command: RunnerReadSkill, signal: AbortSignal) => Promise<boolean>,
     signal?: AbortSignal,
   ): Promise<string> {
     if (connection.skillReads !== true)
@@ -92,8 +93,9 @@ export class RunnerSkillReads {
       connectionId: connection.id,
       requestId,
       resultType: 'skill.read.result',
-      send: () =>
-        send({ type: 'skill.read', requestId, agent, name, maxBytes }),
+      timeoutMs: readTimeoutMs,
+      send: (pending) =>
+        send({ type: 'skill.read', requestId, agent, name, maxBytes }, pending),
       parse: parseSkillResult,
       signal,
     })

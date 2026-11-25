@@ -200,7 +200,11 @@ skill tab at `app/skill-mentions/tab/temporary`.
   refuses a whole stored view for the same reason. So skill tabs in
   `tabs` of the stored view, as Preview tabs are, were rejected.
 - A save without `skillTabs` comes from an older copy of the app. The
-  Worker then keeps the stored skill tabs.
+  Worker keeps the skill tabs that are stored when it applies the save.
 - When such a save names a temporary file or diff, the Worker closes the
   stored temporary skill tab. Reason: the row holds at most one temporary
   tab (decision 284 B).
+- The stored skill positions count the other tabs from the last save
+  that included `skillTabs`. When a repository change or an older app
+  save closes other tabs, the skills keep their order relative to the
+  tabs that stay open.

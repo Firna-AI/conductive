@@ -241,7 +241,7 @@ export class RunnerConnections {
     return this.skillReads.read(
       active.state,
       skill,
-      (command) => this.sendRead(active, command, signal),
+      (command, pending) => this.sendRead(active, command, pending),
       signal,
     )
   }

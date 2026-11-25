@@ -125,6 +125,10 @@ export class Workspace extends NativeAlarmWorkspace {
       } else if (action === 'stopped') await this.lifecycleStopped()
       else if (action === 'seed')
         await this.seedFeatureState(record(input.values))
+      else if (action === 'use-org-secret')
+        await this.chat.changeWorkspace(string(input.workspaceId), (view) =>
+          view.secrets.use([string(input.secretId)]),
+        )
       else if (action === 'advance')
         await this.advanceStartAlarm(
           input.at === undefined ? undefined : number(input.at),

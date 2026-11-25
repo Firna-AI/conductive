@@ -3,6 +3,7 @@ import { afterEach, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import type { RunnerHello } from '../../src/shared/generated/RunnerHello'
 import type { RunnerSkillResult } from '../../src/shared/generated/RunnerSkillResult'
+import { secretsPath } from '../../src/shared/secrets'
 import { skillContentPath } from '../../src/shared/skills'
 import { closeSockets } from '../chat/adapter-sockets.test-support'
 import { record, string } from '../chat/inputs'
@@ -97,6 +98,22 @@ it('serves filtered skill text over the runner socket after hibernation', async 
   )
     .bind(ciphertext, OUTER_WORKSPACE)
     .run()
+  const usedSecret = 'used-run-secret-value'
+  const saved = await fixture.request(secretsPath(OUTER_ORG), {
+    method: 'POST',
+    body: JSON.stringify({
+      name: 'RUN_SECRET',
+      value: usedSecret,
+      description: 'Used during a run',
+      allAgents: false,
+    }),
+  })
+  expect(saved.status).toBe(201)
+  const savedSecret = record(record(await saved.json()).secret)
+  await fixture.control('use-org-secret', {
+    workspaceId: OUTER_WORKSPACE,
+    secretId: string(savedSecret.id),
+  })
   const gateway = { nonce: 'test-turn-token-nonce', loginVersion: 1 }
   const turn: StoredTurn = {
     id: 'past-turn',
@@ -122,17 +139,37 @@ it('serves filtered skill text over the runner socket after hibernation', async 
   const read = await requestSkill(runner)
   const response = await read.reply({
     ok: true,
-    text: `# Release\n\n${secret}\n${OUTER_TOKEN}\ntext${turnToken}after`,
+    text: `# Release\n\n${secret}\n${OUTER_TOKEN}\ntext${turnToken}after\n${usedSecret}`,
   })
   expect(response.status).toBe(200)
   expect(response.headers.get('Cache-Control')).toBe('no-store')
   expect(await response.json()).toEqual({
-    text: '# Release\n\n[redacted]\n[redacted]\ntext[redacted]after',
+    text: '# Release\n\n[redacted]\n[redacted]\ntext[redacted]after\n[redacted]',
   })
   expect(fixture.boat.fileReads).toEqual([])
   expect(await fixture.control('summary')).toMatchObject({
     throughEventNumber: 1,
   })
+})
+
+it('accepts a skill at the UTF-8 limit and refuses a successful reply one byte over it', async () => {
+  const runner = await connect(true)
+  const atLimit = 'é'.repeat(524_288)
+  const oversized = await requestSkill(runner)
+  const rejected = await oversized.reply({ ok: true, text: `${atLimit}a` })
+  expect(rejected.status).toBe(413)
+  expect(await rejected.json()).toMatchObject({
+    error: {
+      code: 'skill_too_large',
+      sizeBytes: 1_048_577,
+      limitBytes: 1_048_576,
+    },
+  })
+
+  const exact = await requestSkill(runner)
+  const accepted = await exact.reply({ ok: true, text: atLimit })
+  expect(accepted.status).toBe(200)
+  expect(await accepted.json()).toEqual({ text: atLimit })
 })
 
 it('refuses foreign members and archived workspaces before reading a skill', async () => {
