@@ -65,11 +65,33 @@ const adminCan: Readonly<Record<ActionWait, string>> = {
 export type NoticeText = { title: string; body?: string }
 
 /**
- * The words of the repository notice. The title names the added
- * repositories, or else the removed ones. While a build runs, it names the
- * added ones only. An admin gets Try again or Build computer, in the notice
- * on the Repositories tab or in the build card under it on the Cloud
- * computer tab, so only a member reads who can act.
+ * The words of the repository notice after a failed build. The failure is
+ * the title, so that the waiting or removed repositories do not read as its
+ * cause. The body says when they are ready or leave.
+ */
+function failedNoticeText(props: {
+  added: readonly string[]
+  removed: readonly string[]
+  admin: boolean
+}): NoticeText {
+  const { added, removed } = props
+  const sentences: string[] = []
+  if (added.length > 0) sentences.push(`${readyTitle(added, 'failed')}.`)
+  if (removed.length > 0) {
+    const when = added.length > 0 ? 'at the same build' : readyWhen.failed
+    sentences.push(`${leave(removed)} ${when}.`)
+  }
+  if (!props.admin) sentences.push(`${adminCan.failed}.`)
+  return { title: 'The last build failed', body: sentences.join(' ') }
+}
+
+/**
+ * The words of the repository notice. After a failed build, the title says
+ * so. Else the title names the added repositories, or else the removed
+ * ones. While a build runs, it names the added ones only. An admin gets Try
+ * again or Build computer, in the notice on the Repositories tab or in the
+ * build card under it on the Cloud computer tab, so only a member reads who
+ * can act.
  */
 export function repositoryNoticeText(props: {
   wait: RepositoryWait
@@ -78,21 +100,20 @@ export function repositoryNoticeText(props: {
   admin: boolean
 }): NoticeText {
   const { added, removed } = props
+  if (props.wait === 'failed') return failedNoticeText(props)
   if (props.wait === 'building' && added.length > 0) {
     return { title: readyTitle(added, 'building') }
   }
   // A removal alone never counts as a build that runs for it.
-  const wait: ActionWait = props.wait === 'failed' ? 'failed' : 'waiting'
-  const leaves =
-    wait === 'failed' ? 'after a build succeeds' : 'at the next build'
   const title =
-    added.length > 0 ? readyTitle(added, wait) : `${leave(removed)} ${leaves}`
+    added.length > 0
+      ? readyTitle(added, 'waiting')
+      : `${leave(removed)} at the next build`
   const sentences: string[] = []
   if (added.length > 0 && removed.length > 0) {
     sentences.push(`${leave(removed)} at the same build.`)
   }
-  if (wait === 'failed') sentences.push('The last build failed.')
-  if (!props.admin) sentences.push(`${adminCan[wait]}.`)
+  if (!props.admin) sentences.push(`${adminCan.waiting}.`)
   return { title, body: sentences.length > 0 ? sentences.join(' ') : undefined }
 }
 

@@ -12,10 +12,12 @@ import {
 import { readImageSoftware } from './image-software'
 import { IMAGE_DAY_MS } from './image-schedule'
 import { readOrgImage } from './org-image-data'
+import { imageHoldsOldValues } from './org-image-refresh-data'
 import { failUnscheduledBuild } from './image-build-failure'
 import {
   readImageSettings,
   readRepositories,
+  repositoriesWithSavedValues,
   selectedRepositories,
 } from './settings-data'
 import {
@@ -68,14 +70,22 @@ export async function admitImageBuild(
         previousRepositories,
       )
     : []
-  const repositories =
-    input.kind === 'refresh' && previous
-      ? previousRepositories
-      : await selectedRepositories(env.DB, input.orgId)
-  const locations =
-    input.kind === 'refresh' && previous
-      ? previousLocations
-      : repositoryLocations(repositories)
+  const kind =
+    input.kind === 'refresh' &&
+    (await imageHoldsOldValues(env.DB, input.orgId, providerAccount))
+      ? 'build'
+      : input.kind
+  const refreshFromPrevious = kind === 'refresh' && previous !== null
+  const repositories = refreshFromPrevious
+    ? await repositoriesWithSavedValues(
+        env.DB,
+        input.orgId,
+        previousRepositories,
+      )
+    : await selectedRepositories(env.DB, input.orgId)
+  const locations = refreshFromPrevious
+    ? previousLocations
+    : repositoryLocations(repositories)
   const id = dependencies.randomToken()
   const now = dependencies.now()
   try {
@@ -87,18 +97,17 @@ export async function admitImageBuild(
       expectedOrgAccount: providerAccount,
       previousProviderAccount: previous?.providerAccount ?? providerAccount,
       userId: input.userId,
-      kind: input.kind,
-      settingsRevision:
-        input.kind === 'refresh' && previous
-          ? previous.settingsRevision
-          : settings.revision,
+      kind,
+      settingsRevision: refreshFromPrevious
+        ? previous.settingsRevision
+        : settings.revision,
       installScript: settings.installScript,
       repositories,
       repositoryLocations: locations,
       previousRepositoryLocations: previousLocations,
       software,
       softwareVersion:
-        input.kind === 'build' && !image?.imageName
+        kind === 'build' && !image?.imageName
           ? await softwareVersion(
               await latestSoftwareRelease(env, dependencies.fetch),
             )
@@ -106,7 +115,7 @@ export async function admitImageBuild(
       previousImageName: image?.imageName ?? null,
       now,
       nextImageRefreshAt:
-        input.kind === 'refresh' && input.dailyRefresh
+        kind === 'refresh' && input.dailyRefresh
           ? now + IMAGE_DAY_MS
           : undefined,
     })

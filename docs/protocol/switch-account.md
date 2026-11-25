@@ -123,6 +123,11 @@ says.
   script, the repositories, and the folder of each repository. It takes no
   saved change that no build ran yet. Reason: members do not see the
   switch build, so it must not change their image.
+- One exception: it copies each repository with its saved name and
+  default branch, as a refresh does, as
+  [The org image](repository-changes-on-github.md#the-org-image) in
+  Repository changes on GitHub says. Each folder keeps its name. Reason:
+  with the old name or branch, the copy fails, and so the switch fails.
 - So the notices of the install script and of the repositories show the
   same state after the switch as before it.
 - It starts as a build of an org without an org image does, as
@@ -156,7 +161,8 @@ says.
   Admins would then see a failure that they cannot fix.
 - After the switch, the Cloud computer tab keeps the newest good build
   that members see as the current build. That build holds the same inputs
-  as the switch build.
+  as the switch build, except the saved names and default branches that
+  the switch build copies, as [The switch build](#the-switch-build) says.
 - A Build computer or a Try again of an admin during a switch build waits
   until the switch build ends (switch decision 2 D). Then it runs on the
   account of the org at that time.

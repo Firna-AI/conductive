@@ -24,8 +24,6 @@ type ImageSchedule =
       dailyAt: number
       pendingAt: number
       imageName: string | null
-      /** The image holds an old name or default branch, so a build is due. */
-      oldValues: boolean
     }
 
 /** Every idle caller uses the persisted daily and pending push deadlines. */
@@ -58,6 +56,7 @@ export async function readImageSchedule(
           image.pendingPushRefreshAt,
           (image.lastPushRefreshAt ?? -Infinity) + IMAGE_PUSH_MS,
         )
+  // Old values make a job due at once, and admission makes it a build.
   const oldValues = await imageHoldsOldValues(db, orgId, providerAccount)
   const providerSwitch = await readOpenProviderSwitch(db, orgId)
   return {
@@ -72,7 +71,6 @@ export async function readImageSchedule(
     dailyAt,
     pendingAt,
     imageName: image?.imageName ?? null,
-    oldValues,
   }
 }
 

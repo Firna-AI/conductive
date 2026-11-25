@@ -40,7 +40,7 @@ export const repositories = defineScreen({
       slug: 'build-failed',
       title: 'Newest build failed',
       description:
-        'The build of acme/admin-dashboard failed, and no build runs. The notice says that acme/admin-dashboard is ready after a build succeeds, and that the last build failed, with Try again. The Settings link in the sidebar shows a dot.',
+        'The build of acme/admin-dashboard failed, and no build runs. The title of the notice says that the last build failed. Its body says that acme/admin-dashboard is ready after a build succeeds, with Try again. The Settings link in the sidebar shows a dot.',
       rationale: `${decisions} A failed build gets no automatic retry (decision 12), so the notice offers Try again, which builds the current choice. The first state that applies wins, so a failed newest build comes first.`,
       props: { repositoryChange: 'added', build: 'failed' },
     },
@@ -64,7 +64,7 @@ export const repositories = defineScreen({
       slug: 'member',
       title: 'Seen by a member',
       description:
-        'Priya, a member who is not an admin, sees the chosen repositories of Acme in the order of the org, with Default on the first one, and without Edit, drag handles, row menus, search, Add, and Remove. One line says that only an admin can change them. The build of acme/admin-dashboard failed, so the notice says that it is ready after a build succeeds, and that an admin can try the build again. The notice has no button.',
+        'Priya, a member who is not an admin, sees the chosen repositories of Acme in the order of the org, with Default on the first one, and without Edit, drag handles, row menus, search, Add, and Remove. One line says that only an admin can change them. The build of acme/admin-dashboard failed, so the title of the notice says that the last build failed. Its body says that acme/admin-dashboard is ready after a build succeeds, and that an admin can try the build again. The notice has no button.',
       rationale: `The user chose option B of decision 57: only admins change the repositories, the scripts, and the environment variables, because a change reaches every new sandbox of the org. Members see them read-only. ${decisions} A member reads the same notice without a button, in each state.`,
       props: { viewer: 'member', repositoryChange: 'added', build: 'failed' },
     },

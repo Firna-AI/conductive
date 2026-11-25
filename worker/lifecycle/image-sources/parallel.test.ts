@@ -228,3 +228,32 @@ it('reserves the sum of command estimates within half the sandbox memory', async
   await fixture.tick(2)
   expect(fixture.finalizes()).toHaveLength(3)
 })
+
+it('copies each repository into its captured folder, not a folder from its name', async () => {
+  const fixture = await parallelFixture(harness)
+  // A refresh after a rename keeps the folders of the published image.
+  const kept = fixture.input.repositories.map((repository, index) => ({
+    repositoryId: repository.id,
+    directory: `/home/user/code/kept-${index}`,
+    variable: `CONDUCTIVE_REPOSITORY_KEPT_${index}_DIR`,
+  }))
+  Object.assign(fixture.input, {
+    repositoryLocations: kept,
+    previousRepositoryLocations: kept,
+  })
+  await fixture.tick(4)
+  fixture.copies().forEach((process) => {
+    process.exitCode = 0
+  })
+  await fixture.tick(4)
+  const finalizes = fixture.finalizes()
+  expect(finalizes).toHaveLength(2)
+  finalizes.forEach((process, index) => {
+    expect(process.command).toContain(`/home/user/code/kept-${index}`)
+    expect(process.command).not.toContain('/home/user/code/parallel-')
+  })
+  const layouts = fixture.processes.filter(({ kind }) => kind === 'layout')
+  expect(layouts.map(({ command }) => command).join('\n')).not.toContain(
+    '/home/user/code/parallel-',
+  )
+})

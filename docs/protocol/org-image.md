@@ -90,7 +90,9 @@ says. A switch decision number names a decision of the change that adds
   automatic refresh needs an admin who is not suspended, as
   [Operator actions](operator-actions.md#starts-stops-and-builds) says.
 - A refresh fetches the new commits of each repository that the org image
-  holds. It does not run the install script, and it adds or removes no
+  holds. It uses the saved name of each repository, as
+  [Repository changes on GitHub](repository-changes-on-github.md#the-org-image)
+  says. It does not run the install script, and it adds or removes no
   repository. It installs the newest release of the sandbox software, as
   [Installs in a build](sandbox-software.md#installs-in-a-build) says.
 - Reason: a new workspace then needs only a small fetch. The limit of one

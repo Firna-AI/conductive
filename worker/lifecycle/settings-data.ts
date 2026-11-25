@@ -85,6 +85,34 @@ export async function selectedRepositories(
   return results
 }
 
+export async function repositoriesWithSavedValues(
+  db: D1Database,
+  orgId: string,
+  repositories: readonly SelectedRepository[],
+): Promise<SelectedRepository[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT id, full_name AS fullName, default_branch AS defaultBranch
+       FROM repositories WHERE org_id = ? AND id IN (SELECT value FROM json_each(?))`,
+    )
+    .bind(
+      orgId,
+      JSON.stringify(repositories.map((repository) => repository.id)),
+    )
+    .all<Pick<SelectedRepository, 'id' | 'fullName' | 'defaultBranch'>>()
+  const savedById = new Map(results.map((row) => [row.id, row]))
+  return repositories.map((repository) => {
+    const saved = savedById.get(repository.id)
+    return saved
+      ? {
+          ...repository,
+          fullName: saved.fullName,
+          defaultBranch: saved.defaultBranch,
+        }
+      : repository
+  })
+}
+
 /** Settings writers use this context to keep encrypted values bound to their org. */
 export function orgEnvironmentContext(orgId: string): string {
   return JSON.stringify(['org-environment', orgId])

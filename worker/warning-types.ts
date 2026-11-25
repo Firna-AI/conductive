@@ -1,4 +1,5 @@
 import type { BuildPhase } from './lifecycle/build-data'
+import type { ImageSourceFailureDetails } from './lifecycle/image-sources/failure'
 import type { RepairKind } from './lifecycle/repair-data'
 import type { WorkspaceStartJob } from './lifecycle/start-types'
 import type { WorkspaceArchiveState } from './lifecycle/archive-types'
@@ -281,6 +282,8 @@ export type WorkerWarning =
       kind: 'image_build_failed'
       buildId: WarningId
       phase: BuildPhase
+      sourceStep: ImageSourceFailureDetails['sourceStep'] | null
+      githubStatus: number | null
       error: ErrorSummary
     }
   | {

@@ -22,7 +22,6 @@ import {
   claimPushRefresh,
   consumePendingPushRefresh,
   markPendingPushRefresh,
-  imageHoldsOldValues,
   pushedImageRepositories,
   markSwitchPushRefresh,
 } from './org-image-refresh-data'
@@ -88,13 +87,8 @@ export async function refreshImagesForPush(
       await startImageBuild(runtime, {
         orgId: repository.orgId,
         userId: admin.userId,
-        kind: (await imageHoldsOldValues(
-          runtime.env.DB,
-          repository.orgId,
-          providerAccount,
-        ))
-          ? 'build'
-          : 'refresh',
+        // Admission makes the refresh a build while the image holds old values.
+        kind: 'refresh',
         software: input.software,
       }),
     )
@@ -203,7 +197,8 @@ export async function runImageAlarm(
   await startImageBuild(runtime, {
     orgId: state.orgId,
     userId: admin.userId,
-    kind: next.oldValues ? 'build' : 'refresh',
+    // Admission makes the refresh a build while the image holds old values.
+    kind: 'refresh',
     software: state.software,
     dailyRefresh: next.dailyAt <= runtime.dependencies.now(),
   })

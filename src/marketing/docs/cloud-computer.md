@@ -81,6 +81,7 @@ Choosing a different default branch empties the queue.
 The pull request bar shows a wait while the queue verifies the change.
 If a build is running, the new build starts after it.
 If the last build failed, the change waits for **Try again**.
+Until then, refreshes still fetch new commits, and the folder keeps its old name.
 
 When a repository moves to another owner on GitHub, Conductive follows the move like a new name.
 It does so only when the org already has another repository of the new owner.

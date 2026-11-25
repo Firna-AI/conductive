@@ -631,3 +631,14 @@ request still targets after a failed reset. List facts hold expiring
 repository facts and per-viewer write access. The previous Worker can
 keep writing the existing tables. The
 [merge queue backend](../worker/merge-queue/README.md) owns the new tables.
+
+`202611241623_image_source_failures.sql` adds the nullable columns
+`image_source_runs.failure_step` and `image_source_runs.failure_github_status`.
+They keep the step and the GitHub status of the first failure of a
+repository load. A failure that ends on a later alarm then still names
+them in the `image_build_failed` warning. They hold no token, no
+repository name, and no response text. Existing rows and previous Worker
+inserts get null. The migration changes no existing column, default, or
+constraint, so the previous Worker keeps working. The
+[source loader](../worker/lifecycle/repository-layout.md#the-source-loader)
+owns these records.
