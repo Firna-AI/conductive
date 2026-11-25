@@ -28,6 +28,13 @@
      - That a stack and its bases survive a rename of the default branch.
   3. Fix each difference between GitHub and the fakes in `worker/github/fake-stacks.ts`, `fake-pull-writes.ts`, and the code that relies on it.
   4. If the server rebase check passes, set `GITHUB_SERVER_REBASE_FIRST` to `true`, and test the queue's restack with it. If it fails, ask Cal whether decision 319 changes to A.
+- **Results of 25 November 2026:** an agent ran the checks in the private repository `calummoore/merge-queue-scratch`, with Cal's fine-grained personal access token. The token could not create a repository in the `Firna-AI` org ("You need admin access to the organization"), so the repository is in Cal's own account.
+  - A merge of the top layer merged every layer below it, and the stack then read `open: false`.
+  - A merge of a middle layer merged the layers below it. GitHub then moved the layer above to the trunk and rebased it by itself. Its timeline showed `automatic_base_change_succeeded` and `head_ref_force_pushed`, and it kept only its own commit.
+  - A base change to a branch that already holds the pull request's head was refused with HTTP 422, "There are no new commits between base branch and head branch". GitHub did not treat the pull request as merged.
+  - The server rebase refused a stale expected head ("head sha didn't match the current head ref").
+  - The server rebase did not keep only the layer's own commits after a squash merge below it. It replayed the commits of the merged layer and failed with `PullRequest::RebaseConflictError`. So the condition of decision 319 B failed.
+  - Not checked: a stack merge that stops partway, because no way to force it was found. The GitHub App permission, because the checks used a personal token. A rename of the default branch, because the token lacks the Administration permission (HTTP 403).
 - **Impact if no action:** Each restack keeps using an agent turn and a running cloud computer. A difference between GitHub and the fakes can stall the queue in production.
 - **Needs:** The merged change, the scratch repository with the GitHub App installed, and Cal's GitHub account.
 - **Done when:** Each check above has a recorded result, the fakes match GitHub, and the server rebase is on or Cal has chosen decision 319 A.
