@@ -109,9 +109,10 @@ function drawnOf(
 
 /**
  * The sections of the org, each a group of workspaces that the user made.
- * A collapsed section shows only its header and its count. A workspace
- * moves to another section by drag and drop, and a section moves to
- * another place by a drag of its header. A dragged section stays faint in
+ * A collapsed section shows its header and its count, and only the row of
+ * the open workspace when it holds that workspace. A workspace moves to
+ * another section by drag and drop, and a section moves to another place
+ * by a drag of its header. A dragged section stays faint in
  * its place, and a line between two sections shows where it lands. The sidebar uses compact
  * rows; the list page uses taller rows for touch. A sub-workspace shows
  * nested under the row of its parent. Only a top-level row drags, and its
@@ -192,7 +193,19 @@ export function SectionList(
       ) : null}
       {props.sections.map((item, position) => {
         const { section } = item
-        const target = drag?.section === section.key ? drag : undefined
+        // A collapsed section hides its rows, but the open row stays in
+        // sight, flat, as no other row of its tree shows.
+        const shown = section.collapsed
+          ? item.rows
+              .filter((row) => row.selected)
+              .map((row) => ({
+                ...row,
+                indent: 0 as const,
+                lines: { last: false, through: [], hasNested: false },
+              }))
+          : item.rows
+        const target =
+          !section.collapsed && drag?.section === section.key ? drag : undefined
         const lifted = item === liftedSection
         // A drop lands between two trees: before the top-level row at the
         // index of the drag, counted without the dragged tree, or after the
@@ -228,9 +241,9 @@ export function SectionList(
                 readOnly={props.readOnly ?? false}
                 variant={props.variant}
               />
-              {section.collapsed ? null : (
+              {shown.length === 0 && section.collapsed ? null : (
                 <ul className={styles.rows}>
-                  {item.rows.map((row) => (
+                  {shown.map((row) => (
                     <Fragment key={row.workspace.key}>
                       {row === before ? drop : null}
                       <li>

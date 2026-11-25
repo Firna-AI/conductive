@@ -1,4 +1,5 @@
 import { Ban, Hourglass } from 'lucide-react'
+import { formatCount } from '../../ui/components/common/counts'
 import { Notice } from '../../ui/components/common/Notice'
 import {
   noVerifiedEmail,
@@ -12,12 +13,7 @@ import { useServices } from '../../app/services'
 import { roleLabels } from '../../members/people'
 import type { OperatorUserDetail } from '../../shared/operator'
 import { AppAccessSection, ReferralSection } from './AccessSections'
-import {
-  formatAge,
-  formatCount,
-  formatLongDay,
-  formatLongMoment,
-} from './format'
+import { formatAge, formatLongDay, formatLongMoment } from './format'
 import { suspensionTitle } from './TargetPage'
 import { EmptyRows, TargetList, TargetRow } from './TargetParts'
 

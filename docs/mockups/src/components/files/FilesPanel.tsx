@@ -6,16 +6,18 @@ import {
   type TreeEntry,
 } from '../../fixtures/files'
 import { filesFor, type PathState } from '../../fixtures/maskedFiles'
+import { limitedLists, type ListState } from '../../fixtures/limitedFiles'
 import type { BannerState } from '../../../../../src/ui/components/workspace/barModel'
-import { checksPaths, paths } from '../../paths'
+import { wholeChange } from '../../../../../src/ui/components/files/changeTotals'
+import { paths } from '../../paths'
 import { allFilesUnavailable } from '../../../../../src/ui/components/chat/lostCopy'
 import { lostUpdateRow } from '../../entries/components/chat/LostUpdate.mockup'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
-import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
-import { panelBar } from '../../entries/components/workspace/PanelBar.mockup'
 import { changeList } from '../../entries/components/files/ChangeList.mockup'
 import { checksList } from '../../entries/components/files/ChecksList.mockup'
+import { listNotice } from '../../entries/components/files/ListNotice.mockup'
 import type { FileRowMenu } from './FileRowMenu'
+import { FileTabs } from './FileTabs'
 import { fileTree } from '../../entries/components/files/FileTree.mockup'
 import { defined } from '../../defined'
 import styles from './FilesPanel.module.css'
@@ -102,40 +104,6 @@ function withOpenFolder(
   }
 }
 
-/** The All files, Changes, and Checks tabs, as links. */
-function FileTabs(props: {
-  view: FileList
-  changes: number
-  banner: BannerState
-}) {
-  return (
-    <panelBar.Component moklyInstance="files-bar">
-      <linkTabs.Component
-        label="Files"
-        moklyInstance="files-tabs"
-        tabs={[
-          {
-            label: 'All files',
-            to: paths.filesAll,
-            selected: props.view === 'all',
-          },
-          {
-            label: 'Changes',
-            to: paths.filesChanges,
-            ...(props.changes > 0 ? { count: props.changes } : {}),
-            selected: props.view === 'changes',
-          },
-          {
-            label: 'Checks',
-            to: checksPaths[props.banner],
-            selected: props.view === 'checks',
-          },
-        ]}
-      />
-    </panelBar.Component>
-  )
-}
-
 /**
  * The files of the workspace: the All files, Changes, and Checks tabs. A
  * file opens as a tab in the centre column, and `open` marks its row. A
@@ -147,13 +115,19 @@ function FileTabs(props: {
  * `checksTop` stands above the checks, such as the actions of the pull
  * request bar on a phone. `only` keeps the changes of these paths, such as
  * the changed files that moved to the new branch of Continue. `menu` is the
- * open menu of a row of the shown list.
+ * open menu of a row of the shown list. Limited `lists` show the lists of a
+ * large branch: each list keeps a notice of what it leaves out, also beside
+ * the notice of a list that is not the latest one, and the Changes tab
+ * counts the whole change. While `only` filters the changes, the rows are
+ * no longer the list of the large branch, so its totals and its notice of
+ * Changes stay out, and the tab counts the rows.
  */
 export function FilesPanel(props: {
   view: FileList
   edited: boolean
   banner: BannerState
   tree: TreeState
+  lists?: ListState
   open?: FileTabView
   placeholder?: ReactNode
   paths?: PathState
@@ -162,11 +136,13 @@ export function FilesPanel(props: {
   menu?: FileRowMenu
 }) {
   const { view, open, only } = props
-  const masked = props.paths === 'masked'
-  const files = filesFor(props.paths ?? 'plain')
+  const limited = props.lists === 'limited' ? limitedLists : undefined
+  const masked = !limited && props.paths === 'masked'
+  const files = limited ?? filesFor(props.paths ?? 'plain')
   const changes = props.edited
     ? files.changes.filter((file) => !only || only.includes(file.path))
     : []
+  const totals = props.edited && !only ? limited?.totals : undefined
   const names = new Set(changes.map((file) => splitPath(file.path).name))
   const treeOpen = treeTab(open)
   const shown = withOpenFolder(files.tree, treeOpen)
@@ -178,7 +154,15 @@ export function FilesPanel(props: {
   const lists = !props.placeholder
   return (
     <div className={styles.files}>
-      <FileTabs banner={props.banner} changes={changes.length} view={view} />
+      <FileTabs
+        banner={props.banner}
+        changes={
+          totals
+            ? wholeChange(totals.listed, totals.omitted).files
+            : changes.length
+        }
+        view={view}
+      />
       {view === 'checks' ? props.checksTop : null}
       {view === 'checks' ? (
         <checksList.Component
@@ -193,6 +177,13 @@ export function FilesPanel(props: {
           icon="circle-slash"
           moklyInstance="all-files-empty"
           title={allFilesUnavailable.title}
+        />
+      ) : null}
+      {view === 'all' && lists && props.tree !== 'none' && limited ? (
+        <listNotice.Component
+          count={limited.omittedEntries}
+          list="all-files"
+          moklyInstance="files-omitted"
         />
       ) : null}
       {view === 'all' && lists && props.tree !== 'none' ? (
@@ -210,7 +201,7 @@ export function FilesPanel(props: {
           diffTo={masked ? paths.maskedPaths : paths.diff}
           files={changes}
           moklyInstance="change-list"
-          {...defined({ menu: props.menu })}
+          {...defined({ menu: props.menu, totals })}
         />
       ) : null}
       {props.tree === 'saved' ? (

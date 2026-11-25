@@ -60,8 +60,9 @@ its notices under `app/org-settings/cloud-computer/skills`.
   each failed load in this way.
 - Members see the list and each notice too. Reason: the lookup runs for
   each viewer. So a member whose agents get no skills learns why, as with
-  the [repository notice](org-image.md#the-repository-notice) of
-  decision 241.
+  the
+  [repository notice](org-image-repositories.md#the-repository-notice)
+  of decision 241.
 - The notices of a private repository and of a repository that is not
   found say what an admin can do. A member reads that an admin can act. In
   a suspended org, these notices name no action. The other notices read

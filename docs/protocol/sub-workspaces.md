@@ -165,8 +165,10 @@ parent changes, as [Parent changes](parent-changes.md) says.
 
 ## The list
 
-[The list](sub-workspace-list.md#the-list) states the nested rows of the
-workspace list and their order.
+[The list](sub-workspace-list.md#the-list) states the nested rows, their
+order, and when a collapsed section shows the open workspace.
+[A queued workspace](sub-workspace-list.md#a-queued-workspace) shows only
+in the Merge queue group, also while it is open (decision 318).
 
 ## The place of a row
 

@@ -11,6 +11,10 @@ export type FileTreeDelta = {
    */
   revision: number
   /**
+   * New omitted entry count. When absent, the previous count stays current.
+   */
+  omittedEntryCount?: number
+  /**
    * At most FILE_TREE_DELTA_MAX_CHANGES, also within FILE_EVENT_MAX_BYTES.
    * An upsert of an unchanged entry reports a content change for that path.
    */

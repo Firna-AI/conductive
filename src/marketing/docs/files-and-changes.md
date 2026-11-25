@@ -15,7 +15,7 @@ Opening a file or a change starts the computer again.
 On a computer, the file lists sit beside the chat.
 On a phone, open the workspace's **Files** view.
 
-- **All files** shows the repository as a tree. With current cloud computer software, it also lists the files in `.context/`.
+- **All files** shows the repository as a tree. With current cloud computer software, the tree can include files in `.context/`.
 - **Changes** lists changes against the workspace's base branch.
 - **Checks** shows the pull request's GitHub checks.
 
@@ -33,6 +33,20 @@ Conductive keeps its chat history until the org is deleted.
 File tools stay unavailable after removal.
 
 - [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
+
+## Find files outside the lists
+
+With current cloud computer software, **All files** lists up to 50,000 files and folders in total.
+**Changes** lists up to 1,000 changed files.
+A notice about a limited list gives the number of files or folders left out.
+
+The **Changes** tab and the summary above the list show the number of changed files.
+The summary also shows totals for lines added and removed.
+These numbers cover all changed files when **Changes** has a notice about files left out.
+When that notice is absent, the numbers cover only the files in the list.
+
+To find files or review changes outside the lists, use **Terminal** or ask the agent.
+Older cloud computer software keeps full lists until its [automatic software update](/docs/cloud-computer#apply-setup-changes).
 
 ## Read a file
 
@@ -213,7 +227,7 @@ The cloud computer uses the new base only after that fetch succeeds.
 The comparison starts at the common commit of the workspace branch and its base branch.
 Newer commits on the base branch therefore stay out of **Changes**.
 
-The list includes the branch's committed changes, uncommitted changes, and untracked files.
+The comparison includes the branch's committed changes, uncommitted changes, and untracked files.
 It covers the workspace branch's work, including work from other sessions.
 It is broader than the changed-file summary of one agent turn.
 
@@ -245,6 +259,7 @@ Use **Terminal** or ask the agent to inspect a file that is too large.
 
 The file lists update as the workspace reports changes.
 If a fresh list is unavailable, a notice can appear beside older saved data.
+A notice about files or folders left out stays visible with the saved list.
 Before the first successful list, the view can show an unavailable state.
 
 An unavailable list does not prove that the repository is empty.

@@ -28,7 +28,8 @@ No person can give a fixed key to a command. The fixed keys are:
 - on a focused workspace row, Alt with Up or Down and no other modifier,
   which moves the workspace with each workspace nested under it. On a
   nested row, the key does nothing, as [Moves](sub-workspaces.md#moves)
-  says.
+  says. On the row of the open workspace in a collapsed section, the key
+  does nothing too, as [Sections](sections.md#sections) says.
 - on a focused panel divider, Left and Right with no modifier or with
   Shift, and Home and End, which move the divider. The divider between
   the file lists and the tools of the right column lies across the

@@ -3,7 +3,8 @@
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
 messages that wait for the sandbox and the tab row of the centre column,
-with its temporary tab, and the menu of a row of the Files panel. It gives
+with its temporary tab, the menu of a row of the Files panel, and the
+notices of the file lists of a large branch. It gives
 the page of an HTML file in its tab, the terminal tabs, and the services
 of the Preview tool. It also gives the number of a workspace with Copy
 link, and the bars of the cloud computer.
@@ -85,6 +86,30 @@ link, and the bars of the cloud computer.
   [`src/ui/components/files/`](../../src/ui/components/files/) gives the
   words of the items and of the toast. Add to chat has the icon of the `@`
   of a mention, because the speech bubble with a plus names New session.
+- `ListNotice` in
+  [`src/ui/components/files/`](../../src/ui/components/files/) draws the
+  notice of a file list that leaves out entries, from runner file report
+  limits, as `app/files/limited` and `app/files/changes/limited` show. The
+  app draws the same part. It is a row in
+  the fill of a raised surface, with the info icon. It stands at the top of
+  All files and under the summary of Changes, and it does not scroll with
+  the rows. Its edges stay neutral, with one line under it. All files counts
+  the files and folders that it does not show together, because the limit
+  counts each folder. The summary and the tab of Changes count the whole
+  change, and the notice says that these totals include the files that the
+  list does not show. Each notice says where the member finds those files:
+  in the terminal, or through the agent. The amber notice of a list that is
+  not the latest one keeps its place under the lists, so a saved limited
+  list shows both. `listNoticeCopy.ts` beside it holds the words, also the
+  line of the list of `@` when nothing in a limited tree matches. The file
+  counts of the Changes tab and of the summary, the line totals, and the
+  counts in the notices, show with thousands separators, such as 2,243.
+  `formatCount` in
+  [`src/ui/components/common/counts.ts`](../../src/ui/components/common/counts.ts)
+  writes each of them. Each file link of
+  a limited screen opens the limited page of its file or list, from the
+  table of `src/limitedListPaths.ts`, which `ScreenLink` reads. The Checks
+  tab and the other views of the workspace keep their standard pages.
 - The tab of an HTML file shows its page in a frame, from HTML preview
   decision 1 A, as `app/files/html` shows. `PageFrame` in
   [`src/ui/components/files/`](../../src/ui/components/files/) holds the

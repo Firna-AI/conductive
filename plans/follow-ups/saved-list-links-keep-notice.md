@@ -1,0 +1,32 @@
+# Saved-list mockup links drop the notice
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-23, from branch `calummoore/object-memory-runner-report-limits-0m1g`, review finding 11 of round 4, and two problems that its checks found outside the scope.
+- **Location:** `docs/mockups/src/screens/workspaceLinks.tsx:18`, `docs/mockups/src/limitedListPaths.ts:11`, `docs/mockups/src/entries/app/chat/lost-updates/index.mockup.tsx:16`, `docs/mockups/src/entries/app/chat/unavailable-files/index.mockup.tsx:45`, and `docs/mockups/src/entries/components/files/FilesPanel.mockup.tsx:85`.
+- **Reason:** The fix needs about eight new catalogue pages and a phone rule for a notice beside an open file, and the same reset already exists on `main` for saved complete lists, so one later fix covers both.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Review.
+- **Category:** Mockup.
+- **Location:** See the header.
+- **Terms:**
+  - **Saved list:** The last file list that the workspace received before a newer list became unavailable or its repair failed.
+  - **Unavailable notice:** The amber row under the Files lists, such as "The latest list of all files is unavailable" or "The latest list of changes is unavailable" with the time since the repair failed.
+  - **Large-branch example:** The catalogue pages whose lists are limited: All files keeps 50,000 of 68,412 entries, and Changes lists 1,000 of 2,243 files.
+  - **Link table:** `docs/mockups/src/limitedListPaths.ts`. `ScreenLink` reads it through the `LinkPages` context that `WorkspaceScreen` sets, so each file link of a large-branch page opens the large-branch copy of the page.
+- **Background:** The app keeps the saved list and its unavailable notice in every view, also while a file is open, until the next complete list arrives (`docs/mockups/src/screens/lostUpdates.tsx:37`, `docs/mockups/src/components/files/FilesPanel.tsx:204`). A catalogue page draws one fixed state, and a Mokly link cannot carry state, so each destination needs its own page.
+- **Problem:** On `app/files/changes/limited/repair-failed` and `app/files/limited/unavailable`, a press on a file, a list tab, or a phone back link opens a page whose lists look current, with no amber notice. The saved complete-list pages on `main` do the same: `app/chat/lost-updates`, `app/chat/unavailable-files`, and the `saved-list` and `no-list` part pages of the files panel link to `app/files/diff`, `app/files/code`, `app/files/markdown`, and `app/files/changes`.
+- **Impact if no action:** A catalogue reader sees the saved list turn current after one press. An implementor can read that as a rule to clear the notice when a file opens.
+- **Root question:** How does each link of a saved-list page keep the reader in the same saved state?
+- **Options:**
+  - **A.** Add saved variants of the destination pages, and choose each destination at its call site. Effort: Medium.
+  - **B.** Define each example case (lists, tree freshness, lost update, and pull request bar) in shared catalogue data. Build the page props and the link table from the same case, so that `WorkspaceLinks` picks destinations by the whole case, not by `lists` alone. Add the saved pages: for each saved state, the other list page and the diff, code, and Markdown pages. `app/files/code` then reaches five screens, the page limit. Decide one phone rule: `placeLostUpdate` (`lostUpdates.tsx:42`) puts the Changes notice under an open file page, and `FilesContent` (`docs/mockups/src/screens/workspaceParts.tsx:128`) drops the All files notice there. Effort: Medium.
+  - **C.** Draw the file links and list tabs of a saved page as plain content, as `StillLinks` does. No new page. A reader cannot open a file from a saved page. Effort: Small.
+  - **D.** Accept the reset, and say in the catalogue text that these links open the latest-list pages. Effort: Small.
+- **Left out:** A link parameter, because Mokly variants have no query parameter. An amber notice on the latest-list pages, because it would be false there.
+- **Wider fix:** B. One case table then picks every destination. The standalone limited Change list page can later take its `diffTo` from the same case, and `plans/follow-ups/masked-paths-list-links-reset.md` option B can join it.
+- **Previous examples:** Commit `216ed6791` gave masked file previews their own back links. The fix of 23 November 2026 on the branch above added the link table for limited lists.
+- **Related:** `plans/follow-ups/masked-paths-list-links-reset.md`, same class, and its fix can join the case table. `plans/follow-ups/standard-example-check-status.md`, same cause: a case that holds the bar fixes it too. `plans/follow-ups/mockup-link-state-check.md` proposes a check that catches this class.
+- **Recommendation:** B. It keeps live links and gives each page one source for its state.
+- **Action:** fix after merge, apply B, because it needs about eight new pages and a phone rule, and the same reset on `main` gets the same fix.

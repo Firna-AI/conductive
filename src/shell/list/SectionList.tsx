@@ -3,7 +3,7 @@ import { Fragment } from 'react'
 import { classes } from '../../ui/components/common/classes'
 import styles from '../../ui/components/workspaces/SectionList.module.css'
 import type { ArchiveAction } from '../../app/archive-model'
-import { topLevelRows, treeRows } from '../../app/list-trees'
+import { shownTreeRows, topLevelRows } from '../../app/list-trees'
 import type { SectionGroup } from '../../app/sections'
 
 import { nameLabel } from '../../shared/name-label'
@@ -27,7 +27,9 @@ import { WorkspaceRow, type RowVariant } from './WorkspaceRow'
  * the org, each a group of workspaces that the people of the org made,
  * then the Archived group. A sub-workspace shows nested under the row of
  * its parent, indented by each row that the list shows above it in its
- * tree. A top-level row moves its whole tree to another place by drag and
+ * tree. A collapsed section shows the open row when that row belongs to
+ * the section. An open queued row belongs only to the Merge queue group.
+ * A top-level row of an open section moves its whole tree by drag and
  * drop, by a long press on a phone, or by Alt with Up or Down and no other
  * modifier. The tree stays faint in its place, and the line falls only
  * between two trees. A nested row moves only with its tree, so none of
@@ -110,7 +112,11 @@ export function SectionList(props: {
     shown: [
       ...queue.shown,
       ...props.groups.flatMap((group) =>
-        group.section.collapsed ? [] : group.rows.map((row) => row.workspace),
+        shownTreeRows(
+          group.rows,
+          group.section.collapsed,
+          props.selectedId,
+        ).map(({ row }) => row.workspace),
       ),
       ...(archived ? props.archived : []),
     ],
@@ -136,13 +142,16 @@ export function SectionList(props: {
       {queue.group}
       {props.groups.map((group, position) => {
         const { section, rows } = group
-        const target = place?.sectionId === section.id ? place : null
+        // A collapsed section hides its drop positions.
+        const target =
+          !section.collapsed && place?.sectionId === section.id ? place : null
         // A drop lands before a top-level row, counted without the dragged
         // tree, or after the last tree.
         const places = topLevelRows(rows).filter(
           (row) => row.workspace.id !== drag?.item.id,
         )
         const before = target ? places[target.index] : undefined
+        const shown = shownTreeRows(rows, section.collapsed, props.selectedId)
         const line = drag ? (
           <DropLine
             carried={carried.size}
@@ -172,17 +181,19 @@ export function SectionList(props: {
                 section={section}
                 variant={props.variant}
               />
-              {section.collapsed ? null : (
+              {section.collapsed && shown.length === 0 ? null : (
                 <ul className={styles.rows}>
-                  {treeRows(rows).map(({ row, treeId, place, lines }) => {
+                  {shown.map(({ row, treeId, place, lines }) => {
                     const { workspace } = row
                     const moving =
                       drag?.item.id === workspace.id ||
                       carried.has(workspace.id)
-                    // Only a top-level row drags. A nested row stays still.
+                    // Only a top-level row of an open section drags. A
+                    // nested row and the open row of a collapsed section,
+                    // whose places the list hides, stay still.
                     const surface = props.readOnly
                       ? undefined
-                      : row.parentId === null
+                      : row.parentId === null && !section.collapsed
                         ? bind(workspace, {
                             sectionId: section.id,
                             index: place,
@@ -201,13 +212,20 @@ export function SectionList(props: {
                             onKeyDown={
                               props.readOnly
                                 ? undefined
-                                : (event) => moves.sectionKey(workspace, event)
+                                : (event) =>
+                                    moves.sectionKey(
+                                      workspace,
+                                      event,
+                                      section.collapsed,
+                                    )
                             }
-                            rowRef={layout.row(
-                              workspace.id,
-                              section.id,
-                              treeId,
-                            )}
+                            rowRef={
+                              // A drop counts only the trees of an open
+                              // section.
+                              section.collapsed
+                                ? undefined
+                                : layout.row(workspace.id, section.id, treeId)
+                            }
                           />
                         </li>
                       </Fragment>

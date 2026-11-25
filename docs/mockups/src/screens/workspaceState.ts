@@ -30,6 +30,7 @@ import {
   layoutStateKeys,
   layoutStateProperties,
 } from './layoutState'
+import { listsStateProperties } from './listsState'
 import { overlayStates } from './overlayStates'
 import {
   rowMenuStateDefaults,
@@ -181,9 +182,9 @@ export const workspaceStateSchema = {
      * update the workspace asks for a fresh full report, and nothing shows.
      * `failed-repair` draws the notices that show when that report is lost
      * too: a file list's under the file lists, and the workspace name's
-     * under the header.
+     * under the header. `changes-repair` draws only the notice of Changes.
      */
-    lostUpdate: { enum: ['none', 'failed-repair'] },
+    lostUpdate: { enum: ['none', 'failed-repair', 'changes-repair'] },
     /**
      * The list of All files: the latest one, or the cloud computer could not
      * read the files. Then All files keeps the list that it saved before,
@@ -191,6 +192,7 @@ export const workspaceStateSchema = {
      * none. The next complete list returns to `latest`.
      */
     tree: { enum: treeStates },
+    ...listsStateProperties,
     /**
      * The paths of the files: plain, or two paths that hold the secret value
      * of an org env var. Each list, tab, and page then shows "[redacted]" in
@@ -275,3 +277,14 @@ export const checksWorkspace: WorkspaceState = {
   tool: 'preview',
   focus: 'files',
 }
+
+/**
+ * The part of the state that each page of the large branch shares: its
+ * limited lists, and the checks of its pull request. So its linked pages
+ * show the same lists and the same checks. No other page sets limited
+ * lists.
+ */
+export const largeBranchState = {
+  lists: 'limited',
+  banner: 'checks-failed',
+} as const satisfies Partial<WorkspaceState>

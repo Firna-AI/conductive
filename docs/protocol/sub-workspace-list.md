@@ -26,8 +26,10 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the list at
 - A tree has no collapse control. So each live sub-workspace shows while
   its section is open. Reason: the user asked that sub-workspaces always
   show.
-- A collapsed section still hides its whole tree. The count of a collapsed
-  section counts each nested row too. Reason: the count says how many
+- A collapsed section hides its trees. If it holds the open workspace,
+  it shows that row, as [Sections](sections.md#sections) says. The row
+  has no indent or guide lines because the other rows of its tree are
+  hidden. The count includes each nested row because it says how many
   workspaces the section holds.
 - The rows come in tree order: each top-level row, then the rows nested
   under it. Under each row, its nested rows come oldest first. Each nested

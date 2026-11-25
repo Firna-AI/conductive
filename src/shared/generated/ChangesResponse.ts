@@ -4,7 +4,7 @@ import type { ChangesResponseSummary } from './ChangesResponseSummary.js'
 import type { ReadonlyVec } from './ReadonlyVec.js'
 
 /**
- * Current-branch commits held by no remote branch. Older runners omit it.
+ * A complete changes report with separate totals for listed and omitted files.
  */
 export type ChangesResponse = {
   /**
@@ -24,11 +24,16 @@ export type ChangesResponse = {
    */
   uncommittedFileCount?: number
   /**
-   * files.
+   * Listed changes.
    */
   files: ReadonlyVec<BranchChangedFile>
   /**
-   * summary.
+   * File and line totals for the listed changes.
    */
   summary: ChangesResponseSummary
+  /**
+   * File and line totals for the omitted changes.
+   * Absent when the count is unknown, as from an older runner.
+   */
+  omitted?: ChangesResponseSummary
 }

@@ -23,8 +23,8 @@ export function carriedBy(
 
 /**
  * The moves of a focused row by Alt with Up or Down and no other modifier,
- * and what each move says to a screen reader. A top-level row of a section
- * moves its tree past the tree above or below it, also into the next open
+ * and what each move says to a screen reader. A top-level row of an open
+ * section moves its tree past the tree above or below it, also into the next open
  * section. A row of the Merge queue group moves its unit past the unit
  * above or below it, only inside its block (decision 315). A key with more
  * modifiers, such as ⌥⌘↑, stays free for its shortcut. The move items of
@@ -48,10 +48,12 @@ export function useRowMoves(props: {
   const sectionKey = (
     workspace: Workspace,
     event: KeyboardEvent<HTMLElement>,
+    collapsed: boolean,
   ) => {
     const move = workspaceRowMove(event.nativeEvent)
     if (move === null) return
     event.preventDefault()
+    if (collapsed) return
     const target = stepTarget(
       props.groups,
       workspace.id,

@@ -25,6 +25,29 @@ export const changedFileSchema = {
   },
 } as const
 
+/** The totals of a list of changes as JSON, with the fields of `ChangeTotals`. */
+const changeTotalsSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['files', 'added', 'removed'],
+  properties: {
+    files: { type: 'integer', minimum: 0 },
+    added: { type: 'integer', minimum: 0 },
+    removed: { type: 'integer', minimum: 0 },
+  },
+} as const
+
+/**
+ * The totals of a list of changes that leaves out files, as JSON, with the
+ * fields of `LimitedTotals`: the listed files and the omitted files.
+ */
+export const limitedTotalsSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['listed', 'omitted'],
+  properties: { listed: changeTotalsSchema, omitted: changeTotalsSchema },
+} as const
+
 /** The tabs that a file of All files opens, as `TreeEntry` lists them. */
 export const treePreviews = [
   'code',

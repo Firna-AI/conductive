@@ -216,6 +216,21 @@ async fn ignored_context_files_join_only_the_tree_and_nested_repositories_stay_w
     assert!(!paths.contains(&"ignored.tmp"));
     assert_eq!(
         snapshot
+            .context_only_paths
+            .iter()
+            .map(String::as_str)
+            .collect::<Vec<_>>(),
+        [
+            ".context/attachments",
+            ".context/attachments/a1",
+            ".context/attachments/a1/.gitignore",
+            ".context/attachments/a1/shot.png",
+            ".context/nested",
+            ".context/note.md",
+        ]
+    );
+    assert_eq!(
+        snapshot
             .changes
             .files
             .iter()

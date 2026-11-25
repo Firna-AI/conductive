@@ -3,8 +3,9 @@
 This guide gives how the runner compares the repository with its base, what
 each changes report counts, and the limits of file reads and diffs.
 [Files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
-states the requirements. [Event limits](event-limits.md) gives the parts of
-each report, and the [runner README](README.md) gives the rest of the runner.
+and [File reports](../docs/protocol/file-reports.md) state the
+requirements. [Event limits](event-limits.md) gives the parts of each
+report, and the [runner README](README.md) gives the rest of the runner.
 
 ## The comparison base
 
@@ -55,7 +56,10 @@ branch.
 ## Repository scans
 
 The scan collects tracked paths, untracked paths, and paths from the base
-commit. Ignored context files join the tree and its readable content
+commit. Each scan stays complete. Only the reports keep at most 50,000
+tree entries and 1,000 changed files, as
+[Report limits](../docs/protocol/file-reports.md#report-limits) says.
+Ignored context files join the tree and its readable content
 identities. They do not join the Git changes or checkpoint identities.
 Symlinks keep their Git link text and their readable target identities.
 Submodule directories keep their separate Git checkpoint identities.
@@ -93,7 +97,10 @@ scan still sends `files.unavailable` before `runner.ready`.
   but Changes has no row for it. The count is therefore not the number of
   rows, and not `summary.files`.
 - A change of only a count sends a new changes report, because the check
-  for a new report compares the whole report.
+  for a new report compares the complete scan before the report cuts its
+  list. So an edit of only omitted files also sends a new report.
+- Both counts use the complete scan, also when the report omits changed
+  files.
 - Each numbered part of a report repeats both counts, and the saved events
   keep them.
 - A sandbox can keep an older runner until its next release update. A

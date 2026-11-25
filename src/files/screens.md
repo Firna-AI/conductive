@@ -14,7 +14,12 @@ screen, its props, and the services that the shell passes to it.
   under the unavailable mark. A read that runs still shows its load, and
   any other failed read shows Try again. The workspace screen gives it the
   wait of a sandbox that starts, so a resume shows the saved lists and the
-  first start of a new workspace shows the wait. Under the lists, the
+  first start of a new workspace shows the wait. While a report leaves out
+  entries, the shared `ListNotice` gives their count from the report: at
+  the top of All files, and under the summary of Changes. The summary and
+  the tab of Changes count the whole change, with the omitted totals.
+  A list that leaves out entries never shows the state of an empty list.
+  Under the lists, the
   panel shows one notice for each failed repair, in the order of the tabs, with its age. A saved tree that
   the cloud computer could not read shows the notice of All files, with no
   age. The notices show under each of the three tabs, and they have no
@@ -58,14 +63,22 @@ screen, its props, and the services that the shell passes to it.
   keeps its zoom.
 - `FilePage` shows the tab of an HTML file, a name that ends with `.html`
   or `.htm` in any case, as [The page of an HTML file](html-page.md) says.
-- `DiffPage` shows the diff of one changed file.
+- `DiffPage` shows the diff of one changed file. While Changes lists the
+  path, its row gives the changed lines of the header and tells a deleted
+  file. A path that Changes leaves out takes both from its own diff: the
+  lines from the rows of a text diff, and a deletion from a patch whose
+  section headers hold a `deleted file mode` line and no `new file mode`
+  line, as a change of type gives both. Each section of the patch starts at
+  its `diff --git` line, and only the whole header lines of a section, before
+  its first hunk, count, so no text of the file reads as a header.
 - The `placeholder` prop of `FilePage` and `DiffPage` replaces the content
   of the page, for example with a sandbox state. The page then reads
   nothing, and its header offers no Download. A diff keeps its changed
-  lines from Changes. With `keepShown`, a page that already shows its file
-  keeps it, with Copy, and so does the page of an HTML file that shows in
-  its frame. The placeholder shows only in place of a page with nothing to
-  show. When the placeholder goes, the page reads at once.
+  lines from Changes while Changes lists its path. With `keepShown`, a page
+  that already shows its file keeps it, with Copy, and so does the page of
+  an HTML file that shows in its frame. The placeholder shows only in place
+  of a page with nothing to show. When the placeholder goes, the page reads
+  at once.
 - `FileTabItem` is the closable tab of a file or a diff, and
   `LiftedFileTab` is the copy that a drag lifts.
   [File tabs](file-tabs.md) gives their props, their names, the temporary

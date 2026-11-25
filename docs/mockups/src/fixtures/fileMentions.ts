@@ -54,12 +54,14 @@ export const mentionEntries: readonly MentionEntry[] = [
 
 /**
  * The drafts of the list of `@`. The text after the last `@` is the query.
- * `none` names no file, and `start` has no query yet.
+ * `none` names no file, and `start` has no query yet. `omitted` names
+ * tsconfig.json, which a limited tree leaves out.
  */
 export const mentionDrafts = {
   query: 'Reuse the postcode check from @addr',
   start: 'Compare the lookup with @',
   none: 'Reuse the postcode check from @zipcode',
+  omitted: 'Turn on strict mode in @tsconfig',
 } as const
 
 /**

@@ -10,6 +10,11 @@ first. Each path is relative to `src/files/`, the folder of this guide.
 - `model/files-snapshot.ts`: `FilesSnapshot`, what the screens read from
   the store, with the label of each read in `readLabels`.
 - `model/files-sync.ts`: the merge rules of the routes and the stream.
+- `model/tree-model.ts`: `FileTree`, the tree with its omitted count, and
+  `applyTreeDelta`, which applies one tree update.
+- `../ui/components/files/changeTotals.ts`: `wholeChange`, the totals that
+  the summary and the tab of Changes show, and `noChanges`, the rule of its
+  empty state. The mockups share both.
 - `model/failed-repairs.ts`: `repairsAfter`, the failed repairs of the
   lists after one event of the stream.
 - `model/files-invalidation.ts`: `FilesInvalidation`, the changed paths and

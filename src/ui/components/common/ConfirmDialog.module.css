@@ -51,6 +51,16 @@
 }
 
 /*
+ * A title that is the only place where a dialog names its subject, such as
+ * a repository in a question. A title already wraps between words. Here a
+ * word that is longer than a line breaks too, so the whole name stays
+ * inside the dialog.
+ */
+.wrapTitle {
+  overflow-wrap: anywhere;
+}
+
+/*
  * The content, 12 px under the title. Its padding also leaves the room of a
  * focus ring inside the box that scrolls.
  */

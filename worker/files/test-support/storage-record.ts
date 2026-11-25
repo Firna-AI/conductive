@@ -1,5 +1,6 @@
 import type { ChangesResponse } from '../../../src/shared/generated/ChangesResponse'
 import type { FileTreeResponse } from '../../../src/shared/generated/FileTreeResponse'
+import { BUCKET_LAYOUT } from '../bucket-layout'
 import { readFileList, readFilesManifest, type FilesStorage } from '../storage'
 
 export interface StoredFiles {
@@ -19,6 +20,11 @@ export async function readStoredFiles(
     tree: await readFileList(storage, manifest, 'tree'),
     changes: await readFileList(storage, manifest, 'changes'),
   }
+}
+
+export async function readStoredTreeFields(storage: FilesStorage) {
+  const manifest = await readFilesManifest(storage)
+  return manifest.layout === BUCKET_LAYOUT ? manifest.tree?.fields : undefined
 }
 
 export function writeStorageRecord(

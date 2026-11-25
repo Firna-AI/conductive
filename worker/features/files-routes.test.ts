@@ -54,46 +54,45 @@ it('serves atomic multipart trees and routes bounded file reads to the physical 
   await runner.inbox.next()
   runner.emit({ type: 'runner.ready' })
   await runner.inbox.next()
-  runner.emit({
-    type: 'files.snapshot',
-    tree: {
-      revision: 1,
-      partNumber: 1,
-      partCount: 2,
-      entries: [
-        { path: 'first.txt', name: 'first.txt', kind: 'file', change: null },
-      ],
-    },
-  })
+  const first = snapshot(1, 1, 2, ['first.txt'])
+  runner.emit({ ...first, tree: { ...first.tree, omittedEntryCount: 7 } })
   await runner.inbox.next()
   const incomplete = await active.request(
     filePaths.tree(OUTER_ORG, OUTER_WORKSPACE),
   )
   expect(incomplete.status).toBe(503)
-  expect.soft(await incomplete.json()).toMatchObject({
-    error: { code: 'file_unavailable' },
+  expect.soft(await incomplete.json()).toEqual({
+    error: {
+      code: 'file_unavailable',
+      message:
+        'The file is not available. Try again when the cloud computer is ready.',
+    },
     stateRead: { eventNumber: 1, repositoryId: null, failure: null },
   })
-  runner.emit({
-    type: 'files.snapshot',
-    tree: {
-      revision: 1,
-      partNumber: 2,
-      partCount: 2,
-      entries: [
-        { path: 'last.txt', name: 'last.txt', kind: 'file', change: null },
-      ],
-    },
-  })
+  const last = snapshot(1, 2, 2, ['last.txt'])
+  runner.emit({ ...last, tree: { ...last.tree, omittedEntryCount: 7 } })
   await runner.inbox.next()
   const tree = await active.request(filePaths.tree(OUTER_ORG, OUTER_WORKSPACE))
   expect(tree.status).toBe(200)
   expect.soft(await tree.json()).toEqual({
     revision: 1,
+    omittedEntryCount: 7,
     entries: [
       { path: 'first.txt', name: 'first.txt', kind: 'file', change: null },
       { path: 'last.txt', name: 'last.txt', kind: 'file', change: null },
     ],
+    stateRead: { eventNumber: 2, repositoryId: null, failure: null },
+  })
+  const missingChanges = await active.request(
+    filePaths.changes(OUTER_ORG, OUTER_WORKSPACE),
+  )
+  expect(missingChanges.status).toBe(503)
+  expect(await missingChanges.json()).toEqual({
+    error: {
+      code: 'file_unavailable',
+      message:
+        'The file is not available. Try again when the cloud computer is ready.',
+    },
     stateRead: { eventNumber: 2, repositoryId: null, failure: null },
   })
   const pending = active.request(
@@ -170,7 +169,8 @@ it('reads a sleeping workspace file from its captured checkout and refuses a for
 it('keeps the tree, its failure, and its cutoff together beside a runner receipt', async () => {
   const f = await filesCutoffFixture(harness)
   const { runner, treePath } = f
-  runner.emit(snapshot(1, 1, 1, ['old.txt']))
+  const old = snapshot(1, 1, 1, ['old.txt'])
+  runner.emit({ ...old, tree: { ...old.tree, omittedEntryCount: 17 } })
   runner.emit(snapshot(2, 1, 1, ['duplicate', 'duplicate']))
   runner.emit(snapshot(3, 1, 1, ['duplicate', 'duplicate']))
   await f.drain()
@@ -191,7 +191,8 @@ it('keeps the tree, its failure, and its cutoff together beside a runner receipt
       ]),
     ).toBe('tree read started')
     const observed = await f.observeNextQueued()
-    runner.emit(snapshot(4, 1, 1, ['new.txt']))
+    const current = snapshot(4, 1, 1, ['new.txt'])
+    runner.emit({ ...current, tree: { ...current.tree, omittedEntryCount: 0 } })
     await observed.queued
     await observed.restore()
     held.release()
@@ -199,6 +200,7 @@ it('keeps the tree, its failure, and its cutoff together beside a runner receipt
     expect(before.status).toBe(200)
     expect(await before.json()).toEqual({
       revision: 1,
+      omittedEntryCount: 17,
       entries: [
         { path: 'old.txt', name: 'old.txt', kind: 'file', change: null },
       ],
@@ -213,6 +215,7 @@ it('keeps the tree, its failure, and its cutoff together beside a runner receipt
     expect(after.status).toBe(200)
     expect(await after.json()).toEqual({
       revision: 4,
+      omittedEntryCount: 0,
       entries: [
         { path: 'new.txt', name: 'new.txt', kind: 'file', change: null },
       ],
@@ -245,6 +248,7 @@ it('waits for the shared recovery before returning filtered changes and their cu
         },
       ],
       summary: { files: 1, added: 1, removed: 0 },
+      omitted: { files: 3, added: 7, removed: 2 },
     },
   })
   await f.drain()
@@ -284,6 +288,7 @@ it('waits for the shared recovery before returning filtered changes and their cu
       unpushedCommits: 2,
       uncommittedFileCount: 1,
       files: [{ path: 'private-token.ts', displayPath: '[redacted].ts' }],
+      omitted: { files: 3, added: 7, removed: 2 },
       stateRead: { eventNumber: 2, repositoryId: 'repo', failure: null },
     })
     expect(starts).toBe(1)

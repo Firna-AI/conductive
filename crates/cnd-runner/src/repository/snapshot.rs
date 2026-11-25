@@ -105,11 +105,18 @@ impl GitRepository {
             self.add_entry(&mut index, &mut entries, &path, state)
                 .await?;
         }
+        let mut context_entries = BTreeMap::new();
         for path in self.context_files(&mut index).await? {
+            if entries.contains_key(&path) {
+                continue;
+            }
             let state = index.classifier.classify(&path).await?;
-            self.add_entry(&mut index, &mut entries, &path, state)
+            self.add_entry(&mut index, &mut context_entries, &path, state)
                 .await?;
         }
+        context_entries.retain(|path, _| !entries.contains_key(path));
+        let context_only_paths = context_entries.keys().cloned().collect();
+        entries.append(&mut context_entries);
         let read_identities = self
             .read_identities(&entries, &cache, &mut next_cache)
             .await?;
@@ -128,11 +135,12 @@ impl GitRepository {
         let identities = self.index_checkpoint(&index).await?;
         let mut entries: Vec<_> = entries.into_values().collect();
         let order = path_order()?;
-        entries.sort_by(|a, b| order.compare(&a.path, &b.path));
+        entries.sort_by(|a, b| order(&a.path, &b.path));
         self.cancellation.check()?;
         *cache = next_cache;
         Ok(RepositorySnapshot {
             entries,
+            context_only_paths,
             changes,
             identities,
             read_identities,

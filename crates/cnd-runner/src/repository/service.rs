@@ -1,6 +1,6 @@
 //! Repository service boundary and injected production dependencies.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -22,9 +22,11 @@ pub type Checkpoint = BTreeMap<String, String>;
 /// One captured state supplies a tree and its complete changes report.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RepositorySnapshot {
-    /// Flat file and directory entries.
+    /// Flat file and directory entries in path order, with all their ancestors.
     pub entries: Vec<FileEntry>,
-    /// Complete changes with counts from the same scan.
+    /// Paths, including directories, added only by the ignored context scan.
+    pub context_only_paths: BTreeSet<String>,
+    /// Complete changes in path order with counts from the same scan.
     pub changes: ChangesResponse,
     /// Git representation identities.
     pub identities: Checkpoint,

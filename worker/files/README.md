@@ -27,7 +27,7 @@ The projection is the last complete tree and branch changes that the API serves.
 The assembly state holds the stored report parts and the revision progress of the current runner stream.
 Both use storage keys that start with `files:`.
 Keep one instance active in an object.
-An unavailable-tree event marks the stored tree and keeps its entries and revision.
+An unavailable-tree event marks the stored tree and keeps its entries, revision, and omitted entry count.
 `markFilesMoved` in [storage.ts](storage.ts) gives the same mark after a [repository change](../lifecycle/repository-change.md#publication), in its publication transaction, and drops the stored changes of the old folder.
 So the Changes API returns `file_unavailable` until the runner reports the new folder, and the next complete tree clears the mark.
 Before any complete tree, the marked tree has revision zero and no cached entries.
@@ -38,15 +38,23 @@ The stored projection has one of two layouts.
 The old layout stores each list as one JSON text in chunks.
 The bucket layout splits each list into 64 buckets by a hash of the item path, with an order text for the list order.
 This module reads both layouts and writes list data in the bucket layout.
+The manifest keeps each list's omission metadata with its other fields.
+The tree manifest records the tree revision beside a known omitted entry count.
+Tree reads use that count only when the two revisions match. A previous Worker can advance the tree during rollback while keeping the earlier count and its revision.
+A full report replaces its list and that metadata together. A list without the field keeps it absent.
 A full report writes buckets with changed digests.
 It writes the order text when it changes or when it cannot read the stored order text.
-A tree delta reads its affected buckets one at a time. A remove visits every tree bucket because a folder's entries can be in any bucket.
+A tree delta reads buckets one at a time. A delta with one or more removes visits each tree bucket at most once because a folder's entries can be in any bucket.
+A delta of absent-path removes leaves the row and order chunks alone.
+An empty delta reads no row bucket. It can set the omitted entry count in the manifest.
+A delta without a count keeps a valid saved count and advances its revision with the tree.
 A connection reset updates the manifest. An unavailable-tree mark and a repository move update the manifest of a bucket projection without reading list items.
 The first list write or tree mark of an old projection converts retained lists one entry at a time.
 It reads the old chunks in bounded batches.
 A repository move converts the old tree and deletes the old Changes chunks.
 The same transaction writes the bucket data and manifest and removes the old keys.
 The reader release can read this layout and converts it back to the old layout on its next write after a rollback.
+An older Worker that writes a full report without omission metadata stores that list without it.
 A damaged projection gives HTTP 502 `file_unavailable` when read.
 A write that only discards damaged chunks finishes and logs a warning.
 Cleanup stops at the first missing key in each chunk sequence.
@@ -70,7 +78,8 @@ A reconnect of the same stream keeps its revisions and pending parts.
 Each new file event that passes the event checks goes to `accept(event)`.
 It checks each part's revision, part number, and part count on arrival.
 It reads the stored copy of a repeated part to check that the copies are identical.
-For a changes report, the assembly state keeps the base branch, the counts, and the summary of part 1.
+The assembly state keeps the omission metadata of part 1 for either kind of report.
+For a changes report, it also keeps the base branch, the status counts, and the listed summary of part 1.
 `accept` compares those fields with each later part on arrival.
 A later part with other fields is invalid.
 An older assembly state can lack these fields.
@@ -88,9 +97,10 @@ A part stored as one value, without a manifest, stays readable.
 A newer revision, a refusal, and a new stream remove each obsolete part with its chunks.
 When the last part arrives, `accept` loads the stored parts once.
 It joins all entries in part order.
+It checks the saved parts for matching omission metadata because a previous Worker can have stored parts during a rollback.
 It refuses the last part if a path occurs more than once.
 It also refuses the last part if the report is empty and has more than one part.
-For a changes report, it checks that the summary counts the files and their added and removed lines.
+For a changes report, it checks that the summary counts the listed files and their added and removed lines.
 `accept` then applies the complete report to the projection and returns it for the history and the browser tabs.
 It returns `null` while parts are pending and for an identical repeated part.
 It applies a tree delta only when the delta has the next tree revision and no tree report is incomplete.
@@ -166,6 +176,7 @@ The list routes load the output filter after the request gates.
 They wait for the shared read-state recovery when it must run.
 One chat-queued view gives the list and its `stateRead`.
 This field gives the event number, the first open repair failure of that list, and the repository ID at that event number.
+Omission metadata is part of the list payload.
 The handler filters the list after the queued read.
 A missing list gives HTTP 503 `file_unavailable` with `stateRead`.
 For the tree, this can occur before the first tree report or unavailable-tree mark.
@@ -243,7 +254,7 @@ It checks that a part stored as one value stays readable, and that each removal 
 The API tests use local D1, the existing fake runner, and FakeBoat.
 `runner-part-checks.test.ts` checks the storage reads, changes fields, and older assembly state.
 The part joining and report repair tests run through the chat backend.
-Run `npm run test -- worker/chat/runner-file-parts.test.ts worker/chat/runner-files-durable.test.ts worker/chat/runner-repair-parts.test.ts worker/chat/runner-receipt-crash.test.ts worker/chat/runner-grown-reports.test.ts`.
+Run `npm run test -- worker/chat/runner-file worker/chat/runner-repair-parts.test.ts worker/chat/runner-receipt-crash.test.ts worker/chat/runner-grown-reports.test.ts`.
 `runner-grown-reports.test.ts` checks tree and changes parts that masking makes larger than one storage value.
 It runs on the production workspace object with the native SQLite value limit.
 File reports remain in Durable Object storage.
@@ -257,7 +268,7 @@ The D1 workspace schema holds the base branch.
 - [list-reads.ts](list-reads.ts) reads each list and its cutoff from the same chat view.
 - [state.ts](state.ts) applies snapshots and tree updates and keeps branch changes.
 - [runner-reports.ts](runner-reports.ts) checks runner report parts on arrival and applies each complete report in the caller's transaction.
-- [report-storage.ts](report-storage.ts) keeps the assembly state with the fields of part 1 of a changes report.
+- [report-storage.ts](report-storage.ts) keeps the assembly state with the comparison fields of part 1.
   It stores each part as a manifest and chunks.
   Its `storedReportKeys` lists each part key and chunk key that a removal needs.
 - [report-generation.ts](report-generation.ts) reads the newest stored revision and the incomplete revision of a report kind for repair checks.

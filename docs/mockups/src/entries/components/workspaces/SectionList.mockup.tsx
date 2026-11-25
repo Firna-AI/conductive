@@ -2,7 +2,7 @@ import { defineComponent } from '@mokly/mokly'
 import { SectionList } from '../../../components/workspaces/SectionList'
 import { sectionDrag } from '../../../fixtures/sections'
 import { workspaceDrag } from '../../../fixtures/workspaces'
-import { acmeSections, adminViewer } from './listPages'
+import { acmeSections, adminViewer, openInCollapsedSections } from './listPages'
 import { mergeQueueSchema, queueDragSchema } from './queueSchemas'
 import { listDragSchema, listMenuSchema, rowFocusSchema } from './rowSchemas'
 import {
@@ -41,7 +41,7 @@ export const sectionList = defineComponent({
   slug: 'section-list',
   title: 'Section list',
   description:
-    'The sections of the org, each a group of workspaces that the user made, with the Archived group at the end. A collapsed section shows only its header and its count. A workspace moves to another section by drag and drop, and a section moves by a drag of its header. The sidebar uses compact rows, and the list page taller rows for touch. Its own page shows the sections of Acme in the sidebar.',
+    'The sections of the org, with the Merge queue group first when it has entries and the Archived group at the end. A collapsed section shows its header and count. It also shows the open workspace when that row belongs to the section. A workspace moves to another section by drag and drop, and a section moves by a drag of its header. The sidebar uses compact rows, and the list page taller rows for touch. Its own page shows the sections of Acme in the sidebar.',
   relatedDocs: ['docs/mockups/orgs-and-logins.md'],
   propSchema: {
     type: 'object',
@@ -80,6 +80,13 @@ export const sectionList = defineComponent({
       title: 'On the list page',
       description: 'The sections on the list page, with taller rows.',
       props: { variant: 'page' },
+    },
+    {
+      slug: 'open-in-collapsed',
+      title: 'Open workspace in a collapsed section',
+      description:
+        'Infra is collapsed, and its workspace "Move retries to a queue" is open. Infra still shows that row, so the open workspace stays in sight. Its other rows stay hidden.',
+      props: { sections: openInCollapsedSections },
     },
     {
       slug: 'section-menu',
