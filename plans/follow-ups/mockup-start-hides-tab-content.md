@@ -10,9 +10,9 @@
 - **Terms:**
   - **Catalogue:** the Mokly mockups under `docs/mockups/`, which are the visual spec of the app.
   - **`filePlaceholder`:** the catalogue helper that chooses what a file, diff, or skill tab shows in place of its content while the sandbox does not run.
-  - **`contentState`:** the app helper in `src/shell/workspace/sandbox-view.ts` that gives the wait of a start while the open resumes the sandbox, or else the panel.
+  - **`contentState`:** the app helper in `src/shell/workspace/sandbox-view.ts` that gives the wait of a start while a Resume runs, or else the panel.
 - **Background:**
-  - In the app, a file or diff tab keeps the file that it shows while the sandbox is stopped or starts. It shows the state of the sandbox only when it has no content (`docs/protocol/workspace-tools.md:180-185`). A skill tab acts the same (`docs/protocol/skill-tabs.md:200-207`).
+  - In the app, a file or diff tab keeps the file that it shows while the sandbox is stopped or starts. It shows the state of the sandbox only when it has no content (`docs/protocol/workspace-tools.md:180-186`). A skill tab acts the same (`docs/protocol/skill-tabs.md:223-233`).
   - The app keeps the shown content when `replacesShownFile` is false, and it is false for a start (`src/ui/components/workspace/sandboxNoticeState.ts:74-85`).
   - The app holds this rule in three places:
     - `pagePlaceholder` gives the state of the sandbox for a page, through `contentState` (`page-placeholder.tsx:13-24`).
@@ -23,6 +23,7 @@
   - The two copies differed once already. Before 25 November 2026, the screen of a stopped skill tab drew only the automatic start. With a stopped sandbox and a skill whose text still loaded, it kept "Opening the skill" where the app shows Resume.
   - On 25 November 2026, the skill tabs change added `hasContent` to the helper. A skill tab without text then shows the state of the sandbox, as the app does (`showsSkillText` in `workspaceSkillTab.ts:34-41`). This holds also for a stopped sandbox, a later failed start, and an archived workspace.
   - The callers pass `hasContent` only for a skill tab. A file tab always passes its default, `true` (`workspaceCentre.tsx:49` and `:61`, `workspaceParts.tsx:150` and `:162`).
+  - Since 25 November 2026, a tab without content shows the wait also while a Resume that a tab open or a press asks for runs, not only while the open of the workspace resumes the sandbox. "The resume" in `docs/protocol/stop-and-resume.md` states it. Cal chose this for the skill tabs change, which made `contentState` and its callers give that wait.
 - **Problem:**
   - No catalogue screen can draw a tab that keeps its content while the sandbox starts. An example is a file that stays in its tab after a press on Resume. The app shows that state.
   - The catalogue has its own copy of the keep rule of the app. So a later change of the rule in the app does not reach the catalogue.
@@ -36,7 +37,7 @@
     - Effort: Small.
   - **B.** Share one rule between the app and the catalogue.
     - Add a function to `src/ui/components/workspace/sandboxNoticeState.ts` that takes the state of the panel and whether the tab has content. It returns the state to draw in place of the content, or nothing.
-    - Use it in `filePlaceholder`, in `pagePlaceholder`, and in the keep checks of the file, diff, and skill pages. The wait of `contentState` while the open resumes stays an input of the app.
+    - Use it in `filePlaceholder`, in `pagePlaceholder`, and in the keep checks of the file, diff, and skill pages. The wait of `contentState` while a Resume runs stays an input of the app.
     - Keep each current result of the app pages. Test each state of the panel with and without content.
     - Add the same variant as A.
     - Cost: it changes the app code of the file pages on `origin/main`.
@@ -44,6 +45,5 @@
 - **Left out:** Change nothing. The catalogue then misses a state of the app.
 - **Wider fix:** B. One rule decides for the app and for the catalogue when a tab keeps its content.
 - **Previous examples:** Commit `d6e125954` added `hasContent` to the same helper for a skill tab without text, because the copy of the rule had missed that case.
-- **Related:** `plans/follow-ups/tab-open-resume-shows-stopped.md` can change `contentState`, and with it what a page shows while a Resume runs. B here then takes its result as an input. No options conflict.
 - **Recommendation:** B. One shared rule keeps the catalogue and the app from drifting apart again. Choose A for a change in the catalogue only.
 - **Action:** fix after merge, apply B, because the gap is on `origin/main`, and B reaches the file pages of the app.

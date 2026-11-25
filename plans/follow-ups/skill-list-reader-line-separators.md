@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 1, a problem outside the scope from the check of finding 3, and review round 2, finding 72, which its check moved outside the scope.
-- **Location:** `runner/sdk-helper/src/skill-front-matter.ts:15` (`KEY`) and `:24-51` (`readFrontMatter`), `runner/sdk-helper/src/skill-read.ts:13-51` (`readClaudeSkill`, `claudeSkill`) and `:57-84` (`readCodexSkill`, `codexSkill`), `runner/sdk-helper/src/skill-read.ts:86-108` (`orgSkillEntry`), `runner/sdk-helper/src/providers/skill-metadata.ts:31-61` (`skillMetadata`), `src/chat/mentions/skill-rows.ts:45-52` (`offeredSkills`).
+- **Location:** `runner/sdk-helper/src/skill-front-matter.ts:15` (`KEY`) and `:24-51` (`readFrontMatter`), `runner/sdk-helper/src/skill-read.ts:13-51` (`readClaudeSkill`, `claudeSkill`) and `:57-84` (`readCodexSkill`, `codexSkill`), `runner/sdk-helper/src/skill-read.ts:86-108` (`orgSkillEntry`), `runner/sdk-helper/src/providers/skill-metadata.ts:35-65` (`skillMetadata`), `src/chat/mentions/skill-rows.ts:45-52` (`offeredSkills`).
 - **Reason:** The two readers disagreed on `origin/main` before the skill tabs change, which moved only the org skills of the list to the YAML reader.
 
 - **Source:** Review. **Category:** Product bug.
@@ -20,8 +20,8 @@
   - A Codex workspace skill with such a front matter leaves the fallback list (`codexSkill`, `skill-read.ts:66-84`).
   - The YAML reader reads the same front matter. The workspace precedence uses it (`runner/sdk-helper/src/providers/skills.ts:34`).
   - The list rules:
-    - The name and the description come from the front matter, and the list holds every skill that the agent loads (`docs/protocol/skill-sources.md:68-80`).
-    - The Claude list leaves out a skill whose `user-invocable` Claude does not read as true (`docs/protocol/skill-sources.md:28-30`). Claude hides such a skill from the menu of its user.
+    - The name and the description come from the front matter, and the list holds every skill that the agent loads (`docs/protocol/skill-sources.md:70-83`).
+    - The Claude list leaves out a skill whose `user-invocable` Claude does not read as true (`docs/protocol/skill-sources.md:30-32`). Claude hides such a skill from the menu of its user.
     - The list of `/` offers a manual-only Claude skill, one with `disable-model-invocation: true`, only when `/` starts the text (`docs/protocol/skill-mentions.md:72-84`, `offeredSkills` in `src/chat/mentions/skill-rows.ts:45-52`).
   - On 25 November 2026, the skill tabs change moved the org skills of the list to the YAML reader. Each org skill takes its entry from the metadata that its selection read (`orgSkillEntry`, `skill-read.ts:86-108`, commit `7a952095e`).
   - On `origin/main`, `listOrgSkills` in `runner/sdk-helper/src/skill-org.ts` writes the safe form of each org skill with the `yaml` package, and reads it back with the list reader. The `yaml` package writes a line separator into the safe form as it is.
@@ -51,7 +51,7 @@
     - Cost: the list then follows the `yaml` package for other unusual inputs too. Nobody checked which reader each agent uses for each input.
     - Effort: Medium.
 - **Left out:**
-  - Change nothing. The list then breaks the rules of `docs/protocol/skill-sources.md:68-80` for these skills.
+  - Change nothing. The list then breaks the rules of `docs/protocol/skill-sources.md:70-83` for these skills.
   - An escape of the line separators when the safe form is written. It reaches only the org skills, which the branch already moved to the YAML reader. A workspace skill keeps its own file.
 - **Wider fix:** B. With one reader, no input can give the list and the agent start two different results.
 - **Previous examples:** The skill tabs change fixed the org skill name in the Claude list in commit `315b5cbca`. It moved each org skill of the list to the YAML reader in commit `7a952095e`. `plans/follow-ups/claude-reserved-skill-identities.md` records other cases where the helper and Claude disagree on a skill name.

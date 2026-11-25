@@ -24,8 +24,13 @@ Contract owners:
 
 - [Skill mentions](../docs/protocol/skill-mentions.md), for the press on a
   chip, and its linked page [Skill tabs](../docs/protocol/skill-tabs.md).
+- [Skill sources](../docs/protocol/skill-sources.md), for the skills that
+  the list leaves out (skill tab decision 3).
 - [Stop and resume](../docs/protocol/stop-and-resume.md), for the start of
-  a stopped cloud computer at the open of a skill tab.
+  a stopped cloud computer at the open of a skill tab, and for the wait
+  while a Resume runs (skill tab decision 5).
+- [Tools of a workspace](../docs/protocol/workspace-tools.md), for a file
+  or diff tab while a Resume runs (skill tab decision 5).
 - [Temporary tabs](../docs/protocol/temporary-tabs.md) and
   [The tab row](../docs/protocol/tab-row.md).
 - [The agent runner](../docs/protocol/agent-runner.md), for the skill read
@@ -137,6 +142,144 @@ Answered on 2026-11-24 by Cal: **A**.
   press opens for a look, not a fixed list of kinds, so a later tab kind
   needs no rule change.
 
+## Review decisions
+
+The review of round 1 raised these three decisions. Each changes a
+requirement or adds a refusal, so Cal answered them on 2026-11-25.
+
+### Skill tab decision 3: The files that a skill read opens
+
+Answered on 2026-11-25 by Cal: **B**.
+
+- Source: review round 1, finding 1, with its problem on `origin/main` in
+  the Claude scan.
+- Root question: which files may the skill reads of the runner open
+  through a link?
+- Background: the browser asks for a skill by its agent and its name. The
+  runner takes the path from its latest scan, and the helper opens it.
+  The open followed links, and the helper checked only that the file was
+  a regular file. So a `SKILL.md` in a skill folder of the repository
+  could link to any file that the helper can read, such as a
+  configuration file. The skill tab then showed that file, and the Claude
+  list took its first line as the description. Each member who can open a
+  skill tab can already read such a file from a terminal. The runner
+  already removes each link that leaves the copy of the org skills.
+- **A.** Keep the reads as they are. State in the protocol that a skill
+  read and the scan follow a link. Cost: a documented risk that a skill
+  tab or the list of `/` shows text from outside the skill folders.
+  Effort: Small.
+- **B.** The shared reader of the helper accepts for a `SKILL.md` only an
+  opened regular file whose own name is `SKILL.md`. It checks the opened
+  file, not the path. It covers the scan, the skill tab, the org skill
+  choice, and the export. It skips the copy of the org skills, whose links
+  the runner already confines, and the reads of `agents/openai.yaml`.
+  Cost: a new refusal. A `SKILL.md` that links to a file of another name
+  leaves the list and the tab, and the agent can still load it. Effort:
+  Small. Chosen.
+- **C.** Confine each read to the folders of the skill sources of its
+  agent. Cost: a new refusal, and a root for each folder that the Codex
+  app server lists, such as the Codex home. Effort: Medium.
+- **D.** Read the skill files in a process that sees only the approved
+  skill folders. Cost: a new refusal, and process isolation in the runner
+  release. Effort: Large.
+- Left out: a check of the path before the open, because a link can
+  change between the check and the open.
+- Reason: one small check confines every skill read, and it keeps each
+  skill whose file is a real `SKILL.md`. A, the documented risk, was not
+  chosen: the tab and the list show the text to each member.
+  [The read](../docs/protocol/skill-tabs.md#the-read) and
+  [Skill sources](../docs/protocol/skill-sources.md#the-sources-of-the-skills)
+  state the rule.
+
+### Skill tab decision 4: The access checks of a skill read
+
+Answered on 2026-11-25 by Cal: **B**.
+
+- Source: review round 1, finding 21.
+- Root question: how long after access ends may a skill read still return
+  text, and which part of the Worker enforces it?
+- Background: the Worker checked the access of the member only when the
+  request came. The read then waited in the queue of the runner
+  connection, whose send checks only the workspace token of the runner.
+  The reply went back with no second check. A removal from the org
+  signals only the workspaces that the removed member owns. Each skill
+  read ends after 30 seconds, so its text could reach a former member up
+  to 30 seconds after the access ended. Decision 70 accepts that window
+  for an open tab. The file and diff reads have the same start check.
+- **A.** Keep the start check and the limit of 30 seconds, and state the
+  window in the protocol. Cost: a documented risk. Effort: Small.
+- **B.** Give the reads through the runner one shared operation that
+  checks the access of the caller before it sends the command, and again
+  before it returns the reply. Use it for the skill route. A caller whose
+  access ends gets the reply of a caller without access, and no text.
+  Cost: a new refusal. Effort: Medium. Chosen.
+- **C.** Check the access again in the outer feature router of the
+  workspace, after each handler returns. Cost: a new refusal on every
+  feature route on `origin/main`, such as the services, the terminal, and
+  the previews. Effort: Medium.
+- **D.** Track each pending read under the access grant of its caller.
+  Cancel the read when the grant ends, and check the access again before
+  the reply. Cost: new state for each grant, and a new refusal. Effort:
+  Large.
+- Left out: a second check written only into the skill route, because B
+  makes the same checks in one place that the file and diff reads can
+  also use.
+- Reason: B puts both checks where the Worker acts for the caller, so a
+  new kind of read cannot miss them. A, the documented window, was not
+  chosen: a former member could still get one private skill text. The
+  file and diff reads keep their start check in this change.
+  `plans/follow-ups/file-reads-after-access-ends.md` asks whether they
+  use the shared operation.
+  [The read](../docs/protocol/skill-tabs.md#the-read) states the rule.
+
+### Skill tab decision 5: What shows while a Resume runs
+
+Answered on 2026-11-25 by Cal: **B**.
+
+- Source: review round 1, findings 61 and 42, and their wider fix. It
+  changes how the file, diff, and Preview tabs on `origin/main` show a
+  start.
+- Root question: how does a member see that the open of a tab, or a press
+  on Resume, has started the cloud computer?
+- Background: the open of a file, diff, Preview, or skill tab in a stopped
+  workspace sends a Resume (decision 247). Until the reply of that Resume
+  or the next state event, the header showed Stopped. A tab without
+  content showed "Sandbox stopped" with a busy Resume button. Only the
+  Resume of the open of the workspace showed Starting and the wait at
+  once. A held Resume reply showed the problem in the review.
+- **A.** Change nothing. Cost: the prompt to start stays for the time of
+  each reply. Effort: Small.
+- **B.** Treat the pending state of each Resume as the Resume of the open
+  is treated. From a Resume that a tab open or a press asks for, until its
+  reply or the next state event, every page and tool shows the wait with
+  no Resume, and the header shows Starting. A failed Resume returns to the
+  stopped state. Cost: after a press on Resume, a panel shows the wait in
+  place of a busy Resume button, also on a phone. Effort: Small. Chosen.
+- **C.** Carry the Resume of a tab open as a flag of its own to the page
+  of a file, diff, or skill tab, which then shows the wait until the
+  reply. A pressed Resume keeps its busy button. Cost: the header, the
+  Preview tab, and the tools still show the stopped state then. Effort:
+  Small.
+- **D.** Let the workspace model show a local Starting state from the
+  Resume request until the reply or the start event. Every reader of the
+  state then shows the start, also the bar of the chat. Cost: it also
+  changes the manual Resume in each place. Effort: Medium.
+- **E.** Give the workspace one shared state for each automatic start:
+  the Resume of the open and each Resume of a tab open. The header and
+  each part read it until the reply, the start event, or a failure. A
+  pressed Resume keeps its busy button. Cost: a new state that replaces
+  the one of the open. Effort: Medium.
+- Left out: a change of the Resume reply alone, because the time before
+  the reply still shows the stopped state. A navigation that waits for the
+  reply, because it hides the page that the member chose. A wait for the
+  skill tab only, because it breaks the rule that a skill tab acts as a
+  file tab does.
+- Reason: one small change gives every tab, every tool, and the header the
+  wait that the Resume of the open already shows. Cal approved the change
+  of the file tabs on `origin/main`.
+  [The resume](../docs/protocol/stop-and-resume.md#the-resume) states the
+  rule.
+
 ## Design calls
 
 Each call below is my call, made on 2026-11-24 unless it says otherwise.
@@ -164,7 +307,10 @@ Each call below is my call, made on 2026-11-24 unless it says otherwise.
   reads. For an org skill, that is the safe view of
   `runner/sdk-helper/src/providers/skill-metadata.ts`, which the helper
   already builds for an agent start. Reason: the tab must not show text
-  that the agent does not get.
+  that the agent does not get. Changed on 2026-11-25 by skill tab decision
+  3 B: outside the copy of the org skills, the runner reads a `SKILL.md`
+  only when it opens a regular file of that name, so a link to a file of
+  another name shows no text, although the agent can load it.
 - **No path leaves the cloud computer.** The command carries the agent and
   the name only. The runner finds the path in the lists of its latest
   scan. A name that the lists do not hold gets "not found". Reason: the
@@ -233,7 +379,10 @@ Each call below is my call, made on 2026-11-24 unless it says otherwise.
     [The resume](../docs/protocol/stop-and-resume.md#the-resume) promises
     that wait only while the open of the workspace resumes the cloud
     computer. A file tab shows the stopped state with Resume until the
-    start shows.
+    start shows. Changed on 2026-11-25 by skill tab decision 5 B: from the
+    Resume that the open or a press asks for, until its reply or the next
+    state event, a file tab and a skill tab without content show the wait
+    with no Resume, and the header shows Starting.
 - **Fresh text.** The tab reads the text each time it shows, and again
   after each skills report while it shows. Reason: a change of a skill
   then shows without a reload, at the cost of one read per report. Changed

@@ -15,7 +15,7 @@
   - The Files client reads each reply body with `response.json()`. When that read rejects for any cause but an abort, it uses `null` as the body (`files-client.ts:65-68`).
   - `response.json()` rejects in two cases: the connection drops before the body ends, or the complete body is not JSON.
   - After a 200, a `null` body fails the parse. So both cases give `invalid_response` with `status: 200` (lines 81-83).
-  - The skill client had a copy of the same code. After a failed refresh whose cause can pass, a skill tab keeps its shown text (`docs/protocol/skill-tabs.md:182-186`). Such a cause is a reply with a 5xx status, or a failure of the network.
+  - The skill client had a copy of the same code. After a failed refresh whose cause can pass, a skill tab keeps its shown text (`docs/protocol/skill-tabs.md:205-209`). Such a cause is a reply with a 5xx status, or a failure of the network.
   - So a connection that dropped during a 200 took the shown text of a skill away. The review of 25 November 2026 found this.
   - On the same day, commit `c459e6971` gave the skill client its own body reader, `readJson` in `skill-read.ts`. A body that fails after a 200 now counts as a failure of the network. A body that is not JSON still shows the failed notice.
   - The file and diff pages read through `ResourceLoader` with no rule that keeps a value (`src/files/page/use-followed.ts:29-33`). So each failed read shows "This file didn't open" or "This diff didn't open" with Try again, whatever its cause (`src/files/ui/FileStates.tsx:44-57`).
@@ -35,7 +35,7 @@
     - Effort: Medium.
 - **Left out:**
   - Change nothing. The Files client then keeps the wrong cause, and the next rule that reads the cause fails for it.
-  - Keep the shown text after every failure without a 4xx status. It breaks the rule of `docs/protocol/skill-tabs.md:187-191`, which rejects text that stays after each failure. It also does not reach the file pages, which keep no text.
+  - Keep the shown text after every failure without a 4xx status. It breaks the rule of `docs/protocol/skill-tabs.md:210-214`, which rejects text that stays after each failure. It also does not reach the file pages, which keep no text.
 - **Wider fix:** B, for the two clients of `FilesError`. C also prevents the class in the other JSON clients, but it changes texts that members see.
 - **Previous examples:** `readJson` of `src/app/api/client.ts:98-106` reads a failed body as `null` too, and `answer` then gives `invalid_response` after a 2xx. Commit `d6e125954` made the skill tab keep its text after a failure that can pass, which made the wrong cause visible there.
 - **Recommendation:** B. One reader gives both clients of `FilesError` the same causes, with no change of a text. C best protects the other JSON clients.

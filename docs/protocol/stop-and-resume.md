@@ -7,7 +7,8 @@ near day 14 of a stop. It belongs to
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A services decision number names a decision of the change that adds
-[services](services.md).
+[services](services.md). A skill tab decision number names a decision of
+the change that adds [skill tabs](skill-tabs.md).
 
 ## The stop
 
@@ -80,6 +81,23 @@ says. A services decision number names a decision of the change that adds
   sandbox, so the open asks for the start. A tab that showed the stopped
   state, or an error with Try again, until a member pressed Resume was
   rejected, because the open of the tab already asks for the file.
+- For a stopped sandbox, and for one whose later start failed, each Resume
+  that the open of a tab or a press on Resume or Try again asks for shows
+  Starting at once in the workspace header (skill tab decision 5 B). This
+  lasts until the reply of that Resume or a newer state of the sandbox.
+- Meanwhile the tools, each Preview tab, and each file, diff, or skill tab
+  without content show that they wait for the sandbox, with no Resume,
+  also on a phone. The file lists keep their saved copy. The chat keeps
+  its bar, whose Resume or Try again shows that it is busy.
+- When that Resume fails, the header and these parts show the state of the
+  sandbox again, such as the stopped state with Resume.
+- Reason: the Resume already asks for the start, so a Stopped state with
+  Resume until its reply asks for a start that already runs. The stopped
+  state until the reply was rejected for that reason. A wait only in the
+  file, diff, and skill tabs was rejected, because the header, the
+  Preview tabs, and the tools would still show Stopped.
+- Cost: after a press on Resume, a part shows the wait in place of a busy
+  Resume button, also on a phone.
 - A message from `send_message` or `create_session` of the agent tools
   also starts the sandbox (decision 260). It does so in the same cases as
   an open, and with the same checks. These cases are a stopped workspace

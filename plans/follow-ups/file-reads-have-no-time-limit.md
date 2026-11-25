@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 1, a problem outside the scope from the check of finding 23.
-- **Location:** `worker/files/runner.ts:73-94`, `worker/chat/runner-read-requests.ts:15-24`, `worker/files/handlers.ts:86-91` and `:118-122`, `src/files/api/files-client.ts:52-90`.
+- **Location:** `worker/files/runner.ts:73-94`, `worker/chat/runner-read-requests.ts:27-34`, `worker/files/handlers.ts:86-91` and `:118-122`, `src/files/api/files-client.ts:52-90`.
 - **Reason:** The file and diff reads on `origin/main` had no time limit before the skill tabs change, which bounded only its own skill reads.
 
 - **Source:** Review. **Category:** Product bug.
@@ -12,8 +12,8 @@
   - **Shared read tracker:** `RunnerReadRequests` in `worker/chat/runner-read-requests.ts`. It holds each pending read until its reply, its time limit, a disconnect of the runner, or a cancel of the browser request.
 - **Background:**
   - A file tab and a diff tab read through `RunnerFiles` in `worker/files/runner.ts`, which uses the shared read tracker (lines 73-94).
-  - The skill tabs change gave each skill read a time limit of 30 seconds in the tracker (`worker/skills/runner.ts:11`). At the limit, the skill tab gets `skill_unavailable`, and the tracker drops a later reply (`runner-read-requests.ts:48-51`).
-  - The tracker type allows a limit only for skill reads. A file or diff read has `timeoutMs?: never` (`runner-read-requests.ts:15-24`).
+  - The skill tabs change gave each skill read a time limit of 30 seconds in the tracker (`worker/skills/runner.ts:13`). At the limit, the skill tab gets `skill_unavailable`, and the tracker drops a later reply (`runner-read-requests.ts:63-66`).
+  - The tracker type allows a limit only for skill reads. A file or diff read has `timeoutMs?: never` (`runner-read-requests.ts:27-34`).
   - So a file or diff read waits for the reply, a disconnect of the runner, or the end of the browser request.
   - The files client of the app sets no limit of its own. `readJson` passes only the signal of its caller (`src/files/api/files-client.ts:52-90`).
   - On `origin/main`, before the skill tabs change, `worker/files/runner.ts` kept its own pending reads, also with no limit.

@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-17, from PR #426, the independent check of review finding 402.
-- **Location:** `runner/sdk-helper/src/providers/skill-metadata.ts:43-50` (the Claude name rule of `skillMetadata`), `runner/sdk-helper/src/providers/skills.ts:34-36` (`repositoryNames`), and `runner/sdk-helper/src/providers/skill-names.test.ts`.
+- **Location:** `runner/sdk-helper/src/providers/skill-metadata.ts:47-54` (the Claude name rule of `skillMetadata`), `runner/sdk-helper/src/providers/skills.ts:34-36` (`repositoryNames`), and `runner/sdk-helper/src/providers/skill-names.test.ts`.
 - **Reason:** These cases require reserved names, and the branch has used its two feature fix rounds.
 
 - **Source:** Review.

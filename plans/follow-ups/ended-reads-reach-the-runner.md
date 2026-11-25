@@ -1,43 +1,40 @@
-# Ended skill and file reads reach the runner
+# Ended file and diff reads reach the runner
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 2, finding 73.
-- **Location:** `worker/chat/authenticated-runner.ts:35-53` (`authorize`, `send`), `worker/chat/runner-connections.ts:230-236` (`attachFiles`) and `:249-272` (`sendRead`), `worker/chat/runner-read-requests.ts:56-105` (`request`), `worker/files/runner.ts:73-94` (`request`), `worker/chat/workspace-integration.ts:79-89` (`runnerAttached`), `worker/chat/types.ts:166-172`.
-- **Reason:** Each skill read already fails in the browser on time, and the fix changes the shared sender of the file reads on `origin/main`.
+- **Location:** `worker/files/runner.ts:73-94` (`request`), `worker/chat/runner-connections.ts:233-249` (`attachFiles`), `worker/chat/authenticated-runner.ts:36-70` (`authorize`, `send`, `sendRead`), `worker/chat/runner-read-requests.ts:100-154` (`track`), `worker/chat/workspace-integration.ts:79-90` (`runnerAttached`), `worker/chat/types.ts:166-172`.
+- **Reason:** The gap is in the send path of the file and diff reads on `origin/main`, which the skill reads of the skill tabs change no longer use.
 
 - **Source:** Review. **Category:** Performance.
 - **Terms:**
   - **Worker:** the Cloudflare Worker that checks each browser request and sends the reads of each workspace to its runner.
   - **Runner:** the program `conductive` in each cloud computer. It answers the skill, file, and diff reads that the Worker sends on its connection.
   - **Shared read tracker:** `RunnerReadRequests` in `worker/chat/runner-read-requests.ts`. It holds each pending read until its reply, its time limit, a disconnect of the runner, or a cancel of the browser request.
-  - **Send signal:** the `AbortSignal` that the tracker gives the sender of each read. The tracker aborts it when the read ends without a reply (`fail`, lines 71-75).
+  - **Pending check:** the `isPending` function that the tracker gives the sender of each read (`worker/chat/runner-read-requests.ts:142-144`). It turns false when the read ends, also at a time limit whose timer did not run yet.
   - **Chat queue:** `ChatStore.run` in `worker/chat/store.ts`. It runs the work of the chat of one workspace one item at a time.
 - **Background:**
-  - A skill tab reads its text through `readSkill` in `worker/chat/runner-connections.ts:238-247`.
-  - The tracker gives each skill read a time limit of 30 seconds (`readTimeoutMs` in `worker/skills/runner.ts:11`, and line 96 of the tracker).
-  - At the limit, at a cancel of the browser request, or at a disconnect, the tracker fails the read with `skill_unavailable`. It also aborts the send signal, and it drops a later reply (lines 48-51).
-  - The sender is `sendRead` (`runner-connections.ts:249-272`). It waits for its turn in the chat queue, and then checks the send signal once (line 258).
-  - It then calls `AuthenticatedRunner.send` (`worker/chat/authenticated-runner.ts:50-53`). That method first reads the access of the runner token from D1, the database of the Worker, with `authorize` (lines 35-48). Only then does it write the command to the socket (line 52).
-  - The file and diff reads give the sender no send signal. `RunnerFiles` ignores the signal of the tracker (`send: () => connection.send(command)`, `worker/files/runner.ts:85`).
-  - `attachFiles` calls `sendRead` without a signal (`runner-connections.ts:230-236`), and the type of its callback has none (`runnerAttached` in `worker/chat/types.ts:166-172`).
-  - On `origin/main`, the sender of the file and diff reads checks no signal either. The skill tabs change added the check of line 258, for the skill reads only.
+  - Since 25 November 2026, each skill read goes through `requestWithAccess` of the tracker (`worker/chat/runner-read-requests.ts:75-98`). Its sender, `AuthenticatedRunner.sendRead`, reads the access of the runner token and of the caller, and then checks the pending check again, right before the write to the socket (`worker/chat/authenticated-runner.ts:56-70`).
+  - So a skill read whose time limit or cancel comes during those access reads never reaches the runner. Cal chose this send for the skill reads on 25 November 2026, as `docs/protocol/skill-tabs.md` says under "The read".
+  - A file tab and a diff tab read through `RunnerFiles` in `worker/files/runner.ts`. It ignores the pending check of the tracker: `send: () => connection.send(command)` (line 85).
+  - That send is the callback that `runnerAttached` gives the file broker (`worker/chat/workspace-integration.ts:79-90`). `attachFiles` serves it (`worker/chat/runner-connections.ts:233-249`).
+  - The callback waits for its turn in the chat queue. It then calls `AuthenticatedRunner.send` (`worker/chat/authenticated-runner.ts:51-54`). That method first reads the access of the runner token from D1, the database of the Worker, with `authorize` (lines 36-49). Only then does it write the command to the socket.
+  - The type of the callback has no pending check (`runnerAttached` in `worker/chat/types.ts:166-172`).
+  - A file or diff read has no time limit, as `plans/follow-ups/file-reads-have-no-time-limit.md` records. It ends at its reply, at a disconnect of the runner, or at a cancel of the browser request.
 - **Problem:**
-  - A skill read whose time limit or cancel comes while `authorize` reads D1 still goes to the runner.
-  - A file or diff read that the browser cancelled while it waited in the chat queue still goes to the runner.
-  - The runner then reads the skill, the file, or the diff, and the Worker drops the reply.
-- **Impact if no action:** The cloud computer does reads whose replies nobody takes. The member sees no difference, because the browser already shows its failure notice or left the tab.
-- **Root question:** How does the Worker keep a read that already ended from reaching the runner?
+  - A file or diff read that the browser cancelled while it waited in the chat queue, or while `authorize` read D1, still goes to the runner.
+  - The runner then reads the file or the diff, and the Worker drops the reply.
+- **Impact if no action:** The cloud computer does reads whose replies nobody takes. The member sees no difference, because the browser already left the read.
+- **Root question:** How does the Worker keep a file or diff read that already ended from reaching the runner?
 - **Options:**
-  - **A.** Check the send signal in `sendRead` again after the access read.
-    - Split `AuthenticatedRunner.send` into `authorize` and a write, so that `sendRead` can check between the two.
-    - Cost: the check stays in one caller, and a later caller of `send` can miss it.
+  - **A.** Check the pending check in the callback of `attachFiles`, after the access read.
+    - Pass the pending check through `RunnerFiles` and the type of `runnerAttached`.
+    - Cost: the check stays in one caller, and a later sender of a read can miss it.
     - Effort: Small.
-  - **B.** Give the shared sender the send signal and the time limit of each read.
-    - `AuthenticatedRunner.send` checks both after `authorize`, right before the write to the socket. It sends nothing for a read that ended.
-    - The check of the time also covers a limit whose timer did not run yet. `receive` of the tracker does the same for a late reply (lines 48-51).
-    - Pass the send signal of each file and diff read through `RunnerFiles` and `runnerAttached` too.
-    - Test: hold the access read past the limit of a skill read, and check that the runner gets no `skill.read`. Test in the same way a file read that the browser cancels while it waits in the chat queue.
+  - **B.** Send the file and diff reads through `AuthenticatedRunner.sendRead`, the sender of the skill reads.
+    - It checks the pending check after the access reads, right before the write. It sends nothing for a read that ended.
+    - Pass the pending check of each file and diff read through `RunnerFiles` and `runnerAttached`.
+    - Test a file read that the browser cancels while it waits in the chat queue, and check that the runner gets no `file.read`.
     - Effort: Small.
   - **C.** Give the runner commands a queue of their own, which drops each command whose read ended, also while it waits behind other chat work.
     - Cost: a second queue beside the chat queue, which must keep the order of the runner commands.
@@ -47,9 +44,9 @@
   - A time limit in the command, which the runner checks. It changes the runner messages, older runners ignore it, and B keeps the command off the socket.
   - A cancel of the access read itself. A D1 query takes no cancel, so a check after it is still necessary.
 - **Wider fix:** B. The one sender of every runner read checks that the read is still live. So no caller and no new kind of read can miss the check.
-- **Previous examples:** Commit `6aede156f` gave the skill reads their time limit and the drop of a late reply. Its check of the send signal comes before the access read. `plans/follow-ups/file-reads-have-no-time-limit.md` records that the file and diff reads have no time limit at all.
+- **Previous examples:** Commit `6aede156f` gave the skill reads their time limit and the drop of a late reply. Commit `89c12ccd5` gave the skill reads `sendRead`, which checks the read right before the write.
 - **Related:**
-  - `plans/follow-ups/skill-read-after-access-ends.md`: its option B adds a check of the caller's access to the same send. Do both in one branch, and put the check of B here last, right before the write. No options conflict.
+  - `plans/follow-ups/file-reads-after-access-ends.md`: its option B moves the file and diff reads onto the shared operation of the skill reads. Its sender `sendRead` already makes the check of B here, so do both in one branch. No options conflict.
   - `plans/follow-ups/file-reads-have-no-time-limit.md`: its option A gives the file and diff reads a time limit in the same tracker. With B here, a file or diff read past that limit then never reaches the runner either.
 - **Recommendation:** B. One check right before the write keeps every ended read off the socket, with no change of the runner messages.
-- **Action:** fix after merge, apply B, because each skill read already fails on time, and B changes the shared sender of the file reads on `origin/main`.
+- **Action:** fix after merge, apply B, because the gap is in the send path of the file and diff reads on `origin/main`, and B changes that shared sender.

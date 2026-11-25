@@ -16,10 +16,13 @@
   - The handler checks the sign-in and the org membership with `gate` (line 39), and the workspace with `filesWorkspace` (line 62).
   - It then sends the read to the runner through `RunnerFiles` (`worker/files/runner.ts:73-94`), or it reads the file through the fallback file read (lines 118-133). It returns the filtered reply with no second check (line 147).
   - A file or diff read through the runner has no time limit, as `plans/follow-ups/file-reads-have-no-time-limit.md` records. It waits for the reply, a disconnect, or the end of the browser request.
-  - The runner connection checks only the workspace token of the runner before it sends (`AuthenticatedRunner.send` in `worker/chat/authenticated-runner.ts:35-53`).
+  - The runner connection checks only the workspace token of the runner before it sends (`authorize` and `AuthenticatedRunner.send` in `worker/chat/authenticated-runner.ts:36-54`).
   - A removal from the org signals only the workspaces that the removed member owns (`removeOrgMember` in `worker/members/membership.ts:46-67`).
   - Decision 70, recorded on 6 November 2026, accepts a window of 30 seconds for an open tab. Such a tab loses its workspace connection within 30 seconds after its user loses access (`docs/protocol/isolation.md:49-54`).
-  - The skill reads of the skill tabs change have the same start check. `plans/follow-ups/skill-read-after-access-ends.md` asks the user how to close it.
+  - The skill reads of the skill tabs change had the same start check. On 25 November 2026, Cal chose for them one shared runner read operation in the Worker. It checks the access of the caller before it sends the command, and again before it returns the reply.
+  - With it, a skill read whose caller loses access gets the reply of a caller without access, HTTP 404 `workspace_not_found`, and no text. `docs/protocol/skill-tabs.md` states the rule under "The read".
+  - The skill route uses that operation: `requestWithAccess` of the shared read tracker `RunnerReadRequests` (`worker/chat/runner-read-requests.ts:75-98`), with its sender `AuthenticatedRunner.sendRead` (`worker/chat/authenticated-runner.ts:56-70`). The file and diff reads can adopt it. The skill tabs change did not move them to it.
+  - So this item no longer waits for the answer for the skill reads. Option B here is no longer blocked.
   - A change of a protocol doc also needs a read of both legal pages and of each public guide, as `AGENTS.md` says.
 - **Problem:** A member who loses access while a file or diff read waits still gets the reply. With no time limit, a slow runner can deliver it later than the 30 seconds that decision 70 accepts.
 - **Impact if no action:** A former member can receive the text of a private file or diff after their workspace access ends.
@@ -31,7 +34,7 @@
     - Give the reason: decision 70 accepts such a window for an open tab.
     - Cost: a documented risk.
     - Effort: Small, after the time limit.
-  - **B.** Use for the file and diff reads the shared runner read operation of option B of `plans/follow-ups/skill-read-after-access-ends.md`.
+  - **B.** Use for the file and diff reads the shared runner read operation that the skill route uses since 25 November 2026.
     - It checks the caller's access before the send and again before the reply.
     - Check the access again after a fallback file read too.
     - Add a test where the access ends while a read waits.
@@ -43,7 +46,7 @@
 - **Wider fix:** B. The operation that sends each read and returns its reply owns both access checks, so a new kind of read cannot miss them.
 - **Previous examples:** Commit `cc6a38f09` added a final access check before the service logs return (`worker/services/handler.ts:102-103`).
 - **Related:**
-  - `plans/follow-ups/skill-read-after-access-ends.md` has the same class for skill reads. This item waits for its answer, because the user sets one policy for both.
   - `plans/follow-ups/file-reads-have-no-time-limit.md`: option A here needs that time limit.
-- **Recommendation:** B. It puts both checks where the Worker acts for the caller, for every read through the runner. Choose A if the user accepts the documented window for the skill reads too.
+  - `plans/follow-ups/ended-reads-reach-the-runner.md` changes the same send of the runner reads. No options conflict.
+- **Recommendation:** B. It puts both checks where the Worker acts for the caller, for every read through the runner, as for the skill reads. Choose A if the user accepts a documented window for the file and diff reads.
 - **Action:** ask the user, because B, C, and D add a new refusal, and A adds a new requirement to a protocol doc.

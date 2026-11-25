@@ -12,7 +12,7 @@
   - **`runnerAttached`:** the hook in `worker/chat/workspace-integration.ts:79-90` that attaches the file broker to each ready runner connection.
 - **Background:**
   - The README says: "Send each `file.read` and `file.diff` request with `sendFileCommand`. A `false` result means that no runner got the request." (`worker/chat/integration/README.md:189-190`).
-  - The product sends each file and diff read through the file broker. `runnerAttached` gives the broker a send callback, which `RunnerConnections.sendRead` serves (`worker/chat/runner-connections.ts:230-272`).
+  - The product sends each file and diff read through the file broker. `runnerAttached` gives the broker a send callback, which `attachFiles` of `RunnerConnections` serves (`worker/chat/runner-connections.ts:233-249`).
   - Each file result goes to the file broker (`receiveFileResult` in `worker/chat/workspace-integration.ts:113-115`). The broker drops a result for which it holds no pending read.
   - `WorkspaceChat.sendFileCommand` and `RunnerChannel.sendFileCommand` send a command without a pending read. So nothing receives the reply of such a send.
   - Only the test helper `worker/chat/harness.test-support.ts:159-163` and the test `worker/chat/recorded-events.test.ts:23-80` call `sendFileCommand`.

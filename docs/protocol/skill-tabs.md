@@ -75,10 +75,19 @@ skill tab at `app/skill-mentions/tab`, the chips that open it at
 
 - The browser asks the Worker for the text of a skill by the agent and the
   name of the skill. It sends no path.
-- The Worker checks that the member may reach the workspace, as for the
-  read of a file. It refuses an agent other than `claude` or `codex`. It
-  also refuses a name that has no character, more than 256 characters,
-  white space, or a control character.
+- The Worker checks that the member may reach the workspace. It refuses an
+  agent other than `claude` or `codex`. It also refuses a name that has no
+  character, more than 256 characters, white space, or a control
+  character.
+- The Worker checks that access again right before it sends the read to
+  the runner, and before it gives the text to the browser (skill tab
+  decision 4 B). A member who loses access meanwhile gets the reply of a
+  member without access, and no text. When the access ends before the
+  send, the runner gets no read.
+- Reason: a former member gets no skill text. A check only when the
+  request comes was rejected. A read could then give its text up to 30
+  seconds after the access ended, though decision 70 accepts that window
+  for an open tab.
 - The Worker sends the read only on the runner connection, as
   [Skill reads](#skill-reads) says. It calls no route of the provider.
   Reason: only the runner knows where each skill lies.
@@ -96,6 +105,20 @@ skill tab at `app/skill-mentions/tab`, the chips that open it at
   it is the safe view that the agent gets at a start, as
   [What Claude and Codex get](org-skills-trust.md#what-claude-and-codex-get)
   says. Reason: the tab must not show text that the agent does not get.
+- The runner reads a `SKILL.md` only when the file that it opens is a
+  regular file whose own name is `SKILL.md`, also through a link (skill
+  tab decision 3 B). It refuses each other file. So a `SKILL.md` that
+  links to a file of another name, such as `README.md`, shows no text,
+  and the list leaves its skill out, as
+  [Skill sources](skill-sources.md#the-sources-of-the-skills) says. The
+  agent can still load it.
+- An org skill is the exception. Its links stay inside the copy of the
+  skills repository, as [What loads](org-skills.md#what-loads) says, so
+  they can lead to a file of another name.
+- Reason: a link in a skill folder cannot bring another file, such as a
+  configuration file, into a skill tab or the list of `/`. Reads that
+  follow a link to any file were rejected. A terminal reaches such a file
+  too, but the tab and the list show its text to each member.
 - A `SKILL.md` of more than 1 MiB, or 1,048,576 bytes, gets "too large".
   Reason: a page of that size is too long to read in a tab. The list can
   still hold such a skill, because the agent loads it, so the tab shows
@@ -120,7 +143,7 @@ skill tab at `app/skill-mentions/tab`, the chips that open it at
   - `skill_not_found`: the list of that agent from the latest scan holds
     no skill of that name, or its file is no longer on the disk.
   - `skill_too_large`: the file holds more bytes than the limit.
-  - `skill_unavailable`: the runner cannot read the file.
+  - `skill_unavailable`: the runner cannot read the file, or refuses it.
 - The result holds no path, no name, and no description. Reason: no path
   leaves the cloud computer, and the header takes the name and the
   description from the skills list, as [The view](#the-view) says.
@@ -203,6 +226,9 @@ skill tab at `app/skill-mentions/tab`, the chips that open it at
 - The open of a skill tab starts a stopped cloud computer, as the open of
   a file tab does, in the cases that
   [The resume](stop-and-resume.md#the-resume) gives (decision 247).
+- From the Resume that the open or a press asks for, until its reply or a
+  newer state, a tab without text shows the wait with no Resume, as
+  [The resume](stop-and-resume.md#the-resume) says (skill tab decision 5 B).
 - A tab that shows its text keeps it when the cloud computer stops. A tab
   without text then shows the stopped state with Resume.
 
