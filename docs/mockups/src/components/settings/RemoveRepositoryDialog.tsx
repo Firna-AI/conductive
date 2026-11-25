@@ -29,7 +29,8 @@ function activeAutomations(name: string): number {
  * New workspace no longer offers it, the repository that becomes the
  * default, and its active automations, which turn off until each owner
  * turns one on again. Remove saves at once and starts no build. Cancel
- * changes nothing.
+ * changes nothing. Only the title names the repository, so the whole title
+ * shows, on more lines when the name is long, also in the sheet of a phone.
  */
 export function RemoveRepositoryDialog(props: {
   chosen: readonly ReachableRepository[]
@@ -60,6 +61,7 @@ export function RemoveRepositoryDialog(props: {
       moklyInstance="remove-repository-dialog"
       title={repositoryRemoval.title(repository.name)}
       viewport={props.viewport}
+      wrapTitle
     >
       <RemoveRepositoryText
         automations={activeAutomations(repository.name)}

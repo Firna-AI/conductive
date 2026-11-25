@@ -4,6 +4,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react'
+import { classes } from '../../ui/components/common/classes'
 import styles from '../../ui/components/common/Sheet.module.css'
 import { Overlay, useModalLayer, type Focusable } from './Overlay'
 import { controlsOf, keepTabInside, tabWithScrollingBody } from './tab-stops'
@@ -38,12 +39,18 @@ export function trapTab(
  * to its trigger. `returnFocus` names that trigger when a render can
  * replace it while the sheet shows, such as the row of a menu that moves
  * the row. `initial` is the part that takes the focus as it opens.
+ *
+ * The title takes one line, with an ellipsis when it is longer.
+ * `wrapTitle` gives it more lines in place of the ellipsis, for a title
+ * that is the only place where the sheet names its subject, such as a
+ * repository in a question.
  */
 export function Sheet(props: {
   title: string
   close: () => void
   returnFocus?: () => void
   initial?: RefObject<Focusable | null>
+  wrapTitle?: boolean
   children: ReactNode
 }) {
   const sheet = useRef<HTMLElement>(null)
@@ -65,7 +72,14 @@ export function Sheet(props: {
           tabIndex={-1}
         >
           <span aria-hidden className={styles.handle} />
-          <h2 className={styles.title}>{props.title}</h2>
+          <h2
+            className={classes(
+              styles.title,
+              props.wrapTitle && styles.wrapTitle,
+            )}
+          >
+            {props.title}
+          </h2>
           <div className={styles.body}>{props.children}</div>
         </section>
       </div>

@@ -3,8 +3,8 @@ import { byRole, byText, queryByRole } from '../../test-support/dom-queries'
 import type { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { repositoryFixtures } from '../../test-support/fixtures/repositories'
-import { mountScreen, settle } from '../test-mount'
-import { startedApp } from '../test-render'
+import { click, mountScreen, settle } from '../test-mount'
+import { startedApp, type ScreenOptions } from '../test-render'
 import { OverlayHost } from '../ui/Overlay'
 import { OrgSettingsScreen } from './OrgSettingsScreen'
 
@@ -14,11 +14,13 @@ export const { repositories } = repositoryFixtures(org).repositories
 /**
  * The Repositories tab of Acme, mounted for the role of the server, in the
  * layer where its dialogs open. The overrides are those of `startedApp`,
- * such as the fetch of `HeldRequests`.
+ * such as the fetch of `HeldRequests`, and `screen` gives the options of
+ * the mount, such as the phone viewport.
  */
 export async function repositoriesTab(
   server: FakeApiServer,
   overrides: Parameters<typeof startedApp>[1] = {},
+  screen: ScreenOptions = {},
 ) {
   const app = await startedApp(server, overrides)
   const boot = app.boot.get()
@@ -29,9 +31,24 @@ export async function repositoriesTab(
     <OverlayHost>
       <OrgSettingsScreen org={acme} tab="repositories" user={boot.user} />
     </OverlayHost>,
+    screen,
   )
   await settle()
   return view
+}
+
+/**
+ * Selects Remove in the row menu of the repository `name`, beside its
+ * button on desktop or in a sheet on a phone. The result is the question.
+ */
+export async function askRemove(
+  view: HTMLElement,
+  name: string,
+): Promise<HTMLElement> {
+  click(byRole('button', `More for ${name}`, view))
+  click(byRole('menuitem', 'Remove'))
+  await settle()
+  return byRole('dialog', `Remove ${name}?`)
 }
 
 /** Each row of the list: its name, and Default when it shows. */

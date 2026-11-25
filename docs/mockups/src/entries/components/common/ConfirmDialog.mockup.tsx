@@ -69,6 +69,11 @@ export const confirmDialog = defineComponent({
       viewport: { enum: viewports },
       /** The wider dialog of a form with a message box. */
       wide: { type: 'boolean' },
+      /**
+       * The whole title shows, on more lines when it is long, for a title
+       * that is the only place that names its subject, such as a repository.
+       */
+      wrapTitle: { type: 'boolean' },
     },
   } as const,
   slots: ['children', 'actions'],
@@ -79,6 +84,7 @@ export const confirmDialog = defineComponent({
       title={props.title}
       viewport={props.viewport ?? context.viewport}
       wide={props.wide}
+      wrapTitle={props.wrapTitle}
     >
       {props.children}
     </ConfirmDialog>

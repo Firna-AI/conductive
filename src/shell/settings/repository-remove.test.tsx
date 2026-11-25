@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import { HeldRequests } from '../../app/test-kit'
+import { HeldRequests, requestLines } from '../../app/test-kit'
 import { automationsPath } from '../../shared/automations'
 import {
   orgSettingsPaths,
@@ -16,11 +16,15 @@ import {
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { automationFixtures } from '../../test-support/fixtures/automations'
+import { coreFixtures } from '../../test-support/fixtures/core'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
+import dialogStyles from '../../ui/components/common/ConfirmDialog.module.css'
+import sheetStyles from '../../ui/components/common/Sheet.module.css'
 import {
+  askRemove,
   moves,
   noRepositories,
   org,
@@ -30,20 +34,10 @@ import {
   rows,
   status,
 } from './repository-order-test-kit'
+import { changed, noticesOf } from './test-builds'
 import { click, press, settle } from '../test-mount'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
-
-/** Selects Remove in the row menu of the repository `name`: the question. */
-async function askRemove(
-  view: HTMLElement,
-  name: string,
-): Promise<HTMLElement> {
-  click(byRole('button', `More for ${name}`, view))
-  click(byRole('menuitem', 'Remove'))
-  await settle()
-  return byRole('dialog', `Remove ${name}?`)
-}
 
 /** The paragraphs of a question. */
 function textOf(question: HTMLElement): string[] {
@@ -84,12 +78,52 @@ describe('Remove in the row menu of the Repositories tab', () => {
     })
   })
 
-  test('Remove of the default names the next repository and the automations that turn off, then removes it at once, gives the focus to the next row, and says so', async () => {
+  // Only the title names the repository. A phone sheet otherwise cuts its
+  // title to one line, and a desktop title otherwise lets a long word run
+  // past the dialog, so the question asks for the whole title.
+  test.each([
+    { viewport: 'desktop', wrapClass: dialogStyles.wrapTitle },
+    { viewport: 'phone', wrapClass: sheetStyles.wrapTitle },
+  ] as const)(
+    'on $viewport, the title of the question shows the whole name, on more lines when it is long',
+    async ({ viewport, wrapClass }) => {
+      const server = new FakeApiServer()
+      const view = await repositoriesTab(server, {}, { viewport })
+      const question = await askRemove(view, 'acme/storefront')
+      const title = question.querySelector('h2')
+      expect({
+        text: title?.textContent,
+        wraps: title?.classList.contains(wrapClass),
+      }).toEqual({ text: 'Remove acme/storefront?', wraps: true })
+    },
+  )
+
+  test('Remove of the default names the next repository and the automations that turn off, then removes it at once, gives the focus to the next row, says so, and starts no build, so the repository notice offers Build computer', async () => {
+    // The spinner of Remove stays on one frame while the answer waits.
+    holdAnimationFrames()
     const server = new FakeApiServer()
-    const view = await repositoriesTab(server)
+    const held = new HeldRequests(server)
+    const path = repositoryPath(org, 'storefront')
+    // The server takes the removal at once, and its answer waits, so the
+    // builds below change between the save and the answer.
+    held.holdAnswer('DELETE', path)
+    const view = await repositoriesTab(server, { fetch: held.fetch })
     const question = await askRemove(view, 'acme/storefront')
     const text = textOf(question)
     click(byRole('button', 'Remove', question))
+    await settle()
+    // The server saved the removal. As the Worker does, the builds now name
+    // acme/storefront, which the image of the cloud computer still holds.
+    // The image stays the same, so the repositories do not read again.
+    const { builds } = coreFixtures()
+    server.json('GET', orgSettingsPaths.builds(org), {
+      ...builds,
+      changes: {
+        ...builds.changes,
+        removedRepositories: [changed('storefront')],
+      },
+    })
+    held.release('DELETE', path)
     await settle()
     expect({
       text,
@@ -100,17 +134,28 @@ describe('Remove in the row menu of the Repositories tab', () => {
         document.activeElement ===
         byRole('button', 'More for acme/billing-service', view),
       status: status(view),
+      notices: noticesOf(view),
+      buildStarts: requestLines(server).filter(
+        (line) => line === `POST ${orgSettingsPaths.builds(org)}`,
+      ).length,
     }).toEqual({
       text: [
         'New workspace no longer offers it, and acme/billing-service becomes the default. Its 2 automations turn off, and only their owners can turn them on again.',
       ],
       open: null,
       rows: ['acme/billing-service Default', 'acme/marketing-site'],
-      removals: [
-        { path: repositoryPath(org, 'storefront'), body: { build: false } },
-      ],
+      removals: [{ path, body: { build: false } }],
       focus: true,
       status: 'acme/storefront is removed',
+      notices: [
+        {
+          text: 'acme/storefront leaves at the next build Build computer',
+          danger: false,
+          spinner: false,
+          buttons: ['Build computer'],
+        },
+      ],
+      buildStarts: 0,
     })
   })
 

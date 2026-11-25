@@ -178,8 +178,13 @@ the folder of this page.
   the part that takes the focus as they open. The Feedback dialog passes
   its message box. Their optional `returnFocus` places the focus as they
   close, such as on the next row after Remove of a repository took away
-  the row of the trigger. `Sheet` puts its content in the scrolling
-  `.body` of the shared `Sheet.module.css`.
+  the row of the trigger. Their optional `wrapTitle` shows the whole
+  title. A sheet then gives the title more lines in place of one line with
+  an ellipsis, and a word longer than a line breaks, also on desktop. The
+  question before Remove of a repository passes it, because only its title
+  names the repository. The `.wrapTitle` rules live in the shared
+  `Sheet.module.css` and `ConfirmDialog.module.css`. `Sheet` puts its
+  content in the scrolling `.body` of `Sheet.module.css`.
 - [feedbackCopy.ts](../ui/components/feedback/feedbackCopy.ts):
   the words of the row, the dialog, and the toast that the app and the
   mockups share. Its `sendLimitBody` gives the words of a send over the

@@ -16,9 +16,11 @@ import type { AskedRemoval } from './useRowRemoval'
 /**
  * The question before Remove of the row menu of a chosen repository. It
  * names the repository and what adding it again does not bring back, as
- * `RemoveRepositoryText` says. Each opening reads the automations of the
- * org once, apart from the list that other screens share, and counts the
- * active ones of the repository. Until that read answers, or when it
+ * `RemoveRepositoryText` says. Only its title names the repository, so the
+ * whole title shows, on more lines when the name is long, also in the
+ * sheet of a phone. Each opening reads the automations of the org once,
+ * apart from the list that other screens share, and counts the active
+ * ones of the repository. Until that read answers, or when it
  * fails, the text gives no number, so a number of an earlier read never
  * shows. Remove saves the removal at once with the route of Done, and
  * starts no build. The question stays open until the answer comes. A
@@ -68,6 +70,7 @@ export function RemoveRepositoryDialog(props: {
       close={props.close}
       returnFocus={props.returnFocus}
       title={repositoryRemoval.title(repository.fullName)}
+      wrapTitle
     >
       <RemoveRepositoryText automations={active} place={props.asked.place} />
     </Dialog>
