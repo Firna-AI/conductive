@@ -34,9 +34,13 @@ says.
   a repository change, or by a new default branch. The target branch also
   changes when GitHub deletes it, as
   [A base branch that GitHub deleted](base-branches.md#a-base-branch-that-github-deleted)
-  says. The instructions keep the branches of the start of the session,
-  and [the branch line](message-lines.md#the-branch-line) names the
-  current branches.
+  says. It changes too when an agent changes it with the workspace tools,
+  and when the open pull request gets a new base on GitHub.
+  [A change by an agent](base-branches.md#a-change-by-an-agent) and
+  [The base of an open pull request](base-branches.md#the-base-of-an-open-pull-request)
+  state these rules. The instructions keep the branches of the start of
+  the session, and [the branch line](message-lines.md#the-branch-line)
+  names the current branches.
 - The repository folder can change by a repository change. The
   instructions keep the folder of the start of the session, and
   [the repository line](message-lines.md#the-repository-line) names the

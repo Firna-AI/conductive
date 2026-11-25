@@ -28,7 +28,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         GitHub login of the workspace owner. It can also hold a short form
         of the workspace name, which can come from the text of the first
         message. A push sends the branch name to GitHub, and each reader of
-        the repository sees it. The Mac app also checks
+        the repository sees it. When an agent changes the base of an open
+        pull request, GitHub gets the pull request number and the new base
+        branch name. The Mac app also checks
         GitHub for updates and downloads new versions. These requests
         send your network address to GitHub.`,
       text`Resend sends the org invitations, approval emails, and feedback
@@ -76,12 +78,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         the GitHub login, the display name, and the ${productName} user ID of
         its sender. They also get the names of secrets that a session uses
         with no request, and the name of each member who changes the
-        capabilities of its workspace. They get the
-        names of the workspace branch and the branch that a pull request
-        targets. Later messages give the current names when either branch
-        changes. Each workspace branch name starts with the GitHub login of
-        the workspace owner. It can also hold a short form of the workspace
-        name. The agents send them
+        capabilities of its workspace. They get the names of the workspace
+        branch and its base branch. Later messages give the current names
+        when either branch changes. Each workspace branch name starts with
+        the GitHub login of the workspace owner. It can also hold a short
+        form of the workspace name. The agents send them
         through ${productName}, which adds the agent login.
         Agent settings in the repository can send them to another address
         instead. Each session keeps a personal login or the org login.
@@ -109,7 +110,10 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         the GitHub token of a turn that runs there. They can also read the
         value of a secret while a command runs with it there. During Continue
         or a repository change, they can also read the GitHub token of the
-        member who started it, while the branch fetch runs. Outside an agent turn,
+        member who started it, while the branch fetch runs. When an agent
+        changes the base or the workspace follows a change on GitHub, the
+        fetch uses the workspace owner's GitHub token. Members with a
+        terminal can read it while the fetch runs. Outside an agent turn,
         the GitHub CLI uses the workspace owner's account. Each member with
         a terminal can get that owner's GitHub token without a running
         turn.`,
@@ -141,8 +145,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         this risk when the automation has a pull request trigger and a
         chosen secret.
         Such text can also steer the agent to read and change work across
-        the org, with your workspace
-        tool rights. Messages follow the same session login rules.`,
+        the org, with your workspace tool rights. This includes changing
+        a workspace's base and, with GitHub write access, the base of its
+        open pull request. Messages follow the same session login rules.`,
       text`A workspace token is a credential for the workspace tools.
         Any program with that token can read workspace, session, and
         message details, list sessions and previews, and read chats across
@@ -153,6 +158,7 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         and the org remains active.`,
       text`During a turn in the calling workspace, the tools can also
         create, rename, move, and archive workspaces across the org.
+        They can also change the base branch of a workspace in the org.
         They can create, rename, stop, and close sessions, send messages,
         and watch one turn of a session. They can create and delete
         sections, and open and close private previews.

@@ -213,16 +213,18 @@ Use a double-click to keep a temporary tab there.
 The diff shows syntax colours, as a file does.
 
 The base branch is the branch that the workspace's work targets.
-A workspace you create targets the branch you select in **New workspace**.
+A workspace you create initially targets the branch you select in **New workspace**.
 You can choose the default branch as the target instead.
 A run for an opened or pushed pull request uses that pull request's head branch.
 A run for a merged pull request uses that pull request's base branch.
 After **Continue**, the base is the branch that the pull request merged into, if it still exists.
 Otherwise, the base is the repository's default branch.
-After a repository change, the base is the latest default branch of the new repository.
+After a repository change, the initial base is the new repository's latest default branch.
+Ask an agent to change the base branch of a workspace.
+While the workspace branch has an open pull request, the workspace follows its base on GitHub.
 A base that follows the default also follows a later rename of that default branch.
-If GitHub deletes the base branch, Conductive fetches the default branch into the cloud computer.
-The cloud computer uses the new base only after that fetch succeeds.
+If GitHub deletes the base branch while no pull request is open, Conductive moves the base to the default branch.
+The cloud computer uses the previous base for comparisons until it fetches the new base.
 The comparison starts at the common commit of the workspace branch and its base branch.
 Newer commits on the base branch therefore stay out of **Changes**.
 
@@ -232,6 +234,8 @@ It is broader than the changed-file summary of one agent turn.
 
 Use the list to check the agent's result before you commit or open a pull request.
 A committed file can remain in **Changes** while the branch differs from its base branch.
+
+- [Change the base branch](/docs/pull-requests#change-the-base-branch)
 
 On an open pull request, files not committed give **Commit and push** priority in the bar.
 Commits not pushed, with no files left to commit, give **Push** priority instead.

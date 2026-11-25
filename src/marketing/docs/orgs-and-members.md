@@ -175,6 +175,7 @@ An org has two roles: **Admin** and **Member**.
 | Send messages | Under the session's login rules | Under the session's login rules |
 | Continue after a merge | All workspaces in the org | All workspaces in the org |
 | Change the repository of a workspace | All workspaces in the org | All workspaces in the org |
+| Change a workspace's target branch through an agent | All workspaces in the org | All workspaces in the org |
 | Merge from the pull request bar | With GitHub write access or more | With GitHub write access or more |
 | Mark a draft ready for review from the pull request bar | With GitHub write access or more | With GitHub write access or more |
 | Manage members and org settings, except secrets | Yes | Read-only |
@@ -205,10 +206,12 @@ That account needs read access to the repository.
 A repository change uses the GitHub account of the member who changes it in the same way, for the new repository.
 Merge uses the clicking member's GitHub account, and GitHub checks its branch rules.
 **Ready for review** also uses the clicking member's GitHub account.
+When an agent changes the base of an open pull request, the member whose message started the turn needs GitHub write access.
 An org role does not add GitHub access.
 
 - [Continue after a merge](/docs/workspaces#continue-after-a-merge)
 - [Change the repository](/docs/workspaces#change-the-repository)
+- [Change the target branch](/docs/workspaces#change-the-target-branch)
 - [Merge a pull request](/docs/pull-requests#merge-the-pull-request)
 
 To reassign a workspace, select its owner in the workspace header.

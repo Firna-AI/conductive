@@ -8,7 +8,9 @@ of the [architecture doc](../architecture.md#terms). A decision number
 names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A secrets
 decision number names a decision of the change that adds
-[secrets](secrets.md), as that doc says.
+[secrets](secrets.md), as that doc says. A retarget decision number names
+a decision of the change that lets an agent change the base branch, as
+[Base branches](base-branches.md) says.
 
 ## Terms
 
@@ -75,7 +77,7 @@ decision number names a decision of the change that adds
   `calling_turn_required`. Reason: the Worker takes the sender of a write
   from its record of the calling turn.
 - A Mac command request also names its turn, as
-  [Who gets a request](agent-tools.md#who-gets-a-request) says.
+  [Who gets a request](mac-command-requests.md#who-gets-a-request) says.
 
 ## The sender
 
@@ -112,6 +114,16 @@ decision number names a decision of the change that adds
   [Grants](secrets.md#grants) says.
 - Only the workspace owner or an admin can archive a workspace
   (decision 42).
+- The app has no action that lets a member pick another target branch for
+  a workspace. Every member can change it through an agent (retarget
+  decision 3 A), as every member can press Continue (decision 224) and
+  rename a workspace.
+  [Change the target branch](workspace-management.md#change-the-target-branch)
+  states the call.
+- Reason: the change deletes no work, and a later call can undo it.
+  GitHub still checks the rights of the sender at each change on GitHub.
+- A change only by the workspace owner and the admins, as for Archive
+  (decision 42), was rejected (retarget decision 3).
 - A write that the sender may not make gets the refusal of the app, and
   nothing changes. An example is HTTP 403 with the error code
   `archive_forbidden`, for an archive by a member who is neither the owner

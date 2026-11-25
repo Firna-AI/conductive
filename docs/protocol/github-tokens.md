@@ -1,7 +1,9 @@
 # GitHub tokens
 
-This doc states how a cloud computer gets GitHub access, who its commits
-name as their author, and how the Worker acts on GitHub as a member.
+This doc states how a cloud computer gets GitHub access, and how the
+Worker acts on GitHub as a member.
+[GitHub tokens: commit author](github-tokens-commit-author.md) states who
+the commits of a cloud computer name as their author.
 [GitHub tokens: image builds](github-tokens-image-builds.md) states which
 GitHub tokens an image job uses to copy the repositories. An image job is
 a build or a refresh of the org image.
@@ -9,7 +11,9 @@ a build or a refresh of the org image.
 rules. A decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A skills
 decision number names a decision of the change that adds the
-[skills repository](org-skills.md), as that doc says.
+[skills repository](org-skills.md), as that doc says. A retarget decision
+number names a decision of the change that lets an agent change the base
+branch, as [Base branches](base-branches.md) says.
 
 ## Git and the GitHub CLI
 
@@ -31,8 +35,9 @@ decision number names a decision of the change that adds the
   never falls back to the workspace owner.
 - Trusted jobs are the other cases. The fetch of a Continue job or of a
   repository change job gets the token of the member who pressed the
-  action, as [Continue](#continue) says. The fetch of a moved base gets
-  the token of the workspace owner, as [A moved base](#a-moved-base) says.
+  action, as [Continue](#continue) says. The fetch of each move of a base
+  branch gets the token of the workspace owner, as
+  [A moved base](#a-moved-base) says.
 - Each command that an agent runs in a turn has the ID of that turn. This
   holds also in a shell that loads the sandbox's own variables again, such
   as the login shell in which Codex runs each command.
@@ -62,74 +67,8 @@ decision number names a decision of the change that adds the
 
 ## Commit author
 
-- Git in a workspace sandbox always has an author name and an author
-  email. A commit needs no Git setup by an agent, a member, or a script.
-- The author of each commit is the person whose GitHub token Git uses
-  (decision 231). [Git and the GitHub CLI](#git-and-the-github-cli) says
-  whose token that is.
-- In an agent turn, the author is the sender of the turn, the member whose
-  message started the turn. A message that another member sends during the
-  turn does not change the author.
-- In a sandbox whose runner gives an agent no turn author, the commits of
-  each agent turn name the workspace owner. An update of the sandbox
-  software gives such a sandbox a newer runner at a later start, as
-  [Updates](sandbox-software.md#updates) says.
-- Outside an agent turn, such as in the shared terminals or in the startup
-  script, the author is the workspace owner.
-- The author of the first commit that the app pushes to an empty
-  repository is the sender of the turn that creates the workspace.
-  [Create a workspace](create-a-workspace.md#the-branch-and-the-name)
-  states that commit.
-- Reason: the commits then show the same person as the pushes and the
-  pull requests.
-- The workspace owner as the author of every commit was rejected. The
-  commit of a teammate's turn then names the owner, but its push uses the
-  teammate's token.
-- A fixed author of the app with a co-author line for the person was
-  rejected. GitHub then shows the person only as a co-author, not as the
-  author.
-- The author name is the display name of the person's GitHub account,
-  without the spaces at its start and end.
-- The GitHub login replaces a display name that is missing or that Git
-  cannot use. Git cannot use a name made only of spaces and the characters
-  `,`, `:`, `;`, `<`, `>`, `"`, `\`, and `'`.
-- The author email is the GitHub no-reply address of the person,
-  `<id>+<login>@users.noreply.github.com` (decision 232). `<id>` is the
-  numeric ID of the GitHub account, and `<login>` is its login.
-- Reason: GitHub links each commit with this address to the account, and
-  the address shows no private email. So GitHub never refuses the push to
-  keep an email private.
-- The primary verified email was rejected. It shows a private address in
-  the history of the repository, and GitHub refuses the push when the
-  person blocks pushes that expose their email.
-- The name and the email of the person's own Git settings on their Mac
-  were rejected, because a member without the Mac app has none.
-- The committer is the same person as the author.
-- In an agent turn, Git gets the author from the four variables
-  `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and
-  `GIT_COMMITTER_EMAIL` of each agent process. This author also wins over
-  an author that a script or an agent writes into the Git settings.
-- Outside an agent turn, Git gets the workspace owner's author from the Git
-  system settings of the sandbox. The app writes them at each start and
-  each resume.
-- Where Git uses the owner's author, it also wins over a `user.name` and a
-  `user.email` that a script or an agent writes into the Git settings. Only
-  an `author` or a `committer` setting of a repository or of the sandbox
-  user wins over it, because Git reads those settings after its system
-  settings. This holds also in an agent turn whose runner gives no turn
-  author.
-- The sandbox's own variables hold none of the four variables. The owner's
-  author in them was rejected. A shell that loads them again, such as a
-  login shell, then replaces the turn sender's author with the owner's.
-- The sandbox gets no org env var with one of these four names
-  (decision 233). The app's author applies in its place, as
-  [Startup script and env vars](workspaces-and-sandboxes.md#startup-script-and-env-vars)
-  says.
-- Org env vars that win over the app's author were rejected, because the
-  commits of that org then stop naming the person of the token.
-- Risk: one Git command can still give its own author, with an option or
-  with its own variables. So the author of a commit does not prove who
-  made it.
+[GitHub tokens: commit author](github-tokens-commit-author.md) states who
+each commit in a workspace sandbox names as its author and its committer.
 
 ## Image builds and refreshes
 
@@ -207,6 +146,14 @@ decision number names a decision of the change that adds the
   [Ready for review](github-banner.md#ready-for-review) says. The same
   access rule, refusals, and error codes of the app apply. The user chose
   this on 17 November 2026.
+- For a call of an agent that changes the target branch, the Worker also
+  changes the base of the open pull request (retarget decision 2 C). It
+  uses the GitHub token of the sender of the calling turn.
+  [Change the target branch](workspace-management.md#change-the-target-branch)
+  states the call.
+- GitHub then shows that member as the person who changed the base, and
+  checks the rights of that member. The sender needs write access or
+  more, as for Merge. No GitHub error text reaches the agent.
 
 ## Branch reads
 
@@ -228,6 +175,10 @@ decision number names a decision of the change that adds the
   branch is missing.
 - The Worker gives each refusal of GitHub as an error code of the app, as
   for a merge.
+- A call of an agent that changes the target branch also asks GitHub for
+  its branch with the GitHub user token of the sender. It reads the open
+  pull request of the workspace with the same token. Reason: the call acts
+  for the sender.
 
 ## Continue
 
@@ -259,18 +210,20 @@ decision number names a decision of the change that adds the
 
 ## A moved base
 
-- When GitHub deletes the base branch of a workspace, the Worker moves the
-  base branch to the default branch (decision 304). The cloud computer
-  then fetches the latest commit of the default branch, as
+- Each move of a base branch fetches the latest commit of the new base
+  branch into the cloud computer, as
   [The move in the cloud computer](base-branches.md#the-move-in-the-cloud-computer)
-  says.
-- That fetch gets the GitHub token of the workspace owner (decision 307).
-  The owner's account is the one that `gh` already uses outside an agent
-  turn.
-- Reason: no member starts the move. The Worker starts it after a GitHub
-  read, such as the read after a GitHub webhook. The saved retry of the
-  move or a resume runs the fetch. So no turn and no press of a member
-  gives a token.
+  says. A move follows a deleted base (decision 304) or a new default
+  branch (decision 310). It also follows a call of an agent, or a new base
+  of the open pull request (retarget decision 1 C).
+- The fetch of each move gets the GitHub token of the workspace owner
+  (decision 307). This holds also for a move that a call of an agent
+  starts. The owner's account is the one that `gh` already uses outside an
+  agent turn.
+- Reason: the saved retry of the move or a resume runs the fetch, also
+  after the turn of a call ends. Most moves start after a GitHub read,
+  such as the read after a GitHub webhook, with no member. So no turn and
+  no press of a member gives a token.
 - The workspace runs this fetch as a trusted job, as it runs the fetch of
   Continue. The credential route gives the token to that job only while
   its fetch runs. GitHub then checks the read access of the owner.

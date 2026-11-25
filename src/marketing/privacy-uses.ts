@@ -42,20 +42,23 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         of that list. It checks named branches other than the default before
         creating a workspace. This check uses the GitHub token of the member
         who requests the workspace. A merge and Ready for review of a draft
-        pull request use the token of the member who clicks. Continue
+        pull request use the token of the member who clicks. When an agent
+        changes the base branch, ${productName} checks the new branch and
+        reads the pull request state. It uses the GitHub token of the
+        member whose message started the turn. If the pull request is
+        open, it uses the same token to change the base on GitHub. Continue
         fetches the branch that the pull request merged into with the token
         of the member who clicks Continue. If that branch no longer exists,
         it fetches the default branch. A repository change fetches the
         latest default branch of the new repository with the token of the
-        member who changes the repository. When GitHub deletes a
-        workspace's base branch, ${productName} fetches the default branch
-        into its cloud computer. A workspace whose base follows the default
-        also gets this fetch when GitHub changes that default branch.
-        The cloud computer uses the new base only
-        after that fetch succeeds. When no member starts the move, the fetch
-        uses the workspace owner's GitHub token. This includes moves from
-        GitHub events, automatic retries, and resumes of stopped cloud
-        computers.`,
+        member who changes the repository. When an agent changes the base
+        or the workspace follows a change on GitHub, the cloud computer
+        fetches the new base. If GitHub deletes the base while no pull
+        request is open, the cloud computer fetches the default branch.
+        A workspace that targets the default also fetches a new default
+        branch when GitHub changes it. The cloud computer uses the new
+        base after the fetch succeeds. These fetches use the workspace
+        owner's GitHub token, including on retries and resumes.`,
       text`The waitlist: a new account without app access waits while the
         waitlist is on or sign-ups are paused. It sees only the waitlist.
         When the waitlist is off and sign-ups are not paused, open sign-up
@@ -243,9 +246,11 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         the Mac command records above.`,
       text`GitHub events: the state of the pull requests and the checks
         of your branches, and the new name, owner, or default branch of a
-        repository, which GitHub sends to ${productName}. An automation
-        also uses the GitHub accounts that open, push to, or merge a pull
-        request, to decide whether the event starts a run.`,
+        repository, which GitHub sends to ${productName}. ${productName}
+        uses the base of an open pull request on GitHub to update its
+        workspace's base branch. An automation also uses the GitHub
+        accounts that open, push to, or merge a pull request, to decide
+        whether the event starts a run.`,
       text`Merge records: ${productName} keeps one record for each merged
         pull request of a workspace branch. The record holds the GitHub
         repository ID, the pull request number, the org, the workspace, the

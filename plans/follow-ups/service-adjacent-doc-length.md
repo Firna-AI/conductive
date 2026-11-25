@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-20, during services documentation on `calummoore/run-dev-servers-as-services-55oo`.
-- **Location:** `docs/protocol/agent-tools.md`, `docs/protocol/sandbox-software.md`, `docs/protocol/repository-change.md`, and `worker/chat/README.md`.
+- **Location:** `docs/protocol/sandbox-software.md`, `docs/protocol/repository-change.md`, and `worker/chat/README.md`.
 - **Reason:** These files already exceeded their length targets, and splitting unrelated content is outside the approved services scope.
 
 - **Terms:**
@@ -17,7 +17,7 @@
 - **Left out:** Dropping content loses requirements or entry points. Compacting lines hides the problem. A new Markdown gate needs approval and does not split the pages. Only the preserving split meets the existing rule.
 - **Wider fix:** Already in force. The documentation skill defines content homes, short pages, and pointer sections.
 - **Previous examples:** `worker/chat/key-code.md` and `worker/chat/access.md` already hold topics moved from the chat README. The protocol index links many child pages.
-- **Related:** `plans/follow-ups/agent-instructions-doc-length.md` owns the same observation for the agent instructions protocol. This item does not duplicate that work.
+- **Related:** The branch `calummoore/change-base-branch-e2ho` split `docs/protocol/agent-tools.md` to 168 lines, so this item no longer covers it.
 - **Recommendation:** A. It gives each topic a short home and keeps each existing link useful.
 - **Action:** fix after merge, apply A, because a structural cleanup of these existing pages is outside the services change.
 

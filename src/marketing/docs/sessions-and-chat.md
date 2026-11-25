@@ -413,14 +413,16 @@ Open **Session history** to reopen the conversation.
 
 After a merge, **Continue** keeps these sessions and their conversation context on the workspace's new branch.
 Each session shows a note with the member who continued, the new branch, and its starting branch.
-With current agent software, later messages tell the agent the current branch names when they change.
 
 A repository change also keeps these sessions and their conversation context.
 Each session shows a note with the member who changed the repository, the new repository, and the new branch.
 Later messages tell the agent the folder of the new repository and the new branch.
 
+With current agent software, later messages tell the agent the current workspace branch and base branch when either branch changes.
+
 - [Continue after a merge](/docs/workspaces#continue-after-a-merge)
 - [Change the repository](/docs/workspaces#change-the-repository)
+- [Change the target branch](/docs/workspaces#change-the-target-branch)
 
 ## Copy a transcript
 
@@ -477,7 +479,8 @@ It has no copy of the earlier history.
 Any member who can send in a session can change its model, effort, and **Fast** setting.
 That choice applies to every member's messages on the session's login.
 
-GitHub operations follow the person whose message started the running turn.
+Git and GitHub CLI commands in a turn use the GitHub account of the person whose message started that turn.
+Changing the base of an open pull request through the workspace tools also uses that account.
 After a late answer to a secret request, the new turn follows the person whose message started the turn that asked.
 Commits name that person as both author and committer.
 In a workspace with older cloud computer software, agent commits name the workspace owner.

@@ -1,15 +1,21 @@
 # Base branches
 
 This doc holds the requirements and the decisions in force for the base
-branch of each workspace, also after GitHub deletes it. It also covers the
-branch of a pull request run. It belongs to
+branch of each workspace. It covers a change of the base branch by an
+agent, the base of an open pull request, and a base branch that GitHub
+deletes. It also covers the branch of a pull request run. It belongs to
 [Workspaces and sandboxes](workspaces-and-sandboxes.md), which covers the
 start of a workspace and its tools.
 [Pull request runs](pull-request-runs.md) says which events start a pull
 request run. The terms are those of the
-[architecture doc](../architecture.md#terms). A decision number names a
-dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+[architecture doc](../architecture.md#terms).
+
+A decision number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says. A retarget
+decision number, such as retarget decision 1, names one dated decision of
+the change that lets an agent change the base branch. Its plan keeps these
+records while the change is open. Its pull request keeps them after the
+merge.
 
 ## The base branch of a workspace
 
@@ -34,11 +40,16 @@ says.
 - A workspace keeps its base branch at each start: the create, a resume,
   and, on Boat, the restart near day 14 of a stop. The agent runner gets
   the base branch at each start.
+- An agent can change the base branch later, as
+  [A change by an agent](#a-change-by-an-agent) says. While the workspace
+  branch has an open pull request, the base branch follows the base of
+  that pull request.
 - After a merge, Continue makes the branch that the pull request merged
   into the base branch of the workspace. When GitHub no longer has that
   branch, Continue takes the default branch, as
   [The base and the new branch](continue.md#the-base-and-the-new-branch)
-  says (decision 300).
+  says (decision 300). Continue also replaces a base branch that an agent
+  set after the merge.
 - A repository change makes the latest default branch of the new
   repository the base branch of the workspace, as
   [The base and the new branch](repository-change.md#the-base-and-the-new-branch)
@@ -47,9 +58,6 @@ says.
   Continue do (decision 312). The base then follows a later rename.
   Keeping its name was rejected, because a rename would look like a
   deleted base and give the wrong cause in the pull request bar.
-- A change of the base of an open pull request on GitHub does not change
-  the base branch of the workspace. A base branch that follows the pull
-  request on GitHub was left out for now (decisions 301 and 304).
 - Changes and each diff compare the branch with its base branch, from the
   merge base of the two.
 - Reason: the base branch can move while a workspace works. A plain
@@ -74,11 +82,76 @@ says.
   request, were rejected. They need a second list in the reports of the
   agent runner.
 
+## A change by an agent
+
+- An agent can change the base branch of a workspace with a call of the
+  workspace tools (retarget decision 1 C).
+  [Change the target branch](workspace-management.md#change-the-target-branch)
+  states the call, its refusals, and its reply.
+- Without an open pull request, the call stores its branch as the new base
+  branch.
+- While the workspace branch has an open pull request, the call changes
+  the base of that pull request on GitHub (retarget decision 2 C). The
+  base branch then follows that base, as
+  [The base of an open pull request](#the-base-of-an-open-pull-request)
+  says.
+- A new base branch that is the default branch is stored as null, as for a
+  create (decision 312). It then follows a later rename.
+- The cloud computer then moves to the new base branch, as
+  [The move in the cloud computer](#the-move-in-the-cloud-computer) says.
+- The call does not merge or rebase the workspace branch. Reason: the
+  agent does each step that changes code (decision 220), and
+  [Merge latest](command-palette-actions.md#merge-latest) asks it to merge
+  the latest target branch.
+- The app has no control that lets a member pick another base branch for a
+  workspace. Reason: the user asked for a change by an agent.
+
+## The base of an open pull request
+
+- While the workspace branch has an open pull request, the base branch is
+  the base of that pull request on GitHub (retarget decision 1 C). A draft
+  counts as open.
+- Each GitHub read of the workspace compares that base with the stored
+  base branch. When the two differ, the Worker stores the base of the pull
+  request. The cloud computer then moves to it, as
+  [The move in the cloud computer](#the-move-in-the-cloud-computer) says.
+- A null stored base compares with the default branch of the same read. A
+  base on the default branch is stored as null, as for a create
+  (decision 312).
+- So after a rename of the default branch, a null stored base stays null.
+  The move of [A new default branch on GitHub](#a-new-default-branch-on-github)
+  then moves the cloud computer.
+- A `pull_request` webhook of the workspace branch, such as `edited`,
+  starts a GitHub read. So the base branch follows a new base from a
+  member, from an agent that runs `gh pr edit --base`, and from GitHub's
+  own retarget of a stack.
+- The rule holds also for a workspace whose open pull request already
+  targets another branch. Its next GitHub read follows that base.
+- A merged or a closed pull request does not count. The base branch then
+  stays until another change, such as a call, Continue, or the move of a
+  deleted base.
+- A call and a GitHub read of the same workspace change its base branch
+  one at a time. Reason: a read must not follow a pull request halfway
+  through a call.
+- Reason for both ways: only the call and this rule together keep the
+  pull request bar, Changes, and the cloud computer on the real target.
+- These ways were rejected (retarget decision 1):
+  - This rule only, where the agent runs `gh pr edit --base`. It gives no
+    way to change the base branch before a pull request opens.
+  - The call only. The workspace then does not follow a later new base on
+    GitHub: an edit by the agent or a member, or GitHub's own retarget of
+    a stack.
+
 ## A base branch that GitHub deleted
 
 - When GitHub no longer has the base branch of a workspace, the Worker
   moves it to the default branch (decision 304). Continue takes the default
   branch in the same case (decision 300).
+- That move happens only while the workspace branch has no open pull
+  request (retarget decision 1 C). With an open pull request, the base
+  branch follows that pull request, also after GitHub retargets a stack,
+  as [The base of an open pull request](#the-base-of-an-open-pull-request)
+  says.
 - Only an answer of GitHub that the branch does not exist moves the base
   branch. A failed read of GitHub keeps it.
 - The cloud computer follows the move, as
@@ -116,10 +189,14 @@ says.
 
 ## The move in the cloud computer
 
-- The cloud computer first fetches the latest commit of the default branch
-  from GitHub. Only after that fetch does it target the default branch
-  (decision 307).
-- Reason: Changes compare from the merge base. An old copy of the default
+- A move takes the cloud computer to a new base branch. It follows a
+  deleted base, a new default branch, a call of an agent, or a new base of
+  the open pull request. Continue and a repository change move the cloud
+  computer in their own steps.
+- Each move first fetches the latest commit of the new base branch from
+  GitHub into the cloud computer. Only after that fetch does the cloud
+  computer target the new base branch (decision 307).
+- Reason: Changes compare from the merge base. An old copy of the new base
   branch lacks its newer commits, such as a merge commit of the deleted
   branch. Changes would then show merged work as work of the workspace.
 - [A moved base](github-tokens.md#a-moved-base) says whose GitHub token
@@ -129,12 +206,15 @@ says.
 - One saved retry owns each unfinished move, in the record of the
   workspace and in the cloud computer (decision 308). After each failure,
   it tries again. It waits longer each time, up to a fixed longest wait.
+- A new base branch replaces an unfinished move (decision 308). The cloud
+  computer then fetches and targets only the newest base branch. Reason:
+  the record of the workspace names only that branch.
 - Each resume of the cloud computer also runs an unfinished move. A
   failure then does not stop the resume, and the saved retry stays.
-- The GitHub read that finds the deleted branch saves that retry and
-  changes the record of the workspace. It runs no command in the cloud
-  computer. So a failure in the cloud computer does not fail the GitHub
-  read of the pull request bar.
+- The GitHub read, the repository webhook, or the call that starts a move
+  saves that retry. It runs no command in the cloud computer. So a failure
+  in the cloud computer does not fail the GitHub read of the pull request
+  bar, or the call.
 - Reason: one retry for each move keeps the tries of a long failure few.
   The pull request bar does not depend on the cloud computer.
 - A retry inside the GitHub read was rejected (decision 308). A failure in

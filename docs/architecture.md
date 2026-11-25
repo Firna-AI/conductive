@@ -189,7 +189,8 @@ the app (decision 6).
 The [flows page](architecture/flows.md) describes how the components work
 together for a new org, a switch of its account, a new workspace, chat, a
 run with secrets, the terminal, previews, the desktop, GitHub events, a
-merge, Continue, automation runs, and stops.
+merge, Continue, a repository change, a change of the target branch,
+automation runs, and stops.
 
 ## Where data lives
 

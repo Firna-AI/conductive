@@ -33,8 +33,9 @@ protocol docs.
     notice before the first good build, and the notice of a waiting
     repository.
 - [Base branches](../protocol/base-branches.md): the base branch of each
-  workspace, a base branch that GitHub deleted, and the branch of a pull
-  request run.
+  workspace, its change by an agent, the base of an open pull request, a
+  base branch that GitHub deleted, the move in the cloud computer, and the
+  branch of a pull request run.
 - [Repository folders](../protocol/repository-folders.md): the folder and the
   shell variable of each repository in a sandbox, and the context folder
   of each workspace.

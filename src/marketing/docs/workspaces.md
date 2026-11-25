@@ -83,12 +83,24 @@ The selected branch is the target until you choose otherwise.
 When the default branch is the target, the branch control adds an arrow and the default branch's name, such as `→ main`.
 Choosing another branch that is not the default keeps your target choice.
 Changing repositories clears your branch and target choices.
-**Changes**, diffs, and **Create PR** use this target as the workspace's base branch.
+This choice sets the initial base branch for **Changes**, diffs, and **Create PR**.
 
 If the list shows **Try again**, select it to reload.
 The default branch stays available while the list loads or cannot load.
 If the selected branch is missing on GitHub, **New workspace** keeps your message.
 Select **Start from** followed by the default branch's name, or choose another branch.
+
+## Change the target branch
+
+Every org member can ask an agent to change the target branch of a workspace in the org.
+Give the agent the workspace and the name of a branch that exists on GitHub.
+Restore an archived workspace before you ask for the change.
+Wait for **Continue**, a repository change, or **Restart** to finish before you ask.
+
+If the workspace has an open pull request, Conductive changes the base of that pull request on GitHub.
+The member whose message started the turn needs GitHub write access for that change.
+
+- [See how the workspace follows the pull request base](/docs/pull-requests#change-the-base-branch)
 
 ## Choose the page or dialog
 
@@ -227,6 +239,8 @@ When an agent creates a workspace, it can set the workspace name and its first s
 It can also choose a starting branch and a base branch for the new workspace.
 With only one branch choice, it uses that branch for both.
 With neither choice, it uses the repository's default branch for both.
+
+- [Change the target of an existing workspace](/docs/workspaces#change-the-target-branch)
 
 An agent puts related work in a sub-workspace of the current workspace:
 
@@ -425,10 +439,10 @@ Use **Restart**, as [Restart the software](/docs/workspaces#restart-the-software
 The computer starts first if it is stopped.
 The new branch starts from the latest default branch of the new repository.
 That default branch becomes the workspace's base branch.
-The base follows a later rename of that default branch.
-Conductive fetches the new default before the cloud computer targets it.
-A stopped computer completes this move when it resumes.
-Your GitHub account needs read access to fetch it.
+Your GitHub account needs read access to the new repository for this fetch.
+While the workspace targets the default branch, it follows a later rename of that branch.
+The cloud computer fetches the new default with the workspace owner's GitHub account before using it.
+A stopped computer fetches it when it resumes.
 The new branch name uses the owner's GitHub login, the workspace name, a version such as `v2`, and a new short suffix.
 The change copies the `.context/` folder into the folder of the new repository.
 A file that already exists there stays.

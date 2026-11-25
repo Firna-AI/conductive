@@ -18,7 +18,9 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         not archived.
         After a pull request merges, every member can use Continue to start
         the next task in that workspace. Every member can also move a
-        workspace to another repository of the org.`,
+        workspace to another repository of the org. In an active org,
+        every member can ask an agent to change the base branch of a
+        workspace that is not archived.`,
       text`The workspace tools let agents read workspace, session, and
         message details, list sessions and previews, and read chats across
         the org. They also list each org secret's name, description, and
@@ -33,6 +35,7 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         and the org remains active.`,
       text`During a running turn in the calling workspace, the tools can
         also create, rename, move, and archive workspaces across the org.
+        They can also change the base branch of a workspace in the org.
         They can create, rename, stop, and close sessions, send messages,
         and watch one turn of a session. They can create and delete
         sections, and open and close private previews.
@@ -73,6 +76,9 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         member as the merger and checks their rights and the branch rules.
         Ready for review of a draft pull request also uses the GitHub token
         of the member who clicks, and GitHub checks their rights.
+        An agent's change to an open pull request's base uses the GitHub
+        token of the member whose message started the turn. GitHub checks
+        that member's write access.
         Outside an agent turn, the GitHub CLI uses the workspace owner's
         account.
         Each terminal connection uses that same account.`,
@@ -178,6 +184,8 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         when the automation has a pull request trigger and a chosen secret.
         Such text can also steer the agent to read and change work across
         the org, with that member's workspace tool rights.
+        This includes changing a workspace's base and, with GitHub write
+        access, the base of its open pull request.
         Messages follow the same session login rules.`,
       text`A tool message, an accepted late answer to a secret request,
         or an accepted watch wake can start a stopped workspace's cloud

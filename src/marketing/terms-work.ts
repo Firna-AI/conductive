@@ -50,17 +50,20 @@ export const termsWorkSection: LegalDocument['sections'][number] = {
     paragraph`A repository change moves a workspace to a new branch of
       another repository of the org. It keeps the cloud computer and
       its sessions. The old branch, its pull request, and the files in
-      the folder of the old repository stay. Its base follows the new
-      repository's default branch, also after a later rename.`,
-    paragraph`When GitHub deletes a workspace's base branch,
-      ${productName} fetches the repository's default branch into its
-      cloud computer. A workspace whose base follows the default also
-      gets this fetch when GitHub changes that default branch.
-      The cloud computer uses the new base only after
-      that fetch succeeds. When no member starts the move, the fetch
-      uses the workspace owner's GitHub token. This includes moves from
-      GitHub events, automatic retries, and resumes of stopped cloud
-      computers. The token enters the cloud computer during the fetch.
+      the folder of the old repository stay. The new repository's default
+      branch becomes the workspace's base branch.`,
+    paragraph`While a workspace branch has an open pull request, the
+      workspace follows that pull request's base branch on GitHub. This
+      includes changes that a member or GitHub makes there. If GitHub
+      deletes the base branch while no pull request is open, ${productName}
+      moves the base to the repository's default branch. A workspace that
+      targets the default branch also follows changes to that default.`,
+    paragraph`When an agent changes the base or the workspace follows a
+      change on GitHub, the cloud computer fetches the new base.
+      It uses the new base after the fetch succeeds. These fetches use
+      the workspace owner's GitHub token. The same token serves automatic
+      retries and resumes of stopped cloud computers. The token enters the
+      cloud computer during the fetch.
       Programs and members with terminal access can read it while the
       fetch runs.`,
     paragraph`The agent actions in the pull request bar and Merge latest

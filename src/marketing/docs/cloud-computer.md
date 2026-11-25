@@ -65,9 +65,10 @@ When a repository gets a new name or default branch on GitHub, Conductive saves 
 After that build, the repository's folder uses its new name, such as `~/code/<new-name>`.
 Update each install or startup script that names the old folder.
 Existing workspaces keep their old folders.
-Workspaces that target the default branch fetch its new name and then target it.
-A stopped computer completes this move when it resumes.
-Workspaces that target another branch keep that target.
+When the default branch changes, workspaces that target it fetch the new default with the workspace owner's GitHub account.
+They use it after the fetch succeeds.
+A stopped computer fetches it when it resumes.
+Workspaces with an open pull request follow its base on GitHub.
 If a build is running, the new build starts after it.
 If the last build failed, the change waits for **Try again**.
 
@@ -432,6 +433,7 @@ An automatic software update gives an existing workspace the server list in **Pr
 It also adds services to software that does not yet support them.
 The workspace tools update with Conductive's own software.
 They manage workspaces, sessions, sections, and private previews across the org.
+This includes changing the target branch of an existing workspace.
 The tools also read chats and messages there, and run commands with secrets.
 
 Installing updated agent software in an older computer does not change its protection for saved agent logins.

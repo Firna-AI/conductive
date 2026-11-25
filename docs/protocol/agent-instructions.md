@@ -103,13 +103,14 @@ tells each agent the capabilities of its session, as
     ends each temporary check server before its reply, as
     [Agent guidance](services.md#agent-guidance) says.
   - The workspace tools create, list, get, rename, move, and archive the
-    workspaces of the org. In each workspace of the org, they also start,
-    list, get, rename, close, and stop sessions, send and get messages,
-    read a chat, and list, open, and close previews. They also create and
-    delete the sections of the org, and ask to run a command on the Mac of
-    the sender of the turn. They also list the secrets of the org with
-    `list_secrets`, and run a command with secrets with
-    `run_with_secrets`, as [Secret requests](secret-requests.md) says
+    workspaces of the org. They also change the target branch of a
+    workspace with `retarget_workspace`. In each workspace of the org,
+    they also start, list, get, rename, close, and stop sessions, send and
+    get messages, read a chat, and list, open, and close previews. They
+    also create and delete the sections of the org, and ask to run a
+    command on the Mac of the sender of the turn. They also list the
+    secrets of the org with `list_secrets`, and run a command with secrets
+    with `run_with_secrets`, as [Secret requests](secret-requests.md) says
     (capability prompts decision 2 A).
   - Before the agent asks a member for a key, a token, or another
     credential, it calls `list_secrets` (capability prompts decision 2 A).
@@ -193,28 +194,9 @@ tells each agent the capabilities of its session, as
 
 ### The branches
 
-- The instructions take the workspace branch from the Worker's record of
-  the workspace. They do not take the current branch in the cloud
-  computer.
-- Reason: the app tracks the branch of its record, and the Git branch in
-  the cloud computer can change.
-- When an older or manual runner start has no workspace branch, the
-  runner warns and continues. Its instructions name no workspace branch.
-  They never substitute the current Git branch for the missing fact.
-- The app finds the pull request of a workspace by the name of its branch.
-  It also routes the GitHub events of the workspace by that name, as
-  [State of a branch](github-banner.md#state-of-a-branch) says. After a
-  rename, the pull request bar no longer follows the work. This is the
-  reason for the rule that keeps the branch name.
-- A Git guard that refuses a rename of the branch was rejected. It covers
-  one fact only, and it adds a refusal that no user asked for.
-- After a merge, [Continue](continue.md) moves the workspace to a new
-  branch. The Worker's record then names the new branch, and the pull
-  request bar follows it. Continue is a branch change of the app, not a
-  rename by the agent.
-- A [repository change](repository-change.md) also moves the workspace to
-  a new branch, in the folder of another repository. It is a change of
-  the app too.
+[The branches](agent-instructions-changes.md#the-branches) states where
+the instructions take the workspace branch from, and why the agent keeps
+its name.
 
 ### The parent and the depth
 

@@ -119,14 +119,21 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
   refresh of the org image, in the account of the org.
 - A pull request event can also start the runs of automations, as
   [Automation runs](#automation-runs) says.
-- When GitHub no longer has the base branch of a workspace, the Worker
-  moves it to the default branch in D1, as
+- While its branch has an open pull request, a workspace takes the base of
+  that pull request as its base branch at each GitHub read.
+  [The base of an open pull request](../protocol/base-branches.md#the-base-of-an-open-pull-request)
+  states this rule. A pull request webhook of the branch, such as an edit
+  of its base, starts such a read.
+- When GitHub deletes the base branch of a workspace without an open pull
+  request, the Worker moves it to the default branch, as
   [A base branch that GitHub deleted](../protocol/base-branches.md#a-base-branch-that-github-deleted)
-  says. The Durable Object keeps one saved retry for the rest of the move.
-- That retry and each resume run a trusted fetch of the default branch in
+  says.
+- In both cases, the Worker stores the new base branch in D1. The Durable
+  Object keeps one saved retry for the rest of the move.
+- That retry and each resume run a trusted fetch of the new base branch in
   the sandbox. The fetch gets the GitHub token of the workspace owner
   through the credential helper, only while it runs. Only then does the
-  sandbox compare with the default branch, as
+  sandbox compare with the new base branch, as
   [The move in the cloud computer](../protocol/base-branches.md#the-move-in-the-cloud-computer)
   says.
 
@@ -178,6 +185,23 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
    to the new folder in its own process, so agent processes keep running.
    Held turns go out after the runner names the new folder.
    [Repository change](../protocol/repository-change.md) states the rules.
+
+## Change the target branch
+
+1. In a turn, an agent asks the agent tools to change the target branch of
+   a workspace of its org. The Worker checks the turn, the sender, and the
+   refusals. It asks GitHub for the branch with the GitHub token of the
+   sender.
+2. When the branch has an open pull request, the Worker changes its base
+   on GitHub with the same token.
+3. The Worker stores the new base branch in D1. The Durable Object keeps
+   one saved retry for the move, and reads the GitHub state again.
+4. The retry runs the trusted fetch of the new base branch, as in
+   [GitHub events](#github-events). Each later message carries the new
+   base branch to the agent.
+
+[Change the target branch](../protocol/workspace-management.md#change-the-target-branch)
+states the rules.
 
 ## Automation runs
 

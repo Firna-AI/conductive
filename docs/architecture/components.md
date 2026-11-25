@@ -72,8 +72,9 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It runs one gate for each hostname before every route and every
   WebSocket upgrade. [Access and security](../protocol/access-and-security.md)
   states the gates.
-- It writes to GitHub only as a member. A merge and Ready for review from
-  the pull request bar use the GitHub token of the member who clicks, as
+- It writes to GitHub only as a member. A merge and Ready for review use
+  the GitHub token of the member who clicks. A target change of the agent
+  tools uses the token of the sender of its turn, as
   [Merge as the member](../protocol/github-tokens.md#merge-as-the-member)
   says.
 - It keeps the secrets of each org and their grants. It returns the value

@@ -4,8 +4,8 @@ This doc holds the requirements and the decisions in force for the calls
 of the workspace tools that create, list, and change the workspaces of the
 org. It belongs to [Agent tools](agent-tools.md). Linked pages cover
 [the lists that a create call takes](create-call-lists.md), and
-[the rename, the move, and the archive](workspace-management.md) of one
-workspace.
+[the rename, the move, the target change, and the archive](workspace-management.md)
+of one workspace.
 [Sub-workspaces](sub-workspaces.md) states the rules of the parent of a
 workspace. [Agent tool access](agent-tool-access.md) states what each
 call reaches, which calls need an active turn, and the rights of the
@@ -24,6 +24,7 @@ says. A secrets decision number names a decision of the change that adds
 | Get a workspace | `get_workspace` | `conductive workspaces get` | `GET /v1/tools/workspaces/{workspaceId}` | The workspace token |
 | Rename a workspace | `rename_workspace` | `conductive workspaces rename` | `POST /v1/tools/workspaces/{workspaceId}/rename` | An active turn |
 | Move a workspace | `move_workspace` | `conductive workspaces move` | `POST /v1/tools/workspaces/{workspaceId}/move` | An active turn |
+| Change the target branch | `retarget_workspace` | `conductive workspaces retarget` | `POST /v1/tools/workspaces/{workspaceId}/retarget` | An active turn |
 | Archive a workspace | `archive_workspace` | `conductive workspaces archive` | `POST /v1/tools/workspaces/{workspaceId}/archive` | An active turn |
 
 - A read uses GET, and a write uses POST.
@@ -230,6 +231,11 @@ the rename call.
 
 [Move a workspace](workspace-management.md#move-a-workspace) states the
 move call, with its section and its target.
+
+## Change the target branch
+
+[Change the target branch](workspace-management.md#change-the-target-branch)
+states the call that changes the base branch of a workspace.
 
 ## Archive a workspace
 

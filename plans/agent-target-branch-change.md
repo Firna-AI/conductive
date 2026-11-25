@@ -202,24 +202,24 @@ State the requirements and the decisions in force for decisions 1 to 4
 and the design calls. Milestone 7 states decision 5. This milestone does
 not wait for the mockups, because they show only decision 5.
 
-- [ ] In `docs/protocol/base-branches.md`, define the retarget decision number. State the call and the follow rule of decision 1, with their rejected ways.
-- [ ] In the same doc, remove the sentence that left the follow rule out. Limit decision 304 to a branch with no open pull request.
-- [ ] In the same doc, state that each saved move fetches its new target first, and that a new target replaces an unfinished move.
-- [ ] In `docs/protocol/workspace-management.md`, add "Change the target branch". Give the call, the write of decision 2, the refusals of decision 4, the reply, and the rights of decision 3.
+- [x] In `docs/protocol/base-branches.md`, define the retarget decision number. State the call and the follow rule of decision 1, with their rejected ways.
+- [x] In the same doc, remove the sentence that left the follow rule out. Limit decision 304 to a branch with no open pull request.
+- [x] In the same doc, state that each saved move fetches its new target first, and that a new target replaces an unfinished move.
+- [x] In `docs/protocol/workspace-management.md`, add "Change the target branch". Give the call, the write of decision 2, the refusals of decision 4, the reply, and the rights of decision 3.
 - [ ] In the same section, state the rule of decision 6 when GitHub cannot answer. Waits for decision 6.
-- [ ] Add the call to the table of `docs/protocol/workspace-calls.md`, with a section that links to it.
-- [ ] In `docs/protocol/agent-tools.md`, count 28 Worker calls and 10 workspace calls. Say that the call can change a pull request on GitHub.
-- [ ] State the rights of decision 3 in `agent-tool-access.md`. Add the call to the writes in `tokens-and-secrets.md`, and its risk to `isolation.md`.
-- [ ] In `docs/protocol/github-tokens.md`, add the write of the call beside Merge. State the owner's token for each saved move, with the reason of decision 307.
-- [ ] Add the call and the follow rule to the causes of a new target in `session-instructions.md`. Add the call to the tool list in `agent-instructions.md`.
-- [ ] Split each changed protocol doc that passes about 250 lines, and update each link to a moved heading. Today `agent-tools.md`, `github-tokens.md`, `isolation.md`, `agent-instructions.md`, and `tokens-and-secrets.md` pass it.
-- [ ] Update the Worker writes to GitHub in `docs/architecture/components.md`, the flows in `docs/architecture/flows.md`, and the doc lists in `docs/architecture/`.
-- [ ] Read the Terms and Privacy pages in full, with their parts. Update each sentence that restates a changed fact.
+- [x] Add the call to the table of `docs/protocol/workspace-calls.md`, with a section that links to it.
+- [x] In `docs/protocol/agent-tools.md`, count 28 Worker calls and 10 workspace calls. Say that the call can change a pull request on GitHub.
+- [x] State the rights of decision 3 in `agent-tool-access.md`. Add the call to the writes in `tokens-and-secrets.md`, and its risk to `isolation.md`.
+- [x] In `docs/protocol/github-tokens.md`, add the write of the call beside Merge. State the owner's token for each saved move, with the reason of decision 307.
+- [x] Add the call and the follow rule to the causes of a new target in `session-instructions.md`. Add the call to the tool list in `agent-instructions.md`.
+- [x] Split each changed protocol doc that passes about 250 lines, and update each link to a moved heading. Today `agent-tools.md`, `github-tokens.md`, `isolation.md`, `agent-instructions.md`, and `tokens-and-secrets.md` pass it.
+- [x] Update the Worker writes to GitHub in `docs/architecture/components.md`, the flows in `docs/architecture/flows.md`, and the doc lists in `docs/architecture/`.
+- [x] Read the Terms and Privacy pages in full, with their parts. Update each sentence that restates a changed fact.
   - Examples: the tool writes in `terms-org.ts` and `privacy-recipients.ts`. The GitHub tokens in `terms-org.ts` and `privacy-uses.ts`. The moved base in `terms-work.ts`.
-- [ ] Set the effective date of each changed legal page to the date of the change. A Terms change gives a new `TERMS_VERSION`.
-- [ ] Read each guide in `src/marketing/docs/` in full, as [Website docs](../docs/protocol/website-docs.md) says. Update each sentence that restates a changed fact.
+- [x] Set the effective date of each changed legal page to the date of the change. A Terms change gives a new `TERMS_VERSION`.
+- [x] Read each guide in `src/marketing/docs/` in full, as [Website docs](../docs/protocol/website-docs.md) says. Update each sentence that restates a changed fact.
   - Examples: `pull-requests.md`, `files-and-changes.md`, `workspaces.md`, `security.md`, and `cloud-computer.md`.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 3: A saved move to an explicit target
 

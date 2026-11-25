@@ -43,9 +43,10 @@ A wake that joins a running turn keeps that turn's sender.
 | GitHub CLI outside a turn | The workspace owner's GitHub account |
 | Merge from the pull request bar | The GitHub account of the member who selects Merge |
 | Ready for review from the pull request bar | The GitHub account of the member who selects Ready for review |
+| GitHub reads and pull request updates when an agent changes a workspace's base branch | The turn sender's GitHub account |
 | Continue's repository fetch | The GitHub account of the member who selects Continue |
 | A repository change's fetch | The GitHub account of the member who changes the repository |
-| Base branch fetch when no member starts the move | The workspace owner's GitHub account |
+| Base branch fetch after an agent changes the target or the workspace follows a change on GitHub | The workspace owner's GitHub account |
 | Commit in an agent turn | The turn sender, as author and committer |
 | Commit outside a turn, including Terminal and scripts | The workspace owner by default, as author and committer |
 | A request to run a Mac command | The turn sender's connected Mac |
@@ -81,6 +82,8 @@ GitHub checks the clicking member's access and branch rules for a merge.
 GitHub also checks the clicking member's access for Ready for review.
 Every org member can Continue after a merge, but their GitHub account needs repository read access for its fetch.
 Every org member can also change a workspace's repository, and their GitHub account needs read access to the new repository for its fetch.
+Every org member can ask an agent to change a workspace's base branch.
+If the workspace has an open pull request, GitHub checks the turn sender's write access for that change.
 
 ## Understand what agents can reach
 
@@ -118,6 +121,7 @@ Each action follows that member's rights in the app.
 The tools can:
 
 - Create, rename, and move workspaces.
+- Change the base branch of a workspace in the org.
 - Archive workspaces that the sender owns, or any workspace when the sender is an org admin.
 - Create, rename, stop, and close sessions.
 - Send messages to sessions.
@@ -135,6 +139,7 @@ A wake follows current membership and session login rules.
 
 An automation can start agent work from a pull request.
 Comments and reviews on that pull request can steer these reads and changes across the org, with the automation owner's rights.
+This includes changing a workspace's base and, with GitHub write access, the base of its open pull request.
 Conductive sets no limit on the number of sessions or messages that agents create.
 Agents that keep replying to each other can spend logins and keep computers running.
 Use **Stop** in each affected session to end its turn.
@@ -205,10 +210,10 @@ Removing a login from Account does not revoke a copy held elsewhere.
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
 Continue and a repository change also bring the member's GitHub token into the cloud computer during their branch fetch.
-Conductive also fetches a new base when GitHub deletes a workspace's base branch.
-A workspace that follows the default also gets this fetch when GitHub changes that default branch.
-When no member starts this move, the fetch brings the workspace owner's GitHub token into the cloud computer.
-This includes GitHub events, automatic retries, and resumes of stopped cloud computers.
+When an agent changes the base, the fetch brings the workspace owner's GitHub token into the cloud computer.
+The same token serves a fetch when the workspace follows an open pull request's base or a change to the default branch it targets.
+If GitHub deletes the base while no pull request is open, the default branch fetch also uses the owner's token.
+Automatic retries and resumes use the same token.
 Code or members with terminal access can read these GitHub tokens while their fetches run.
 
 Removing a member ends their ordinary access to the org.

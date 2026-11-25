@@ -6,9 +6,9 @@ Capabilities control in the Mac app. The switch starts or stops a grant of
 one workspace on this Mac. This doc belongs to
 [Capabilities](capabilities.md), which covers the control.
 [Permissions and Mac commands](desktop-commands.md) states the choices and
-the grants on the Mac. [Mac commands](agent-tools.md#mac-commands) states
-the requests. The [mockup catalogue](../mockups/catalogue-secrets.md) draws
-the switch. The terms are those of [Secrets](secrets.md#terms) and of the
+the grants on the Mac. [Mac command requests](mac-command-requests.md)
+states the requests. The [mockup catalogue](../mockups/catalogue-secrets.md)
+draws the switch. The terms are those of [Secrets](secrets.md#terms) and of the
 [architecture doc](../architecture.md#terms).
 
 A decision number names a dated record, as
@@ -58,7 +58,7 @@ Stop. It is not a grant of a secret.
   after a member chose it for the workspace. The value no longer gates a
   request, so neither decision keeps agents from asking.
 - A request that the Worker refused while the value was off keeps that
-  result, as [Results](agent-tools.md#results) says.
+  result, as [Results](mac-command-requests.md#results) says.
 
 ## The switch
 
@@ -180,8 +180,9 @@ Stop. It is not a grant of a secret.
   workspace that the member sends can run any command on that Mac with no
   question. Text that steers the agent, another process in the sandbox,
   and a message of the session calls from another workspace can all use
-  it, as [Who gets a request](agent-tools.md#who-gets-a-request) says. The
-  switch makes such grants common.
+  it, as
+  [Who gets a request](mac-command-requests.md#who-gets-a-request) says.
+  The switch makes such grants common.
 - Risk: an automation run acts as its owner, so the requests of its first
   turn go to the Mac of the owner, as
   [A run acts as its owner](automation-runs.md#a-run-acts-as-its-owner)

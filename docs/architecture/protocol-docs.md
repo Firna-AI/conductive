@@ -16,60 +16,8 @@ This page lists each protocol doc and what it covers.
   it.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
-  - [Isolation of orgs and sandboxes](../protocol/isolation.md)
-    - [The app's provider keys](../protocol/provider-keys.md): the Boat key
-      and the E2B key.
-    - [Version pins](../protocol/version-pins.md): the runner version that
-      a workspace accepts, the version pin, and the risks of the turn
-      token in a sandbox.
-    - [The share setting](../protocol/share-setting.md): whether the
-      messages of other members can run on a personal login, its default,
-      its checks, and its risks.
-  - [Tokens and secrets](../protocol/tokens-and-secrets.md)
-    - [Tool detail secrets](../protocol/tool-detail-secrets.md): the filter
-      of secret values before the cut of a long tool detail, and the risk
-      of older runners and fallback connections.
-    - [Answer text secrets](../protocol/answer-text-secrets.md): the held
-      end of an unfinished answer, the saved state of its filter, and a
-      longer value that shows as two masks.
-    - [Own endpoint logins](../protocol/own-endpoint-logins.md): the
-      endpoint and the key of each agent, the model list of the endpoint,
-      and the addresses that the app accepts.
-    - [Org logins](../protocol/org-logins.md): the login that an admin
-      connects for each agent of an org, the Agents tab of the org
-      settings, and the default login of a new session.
-    - [Secrets](../protocol/secrets.md): the secrets of an org that agents
-      use in one command, their storage, the Secrets tab, the rights,
-      Reveal, the mark for all agents, the grants, and their risks.
-      - [Capabilities](../protocol/capabilities.md): the control of New
-        workspace, of each workspace, and of an automation, with its
-        secrets part.
-        - [Mac access](../protocol/mac-access.md): the requests that agents
-          can always send to a Mac, the Mac access switch of the Mac app,
-          the grant that it starts on this Mac, and the risks.
-        - [Capabilities: what agents learn](../protocol/capabilities-agents.md):
-          the facts of a session that its agent learns, the change note of
-          each change, where the note goes, what the chat shows, and older
-          runners.
-      - [Secret variables](../protocol/secret-variables.md): the names of
-        new secrets, the variable name of each secret, the command
-        environment, conflicting variable names, and older tools.
-      - [Secret requests](../protocol/secret-requests.md): the calls that
-        list the secrets and run a command with secrets, the requests and
-        their time limit, temporary values, and what the chat shows.
-        - [Late secret requests](../protocol/secret-late-answers.md): the
-          requests after the wait of their tool call ends, and their late
-          answers.
-  - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
-    - [Preview grants](../protocol/preview-grants.md): the launch address
-      of a preview, its one-use grant, the authorizer, the browser launch,
-      the credential cookie, and a launch at a path.
-  - [Attachment uploads](../protocol/attachment-uploads.md): the upload of
-    an attached file in parts, with the gate rules and the body limit of
-    its routes.
-  - [Step timing](../protocol/step-timing.md): the `Server-Timing` header of
-    the preview replies and of the create reply, and what it may hold, and
-    the job step records of builds and starts.
+  [Access protocol docs](protocol-docs-access.md) lists the docs that
+  belong to it.
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
   Worker routes that add the agent login to each model request.
   - [Model gateway: requests and answers](../protocol/model-gateway-requests.md):
@@ -93,11 +41,13 @@ This page lists each protocol doc and what it covers.
   - [Agent tool access](../protocol/agent-tool-access.md): what each call
     reaches, which calls need an active turn, and the rights of the sender.
   - [Workspace calls](../protocol/workspace-calls.md): the calls that
-    create, list, get, rename, move, and archive workspaces.
+    create, list, get, rename, move, and archive workspaces, and change
+    their target branch.
     - [Repository, section, and model lists](../protocol/create-call-lists.md):
       the lists that a create call takes.
     - [Workspace management](../protocol/workspace-management.md): the
-      calls that rename, move, and archive one workspace.
+      calls that rename, move, and archive one workspace, and change its
+      target branch.
   - [Session calls](../protocol/session-calls.md): the calls that start,
     list, message, and read the sessions of the org.
     - [Session management](../protocol/session-management.md): the calls
@@ -114,6 +64,9 @@ This page lists each protocol doc and what it covers.
     the secrets of the org and run a command with secrets.
   - [Names from the workspace tools](../protocol/tool-names.md): the rule
     for the names and titles that the calls give.
+  - [Mac command requests](../protocol/mac-command-requests.md): the
+    requests of agents to run a command on a Mac, their results, who
+    answers them, and what the chat shows.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
   roles, and the first run.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
@@ -207,9 +160,10 @@ This page lists each protocol doc and what it covers.
     message shows as one line in the work of a turn, closed and open, with
     its tables, headings, quotes, rules, and line breaks.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
-  scope of a cloud computer, the author of each commit in a sandbox, the copy
-  and lookup of the skills repository, and the GitHub actions of the
-  Worker as a member.
+  scope of a cloud computer, the copy and lookup of the skills repository,
+  and the GitHub actions of the Worker as a member.
+  - [GitHub tokens: commit author](../protocol/github-tokens-commit-author.md):
+    the author and the committer of each commit in a sandbox.
   - [GitHub tokens: image builds](../protocol/github-tokens-image-builds.md):
     the GitHub tokens that an image job uses to copy the repositories.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
@@ -221,8 +175,8 @@ This page lists each protocol doc and what it covers.
     of a change note, and the access of a turn, which does not depend on
     the sender line.
   - [Agent instructions: facts that change](../protocol/agent-instructions-changes.md):
-    the parent, the depth, and the capabilities, which can change during a
-    session.
+    the branches, the parent, the depth, and the capabilities, which can
+    change during a session.
   - [Base prompts](../protocol/base-prompts.md): the base prompt of Claude
     agents and the base instructions of Codex agents.
   - [Agent instructions: how each agent gets them](../protocol/agent-instructions-delivery.md):

@@ -25,35 +25,40 @@ The bar can ask the agent to create a pull request with files not committed or c
 
 The action asks the agent to commit the changes, push this branch, and open a pull request.
 It targets the workspace's base branch, which is the branch this work will merge into.
-A workspace you create targets the branch you select in **New workspace**.
+A workspace you create initially targets the branch you select in **New workspace**.
 You can choose the default branch as the target instead.
 For a pull request run, its first message names the initial target under **Your work goes to**.
 On a computer, the pull request bar names the workspace's base branch.
 On a phone, the top of **Checks** shows the branch and its base while the branch has no pull request.
 After **Continue**, it targets the branch the pull request merged into, or the default branch if that branch is gone.
-After a repository change, the workspace targets the latest default branch of the new repository.
+After a repository change, the workspace starts with the new repository's latest default branch as its target.
 Your draft and its attached files stay unchanged.
 Conductive then shows the pull request's state for that branch.
-
-If GitHub deletes the workspace's base branch, Conductive fetches the default branch into the cloud computer.
-The cloud computer uses the new base only after that fetch succeeds.
-The bar explains that change until a pull request opens.
-
-A workspace that targets the default branch also follows a later rename of that default branch.
-This includes a workspace after a repository change.
-Conductive fetches the new default before the cloud computer targets it.
-A stopped computer completes this move when it resumes.
-A workspace that targets another branch keeps that target.
-
-If the computer cannot complete the move, Conductive retries it automatically, also when the computer resumes.
-The pull request bar still shows GitHub state while that update waits.
-
-Changing a pull request's target on GitHub leaves the workspace's base unchanged.
-Check the target on GitHub before merging after such a change.
 
 If the bar shows **No commits yet**, make a change or ask the agent to start the task.
 GitHub write access enables the agent actions.
 An archived workspace or suspended org keeps only its GitHub links.
+
+## Change the base branch
+
+Ask an agent to change the workspace's target branch.
+If the workspace branch has an open pull request, Conductive changes its base on GitHub.
+The change uses the GitHub account of the member whose message started the agent's turn.
+GitHub checks that member's write access to the repository.
+
+While a pull request is open, the workspace follows its base on GitHub.
+This includes draft pull requests and base changes that a member or GitHub makes there.
+
+If GitHub deletes the workspace's base branch while no pull request is open, Conductive moves the base to the default branch.
+The bar explains that move until a pull request opens.
+A workspace that targets the default branch also follows a later rename of that branch.
+
+The cloud computer fetches the new base with the workspace owner's GitHub account before using it.
+If the computer cannot complete the move, Conductive retries it automatically.
+A stopped computer tries the move when it resumes.
+The pull request bar still shows GitHub state while that update waits.
+
+- [Ask an agent to change the target branch](/docs/workspaces#change-the-target-branch)
 
 ## Open the pull request on GitHub
 
@@ -68,8 +73,9 @@ You can also create the pull request on GitHub yourself:
 
 You can also ask the agent to create a pull request with the GitHub CLI.
 The CLI is authenticated on computers with the current software.
+Use `--base` with `gh pr create` to name the new base branch before the cloud computer fetches it.
 
-GitHub operations in an agent turn use the person whose message started that turn.
+Git and GitHub CLI commands in an agent turn use the GitHub account of the person whose message started that turn.
 Commands in any workspace terminal use the workspace owner's GitHub account.
 
 Commits in each place name that same person as both author and committer.
