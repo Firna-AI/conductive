@@ -123,13 +123,13 @@ the chat.
   the skill, and screen readers hear "Skill" before the name. In a message
   box it has the cell of its icon and the × of `ChipRemove.tsx`, as a file
   chip does, and its `onOpen` makes the name a button that opens the skill
-  tab, as the name of a file chip opens its file. A view cannot hover, so
+  tab, as the name of a file chip opens its file. In a view, its name link
+  makes the name a link to the skill tab screen. A view cannot hover, so
   its `namePointer` draws the pointer over the name, which is then
-  underlined. A sent message shows it without a ×, and a press opens the
-  skill tab, from skill tab decision 1 B. The app uses `SkillChip` too.
-- `ChipPointer.module.css` in `src/components/chat/` draws a sent chip that
-  opens a page under the pointer, with the fill of a hover, as a view
-  cannot hover. Its rule repeats a hover rule of the shared chips.
+  underlined, and its `pointer` draws a sent chip under the pointer with
+  the fill of the shared hover rule. A sent message shows it without a ×,
+  and a press opens the skill tab, from skill tab decision 1 B. The app
+  uses `SkillChip` too.
 - `SkillMentionList` in `src/components/chat/` draws the list of `/` above
   the message box, in the place of the list of `@`. It renders through
   `MentionList`: each row gives the name and a `description`, which shows

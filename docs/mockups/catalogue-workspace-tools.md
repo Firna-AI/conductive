@@ -266,7 +266,8 @@ pages:
     temporary README.md. Its `kept` variant has the kept skill tab, then
     README.md in a new temporary tab. Its `menu` variant has the menu of
     the temporary skill tab: Keep open, the moves, and the closes, without
-    Copy path.
+    Copy path. Its `return` variant has the kept skill shown again, with
+    README.md still in the temporary tab.
   - `app/skill-mentions/tab/notices` has "Opening the skill" while the
     text loads. Its `gone` variant has a skill that the list no longer
     holds, its `too-large` variant a text over 1 MB, and its
@@ -275,7 +276,8 @@ pages:
     read that failed for another cause, as a file tab shows "This file
     didn't open".
   - `app/skill-mentions/tab/stopped` has the wait while the open starts a
-    stopped cloud computer.
+    stopped cloud computer. Its `before-text` variant has a skill tab that
+    shows no text yet when the cloud computer stops, with Resume.
 
 On a phone the skill chip keeps its icon and ends with a ×, as each chip
 of the composer does. The flow `user-flows/use-a-skill` goes from the
