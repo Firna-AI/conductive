@@ -3,7 +3,11 @@ import type { SkillEntry } from './generated/SkillEntry'
 import type { SkillReadOutcome } from './generated/SkillReadOutcome'
 
 import type { SelectedOrgSkill } from './providers/skills'
-import { readSkillContent, SKILL_FILE_MAX_BYTES } from './skill-content'
+import {
+  readRegularSkill,
+  readSkillContent,
+  SKILL_FILE_MAX_BYTES,
+} from './skill-content'
 import { readFrontMatter, type FrontMatterValue } from './skill-front-matter'
 import type { SkillFile } from './skill-files'
 
@@ -60,6 +64,23 @@ export async function readCodexSkill(
 ): Promise<SkillEntry | null> {
   const source = await readSkillFile(file.path, warn)
   return source === null ? null : codexSkill(source, file, warn)
+}
+
+export async function readableCodexSkills(
+  skills: readonly SkillEntry[],
+  warn: (message: string) => void,
+): Promise<SkillEntry[]> {
+  const found: SkillEntry[] = []
+  for (const skill of skills) {
+    const opened = await readRegularSkill(
+      skill.path,
+      'agent',
+      async () => true,
+    ).catch(() => false)
+    if (opened === true) found.push(skill)
+    else warnUnreadableSkill(skill.path, warn)
+  }
+  return found
 }
 
 /** The Codex entry of the text of one `SKILL.md`, as `readCodexSkill` says. */
@@ -122,10 +143,14 @@ export function listedSkillText(
   warn: (message: string) => void,
 ): string | null {
   if (result.ok) return result.text
+  warnUnreadableSkill(path, warn)
+  return null
+}
+
+function warnUnreadableSkill(path: string, warn: (message: string) => void) {
   warn(
     `The skill file ${path} could not be read. The list leaves out its skill.`,
   )
-  return null
 }
 
 function text(value: FrontMatterValue | undefined): string {
