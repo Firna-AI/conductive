@@ -30,6 +30,7 @@ import { previewServicesOf } from './workspaceServices'
 import { backFrom, openFile } from './workspaceFileTab'
 import { openSkill, showsSkillText } from './workspaceSkillTab'
 import { isNew } from './workspaceTabs'
+import { readmeBesideKeptSkill } from './workspaceTemporaryTab'
 import type { WorkspaceState } from './workspaceState'
 
 /**
@@ -113,7 +114,10 @@ function listsPlaceholder(state: WorkspaceState, phone: boolean): ReactNode {
  * with the sandbox state in place of its content, as on desktop. An open
  * skill shows there in the same way, and leads back to All files, as a
  * file does. An archived workspace has no file lists: its files went with
- * the cloud computer. A row of the lists can show its open menu.
+ * the cloud computer. A row of the lists can show its open menu. While the
+ * tab row keeps the skill tab of `plans` before README.md, the row of
+ * README.md in All files leads to that tab row, as `readmeBesideKeptSkill`
+ * says.
  */
 export function FilesContent(props: {
   state: WorkspaceState
@@ -171,6 +175,7 @@ export function FilesContent(props: {
         checksTop: props.checksTop,
         // Complete lists pass nothing, so the panel keeps its earlier props.
         lists: state.lists === 'limited' ? state.lists : undefined,
+        markdownTo: readmeBesideKeptSkill(state),
         menu: rowMenuOf(state, props.viewport),
         only: changedPaths(state),
         open,

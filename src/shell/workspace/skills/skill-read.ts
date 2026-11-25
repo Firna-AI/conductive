@@ -36,10 +36,12 @@ function skillError(status: number, body: unknown): FilesError {
 
 /**
  * Whether the cause of a failed read can pass: a reply with a 5xx status,
- * such as of a cloud computer that stops, or a fetch that failed, as when
- * the connection drops. A read of a text that shows keeps the text after
- * such a failure, as "Notices" in `docs/protocol/skill-tabs.md` says. A
- * reply with a 4xx status, such as of a removed skill, shows its notice.
+ * such as of a cloud computer that stops, or a failure of the network, as
+ * when the connection drops before the reply or during the body of a 200.
+ * A read of a text that shows keeps the text after such a failure, as
+ * "Notices" in `docs/protocol/skill-tabs.md` says. A reply with a 4xx
+ * status, such as of a removed skill, and a 200 whose body is not the
+ * text, show their notice.
  */
 function causePasses(error: FilesError): boolean {
   return (
@@ -52,6 +54,20 @@ export interface SkillSource {
   fetch: FetchLike
   orgId: string
   workspaceId: string
+}
+
+/**
+ * The body of a reply as JSON, or null when the body is not JSON. A body
+ * that fails before its end, as when the connection drops, rejects.
+ */
+async function readJson(response: Response): Promise<unknown> {
+  const raw = await response.text()
+  try {
+    const body: unknown = JSON.parse(raw)
+    return body
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -69,8 +85,11 @@ async function readSkillText(
       skillContentPath(source.orgId, source.workspaceId, skill),
       { headers: { Accept: 'application/json' }, signal },
     )
-    const body: unknown = await response.json().catch((error: unknown) => {
-      if (errorFromThrown(error).kind === 'aborted') throw error
+    // A body that fails after a 200 fails the read as the network does. A
+    // reply with an error status gives its cause by its status, also when
+    // its body fails.
+    const body = await readJson(response).catch((error: unknown) => {
+      if (response.ok || errorFromThrown(error).kind === 'aborted') throw error
       return null
     })
     signal.throwIfAborted()

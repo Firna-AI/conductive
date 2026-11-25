@@ -70,7 +70,9 @@ to `src/shell/workspace/`, the folder of this guide.
   new read keeps the text that shows, and a reply for another skill never
   shows. A read of a text that shows, such as after a skills report, also
   keeps the text when it fails with a cause that can pass: a reply with a
-  5xx status, such as `computer_stopped`, or a fetch that failed. Without
+  5xx status, such as `computer_stopped`, a fetch that failed, or a body
+  that failed after a 2xx status. A body that is not JSON shows the
+  failure. Without
   a text that shows, and for a reply with a 4xx status, the page shows the
   notice of the failure. `skill_not_found`, `skill_too_large`, and
   `skill_reads_unsupported` show their notices. `computer_stopped` and
@@ -102,4 +104,5 @@ the page on a phone, and the view of a skill that opens again on a phone
 after a diff replaced its tab. `skills/skill-address.test.ts` reads the
 addresses that `skillHref` writes, also of names with dots.
 `skills/skill-test-kit.ts` serves the skills report, a sent message with
-a skill chip, and the reads, also a read whose connection drops.
+a skill chip, and the reads, also a read whose connection drops, a 200
+whose body fails, and a 200 whose body is not JSON.

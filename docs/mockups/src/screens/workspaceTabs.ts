@@ -21,7 +21,10 @@ import { htmlTab } from './workspaceFileTab'
 import { skillTab } from './workspaceSkillTab'
 import type { WorkspaceState } from './workspaceState'
 import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
-import { withTemporaryTab } from './workspaceTemporaryTab'
+import {
+  readmeBesideKeptSkill,
+  withTemporaryTab,
+} from './workspaceTemporaryTab'
 
 /**
  * A workspace that the create flow or an automation run made has one session,
@@ -148,9 +151,11 @@ function previewTabs(state: WorkspaceState): WorkspaceTab[] {
  * first session leads to that view. After the second session sent its
  * messages, the second session can show, and each session tab leads to its
  * chat of that time. The file, the diff, or the skill that the state opens
- * can be the temporary tab, as `withTemporaryTab` draws it. The Preview
- * tabs show after the code file. The tabs of the open explanations come
- * last, as `explainTabs` says.
+ * can be the temporary tab, as `withTemporaryTab` draws it. The tab of
+ * README.md after the kept skill tab of `plans` leads to the screen of
+ * that row, as `readmeBesideKeptSkill` says. The Preview tabs show after
+ * the code file. The tabs of the open explanations come last, as
+ * `explainTabs` says.
  */
 export function tabsFor(
   state: WorkspaceState,
@@ -198,7 +203,7 @@ export function tabsFor(
   if (state.repositoryMove === 'changed') tabs.pop()
   if (state.tabRow === 'full') tabs.push(...moreTabs)
   if (state.tab === 'markdown') {
-    const to = paths.markdown
+    const to = readmeBesideKeptSkill(state) ?? paths.markdown
     tabs.push({
       key: 'readme',
       kind: 'markdown',

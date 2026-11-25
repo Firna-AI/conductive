@@ -76,10 +76,16 @@ export function serveSkillChat(
 }
 
 /**
- * One reply of the read of a skill, as the Worker sends it, or a read whose
- * fetch fails, as when the connection drops.
+ * One reply of the read of a skill, as the Worker sends it, or a broken
+ * one: a read whose fetch fails, as when the connection drops, a 200 whose
+ * body fails before its end, as when the connection drops after the
+ * status, and a 200 whose body is not JSON.
  */
-export type SkillReply = { status: number; body: unknown } | 'lost connection'
+export type SkillReply =
+  | { status: number; body: unknown }
+  | 'lost connection'
+  | 'lost body'
+  | 'not JSON'
 
 /** A reply with the text of a skill. */
 export const textReply = (text: string): SkillReply => ({
@@ -92,6 +98,26 @@ export const errorReply = (status: number, code: string): SkillReply => ({
   status,
   body: { error: { code, message: 'The skill did not open.' } },
 })
+
+/** The response of `reply`, or the failure of its fetch. */
+function respond(reply: SkillReply): Promise<Response> {
+  switch (reply) {
+    case 'lost connection':
+      return Promise.reject(new TypeError('Failed to fetch'))
+    case 'lost body': {
+      const body = new ReadableStream<Uint8Array>({
+        start: (controller) => controller.error(new TypeError('network error')),
+      })
+      return Promise.resolve(new Response(body, { status: 200 }))
+    }
+    case 'not JSON':
+      return Promise.resolve(new Response('{"text": "---', { status: 200 }))
+    default:
+      return Promise.resolve(
+        Response.json(reply.body, { status: reply.status }),
+      )
+  }
+}
 
 /**
  * Answers each read of `skill` with the next reply of `replies`, and with
@@ -106,9 +132,7 @@ export function serveSkillReads(
   server.handle('GET', skillContentPath(org, id, skill), () => {
     const reply = replies[Math.min(reads, replies.length - 1)]
     reads += 1
-    return reply === 'lost connection'
-      ? Promise.reject(new TypeError('Failed to fetch'))
-      : Promise.resolve(Response.json(reply.body, { status: reply.status }))
+    return respond(reply)
   })
   return () => reads
 }

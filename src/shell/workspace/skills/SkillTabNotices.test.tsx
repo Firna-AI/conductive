@@ -160,6 +160,10 @@ describe('the notices of the skill tab', () => {
       reply: errorReply(503, 'computer_stopped'),
     },
     { cause: 'a lost connection', reply: 'lost connection' as const },
+    {
+      cause: 'a lost connection in the body of a 200',
+      reply: 'lost body' as const,
+    },
   ])(
     'a read after a skills report that fails with $cause keeps the text that shows',
     async ({ reply }) => {
@@ -187,24 +191,39 @@ describe('the notices of the skill tab', () => {
     },
   )
 
-  test('a read after a skills report that finds no skill shows the notice of a removed skill in place of the text', async () => {
-    holdAnimationFrames()
-    fakeWorkers()
-    const server = new FakeApiServer()
-    serveSkillChat(server)
-    const reads = serveSkillReads(server, plans, [
-      textReply(plansText),
-      errorReply(404, 'skill_not_found'),
-    ])
-    const { view } = await openTab(server, plansHref)
-    reportSkills(server)
-    await settle()
+  test.each([
+    {
+      cause: 'finds no skill',
+      reply: errorReply(404, 'skill_not_found'),
+      notice:
+        'This skill was removed or renamedType / in a message to see the current skills.',
+    },
+    {
+      cause: 'gets a 200 whose body is not JSON',
+      reply: 'not JSON' as const,
+      notice: "This skill didn't openTry again",
+    },
+  ])(
+    'a read after a skills report that $cause shows its notice in place of the text',
+    async ({ reply, notice }) => {
+      holdAnimationFrames()
+      fakeWorkers()
+      const server = new FakeApiServer()
+      serveSkillChat(server)
+      const reads = serveSkillReads(server, plans, [
+        textReply(plansText),
+        reply,
+      ])
+      const { view } = await openTab(server, plansHref)
+      reportSkills(server)
+      await settle()
 
-    expect({ reads: reads(), page: pageText(view) }).toEqual({
-      reads: 2,
-      page: 'plansClaude skillUse before you write or change a plan file.This skill was removed or renamedType / in a message to see the current skills.',
-    })
-  })
+      expect({ reads: reads(), page: pageText(view) }).toEqual({
+        reads: 2,
+        page: `plansClaude skillUse before you write or change a plan file.${notice}`,
+      })
+    },
+  )
 })
 
 describe('the skill tab of a cloud computer that does not run, and on a phone', () => {

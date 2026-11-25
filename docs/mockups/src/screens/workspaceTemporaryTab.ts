@@ -87,6 +87,23 @@ const readmeAfterSkill: WorkspaceTab = {
 }
 
 /**
+ * The screen that README.md leads to from its tab and from its row in All
+ * files, while the row keeps the skill tab of `plans` and README.md is the
+ * temporary tab after it: that row with README.md shown. A press on a file
+ * that has a tab shows that tab, so the skill stays kept. Other rows give
+ * none, and README.md leads to its own screen.
+ */
+export function readmeBesideKeptSkill(
+  state: WorkspaceState,
+): string | undefined {
+  const keptSkill =
+    state.temporary === 'skill-kept' || state.temporary === 'skill-shown'
+  return keptSkill && hasTemporaryTab(state)
+    ? skillPaths.keptThenFile
+    : undefined
+}
+
+/**
  * The row with the temporary tab of the state, from decisions 284 to 287:
  * the shown file, diff, or skill, with its title in italics. A replaced
  * tab keeps the place of the tab before it, so the tab of a session that
