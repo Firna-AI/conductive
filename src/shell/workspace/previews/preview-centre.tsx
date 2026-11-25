@@ -114,7 +114,7 @@ export function usePreviewCentre(context: WorkspaceContext): PreviewCentre {
 
   let content: ReactNode = null
   if (port !== null) {
-    const down = contentState(context.panel, context.resumingAtOpen)
+    const down = contentState(context)
     content = down ? (
       <div className={page.page}>
         <SandboxPanel

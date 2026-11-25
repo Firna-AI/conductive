@@ -5,14 +5,9 @@ import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../../app/router'
 import { fakeWorkers } from '../../../files/mount-test-kit'
 import { workspaceViewPath } from '../../../shared/workspace-view'
-import { workspacePaths } from '../../../shared/workspaces'
 import { byLabel, byRole, queryByRole } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
-import {
-  FAKE_IDS,
-  FAKE_ORIGIN,
-  FAKE_TIME,
-} from '../../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from '../../../test-support/fixtures/core'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
@@ -21,7 +16,7 @@ import {
 import { nextEnvelope } from '../../../test-support/recorded-repairs'
 import { click, settle } from '../../test-mount'
 import { bodiesOf } from '../kept-test-kit'
-import { linkTo, openTab } from '../wiring-test-kit'
+import { openTab } from '../wiring-test-kit'
 import { skillHref } from './skill-address'
 import {
   errorReply,
@@ -226,31 +221,7 @@ describe('the notices of the skill tab', () => {
   )
 })
 
-describe('the skill tab of a cloud computer that does not run, and on a phone', () => {
-  test('a press on a skill chip while the cloud computer is stopped resumes it, and the tab shows the state of the sandbox and reads nothing', async () => {
-    holdAnimationFrames()
-    const server = new FakeApiServer({ workspaceState: 'stopped' })
-    serveSkillChat(server)
-    const reads = serveSkillReads(server, plans, [textReply(plansText)])
-    const resume = new URL(workspacePaths.resume(org, id), FAKE_ORIGIN).href
-    const resumes = () =>
-      server.requests.filter(
-        (request) => request.method === 'POST' && request.url === resume,
-      ).length
-    const { view } = await openTab(server, routes.workspace(org, id))
-    const atOpen = resumes()
-
-    click(linkTo(byLabel('Chat', view), plansHref))
-    await settle()
-
-    expect({
-      atOpen,
-      afterPress: resumes(),
-      page: pageText(view)?.includes('Sandbox stopped'),
-      reads: reads(),
-    }).toEqual({ atOpen: 1, afterPress: 2, page: true, reads: 0 })
-  })
-
+describe('the skill tab on a phone', () => {
   test('on a phone, the address of a skill shows it as a page of the Files tab, which leads back to All files, and opens it in the temporary tab', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()

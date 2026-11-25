@@ -85,6 +85,9 @@ the change that adds [skill tabs](skill-tabs.md).
   that the open of a tab or a press on Resume or Try again asks for shows
   Starting at once in the workspace header (skill tab decision 5 B). This
   lasts until the reply of that Resume or a newer state of the sandbox.
+  A failed first start is not such a case: its Try again starts a new
+  sandbox, and it shows that it is busy until the reply, as the open of
+  the workspace does.
 - Meanwhile the tools, each Preview tab, and each file, diff, or skill tab
   without content show that they wait for the sandbox, with no Resume,
   also on a phone. The file lists keep their saved copy. The chat keeps

@@ -213,9 +213,13 @@ Each folder of a path is a part of the address. Another address under
 - A stopped sandbox, and one whose later start failed, keep the file that
   a page already shows, as they keep the lists. Otherwise the sandbox panel
   takes the place of the content. The page hides the bar of the chat, so
-  its panel has Resume or Try again, and the words of a refusal. While
-  the open of the workspace resumes the sandbox, the panel shows the wait
-  of a start instead, with no Resume. The
+  its panel has Resume or Try again, and the words of a refusal. While a
+  Resume of the visit runs, the panel shows the wait of a start instead,
+  with no Resume, and the header of the workspace shows Starting. That
+  Resume can be the one of the open of the workspace, of the open of the
+  tab, or of a press on Resume or Try again. The wait ends with its
+  reply, or with a newer state of the sandbox. After a failed Resume, the
+  panel shows the state of the sandbox again. The
   header keeps the name of the file, and a diff keeps its changed lines.
 - Each visit that opens a file or diff tab resumes a stopped sandbox, as
   [Stop and resume](../../../docs/protocol/workspace-life.md#stop-and-resume)

@@ -114,12 +114,12 @@ function sandboxPlaceholder(context: WorkspaceContext): ReactNode {
 
 /**
  * The state of the sandbox in place of a list that the workspace has not
- * saved. While the sandbox starts, also while the open resumes it, this is
- * the wait, as at the first start of a new workspace. A refused start and a
- * failed first start already take the place of each list.
+ * saved. While the sandbox starts, also while a Resume of the visit runs,
+ * this is the wait, as at the first start of a new workspace. A refused
+ * start and a failed first start already take the place of each list.
  */
 function listWait(context: WorkspaceContext): ReactNode {
-  const state = contentState(context.panel, context.resumingAtOpen)
+  const state = contentState(context)
   if (!state || !replacesList(state, false)) return undefined
   return sandboxPanel(context, state)
 }

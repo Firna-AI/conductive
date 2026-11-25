@@ -81,8 +81,10 @@ to `src/shell/workspace/`, the folder of this guide.
   failure with Try again.
 - While the sandbox does not run, the page reads nothing, and
   `pagePlaceholder` of `files/page-placeholder.tsx` shows the state of the
-  sandbox in place of the text, as for a file tab. A page that shows its
-  text keeps it while the sandbox is stopped or starts.
+  sandbox in place of the text, as for a file tab. While a Resume of the
+  visit runs, such as the one that the open of the tab sent, that state is
+  the wait of a start, with no Resume, until its reply. A page that shows
+  its text keeps it while the sandbox is stopped or starts.
 
 ## Development
 
@@ -93,15 +95,18 @@ says.
 
 ## Tests
 
-`skills/SkillTabs.test.tsx` and `skills/SkillTabNotices.test.tsx` mount
-the whole app over the fake API. They press a sent skill chip and check
-the temporary tab, its address, its header, the Markdown body without the
-front matter, Source, the keeps, the tab menu, Escape, the save of the
-skill fields, and a press on a file that replaces the tab. They also
-check each notice, Try again, the read after a skills report, the text
-that a failed read after a report keeps, the Resume of a stopped sandbox,
-the page on a phone, and the view of a skill that opens again on a phone
-after a diff replaced its tab. `skills/skill-address.test.ts` reads the
+`skills/SkillTabs.test.tsx`, `skills/SkillTabNotices.test.tsx`, and
+`skills/SkillTabResume.test.tsx` mount the whole app over the fake API.
+They press a sent skill chip and check the temporary tab, its address,
+its header, the Markdown body without the front matter, Source, the
+keeps, the tab menu, Escape, the save of the skill fields, and a press on
+a file that replaces the tab. They also check each notice, Try again, the
+read after a skills report, the text that a failed read after a report
+keeps, the page on a phone, and the view of a skill that opens again on a
+phone after a diff replaced its tab. `skills/SkillTabResume.test.tsx`
+holds the reply of the Resume of a stopped sandbox, and checks the wait
+with no Resume, Starting in the header, and no read until the reply.
+`skills/skill-address.test.ts` reads the
 addresses that `skillHref` writes, also of names with dots.
 `skills/skill-test-kit.ts` serves the skills report, a sent message with
 a skill chip, and the reads, also a read whose connection drops, a 200

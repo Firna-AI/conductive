@@ -47,8 +47,10 @@ function Owner(props: { workspace: Workspace; compact: boolean }) {
  * header names the repository. The repository opens the menu that moves
  * the workspace to another repository, as `RepositoryControl` says. On desktop the header ends with the toggle
  * of the right column. A run workspace links to its automation below it.
- * While the open of the workspace resumes its sandbox, the state shows
- * Starting at once, before the Resume reply. While the software runs, the
+ * While a Resume of the visit runs for a stopped sandbox, or for one whose
+ * later start failed, the state shows Starting at once, before its reply:
+ * the Resume of the open, of the open of a tab, or of a press, as
+ * `WorkspaceContext.resuming` says. While the software runs, the
  * state opens the menu with Restart. The name is a button with no caret. It
  * opens the workspace menu of the list below it, and Rename in that menu
  * puts the field in place of the name. Until the list of the org loads, the
@@ -69,7 +71,7 @@ export function WorkspaceHeader(props: {
   )
   const name = nameLabel(workspace.name)
   const phone = props.context.viewport === 'phone'
-  const state = props.context.resumingAtOpen ? 'starting' : workspace.state
+  const state = props.context.resuming ? 'starting' : workspace.state
   const ownerView = props.ownerControl ?? (
     <Owner compact={phone} workspace={workspace} />
   )

@@ -89,9 +89,11 @@ this guide.
 - `files/TabOpenResume.test.tsx`: mounts the whole app over the fake API. It
   checks the resume when a diff of a stopped workspace opens, also at a
   second click on the diff that shows, and no second resume at the first
-  address. It checks the file that a tab keeps when the sandbox stops, no
-  start at a switch of its view, and no start in a ready or a refused
-  workspace.
+  address. With the reply of that resume held, it checks the wait of the
+  tab with no Resume, Starting in the header, and no read, then the
+  stopped state after the resume fails. It checks the file that a tab
+  keeps when the sandbox stops, no start at a switch of its view, and no
+  start in a ready or a refused workspace.
 - `files/TabScroll.test.tsx`: mounts the whole app over the fake API. It
   scrolls a file tab and a diff tab, shows the chat, and checks that each
   tab gives its offset back. A tab that the user closes opens at the top
@@ -313,10 +315,14 @@ this guide.
   for the end of Restore. Until the open of the visit ends, as
   `WorkspaceModel.opened` says, it shows the composer in place of the bar
   of a sandbox that the open resumes, so that no Resume flashes at an open.
-  Meanwhile `WorkspaceHeader.tsx` shows Starting in place of Stopped, and
-  `contentState` gives the tools and the file pages the wait of a start,
-  with no Resume. The lists keep their saved copy. A tab that opens then
-  sends no second Resume. `WorkspaceScreen.tsx` gives the bar
+  A tab that opens then sends no second Resume. The `resuming` flag of the
+  view holds while a Resume of the visit runs for such a sandbox: the
+  Resume of the open, or the pending Resume action of the screen, which
+  the open of a tab or a press sent. Meanwhile `WorkspaceHeader.tsx` shows
+  Starting in place of Stopped, and `contentState` gives the tools, the
+  Preview tabs, and the file and skill pages the wait of a start, with no
+  Resume. The lists keep their saved copy. After the open, the bar keeps
+  its notice, with the busy Resume. `WorkspaceScreen.tsx` gives the bar
   `workspace.archivedComputer?.state` as its `computer` mark. It sets the
   `removed` mark at the end of the 14 days, also without a kept cloud
   computer. `archiveEnd` in `archive-ends.ts` gives that end: the cutoff

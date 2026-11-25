@@ -485,6 +485,13 @@ Each call below is my call, made on 2026-11-24 unless it says otherwise.
   - The close of the shown skill tab shows the next skill tab, else the
     one before, else the chat, as for file and Preview tabs.
 
+- **Try again of a failed first start.** The wait of skill tab decision
+  5 holds for a stopped sandbox and for a later failed start, as for the
+  Resume of the open. Try again of a failed first start keeps its busy
+  state until the reply. Reason: decision 5 answers a start request for a
+  stopped computer, and a failed first start starts a new sandbox. My call
+  on 2026-11-25, after the app part of decision 5 raised it.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
