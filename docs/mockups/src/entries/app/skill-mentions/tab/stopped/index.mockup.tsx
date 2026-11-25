@@ -24,4 +24,15 @@ export const skillTabStopped = defineScreen({
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />
   ),
+  variants: [
+    {
+      slug: 'before-text',
+      title: 'Stopped before the text came',
+      description:
+        'The cloud computer stopped while the tab still read the text of plans. The header of the workspace shows Stopped. In place of "Opening the skill", the tab shows the stopped state with Resume, also on a phone. Resume starts the cloud computer, and the tab then reads the text.',
+      rationale:
+        'A tab keeps the text that it shows when the cloud computer stops, as a file tab keeps its file (decision 247). A tab without text has no text to keep, so it shows the stopped state with Resume, as a file tab without its file does. The same holds for a later start that failed, with Try again.',
+      props: { sandbox: 'stopped', tab: 'skill-loading' },
+    },
+  ],
 })

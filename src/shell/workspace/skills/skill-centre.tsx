@@ -1,7 +1,6 @@
 import { useMemo, type ReactNode } from 'react'
 import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
-import { useFollowTabs } from '../../../app/tab-places'
 import type { RenderedTab, TabDraw } from '../../../chat/components/tab-row'
 import { tabKey } from '../../../chat/state/tab-order'
 import { KeptScroll } from '../../../files/ui/kept-scroll'
@@ -22,7 +21,6 @@ import {
 } from './skill-navigation'
 import { LiftedSkillTab, SkillTabItem } from './SkillTabItem'
 import { SkillTabPage } from './SkillTabPage'
-import { skillViews } from './skill-views'
 
 /** Whether two skill tabs show one skill of one agent. */
 function sameSkill(left: SkillIdentity, right: SkillIdentity): boolean {
@@ -125,18 +123,13 @@ export interface SkillCentre {
  * name of its skill, and its tab menu has Keep open while it is the
  * temporary tab, the moves, and the closes, but no Copy path, because a
  * skill tab has no path. A phone shows the skill as a page of the Files
- * tab, and an archived workspace has no skill tabs. A skill tab that
- * leaves the saved view forgets its view.
+ * tab, and an archived workspace has no skill tabs.
  */
 export function useSkillCentre(context: WorkspaceContext): SkillCentre {
   const navigation = useSkillNavigation(context)
   const view = useSavedView(context.savedView)
   const desktop = context.viewport !== 'phone' && context.sandbox !== 'archived'
   const shown = desktop ? skillPlace(context.view) : null
-  useFollowTabs(
-    skillViews(context.skills),
-    view ? skillTabsOf(view).map(tabKey) : null,
-  )
   const renderTab = (tab: SkillTab): RenderedTab => {
     const temporary = isTemporaryTab(view, tab)
     return {

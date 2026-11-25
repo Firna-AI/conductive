@@ -43,6 +43,19 @@ const plansHref = skillHref(org, id, plans)
 const pageText = (view: HTMLElement) =>
   byRole('region', 'plans', view).textContent
 
+/** A new skills report of the workspace, as the stream brings it. */
+function reportSkills(server: FakeApiServer) {
+  act(() =>
+    server.events.emit(
+      nextEnvelope(
+        server.events,
+        { type: 'skills.updated', skills: skillLists },
+        FAKE_TIME,
+      ),
+    ),
+  )
+}
+
 describe('the notices of the skill tab', () => {
   test.each([
     {
@@ -127,15 +140,7 @@ describe('the notices of the skill tab', () => {
     ])
     await openTab(server, plansHref)
     const first = reads()
-    act(() =>
-      server.events.emit(
-        nextEnvelope(
-          server.events,
-          { type: 'skills.updated', skills: skillLists },
-          FAKE_TIME,
-        ),
-      ),
-    )
+    reportSkills(server)
     await settle()
 
     expect({
@@ -146,6 +151,58 @@ describe('the notices of the skill tab', () => {
       first: 1,
       after: 2,
       posted: [plansBody, plansBody.replace('options.', 'options and a date.')],
+    })
+  })
+
+  test.each([
+    {
+      cause: 'a 5xx reply of a stopped cloud computer',
+      reply: errorReply(503, 'computer_stopped'),
+    },
+    { cause: 'a lost connection', reply: 'lost connection' as const },
+  ])(
+    'a read after a skills report that fails with $cause keeps the text that shows',
+    async ({ reply }) => {
+      holdAnimationFrames()
+      fakeWorkers()
+      const server = new FakeApiServer()
+      serveSkillChat(server)
+      const reads = serveSkillReads(server, plans, [
+        textReply(plansText),
+        reply,
+      ])
+      const { view } = await openTab(server, plansHref)
+      click(byRole('radio', 'Source', byRole('region', 'plans', view)))
+      await settle()
+      const shown = pageText(view)
+
+      reportSkills(server)
+      await settle()
+
+      expect({
+        reads: reads(),
+        text: shown?.includes('Write each decision with its options.'),
+        after: pageText(view),
+      }).toEqual({ reads: 2, text: true, after: shown })
+    },
+  )
+
+  test('a read after a skills report that finds no skill shows the notice of a removed skill in place of the text', async () => {
+    holdAnimationFrames()
+    fakeWorkers()
+    const server = new FakeApiServer()
+    serveSkillChat(server)
+    const reads = serveSkillReads(server, plans, [
+      textReply(plansText),
+      errorReply(404, 'skill_not_found'),
+    ])
+    const { view } = await openTab(server, plansHref)
+    reportSkills(server)
+    await settle()
+
+    expect({ reads: reads(), page: pageText(view) }).toEqual({
+      reads: 2,
+      page: 'plansClaude skillUse before you write or change a plan file.This skill was removed or renamedType / in a message to see the current skills.',
     })
   })
 })

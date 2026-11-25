@@ -25,7 +25,10 @@ to `src/shell/workspace/`, the folder of this guide.
 
 - `skills/skill-address.ts` reads and writes the address
   `skills/<agent>/<name>` after the workspace. A link encodes a `/` of the
-  name, and an address that a person types can keep it.
+  name, and an address that a person types can keep it. A browser drops a
+  part `.` or `..` of an address and reads `%2E` as a dot, so a name of
+  only `~` signs and one or two dots gets one more `~` in front: `.` is
+  `~.`, and `~.` is `~~.`.
 - `skills/skill-navigation.ts` holds `useSkillNavigation`. Its `open`
   saves the tab as the open and active tab, then moves the address, as a
   press on a skill chip does. Its `keep` keeps the temporary tab, as a
@@ -51,6 +54,9 @@ to `src/shell/workspace/`, the folder of this guide.
   no Copy path.
 - Each skill tab keeps its view, Preview or Source, in `skills/skill-views.ts`,
   and its scroll offset of each view in the kept files, until it closes.
+  `ForgetClosedSkillViews` of the same file follows the saved view in
+  `screen-addons.tsx`, in each layout, so a tab that closes while a phone
+  shows Files forgets its view too.
 - `skills/SkillTabPage.tsx` gives `SkillPage` of the
   [Files screens](../../files/screens.md) the read of the text, the
   description from the list of the agent of the tab, and the view. On a
@@ -62,7 +68,11 @@ to `src/shell/workspace/`, the folder of this guide.
   at Try again, and after each skills report of `WorkspaceSkills` while
   the page shows. It uses the `ResourceLoader` of the Files screens, so a
   new read keeps the text that shows, and a reply for another skill never
-  shows. `skill_not_found`, `skill_too_large`, and
+  shows. A read of a text that shows, such as after a skills report, also
+  keeps the text when it fails with a cause that can pass: a reply with a
+  5xx status, such as `computer_stopped`, or a fetch that failed. Without
+  a text that shows, and for a reply with a 4xx status, the page shows the
+  notice of the failure. `skill_not_found`, `skill_too_large`, and
   `skill_reads_unsupported` show their notices. `computer_stopped` and
   `computer_starting` show the wait of the read, because the workspace
   then shows the state of its sandbox. Each other failure shows the
@@ -86,6 +96,10 @@ the whole app over the fake API. They press a sent skill chip and check
 the temporary tab, its address, its header, the Markdown body without the
 front matter, Source, the keeps, the tab menu, Escape, the save of the
 skill fields, and a press on a file that replaces the tab. They also
-check each notice, Try again, the read after a skills report, the Resume
-of a stopped sandbox, and the page on a phone. `skills/skill-test-kit.ts`
-serves the skills report, a sent message with a skill chip, and the reads.
+check each notice, Try again, the read after a skills report, the text
+that a failed read after a report keeps, the Resume of a stopped sandbox,
+the page on a phone, and the view of a skill that opens again on a phone
+after a diff replaced its tab. `skills/skill-address.test.ts` reads the
+addresses that `skillHref` writes, also of names with dots.
+`skills/skill-test-kit.ts` serves the skills report, a sent message with
+a skill chip, and the reads, also a read whose connection drops.

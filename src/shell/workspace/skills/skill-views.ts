@@ -1,7 +1,11 @@
 import { useState } from 'react'
-import { TabPlaces } from '../../../app/tab-places'
+import { TabPlaces, useFollowTabs } from '../../../app/tab-places'
 import type { SkillsStore } from '../../../chat/mentions/mention-skills'
+import { tabKey } from '../../../chat/state/tab-order'
 import type { FileMode } from '../../../files/navigation'
+import type { WorkspaceContext } from '../features'
+import { useSavedView } from '../saved-view'
+import { skillTabsOf } from './skill-navigation'
 
 /**
  * The view of each skill tab of one workspace, Preview or Source, for as
@@ -14,7 +18,7 @@ const views = new WeakMap<SkillsStore, TabPlaces<FileMode>>()
  * The views of the skill tabs of the workspace of `skills`, by the key of
  * each tab. A reload forgets them, so a tab starts in Preview.
  */
-export function skillViews(skills: SkillsStore): TabPlaces<FileMode> {
+function skillViews(skills: SkillsStore): TabPlaces<FileMode> {
   const known = views.get(skills)
   if (known) return known
   const made = new TabPlaces<FileMode>()
@@ -39,4 +43,21 @@ export function useSkillView(
     setMode(next)
   }
   return [mode, change]
+}
+
+/**
+ * A skill tab that leaves the saved view, such as one that a file of the
+ * temporary tab replaced, forgets its view, so the skill opens again in
+ * Preview. The workspace screen draws this part in each layout, so it
+ * follows the tabs also while a phone shows Files, where no chat shows.
+ */
+export function ForgetClosedSkillViews(props: {
+  context: WorkspaceContext
+}): null {
+  const view = useSavedView(props.context.savedView)
+  useFollowTabs(
+    skillViews(props.context.skills),
+    view ? skillTabsOf(view).map(tabKey) : null,
+  )
+  return null
 }

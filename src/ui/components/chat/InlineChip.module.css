@@ -37,9 +37,14 @@
   font-weight: 500;
 }
 
-/* A chip that opens its page: a link of the app or of the mockups. */
+/*
+ * A chip that opens its page: a link of the app or of the mockups. A view
+ * of the mockups has no pointer, so `.pointer` draws its hover.
+ */
 a.chip:hover,
-button.chip:hover {
+button.chip:hover,
+a.chip.pointer,
+button.chip.pointer {
   border-color: var(--ui-faint);
   background: var(--ui-selected);
 }

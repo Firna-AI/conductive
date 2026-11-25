@@ -11,8 +11,8 @@ import type { FileEntry } from '../../../shared/generated/FileEntry'
 import { useChatLinks } from '../../links/LinksContext'
 import { MentionIcon } from '../../mentions/MentionIcon'
 import { folderLabel, mentionRows } from '../../mentions/mention-rows'
-import { useMentionSkills } from '../../mentions/mention-skills'
 import {
+  useMentionSkills,
   useMentionTree,
   type MentionTree,
 } from '../../mentions/MentionsContext'

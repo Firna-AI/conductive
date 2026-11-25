@@ -1,8 +1,10 @@
-import { useCallback, useSyncExternalStore } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
 import type { AgentSkill } from '../../shared/generated/AgentSkill'
 import type { SkillLists } from '../../shared/generated/SkillLists'
-import { useChatMentions } from './MentionsContext'
+
+// The skill lists of the workspace and the lookup of a skill in them. The
+// module holds no React, so the readers of chat text can use its types.
+// `useMentionSkills` of `MentionsContext.tsx` follows the lists.
 
 /**
  * The skill lists of the workspace as the list of `/` and the skill chips
@@ -21,22 +23,6 @@ export type MentionSkills =
 export interface SkillsStore {
   subscribe: (listener: () => void) => () => void
   getSnapshot: () => MentionSkills
-}
-
-function followNothing(): () => void {
-  return () => undefined
-}
-
-/**
- * The skill lists that the chat follows now, or null without mentions. A
- * reader that `follows` nothing, such as an answer, gets null and follows
- * no change.
- */
-export function useMentionSkills(follows = true): MentionSkills | null {
-  const mentions = useChatMentions()
-  const skills = follows ? (mentions?.skills ?? null) : null
-  const read = useCallback(() => skills?.getSnapshot() ?? null, [skills])
-  return useSyncExternalStore(skills?.subscribe ?? followNothing, read, read)
 }
 
 /** The skills of one agent, or none while the lists are not ready. */
@@ -71,16 +57,4 @@ export function findListedSkill(
     if (skill) return { agent: each, skill }
   }
   return undefined
-}
-
-/**
- * The skill of either agent that a skill text names, or undefined. The
- * list of `agent` comes first, so its description gives the title.
- */
-export function findSkill(
-  skills: MentionSkills,
-  name: string,
-  agent: Agent = 'claude',
-): AgentSkill | undefined {
-  return findListedSkill(skills, name, agent)?.skill
 }

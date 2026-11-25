@@ -75,8 +75,11 @@ export const tabStates = [
  * after that file. `kept` draws the file that the temporary tab held,
  * which a double-click kept, then the file of `tab` in a new temporary tab
  * at the end of the row. `skill-kept` does the same with the skill tab of
- * `plans` as the kept tab. A session or the code file in `tab` draws no
- * temporary tab, and a phone row shows no file or skill tabs.
+ * `plans` as the kept tab. `skill-shown` draws that row after a return to
+ * the kept skill tab of `plans` in `tab`: the skill shows and stays kept,
+ * and README.md stays the temporary tab after it. A session or the code
+ * file in `tab` draws no temporary tab, and a phone row shows no file or
+ * skill tabs.
  */
 export const temporaryTabStates = [
   'none',
@@ -84,6 +87,7 @@ export const temporaryTabStates = [
   'replaced',
   'kept',
   'skill-kept',
+  'skill-shown',
 ] as const
 
 /**

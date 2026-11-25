@@ -196,16 +196,18 @@ this guide.
   `repository/RepositoryQuestion.tsx`: the question.
   `repository/RepositoryMenu.test.tsx` and
   `repository/RepositoryQuestion.test.tsx` mount the whole app over the
-  fake API: the menu, the progress, the note, the close of a file tab, a
-  phone sheet, the text in read-only states, the question with the labels
-  of its files, and the failure toasts. `repository/repository-api.test.ts`
+  fake API: the menu, the progress, the note, the close of a file tab
+  beside a temporary skill tab that stays, a phone sheet, the text in
+  read-only states, the question with the labels of its files, and the
+  failure toasts. `repository/repository-api.test.ts`
   checks the reader of those labels. `repository/repository-test-kit.tsx`
   holds their helpers, `../../test-support/fake-repository-change.ts` the
   replies, and `../../test-support/fake-repository-names.ts` their names.
 - `screen-addons.tsx`: `ScreenAddons`, the parts of the screen with no
   place of their own, in each layout: the question of Continue, the
   palette actions, `RestoreShownTab`, `ResumeOnTabOpen`, `LeaveMovedFiles`
-  of `files/moved-files.tsx`, and `OpenSessionAddress`.
+  of `files/moved-files.tsx`, `OpenSessionAddress`, and
+  `ForgetClosedSkillViews` of `skills/skill-views.ts`.
 - `github/BarMerge.test.tsx`, `github/BarAgent.test.tsx`,
   `github/BarContinue.test.tsx`, and `files/KeptFiles.test.tsx`: mount the
   whole app over the fake API. They check Merge and its refusals, the

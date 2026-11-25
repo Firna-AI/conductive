@@ -12,6 +12,7 @@ import type { Attachment as AppAttachment } from '../../../../../src/shared/gene
 import type { FileEntry } from '../../../../../src/shared/generated/FileEntry'
 import type { Attachment } from '../../fixtures/attachments'
 import { mentionEntries, repositoryFolder } from '../../fixtures/fileMentions'
+import { plansAgent } from '../../fixtures/skillFiles'
 import { type MentionEntry } from '../../../../../src/ui/components/chat/mentionEntry'
 import { skills } from '../../fixtures/skills'
 import { entryName } from '../../../../../src/ui/components/chat/entryPaths'
@@ -55,9 +56,15 @@ export function mockupEntry(file: FileEntry): MentionEntry {
   )
 }
 
-/** Finds the skill of the agents of the mockups that a skill text names. */
-export const findSkill: SkillLookup = (name) =>
-  skills.find((skill) => skill.name === name)
+/**
+ * Finds the skill of the mockups that a skill text names, with its agent.
+ * The skills of the mockups lie in the Claude skill folder, as the skill
+ * tab of `plans` shows.
+ */
+export const findSkill: SkillLookup = (name) => {
+  const skill = skills.find((each) => each.name === name)
+  return skill ? { agent: plansAgent, skill } : undefined
+}
 
 /**
  * What the mockups read the text of an agent message with: the workspaces

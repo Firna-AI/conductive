@@ -49,9 +49,7 @@ export function UserBubble(props: {
     attachments: message.attachments,
   })
   const listed = filesWithoutChip(parts, message.attachments)
-  const text = (
-    <ChatText agent={agent} opens={message.state === 'sent'} parts={parts} />
-  )
+  const text = <ChatText opens={message.state === 'sent'} parts={parts} />
   return (
     <div className={styles.user}>
       <div className={classes(styles.bubble, controls.lines)}>

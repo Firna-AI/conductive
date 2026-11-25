@@ -13,7 +13,8 @@ import type { ChipUpload } from '../../../../../src/ui/components/chat/DraftFile
 import { entryName } from '../../../../../src/ui/components/chat/entryPaths'
 import { FileChip } from '../../../../../src/ui/components/chat/FileChip'
 import { SkillChip } from '../../../../../src/ui/components/chat/SkillChip'
-import { noop } from '../../../../../src/ui/noop'
+import { skillTabOf } from '../../skillPaths'
+import { ScreenLink } from '../common/ScreenLink'
 import { LinkChip } from './LinkChip'
 import { iconOf } from './MentionChip'
 import { linkTarget, type LinkTarget, type RowLinks } from './workspaceLinks'
@@ -59,10 +60,12 @@ function skillItems(text: string, links: RowLinks): DraftItem[] {
       index += 1
       continue
     }
-    const skill = findSkill(found.name)
+    const listed = findSkill(found.name)
     items.push(
       ...linkItems(plain, links),
-      skill ? { kind: 'skill', skill } : { kind: 'text', text: found.source },
+      listed
+        ? { kind: 'skill', skill: listed.skill }
+        : { kind: 'text', text: found.source },
     )
     plain = ''
     index += found.source.length
@@ -136,7 +139,8 @@ function uploadOf(file: Attachment): ChipUpload {
  * which a pointer turns into a × that removes it. In the app a press on
  * the name of a file chip opens the file, and a press on the name of an
  * attached file opens nothing. A press on the name of a skill chip opens
- * the skill in the temporary tab, as the shared `SkillChip` says.
+ * the skill in the temporary tab, as the shared `SkillChip` says, so its
+ * name is a link to the skill tab, when the mockups draw that tab.
  *
  * `files` are the files of the draft, by the draft IDs of their marks. A
  * view runs no script, so `caret` draws the caret at that index of the
@@ -202,17 +206,21 @@ export function DraftText(props: {
                 />
               </span>
             )
-          case 'skill':
+          case 'skill': {
+            const to = skillTabOf(item.skill.name)
             return (
               <span contentEditable={false} key={index}>
                 <SkillChip
+                  nameOpener={
+                    to ? (name) => <ScreenLink {...name} to={to} /> : undefined
+                  }
                   namePointer={props.namePointer === true && first}
-                  onOpen={noop}
                   removal={{ name: item.skill.name, pointer }}
                   skill={item.skill}
                 />
               </span>
             )
+          }
           case 'link':
             return (
               <span contentEditable={false} key={index}>

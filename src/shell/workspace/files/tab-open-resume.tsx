@@ -2,12 +2,13 @@ import type { WorkspaceContext } from '../features'
 import { useTabVisits } from '../tab-visits'
 
 /**
- * Whether the open of a file or diff tab resumes the sandbox: in the cases
- * where the open of the workspace resumes it, a stopped workspace and one
- * whose later start failed. A failed first start waits for Try again. A
- * refused start, an archived workspace, and a suspended org start nothing.
- * Nor does a tab that opens while the open of the workspace still resumes
- * the sandbox, because that Resume already runs.
+ * Whether the open of a file, diff, Preview, or skill tab resumes the
+ * sandbox: in the cases where the open of the workspace resumes it, a
+ * stopped workspace and one whose later start failed. A failed first start
+ * waits for Try again. A refused start, an archived workspace, and a
+ * suspended org start nothing. Nor does a tab that opens while the open of
+ * the workspace still resumes the sandbox, because that Resume already
+ * runs.
  */
 function resumesAtTabOpen(context: WorkspaceContext): boolean {
   const { panel } = context

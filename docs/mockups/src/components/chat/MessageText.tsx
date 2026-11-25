@@ -5,21 +5,17 @@ import {
   type ChatPart,
 } from '../../../../../src/chat/links/chat-parts'
 import type { Attachment } from '../../fixtures/attachments'
-import { plansSkill } from '../../fixtures/skills'
 import { paths } from '../../paths'
-import { skillPaths } from '../../skillPaths'
-import { classes } from '../../../../../src/ui/components/common/classes'
+import { skillTabOf } from '../../skillPaths'
 import { ScreenLink } from '../common/ScreenLink'
 import { appAttachment, findEntry, findSkill } from './chatReading'
 import { useChatWorkspaces } from './chatWorkspaces'
 import { ReadChip } from './LinkChip'
 import { MentionChip } from './MentionChip'
 import { SentFileChip } from '../../../../../src/ui/components/chat/SentFileChip'
-import { useNoHover } from '../../../../../src/ui/components/chat/ChipRemove'
 import { SkillChip } from '../../../../../src/ui/components/chat/SkillChip'
 import { CodeText, WebLinkText } from './WebLinkText'
 import { webLinkOf } from './workspaceLinks'
-import pointerStyles from './ChipPointer.module.css'
 
 /** The file tab of the copy of an attached file, when the mockups draw it. */
 const attachedTabs = { picture: paths.attachmentOpen } as const
@@ -48,40 +44,24 @@ function AttachedChip(props: {
   )
 }
 
-/** The skill tab that a press on a skill chip opens, when the mockups draw it. */
-const skillTabs: Readonly<Partial<Record<string, string>>> = {
-  [plansSkill.name]: skillPaths.preview,
-}
-
 /**
  * The chip of a skill in a sent message. A press opens the skill in the
  * temporary tab (skill tab decision 1 B), when the mockups draw its tab. A
  * view cannot hover, so `pointer` draws the pointer over the chip, with
- * the fill of a hover. Where no pointer hovers, as on a phone, it draws
- * none.
+ * the fill of a hover, as the shared `SkillChip` says. Where no pointer
+ * hovers, as on a phone, it draws none.
  */
 function SentSkillChip(props: {
   part: Extract<ChatPart, { kind: 'skill' }>
   pointer: boolean
 }) {
   const { part } = props
-  const noHover = useNoHover()
-  const to = skillTabs[part.skill.name]
-  const hover = props.pointer && !noHover && pointerStyles.chip
+  const to = skillTabOf(part.skill.name)
   return (
     <SkillChip
       mention={part.source}
-      opener={
-        to
-          ? (chip) => (
-              <ScreenLink
-                {...chip}
-                className={classes(chip.className, hover)}
-                to={to}
-              />
-            )
-          : undefined
-      }
+      opener={to ? (chip) => <ScreenLink {...chip} to={to} /> : undefined}
+      pointer={props.pointer}
       skill={part.skill}
     />
   )

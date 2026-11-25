@@ -15,11 +15,13 @@ import type { Agent } from '../../../shared/generated/Agent'
 import { skillTextAt } from '../../../shared/skill-text'
 import {
   findListedSkill,
-  useMentionSkills,
   type ListedSkill,
   type MentionSkills,
 } from '../../mentions/mention-skills'
-import { useChatMentions } from '../../mentions/MentionsContext'
+import {
+  useChatMentions,
+  useMentionSkills,
+} from '../../mentions/MentionsContext'
 
 /** The skill text as the text has it, such as `/plans`. */
 const skillState = createState('skill', {

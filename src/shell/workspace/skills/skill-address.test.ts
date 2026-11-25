@@ -22,6 +22,15 @@ test('the address of a skill tab names its agent and its name, also a name with 
   })
 })
 
+test('the address of a skill tab opens a skill named with dots, a name that looks like the escape of dots, and a name with a percent sign', () => {
+  const names = ['.', '..', '~.', '~~..', '%2E']
+  expect(
+    names.map((name) =>
+      skillAt(skillHref('acme', 'checkout', { agent: 'claude', name })),
+    ),
+  ).toEqual(names.map((name) => ({ agent: 'claude', name })))
+})
+
 test('an address with another agent, no name, or a name with white space names no skill', () => {
   expect(
     [

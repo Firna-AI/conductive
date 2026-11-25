@@ -10,7 +10,7 @@ import type { LineRange } from '../../shared/line-target'
 import type { SkillIdentity } from '../../shared/skills'
 import type { ChatPictures } from '../../files/page/picture-reads'
 import { mentionable } from './mention-rows'
-import type { SkillsStore } from './mention-skills'
+import type { MentionSkills, SkillsStore } from './mention-skills'
 
 /**
  * What the chat reads of the kept files of the workspace: the store of the
@@ -192,6 +192,18 @@ export function useFilesMentionTree(
 export function useMentionTree(follows = true): MentionTree | null {
   const mentions = useChatMentions()
   return useFilesMentionTree(follows ? (mentions?.files ?? null) : null)
+}
+
+/**
+ * The skill lists that the chat follows now, or null without mentions. A
+ * reader that `follows` nothing, such as an answer, gets null and follows
+ * no change.
+ */
+export function useMentionSkills(follows = true): MentionSkills | null {
+  const mentions = useChatMentions()
+  const skills = follows ? (mentions?.skills ?? null) : null
+  const read = useCallback(() => skills?.getSnapshot() ?? null, [skills])
+  return useSyncExternalStore(skills?.subscribe ?? followNothing, read, read)
 }
 
 /**

@@ -34,6 +34,19 @@ function skillError(status: number, body: unknown): FilesError {
   return { kind: 'failed', status, code }
 }
 
+/**
+ * Whether the cause of a failed read can pass: a reply with a 5xx status,
+ * such as of a cloud computer that stops, or a fetch that failed, as when
+ * the connection drops. A read of a text that shows keeps the text after
+ * such a failure, as "Notices" in `docs/protocol/skill-tabs.md` says. A
+ * reply with a 4xx status, such as of a removed skill, shows its notice.
+ */
+function causePasses(error: FilesError): boolean {
+  return (
+    error.kind === 'failed' && (error.status === null || error.status >= 500)
+  )
+}
+
 /** Where a read of a skill goes: the fetch of the org, and the workspace. */
 export interface SkillSource {
   fetch: FetchLike
@@ -77,9 +90,10 @@ async function readSkillText(
  * Reads the text of a skill while `follow` is on, and reads it again after
  * each skills report of the workspace, as "Fresh text" in
  * `docs/protocol/skill-tabs.md` says. A new read keeps the text that shows
- * until its reply. With `follow` off, such as while the cloud computer does
- * not run, it reads nothing, and the state stays as the last read left it.
- * When `follow` turns on, such as when the workspace leaves Starting, it
+ * until its reply, and after a failure whose cause can pass, as
+ * `causePasses` says. With `follow` off, such as while the cloud computer
+ * does not run, it reads nothing, and the state stays as the last read left
+ * it. When `follow` turns on, such as when the workspace leaves Starting, it
  * reads at once. A reply for a skill that the page no longer shows never
  * shows.
  */
@@ -94,8 +108,10 @@ export function useSkillRead(
   const key = JSON.stringify([agent, name])
   const loader = useMemo(
     () =>
-      new ResourceLoader<string>((_key, signal) =>
-        readSkillText({ fetch, orgId, workspaceId }, { agent, name }, signal),
+      new ResourceLoader<string>(
+        (_key, signal) =>
+          readSkillText({ fetch, orgId, workspaceId }, { agent, name }, signal),
+        causePasses,
       ),
     [fetch, orgId, workspaceId, agent, name],
   )

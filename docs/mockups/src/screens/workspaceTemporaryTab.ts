@@ -2,6 +2,7 @@ import { nameLabel } from '../../../../src/shared/name-label'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { newSession } from '../fixtures/sessions'
 import { paths } from '../paths'
+import { skillPaths } from '../skillPaths'
 import { keptSkillTab } from './workspaceSkillTab'
 import type { WorkspaceState } from './workspaceState'
 
@@ -73,12 +74,26 @@ function keptTabOf(state: WorkspaceState): WorkspaceTab {
 }
 
 /**
+ * README.md in the temporary tab after the kept skill tab of `plans`,
+ * while the skill shows. It leads back to the row where README.md shows.
+ */
+const readmeAfterSkill: WorkspaceTab = {
+  key: 'readme',
+  kind: 'markdown',
+  title: 'README.md',
+  to: skillPaths.keptThenFile,
+  selected: false,
+  temporary: true,
+}
+
+/**
  * The row with the temporary tab of the state, from decisions 284 to 287:
  * the shown file, diff, or skill, with its title in italics. A replaced
  * tab keeps the place of the tab before it, so the tab of a session that
  * opened later stays after it. After a keep, the next press opens a new
  * temporary tab at the end of the row, as each new tab opens there. The
- * kept tab can be a file or the skill tab of `plans`.
+ * kept tab can be a file or the skill tab of `plans`. A return to that
+ * kept skill tab shows it, and README.md stays the temporary tab after it.
  */
 export function withTemporaryTab(
   state: WorkspaceState,
@@ -98,5 +113,9 @@ export function withTemporaryTab(
       return marked.toSpliced(at, 0, keptTabOf(state))
     case 'skill-kept':
       return marked.toSpliced(at, 0, keptSkillTab)
+    case 'skill-shown':
+      return tabs
+        .with(at, { ...tabs[at], to: keptSkillTab.to })
+        .toSpliced(at + 1, 0, readmeAfterSkill)
   }
 }

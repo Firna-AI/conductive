@@ -75,11 +75,11 @@ export function serveSkillChat(
   )
 }
 
-/** One reply of the read of a skill, as the Worker sends it. */
-export interface SkillReply {
-  status: number
-  body: unknown
-}
+/**
+ * One reply of the read of a skill, as the Worker sends it, or a read whose
+ * fetch fails, as when the connection drops.
+ */
+export type SkillReply = { status: number; body: unknown } | 'lost connection'
 
 /** A reply with the text of a skill. */
 export const textReply = (text: string): SkillReply => ({
@@ -106,7 +106,9 @@ export function serveSkillReads(
   server.handle('GET', skillContentPath(org, id, skill), () => {
     const reply = replies[Math.min(reads, replies.length - 1)]
     reads += 1
-    return Promise.resolve(Response.json(reply.body, { status: reply.status }))
+    return reply === 'lost connection'
+      ? Promise.reject(new TypeError('Failed to fetch'))
+      : Promise.resolve(Response.json(reply.body, { status: reply.status }))
   })
   return () => reads
 }

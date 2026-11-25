@@ -31,6 +31,15 @@ export function openSkill(state: WorkspaceState): SkillTabView | undefined {
   }
 }
 
+/**
+ * Whether the skill tab shows the text of the skill, in Preview or in
+ * Source, which a stopped sandbox keeps. A notice in place of the text,
+ * such as the read that runs, gives way to the state of the sandbox.
+ */
+export function showsSkillText(view: SkillTabView): boolean {
+  return view === 'preview' || view === 'source'
+}
+
 /** The screen of each view of the skill tab. */
 const viewPaths: Readonly<Record<SkillTabView, string>> = {
   preview: skillPaths.preview,
@@ -65,11 +74,15 @@ export function skillTab(state: WorkspaceState): WorkspaceTab | undefined {
   }
 }
 
-/** The skill tab of `plans`, which a keep kept, while another tab shows. */
+/**
+ * The skill tab of `plans`, which a keep kept, while another tab shows. It
+ * leads to the same row with the skill shown, so the skill stays kept and
+ * the temporary tab stays.
+ */
 export const keptSkillTab: WorkspaceTab = {
   key: skillTabKey,
   kind: 'skill',
   title: plansSkill.name,
-  to: skillPaths.preview,
+  to: skillPaths.keptShown,
   selected: false,
 }

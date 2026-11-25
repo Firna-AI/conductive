@@ -28,7 +28,7 @@ import { freshPromptFor, runStartingLog } from './workspaceRun'
 import { panelState } from './workspaceSandbox'
 import { previewServicesOf } from './workspaceServices'
 import { backFrom, openFile } from './workspaceFileTab'
-import { openSkill } from './workspaceSkillTab'
+import { openSkill, showsSkillText } from './workspaceSkillTab'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
@@ -60,17 +60,23 @@ function changedPaths(state: WorkspaceState): readonly string[] | undefined {
  * The sandbox state in place of the content of an open file: while the
  * sandbox starts, because the tab opened then and shows no content yet,
  * while its start is refused, and after a failed first start. A stopped
- * sandbox, and one whose later start failed, keep the file. `withAction`
- * adds the action and the words of a refusal, as a phone shows them, and as
- * a file page shows them on desktop, where the page hides the bar of the
- * chat.
+ * sandbox, one whose later start failed, and an archived one keep the
+ * content that the tab shows. A tab without content, `hasContent` false,
+ * such as a skill tab whose text still loads, shows their state too, with
+ * Resume or Try again, as the app does. `withAction` adds the action and
+ * the words of a refusal, as a phone shows them, and as a file page shows
+ * them on desktop, where the page hides the bar of the chat.
  */
 export function filePlaceholder(
   state: WorkspaceState,
   withAction: boolean,
+  hasContent = true,
 ): ReactNode {
   const panel = panelState(state)
-  return panel && (panel.problem === 'starting' || replacesShownFile(panel)) ? (
+  const replaces =
+    panel !== undefined &&
+    (panel.problem === 'starting' || replacesShownFile(panel) || !hasContent)
+  return replaces ? (
     <sandboxPanel.Component
       moklyInstance="sandbox-file"
       phone={withAction}
@@ -136,7 +142,9 @@ export function FilesContent(props: {
         back={{ label: 'All files', to: paths.filesAll }}
         moklyInstance="skill-page"
         view={skill}
-        {...defined({ placeholder: filePlaceholder(state, true) })}
+        {...defined({
+          placeholder: filePlaceholder(state, true, showsSkillText(skill)),
+        })}
       />
     )
   }

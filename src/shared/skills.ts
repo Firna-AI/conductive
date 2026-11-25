@@ -1,3 +1,6 @@
+import type { RunnerReadSkill } from './generated/RunnerReadSkill'
+import { workspacePath } from './workspaces'
+
 /** The most skills of one agent in a report: the first ones in name order. */
 export const SKILL_REPORT_MAX_SKILLS = 200
 /**
@@ -28,8 +31,6 @@ export function isSkillName(name: string): boolean {
     !/[\s\p{Z}\p{Cc}]/u.test(name)
   )
 }
-import type { RunnerReadSkill } from './generated/RunnerReadSkill'
-import { workspacePath } from './workspaces'
 
 export type SkillIdentity = Pick<RunnerReadSkill, 'agent' | 'name'>
 

@@ -1,10 +1,10 @@
 import { attachmentForMention } from '../../shared/attachment-mentions'
-import type { AgentSkill } from '../../shared/generated/AgentSkill'
 import type { FileEntry } from '../../shared/generated/FileEntry'
 import type { Attachment } from '../../shared/generated/Attachment'
 import type { LineRange } from '../../shared/line-target'
 import { mentionTarget, type EntryLookup } from './file-targets'
 import type { Mention } from '../../shared/mention-text'
+import type { ListedSkill } from '../mentions/mention-skills'
 import {
   tokens,
   type LinkToken,
@@ -31,7 +31,7 @@ export type ChatPart =
   | { kind: 'chip'; source: string; target: LinkTarget }
   | LinkPart
   | FilePart
-  | { kind: 'skill'; source: string; skill: AgentSkill }
+  | ({ kind: 'skill'; source: string } & ListedSkill)
   | AttachmentPart
 
 /**

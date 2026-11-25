@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 
+import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../../app/router'
 import {
@@ -76,6 +77,15 @@ const tabOf = (view: HTMLElement, skill: SkillIdentity) =>
 /** The text of the page of the skill tab of `plans`. */
 const pageText = (view: HTMLElement) =>
   byRole('region', 'plans', view).textContent
+
+/** The view that the switch of the page of `plans` marks: Preview or Source. */
+const shownView = (view: HTMLElement) =>
+  ['Preview', 'Source'].find(
+    (name) =>
+      byRole('radio', name, byRole('region', 'plans', view)).getAttribute(
+        'aria-checked',
+      ) === 'true',
+  )
 
 describe('the skill tab in the workspace', () => {
   test('a press on a skill chip of a sent message opens the skill in the temporary tab at its address, with the header of the skill and the Markdown body without the front matter, and the save carries the tab in the skill fields', async () => {
@@ -213,5 +223,41 @@ describe('the skill tab in the workspace', () => {
       debounce,
       'AddressForm.tsx changes, temporary',
     ])
+  })
+
+  test('on a phone, a skill in Source whose temporary tab a diff replaced opens again in Preview', async () => {
+    holdAnimationFrames()
+    fakeWorkers()
+    const server = new FakeApiServer()
+    serveSkillChat(server)
+    serveSkillReads(server, plans, [textReply(plansText)])
+    const address = skillHref(org, id, plans)
+    const { view, navigation } = await openTab(server, address, {
+      viewport: 'phone',
+    })
+    click(byRole('radio', 'Source', byRole('region', 'plans', view)))
+    await settle()
+    const before = shownView(view)
+    const from = server.requests.length
+
+    act(() => navigation.push(filesHref(org, id, formDiff)))
+    await settle()
+    const saved = await bodiesOf(
+      server,
+      'PUT',
+      workspaceViewPath(org, id),
+      from,
+    )
+    act(() => navigation.push(address))
+    await settle()
+
+    expect({ before, replaced: saved.at(-1), after: shownView(view) }).toEqual({
+      before: 'Source',
+      replaced: expect.objectContaining({
+        temporaryTab: formDiff,
+        skillTabs: [],
+      }),
+      after: 'Preview',
+    })
   })
 })

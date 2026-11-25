@@ -1,7 +1,5 @@
 import { SkillChip } from '../../ui/components/chat/SkillChip'
-import type { Agent } from '../../shared/generated/Agent'
 import { isPlainClick } from '../../shell/ui/AppLink'
-import { findListedSkill, useMentionSkills } from '../mentions/mention-skills'
 import { useChatMentions } from '../mentions/MentionsContext'
 import type { ChatPart } from './chat-parts'
 
@@ -10,29 +8,24 @@ type SkillPart = Extract<ChatPart, { kind: 'skill' }>
 
 /**
  * A skill in a sent message: a link of the app to the skill tab, as a file
- * chip is a link to its file. The chip names the skill of `agent`, the
- * agent that the message went to, or the skill of the other agent when
- * only that agent has a skill of the name, as the title of the chip does.
- * A plain click opens the skill tab, in the temporary tab when the skill
- * has none. A click with a modifier key stays with the browser. In a chat
- * without the skill tabs of the shell, the chip opens nothing.
+ * chip is a link to its file. The part names the skill and the agent whose
+ * list holds it: the agent that the message went to, or the other agent
+ * when only that agent has a skill of the name. So the title of the chip
+ * and its skill tab come from one lookup. A plain click opens the skill
+ * tab, in the temporary tab when the skill has none. A click with a
+ * modifier key stays with the browser. In a chat without the skill tabs of
+ * the shell, the chip opens nothing.
  */
-export function SkillLink(props: { part: SkillPart; agent?: Agent }) {
+export function SkillLink(props: { part: SkillPart }) {
   const { part } = props
   const tabs = useChatMentions()?.skillTabs
-  const skills = useMentionSkills()
-  const listed = skills
-    ? findListedSkill(skills, part.skill.name, props.agent)
-    : undefined
-  const target = listed
-    ? { agent: listed.agent, name: listed.skill.name }
-    : null
   const { name, description } = part.skill
+  const target = { agent: part.agent, name }
   return (
     <SkillChip
       mention={part.source}
       opener={
-        tabs && target
+        tabs
           ? (chip) => (
               <a
                 {...chip}

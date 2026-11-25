@@ -8,7 +8,7 @@ import { paths } from '../paths'
 import { PreviewPage } from '../components/tools/PreviewPage'
 import { SandboxPanel } from '../components/workspace/SandboxNotice'
 import { openFile } from './workspaceFileTab'
-import { openSkill } from './workspaceSkillTab'
+import { openSkill, showsSkillText } from './workspaceSkillTab'
 import { filePlaceholder } from './workspaceParts'
 import { panelState } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
@@ -34,6 +34,8 @@ function expandedScreen(file: FileTabView): string | undefined {
  * (decision 288), or else the chat. While the sandbox does not run, the
  * Preview tab shows the sandbox state in place of the page, with its
  * action. A skill tab shows the state of the sandbox as a file tab does.
+ * While it shows no text, such as while its text loads, a stopped sandbox
+ * takes the place of its notice too, as `filePlaceholder` says.
  */
 export function centreOf(state: WorkspaceState, chat: ReactNode): ReactNode {
   const skill = openSkill(state)
@@ -43,7 +45,9 @@ export function centreOf(state: WorkspaceState, chat: ReactNode): ReactNode {
         agent={plansAgent}
         moklyInstance="skill-page"
         view={skill}
-        {...defined({ placeholder: filePlaceholder(state, true) })}
+        {...defined({
+          placeholder: filePlaceholder(state, true, showsSkillText(skill)),
+        })}
       />
     )
   }

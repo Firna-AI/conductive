@@ -34,6 +34,15 @@ export const skillTabTemporary = defineScreen({
       props: { files: 'all', tab: 'markdown', temporary: 'skill-kept' },
     },
     {
+      slug: 'return',
+      title: 'Back to the kept skill',
+      description:
+        'After README.md opened in the temporary tab, Cal selected the kept skill tab plans. The skill shows, and it stays a kept tab with an upright title, in its place. README.md stays the temporary tab after it, with its title in italics, and the next press on a file, a diff, or another skill replaces README.md. A press on the chip plans shows the same tab. On a phone, the skill shows as the page of the Files tab.',
+      rationale:
+        'The user chose option B of decision 284 on 11 November 2026: a press on a file that has a tab shows that tab, and the temporary tab stays as it is. Skill tab decision 2 A gives a skill tab the same rule, so a return to a kept skill keeps it kept, and no tab that Cal chose closes.',
+      props: { files: 'all', tab: 'skill', temporary: 'skill-shown' },
+    },
+    {
       slug: 'menu',
       title: 'Tab menu of the temporary skill tab',
       description:

@@ -22,6 +22,8 @@ first. Each path is relative to `src/files/`, the folder of this guide.
   once.
 - `model/resource-loader.ts` and `model/follow-path.ts`: the read of one
   file or diff, which drops stale replies and reads again after an event.
+  The skill tab reads its text with `ResourceLoader` too, and gives it the
+  errors after which a failed refresh keeps the text that shows.
 - `api/files-client.ts`: `createFilesClient`, the file routes, with their
   errors as `FilesError`, and the download address of a path.
 - `page/file-actions.ts`: Copy and Download, with `browserTargets`.
