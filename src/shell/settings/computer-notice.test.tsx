@@ -66,7 +66,7 @@ describe('the notices of the Cloud computer tab of an admin', () => {
       failed: {
         notices: [
           {
-            text: 'acme/admin-dashboard is ready after a build succeeds The last build failed.',
+            text: 'The last build failed acme/admin-dashboard is ready after a build succeeds.',
             danger: true,
             spinner: false,
             buttons: [],

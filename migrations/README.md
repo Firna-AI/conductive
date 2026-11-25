@@ -621,3 +621,14 @@ one account. Existing rows keep null. The migration changes no existing
 column, default, or constraint, so the previous Worker keeps working.
 [Model favourites](../docs/protocol/model-favourites-account.md#the-starting-favourites)
 gives the rules for an account without a saved list.
+
+`202611241623_image_source_failures.sql` adds the nullable columns
+`image_source_runs.failure_step` and `image_source_runs.failure_github_status`.
+They keep the step and the GitHub status of the first failure of a
+repository load. A failure that ends on a later alarm then still names
+them in the `image_build_failed` warning. They hold no token, no
+repository name, and no response text. Existing rows and previous Worker
+inserts get null. The migration changes no existing column, default, or
+constraint, so the previous Worker keeps working. The
+[source loader](../worker/lifecycle/repository-layout.md#the-source-loader)
+owns these records.

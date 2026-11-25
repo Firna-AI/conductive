@@ -2,6 +2,7 @@ import type { AppDependencies, AppEnv } from '../../env'
 import { decrypt, encrypt } from '../../security/crypto'
 import type { SelectedRepository } from '../settings-data'
 import { readSourceRepositories } from './data'
+import { ImageSourceStepError } from './failure'
 import {
   metadataInstallationToken,
   revokeInstallationToken,
@@ -46,7 +47,7 @@ export async function prepareSourceMetadata(
   let owner = await readSourceAt(env.DB, run.buildId, 0)
   if (!owner) throw new Error('Missing metadata ownership')
   if (run.phase === 'metadata-ready') {
-    if (!env.GITHUB_APP_PRIVATE_KEY) throw new Error('Missing App private key')
+    if (!env.GITHUB_APP_PRIVATE_KEY) throw new ImageSourceStepError('app_key')
     const token = await metadataInstallationToken(
       dependencies.fetch,
       env.GITHUB_CLIENT_ID,

@@ -9,6 +9,7 @@ import {
 import { revokeSourceToken } from './cleanup'
 import { finishSourceCopy } from './copy-data'
 import { startSourceCopy } from './copy'
+import { ImageSourceStepError, sourceCommandFailure } from './failure'
 import { finalizeSourceCommand } from './native-command'
 import { completeRunPhase, type SourceRun } from './run-data'
 import { refusedSourceStart } from './source-commands'
@@ -43,16 +44,24 @@ async function pollSource(
   input: Parameters<PrepareImageSources>[0],
   job: SourceJob,
 ) {
-  if (job.failed || job.phase === 'abort' || job.phase.endsWith('-starting'))
+  if (job.phase.endsWith('-starting'))
+    throw new ImageSourceStepError('interrupted')
+  if (job.failed && job.phase === 'revoke')
+    throw new ImageSourceStepError('copy')
+  if (job.failed || job.phase === 'abort')
     throw new Error('The source command failed')
   if (job.phase === 'fetch' || job.phase === 'finalize') {
-    if (job.processId === null) throw new Error('Missing source process')
-    const status = await input.commands.status(job.processId, job)
+    if (job.processId === null) throw new ImageSourceStepError('interrupted')
+    const status = await input.commands
+      .status(job.processId, job)
+      .catch((error: unknown) => {
+        throw sourceCommandFailure(error, 'copy')
+      })
     await saveSourceStatus(env.DB, job.buildId, status, job.sourceIndex)
     if (status.running) return
     if (job.phase === 'finalize') {
       if (!sourceCommandSucceeded(status))
-        throw new Error('The source command failed')
+        throw new ImageSourceStepError('copy')
       await setSourcePhase(env.DB, job.buildId, 'done', null, job.sourceIndex)
       return
     }
@@ -69,7 +78,7 @@ async function pollSource(
       dependencies.now(),
     )
     const revoked = await revokeSourceToken(env, dependencies.fetch, current)
-    if (!succeeded) throw new Error('The source command failed')
+    if (!succeeded) throw new ImageSourceStepError('copy')
     if (revoked)
       await setSourcePhase(
         env.DB,
@@ -98,7 +107,7 @@ async function startFinalize(
   job: SourceJob,
 ) {
   const repository = input.repositories[job.sourceIndex]
-  if (!repository) throw new Error('Missing captured repository')
+  if (!repository) throw new ImageSourceStepError('repository_values')
   const locations =
     input.repositoryLocations ?? legacyRepositoryLocations(input.repositories)
   await setSourcePhase(
@@ -125,14 +134,15 @@ async function startFinalize(
       job.sourceIndex,
     )
   } catch (error) {
-    if (refusedSourceStart(error))
-      await setSourcePhase(
-        env.DB,
-        job.buildId,
-        'finalize-ready',
-        null,
-        job.sourceIndex,
-      )
+    if (!refusedSourceStart(error))
+      throw sourceCommandFailure(error, 'interrupted')
+    await setSourcePhase(
+      env.DB,
+      job.buildId,
+      'finalize-ready',
+      null,
+      job.sourceIndex,
+    )
     throw error
   }
 }

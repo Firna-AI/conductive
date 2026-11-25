@@ -78,15 +78,15 @@ it('cancels oversized image token replies and returns the safe image credential 
       repository,
       now,
     ),
-  ).rejects.toEqual(accessFailure)
+  ).rejects.toEqual(accessFailure())
   expect(body.cancelled).toBe(true)
   expect(body.readBytes).toBe(27_328_512)
 
-  for (const response of [
-    Response.json({ token: '' }),
-    Response.json({ token: 7 }),
-    new Response('private-upstream-body', { status: 500 }),
-  ])
+  for (const [response, githubStatus] of [
+    [Response.json({ token: '' }), null],
+    [Response.json({ token: 7 }), null],
+    [new Response('private-upstream-body', { status: 500 }), 500],
+  ] as const)
     await expect(
       installationToken(
         async () => response,
@@ -95,7 +95,7 @@ it('cancels oversized image token replies and returns the safe image credential 
         repository,
         now,
       ),
-    ).rejects.toEqual(accessFailure)
+    ).rejects.toEqual(accessFailure(githubStatus))
 })
 
 it('bounds token revocation and requires a 204 or 401 reply as inactivity proof', async () => {

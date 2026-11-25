@@ -187,6 +187,8 @@ it('keeps push admission and daily refresh times separate for each account', asy
     .bind(SECONDARY_IMAGE_ACCOUNT, org.id)
     .run()
   await db.batch([
+    // A push follows the saved default branch, which the image holds.
+    db.prepare("UPDATE repositories SET default_branch = 'secondary-main'"),
     db
       .prepare(
         `UPDATE org_images SET last_refresh_at = ?, last_push_refresh_at = ?,

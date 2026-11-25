@@ -6,11 +6,11 @@ import { staleImageOrgs } from './org-image-refresh-data'
 /**
  * Only the verified GitHub webhook dispatcher calls this entry point.
  *
- * A refresh copies each repository with the name and the default branch
- * that its image holds. After GitHub changes one of them, only a build
- * takes in the new values. This wakes the image coordinator of each org
- * whose image holds old values. The coordinator then starts the build, or
- * starts it after the job that runs. A failed wake records no build, and
+ * After GitHub changes the name or the default branch of a repository, a
+ * build moves its folder to the new name. This wakes the image coordinator
+ * of each org whose image holds old values and whose newest build
+ * succeeded. The coordinator then starts the build, or starts it after the
+ * job that runs. A failed wake records no build, and
  * the next alarm of the coordinator checks again.
  */
 export async function wakeImagesForRepositoryChange(

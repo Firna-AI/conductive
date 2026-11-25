@@ -13,7 +13,12 @@ export const repository = {
   installationId: 701,
 }
 export const now = () => 1_800_000_000_000
-export const accessFailure = new Error('Installation access is not available')
+export function accessFailure(githubStatus: number | null = null) {
+  return Object.assign(new Error('Installation access is not available'), {
+    sourceStep: 'source_token',
+    githubStatus,
+  })
+}
 export const revokeFailure = new Error(
   'Installation access could not be revoked',
 )

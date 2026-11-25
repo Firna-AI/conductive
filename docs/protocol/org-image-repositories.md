@@ -112,7 +112,8 @@ adds Remove to the row menu of a chosen repository, as
 - It shows while a repository waits, or while the org image still holds a
   removed repository. So it shows only once the org has an image.
 - Its title names the waiting repositories, or the removed ones when no
-  repository waits.
+  repository waits. After a failed build, the title names the failure, as
+  the first state below says.
 - While an open edit of the Repositories tab adds repositories, the
   notice of that admin names them and says to select Done to add them and
   start a build (decision 297). It has no button. It takes the place of
@@ -120,9 +121,11 @@ adds Remove to the row menu of a chosen repository, as
 - Reason: no build starts before Done, and the admin learns that Done
   starts it.
 - The first state that applies gives its words and its action:
-  1. No build runs, and the newest build failed. The notice says that the
-     change waits for a build that succeeds, and that the last build
-     failed. An admin gets Try again.
+  1. No build runs, and the newest build failed. The title says that the
+     last build failed. The body says that the change waits for a build
+     that succeeds. An admin gets Try again. The user chose this title on
+     24 November 2026 (repository load decision 3). Reason: the waiting or
+     removed repositories then do not read as the cause of the failure.
   2. A build runs, and a repository waits. The notice says that the
      waiting repositories are ready after the build. It has no button.
   3. In each other case, the notice says that the change waits for the

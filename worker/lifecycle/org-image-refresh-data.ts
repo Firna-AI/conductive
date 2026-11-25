@@ -1,5 +1,10 @@
 import { activeOrgIdPredicate, activeOrgPredicate } from '../data/org-access'
 
+/**
+ * The orgs whose image holds the pushed repository, with its saved default
+ * branch. Each job copies the saved branch, so a push to that branch is the
+ * push that makes the image old.
+ */
 export async function pushedImageRepositories(
   db: D1Database,
   input: { githubRepositoryId: number; installationId?: number },
@@ -9,7 +14,7 @@ export async function pushedImageRepositories(
   const { results } = await db
     .prepare(
       `SELECT r.org_id AS orgId, image.provider_account AS providerAccount,
-       json_extract(entry.value, '$.defaultBranch') AS defaultBranch
+       r.default_branch AS defaultBranch
        FROM org_images image JOIN image_builds b ON b.id = COALESCE(image.image_build_id,
          (SELECT id FROM image_builds WHERE org_id = image.org_id AND state = 'running'
           AND provider_account = image.provider_account AND waiting_for_switch_id IS NULL))
