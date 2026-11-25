@@ -1,3 +1,4 @@
+import { automationsPath } from '../shared/automations'
 import {
   repositoryPath,
   repositoryPositionPath,
@@ -5,8 +6,10 @@ import {
   type Repository,
   type RepositoryChangeRequest,
 } from '../shared/org-settings'
+import { readAutomations, type ListedAutomation } from './api/read-automations'
 import { readRepositories, readRepositoryOrder } from './api/read-settings'
 import type { OrgModel } from './org-model'
+import { load, loading, Store, type Loadable, type Readable } from './store'
 
 /**
  * Adds or removes one repository of the org, and starts no build. Queued
@@ -29,6 +32,26 @@ export async function setRepositorySelected(
     ),
   )
   void org.reload('builds')
+}
+
+/**
+ * A read of the automations of the org that only its caller shows, such as
+ * one opening of the question before Remove of a repository. `store` loads
+ * until `read` answers, and shows the error of a failed read. It never
+ * shows the shared list of the model, which can be older than the caller.
+ */
+export function freshAutomations(org: OrgModel): {
+  store: Readable<Loadable<readonly ListedAutomation[]>>
+  read: () => Promise<void>
+} {
+  const store = new Store<Loadable<readonly ListedAutomation[]>>(loading)
+  return {
+    store,
+    read: () =>
+      load(store, () =>
+        org.services.api.get(automationsPath(org.orgId), readAutomations),
+      ),
+  }
 }
 
 /**

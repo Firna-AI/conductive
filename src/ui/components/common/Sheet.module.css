@@ -52,6 +52,18 @@
   white-space: nowrap;
 }
 
+/*
+ * A title that is the only place where a sheet names its subject, such as
+ * a repository in a question. It takes more lines in place of an ellipsis,
+ * and a long word breaks, so the whole name shows. It comes after `.title`,
+ * so that it wins over it.
+ */
+.wrapTitle {
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  white-space: normal;
+}
+
 /* The content of a sheet, which scrolls when the sheet reaches its limit. */
 .body {
   min-height: 0;

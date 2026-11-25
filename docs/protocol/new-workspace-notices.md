@@ -50,9 +50,10 @@ says.
 - The repository picker lists each chosen repository, on the page and in
   the dialog (decision 240), in the
   [repository order](orgs-and-members.md#repository-order) of the org. A removed repository is not in the list.
-- A [waiting repository](org-image.md#repository-changes) is off in the
+- A [waiting repository](org-image-repositories.md) is off in the
   list, with a note that says when it is ready. The note follows the
-  states of [The repository notice](org-image.md#the-repository-notice).
+  states of
+  [The repository notice](org-image-repositories.md#the-repository-notice).
 - Reason: the person learns of the wait before the send. A change of only
   the words of the refusal was rejected for that reason.
 - The form picks the first ready repository of the order. A kept draft keeps its
@@ -67,8 +68,8 @@ says.
 - While a build runs, the notice shows that build, and the admin can
   follow it on that tab. Such a build adds a repository, or an admin
   started it. A refresh never counts as a build that runs, as
-  [The repository notice](org-image.md#the-repository-notice) says. While
-  only a refresh runs, the notice follows its other states.
+  [The repository notice](org-image-repositories.md#the-repository-notice)
+  says. While only a refresh runs, the notice follows its other states.
 - Reason: the link then follows one rule in both notices. A notice with no
   link during a build was rejected for that reason.
 - A member who is not an admin gets no link. When an admin can act, the

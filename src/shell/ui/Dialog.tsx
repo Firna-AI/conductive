@@ -29,6 +29,16 @@ import { useViewport } from './viewport'
  * its actions, and its content scrolls between them. While that content is
  * text without a control, Tab stops on it too, so the keys of the keyboard
  * scroll it. It never takes the first focus.
+ *
+ * As the question closes, the focus goes back to the element that had it,
+ * such as its trigger. `returnFocus` places it instead, such as on the next
+ * row when the write took away the row of the trigger.
+ *
+ * The title of a phone sheet takes one line, with an ellipsis when it is
+ * longer, and a desktop title wraps between words. `wrapTitle` shows the
+ * whole title on both: the sheet gives it more lines, and a word longer
+ * than a line breaks. A question whose title is the only place that names
+ * its subject, such as a repository, gives it.
  */
 export function Dialog(props: {
   title: string
@@ -40,6 +50,9 @@ export function Dialog(props: {
   action: ReactNode
   wide?: boolean
   initial?: RefObject<Focusable | null>
+  returnFocus?: () => void
+  /** The whole title shows, on more lines when it is long. */
+  wrapTitle?: boolean
 }) {
   const { busy, close } = props
   // The one dismissal of the question: Cancel, Escape, and a press
@@ -59,8 +72,10 @@ export function Dialog(props: {
       }
       close={dismiss}
       initial={props.initial}
+      returnFocus={props.returnFocus}
       title={props.title}
       wide={props.wide}
+      wrapTitle={props.wrapTitle}
     >
       {props.children}
     </DialogFrame>
@@ -101,11 +116,19 @@ function DialogFrame(props: {
   actions: ReactNode
   wide?: boolean
   initial?: RefObject<Focusable | null>
+  returnFocus?: () => void
+  wrapTitle?: boolean
 }) {
   const viewport = useViewport()
   if (viewport === 'phone') {
     return (
-      <Sheet close={props.close} initial={props.initial} title={props.title}>
+      <Sheet
+        close={props.close}
+        initial={props.initial}
+        returnFocus={props.returnFocus}
+        title={props.title}
+        wrapTitle={props.wrapTitle}
+      >
         <div className={styles.sheetBody}>
           {props.children}
           <div className={styles.sheetActions}>{props.actions}</div>
@@ -121,8 +144,10 @@ function DialogFrame(props: {
           actions={props.actions}
           close={props.close}
           initial={props.initial}
+          returnFocus={props.returnFocus}
           title={props.title}
           wide={props.wide}
+          wrapTitle={props.wrapTitle}
         >
           {props.children}
         </DialogBox>
@@ -138,10 +163,15 @@ function DialogBox(props: {
   actions: ReactNode
   wide?: boolean
   initial?: RefObject<Focusable | null>
+  returnFocus?: () => void
+  wrapTitle?: boolean
 }) {
   const dialog = useRef<HTMLElement>(null)
   const body = useRef<HTMLDivElement>(null)
-  useModalLayer(dialog, props.close, { initial: props.initial })
+  useModalLayer(dialog, props.close, {
+    initial: props.initial,
+    returnFocus: props.returnFocus,
+  })
   return (
     <section
       aria-label={props.title}
@@ -152,7 +182,15 @@ function DialogBox(props: {
       role="dialog"
       tabIndex={-1}
     >
-      <h2 className={classes(styles.title, card.head)}>{props.title}</h2>
+      <h2
+        className={classes(
+          styles.title,
+          card.head,
+          props.wrapTitle && styles.wrapTitle,
+        )}
+      >
+        {props.title}
+      </h2>
       {/*
        * The browser makes no Tab stop of the body. The trap does, while the
        * body scrolls text.
