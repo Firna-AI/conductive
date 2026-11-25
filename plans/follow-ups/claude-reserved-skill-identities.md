@@ -34,6 +34,7 @@
 - **Related:**
   - `plans/follow-ups/claude-reserved-skill-folder.md` gives exported org skills safe, unique aliases. Coordinate the identity result with that mapping. Its alias change alone does not fix these two cases.
   - `plans/follow-ups/skill-duplicate-order.md` changes selection order. Keep that change independent of whether a name is usable by Claude.
+  - `plans/follow-ups/skill-list-reader-line-separators.md` makes the skills list read each front matter with the shared YAML reader. Keep the identity result of B when that change lands. No options conflict.
 - **Recommendation:** B. One result keeps selection and workspace precedence consistent with the same native rules.
 - **Action:** fix after merge, apply B, because these inputs are rare and the fix does not get harder later.
 

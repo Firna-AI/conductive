@@ -1,0 +1,38 @@
+# Mockup starts always hide tab content
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 1, a problem outside the scope from the check of finding 64.
+- **Location:** `docs/mockups/src/screens/workspaceParts.tsx:70-87` (`filePlaceholder`), `docs/mockups/src/screens/workspaceCentre.tsx:49` and `:61`, `docs/mockups/src/screens/workspaceParts.tsx:146` and `:158`, `src/ui/components/workspace/sandboxNoticeState.ts:74-85` (`replacesShownFile`), `src/shell/workspace/files/files-features.tsx:64-72`.
+- **Reason:** The helper drew the wait for every start on `origin/main`, and the skill tabs change added only a skill tab without text.
+
+- **Source:** Review. **Category:** Mockup.
+- **Terms:**
+  - **Catalogue:** the Mokly mockups under `docs/mockups/`, which are the visual spec of the app.
+  - **`filePlaceholder`:** the catalogue helper that chooses what a file, diff, or skill tab shows in place of its content while the sandbox does not run.
+- **Background:**
+  - In the app, a file or diff tab keeps the file that it shows while the sandbox is stopped or starts. It shows the state of the sandbox only when it has no content (`docs/protocol/workspace-tools.md:180-185`). A skill tab acts the same (`docs/protocol/skill-tabs.md:198-205`).
+  - The app keeps the shown content when `replacesShownFile` is false, and it is false for a start (`src/ui/components/workspace/sandboxNoticeState.ts:74-85`, `keepShown` in `src/shell/workspace/files/files-features.tsx:70-71`).
+  - The catalogue helper replaces the content whenever the sandbox starts: `panel.problem === 'starting' || replacesShownFile(panel) || !hasContent` (`workspaceParts.tsx:78`).
+  - Its comment gives the reason: the tab opened during the start, so it shows no content yet.
+  - On 25 November 2026, the skill tabs change added `hasContent` to the helper. A skill tab without text then shows the stopped state with Resume.
+  - The callers pass `hasContent` only for a skill tab. A file tab always passes its default, `true` (`workspaceCentre.tsx:49` and `:61`, `workspaceParts.tsx:146` and `:158`).
+- **Problem:** No catalogue screen can draw a tab that keeps its content while the sandbox starts. An example is a file that stays in its tab after a press on Resume. The app shows that state.
+- **Impact if no action:** The visual spec misses a state that the app shows. A reviewer can read the wait as the rule for every start.
+- **Root question:** How does the catalogue draw a tab that keeps its content while the sandbox starts?
+- **Options:**
+  - **A.** Let `filePlaceholder` draw the wait for a start only for a tab without content, as the app does.
+    - Pass `hasContent` false where the tab of a screen opened during the start, so that each current screen keeps its picture.
+    - Add one variant with a file tab that keeps its file while the sandbox starts.
+    - Run `npm run mockups:check`.
+    - Effort: Small.
+  - **B.** Share one rule between the app and the catalogue.
+    - Add a function to `src/ui/components/workspace/sandboxNoticeState.ts` that takes the state of the panel and whether the tab has content.
+    - Use it in `filePlaceholder` and in the file, diff, and skill pages of the app. Add the same variant as A.
+    - Cost: it changes the app code of the file pages on `origin/main`.
+    - Effort: Medium.
+- **Left out:** Change nothing. The catalogue then misses a state of the app.
+- **Wider fix:** B. One rule decides for the app and for the catalogue when a tab keeps its content.
+- **Previous examples:** The skill tabs change added `hasContent` to the same helper for a skill tab without text.
+- **Recommendation:** B. One shared rule keeps the catalogue and the app from drifting apart again. Choose A for a change in the catalogue only.
+- **Action:** fix after merge, apply B, because the gap is on `origin/main`, and B reaches the file pages of the app.

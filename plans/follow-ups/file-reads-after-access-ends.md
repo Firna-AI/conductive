@@ -1,0 +1,49 @@
+# File reads can outlast workspace access
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 1, a problem outside the scope from the check of finding 21.
+- **Location:** `worker/files/handlers.ts:39`, `:62`, `:80-105`, `:118-147`, `worker/files/access.ts:8-24`, `worker/files/runner.ts:73-94`, `worker/files/boat.ts:18` (`readBoatFile`).
+- **Reason:** The file routes on `origin/main` have this start check, and each option that closes the window adds a new refusal.
+
+- **Source:** Review. **Category:** Security.
+- **Terms:**
+  - **Worker:** the Cloudflare Worker that checks each browser request and serves the data of each workspace.
+  - **Runner:** the program `conductive` in each cloud computer. It reads one file or one diff for each request of the Worker.
+  - **Fallback file read:** the read of one file through the sandbox provider's own file API, `readBoatFile` in `worker/files/boat.ts:18`. A file tab uses it when the runner is not connected.
+- **Background:**
+  - A file tab reads a file with `GET .../files/content`, and a diff tab reads a diff with `GET .../files/diff`. Both go to `createFilesHandler` in `worker/files/handlers.ts`.
+  - The handler checks the sign-in and the org membership with `gate` (line 39), and the workspace with `filesWorkspace` (line 62).
+  - It then sends the read to the runner through `RunnerFiles` (`worker/files/runner.ts:73-94`), or it reads the file through the fallback file read (lines 118-133). It returns the filtered reply with no second check (line 147).
+  - A file or diff read through the runner has no time limit, as `plans/follow-ups/file-reads-have-no-time-limit.md` records. It waits for the reply, a disconnect, or the end of the browser request.
+  - The runner connection checks only the workspace token of the runner before it sends (`AuthenticatedRunner.send` in `worker/chat/authenticated-runner.ts:35-53`).
+  - A removal from the org signals only the workspaces that the removed member owns (`removeOrgMember` in `worker/members/membership.ts:46-67`).
+  - Decision 70, recorded on 6 November 2026, accepts a window of 30 seconds for an open tab. Such a tab loses its workspace connection within 30 seconds after its user loses access (`docs/protocol/isolation.md:49-54`).
+  - The skill reads of the skill tabs change have the same start check. `plans/follow-ups/skill-read-after-access-ends.md` asks the user how to close it.
+  - A change of a protocol doc also needs a read of both legal pages and of each public guide, as `AGENTS.md` says.
+- **Problem:** A member who loses access while a file or diff read waits still gets the reply. With no time limit, a slow runner can deliver it later than the 30 seconds that decision 70 accepts.
+- **Impact if no action:** A former member can receive the text of a private file or diff after their workspace access ends.
+- **Root question:** How long after access ends may a file or diff read still return its text, and which part of the Worker enforces it?
+- **Options:**
+  - **A.** Keep the start check, and bound the window.
+    - Give the file and diff reads a time limit of 30 seconds or less, as `plans/follow-ups/file-reads-have-no-time-limit.md` proposes.
+    - State in "Files and changes" of `docs/protocol/workspace-tools.md` that a read can return up to that limit after the access ends.
+    - Give the reason: decision 70 accepts such a window for an open tab.
+    - Cost: a documented risk.
+    - Effort: Small, after the time limit.
+  - **B.** Use for the file and diff reads the shared runner read operation of option B of `plans/follow-ups/skill-read-after-access-ends.md`.
+    - It checks the caller's access before the send and again before the reply.
+    - Check the access again after a fallback file read too.
+    - Add a test where the access ends while a read waits.
+    - Cost: a new refusal.
+    - Effort: Medium.
+  - **C.** Check the caller's access again in the outer feature router, `WorkspaceFeatures.fetch` in `worker/features/workspace.ts:112-138`, after each handler returns. Cost: a new refusal on every feature route. Effort: Medium.
+  - **D.** Track each pending read under the access grant of its caller. Cancel the read when the grant ends. Cost: new state for each grant, and a new refusal. Effort: Large.
+- **Left out:** A second check written only into the file handler. B makes the same checks in the shared operation, which the skill reads use too.
+- **Wider fix:** B. The operation that sends each read and returns its reply owns both access checks, so a new kind of read cannot miss them.
+- **Previous examples:** Commit `cc6a38f09` added a final access check before the service logs return (`worker/services/handler.ts:102-103`).
+- **Related:**
+  - `plans/follow-ups/skill-read-after-access-ends.md` has the same class for skill reads. This item waits for its answer, because the user sets one policy for both.
+  - `plans/follow-ups/file-reads-have-no-time-limit.md`: option A here needs that time limit.
+- **Recommendation:** B. It puts both checks where the Worker acts for the caller, for every read through the runner. Choose A if the user accepts the documented window for the skill reads too.
+- **Action:** ask the user, because B, C, and D add a new refusal, and A adds a new requirement to a protocol doc.

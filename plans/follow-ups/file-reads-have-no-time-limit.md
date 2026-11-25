@@ -1,0 +1,36 @@
+# File and diff reads have no time limit
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 1, a problem outside the scope from the check of finding 23.
+- **Location:** `worker/files/runner.ts:73-94`, `worker/chat/runner-read-requests.ts:15-24`, `worker/files/handlers.ts:86-91` and `:118-122`, `src/files/api/files-client.ts:52-90`.
+- **Reason:** The file and diff reads on `origin/main` had no time limit before the skill tabs change, which bounded only its own skill reads.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Runner:** the program `conductive` in each cloud computer. It reads one file or one diff for each request of the Worker.
+  - **Shared read tracker:** `RunnerReadRequests` in `worker/chat/runner-read-requests.ts`. It holds each pending read until its reply, its time limit, a disconnect of the runner, or a cancel of the browser request.
+- **Background:**
+  - A file tab and a diff tab read through `RunnerFiles` in `worker/files/runner.ts`, which uses the shared read tracker (lines 73-94).
+  - The skill tabs change gave each skill read a time limit of 30 seconds in the tracker (`worker/skills/runner.ts:11`). At the limit, the skill tab gets `skill_unavailable`, and the tracker drops a later reply (`runner-read-requests.ts:48-51`).
+  - The tracker type allows a limit only for skill reads. A file or diff read has `timeoutMs?: never` (`runner-read-requests.ts:15-24`).
+  - So a file or diff read waits for the reply, a disconnect of the runner, or the end of the browser request.
+  - The files client of the app sets no limit of its own. `readJson` passes only the signal of its caller (`src/files/api/files-client.ts:52-90`).
+  - On `origin/main`, before the skill tabs change, `worker/files/runner.ts` kept its own pending reads, also with no limit.
+  - A failed read with `file_unavailable` and HTTP 503 shows "This file didn't open" or "This diff didn't open", with Try again (`src/files/ui/FileStates.tsx:44-57`).
+- **Problem:** When the runner accepts a file or diff read and never answers while its connection stays open, the read never ends. The tab keeps its loading state.
+- **Impact if no action:** The member cannot read the file or the diff until the runner disconnects or the member leaves the tab. No failure notice with Try again shows.
+- **Root question:** How does a file or diff tab recover when the runner accepts a read and never finishes it?
+- **Options:**
+  - **A.** Make a finite time limit a required input of every read in the shared tracker.
+    - Give the file and diff reads a limit, such as the 30 seconds of the skill reads.
+    - At the limit, the Worker returns `file_unavailable` with HTTP 503, so the tab shows its failure notice with Try again. The tracker drops a later reply.
+    - Test the limit and a late reply, as `worker/skills/runner.test.ts` does for skill reads.
+    - Effort: Small.
+  - **B.** Bound each file and diff read in the runner too, and keep a Worker limit for a runner that never replies. Effort: Medium.
+- **Left out:** A limit in the browser only. Older copies of the app, such as an older Mac app, keep waiting, and the Worker keeps the pending read until the cancel reaches it.
+- **Wider fix:** A. A tracker that requires a finite wait for each kind of read leaves no read without an end.
+- **Previous examples:** The skill tabs change bounded the skill reads in the same tracker, in commit `6aede156f`. Commit `68342ce4a` kept a stuck runner from hiding waiting messages.
+- **Related:** `plans/follow-ups/file-reads-after-access-ends.md`: its option A needs this limit. A limit of 30 seconds or less keeps the window of decision 70 for an open tab.
+- **Recommendation:** A. It ends each pending read at its owner, with the failure notice that the tabs already have.
+- **Action:** fix after merge, apply A, because the problem is on `origin/main`, a stalled read is rare, and the fix costs the same later.

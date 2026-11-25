@@ -20,5 +20,6 @@
 - **Left out:** None.
 - **Wider fix:** None.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/tab-open-resume-shows-stopped.md` has the same stopped state with Resume at an earlier time: before the reply of a Resume that the open of a tab sends. Option B here covers the reply of a held resume. No options conflict.
 - **Recommendation:** A, because B changes the reply that older Mac apps read.
 - **Action:** fix after merge, apply A.
