@@ -97,7 +97,9 @@ skill tab at `app/skill-mentions/tab`, the chips that open it at
   [What Claude and Codex get](org-skills-trust.md#what-claude-and-codex-get)
   says. Reason: the tab must not show text that the agent does not get.
 - A `SKILL.md` of more than 1 MiB, or 1,048,576 bytes, gets "too large".
-  Reason: this is the limit of the scan, which leaves out a larger skill.
+  Reason: a page of that size is too long to read in a tab. The list can
+  still hold such a skill, because the agent loads it, so the tab shows
+  the notice.
 - Before a browser gets the text, the Worker hides in it each value that
   the workspace hides in a runner event. It also hides each exact copy of
   the workspace token and of a turn token of the workspace, as

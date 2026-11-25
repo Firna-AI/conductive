@@ -177,8 +177,10 @@ Each call below is my call, made on 2026-11-24 unless it says otherwise.
   and the sweep can remove that copy after a newer copy publishes.
   Changed on 2026-11-24 after the options check.
 - **Size.** A `SKILL.md` over 1 MiB gets "too large", the limit of the
-  scan in `runner/sdk-helper/src/skill-read.ts`. Reason: the scan already
-  leaves out such a skill, so the list never holds it.
+  scan in `runner/sdk-helper/src/skill-read.ts`. Reason: a page of that
+  size is too long to read in a tab. Corrected on 2026-11-25 after review
+  finding 70: the list can hold an org skill over 1 MiB, because the
+  agent loads it, so the tab shows the notice.
 - **Secrets.** The Worker hides in the text what the workspace hides in a
   runner event, as for a skill description, and also each exact copy of
   the workspace token and of the turn tokens. Reason: a skill text is text
