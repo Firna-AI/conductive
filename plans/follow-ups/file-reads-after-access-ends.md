@@ -20,7 +20,7 @@
   - A removal from the org signals only the workspaces that the removed member owns (`removeOrgMember` in `worker/members/membership.ts:46-67`).
   - Decision 70, recorded on 6 November 2026, accepts a window of 30 seconds for an open tab. Such a tab loses its workspace connection within 30 seconds after its user loses access (`docs/protocol/isolation.md:49-54`).
   - The skill reads of the skill tabs change had the same start check. On 25 November 2026, Cal chose for them one shared runner read operation in the Worker. It checks the access of the caller before it sends the command, and again before it returns the reply.
-  - With it, a skill read whose caller loses access gets the reply of a caller without access, HTTP 404 `workspace_not_found`, and no text. `docs/protocol/skill-tabs.md` states the rule under "The read".
+  - With it, a skill read whose caller loses access gets HTTP 404 `workspace_not_found`, and no text. "The read" in `docs/protocol/skill-tabs.md` requires the reply of a caller without access. A new request of that caller can get another refusal, such as 401 `sign_in_required`, as `plans/follow-ups/skill-read-recheck-refusals.md` says.
   - The skill route uses that operation: `requestWithAccess` of the shared read tracker `RunnerReadRequests` (`worker/chat/runner-read-requests.ts:75-98`), with its sender `AuthenticatedRunner.sendRead` (`worker/chat/authenticated-runner.ts:56-70`). The file and diff reads can adopt it. The skill tabs change did not move them to it.
   - So this item no longer waits for the answer for the skill reads. Option B here is no longer blocked.
   - A change of a protocol doc also needs a read of both legal pages and of each public guide, as `AGENTS.md` says.
@@ -48,5 +48,6 @@
 - **Related:**
   - `plans/follow-ups/file-reads-have-no-time-limit.md`: option A here needs that time limit.
   - `plans/follow-ups/ended-reads-reach-the-runner.md` changes the same send of the runner reads. No options conflict.
+  - `plans/follow-ups/skill-read-recheck-refusals.md`: after a failed recheck, its option A runs the admission checks of the skill route again, so the refusal equals the reply to a new request. With B here, give the recheck of the file and diff reads the same rerun. No options conflict.
 - **Recommendation:** B. It puts both checks where the Worker acts for the caller, for every read through the runner, as for the skill reads. Choose A if the user accepts a documented window for the file and diff reads.
 - **Action:** ask the user, because B, C, and D add a new refusal, and A adds a new requirement to a protocol doc.

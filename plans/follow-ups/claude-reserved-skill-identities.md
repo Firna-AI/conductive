@@ -31,6 +31,8 @@
   - **A.** Handle the known refusals separately. Treat a reserved org shown name as having no usable Claude name and use the existing warning. Exclude refused workspace folders from the set that takes precedence. Extend the existing name tests and update the helper README. Each selection path keeps its own native-name rule. Effort: Small.
   - **B.** Give the shared Claude metadata reader one result for a usable skill identity. Use that result in org selection and workspace precedence. Distinguish an exported org alias from an original workspace folder. A refused org shown name uses the existing warning. A workspace directory that Claude skips contributes no winning identity.
 
+    Read a Claude workspace `SKILL.md` for that result through a link to any regular file, as Claude does. A workspace skill whose `SKILL.md` links to a file of another name then keeps its winning identity. `plans/follow-ups/linked-claude-skill-loses-precedence.md` gives this link rule as its option D.
+
     Extend the existing name tests and update the helper README. Recheck the private native rules as a one-time proof at SDK updates. Effort: Small.
 - **Left out:** Two local approaches repair both selection paths: separate handling, or one shared identity result. An alias-only change cannot repair a refused shown name. A warning from Claude's `init` list cannot restore a wrongly excluded org skill. That list also omits non-user-invocable skills. Changing the public app list adds behavior without making Claude load the skill. A third-party fork adds maintenance without an advantage over B.
 - **Wider fix:** B. One Claude identity result prevents the selector and precedence reader from accepting different native identities.
@@ -39,6 +41,7 @@
   - `plans/follow-ups/claude-reserved-skill-folder.md` gives exported org skills safe, unique aliases. Coordinate the identity result with that mapping. Its alias change alone does not fix these two cases.
   - `plans/follow-ups/skill-duplicate-order.md` changes selection order. Keep that change independent of whether a name is usable by Claude.
   - `plans/follow-ups/skill-list-reader-line-separators.md` makes the skills list read each front matter with the shared YAML reader. Keep the identity result of B when that change lands. No options conflict.
+  - `plans/follow-ups/linked-claude-skill-loses-precedence.md` records a third case of the same precedence read. Since 25 November 2026, the read refuses a workspace `SKILL.md` that links to a file of another name, which Claude still loads. Its option D reads such a file again for Claude. Both items change `repositoryNames`, so do them in one branch, or keep the rule of D when B lands. No options conflict.
 - **Recommendation:** B. One result keeps selection and workspace precedence consistent with the same native rules.
 - **Action:** fix after merge, apply B, because these inputs are rare and the fix does not get harder later.
 

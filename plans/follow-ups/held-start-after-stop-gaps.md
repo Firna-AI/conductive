@@ -20,5 +20,6 @@
 - **Left out:** None.
 - **Wider fix:** None.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/newer-start-failure-shows-starting.md`. Both items change what shows around the reply of a Resume. There, a start that fails while the reply waits still shows Starting until the reply. Its option B lets the workspace model own the wait of each Resume, so that owner can also keep the wait across the reply of a held resume. No options conflict.
 - **Recommendation:** A, because B changes the reply that older Mac apps read.
 - **Action:** fix after merge, apply A.
