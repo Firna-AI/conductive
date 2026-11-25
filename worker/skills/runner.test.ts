@@ -4,6 +4,11 @@ import { RunnerSkillReads } from './runner'
 
 afterEach(() => vi.useRealTimers())
 
+const options = {
+  authorize: async () => undefined,
+  filter: (text: string) => text,
+}
+
 it('expires a silent skill read, ignores its late reply, and accepts a later read', async () => {
   vi.useFakeTimers()
   const ids = ['first-read', 'next-read'][Symbol.iterator]()
@@ -14,9 +19,9 @@ it('expires a silent skill read, ignores its late reply, and accepts a later rea
   })
   const connection = { id: 'runner', skillReads: true }
   const skill = { agent: 'codex', name: 'review' } as const
-  const send = async () => true
+  const queue = async () => true
   const failed = vi.fn()
-  void reads.read(connection, skill, send).catch(failed)
+  void reads.read(connection, skill, queue, options).catch(failed)
 
   await vi.advanceTimersByTimeAsync(29_999)
   expect(failed).not.toHaveBeenCalled()
@@ -25,7 +30,7 @@ it('expires a silent skill read, ignores its late reply, and accepts a later rea
     expect.objectContaining({ code: 'skill_unavailable', status: 503 }),
   )
 
-  const next = reads.read(connection, skill, send)
+  const next = reads.read(connection, skill, queue, options)
   expect(
     reads.receive(connection.id, {
       type: 'skill.read.result',
@@ -52,6 +57,7 @@ it('drops a skill reply after the deadline while the expiry timer is still pendi
     connection,
     { agent: 'codex', name: 'review' },
     async () => true,
+    options,
   )
   vi.setSystemTime(30_001)
   expect(

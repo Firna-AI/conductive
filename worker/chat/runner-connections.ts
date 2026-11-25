@@ -1,6 +1,9 @@
-import type { RunnerCommand } from '../../src/shared/generated/RunnerCommand'
 import type { SkillIdentity } from '../../src/shared/skills'
-import { RunnerSkillReads, skillUnavailable } from '../skills/runner'
+import {
+  RunnerSkillReads,
+  skillUnavailable,
+  type SkillReadOptions,
+} from '../skills/runner'
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import {
   isSupportedRunnerVersion,
@@ -231,44 +234,38 @@ export class RunnerConnections {
     this.dependencies.runnerAttached(
       active.state.workspace.id,
       active.state.id,
-      (command) => this.sendRead(active, command),
+      (command) =>
+        this.store.run(async () => {
+          if (this.current !== active) return false
+          try {
+            await active.peer.send(command)
+            return true
+          } catch {
+            active.peer.close()
+            return false
+          }
+        }),
     )
   }
 
-  readSkill(skill: SkillIdentity, signal: AbortSignal): Promise<string> {
+  readSkill(skill: SkillIdentity, options: SkillReadOptions): Promise<string> {
     const active = this.current
     if (!active?.state.ready) throw skillUnavailable()
     return this.skillReads.read(
       active.state,
       skill,
-      (command, pending) => this.sendRead(active, command, pending),
-      signal,
+      (send) =>
+        this.store.run(async () => {
+          if (
+            this.current !== active ||
+            !active.state.ready ||
+            active.state.skillReads !== true
+          )
+            return false
+          return send(active.peer)
+        }),
+      options,
     )
-  }
-
-  private sendRead(
-    active: ActiveRunner,
-    command: Extract<
-      RunnerCommand,
-      { type: 'file.read' | 'file.diff' | 'skill.read' }
-    >,
-    signal?: AbortSignal,
-  ): Promise<boolean> {
-    return this.store.run(async () => {
-      if (this.current !== active || signal?.aborted) return false
-      if (
-        command.type === 'skill.read' &&
-        (!active.state.ready || active.state.skillReads !== true)
-      )
-        return false
-      try {
-        await active.peer.send(command)
-        return true
-      } catch {
-        active.peer.close()
-        return false
-      }
-    })
   }
 
   async alarm(): Promise<void> {

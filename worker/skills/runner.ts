@@ -1,14 +1,22 @@
 import { FILE_READ_MAX_BYTES } from '../../src/shared/files'
-import type { RunnerReadSkill } from '../../src/shared/generated/RunnerReadSkill'
 import type { RunnerSkillError } from '../../src/shared/generated/RunnerSkillError'
 import type { SkillIdentity } from '../../src/shared/skills'
 import type { RunnerConnectionState } from '../chat/runner-connection-state'
-import { RunnerReadRequests } from '../chat/runner-read-requests'
+import {
+  RunnerReadRequests,
+  type RunnerReadQueue,
+} from '../chat/runner-read-requests'
 import { natural } from '../files/parsers'
 import { HttpError, isRecord } from '../http'
 
 const maxBytes = Math.min(FILE_READ_MAX_BYTES, 1_048_576)
 const readTimeoutMs = 30_000
+
+export interface SkillReadOptions {
+  authorize(): Promise<void>
+  filter(text: string): string | Promise<string>
+  signal?: AbortSignal
+}
 
 export function skillUnavailable(): HttpError {
   return new HttpError(
@@ -79,8 +87,8 @@ export class RunnerSkillReads {
   read(
     connection: Pick<RunnerConnectionState, 'id' | 'skillReads'>,
     { agent, name }: SkillIdentity,
-    send: (command: RunnerReadSkill, signal: AbortSignal) => Promise<boolean>,
-    signal?: AbortSignal,
+    queue: RunnerReadQueue,
+    { authorize, filter, signal }: SkillReadOptions,
   ): Promise<string> {
     if (connection.skillReads !== true)
       throw new HttpError(
@@ -89,14 +97,14 @@ export class RunnerSkillReads {
         'Restart the cloud computer to open this skill.',
       )
     const requestId = this.requestId()
-    return this.requests.request({
+    return this.requests.requestWithAccess({
       connectionId: connection.id,
-      requestId,
       resultType: 'skill.read.result',
       timeoutMs: readTimeoutMs,
-      send: (pending) =>
-        send({ type: 'skill.read', requestId, agent, name, maxBytes }, pending),
-      parse: parseSkillResult,
+      command: { type: 'skill.read', requestId, agent, name, maxBytes },
+      parse: (value) => filter(parseSkillResult(value)),
+      queue,
+      authorize,
       signal,
     })
   }

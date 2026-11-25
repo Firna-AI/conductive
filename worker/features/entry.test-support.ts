@@ -9,6 +9,7 @@ import type { ImageCoordinatorState } from '../lifecycle/image-timers'
 import { number, record, sendMessage, string } from '../chat/inputs'
 import { readJsonObject } from '../http/json-body'
 import type { ReadySessionWatch } from '../chat/session-watch-records'
+import { heldOperation } from '../test-support/held-operation'
 
 const app = createApp({ now: () => DEVICE_TEST_NOW })
 
@@ -16,6 +17,7 @@ export class Workspace extends NativeAlarmWorkspace {
   private readonly instance = crypto.randomUUID()
   private suspensions = 0
   private readonly observers = new Map<number, () => void>()
+  private runnerAccess?: ReturnType<typeof heldOperation>
   private watchReply:
     | {
         id: string
@@ -51,6 +53,32 @@ export class Workspace extends NativeAlarmWorkspace {
 
   releaseSessionWatchReply(): void {
     this.watchReply?.release()
+  }
+
+  holdRunnerAccess(): Promise<void> {
+    return this.chat.store.run(async () => {
+      const peer = this.chat.runner.connections.current?.peer
+      if (!peer) throw new Error('The runner is not connected.')
+      const held = heldOperation()
+      this.runnerAccess = held
+      const authorize = peer.authorize.bind(peer)
+      peer.authorize = async () => {
+        peer.authorize = authorize
+        const allowed = await authorize()
+        await held.wait()
+        return allowed
+      }
+    })
+  }
+
+  waitForRunnerAccess(): Promise<void> {
+    if (!this.runnerAccess) throw new Error('No runner access read is held.')
+    return this.runnerAccess.entered
+  }
+
+  releaseRunnerAccess(): void {
+    this.runnerAccess?.release()
+    this.runnerAccess = undefined
   }
 
   async acceptSessionWatch(watch: ReadySessionWatch) {

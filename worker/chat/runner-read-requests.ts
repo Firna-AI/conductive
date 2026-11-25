@@ -1,6 +1,9 @@
+import type { RunnerFileCommand } from '../../src/shared/generated/RunnerFileCommand'
 import type { RunnerFileResponse } from '../../src/shared/generated/RunnerFileResponse'
+import type { RunnerReadSkill } from '../../src/shared/generated/RunnerReadSkill'
 import type { RunnerSkillResult } from '../../src/shared/generated/RunnerSkillResult'
 import { isRecord, type HttpError } from '../http'
+import type { AuthenticatedRunner } from './authenticated-runner'
 
 type ReadResultType = (RunnerFileResponse | RunnerSkillResult)['type']
 
@@ -12,16 +15,28 @@ interface PendingRead {
   fail(): void
 }
 
+export type RunnerReadQueue = (
+  send: (peer: AuthenticatedRunner) => Promise<boolean>,
+) => Promise<boolean>
+
+export interface RunnerReadDispatch {
+  authorize(): Promise<void>
+  isPending(): boolean
+}
+
 type ReadRequest<T> = {
   connectionId: string
-  requestId: string
-  send(signal: AbortSignal): void | boolean | Promise<boolean>
   parse(value: unknown): T
   signal?: AbortSignal
 } & (
   | { resultType: RunnerSkillResult['type']; timeoutMs: number }
   | { resultType: RunnerFileResponse['type']; timeoutMs?: never }
 )
+
+type TrackedRead<T> = ReadRequest<T> & {
+  requestId: string
+  send(isPending: () => boolean): void | boolean | Promise<boolean>
+}
 
 export class RunnerReadRequests {
   private readonly pending = new Map<string, PendingRead>()
@@ -53,10 +68,41 @@ export class RunnerReadRequests {
     return true
   }
 
-  request<T>(input: ReadRequest<T>): Promise<T> {
+  request<T>(input: TrackedRead<T>): Promise<T> {
+    return this.track(input)
+  }
+
+  async requestWithAccess<T>(
+    input: ReadRequest<T | Promise<T>> & {
+      command: RunnerFileCommand | RunnerReadSkill
+      queue: RunnerReadQueue
+      authorize(): Promise<void>
+    },
+  ): Promise<T> {
+    const { authorize, command, queue } = input
+    try {
+      const reply = await this.track(
+        {
+          ...input,
+          requestId: command.requestId,
+          send: (isPending) =>
+            queue((peer) => peer.sendRead(command, { authorize, isPending })),
+          parse: (value) => value,
+        },
+        (error) => error,
+      )
+      return await input.parse(reply)
+    } finally {
+      await authorize()
+    }
+  }
+
+  private track<T>(
+    input: TrackedRead<T>,
+    sendError: (error: unknown) => unknown = this.unavailable,
+  ): Promise<T> {
     const { requestId, connectionId, resultType, signal, timeoutMs } = input
     return new Promise<T>((resolve, reject) => {
-      const sendController = new AbortController()
       let timer: ReturnType<typeof setTimeout> | undefined
       let settled = false
       const clear = () => {
@@ -68,11 +114,10 @@ export class RunnerReadRequests {
         if (timer !== undefined) clearTimeout(timer)
         return true
       }
-      const fail = () => {
-        if (!clear()) return
-        sendController.abort()
-        reject(this.unavailable())
+      const rejectRead = (error: unknown) => {
+        if (clear()) reject(error)
       }
+      const fail = () => rejectRead(this.unavailable())
       const request: PendingRead = {
         connectionId,
         resultType,
@@ -94,12 +139,16 @@ export class RunnerReadRequests {
         return
       }
       if (timeoutMs !== undefined) timer = setTimeout(fail, timeoutMs)
+      const isPending = () =>
+        !settled &&
+        (request.expiresAt === undefined || Date.now() < request.expiresAt)
+      const sendFailed = (error: unknown) => rejectRead(sendError(error))
       try {
-        void Promise.resolve(input.send(sendController.signal)).then((sent) => {
+        void Promise.resolve(input.send(isPending)).then((sent) => {
           if (sent === false) fail()
-        }, fail)
-      } catch {
-        fail()
+        }, sendFailed)
+      } catch (error) {
+        sendFailed(error)
       }
     })
   }

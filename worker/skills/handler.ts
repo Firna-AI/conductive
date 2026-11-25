@@ -4,6 +4,7 @@ import type { WorkspaceChat } from '../chat/backend'
 import type { AppEnv } from '../env'
 import { filesWorkspace } from '../files/access'
 import { errorResponse, HttpError, privateResponse } from '../http'
+import { readConnectionAccess } from '../security/connection-access'
 import { gate } from '../security/gate'
 import { filterSkillText } from './output'
 import { SkillTooLargeError } from './runner'
@@ -18,6 +19,14 @@ function skillIdentity(query: URLSearchParams): SkillIdentity {
   )
     throw new HttpError(400, 'invalid_input', 'Choose a skill to open.')
   return { agent, name }
+}
+
+function workspaceNotFound(): HttpError {
+  return new HttpError(
+    404,
+    'workspace_not_found',
+    'The workspace is not available.',
+  )
 }
 
 export function createSkillHandler(
@@ -44,20 +53,40 @@ export function createSkillHandler(
           'computer_starting',
           'The cloud computer is starting.',
         )
-      const text = await chat.runner.connections.readSkill(
-        skill,
-        request.signal,
-      )
+      const text = await chat.runner.connections.readSkill(skill, {
+        signal: request.signal,
+        filter: (text) => filterSkillText(env, chat.store, workspace, text),
+        authorize: async () => {
+          const [access] = await readConnectionAccess(
+            env.DB,
+            [
+              {
+                kind: 'workspace-read',
+                sessionId: context.sessionId,
+                userId: context.user.id,
+                orgId: workspace.orgId,
+                workspaceId,
+              },
+            ],
+            now(),
+          )
+          if (!access || access.deadline <= now()) throw workspaceNotFound()
+        },
+      })
       return privateResponse(
         Response.json({
-          text: await filterSkillText(env, chat.store, workspace, text),
+          text,
         } satisfies Pick<Extract<SkillReadOutcome, { ok: true }>, 'text'>),
       )
     } catch (error) {
+      const failure =
+        error instanceof HttpError && error.code === 'org_not_found'
+          ? workspaceNotFound()
+          : error
       return privateResponse(
-        error instanceof SkillTooLargeError
-          ? error.response()
-          : errorResponse(error, request),
+        failure instanceof SkillTooLargeError
+          ? failure.response()
+          : errorResponse(failure, request),
       )
     }
   }
