@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 1, finding 1, merged with its problem outside the scope in the Claude scan.
-- **Location:** `runner/sdk-helper/src/skill-content.ts:57` (`readSkillContent`) and `:85` (`readRegularSkill`), `runner/sdk-helper/src/session.ts:78-83`, `crates/cnd-runner/src/skills/helper.rs:192`, `runner/sdk-helper/src/skill-files.ts:47`, `runner/sdk-helper/src/skill-read.ts:42`, `docs/protocol/skill-tabs.md:95-98`.
+- **Location:** `runner/sdk-helper/src/skill-content.ts:82-94` (`readRegularSkill`), `:53-80` (`readSkillContent`), `:101-121` (`readSkillHeader`), and `:123-136` (`readFirstSkillLine`), `runner/sdk-helper/src/providers/skill-view.ts:28-43` (`replaceMetadata`), `runner/sdk-helper/src/session.ts:78-83`, `crates/cnd-runner/src/skills/helper.rs:192`, `runner/sdk-helper/src/skill-files.ts:47`, `runner/sdk-helper/src/skill-read.ts:44-45`, `docs/protocol/skill-tabs.md:95-98`.
 - **Reason:** Each option that confines the reads adds a new refusal, and the other option accepts a risk in a protocol doc, so the user decides.
 
 - **Source:** Review. **Category:** Security.
@@ -12,24 +12,26 @@
   - **Helper:** the Node process under `runner/sdk-helper` that the runner starts. It reads the skill files for the scan and for each skill read.
   - **Skill tab:** the workspace tab that shows the `SKILL.md` text of one skill of one agent.
   - **Skills report:** the list of skills of each agent that the runner sends for the `/` menu and the skill chips. Each skill has a name and a description.
-  - **Shared reader:** `readSkillContent` and `readRegularSkill` in `runner/sdk-helper/src/skill-content.ts`. The scan, the skill tab, and the org skill choice all read through it.
+  - **Shared reader:** `readRegularSkill` in `runner/sdk-helper/src/skill-content.ts`, and the readers on top of it. The scan, the skill tab, the org skill choice, and the export read through it.
 - **Background:**
   - The browser asks for a skill by its agent and its name, never by a path (`docs/protocol/skill-tabs.md:76-77`).
   - The runner finds the entry of that name in its latest scan (`crates/cnd-runner/src/skills/reporter.rs:129-146`). For a skill of the workspace repository, it sends the path of that entry to the helper (`crates/cnd-runner/src/skills/helper.rs:192`).
   - The helper reads the path with the shared reader (`runner/sdk-helper/src/session.ts:78-83`). The reader opens the path with `O_RDONLY | O_NONBLOCK`, so the open follows symbolic links.
-  - After the open, the reader checks only that the file is a regular file of 1 MiB or less (`skill-content.ts:85-110`).
+  - After the open, the reader checks only that the file is a regular file (`readRegularSkill`, `skill-content.ts:82-94`). `readSkillContent` then bounds the text at 1 MiB (lines 53-80).
+  - Since 25 November 2026, the org skill choice reads each front matter with `readSkillHeader` (lines 101-121). The list reads a missing description with `readFirstSkillLine` (lines 123-136). Both open through `readRegularSkill`.
+  - Since commit `7a952095e` of the same day, the export also opens each `SKILL.md` of the org skills copy through `readRegularSkill` (`replaceMetadata`, `runner/sdk-helper/src/providers/skill-view.ts:28-43`). A refused read there fails the whole export, and the turn runs without org skills (`skill-view.ts:39-40` and `:155-162`).
   - The Claude scan takes each folder or link under `<repository>/.claude/skills`. It checks the `SKILL.md` inside with `stat`, which also follows a link (`runner/sdk-helper/src/skill-files.ts:40-54`, `:121-135`).
-  - Without a description in its front matter, a Claude skill takes the first line of its text that is not empty (`runner/sdk-helper/src/skill-read.ts:42`, `docs/protocol/skill-sources.md:71-74`).
+  - Without a description in its front matter, a Claude skill takes the first line of its text that is not empty (`runner/sdk-helper/src/skill-read.ts:44-45`, `docs/protocol/skill-sources.md:71-74`).
   - The runner sends each description whole, and a description of more than 4096 characters as empty text. The workspace cuts each description to 300 characters after its filter of secret values (`docs/protocol/skill-mentions.md:119-125`).
   - The Codex list comes from the Codex app server, which also lists the shared Codex home. Its fallback scans `<repository>/.agents/skills` and `<repository>/.codex/skills` (`docs/protocol/skill-sources.md:34-40`).
   - Org skills are already confined. Before the helper sees a copy of the skills repository, the runner removes each link that leaves the copy or points nowhere (`crates/cnd-runner/src/skills/links.rs:9-37`, `docs/protocol/org-skills.md:147`).
   - The file tab read of the runner opens a file only inside the repository folder. It checks the target, and then the opened descriptor through `/proc/self/fd` (`verified_open` in `crates/cnd-runner/src/repository/open.rs:32-63`).
   - The protocol says that a skill tab shows the text that its agent reads (`docs/protocol/skill-tabs.md:95-98`). No protocol doc says what a skill read or the scan does with a link.
-  - Every member who can open a skill tab can also read every file of the cloud computer from a terminal. Every shell runs as the same user (`docs/protocol/terminal.md:41-45`).
+  - Every member who can open a skill tab can also read every file of the cloud computer from a terminal. Every shell runs as the same user (`docs/protocol/terminal.md:42-45`).
   - A change of a protocol doc also needs a read of both legal pages and of each public guide, as `AGENTS.md` says.
 - **Problem:**
   - A `SKILL.md` in a skill folder of the workspace repository can be a link to any file that the helper can read. A commit, a member, or an agent can make such a link.
-  - The skill tab then shows the whole text of that file. The Worker hides only the known secret values and the tokens in it (`docs/protocol/skill-tabs.md:101-105`).
+  - The skill tab then shows the whole text of that file. The Worker hides only the known secret values and the tokens in it (`docs/protocol/skill-tabs.md:103-107`).
   - For Claude, the scan also lists such a file as a skill. Without front matter, its first line becomes the description in the skills report.
   - The workspace keeps that line and shows it to each member. This part of the problem is on `origin/main`.
 - **Impact if no action:** A skill tab and the `/` menu can show text of a file outside the skill folders, such as a configuration file. The members who see it can already read that file from a terminal, so no person gets new access.
@@ -42,7 +44,9 @@
     - Effort: Small.
   - **B.** Let the shared reader accept only an opened regular file whose own name is `SKILL.md`.
     - After the open, read the real path of the descriptor through `/proc/self/fd/<fd>`, and check its last name.
-    - This covers the scan, the skill tab, and the org skill choice, for every source of each agent.
+    - This covers the scan, the skill tab, the org skill choice, and the export, for every source of each agent.
+    - The export also reads each `agents/openai.yaml` through `readRegularSkill` (`skill-view.ts:95-98`). So the check must apply only to the reads of a `SKILL.md`.
+    - The check must also skip the org skills copy, whose links the runner already confines. Otherwise a supported link of the copy fails the export, and the turn runs without org skills. An example is `nested/SKILL.md` as a link to `shared/instructions.md` (`runner/sdk-helper/src/providers/skill-safety.test.ts:171-219`).
     - Cost: a new refusal. A `SKILL.md` that links to a file of another name, such as `README.md`, drops out of the list and the tab.
     - An agent can still load such a skill, so the list and the agent can differ for it.
     - `docs/protocol/skill-tabs.md:95-98` must change.
@@ -55,11 +59,11 @@
     - Effort: Medium.
   - **D.** Read skill files in a process that can see only the approved skill folders. Cost: a new refusal, and process isolation in the runner release. Effort: Large.
 - **Left out:** A check of the path before the open. A link can change between the check and the open.
-- **Wider fix:** B. One check in the shared reader covers the scan, the tab, and the org skill choice of each agent. C covers the same reads with a stricter rule, at a higher cost.
+- **Wider fix:** B. One check in the shared reader covers the scan, the tab, the org skill choice, and the export of each agent. C covers the same reads with a stricter rule, at a higher cost.
 - **Previous examples:**
   - Commit `7552f6e33` added the descriptor-checked opens of `crates/cnd-runner/src/repository/open.rs` for file tabs and HTML previews.
   - Commit `d3c1c5f17` confined the links of the org skills copy in `crates/cnd-runner/src/skills/links.rs`.
   - `plans/follow-ups/boat-file-read-allows-git-paths.md` records the same class for the fallback file read. It has the severity Low for the same terminal reason.
-- **Related:** `plans/follow-ups/linked-org-skill-export-name.md` covers links inside the org skills copy, which the shared reader also reads. Its fix must keep a valid link inside the copy readable. B keeps such a link when its target is named `SKILL.md`. No options conflict.
+- **Related:** `plans/follow-ups/skill-export-reads-whole-files.md` changes the reads of the same export and of the org skill choice, which go through the shared reader. Both fixes must keep a valid link inside the org skills copy readable. No options conflict.
 - **Recommendation:** B. One small check confines every skill read and keeps each skill whose file is a real `SKILL.md`. Choose A if the user accepts the documented terminal risk.
 - **Action:** ask the user, because B, C, and D add a new refusal, and A adds a new requirement to a protocol doc.

@@ -3,44 +3,57 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 1, a problem outside the scope from the checks of findings 2 and 4.
-- **Location:** `runner/sdk-helper/src/providers/skill-view.ts:22-35` (`replaceMetadata`), `runner/sdk-helper/src/providers/skill-view.ts:68-82` (the walk of `exportSkills`), `runner/sdk-helper/src/providers/skills.ts:10-14` (`metadata`), `runner/sdk-helper/src/skill-org.ts:55-77` (`listOrgSkills`), `runner/sdk-helper/src/skill-content.ts:6-7`.
-- **Reason:** The whole reads ran on `origin/main` before the skill tabs change, and each bounded read must refuse a larger file, which the user decides.
+- **Location:** `runner/sdk-helper/src/providers/skill-view.ts:28-43` (`replaceMetadata`), `runner/sdk-helper/src/providers/skill-view.ts:77-103` (the walk of `exportSkills`), `runner/sdk-helper/src/skill-content.ts:101-121` (`readSkillHeader`), `runner/sdk-helper/src/providers/skill-metadata.ts:9-19` (`readSkillMetadata`) and `:131-149` (`safeSkillSidecar`), `runner/sdk-helper/src/providers/skills.ts:68-120` (`selectAgentSkills`).
+- **Reason:** The whole reads ran on `origin/main` before the skill tabs change, and each option that bounds them refuses a larger file, which the user decides.
 
 - **Source:** Review. **Category:** Performance.
 - **Terms:**
   - **Helper:** the Node process under `runner/sdk-helper` that starts each agent and prepares its org skills.
   - **Org skills copy:** the copy of the org's skills repository on the cloud computer. The runner makes it, and it removes each link that leaves the copy.
   - **Export:** `prepareSkillView` in `runner/sdk-helper/src/providers/skill-view.ts`. At each agent start, it copies the org skills copy into a temporary view and rewrites each skill file into its safe form.
-  - **Bounded reader:** `readSkillPrefix` and `readSkillContent` in `runner/sdk-helper/src/skill-content.ts`. They read a regular file up to 1 MiB, or 1,048,576 bytes.
+  - **Bounded reader:** `readSkillContent` in `runner/sdk-helper/src/skill-content.ts:53-80`. It reads a regular file up to 1 MiB, or 1,048,576 bytes, for the skill tab.
+  - **Header reader:** `readSkillHeader` in `runner/sdk-helper/src/skill-content.ts:101-121`. It reads the front matter of a `SKILL.md` in parts of 64 KiB, up to its closing `---`, with no limit for its size.
 - **Background:**
-  - At each agent start, the export walks every folder of its view. In each folder that holds a `SKILL.md`, it rewrites `SKILL.md` and `agents/openai.yaml` (`skill-view.ts:68-82`). This covers each such folder, selected or not.
-  - `replaceMetadata` reads each of these files whole with `readFile`, also through a link, and it writes the safe form (`skill-view.ts:22-35`). `safeSkillSidecar` parses the whole YAML of `agents/openai.yaml` (`runner/sdk-helper/src/providers/skill-metadata.ts:109-127`).
-  - Since 25 November 2026, the org skill choice reads each candidate `SKILL.md` with the bounded reader (`metadata` in `runner/sdk-helper/src/providers/skills.ts:10-14`). It takes the name from the first 1 MiB, so it still selects a skill whose `SKILL.md` is larger.
-  - The skills list leaves out an org skill whose `SKILL.md` is over 1 MiB (`listOrgSkills` in `runner/sdk-helper/src/skill-org.ts:55-77`). A skill tab gets "too large" for it (`docs/protocol/skill-tabs.md:99-100`).
+  - At each agent start, the export walks every folder of its view. In each folder that holds a `SKILL.md`, it rewrites `SKILL.md` and `agents/openai.yaml` (`skill-view.ts:77-103`). This covers each such folder, selected or not.
+  - `replaceMetadata` opens each `SKILL.md` of the org skills copy, also through a link, and reads it whole with `readFile`. It writes the safe form into the view (`skill-view.ts:28-43` and `:83-94`).
+  - It reads each `agents/openai.yaml` whole in the same way. `safeSkillSidecar` parses its whole YAML (`runner/sdk-helper/src/providers/skill-metadata.ts:131-149`).
+  - The org skill choice reads the front matter of each candidate with the header reader (`readSkillMetadata`, `skill-metadata.ts:9-19`). A `SKILL.md` that opens a front matter and never closes it makes the reader read the whole file.
+  - The choice runs at each agent start, at each scan of the skills list, and at each read of a skill tab (`selectAgentSkills` in `runner/sdk-helper/src/providers/skills.ts:68-120`).
+  - Commit `315b5cbca` of 25 November 2026 bounded the choice to the first 1 MiB of each `SKILL.md`. Commit `7a952095e` of the same day replaced that bound with the header reader.
+  - Its reason: a front matter that the bound cut let two org skills claim one name. The tab then showed the text of the other skill.
+  - Since commit `7a952095e`, the skills list holds an org skill over 1 MiB, because the agent loads it. Its skill tab gets "too large" (`docs/protocol/skill-tabs.md:99-102`).
   - The list rule says that the list holds every skill that the agent loads (`docs/protocol/skill-sources.md:75-80`).
   - No protocol doc gives a size limit for the files that an agent start loads.
-  - A failed export ends with the warning "The org skills could not be prepared. The turn will continue.", and the turn runs without org skills (`skill-view.ts:131-138`).
+  - A failed export ends with the warning "The org skills could not be prepared. The turn will continue.", and the turn runs without org skills (`skill-view.ts:155-162`).
   - A change of a protocol doc also needs a read of both legal pages and of each public guide, as `AGENTS.md` says.
 - **Problem:**
   - Each agent start reads every `SKILL.md` and `agents/openai.yaml` of the org skills copy whole into memory, with no limit.
-  - An org skill over 1 MiB loads for the agent, but the list leaves it out.
-- **Impact if no action:** A large file in the org skills repository slows each agent start of the org, or makes the start drop its org skills. The list and the agent disagree for a skill over 1 MiB.
+  - The choice also reads the whole front matter of each candidate, with no limit, at each start, each list scan, and each tab read.
+  - Before commit `7a952095e`, the list also left out an org skill over 1 MiB that the agent loaded. Commit `7a952095e` fixed that part.
+- **Impact if no action:** A large file in the org skills repository slows each agent start of the org, or makes the start drop its org skills.
 - **Root question:** How does an agent start read the org skill files within a limit, and what does it do with a larger file?
 - **Options:**
   - **A.** Read `SKILL.md` and `agents/openai.yaml` with the bounded reader in `replaceMetadata`.
-    - Leave out of the view each folder with a file over 1 MiB, and warn. The list already leaves out such a skill.
-    - Cost: an agent no longer gets an org skill over 1 MiB, a new refusal.
+    - Leave out each folder with a larger file, from the view and from the choice, and warn.
+    - Cost: a new refusal. An agent no longer gets an org skill over 1 MiB, and the rule of `docs/protocol/skill-tabs.md:99-102` changes. The header read of the choice keeps no limit.
     - Effort: Small.
-  - **B.** Render each selected skill with the one org skill resolver of `plans/follow-ups/linked-org-skill-export-name.md`, from the bytes that the bounded choice already read.
-    - Read each other skill file and each `agents/openai.yaml` with the bounded reader. Leave out each folder with a larger file, and warn.
-    - Cost: the same new refusal as A.
+  - **B.** Bound every read of an org skill, with the one metadata result of commit `7a952095e`.
+    - Bound the header read of the choice, the body read of the export, and each `agents/openai.yaml`. A skill with a larger file leaves the choice, with a warning. So the list, the tab, and the agent hold the same skills.
+    - Leave out a skill whose front matter passes the limit. Never cut the front matter, because a cut front matter let two org skills claim one name.
+    - The limit of the choice and the export can be higher than the 1 MiB of the tab. A skill under that limit then still loads, and its tab shows "too large".
+    - Cost: the same new refusal as A, and the same change of the rule.
+    - Effort: Medium.
+  - **C.** Keep each org skill that an agent loads, and bound only the memory.
+    - Stream the body of each `SKILL.md` from the copy into the view in parts, through the filter of the safe form.
+    - Bound the front matter and each `agents/openai.yaml`. Leave out a skill with a larger one, with a warning.
+    - Cost: a filter of the safe form that works across the parts. The new refusal holds only for a large front matter or `agents/openai.yaml`.
     - Effort: Medium.
 - **Left out:**
   - Change nothing. Each agent start keeps reading every skill file of the copy whole.
   - Copy a file over the limit without its safe form. The agent would then get the settings that the safe form removes, such as keys that run code.
-  - A higher limit for the export than for the list. The list and the agent would still disagree for a file between the two limits.
-- **Wider fix:** B. One resolver gives the list, the tab, and the agent the same choice and the same limit for each org skill.
-- **Previous examples:** The review fixes of 25 November 2026 bounded the org skill choice, in commit `315b5cbca`. Commit `6bed6bdb7` bounded the request bodies at the entry of the Worker.
-- **Related:** `plans/follow-ups/linked-org-skill-export-name.md` changes the same export. Its resolver can apply the answer here. Do both in one branch when the answer comes. No options conflict.
-- **Recommendation:** B. It bounds every read of the export, and it keeps the list and the agent on one rule. Choose A for a smaller change.
-- **Action:** ask the user, because each bounded read must leave out a skill over 1 MiB, which is a new refusal.
+  - A cut of a file at the limit. A cut front matter let two org skills claim one name, and a cut body changes the skill that the agent gets.
+- **Wider fix:** B. One limit in the one metadata result gives the list, the tab, and the agent the same choice for each org skill.
+- **Previous examples:** Commit `315b5cbca` bounded the org skill choice, and commit `7a952095e` replaced that bound with a read of the whole front matter. Commit `6bed6bdb7` bounded the request bodies at the entry of the Worker.
+- **Related:** `plans/follow-ups/skill-reads-follow-links-out-of-folders.md` changes the shared reader `readRegularSkill`, which the export and the choice use since commit `7a952095e`. Both fixes must keep a valid link inside the org skills copy readable. No options conflict.
+- **Recommendation:** B. It bounds every read of an org skill, so the list, the tab, and the agent hold the same skills. Choose C to keep each org skill that an agent loads today, or A for a smaller change.
+- **Action:** ask the user, because each option leaves out an org skill with a file over its limit, which is a new refusal.

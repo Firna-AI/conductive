@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-17, from PR #426, the independent check of review finding 402.
-- **Location:** `runner/sdk-helper/src/providers/skill-metadata.ts:32`, `runner/sdk-helper/src/providers/skills.ts:37`, and `runner/sdk-helper/src/providers/skill-names.test.ts`.
+- **Location:** `runner/sdk-helper/src/providers/skill-metadata.ts:43-50` (the Claude name rule of `skillMetadata`), `runner/sdk-helper/src/providers/skills.ts:34-36` (`repositoryNames`), and `runner/sdk-helper/src/providers/skill-names.test.ts`.
 - **Reason:** These cases require reserved names, and the branch has used its two feature fix rounds.
 
 - **Source:** Review.
@@ -15,6 +15,8 @@
   - **Helper:** The process under `runner/sdk-helper` that selects skills and starts the agent.
   - **Discovery alias:** The link name under `.claude/skills` that Claude reads.
 - **Background:** The helper reads names before it selects org skills. An existing workspace skill wins a shown-name clash. `docs/protocol/org-skills.md` requires both agents to get the selected skills and defines workspace precedence.
+
+  Since commit `7a952095e` of 25 November 2026, each org skill has one metadata result, from `readSkillMetadata`. The org skill choice, the skills list, the skill tab, and the export use it. Option B can put the usable identity into that result.
 - **Problem:** Two selection rules disagree with the pinned Claude reader.
   - `skill-metadata.ts` accepts the shown name `anthropic-skills` and names that start with `anthropic-skills:`. Claude refuses those names. The app lists the skill, but Claude drops it without a helper warning. Changing the discovery alias does not repair a refused shown name.
   - `skills.ts` records workspace names even when Claude skips their directory. For example, `.claude/skills/synced/SKILL.md` can declare `name: sync-data`. The helper then excludes an org skill named `sync-data`, although Claude loads neither copy. This precedence defect is Low severity and Rare.
@@ -22,6 +24,8 @@
 - **Evidence:** The independent check read SDK `0.3.318` and its bundled Claude `2.1.318`. The native directory reader skips `synced` after case folding and removal of trailing dots and spaces. Its reserved-name filters also reject `anthropic-skills` identities.
 
   The `tengu_plaid_harbor` flag controls part of that filtering and defaults to on. The sandbox's remote flag value was not checked. Evidence is static, from the Linux x64 package. No native Claude process ran.
+
+  A run of the helper code on 25 November 2026, at commit `682b5b23d`, showed that both rules of the helper still hold. `readSkillMetadata` accepted `anthropic-skills` and `anthropic-skills:review` as Claude names. A workspace folder `.claude/skills/synced` with `name: sync-data` kept out an org skill `sync-data`, with the warning "The workspace skill sync-data takes precedence. The org skill will not load." The helper still pins SDK `0.3.318`. Nobody ran Claude itself again.
 - **Root question:** How can the helper select org skills and apply workspace precedence using identities that the pinned Claude reader can load?
 - **Options:**
   - **A.** Handle the known refusals separately. Treat a reserved org shown name as having no usable Claude name and use the existing warning. Exclude refused workspace folders from the set that takes precedence. Extend the existing name tests and update the helper README. Each selection path keeps its own native-name rule. Effort: Small.
