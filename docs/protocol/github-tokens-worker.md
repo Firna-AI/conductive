@@ -150,8 +150,8 @@ merge queue. A decision number names a dated record, as
   Reason: no member starts the move. The sync of the local branch after
   GitHub rewrites it fetches with the same token.
 - The other GitHub writes of the queue for an entry use the stored token of
-  the queuer of that entry: the base changes, the calls on the GitHub
-  stack, and the server rebases. Reason: the queue acts as the queuer
+  the queuer of that entry: the base changes and the calls on the GitHub
+  stack. Reason: the queue acts as the queuer
   (decision 314).
 - When the queuer can no longer act, such as after a leave of the org, the
   leave step resets the base with the token of the member whose action

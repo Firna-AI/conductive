@@ -190,9 +190,6 @@ marks a draft ready for review, continues, and archives.
   changes decision 220 for this one action, as
   [Add to merge queue](merge-queue-in-the-app.md#add-to-merge-queue) says
   (decision 317).
-- The merge queue asks GitHub to rebase a layer on its servers. It changes
-  decision 220 for that one step, as
-  [Restacks](merge-queue-stack.md#restacks) says (decision 319).
 
 ## Agent actions
 

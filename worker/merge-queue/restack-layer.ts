@@ -19,7 +19,6 @@ import {
   forgetExpectedQueueBase,
   saveQueuedGitHubRef,
 } from './restack-data'
-import { tryGitHubServerRebase } from './server-rebase'
 import type { QueueStackChanges } from './stack-changes'
 import { openStackLayers } from './stack-read'
 import { leaveQueue, type QueueRuntime } from './step'
@@ -38,18 +37,15 @@ export class QueueLayerRestack {
   private readonly runtime: QueueRuntime
   private readonly fixes: QueueFixTurns
   private readonly stacks: QueueStackChanges
-  private readonly storage: DurableObjectStorage
 
   constructor(
     runtime: QueueRuntime,
     fixes: QueueFixTurns,
     stacks: QueueStackChanges,
-    storage: DurableObjectStorage,
   ) {
     this.runtime = runtime
     this.fixes = fixes
     this.stacks = stacks
-    this.storage = storage
   }
 
   async move(
@@ -133,17 +129,6 @@ export class QueueLayerRestack {
       })
       const writer = await this.writer(queue, entries, entry)
       if ('step' in writer) return writer.step
-      if (
-        !active &&
-        (await tryGitHubServerRebase(
-          this.runtime,
-          this.storage,
-          read,
-          base,
-          writer,
-        ))
-      )
-        return retryRebase
       return this.fix(queue, entry, base, oldBase)
     }
 

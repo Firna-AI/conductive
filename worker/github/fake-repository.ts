@@ -9,11 +9,7 @@ import {
 } from './fake-pull'
 import { RepositoryMerges } from './fake-merges'
 import { fakePullLists } from './fake-pull-reads'
-import {
-  changeFakePullBase,
-  rebaseFakePull,
-  repositoryToken,
-} from './fake-pull-writes'
+import { changeFakePullBase, repositoryToken } from './fake-pull-writes'
 import { RepositoryStacks } from './fake-stacks'
 
 export class RepositoryGitHub {
@@ -199,8 +195,6 @@ export class RepositoryGitHub {
     await this.onRequest?.(operation)
     const variables = body.variables
     if (operation === 'MarkReady') return this.markReady(request, variables)
-    if (operation === 'RebasePull')
-      return rebaseFakePull(this, request, variables.input)
     if (this.deniedTokens.has(repositoryToken(request)))
       return Response.json({
         data: { repository: null },

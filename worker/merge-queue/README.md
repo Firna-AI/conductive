@@ -83,9 +83,8 @@ rewrites a branch, a guarded sync checks the local head before it moves.
 When the local branch has additional work, the restack turn moves only
 that work onto the rewritten head and asks for a plain push.
 
-The [server rebase flag](server-rebase.ts) defaults to off. It uses the
-current GitHub base and the pinned pull request head. Decision 319 needs
-the scratch test of a server rebase after a squash merge beneath it.
+Each restack is one restack turn (decision 319 A). GitHub's server rebase
+failed a live check after a squash merge below, so the queue does not use it.
 
 The coordinator checks the ready layers from the trunk up. It reuses
 the GitHub bar state and checks each workspace's local work. A dirty

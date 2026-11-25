@@ -63,27 +63,6 @@ export function forgetExpectedQueueBase(
     .run()
 }
 
-export function expectHeadRewrite(
-  db: D1Database,
-  entry: QueueEntry,
-  head: string,
-) {
-  return db
-    .prepare(
-      `UPDATE merge_queue_entries SET sync_from = COALESCE(sync_from, ?),
-      merge_head = NULL
-     WHERE queue_id = ? AND workspace_id = ? AND queued_at = ? AND pull_number = ?`,
-    )
-    .bind(
-      head,
-      entry.queueId,
-      entry.workspaceId,
-      entry.queuedAt,
-      entry.pullNumber,
-    )
-    .run()
-}
-
 export function saveQueueStack(
   db: D1Database,
   queue: QueueRecord,

@@ -47,38 +47,3 @@ export async function changeFakePullBase(
   pull.baseRefName = input.base
   return Response.json(restPull(pull, api))
 }
-
-function rebaseError(type: string) {
-  return Response.json({
-    data: { updatePullRequestBranch: null },
-    errors: [{ type, message: 'GitHub detail that must stay on the server.' }],
-  })
-}
-
-export function rebaseFakePull(
-  api: RepositoryGitHub,
-  request: Request,
-  input: unknown,
-): Response {
-  if (!isRecord(input) || input.updateMethod !== 'REBASE')
-    return rebaseError('UNPROCESSABLE')
-  const pull = Object.values(api.pulls).find(
-    (pull) => input.pullRequestId === `PR_${pull.number}`,
-  )
-  if (!pull || api.deniedTokens.has(repositoryToken(request)))
-    return rebaseError('NOT_FOUND')
-  if (!canWritePulls(api, request)) return rebaseError('FORBIDDEN')
-  if (
-    pull.state !== 'OPEN' ||
-    input.expectedHeadOid !== pull.headRefOid ||
-    pull.mergeable === 'CONFLICTING'
-  )
-    return rebaseError('UNPROCESSABLE')
-  pull.headRefOid = `rebased-${pull.headRefOid}`
-  api.branches.set(`refs/heads/${pull.headRefName}`, pull.headRefOid)
-  return Response.json({
-    data: {
-      updatePullRequestBranch: { pullRequest: { id: `PR_${pull.number}` } },
-    },
-  })
-}

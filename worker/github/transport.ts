@@ -63,7 +63,7 @@ export async function githubJson(
   }
 }
 
-export function githubActionFailure(status: number): HttpError {
+function githubActionFailure(status: number): HttpError {
   switch (status) {
     case 401:
     case 403:

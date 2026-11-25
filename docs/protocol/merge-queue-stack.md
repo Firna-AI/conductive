@@ -74,18 +74,17 @@ says.
   existing GitHub base.
 - Every cause uses this rule: a join, a re-order, a leave, a push to a
   lower layer, and a merge into the trunk from outside the queue.
-- The queue first asks GitHub to rebase the layer on GitHub's servers
-  (decision 319). It sends a restack turn only when that rebase has a
-  conflict. This changes decision 220 for this one rebase, because the app
-  asks GitHub to change the code of a branch.
-- Reason: most restacks have no conflict. A turn for each one costs an
-  agent turn, a running cloud computer, and minutes.
-- A restack turn for every restack was rejected (decision 319). Each
-  re-order and each push to a lower layer would then start one turn for
-  each layer above, one after another. A rebase that the Worker runs in the
-  cloud computer with no agent was left out. It changes decision 220 too,
-  and the rebase on GitHub needs no cloud computer.
-- On a conflict, the queue sends one restack turn as a message of the
+- Each restack is one restack turn of the queue (decision 319 A, chosen on
+  25 November 2026). After a merge of a layer, GitHub moves and rebases the
+  layers above it by itself, so that move needs no turn.
+- Reason: a live check showed that GitHub's server rebase replays the
+  commits of a layer that was squash-merged below, and stops with a
+  conflict. An agent skips those commits.
+- GitHub's server rebase first, with a turn only on a conflict, was
+  rejected (decision 319 B). It failed the live check after a squash merge
+  below. A rebase that the Worker runs in the cloud computer with no agent
+  was left out, because it changes decision 220.
+- When a restack has a conflict, the queue sends one restack turn as a message of the
   queuer (decision 321). When that turn ends and the conflict stays, the
   queue sends no second turn. The entry then waits in its place for a
   member, as [Failures](merge-queue.md#failures) says.

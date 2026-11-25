@@ -45,7 +45,7 @@ export class QueueRestacks {
     this.storage = storage
     this.fixes = fixes
     this.stacks = new QueueStackChanges(runtime, storage)
-    this.layer = new QueueLayerRestack(runtime, fixes, this.stacks, storage)
+    this.layer = new QueueLayerRestack(runtime, fixes, this.stacks)
   }
 
   private schedule(scope: QueueScope, delay = 0) {
