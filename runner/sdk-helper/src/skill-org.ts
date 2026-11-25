@@ -54,7 +54,7 @@ export async function listOrgSkills(
     if (!entry) continue
     if (!entry.description) {
       const line = listedSkillText(
-        await readFirstSkillLine(entry.path, file.bodyOffset),
+        await readFirstSkillLine(entry.path, 'org', file.bodyOffset),
         entry.path,
         warn,
       )
@@ -87,6 +87,7 @@ export async function readOrgSkill(
     const body = await readSkillContent(
       metadata.path,
       maxBytes,
+      'org',
       metadata.file.bodyOffset,
     )
     if (!body.ok) return body

@@ -1,5 +1,6 @@
 import { constants } from 'node:fs'
-import { open, type FileHandle } from 'node:fs/promises'
+import { open, readlink, type FileHandle } from 'node:fs/promises'
+import { basename } from 'node:path'
 
 import type { SkillReadOutcome } from './generated/SkillReadOutcome'
 
@@ -7,6 +8,7 @@ import type { SkillReadOutcome } from './generated/SkillReadOutcome'
 export const SKILL_FILE_MAX_BYTES = 1_048_576
 
 type SkillReadFailure = Extract<SkillReadOutcome, { ok: false }>
+export type SkillFileSource = 'agent' | 'org'
 
 export const SKILL_NOT_FOUND = {
   ok: false,
@@ -53,11 +55,12 @@ export function skillReadText(
 export async function readSkillContent(
   path: string,
   maxBytes: number,
+  source: SkillFileSource = 'agent',
   bodyOffset = 0,
 ): Promise<SkillReadOutcome> {
   const limit = Math.min(maxBytes, SKILL_FILE_MAX_BYTES)
   try {
-    return await readRegularSkill(path, async (file, sizeBytes) => {
+    return await readRegularSkill(path, source, async (file, sizeBytes) => {
       if (sizeBytes > limit) return tooLarge(sizeBytes, limit)
       const buffer = Buffer.allocUnsafe(limit + 1)
       let size = 0
@@ -81,12 +84,17 @@ export async function readSkillContent(
 
 export async function readRegularSkill<T>(
   path: string,
+  source: SkillFileSource,
   read: (file: FileHandle, sizeBytes: number) => Promise<T>,
 ): Promise<T | SkillReadFailure> {
   const file = await open(path, constants.O_RDONLY | constants.O_NONBLOCK)
   try {
     const info = await file.stat()
     if (!info.isFile()) return SKILL_UNAVAILABLE
+    if (source === 'agent') {
+      const target = await readlink(`/proc/self/fd/${file.fd}`).catch(() => '')
+      if (basename(target) !== 'SKILL.md') return SKILL_UNAVAILABLE
+    }
     return await read(file, info.size)
   } finally {
     await file.close()
@@ -98,8 +106,8 @@ const LINE_FEED = 10
 const FRONT_MATTER_DELIMITER = /^---[^\S\n]*$/u
 
 /** Read through the closing delimiter and give the byte offset of the body. */
-export function readSkillHeader(path: string) {
-  return readRegularSkill(path, async (file, sizeBytes) => {
+export function readSkillHeader(path: string, source: SkillFileSource) {
+  return readRegularSkill(path, source, async (file, sizeBytes) => {
     let opened = false
     const header: string[] = []
     for await (const { line, end } of skillLines(file, 0, sizeBytes, '---')) {
@@ -122,10 +130,11 @@ export function readSkillHeader(path: string) {
 
 export async function readFirstSkillLine(
   path: string,
+  source: SkillFileSource,
   bodyOffset: number,
 ): Promise<SkillReadOutcome> {
   try {
-    return await readRegularSkill(path, async (file, sizeBytes) => {
+    return await readRegularSkill(path, source, async (file, sizeBytes) => {
       for await (const { line } of skillLines(file, bodyOffset, sizeBytes))
         if (line.trim()) return { ok: true, text: line }
       return { ok: true, text: '' }

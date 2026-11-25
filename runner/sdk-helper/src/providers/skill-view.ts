@@ -36,7 +36,7 @@ async function replaceMetadata(
     throw error
   })
   if (!info || (!info.isFile() && !info.isSymbolicLink())) return
-  const safe = await readRegularSkill(source, render)
+  const safe = await readRegularSkill(source, 'org', render)
   if (typeof safe !== 'string') throw new Error(safe.error.message)
   if (info.isSymbolicLink()) await rm(path)
   await writeFile(path, safe)
@@ -82,7 +82,7 @@ async function exportSkills(
         join(directory, 'SKILL.md'),
         async (file) => {
           const metadata =
-            files.get(folder) ?? (await readSkillMetadata(folder, agent))
+            files.get(folder) ?? (await readSkillMetadata(folder, agent, 'org'))
           if (!metadata.file.ok) throw new Error(metadata.file.error.message)
           const body = (await file.readFile()).toString(
             'utf8',

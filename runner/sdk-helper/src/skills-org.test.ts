@@ -65,8 +65,9 @@ it('lists the org skills after the workspace skills, as an agent start loads the
       'Run `!git status`.',
     ),
   )
-  await org.write('skills/no-description/SKILL.md', '# Only a heading\n')
   const path = (folder: string) => join(org.directory, 'skills', folder)
+  await org.write('skills/no-description/content.md', '# Only a heading\n')
+  await linkSkill(join(path('no-description'), 'SKILL.md'), 'content.md')
   expect(await h.scanner.scan(false, org.skills)).toEqual({
     claude: [
       {
@@ -176,20 +177,20 @@ it('keeps workspace precedence regardless of size and limits the org tab text', 
     skillText({ name: 'shadowed', description: 'Org skill.' }),
   )
   await h.write(
-    'early.md',
+    'early/SKILL.md',
     skillText({ name: 'shadowed', description: 'Workspace skill.' }, body),
   )
   await h.write(
-    'late.md',
+    'late/SKILL.md',
     `---\n# ${body}\nname: review\ndescription: Workspace skill.\n---\n`,
   )
   await linkSkill(
     join(h.root, '.claude/skills/early/SKILL.md'),
-    join(h.root, 'early.md'),
+    join(h.root, 'early/SKILL.md'),
   )
   await linkSkill(
     join(h.root, '.claude/skills/late/SKILL.md'),
-    join(h.root, 'late.md'),
+    join(h.root, 'late/SKILL.md'),
   )
 
   const { claude } = await h.scanner.scan(false, org.skills)

@@ -3,12 +3,16 @@ import { basename, join } from 'node:path'
 import { stringify } from 'yaml'
 
 import type { Agent } from '../generated/Agent'
-import { readSkillHeader } from '../skill-content'
+import { readSkillHeader, type SkillFileSource } from '../skill-content'
 import { readSkillSidecar, readSkillYaml, yamlRecord } from './skill-yaml'
 
-export async function readSkillMetadata(folder: string, agent: Agent) {
+export async function readSkillMetadata(
+  folder: string,
+  agent: Agent,
+  source: SkillFileSource,
+) {
   const path = join(folder, 'SKILL.md')
-  const header = await readSkillHeader(path)
+  const header = await readSkillHeader(path, source)
   return {
     ...skillMetadata(header.ok ? header.yaml : null, basename(folder), agent),
     path,

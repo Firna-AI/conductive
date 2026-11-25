@@ -31,7 +31,7 @@ async function repositoryNames(options: OrgSkillOptions, agent: Agent) {
           (entry.isFile() || entry.isSymbolicLink()),
       )
     ) {
-      const skill = await readSkillMetadata(directory, agent)
+      const skill = await readSkillMetadata(directory, agent, 'agent')
       for (const name of skill.aliases) result.add(name)
       if (agent === 'claude') result.add(basename(directory))
       if (!skill.name)
@@ -76,7 +76,7 @@ export async function selectAgentSkills(
   const selected: SelectedOrgSkill[] = []
   const shown = new Map<string, string>()
   for (const skill of skills) {
-    const metadata = await readSkillMetadata(skill.path, agent)
+    const metadata = await readSkillMetadata(skill.path, agent, 'org')
     files.set(skill.path, metadata)
     const { name, aliases } = metadata
     const path = relative(options.orgSkills?.directory ?? '', skill.path)

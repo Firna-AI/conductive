@@ -172,8 +172,9 @@ it.each(['claude', 'codex'] as const)(
   'keeps %s root-skill support links within the safe view and sanitizes linked metadata',
   async (agent) => {
     const h = await skillProviders(agent)
-    await h.write('SKILL.md', unsafe)
-    await h.write('shared/instructions.md', unsafe)
+    await h.write('shared/root.md', unsafe)
+    await symlink('shared/root.md', join(h.copy, 'SKILL.md'))
+    await h.write('shared/instructions.md', `${unsafe}Nested instructions.\n`)
     await h.write('shared/openai.yaml', sidecar)
     await h.write('shared/script.sh', 'echo support\n')
     await h.write('nested/placeholder', 'Nested support')
@@ -191,7 +192,7 @@ it.each(['claude', 'codex'] as const)(
     expect(paths).toHaveLength(1)
     const [path] = paths
     expect(await readFile(join(path, 'nested/SKILL.md'), 'utf8')).toBe(
-      await readFile(join(path, 'SKILL.md'), 'utf8'),
+      `${await readFile(join(path, 'SKILL.md'), 'utf8')}Nested instructions.\n`,
     )
     expect(
       frontmatter(await readFile(join(path, 'nested/SKILL.md'), 'utf8')),

@@ -1,10 +1,10 @@
-import { mkdir, unlink, writeFile } from 'node:fs/promises'
+import { link, mkdir, symlink, unlink, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 
 import { expect, it } from 'vitest'
 
 import { providerFixture } from '../test-support/fixture'
-import { skillText } from '../test-support/skills'
+import { scannerFixture, skillText } from '../test-support/skills'
 import type { HelperOutput } from './generated/HelperOutput'
 import type { HelperSkillSource } from './generated/HelperSkillSource'
 import type { SkillReadOutcome } from './generated/SkillReadOutcome'
@@ -55,6 +55,39 @@ it.each(['.claude', '.agents'])(
     )
   },
 )
+
+it('lists and opens a linked Claude skill only while its target is named SKILL.md', async () => {
+  const h = await scannerFixture()
+  const text = '# Review\n'
+  const target = await writeSkill(join(h.root, 'shared'), text)
+  const readme = join(h.root, 'README.md')
+  await link(target, readme)
+  const path = join(h.root, '.claude', 'skills', 'review', 'SKILL.md')
+  await mkdir(dirname(path), { recursive: true })
+  await symlink(target, path)
+  const source = { type: 'file', path } as const
+
+  expect((await h.scanner.scan()).claude).toEqual([
+    { name: 'review', description: 'Review', path },
+  ])
+  expect(await read(source)).toEqual(reply({ ok: true, text }))
+
+  await unlink(path)
+  await symlink(readme, path)
+  expect({
+    listed: (await h.scanner.scan()).claude,
+    opened: await read(source),
+  }).toEqual({
+    listed: [],
+    opened: reply({
+      ok: false,
+      error: {
+        code: 'skill_unavailable',
+        message: 'The skill could not be read.',
+      },
+    }),
+  })
+})
 
 it('reads the safe view of the selected org skill with the agent trust policy', async () => {
   const { root, home } = await providerFixture()
