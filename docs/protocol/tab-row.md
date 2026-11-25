@@ -177,9 +177,9 @@ adds the menu of the rows of All files and Changes, as
   copy there, as
   [Read-only workspaces](session-transcripts.md#read-only-workspaces)
   says. The rule also covers each item that the menu gets later.
-- So a read-only workspace also leaves out Keep open. The tab menu of the
-  temporary tab there holds only Copy path, and only a double-click keeps
-  a tab (decision 286 B).
+- So a read-only workspace also leaves out Keep open. The tab menu of a
+  temporary file or diff tab there holds only Copy path, and only a
+  double-click keeps a tab (decision 286 B).
 - The tab menu opens there in the same ways as in other workspaces. A long
   press on a phone opens it, but lifts no tab.
 - An item that the place of a tab rules out, such as Move left on the

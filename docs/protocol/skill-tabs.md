@@ -177,6 +177,16 @@ skill tab at `app/skill-mentions/tab`, the chips that open it at
   The notice of a removed skill for each failure was rejected, because it
   gives a wrong cause. A spinner that keeps reading was rejected, because a
   lasting failure never ends.
+- A read that fails while the tab shows the text of its skill, such as a
+  read after a skills report, keeps that text when the cause can pass: a
+  reply with a 5xx status, or a failure of the network. A read while the
+  tab shows no text, and a reply with a 4xx status, still show their
+  notice.
+- Reason: a cause that passes, such as a stop of the cloud computer that
+  the tab does not know about yet, then takes no text from the member. A
+  notice for each failed read was rejected for that reason. Text that
+  stays after each failure was rejected, because it hides a cause that
+  lasts, such as a removed skill.
 - The notice for older software has no button of its own, as the notice of
   an HTML file in [Older software](html-file-preview.md#older-software).
   Reason: Restart downloads the newest release before it restarts the
@@ -186,10 +196,11 @@ skill tab at `app/skill-mentions/tab`, the chips that open it at
 ## A stopped cloud computer
 
 - A skill tab acts as a file tab does while the cloud computer does not
-  run, as [Files and changes](workspace-tools.md#files-and-changes) says.
+  run, also during a start that the open of the tab asks for, as
+  [Files and changes](workspace-tools.md#files-and-changes) says.
 - The open of a skill tab starts a stopped cloud computer, as the open of
-  a file tab does (decision 247). The tab then shows the wait of a start,
-  with no Resume, as [The resume](stop-and-resume.md#the-resume) says.
+  a file tab does, in the cases that
+  [The resume](stop-and-resume.md#the-resume) gives (decision 247).
 - A tab that shows its text keeps it when the cloud computer stops. A tab
   without text then shows the stopped state with Resume.
 
@@ -197,10 +208,10 @@ skill tab at `app/skill-mentions/tab`, the chips that open it at
 
 - The tab reads the text each time it shows, when the workspace leaves
   Starting, and again after each skills report while it shows.
+  [The skills report](skill-mentions.md#the-skills-report) states when the
+  runner sends a report.
 - Reason: a change of a skill then shows without a reload.
-- Cost: one read for each report while the tab shows. The runner sends a
-  report only when a name, a description, or a manual-only mark changes.
-  So an edit of the body alone shows at the next show of the tab.
+- Cost: one read for each report while the tab shows.
 
 ## The address
 

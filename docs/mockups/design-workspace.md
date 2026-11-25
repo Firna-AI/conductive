@@ -32,8 +32,10 @@ the bars of the cloud computer.
   kept file or diff tab has Copy path, a line, the moves, a line, and the
   two closes, from decision 3 B of the file row menu change. Copy path
   copies the path of the file, as in the menu of its row. A tab whose label can hide a secret value
-  leaves it out. A skill tab has no path, so its menu has only the moves
-  and the two closes. In a read-only workspace, the menu of a session tab holds
+  leaves it out. A skill tab has no path, so its menu leaves out Copy
+  path, as [The tab menu](../protocol/tab-row.md#the-tab-menu) says for a
+  kept and a temporary skill tab.
+  In a read-only workspace, the menu of a session tab holds
   only the three copy items, and the menu of a file or diff tab only Copy
   path. A copy keeps the shown tab, and a toast gives its result, as
   `app/transcripts` shows. The menu is the one way to rename a session, so
@@ -54,13 +56,16 @@ the bars of the cloud computer.
   the skill there (skill tab decision 2 A). When the
   row has no temporary tab, it opens at the end of the row. Otherwise the
   press replaces its file in the same place, also when a later tab stands
-  after it. A press on a file that has a tab shows that tab. The title of
+  after it. A press on a file, a diff, or a skill that has a tab shows
+  that tab, and the temporary tab stays as it is. The title of
   the temporary tab shows in italics, also on the lifted copy of a drag,
   and nothing else on the tab changes. A screen reader hears its name, then
   ", temporary". The tab menu and the move messages keep the plain name. A
   double-click on the tab or on the row of its file keeps it as a normal
   tab, with an upright title, in its place. Its tab menu leads with Keep
-  open, which keeps it too, then a line, Copy path, a line, and the moves.
+  open, which keeps it too.
+  [The tab menu](../protocol/tab-row.md#the-tab-menu) gives the items
+  that follow, for a file, a diff, and a skill.
   Keep open has the icon of a bookmark with a check, because a pin names
   the pinned tabs of a browser. A drag, Move left, or Move right that
   changes its place keeps it. A drag that Escape cancels, or that ends in

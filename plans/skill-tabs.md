@@ -144,9 +144,12 @@ Each call below is my call, made on 2026-11-24 unless it says otherwise.
 - **The agent of a chip.** A chip in a sent message opens the skill of
   the agent of that message's choice. A chip in the composer opens the
   skill of the agent of the model chosen now. When that agent has no such
-  skill, the chip opens the skill of the other agent, as `findSkill` does
-  for the title. The title of a sent chip follows the same choice. Reason:
-  the chip then shows the skill that the agent of the message ran.
+  skill, the chip opens the skill of the other agent. The title of a sent
+  chip follows the same choice. Reason: the chip then names the skill that
+  the agent of the message has now, in its current text. Corrected on
+  2026-11-24 after the review: the first reason said that the chip shows
+  the skill that the agent of the message ran. But a turn gets a skill
+  only from the list of its own agent, and the tab shows the current text.
 - **The identity of a skill tab.** A skill tab names its agent and its
   skill name. Its title is the skill name, and its icon is the skill icon.
   Reason: two agents can hold skills with one name and different texts.
@@ -220,16 +223,26 @@ Each call below is my call, made on 2026-11-24 unless it says otherwise.
       cloud computer software. Select Restart in the workspace header."
       These words follow the notice of the HTML preview.
   - As for a file tab (decision 247), the open of a skill tab starts a
-    stopped cloud computer. The tab then shows the wait of a start, with
-    no Resume. A tab that shows its text keeps it when the cloud computer
+    stopped cloud computer. During that start, the tab acts as a file tab
+    does. A tab that shows its text keeps it when the cloud computer
     stops. A tab without text then shows the stopped state with Resume.
-    Found by the mockups on 2026-11-24.
+    Found by the mockups on 2026-11-24. Corrected on 2026-11-24 after the
+    review: the first text promised the wait of a start with no Resume.
+    [The resume](../docs/protocol/stop-and-resume.md#the-resume) promises
+    that wait only while the open of the workspace resumes the cloud
+    computer. A file tab shows the stopped state with Resume until the
+    start shows.
 - **Fresh text.** The tab reads the text each time it shows, and again
   after each skills report while it shows. Reason: a change of a skill
-  then shows without a reload, at the cost of one read per report. Cost:
-  the runner sends a report only when a name, a description, or a
-  manual-only mark changes. So an edit of the body alone shows at the next
-  show of the tab. Changed on 2026-11-24 after the options check.
+  then shows without a reload, at the cost of one read per report. Changed
+  on 2026-11-24 after the options check. Corrected on 2026-11-24 after the
+  review: the first text also said that the runner sends a report only
+  when a name, a description, or a manual-only mark changes, so that an
+  edit of the body alone shows at the next show of the tab. The runner
+  also sends a full report after each connect and for each repair, as
+  [The skills report](../docs/protocol/skill-mentions.md#the-skills-report)
+  says. So `docs/protocol/skill-tabs.md` states only when the tab reads,
+  and it links there for the times of the reports.
 - **The address.** A skill tab has an address in the workspace, as a file
   tab has: `skills/<agent>/<name>` after the workspace. Back, a reload,
   and a copied link open the skill tab from it, as the temporary tab of a
@@ -287,6 +300,16 @@ Each call below is my call, made on 2026-11-24 unless it says otherwise.
     its own catalogue page, `app/skill-mentions/tab/stopped`, so that the
     notices page keeps at most five screens. Found by the mockups on
     2026-11-24.
+- **A failed refresh.** A read that fails while the tab shows its text,
+  such as the read after a skills report, keeps that text when the cause
+  can pass: a reply with a 5xx status, or a failure of the network. A
+  read while the tab shows no text, and a reply with a 4xx status, still
+  show their notice. Reason: a cause that passes, such as a stop of the
+  cloud computer that the tab does not know about yet, then takes no text
+  from the member. Rejected: a notice for each failed read, for that
+  reason, and text that stays after each failure, because it hides a
+  cause that lasts, such as a removed skill. Found by the review on
+  2026-11-24.
 
 - **App calls of the app milestone.** Each call below was made on
   2026-11-24 by the app milestone, and the orchestrator checked it.
@@ -304,8 +327,10 @@ Each call below is my call, made on 2026-11-24 unless it says otherwise.
     skill.
   - A waiting message carries its model choice, so its chips name the
     agent of the message before the stream shows it.
-  - A `computer_stopped` or `computer_starting` reply shows the loading
-    line until the state of the cloud computer takes its place.
+  - A `computer_stopped` or `computer_starting` reply to a read without
+    text shows the loading line until the state of the cloud computer
+    takes its place. Changed on 2026-11-24 after the review: a tab that
+    shows its text keeps it, as A failed refresh says.
   - The close of the shown skill tab shows the next skill tab, else the
     one before, else the chat, as for file and Preview tabs.
 

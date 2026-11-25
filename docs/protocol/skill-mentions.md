@@ -203,8 +203,11 @@ order of the list.
 - When only the other agent has a skill of that name, the chip names the
   skill of the other agent.
 - The title of the chip and the skill tab that it opens follow that
-  choice. Reason: the chip then shows the skill that the agent of the
-  message ran.
+  choice. Reason: the chip then names the skill that the agent of the
+  message has now, in its current text. It does not show what a turn ran:
+  a turn gets a skill only from the list of its own agent, as
+  [Skills of a message](skill-input.md) says, and the tab shows no text
+  of an earlier turn, as [The open](skill-tabs.md#the-open) says.
 - A copy of a skill chip gives its skill text. A paste of a skill text
   gives a chip when the text names a skill of the list.
 - A draft keeps the skill text of each chip. When a draft comes back, its
