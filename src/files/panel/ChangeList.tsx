@@ -1,6 +1,9 @@
+import type { RefCallback } from 'react'
 import type { BranchChangedFile } from '../../shared/generated/BranchChangedFile'
 import type { ChangesResponse } from '../../shared/generated/ChangesResponse'
-import type { RefCallback } from 'react'
+import { formatCount } from '../../ui/components/common/counts'
+import { wholeChange } from '../../ui/components/files/changeTotals'
+import { ListNotice } from '../../ui/components/files/ListNotice'
 import { hidesSecret, pathLabel } from '../model/file-labels'
 import { splitPath, type DiffTab, type FilesNavigation } from '../navigation'
 import { ChangeIcon, changeLabels } from '../ui/ChangeIcon'
@@ -70,11 +73,13 @@ function Row({
 
 /**
  * The files that the branch changes against the default branch, under the
- * totals of the whole change. A row is a link to the diff of its file, and
- * the row of the open diff is marked. A double-click on a row keeps the tab
- * that the row opens. A row shows the label of its path, and its real path
- * stays its key and its target. Each row opens the menu of `rowMenu`, as
- * `useRowMenu` says, and keeps the fill of a hover while it is open.
+ * totals of the whole change. The totals include the files that the report
+ * leaves out, and a notice under them says how many it leaves out. The rows
+ * keep the order of the report. A row is a link to the diff of its file,
+ * and the row of the open diff is marked. A double-click on a row keeps the
+ * tab that the row opens. A row shows the label of its path, and its real
+ * path stays its key and its target. Each row opens the menu of `rowMenu`,
+ * as `useRowMenu` says, and keeps the fill of a hover while it is open.
  */
 export function ChangeList(props: {
   changes: ChangesResponse
@@ -83,17 +88,22 @@ export function ChangeList(props: {
   /** The items of the menu of each row. Without it, no row has a menu. */
   rowMenu?: RowMenuItems
 }) {
-  const { summary, files } = props.changes
+  const { changes } = props
+  const { files } = changes
+  const totals = wholeChange(changes.summary, changes.omitted)
+  const omitted = changes.omitted?.files ?? 0
   const menuRows = files.map(menuRowOf)
   const menu = useRowMenu(props.rowMenu, menuRows)
   return (
     <>
       <div className={styles.summary}>
         <span className={styles.count}>
-          {summary.files} {summary.files === 1 ? 'file' : 'files'} changed
+          {formatCount(totals.files)} {totals.files === 1 ? 'file' : 'files'}{' '}
+          changed
         </span>
-        <DiffStat added={summary.added} removed={summary.removed} />
+        <DiffStat added={totals.added} removed={totals.removed} />
       </div>
+      {omitted > 0 ? <ListNotice count={omitted} list="changes" /> : null}
       <div className={styles.scroll}>
         <ul aria-label="Changed files" className={styles.list}>
           {files.map((file, index) => {

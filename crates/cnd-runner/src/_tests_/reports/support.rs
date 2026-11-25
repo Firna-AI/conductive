@@ -3,14 +3,17 @@
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 
-use cnd_runner_interface::file_changes::{ChangesResponse, ChangesResponseSummary};
-use cnd_runner_interface::file_tree::{FileEntry, FileEntryKind};
+use cnd_runner_interface::file_changes::{
+    BranchChangedFile, ChangeKind, ChangedFile, ChangesResponse, ChangesResponseSummary,
+};
+use cnd_runner_interface::file_tree::{FileEntry, FileEntryKind, RunnerFileEvent};
 use cnd_runner_interface::runner::RunnerEvent;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::emitter::{EventEmitter, EventEmitterMock};
 use crate::reports::files::{FileReporter, FileReports};
 use crate::reports::prepare::{ReportFilter, UnfilteredReports};
+use crate::reports::selection::ReportLimits;
 use crate::repository::service::{Repository, RepositoryMock, RepositorySnapshot};
 use crate::state::records::FileRevisions;
 
@@ -26,6 +29,7 @@ pub(super) fn snapshot(paths: Vec<String>) -> RepositorySnapshot {
                 change: None,
             })
             .collect(),
+        context_only_paths: Default::default(),
         changes: ChangesResponse {
             base_branch: "main".into(),
             display_base_branch: None,
@@ -37,10 +41,35 @@ pub(super) fn snapshot(paths: Vec<String>) -> RepositorySnapshot {
                 added: 0,
                 removed: 0,
             },
+            omitted: None,
         },
         identities: BTreeMap::new(),
         read_identities: BTreeMap::new(),
         base_commit: "base".into(),
+    }
+}
+
+pub(super) fn named_snapshot(paths: &[&str]) -> RepositorySnapshot {
+    snapshot(paths.iter().map(|path| (*path).into()).collect())
+}
+
+pub(super) fn changed_file(
+    path: &str,
+    added: u64,
+    removed: u64,
+    uncommitted: bool,
+) -> BranchChangedFile {
+    BranchChangedFile {
+        changed_file: ChangedFile {
+            path: path.into(),
+            display_path: None,
+            previous_path: None,
+            previous_display_path: None,
+            change: ChangeKind::Modified,
+            added,
+            removed,
+        },
+        uncommitted,
     }
 }
 
@@ -58,6 +87,26 @@ impl Fixture {
     }
 
     pub(super) fn with_filter(current: RepositorySnapshot, filter: Arc<dyn ReportFilter>) -> Self {
+        Self::build(current, filter, None)
+    }
+
+    pub(super) fn with_limits(current: RepositorySnapshot, limits: ReportLimits) -> Self {
+        Self::with_filter_and_limits(current, Arc::new(UnfilteredReports), limits)
+    }
+
+    pub(super) fn with_filter_and_limits(
+        current: RepositorySnapshot,
+        filter: Arc<dyn ReportFilter>,
+        limits: ReportLimits,
+    ) -> Self {
+        Self::build(current, filter, Some(limits))
+    }
+
+    fn build(
+        current: RepositorySnapshot,
+        filter: Arc<dyn ReportFilter>,
+        limits: Option<ReportLimits>,
+    ) -> Self {
         let current = Arc::new(Mutex::new(Some(current)));
         let events = Arc::new(Mutex::new(vec![]));
         let captured = events.clone();
@@ -84,13 +133,17 @@ impl Fixture {
                     Ok(())
                 })),
         ));
-        let files: Arc<dyn FileReports> = Arc::new(FileReporter::new(
+        let mut reporter = FileReporter::new(
             repository,
             "main".into(),
             emitter,
             filter,
             FileRevisions::default(),
-        ));
+        );
+        if let Some(limits) = limits {
+            reporter.limits = limits;
+        }
+        let files: Arc<dyn FileReports> = Arc::new(reporter);
         Self {
             files,
             current,
@@ -100,5 +153,15 @@ impl Fixture {
 
     pub(super) fn take(&self) -> Vec<(RunnerEvent, Option<String>)> {
         std::mem::take(&mut *self.events.lock().unwrap())
+    }
+
+    pub(super) fn take_reports(&self) -> Vec<RunnerFileEvent> {
+        self.take()
+            .into_iter()
+            .map(|(event, _)| match event {
+                RunnerEvent::RunnerFileEvent(report) => report,
+                _ => panic!("expected a file report"),
+            })
+            .collect()
     }
 }

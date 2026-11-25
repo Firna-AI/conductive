@@ -12,7 +12,11 @@ export type RunnerFileTreePart = {
    */
   unavailable?: WireTrue
   /**
-   * Full flat list of paths relative to the repository root.
+   * Entries left out of the complete report. Every part repeats this count.
+   */
+  omittedEntryCount?: number
+  /**
+   * Paths in this part, relative to the repository root.
    */
   entries: ReadonlyVec<FileEntry>
   /**

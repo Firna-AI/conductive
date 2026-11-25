@@ -112,12 +112,18 @@ it('reads each list cutoff and keeps the optional fields of both lists', async (
       event: refusedReport('files.snapshot', true),
     },
   }
-  const tree = { ...toolFixtures().files, unavailable: true }
+  // The saved tree of a failed read keeps the omitted count of its report.
+  const tree = {
+    ...toolFixtures().files,
+    unavailable: true,
+    omittedEntryCount: 18_412,
+  }
   const changes = {
     ...emptyChanges,
     displayBaseBranch: 'masked',
     unpushedCommits: 0,
     uncommittedFileCount: 4,
+    omitted: { files: 1_243, added: 31_004, removed: 9_877 },
   }
   const changesRead = { eventNumber: 23, repositoryId: null, failure: null }
   server.json('GET', filePaths.tree(org, id), { ...tree, stateRead })
@@ -133,6 +139,47 @@ it('reads each list cutoff and keeps the optional fields of both lists', async (
     value: changes,
     stateRead: changesRead,
   })
+})
+
+it('keeps each list and its zero totals, and drops omitted totals that are not safe counts', async () => {
+  const tree = { revision: 3, entries: [] }
+  const readTree = (omittedEntryCount: unknown) =>
+    clientFor(async () =>
+      Response.json({ ...tree, omittedEntryCount }),
+    ).readTree()
+  const readChanges = (omitted: unknown) =>
+    clientFor(async () =>
+      Response.json({ ...emptyChanges, omitted }),
+    ).readChanges()
+  const zero = { files: 0, added: 0, removed: 0 }
+
+  expect(await readTree(0)).toEqual({
+    ok: true,
+    value: { ...tree, omittedEntryCount: 0 },
+  })
+  expect(await readChanges(zero)).toEqual({
+    ok: true,
+    value: { ...emptyChanges, omitted: zero },
+  })
+  for (const count of [undefined, null, -1, 1.5, 2 ** 53, '12']) {
+    expect(await readTree(count), String(count)).toEqual({
+      ok: true,
+      value: tree,
+    })
+  }
+  for (const omitted of [
+    undefined,
+    'all',
+    { files: 1, added: 2 },
+    { files: 1, added: -2, removed: 0 },
+    { files: 2 ** 53, added: 0, removed: 0 },
+  ]) {
+    const name = String(JSON.stringify(omitted))
+    expect(await readChanges(omitted), name).toEqual({
+      ok: true,
+      value: emptyChanges,
+    })
+  }
 })
 
 it('takes a cutoff only from an authorized unavailable list with readable state', async () => {

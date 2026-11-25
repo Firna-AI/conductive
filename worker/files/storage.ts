@@ -18,6 +18,7 @@ import {
   legacyChunkKeys,
   readStoredText,
 } from './stored-chunks'
+import { validTreeOmissionCount } from './tree-omission'
 
 export interface FilesReader {
   get(key: string): Promise<unknown>
@@ -148,7 +149,12 @@ export async function readFileList(
     if (count === 0) return null
     value = await readChunks(storage, kind, count)
   }
-  return kind === 'tree' ? parseTree(value) : parseChanges(value)
+  if (kind === 'changes') return parseChanges(value)
+  if (!isRecord(value)) throw invalidFileResponse()
+  return parseTree({
+    ...value,
+    omittedEntryCount: validTreeOmissionCount(value),
+  })
 }
 
 /**

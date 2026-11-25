@@ -2,16 +2,56 @@
 
 This page belongs to [Files and changes](workspace-tools.md#files-and-changes).
 It states the limits, the parts, the revisions, and the repairs of the
-runner's reports of the file tree and the branch changes. The terms are
-those of the [architecture doc](../architecture.md#terms). A decision
-number names a dated record, as
+runner's reports of the file tree and the branch changes. It also states
+which entries and changes a report keeps, the totals of the rest, the
+updates of the tree, and the rollout to older runners and readers. The
+terms are those of the [architecture doc](../architecture.md#terms). A
+decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
+
+## Terms
+
+- **Listed:** an entry of the tree, or a changed file, that a complete
+  report holds.
+- **Omitted:** an entry or a changed file that the scan of the runner
+  finds, but that the report leaves out because of its limit.
+- **Omitted totals:** the number of omitted entries of a tree report, or
+  the number of omitted files of a changes report with the lines that
+  they add and remove.
+- **Context-only entry:** a file or a folder that only the scan of the
+  [context folder](repository-folders.md#the-context-folder) adds to the
+  tree.
+
+## Report limits
 
 - Runner file reports hold at most 256 KiB, or 262,144 bytes, of compact UTF-8 JSON per event.
   This includes the event type, metadata, escapes, and delimiters. It excludes the runner envelope.
 - The complete runner envelope also meets the
   [runner event limit](agent-runner.md#the-agent-runner).
   Reason: paths have no fixed byte length, so an item count cannot bound an event.
+- A complete tree report of a new runner holds at most 50,000 entries.
+  Files and folders count together, and each path counts once.
+- A complete changes report of a new runner holds at most 1,000 changed
+  files.
+- Reason: the Durable Object of one workspace has a memory limit of
+  128 MB. Large reports passed that limit while the object stored,
+  published, or replayed them (Cal, 20 November 2026).
+- These ways were not chosen:
+  - A changes list at most once in N seconds. The panel then lags.
+  - Deltas of the changes list. They change the runner, the Worker, the
+    browser, and the protocol.
+  - A tree without the ignored folders under `.context/`. The entry limit
+    covers them too.
+- The limits apply only to the reports. The files on disk, Git, the read
+  of a path, and the access checks do not change.
+- The count limits do not replace the 256 KiB event budget or the
+  512-change limit of a tree delta. So a report within its count limit
+  can still take many parts.
+- The end-of-turn file list keeps its own limit of 200 unique paths, as
+  [The agent runner](agent-runner.md#the-agent-runner) says.
+
+## Parts and revisions
+
 - Full trees and branch changes lists use numbered parts of one revision (decision 76).
   Every path and entry stays whole. Each path appears once in the complete report.
 - Tree reports and branch changes reports have independent revision sequences within one runner stream.
@@ -22,7 +62,7 @@ number names a dated record, as
   It does not interleave revisions of one report kind, including tree deltas.
 - A single-part or empty report uses part number 1 and total part count 1.
   Each changes part repeats the full report's base branch and summary.
-- The summary counts the complete list, rather than one part.
+- The summary counts the listed changes of all parts, rather than one part.
   The workspace joins entries in part order and uses the full report atomically.
 - The workspace checks the fields of each part when the part arrives.
   It checks for a repeated path only when the last part arrives. A repeated path refuses that last part.
@@ -45,9 +85,144 @@ number names a dated record, as
 - An invalid part counts as a replacement unless its stream, revision, and part number show a remaining part.
   A tree delta is never a replacement, and it never ends or fails an open tree repair.
 - Each tree delta holds at most 512 changes and meets the same 256 KiB event budget.
-  A large update uses several deltas, each with the next consecutive tree revision.
+  A large update uses several deltas, each with the next consecutive tree revision, except as
+  [Updates and refreshes](#updates-and-refreshes) says.
 - Reason: the count cap also bounds the tree work of each event.
 - A delta applies only after its previous tree revision is complete.
   The runner increases the branch changes revision by 1 for each new full changes report.
 - A browser file event and a browser file response contain complete reports.
   They never expose a runner part as a full tree or changes list.
+
+## Omitted totals
+
+- Each part of a full tree, each tree delta, and the tree that the
+  workspace serves can carry `omittedEntryCount`, the number of omitted
+  entries.
+- Each part of a full changes list, and the changes list that the
+  workspace serves, can carry `omitted`. It gives the omitted files and
+  the lines that they add and remove, as `files`, `added`, and `removed`.
+- The `summary` of a changes report counts only its listed changes.
+  Reason: the previous Worker checks the summary against the listed files,
+  so it still accepts the report of a new runner.
+- Each part of a full report of a new runner carries its omitted totals,
+  with zeros when the report omits nothing.
+- Omitted totals that a full report or a saved list does not carry are
+  unknown, not zero. A later full tree sets the tree count. A later full
+  changes list sets the changes totals. A tree delta with
+  `omittedEntryCount` sets the tree count.
+- Every part of one report repeats the same omitted totals.
+- The workspace publishes the omitted totals only with the complete
+  report. So a pending part changes no count of a panel.
+
+## Which entries stay
+
+- The tree report keeps entries in this order, up to its limit
+  (Cal, 23 November 2026):
+  1. The files of the branch that the changes report lists, in the order
+     in which it selects them. The tree report keeps each such file with
+     its parent folders, when the file and those folders fit in the
+     remaining entries. Else it skips the file.
+  2. The other entries of the repository, and the context-only entries.
+     Up to 5,000 of the remaining entries go to the context-only entries.
+     Each of the two groups lends the entries that it does not use to the
+     other.
+- Inside each group, the entries follow path order: the English collation
+  of the paths, with the raw path as the tie-break. A folder takes its
+  entry before the entries inside it.
+- The report selects by the real paths, before the filter of secret values
+  and before the split into parts. So the mask of a secret value cannot
+  change which entries stay.
+- The change mark of each entry comes from the complete scan, also for a
+  file that the changes report omits.
+- Reason: the tree keeps the current work first, then the folders of the
+  repository and some notes. A plain prefix in path order was not chosen,
+  because context files can fill it. Shallow entries first was not chosen,
+  because a folder can then show with no entries in it.
+- Risk: a large folder early in the path order, such as `tests/fixtures/`,
+  can push later entries out, also root files such as `tsconfig.json`.
+
+## Which changes stay
+
+- The changes report keeps the uncommitted changes first, also the
+  untracked files. The committed changes come next. Path order applies
+  inside each group (Cal, 23 November 2026).
+- Reason: the current edits stay in view. A plain prefix in path order was
+  not chosen, because large changes late in the order then stay out. An
+  order by changed lines was not chosen, because a binary file has no line
+  count to rank. Generated files last was not chosen, because it needs a
+  read of the Git attributes in each scan.
+- The selection decides only which files the report keeps. The Changes
+  panel keeps its own order of the rows.
+- The selection does not depend on the tree. A deleted file can show in
+  Changes with no entry in the tree.
+- The counts of uncommitted files and of unpushed commits, and the file
+  list at the end of each turn, use the complete scan. So the pull request
+  bar does not take the local work from a limited list.
+
+## Updates and refreshes
+
+- An update that changes which entries the tree lists uses the removes and
+  the upserts of a tree delta. The removes come first.
+- That delta carries the new `omittedEntryCount`. A delta without the
+  field keeps the previous count. A delta with no changes can carry a new
+  count alone.
+- A delta can also refresh a path. Each open file or diff of that path
+  then reads again. A remove of a path that the tree does not hold
+  refreshes an omitted path. An upsert of an unchanged entry refreshes a
+  listed path.
+- Reason: each reader, also an older one, reads a path again after such a
+  remove or upsert, and its tree does not grow.
+- The runner refreshes these paths:
+  - each path that the tree omits, when a file at that path is added,
+    changed, or deleted
+  - after the base commit changes, each path of the complete changes lists
+    before and after the change that neither listed changes report names,
+    with the old and the new path of each rename
+  - the same paths after a change of the data of a row of the complete
+    changes list, such as the pairing of a rename
+- The listed changes reports are the lists that readers hold before and
+  after the update. A scan with unchanged report data can reuse the
+  existing report.
+- These rules decide when the runner sends one full tree within the limit,
+  in place of deltas:
+  - A limited tree that changes its listed entries keeps the whole update
+    in one delta or one full tree. Here a limited tree omits entries before
+    or after the update. So a reader never sees a part of such an update.
+  - Refresh-only operations must arrive together because their only
+    effect is to make readers read again. They remove absent paths or
+    upsert unchanged entries. If they do not fit one delta, the runner
+    sends one full tree.
+  - After a repair of only one report kind, the next tree update is one
+    full tree unless the repair found the same data as the last scan of
+    the other kind.
+- An operation that also edits its entry goes with the other edits.
+  Ordinary edits split across successive deltas when they exceed one
+  delta's budget, unless a full-tree rule applies. Each edit refreshes
+  its path in whichever delta carries it, so every affected path
+  refreshes. See [Parts and revisions](#parts-and-revisions).
+- A full tree after a repair makes every reader read each open file and
+  diff again, including older readers.
+- In each scan that sends both reports, the runner sends every part of the
+  changes report before the tree update.
+- Reason: the workspace then stores the new base branch before a refresh
+  makes a diff read again.
+- The runner compares the complete changes scan before it cuts the list.
+  So an edit of only omitted files still sends a new changes report.
+
+## Older runners and readers
+
+- An older runner can still send reports with no limit and without omitted
+  totals. The workspace accepts them, with no new refusal for their size.
+- The workspace stores and serves such a tree or changes list in full.
+  Their omitted totals stay unknown.
+- Both limits start with the complete reports of a new runner, after the
+  normal update of the sandbox software, as
+  [Updates](sandbox-software.md#updates) says. They add no protocol
+  version, and no reader has to update.
+- The previous Worker drops the new fields. It still joins a new report,
+  because the summary matches the listed changes.
+- An older Mac app drops the new fields too. It keeps its rows and its
+  totals, but it cannot show the new notices.
+- An example: a list that the previous Worker saved during a rollback
+  carries no omitted totals. After the next upgrade, they are unknown,
+  not zero, as [Omitted totals](#omitted-totals) says.

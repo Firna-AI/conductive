@@ -1,13 +1,17 @@
 import tabScroll from '../../../../../src/ui/components/workspace/TabScroll.module.css'
 import { ScreenLink } from './ScreenLink'
 import { classes } from '../../../../../src/ui/components/common/classes'
+import { formatCount } from '../../../../../src/ui/components/common/counts'
 import styles from '../../../../../src/ui/components/common/LinkTabs.module.css'
 
 export type LinkTab = {
   label: string
   /** The screen of the tab. A tab whose screen the mockups lack has none. */
   to?: string
-  /** A count after the label, such as the number of changed files. */
+  /**
+   * A count after the label, such as the number of changed files. It shows
+   * with thousands separators, such as 2,243.
+   */
   count?: number
   /**
    * The tooltip of a tab whose label is cut, which is also its spoken name,
@@ -50,7 +54,7 @@ export function LinkTabs(props: {
           <>
             {tab.label}
             {tab.count === undefined ? null : (
-              <span className={styles.count}>{tab.count}</span>
+              <span className={styles.count}>{formatCount(tab.count)}</span>
             )}
           </>
         )

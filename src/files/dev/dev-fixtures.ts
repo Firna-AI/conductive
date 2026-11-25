@@ -9,6 +9,7 @@ import type { FakeApiServer } from '../../test-support/fake-api'
 import { fakeFileLists } from '../../test-support/fake-file-lists'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { toolFixtures } from '../../test-support/fixtures/tools'
+import { limitedFileLists } from '../../test-support/limited-file-lists'
 import { splitPath } from '../navigation'
 import * as samples from './dev-samples'
 import type { DevView } from './dev-view'
@@ -176,19 +177,23 @@ export function devTree(): FileTreeResponse {
 /**
  * Sets the development replies of the file routes on the fake server:
  * file texts, downloads, diffs, a binary file, a file over the read limit,
- * and a file whose read and download fail.
+ * and a file whose read and download fail. The limited lists of
+ * `?lists=limited` leave out `tsconfig.json`, whose file tab still reads it.
  */
 export function registerDevFiles(
   server: FakeApiServer,
-  view?: Pick<DevView, 'scenario' | 'tree'>,
+  view?: Pick<DevView, 'scenario' | 'tree' | 'lists'>,
 ): void {
   if (view?.scenario !== 'live') {
+    const complete = { tree: devTree(), changes: toolFixtures().changes }
+    const lists =
+      view?.lists === 'limited' ? limitedFileLists(complete) : complete
     fakeFileLists(
       server,
       server.events,
       {
-        tree: view?.tree === 'none' ? null : devTree(),
-        changes: toolFixtures().changes,
+        tree: view?.tree === 'none' ? null : lists.tree,
+        changes: lists.changes,
       },
       server.events.last(id),
     )

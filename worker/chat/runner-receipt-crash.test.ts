@@ -71,11 +71,15 @@ it('keeps pending file assembly after a post-commit crash and resumes the join a
   const fixture = await createRunnerLimitsFixture()
   const storage = chatFilesStorage(fixture.storage)
   const files = new FilesState(storage)
+  const countedPart = (partNumber: number, path: string) => {
+    const part = snapshot(2, partNumber, 2, [path])
+    return { ...part, tree: { ...part.tree, omittedEntryCount: 8 } }
+  }
   await fixture.receive(1, snapshot(1, 1, 1, ['old']))
   await fixture.failNextCommit('after', 'Injected post-commit crash')
-  await expect(
-    fixture.receive(2, snapshot(2, 1, 2, ['first'])),
-  ).rejects.toThrow('Injected post-commit crash')
+  await expect(fixture.receive(2, countedPart(1, 'first'))).rejects.toThrow(
+    'Injected post-commit crash',
+  )
   expect(fixture.closed).toBe(1)
   expect(fixture.published.map(({ event }) => event.type)).toEqual([
     'files.snapshot',
@@ -87,7 +91,12 @@ it('keeps pending file assembly after a post-commit crash and resumes the join a
     tree: {
       appliedRevision: 1,
       seen: true,
-      report: { revision: 2, partCount: 2, through: 1 },
+      report: {
+        revision: 2,
+        partCount: 2,
+        through: 1,
+        fields: { omittedEntryCount: 8 },
+      },
     },
     changes: { appliedRevision: 0, seen: false, report: null },
   })
@@ -97,7 +106,7 @@ it('keeps pending file assembly after a post-commit crash and resumes the join a
       partCount: 2,
       through: 1,
     }),
-  ).toEqual([snapshot(2, 1, 2, ['first'])])
+  ).toEqual([countedPart(1, 'first')])
   expect((await files.tree())?.entries.map((entry) => entry.path)).toEqual([
     'old',
   ])
@@ -108,7 +117,7 @@ it('keeps pending file assembly after a post-commit crash and resumes the join a
     streamId: 'stream',
     confirmedThrough: 2,
   })
-  await fixture.receive(3, snapshot(2, 2, 2, ['last']))
+  await fixture.receive(3, countedPart(2, 'last'))
   expect((await files.tree())?.entries.map((entry) => entry.path)).toEqual([
     'first',
     'last',
@@ -121,13 +130,14 @@ it('keeps pending file assembly after a post-commit crash and resumes the join a
     type: 'files.snapshot',
     tree: {
       revision: 2,
+      omittedEntryCount: 8,
       entries: [
         { path: 'first', name: 'first', kind: 'file', change: null },
         { path: 'last', name: 'last', kind: 'file', change: null },
       ],
     },
   })
-  await fixture.receive(3, snapshot(2, 2, 2, ['last']))
+  await fixture.receive(3, countedPart(2, 'last'))
   expect(await fixture.history()).toEqual(history)
   expect(fixture.sent.at(-1)).toEqual({
     type: 'confirm',

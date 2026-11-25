@@ -184,7 +184,18 @@ pages:
 - `app/file-mentions/list` has the list without a query, folders first.
   Its `no-match` variant says "Nothing matches “zipcode”", its `loading`
   variant says "Loading files…", and its `unavailable` variant says that
-  the list of all files is unavailable.
+  the list of all files is unavailable. Its `limited` variant has the
+  limited lists of a large branch, from item 3 A of runner file report
+  limits, which Cal chose on 23 November 2026. The list of `@` reads the
+  one tree of All files, which leaves out `tsconfig.json`. So `@tsconfig`
+  finds nothing, and the line says "Nothing matches “tsconfig”. Some files
+  are not listed, so type the path or ask the agent." A typed path stays
+  text in the message. In an answer, a path that the tree leaves out stays
+  text or code, with no chip. A Markdown link to it shows as the text that
+  the agent typed, and it opens nothing. An image of it shows only its
+  label, or nothing when the label is blank. An attached file keeps its
+  chip. Only a direct read of the path, such as the address of a file tab,
+  opens the file. `app/files/limited` draws the same tree in All files.
 - `app/file-mentions/chips` has a file chip and a folder chip in the
   message box. Its `pointer` variant has the pointer over the icon of the
   file chip, where a × takes the place of the icon. Its `sent` variant has

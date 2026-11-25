@@ -101,11 +101,15 @@ function guideLines(view: HTMLElement, section: string): string[] {
 }
 
 describe('the trees of the workspace list', () => {
-  test('a nested row indents by each row above it in its tree, in the sidebar and on the page, the guide lines join the rows of a tree as a file tree does, and a collapsed section counts its nested rows', async () => {
+  test('a nested row indents by each row above it in its tree, in the sidebar and on the page, the guide lines join the rows of a tree as a file tree does, and a collapsed section counts its nested rows and shows only the open row, flat', async () => {
     const app = await startedApp(new FakeApiServer())
     const { sections } = coreFixtures().sectionList
     const groups = groupWorkspaces(sections, trees, FAKE_TIME).sections
-    const mount = (variant: RowVariant, collapsed = false) =>
+    const mount = (
+      variant: RowVariant,
+      collapsed = false,
+      selectedId: string | null = null,
+    ) =>
       mountScreen(
         app,
         <SectionList
@@ -119,13 +123,16 @@ describe('the trees of the workspace list', () => {
           move={() => undefined}
           now={FAKE_TIME}
           readOnly={false}
-          selectedId={null}
+          selectedId={selectedId}
           variant={variant}
         />,
       )
-    const collapsed = mount('sidebar', true).querySelector(
+    const closed = mount('sidebar', true)
+    const collapsed = closed.querySelector(
       `section[aria-label="Checkout"] .${sectionStyles.count}`,
     )
+    // A collapsed section shows the open row, nested at depth 3, flat.
+    const opened = mount('sidebar', true, 'rate-limits')
     const sidebar = mount('sidebar')
     const tree = [
       'fix-cart-flake 0',
@@ -145,6 +152,9 @@ describe('the trees of the workspace list', () => {
       page: indents(mount('page'), 'Checkout'),
       lines: guideLines(sidebar, 'Checkout'),
       count: collapsed?.textContent,
+      closed: indents(closed, 'Checkout'),
+      opened: indents(opened, 'Checkout'),
+      openedLines: guideLines(opened, 'Checkout'),
     }).toEqual({
       sidebar: tree,
       page: tree,
@@ -162,6 +172,9 @@ describe('the trees of the workspace list', () => {
         '└─ suggestion-list',
       ],
       count: '11',
+      closed: [],
+      opened: ['rate-limits 0'],
+      openedLines: ['rate-limits'],
     })
   })
 

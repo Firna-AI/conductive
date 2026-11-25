@@ -52,7 +52,11 @@ pub struct RunnerFileTreePart {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub unavailable: Option<WireTrue>,
-    /// Full flat list of paths relative to the repository root.
+    /// Entries left out of the complete report. Every part repeats this count.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional, type = "number")]
+    pub omitted_entry_count: Option<u64>,
+    /// Paths in this part, relative to the repository root.
     #[ts(as = "ReadonlyVec<FileEntry>")]
     pub entries: Vec<FileEntry>,
 }
@@ -68,7 +72,12 @@ pub struct FileTreeResponse {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub unavailable: Option<WireTrue>,
-    /// A full, flat list. Each path is relative to the repository root.
+    /// Entries left out of the complete tree.
+    /// Absent when the count is unknown, as from an older runner.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional, type = "number")]
+    pub omitted_entry_count: Option<u64>,
+    /// Listed entries as flat paths relative to the repository root.
     #[ts(as = "ReadonlyVec<FileEntry>")]
     pub entries: Vec<FileEntry>,
 }
@@ -137,6 +146,10 @@ pub struct FileTreeDelta {
     /// The next tree revision. Split large updates into consecutive revisions.
     #[ts(type = "number")]
     pub revision: u64,
+    /// New omitted entry count. When absent, the previous count stays current.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional, type = "number")]
+    pub omitted_entry_count: Option<u64>,
     /// At most FILE_TREE_DELTA_MAX_CHANGES, also within FILE_EVENT_MAX_BYTES.
     /// An upsert of an unchanged entry reports a content change for that path.
     #[ts(as = "ReadonlyVec<FileTreeChange>")]
@@ -174,3 +187,6 @@ pub const FILE_EVENT_MAX_BYTES: u64 = 262_144;
 
 /// Shared file tree delta max changes.
 pub const FILE_TREE_DELTA_MAX_CHANGES: u64 = 512;
+
+/// Maximum entries in a complete file tree report from a new runner.
+pub const FILE_TREE_REPORT_MAX_ENTRIES: u64 = 50_000;

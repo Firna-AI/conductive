@@ -193,7 +193,8 @@ run outside every turn, in units of their own.
   failure was rejected, because it loses each running turn, and a lasting
   failure repeats the exit.
 - The runner also reports the file tree and the changes of its workspace,
-  and reads files and diffs on request, as
+  within the limits that [File reports](file-reports.md#report-limits)
+  states, and reads files and diffs on request, as
   [Files and changes](workspace-tools.md#files-and-changes) says.
   File results are not part of the chat history.
 
