@@ -24,8 +24,9 @@ const listCommands: readonly ShortcutCommandId[] = [
  * Offers the keys of the workspace list while the page shows it: Open
  * workspace 1 to 9, Previous and Next workspace, and Next workspace that
  * needs input, which starts from the top on the list page. They count only
- * `shown`, the rows that the list shows in their order, without a
- * collapsed section or a closed Archived group. Each key opens its
+ * `shown`, the rows that the list shows in their order. A collapsed
+ * section adds only the row of the open workspace, and a closed Archived
+ * group adds none. Each key opens its
  * workspace as the link of its row does. A key that would open no other
  * workspace is not offered, so it goes on to the page.
  */

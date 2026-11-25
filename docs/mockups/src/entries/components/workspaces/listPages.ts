@@ -18,6 +18,19 @@ import type { SectionKey } from '../../../fixtures/sections'
 export const acmeSections: readonly SidebarSection[] =
   plainData(workspaceSections())
 
+/**
+ * The sections of Acme with "Move retries to a queue" open, in Infra,
+ * which is collapsed.
+ */
+export const openInCollapsedSections: readonly SidebarSection[] =
+  acmeSections.map((item) => ({
+    ...item,
+    rows: item.rows.map((row) => ({
+      ...row,
+      selected: row.workspace.key === 'retry-queue',
+    })),
+  }))
+
 /** The rows of the Archived group of Acme, the last archived first. */
 export const archivedRows: readonly WorkspaceRow[] = plainData(
   archivedGroup().archived,
