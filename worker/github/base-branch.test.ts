@@ -14,7 +14,7 @@ afterAll(async () => {
   await h.base.dispose()
 })
 
-it('compares the run branch with its workspace base and opens its own pull request into that base', async () => {
+it('compares the run branch with its workspace base until its open pull request supplies a new base', async () => {
   const { orgId, session, workspace } = await h.seed('run/fixes')
   await h.env.DB.prepare('UPDATE workspaces SET base_branch = ? WHERE id = ?')
     .bind('feature/review', workspace.id)
@@ -60,7 +60,7 @@ it('compares the run branch with its workspace base and opens its own pull reque
   expect(await response.json()).toMatchObject({
     banner: {
       branch: 'run/fixes',
-      baseBranch: 'feature/review',
+      baseBranch: 'main',
       pullRequest: { number: 3 },
     },
   })

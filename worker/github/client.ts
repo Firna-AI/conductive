@@ -21,13 +21,17 @@ import { checkRepositoryBranch } from './branch-check'
 import { requireGitBranchName } from './branch-name'
 import { HttpError } from '../http'
 
+interface BranchLookup extends GitHubBranchDependencies {
+  defaultBranch: string
+  openPullRequest: boolean
+}
+
 export class GitHubReader {
   private readonly dependencies: GitHubReadDependencies
   private readonly workspace: GitHubWorkspace
   private readonly token: string
-  private liveDefaultBranch: string
   private branchPull: {
-    dependencies: GitHubBranchDependencies
+    dependencies: BranchLookup
     pull: Record<string, unknown>
   } | null = null
 
@@ -39,7 +43,6 @@ export class GitHubReader {
     this.dependencies = dependencies
     this.workspace = workspace
     this.token = token
-    this.liveDefaultBranch = workspace.defaultBranch
   }
 
   private async repository(query: string, variables: Record<string, unknown>) {
@@ -62,6 +65,10 @@ export class GitHubReader {
       states: ['OPEN'],
       after: null,
     })
+    return this.repositoryDefault(repository)
+  }
+
+  private repositoryDefault(repository: Record<string, unknown>): string {
     return repository.defaultBranchRef === null
       ? this.workspace.defaultBranch
       : text(object(repository.defaultBranchRef).name)
@@ -78,13 +85,20 @@ export class GitHubReader {
     return comparison === null ? 0 : integer(object(comparison).aheadBy)
   }
 
-  async read(branches?: GitHubBranchDependencies): Promise<GitHubSnapshot> {
+  async read(
+    branches?: BranchLookup,
+    storedBase = this.workspace.baseBranch ?? null,
+  ): Promise<GitHubSnapshot> {
     const lookup = branches ?? (await this.dependenciesForBranch())
-    const baseChange = await this.baseChange()
+    const storedTarget = storedBase ?? lookup.defaultBranch
     if (lookup.pullNumber === null) {
+      const baseChange = await this.deletedBaseChange(
+        storedBase,
+        lookup.defaultBranch,
+      )
       const snapshot = await this.withoutPull(
         lookup.headSha,
-        baseChange?.to ?? lookup.baseBranch,
+        baseChange?.to ?? storedTarget,
       )
       if (baseChange) {
         snapshot.banner.baseMoved = baseChange.from
@@ -101,6 +115,10 @@ export class GitHubReader {
           )
     this.branchPull = null
     const pull = parsePull(firstPage, this.workspace)
+    const baseChange =
+      pull.state === 'OPEN'
+        ? undefined
+        : await this.deletedBaseChange(storedBase, lookup.defaultBranch)
     const checks = await readChecks(pull, firstPage, (after, mergeAfter) =>
       this.repository(CHECKS, { number: pull.number, after, mergeAfter }),
     )
@@ -110,9 +128,13 @@ export class GitHubReader {
     )
     return {
       banner: pullBanner(
-        baseChange
-          ? { ...this.workspace, baseBranch: baseChange.to }
-          : this.workspace,
+        {
+          branch: this.workspace.branch,
+          baseBranch:
+            pull.state === 'OPEN'
+              ? pull.baseBranch
+              : (baseChange?.to ?? storedTarget),
+        },
         pull,
         checks,
         reviewers,
@@ -125,11 +147,11 @@ export class GitHubReader {
     }
   }
 
-  async dependenciesForBranch(): Promise<GitHubBranchDependencies> {
+  async dependenciesForBranch(): Promise<BranchLookup> {
     this.branchPull = null
     let headSha: string | null = null
     let fullName = this.workspace.fullName
-    let baseBranch = this.workspace.baseBranch ?? this.workspace.defaultBranch
+    let defaultBranch = this.workspace.defaultBranch
     for (const states of [['OPEN'], ['MERGED', 'CLOSED']]) {
       let after: string | null = null
       do {
@@ -140,15 +162,7 @@ export class GitHubReader {
           after,
         })
         fullName = text(repository.nameWithOwner)
-        this.liveDefaultBranch =
-          repository.defaultBranchRef === null
-            ? this.workspace.defaultBranch
-            : text(object(repository.defaultBranchRef).name)
-        baseBranch =
-          this.workspace.baseBranch != null ||
-          repository.defaultBranchRef === null
-            ? baseBranch
-            : text(object(repository.defaultBranchRef).name)
+        defaultBranch = this.repositoryDefault(repository)
         headSha =
           repository.ref === null
             ? null
@@ -162,12 +176,17 @@ export class GitHubReader {
               this.workspace.repositoryId &&
             text(pull.headRefName) === this.workspace.branch
           ) {
+            const openPullRequest = pull.state === 'OPEN'
             const dependencies = {
               pullNumber: integer(pull.number),
               headBranch: this.workspace.branch,
               headSha,
               fullName,
-              baseBranch: this.workspace.baseBranch ?? text(pull.baseRefName),
+              baseBranch: openPullRequest
+                ? text(pull.baseRefName)
+                : (this.workspace.baseBranch ?? defaultBranch),
+              defaultBranch,
+              openPullRequest,
             }
             this.branchPull = { dependencies, pull }
             return dependencies
@@ -181,13 +200,17 @@ export class GitHubReader {
       headBranch: this.workspace.branch,
       headSha,
       fullName,
-      baseBranch,
+      baseBranch: this.workspace.baseBranch ?? defaultBranch,
+      defaultBranch,
+      openPullRequest: false,
     }
   }
 
-  private async baseChange(): Promise<GitHubSnapshot['baseChange']> {
-    const from = this.workspace.baseBranch
-    if (from == null) return undefined
+  private async deletedBaseChange(
+    from: string | null,
+    defaultBranch: string,
+  ): Promise<GitHubSnapshot['baseChange']> {
+    if (from === null) return undefined
     requireGitBranchName(from)
     try {
       await checkRepositoryBranch(
@@ -196,7 +219,7 @@ export class GitHubReader {
         {
           githubId: this.workspace.repositoryId,
           fullName: this.workspace.fullName,
-          defaultBranch: this.liveDefaultBranch,
+          defaultBranch,
         },
         from,
       )
@@ -204,9 +227,9 @@ export class GitHubReader {
     } catch (error) {
       if (!(error instanceof HttpError) || error.code !== 'branch_not_found')
         throw error
-      requireGitBranchName(this.liveDefaultBranch)
-      if (from === this.liveDefaultBranch) throw githubFailure()
-      return { from, to: this.liveDefaultBranch }
+      requireGitBranchName(defaultBranch)
+      if (from === defaultBranch) throw githubFailure()
+      return { from, to: defaultBranch }
     }
   }
 

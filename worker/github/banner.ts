@@ -88,15 +88,14 @@ export function parsePull(
 }
 
 export function pullBanner(
-  workspace: GitHubWorkspace,
+  branches: { branch: string; baseBranch: string },
   pull: GitHubPull,
   checks: readonly GitHubCheck[],
   changesRequestedBy: readonly string[],
   now: number,
 ): GitHubBanner {
   const common = {
-    branch: workspace.branch,
-    baseBranch: workspace.baseBranch ?? pull.baseBranch,
+    ...branches,
     updatedAt: now,
     pullRequest: {
       number: pull.number,

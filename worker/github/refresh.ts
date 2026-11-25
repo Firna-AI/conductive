@@ -1,5 +1,14 @@
-import { githubSummary } from '../../src/shared/github'
+import { githubSummary, type GitHubBanner } from '../../src/shared/github'
 import { HttpError } from '../http'
+import {
+  saveBaseChangeJob,
+  saveWorkspaceTargetChange,
+} from '../lifecycle/base-change-job'
+import {
+  moveWorkspaceBase,
+  writeWorkspaceTarget,
+  type WorkspaceTargetChange,
+} from './base-data'
 import { GitHubReader } from './client'
 import type {
   GitHubReadDependencies,
@@ -12,12 +21,18 @@ import { recordPullRequestMerge } from './merge-record-data'
 import { saveWorkspaceGitHubSummary } from './summary-data'
 import { readMergeWorkspace } from './merge-access'
 import type { WorkspaceGitHubState } from './workspace-state'
-import { moveWorkspaceBase } from './base-data'
-import { saveBaseChangeJob } from '../lifecycle/base-change-job'
 
 // Three fresh reads, one second apart, bound GitHub's merge-state retry work.
 const MERGE_STATE_RETRY_LIMIT = 3
 const MERGE_STATE_RETRY_DELAY_MS = 1000
+
+function hasOpenPullRequest(banner: GitHubBanner): boolean {
+  return (
+    banner.pullRequest !== null &&
+    banner.state !== 'merged' &&
+    banner.state !== 'closed'
+  )
+}
 
 /**
  * Decide from the stored state whether a webhook can change this workspace.
@@ -25,21 +40,17 @@ const MERGE_STATE_RETRY_DELAY_MS = 1000
  * check event that names no branch matters only to an open pull request.
  * Without stored state of the current branch, the workspace reads GitHub.
  */
-async function needsRead(
+function needsRead(
   workspace: GitHubWorkspace,
   signal: GitHubRefresh,
-  state: WorkspaceGitHubState,
-): Promise<boolean> {
+  stored: GitHubSnapshot | undefined,
+): boolean {
   const otherPush =
     signal.pushBranch !== undefined && signal.pushBranch !== workspace.branch
   if (!otherPush && !signal.openPullRequestOnly) return true
-  const stored = await state.stored()
   if (stored?.banner.branch !== workspace.branch) return true
   const { banner } = stored
-  const open =
-    banner.pullRequest !== null &&
-    banner.state !== 'merged' &&
-    banner.state !== 'closed'
+  const open = hasOpenPullRequest(banner)
   if (!otherPush) return open
   if (
     workspace.baseBranch != null &&
@@ -97,6 +108,7 @@ async function readAndCommit(
   dependencies: GitHubReadDependencies,
 ): Promise<GitHubSnapshot | null> {
   let binding = workspace
+  let targetChange: WorkspaceTargetChange | null = null
   const authorize = async () => {
     const current =
       signal.requireWritable && signal.userId !== undefined
@@ -127,7 +139,11 @@ async function readAndCommit(
     binding = current
   }
   const copy = async (snapshot: GitHubSnapshot) => {
-    if (snapshot.baseChange && snapshot.banner.branch === binding.branch) {
+    if (
+      snapshot.baseChange &&
+      snapshot.banner.branch === binding.branch &&
+      !hasOpenPullRequest(snapshot.banner)
+    ) {
       const moved = await moveWorkspaceBase(db, binding, snapshot.baseChange)
       if (moved) {
         binding = moved
@@ -176,8 +192,10 @@ async function readAndCommit(
   return state.refresh(
     async () => {
       const previous = await state.stored()
-      if (previous?.baseChange) await copy(previous)
-      if (!(await needsRead(binding, signal, state))) return null
+      if (!needsRead(binding, signal, previous)) {
+        if (previous?.baseChange) await copy(previous)
+        return null
+      }
       const token = await dependencies.token(binding)
       await authorize()
       const reader = new GitHubReader(
@@ -193,13 +211,21 @@ async function readAndCommit(
       )
       try {
         const branches = await reader.dependenciesForBranch()
+        // An open pull request takes precedence over an older deleted-base repair.
+        if (!branches.openPullRequest && previous?.baseChange)
+          await copy(previous)
+        const storedTarget = binding.baseBranch ?? branches.defaultBranch
+        const baseBranch = branches.openPullRequest
+          ? branches.baseBranch
+          : storedTarget
         if (
           signal.pushBranch !== undefined &&
           signal.pushBranch !== branches.headBranch &&
-          signal.pushBranch !== branches.baseBranch
+          signal.pushBranch !== baseBranch &&
+          signal.pushBranch !== storedTarget
         )
           return null
-        const snapshot = await reader.read(branches)
+        const snapshot = await reader.read(branches, binding.baseBranch ?? null)
         if (
           !snapshot.banner.pullRequest &&
           !snapshot.banner.baseMoved &&
@@ -208,7 +234,21 @@ async function readAndCommit(
           previous.banner.baseMoved
         )
           snapshot.banner.baseMoved = previous.banner.baseMoved
-        if (signal.pushBranch === branches.baseBranch) await schedule()
+        if (signal.pushBranch === baseBranch) await schedule()
+        if (
+          hasOpenPullRequest(snapshot.banner) &&
+          snapshot.banner.baseBranch !==
+            (binding.baseBranch ?? branches.defaultBranch)
+        ) {
+          await authorize()
+          // One D1 write supplies the move to the retryable chat transaction.
+          targetChange = await writeWorkspaceTarget(
+            db,
+            binding,
+            snapshot.banner.baseBranch,
+            branches.defaultBranch,
+          )
+        }
         return snapshot
       } catch (error) {
         await authorize()
@@ -221,7 +261,20 @@ async function readAndCommit(
     signal,
     // A receipt can replay committed state from before Continue.
     copy,
-    (transaction, snapshot) =>
-      saveBaseChangeJob(transaction, snapshot, binding, dependencies.now()),
+    async (transaction, snapshot) => {
+      if (targetChange)
+        await saveWorkspaceTargetChange(
+          transaction,
+          targetChange,
+          dependencies.now(),
+        )
+      else if (!hasOpenPullRequest(snapshot.banner))
+        await saveBaseChangeJob(
+          transaction,
+          snapshot,
+          binding,
+          dependencies.now(),
+        )
+    },
   )
 }

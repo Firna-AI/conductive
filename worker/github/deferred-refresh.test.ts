@@ -43,7 +43,10 @@ it('re-reads a non-default pull request base after its unchanged delivery commit
   expect((await inspect()).published).toHaveLength(1)
   expect((await inspect()).scheduled).toEqual([
     {
-      request: { workspace, signal: { retryAttempt: 1 } },
+      request: {
+        workspace: { ...workspace, baseBranch: 'release' },
+        signal: { retryAttempt: 1 },
+      },
       delayMs: 1000,
     },
   ])

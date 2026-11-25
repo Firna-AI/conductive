@@ -67,6 +67,7 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   It checks active org, installation, repository, branch, and optional user access before reading.
   It repeats the access check before storage and publication.
   The port checks access once more inside the chat queue, before each commit or replay.
+  A fresh read follows the base of an open pull request and saves its cloud move.
   It gives `WorkspaceGitHubState.refresh` the copy callback, which writes through [saveWorkspaceGitHubSummary](summary-data.ts).
 - [WorkspaceGitHubState](workspace-state.ts) serializes reads and commits within one workspace.
   A tab read joins an equal tab read of the same member and branch that has not ended, through `share`.
@@ -79,7 +80,7 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   A retry of a committed delivery reads its receipt and does not read GitHub.
   It republishes the event of a changed delivery with the same event number.
   A fresh read with unchanged banner and checks publishes no event.
-  A pending base move keeps its private repair marker across unchanged reads.
+  The private repair marker of a deleted base stays across unchanged reads while the workspace branch has no open pull request.
   The comparison ignores `banner.updatedAt` and object-key order.
   After each commit, unchanged read, or receipt replay, it copies the summary in the same queue.
 - [createGitHubStatePort](chat-store.ts) builds that port on the `WorkspaceChat` of the workspace Durable Object.
@@ -188,136 +189,19 @@ JSON parsing and storage access follow successful verification.
 
 ## Refresh behavior
 
-Each webhook triggers a fresh read instead of applying old payload state.
-Resolving or unresolving a review thread refreshes its pull request branch.
-Repository and installation IDs must match active local records.
-A foreign fork's same-named branch cannot update a workspace in the base repository.
-Push routing sends the active repository workspaces to their coordinators as candidates.
-A coordinator with a stored state of its current branch decides without GitHub.
-It reads when the pushed branch is its head or the base of its open pull request.
-A push to an explicit workspace base reads it even without an open pull request, so a deleted base can move.
-Other pushes to a base of a merged or closed pull request, or to a branch without a pull request, are skipped.
-Without that stored state, the coordinator reads the current head branch, head commit, pull request, and base branch.
-It refreshes only when the pushed branch is that head or base.
-An explicit workspace base takes precedence.
-Otherwise, the base comes from the pull request, or the repository default when no pull request exists.
-An unrelated push returns `null` and stores no snapshot or event.
-A check event that names a branch reaches only the workspaces of that branch.
-A check suite names `head_branch`, a check run names the branch of its suite, and a status names its `branches`.
-A check event that names no branch, such as a status of a test merge commit, reaches each workspace.
-That workspace reads only for an open pull request, or when it has no stored state of its branch.
-The routing never uses the payload's pull request list.
-A changed banner or check publishes one fresh event.
-A later identical read publishes none.
-Retrying an already committed delivery republishes its original event without another GitHub read.
-An unchanged delivery receipt has no envelope to publish.
-For a push, each workspace refresh runs even when an earlier workspace fails.
-The image refresh runs after those workspace steps, also when a workspace fails.
-A push can complete when a `github_pending` workspace has scheduled its bounded fresh read.
-Other workspace failures and image refresh failures leave the delivery retryable.
-The handler returns the error after the independent steps run.
-For other events, the handler marks a delivery processed only after all workspace refreshes succeed.
-A failed read or commit of those events leaves the delivery retryable.
-A failure after the commit also leaves it retryable.
-The retry then replays the receipt.
-A failed send to one tab does not fail the refresh.
-[History and event order](../chat/README.md#history-and-event-order) says how that tab gets the missed event.
-
-Pull request lookup prefers an open request for the exact repository and branch.
-It then considers merged and closed requests, in GitHub's newest-created order.
-Each lookup page reads five pull requests with their banner fields, both check rollups, and latest opinionated reviews.
-Each check and review connection includes its first 100 entries.
-When those first pages are complete, an open pull request needs one GraphQL query.
-A merged or closed pull request needs two queries, including the empty open lookup.
-Further lookup pages and later pages of the chosen check rollup or reviews need additional queries.
-Without a pull request, a GraphQL comparison uses the explicit head commit and the workspace base branch.
-It reads the commit count and repository identity.
-It selects no file patches.
-The reader follows every lookup, review, and check connection page.
-The combined GitHub check rollup supplies check runs and status contexts in returned order.
-The reader chooses the test merge commit's rollup when it has at least one check run or status context.
-Otherwise, it chooses the head commit's rollup.
-The banner and Checks response use that same chosen list.
-Each chosen rollup page must keep the captured head and test merge commit IDs.
-Check runs use their completed and started times for duration.
-Commit status contexts supply no run start time, so their duration remains null.
-All links point to GitHub.
-
-The reader maps BEHIND and BLOCKED to the shared `blocked` banner.
-Terminal, draft, conflict, review, and check states take priority over `blocked`.
-The banner keeps the pull request's GitHub link and the existing shared fields.
-Its `pullRequest.headSha` is the head commit that the reader captured, which a merge sends back.
-The banner read adds no blocker reasons. The separate member routes own merge writes.
-An unresolved merge condition still returns `github_pending` with HTTP 503.
-UNKNOWN mergeability or merge state remains retryable when no earlier state applies.
-UNSTABLE remains retryable if the read checks show no failed, running, or queued check.
-It keeps the previous stored state until a read can confirm the current state.
-The bounded scheduled reads retry that state without a browser request.
-
-The webhook candidate query skips archived workspaces: `archived_at` is set or the state is `archived`.
-An archived workspace still reads GitHub when a tab asks, and its scheduled reads still run.
-No other workspace state limits a GitHub read or webhook refresh.
-This includes a workspace in `input` while its agent waits for the user.
+See [Refresh behavior](refresh.md#refresh-behavior) for routing and snapshots, and [The base of an open pull request](refresh.md#the-base-of-an-open-pull-request) for target changes.
 
 ## A deleted base
 
-The reader checks each explicit workspace base through [checkRepositoryBranch](branch-check.ts).
-Only `branch_not_found` moves the base to GitHub's live default branch.
-A failed read or missing repository access keeps the base.
-[Base branches](../../docs/protocol/base-branches.md#a-base-branch-that-github-deleted) states the requirement.
-
-The snapshot records its private `baseChange` repair marker with one saved `baseChange:job` and its alarm source in the same transaction.
-The native alarm registers before that transaction commits.
-[moveWorkspaceBase](base-data.ts) then writes a null workspace base and records the live repository default in one D1 batch.
-Its guards bind the write to the repository, installation, workspace branch, and earlier base.
-Replaying an applied move does not overwrite a newer repository default.
-Each refresh reads the current stored base, so a saved refresh binding cannot restore the deleted base.
-Before another read replaces that snapshot, the refresh repairs its D1 move.
-The job also repairs D1, so a failed D1 write has a saved retry.
-The snapshot keeps the marker until the cloud move completes.
-
-The public banner's optional `baseMoved` field names the deleted branch, and `filterGitHubBanner` adds its masked label `displayBaseMoved`.
-The Worker keeps it across reads and object rebuilds until a pull request opens.
-The app can use it with `barMessageText` and the `baseMoved` fact of the shared bar model.
-The banner names the default branch and compares commits with it.
-A pull request keeps its real GitHub base separately in the private `pullBaseBranch` snapshot field for Continue.
-
-The GitHub read runs no cloud command.
-A cloud failure cannot fail a banner read, a merge reply, or the verify read of Continue.
-[Moved bases](../lifecycle/README.md#moved-bases) describes the shared isolated fetch and reference installation, the owner credential, resume, and the one retry job.
+See [A deleted base](refresh.md#a-deleted-base) for the move to the default branch.
 
 ## The summary copy
 
-[The GitHub state](../../docs/protocol/github-banner.md#the-github-state) states that the summary is the bar state.
-`githubSummary` in the [shared contracts](../../src/shared/github.ts) gives the value from a banner: its state, or null without a pull request and for a closed pull request.
-`pullBanner` uses `checksSummary` for `checks-failed` and `checks-running` after its draft, conflict, and review checks.
-So the bar and the copy cannot disagree.
-After a commit, an unchanged read, or a receipt replay, `WorkspaceGitHubState` reads the committed `github:state` again.
-It checks access once more and calls the copy callback with that snapshot, before the next refresh starts.
-So a replay of an older receipt copies the current state, not the snapshot of its receipt.
-The replay still publishes the original event of that receipt.
-An unchanged read publishes no event, but it still repairs a missing or old copy.
-The base-change job clears its private marker when the cloud move completes.
-A read that returns `null`, such as an unrelated push, copies nothing.
-`saveWorkspaceGitHubSummary` updates only `github_summary`, when the value differs and the workspace still has the snapshot's branch.
-Continue and a repository change clear the summary when they store the new branch, so an old branch's copy cannot restore its mark.
-The summary copy changes no activity time, update time, or list position.
-A failed copy rejects the refresh, so the delivery stays retryable.
-The retry of a committed delivery replays its receipt and copies again, without a GitHub request or a fresh event.
+See [The summary copy](refresh.md#the-summary-copy) for the workspace list copy.
 
 ## The merge record
 
-[The merge record](../../docs/protocol/account-stats.md#the-merge-record) gives the requirements.
-[merge-record-data.ts](merge-record-data.ts) writes one row of `pull_request_merges` for each merged pull request, keyed by the GitHub repository ID and the number.
-A repeated write changes nothing, so the first workspace and its owner at that time keep the merge.
-Each write reads the owner from the workspace row and skips a workspace of a deleted org.
-The copy callback of the refresh writes the row after the summary copy, when the committed banner is `merged` and has a merge time.
-So a merge from the app, a merge on GitHub, a tab read after a missed event, and a receipt replay all write it.
-The merged `pull_request` event writes the row for the oldest workspace of its repository, installation, and head branch, also an archived one, with no GitHub read.
-It takes `merged_at` from the event, and the delivery time when the event has none.
-A failed write fails the delivery after the other work of the event, so the delivery stays retryable.
-GitHub does not resend a failed delivery by itself, so the next refresh of a workspace that is not archived repairs a missed row.
-The org purge removes the rows through the foreign key of the org.
+See [The merge record](refresh.md#the-merge-record) for the record of each merged pull request.
 
 ## Verification
 
@@ -335,15 +219,15 @@ The GitHub tests that store state run on the production workspace object in Mini
 - [app-handler.ts](app-handler.ts) serves protected banner and checks reads.
 - [workspace-state.ts](workspace-state.ts) serializes refreshes, commits changed snapshots, replays delivery receipts, and runs the summary copy.
 - [summary-data.ts](summary-data.ts) writes a changed GitHub summary to the workspace record.
-- [base-data.ts](base-data.ts) applies the base move of a committed snapshot to D1.
+- [base-data.ts](base-data.ts) writes a followed target and repairs the D1 record of a deleted base.
 - [merge-record-data.ts](merge-record-data.ts) writes the merge record of a merged pull request.
 - [Shared summary](../../src/shared/github.ts) gives `checksSummary`, which the bar uses, and `githubSummary`, which the copy uses.
 - [chat-store.ts](chat-store.ts) adapts the state port to `WorkspaceChat`, with an access check inside the queue before each commit or replay.
 - [delivery-receipt.ts](delivery-receipt.ts) defines the receipt and builds the `github.updated` event from a snapshot, for a commit and a replay.
 - [output.ts](output.ts) adds the masked labels `displayBranch`, `displayBaseBranch`, and `displayBaseMoved` to the banner of the fresh and stored replies of `app-handler.ts`, with the secret values of the last start of the sandbox. The chat backend labels each `github.updated` event, as [Branch and path labels](../chat/integration/README.md#branch-and-path-labels) says. Snapshots and receipts keep the real names.
-- [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.
-- [client.ts](client.ts) reads current GitHub state and follows pagination. Its `defaultBranch` reads the current default branch for Continue. Its `aheadBy` counts the commits of a head that a base branch does not hold.
-- [base-moved.test.ts](base-moved.test.ts) checks a deleted base, its saved banner, and failed reads.
+- [refresh.ts](refresh.ts) checks dependencies, saves target changes, and schedules bounded fresh reads.
+- [client.ts](client.ts) reads the live base of an open pull request and follows pagination. Its `defaultBranch` reads the current default branch for Continue. Its `aheadBy` counts the commits of a head that a base branch does not hold.
+- [base-moved.test.ts](base-moved.test.ts) checks pull request target changes, default branch renames, deleted bases, and failed reads.
 - [Cloud base tests](../features/base-moved.test.ts) use native storage, saved alarms, and hibernation to check growing retries, resume, and failed D1 publication. The recovery push names an unrelated branch.
 - [Owner credential tests](../features/base-moved-credentials.test.ts) check the trusted fetch scope and keep tokens out of commands, saved state, logs, and banner replies.
 - [Native Git base tests](../lifecycle/base-change-native.test.ts) check an advancing merge commit, Changes, diffs, and a refused owner fetch.

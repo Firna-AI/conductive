@@ -249,16 +249,20 @@ Verification logs are in `.context/agent-target-branch-change/m3-checks/`.
 
 Depends on: 3
 
-- [ ] In the GitHub read in `worker/github/client.ts` and `refresh.ts`, take the base of an open pull request as the target.
-- [ ] When that base differs from the target, write the record and save the move of Milestone 3, as the design calls say.
-- [ ] While a pull request is open, make no move of decision 304. A merged or closed pull request keeps the stored target.
-- [ ] Test with the fake GitHub server, beside `worker/github/base-moved.test.ts` and `webhook.test.ts`:
+- [x] In the GitHub read in `worker/github/client.ts` and `refresh.ts`, take the base of an open pull request as the target.
+- [x] When that base differs from the target, write the record and save the move of Milestone 3, as the design calls say.
+- [x] While a pull request is open, make no move of decision 304. A merged or closed pull request keeps the stored target.
+- [x] Keep a push to the earlier target eligible for refresh when GitHub has already moved the pull request base.
+- [x] Test with the fake GitHub server, beside `worker/github/base-moved.test.ts` and `webhook.test.ts`:
   - a `pull_request` `edited` webhook with a new base, and a draft
   - GitHub's retarget of a stack after it deletes the lower branch
   - a base on the default branch, and a renamed default branch
   - a merged and a closed pull request
   - an open pull request whose base differs at the first read after the deploy
-- [ ] Update `worker/github/README.md`. Split it, because it passes 300 lines.
+- [x] Update `worker/github/README.md`. Split it, because it passes 300 lines.
+- [x] Update the earlier target expectations in `worker/github/base-branch.test.ts` and `worker/github/deferred-refresh.test.ts`.
+
+Verification logs are in `.context/agent-target-branch-change/m4-checks/`.
 
 ## Milestone 5: The call in the Worker
 
