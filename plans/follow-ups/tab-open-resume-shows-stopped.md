@@ -22,7 +22,7 @@
     - the Preview tab (`preview-centre.tsx:117`)
     - the tools (`WorkspaceScreen.tsx:183`)
   - The page of a tab draws the panel with a Resume button, which is busy while `resume.pending` is true (`SandboxPanel` in `src/shell/workspace/SandboxNotice.tsx:152`).
-  - Since 25 November 2026, a skill tab acts as a file tab does during the start that its open asks for (`docs/protocol/skill-tabs.md:198-200`). No protocol doc gives a wait for the time before the reply of a tab-open Resume.
+  - Since 25 November 2026, a skill tab acts as a file tab does during the start that its open asks for (`docs/protocol/skill-tabs.md:200-202`). No protocol doc gives a wait for the time before the reply of a tab-open Resume.
   - The catalogue screen of a stopped skill tab draws the start after it began. The header shows Starting, and the tab waits with no Resume (`docs/mockups/src/entries/app/skill-mentions/tab/stopped/index.mockup.tsx`).
   - Each option except A changes `docs/protocol/stop-and-resume.md`. A change of a protocol doc also needs a read of both legal pages and of each public guide, as `AGENTS.md` says.
 - **Problem:**
@@ -54,9 +54,11 @@
 - **Left out:**
   - A change of the Resume reply alone. The time before the reply still shows the stopped state.
   - A navigation that waits for the reply. It hides the page that the member chose during the wait.
-  - A wait for the skill tab only. It breaks the rule that a skill tab acts as a file tab does (`docs/protocol/skill-tabs.md:198-200`).
+  - A wait for the skill tab only. It breaks the rule that a skill tab acts as a file tab does (`docs/protocol/skill-tabs.md:200-202`).
 - **Wider fix:** C, when `contentState` and the header read one shared flag, so that each part gets the pending start from one place. E also prevents the class, and it also covers a later kind of automatic start.
 - **Previous examples:** Commit `8c49081e3` fixed the same stopped bar during the open Resume. `plans/follow-ups/held-start-after-stop-gaps.md` records the same stopped state after the reply of a held resume.
-- **Related:** `plans/follow-ups/held-start-after-stop-gaps.md` has the same symptom at a later time. Its option B makes the reply of a held resume show Starting. This item covers the time before any reply. No options conflict.
+- **Related:**
+  - `plans/follow-ups/held-start-after-stop-gaps.md` has the same symptom at a later time. Its option B makes the reply of a held resume show Starting. This item covers the time before any reply. No options conflict.
+  - `plans/follow-ups/mockup-start-hides-tab-content.md` gives the app and the catalogue one rule for when a tab keeps its content. That rule takes the result of `contentState` as an input, so C or E here changes its input. No options conflict.
 - **Recommendation:** C. One small change gives every tab and the header the wait that the open Resume already shows.
 - **Action:** ask the user, because C changes how the tabs on `origin/main` show a start and a pressed Resume, beyond what the protocol states.

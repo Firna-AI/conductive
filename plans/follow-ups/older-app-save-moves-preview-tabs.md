@@ -2,8 +2,8 @@
 
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
-- **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 1, a problem outside the scope from the checks of findings 22 and 24.
-- **Location:** `worker/app-api/workspace-view-sql.ts:14-29` (`kept_previews` and the merge of the tabs), `worker/app-api/workspace-view.ts:101-118` (`workspaceViewPatch`), `src/shared/README.md:325-331`.
+- **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 1, a problem outside the scope from the checks of findings 22 and 24, and review round 2, a problem outside the scope from the check of finding 71.
+- **Location:** `worker/app-api/workspace-view-sql.ts:48-63` (`kept_previews` and the merge of the tabs), `worker/app-api/workspace-view-sql.ts:3-11` (`TAB_IDENTITY`, `tabCounts`), `worker/app-api/workspace-view.ts:101-118` (`workspaceViewPatch`), `src/shared/README.md:325-331`.
 - **Reason:** The place rule of the kept Preview tabs is older than the skill tabs change, which fixed the same class only for the skill tabs.
 
 - **Source:** Review. **Category:** Product bug.
@@ -17,17 +17,20 @@
   - The order of the row stays after a reload, and the other devices of the member load the same order (`docs/protocol/tab-row.md:20-21`).
   - Since 25 November 2026, each save is one SQL statement, `SAVE_WORKSPACE_VIEW` in `worker/app-api/workspace-view-sql.ts`. It reads the stored row and writes the new row in the same statement.
   - So the race between the read and the write of the kept Preview tabs, which `worker/app-api/shell.ts` has on `origin/main`, is closed. This item holds only the place rule.
-  - For each kept Preview tab, the statement counts the ordinary tabs before it in the stored row (`kept_previews`, lines 14-18). It then puts the Preview tab before the ordinary tab of the save at that count (lines 19-29).
+  - For each kept Preview tab, the statement counts the ordinary tabs before it in the stored row (`kept_previews`, lines 48-52). It then puts the Preview tab before the ordinary tab of the save at that count (lines 53-63).
+  - On `origin/main`, `workspaceViewSave` in `worker/app-api/workspace-view.ts` gets each stored Preview tab with its index in the stored row, from `viewToWire`. `viewFromWire` in `src/shared/workspace-view-wire.ts` puts it back at that index of the new row.
   - The skill tabs got their own rule on 25 November 2026. Their places count against the tab list of the last save that sent them (`docs/protocol/temporary-tabs.md:207-210`).
+  - The same day, the statement started to record each tab that a save of an older app closes, for the skill places (`retainedSkillBaseTabs`, lines 13-35). It matches the tabs by their kind and their session ID, port, or path (`TAB_IDENTITY` and `tabCounts`, lines 3-11).
 - **Problem:**
   - The count includes ordinary tabs that the save of the older app closed. So a close before a Preview tab moves the Preview tab past a neighbour.
-  - A run of the statement on 25 November 2026, in SQLite 3.45, showed it. The stored row `A, B, Preview 3000, C` and an older-app save of `B, C` gave `B, C, Preview 3000`.
+  - A run of the statement at commit `b3aac93b6` on 25 November 2026, in SQLite 3.45, showed it. The stored row `A, B, Preview 3000, C` and an older-app save of `B, C` gave `B, C, Preview 3000`.
+  - A run of `viewToWire` and `viewFromWire` of `origin/main` with the same rows gave the same row.
   - The expected row is `B, Preview 3000, C`.
 - **Impact if no action:** After a member uses an older app, a Preview tab can show at another place in the row of the current app. No tab closes.
 - **Root question:** How does a save from an older app keep each Preview tab between the tabs that stay open?
 - **Options:**
   - **A.** Count only the stored ordinary tabs that the save still holds.
-    - In `kept_previews`, count each ordinary tab before the Preview tab that the `tabs` of the save also hold. Match a tab by its kind and its session ID or path.
+    - In `kept_previews`, count each ordinary tab before the Preview tab that the `tabs` of the save also hold. Match a tab by its kind and its session ID or path, as `TAB_IDENTITY` and `tabCounts` already do for the skill places.
     - Add a Worker test with the row above.
     - Effort: Small.
   - **B.** Store beside the kept Preview tabs the ordinary tab list that their places count against, as the skill tabs do with `skillBaseTabs`. Rebuild the places at each save of an older app. Cost: a second stored list for one rare save. Effort: Medium.
@@ -35,7 +38,7 @@
   - Change nothing. A Preview tab then moves past a tab that the member did not move, against the order rule of `docs/protocol/tab-row.md:20-21`.
   - One merge rule for the Preview and the skill tabs. The Preview tabs live in `tabs` of the stored row, which the previous Worker reads. So the two kinds cannot share one stored shape without a migration.
 - **Wider fix:** None found that keeps the stored shape. A is the direct fix.
-- **Previous examples:** The skill tabs change fixed the same class for the skill tabs, at a repository change and at a save of an older app. `plans/follow-ups/saved-terminal-older-app.md` records another field that a save of an older app drops.
+- **Previous examples:** The skill tabs change fixed the same class for the skill tabs, at a repository change and at a save of an older app. Commit `da9d23691` also kept a skill tab in its place when a save of an older app closes a tab and opens it again. `plans/follow-ups/saved-terminal-older-app.md` records another field that a save of an older app drops.
 - **Related:** `plans/follow-ups/saved-terminal-older-app.md` covers the same kind of save for another field. No options conflict.
 - **Recommendation:** A. It keeps the order of the tabs that stay open, with a small change to one statement.
 - **Action:** fix after merge, apply A, because the problem is on `origin/main`, it needs an older app, and the fix costs the same later.

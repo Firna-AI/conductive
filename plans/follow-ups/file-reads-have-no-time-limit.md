@@ -31,6 +31,8 @@
 - **Left out:** A limit in the browser only. Older copies of the app, such as an older Mac app, keep waiting, and the Worker keeps the pending read until the cancel reaches it.
 - **Wider fix:** A. A tracker that requires a finite wait for each kind of read leaves no read without an end.
 - **Previous examples:** The skill tabs change bounded the skill reads in the same tracker, in commit `6aede156f`. Commit `68342ce4a` kept a stuck runner from hiding waiting messages.
-- **Related:** `plans/follow-ups/file-reads-after-access-ends.md`: its option A needs this limit. A limit of 30 seconds or less keeps the window of decision 70 for an open tab.
+- **Related:**
+  - `plans/follow-ups/file-reads-after-access-ends.md`: its option A needs this limit. A limit of 30 seconds or less keeps the window of decision 70 for an open tab.
+  - `plans/follow-ups/ended-reads-reach-the-runner.md`: its option B checks the time limit and the cancel of each read right before the write to the socket. With both, a file or diff read past its limit never reaches the runner. No options conflict.
 - **Recommendation:** A. It ends each pending read at its owner, with the failure notice that the tabs already have.
 - **Action:** fix after merge, apply A, because the problem is on `origin/main`, a stalled read is rare, and the fix costs the same later.

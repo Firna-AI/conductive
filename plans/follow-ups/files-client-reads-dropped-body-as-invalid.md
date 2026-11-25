@@ -1,0 +1,42 @@
+# Files client reads a dropped body as invalid
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 2, the wider fix of finding 90.
+- **Location:** `src/files/api/files-client.ts:52-91` (`readJson`), `src/files/api/files-errors.ts:36-42` (`errorFromThrown`), `src/shell/workspace/skills/skill-read.ts:59-71` (`readJson`) and `:77-106` (`readSkillText`), `src/files/page/use-followed.ts:29-33`.
+- **Reason:** The skill client gets its own fix in this branch, and the shared reader changes the Files client on `origin/main`, where no notice differs today.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Files client:** `createFilesClient` in `src/files/api/files-client.ts`. It reads the file tree, the changes, a file, and a diff of a workspace for the browser.
+  - **Skill client:** `readSkillText` in `src/shell/workspace/skills/skill-read.ts`. It reads the text of one skill for a skill tab.
+  - **`FilesError`:** the error type of both clients, in `src/files/api/files-errors.ts`. A `failed` error with `status: null` is a failure of the network. A `failed` error with `status: 200` and the code `invalid_response` is a reply that does not match the contract.
+- **Background:**
+  - The Files client reads each reply body with `response.json()`. When that read rejects for any cause but an abort, it uses `null` as the body (`files-client.ts:65-68`).
+  - `response.json()` rejects in two cases: the connection drops before the body ends, or the complete body is not JSON.
+  - After a 200, a `null` body fails the parse. So both cases give `invalid_response` with `status: 200` (lines 81-83).
+  - The skill client had a copy of the same code. After a failed refresh whose cause can pass, a skill tab keeps its shown text (`docs/protocol/skill-tabs.md:182-186`). Such a cause is a reply with a 5xx status, or a failure of the network.
+  - So a connection that dropped during a 200 took the shown text of a skill away. The review of 25 November 2026 found this.
+  - On the same day, commit `c459e6971` gave the skill client its own body reader, `readJson` in `skill-read.ts`. A body that fails after a 200 now counts as a failure of the network. A body that is not JSON still shows the failed notice.
+  - The file and diff pages read through `ResourceLoader` with no rule that keeps a value (`src/files/page/use-followed.ts:29-33`). So each failed read shows "This file didn't open" or "This diff didn't open" with Try again, whatever its cause (`src/files/ui/FileStates.tsx:44-57`).
+- **Problem:** The Files client reads a body that fails after a 200 as a reply that does not match the contract. The skill client now has its own copy of the body read, with another rule.
+- **Impact if no action:** No notice differs today. A later rule that tells a failure of the network from a bad reply, as the skill tab has, then fails for the file reads. The two copies can drift apart again.
+- **Root question:** How does each client of `FilesError` tell a body that failed before its end from a body that is not valid?
+- **Options:**
+  - **A.** Copy the body read of the skill client into `readJson` of the Files client. Cost: two copies of one rule stay. Effort: Small.
+  - **B.** Give both clients one body reader in `src/files/api/`.
+    - It reads the whole body, and then parses it. A failed read gives a failure of the network, an abort gives `aborted`, and a body that is not JSON gives `null`.
+    - `readJson` of the Files client and `readSkillText` use it. Remove the copy from `skill-read.ts`.
+    - Test a 200 whose body stream fails, for a file read and for a skill read. Test a 200 whose body is not JSON too.
+    - Effort: Medium.
+  - **C.** Give every JSON client of the browser one body reader.
+    - It also serves `readJson` of `src/app/api/client.ts:98-106`, `src/github/githubClient.ts:50`, and `src/github/githubActions.ts:43`. Each of them reads a failed body as `null` after a 2xx too.
+    - Cost: a dropped body of the app API then shows "The app can't reach the server. Check the connection, then try again." in place of "The app could not read the answer of the server. Try again." (`answer`, `src/app/api/client.ts:160-176`). That changes texts that members see on `origin/main`.
+    - Effort: Medium.
+- **Left out:**
+  - Change nothing. The Files client then keeps the wrong cause, and the next rule that reads the cause fails for it.
+  - Keep the shown text after every failure without a 4xx status. It breaks the rule of `docs/protocol/skill-tabs.md:187-191`, which rejects text that stays after each failure. It also does not reach the file pages, which keep no text.
+- **Wider fix:** B, for the two clients of `FilesError`. C also prevents the class in the other JSON clients, but it changes texts that members see.
+- **Previous examples:** `readJson` of `src/app/api/client.ts:98-106` reads a failed body as `null` too, and `answer` then gives `invalid_response` after a 2xx. Commit `d6e125954` made the skill tab keep its text after a failure that can pass, which made the wrong cause visible there.
+- **Recommendation:** B. One reader gives both clients of `FilesError` the same causes, with no change of a text. C best protects the other JSON clients.
+- **Action:** fix after merge, apply B, because no notice differs for the file reads today, and B changes the Files client on `origin/main`.

@@ -46,6 +46,8 @@
 - **Left out:** A second check written only into the skill route, in the queued send and before the reply. B makes the same two checks for skill reads in one place, which the file and diff reads can also use.
 - **Wider fix:** B. The operation that sends each read and returns its reply owns both access checks, so a new kind of read cannot miss them.
 - **Previous examples:** Commit `cc6a38f09` added a final access check before the service logs return (`worker/services/handler.ts:102-103`). `plans/follow-ups/desktop-stream-after-access-loss.md` records another path that outlives the loss of access.
-- **Related:** `plans/follow-ups/file-reads-after-access-ends.md` has the same class for the file and diff reads. B can serve both. That item waits for the answer here, because the user sets one policy for both.
+- **Related:**
+  - `plans/follow-ups/file-reads-after-access-ends.md` has the same class for the file and diff reads. B can serve both. That item waits for the answer here, because the user sets one policy for both.
+  - `plans/follow-ups/ended-reads-reach-the-runner.md` adds a check of the time limit and the cancel of each read to the same send, right before the write to the socket. With B, do both in one branch. No options conflict.
 - **Recommendation:** B. It puts both checks at the points where the Worker acts for the caller. Choose A if the user accepts the documented 30-second window.
 - **Action:** ask the user, because B, C, and D add a new refusal, and A adds a new requirement to a protocol doc.
