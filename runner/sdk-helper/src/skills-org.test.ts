@@ -1,12 +1,14 @@
 import { execFileSync } from 'node:child_process'
 import { constants } from 'node:fs'
-import { mkdir, open, symlink, writeFile } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
+import { mkdir, open, readFile, symlink, writeFile } from 'node:fs/promises'
+import { basename, dirname, join } from 'node:path'
 
 import { expect, it, onTestFinished } from 'vitest'
 
 import { scannerFixture, skillText } from '../test-support/skills'
 import type { OrgSkills } from './generated/OrgSkills'
+import { prepareCodexSkills } from './providers/codex-skills'
+import { ProviderLifetime } from './providers/lifetime'
 import { withOrgSkillPaths } from './providers/skill-input'
 import { readOrgSkill } from './skill-org'
 
@@ -153,7 +155,7 @@ it('lists and reads a regular org skill when another candidate links to a FIFO',
   })
 })
 
-it('bounds metadata from oversized links and keeps workspace names found within the limit', async () => {
+it('keeps workspace precedence regardless of size and limits the org tab text', async () => {
   const h = await scannerFixture()
   const org = await orgCopy(h.home)
   const body = 'x'.repeat(1_048_576)
@@ -165,8 +167,10 @@ it('bounds metadata from oversized links and keeps workspace names found within 
   await org.write('skills/oversized/content.md', oversized)
   await linkSkill(join(org.directory, 'skills/oversized/SKILL.md'), target)
 
-  const kept = skillText({ name: 'review', description: 'Review the code.' })
-  await org.write('skills/review/SKILL.md', kept)
+  await org.write(
+    'skills/review/SKILL.md',
+    skillText({ name: 'review', description: 'Org skill.' }),
+  )
   await org.write(
     'skills/shadowed/SKILL.md',
     skillText({ name: 'shadowed', description: 'Org skill.' }),
@@ -189,10 +193,10 @@ it('bounds metadata from oversized links and keeps workspace names found within 
   )
 
   const { claude } = await h.scanner.scan(false, org.skills)
-  expect(claude.map((skill) => skill.name)).toEqual(['review'])
+  expect(claude.map((skill) => skill.name)).toEqual(['oversized'])
   expect(await readClaudeOrgSkill(h.root, org.skills, 'review')).toEqual({
-    ok: true,
-    text: kept,
+    ok: false,
+    error: { code: 'skill_not_found', message: 'The skill was not found.' },
   })
   expect(await readClaudeOrgSkill(h.root, org.skills, 'shadowed')).toEqual({
     ok: false,
@@ -207,6 +211,55 @@ it('bounds metadata from oversized links and keeps workspace names found within 
       limitBytes: 1_048_576,
     },
   })
+})
+
+it('keeps the first duplicate org skill when its header exceeds the tab limit', async () => {
+  const h = await scannerFixture()
+  const org = await orgCopy(h.home)
+  const first = 'skills/first/SKILL.md'
+  const fields = { name: 'review', description: 'First skill.' }
+  const safe = skillText(fields, 'First body.\n')
+  const source = safe.replace('---\n', `---\n# ${'x'.repeat(1_048_576)}\n`)
+  await org.write(first, source)
+  await org.write(
+    'skills/second/SKILL.md',
+    skillText({ ...fields, description: 'Second skill.' }, 'Second body.\n'),
+  )
+
+  const listed = await h.scanner.scan(false, org.skills)
+  const entry = { ...fields, path: join(org.directory, first), org: true }
+  expect(listed).toEqual({ claude: [entry], codex: [entry] })
+  expect(
+    await readOrgSkill(
+      {
+        type: 'org',
+        repository: h.root,
+        orgSkills: org.skills,
+        agent: 'codex',
+        name: 'review',
+      },
+      1_048_576,
+    ),
+  ).toEqual({
+    ok: false,
+    error: {
+      code: 'skill_too_large',
+      message: 'The skill is too large.',
+      sizeBytes: Buffer.byteLength(source),
+      limitBytes: 1_048_576,
+    },
+  })
+
+  const lifetime = new ProviderLifetime()
+  onTestFinished(() => lifetime.close())
+  const view = await prepareCodexSkills(
+    { ...h.options, orgSkills: org.skills },
+    lifetime,
+  )
+  expect(view.extraRoots.map((path) => basename(path))).toEqual(['first'])
+  const exported = join(view.extraRoots[0], 'SKILL.md')
+  expect([...view.inputs]).toEqual([['review', exported]])
+  expect(await readFile(exported, 'utf8')).toBe(safe)
 })
 
 it('lists and reads a Claude org skill under its declared name with a Unicode line separator', async () => {

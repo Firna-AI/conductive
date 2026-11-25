@@ -1,9 +1,24 @@
-import { basename } from 'node:path'
+import { basename, join } from 'node:path'
 
 import { stringify } from 'yaml'
 
 import type { Agent } from '../generated/Agent'
+import { readSkillHeader } from '../skill-content'
 import { readSkillSidecar, readSkillYaml, yamlRecord } from './skill-yaml'
+
+export async function readSkillMetadata(folder: string, agent: Agent) {
+  const path = join(folder, 'SKILL.md')
+  const header = await readSkillHeader(path)
+  return {
+    ...skillMetadata(header.ok ? header.yaml : null, basename(folder), agent),
+    path,
+    file: header.ok
+      ? { ok: true as const, bodyOffset: header.bodyOffset }
+      : header,
+  }
+}
+
+export type SkillMetadata = Awaited<ReturnType<typeof readSkillMetadata>>
 
 function singleLine(value: unknown): string {
   return value == null ? '' : String(value).trim().replace(/\s+/gu, ' ')
@@ -13,12 +28,8 @@ export function isClaudeSkillAlias(value: string): boolean {
   return /^[A-Za-z0-9._-]+$/u.test(value)
 }
 
-export function skillMetadata(content: string, path: string, agent: Agent) {
-  const block = /^---[^\S\n]*\r?\n([\s\S]*?)\r?\n---[^\S\n]*(?:\r?\n|$)/u.exec(
-    content,
-  )
-  const frontmatter = block ? readSkillYaml(block[1], agent) : null
-  const folder = basename(path)
+function skillMetadata(yaml: string | null, folder: string, agent: Agent) {
+  const frontmatter = yaml === null ? null : readSkillYaml(yaml, agent)
   let name: string | null
   if (agent === 'codex') {
     const candidate = singleLine(frontmatter?.name) || folder
@@ -45,8 +56,7 @@ export function skillMetadata(content: string, path: string, agent: Agent) {
         ? [folder, name]
         : [name]
       : [],
-    frontmatter: frontmatter ?? {},
-    body: block ? content.slice(block[0].length) : content,
+    frontmatter: safeFrontMatter(name, frontmatter ?? {}),
   }
 }
 
@@ -67,13 +77,10 @@ const DESCRIPTIVE_FIELDS = [
   'compatibility',
 ] as const
 
-export function safeSkillContent(
-  content: string,
-  path: string,
-  agent: Agent,
-  trustedClaudeBody = false,
+function safeFrontMatter(
+  name: string | null,
+  frontmatter: Record<string, unknown>,
 ) {
-  const { name, frontmatter, body } = skillMetadata(content, path, agent)
   const safe: Record<string, unknown> = {}
   if (name) safe.name = name
   for (const key of DESCRIPTIVE_FIELDS)
@@ -88,13 +95,28 @@ export function safeSkillContent(
   const metadata = frontmatter.metadata
   if (yamlRecord(metadata) && scalar(metadata['short-description']))
     safe.metadata = { 'short-description': metadata['short-description'] }
+  return safe
+}
+
+export function safeSkillBody(
+  body: string,
+  agent: Agent,
+  trustedClaudeBody: boolean,
+) {
   // Insert separators. Removing ! can turn an inert !!` into a live !`.
   // Argument placeholders can expand to backticks after this filter runs.
-  const exportedBody =
-    agent === 'claude' && trustedClaudeBody
-      ? body
-      : body.replace(/!(?=[`$])/gu, '! ').replaceAll('```!', '``` !')
-  return `---\n${stringify(safe)}---\n${exportedBody}`
+  return agent === 'claude' && trustedClaudeBody
+    ? body
+    : body.replace(/!(?=[`$])/gu, '! ').replaceAll('```!', '``` !')
+}
+
+export function safeSkillContent(
+  metadata: SkillMetadata,
+  body: string,
+  agent: Agent,
+  trustedClaudeBody: boolean,
+) {
+  return `---\n${stringify(metadata.frontmatter)}---\n${safeSkillBody(body, agent, trustedClaudeBody)}`
 }
 
 const INTERFACE_FIELDS = [

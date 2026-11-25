@@ -1,6 +1,8 @@
+import type { Agent } from './generated/Agent'
 import type { SkillEntry } from './generated/SkillEntry'
 import type { SkillReadOutcome } from './generated/SkillReadOutcome'
 
+import type { SelectedOrgSkill } from './providers/skills'
 import { readSkillContent, SKILL_FILE_MAX_BYTES } from './skill-content'
 import { readFrontMatter, type FrontMatterValue } from './skill-front-matter'
 import type { SkillFile } from './skill-files'
@@ -24,7 +26,7 @@ export async function readClaudeSkill(
 }
 
 /** The Claude entry of the text of one `SKILL.md`, as `readClaudeSkill` says. */
-export function claudeSkill(
+function claudeSkill(
   source: string,
   file: SkillPlace,
   warn: (message: string) => void,
@@ -36,11 +38,12 @@ export function claudeSkill(
     )
   const fields = front.fields ?? new Map<string, FrontMatterValue>()
   const invocable = fields.get('user-invocable')
-  if (invocable !== undefined && !isTrue(invocable)) return null
+  if (invocable !== undefined && !isTrue(text(invocable))) return null
   return {
     name: text(fields.get('name')) || file.folder,
-    description: text(fields.get('description')) || firstLine(front.body),
-    ...(isTrue(fields.get('disable-model-invocation'))
+    description:
+      text(fields.get('description')) || skillDescriptionLine(front.body),
+    ...(isTrue(text(fields.get('disable-model-invocation')))
       ? { manualOnly: true }
       : {}),
     path: file.path,
@@ -60,7 +63,7 @@ export async function readCodexSkill(
 }
 
 /** The Codex entry of the text of one `SKILL.md`, as `readCodexSkill` says. */
-export function codexSkill(
+function codexSkill(
   source: string,
   file: SkillPlace,
   warn: (message: string) => void,
@@ -80,6 +83,30 @@ export function codexSkill(
   }
 }
 
+export function orgSkillEntry(
+  skill: SelectedOrgSkill,
+  agent: Agent,
+): SkillEntry | null {
+  const { frontmatter, path } = skill.metadata
+  const invocable = frontmatter['user-invocable']
+  if (
+    agent === 'claude' &&
+    invocable !== undefined &&
+    !isTrue(String(invocable))
+  )
+    return null
+  return {
+    name: skill.shownName,
+    description: String(frontmatter.description ?? '').trim(),
+    path,
+    org: true,
+    ...(agent === 'claude' &&
+    isTrue(String(frontmatter['disable-model-invocation']))
+      ? { manualOnly: true }
+      : {}),
+  }
+}
+
 async function readSkillFile(
   path: string,
   warn: (message: string) => void,
@@ -88,7 +115,7 @@ async function readSkillFile(
   return listedSkillText(result, path, warn)
 }
 
-/** A failed read or a larger file warns and gives no text for the list. */
+/** A failed read warns and gives no text for the list. */
 export function listedSkillText(
   result: SkillReadOutcome,
   path: string,
@@ -105,13 +132,11 @@ function text(value: FrontMatterValue | undefined): string {
   return value?.kind === 'text' ? value.text.trim() : ''
 }
 
-function isTrue(value: FrontMatterValue | undefined): boolean {
-  return (
-    value?.kind === 'text' && /^(?:true|yes|on|1)$/i.test(value.text.trim())
-  )
+function isTrue(value: string): boolean {
+  return /^(?:true|yes|on|1)$/i.test(value.trim())
 }
 
-function firstLine(body: string): string {
+export function skillDescriptionLine(body: string): string {
   for (const line of body.split(/\r?\n/)) {
     const trimmed = line.trim()
     if (trimmed) return /^#+\s+(\S.*)$/.exec(trimmed)?.[1] ?? trimmed

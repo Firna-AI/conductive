@@ -1,48 +1,29 @@
-import { join } from 'node:path'
-
 import type { Agent } from './generated/Agent'
 import type { HelperSkillSource } from './generated/HelperSkillSource'
 import type { OrgSkills } from './generated/OrgSkills'
 import type { SkillEntry } from './generated/SkillEntry'
 import type { SkillReadOutcome } from './generated/SkillReadOutcome'
 import { isTrustedOrgSkills } from './providers/org-skills'
-import { safeSkillContent } from './providers/skill-metadata'
-import { selectAgentSkills, type SelectedOrgSkill } from './providers/skills'
+import { safeSkillBody, safeSkillContent } from './providers/skill-metadata'
+import { selectAgentSkills } from './providers/skills'
 import {
-  SKILL_FILE_MAX_BYTES,
+  readFirstSkillLine,
+  readSkillContent,
   SKILL_NOT_FOUND,
-  skillFileResult,
   skillReadFailure,
   skillReadText,
 } from './skill-content'
-import { claudeSkill, codexSkill, listedSkillText } from './skill-read'
+import {
+  listedSkillText,
+  orgSkillEntry,
+  skillDescriptionLine,
+} from './skill-read'
 
 export interface OrgSkillsListRequest {
   repository: string
   orgSkills: OrgSkills | null
   agent: Agent
   warn: (message: string) => void
-}
-
-function orgSkillView(
-  skill: SelectedOrgSkill,
-  path: string,
-  source: string,
-  request: OrgSkillsListRequest,
-) {
-  const { agent, orgSkills, warn } = request
-  const text = safeSkillContent(
-    source,
-    skill.path,
-    agent,
-    isTrustedOrgSkills(orgSkills),
-  )
-  const place = { path, folder: skill.shownName }
-  const entry =
-    agent === 'claude'
-      ? claudeSkill(text, place, warn)
-      : codexSkill(text, place, warn)
-  return { text, entry: entry && { ...entry, name: skill.shownName } }
 }
 
 /**
@@ -57,22 +38,33 @@ export async function listOrgSkills(
 ): Promise<SkillEntry[]> {
   const { repository, orgSkills, agent, warn } = request
   if (!orgSkills?.directory) return []
-  const found: SkillEntry[] = []
-  await selectAgentSkills(
+  const trusted = isTrustedOrgSkills(orgSkills)
+  const { selected } = await selectAgentSkills(
     { cwd: repository, orgSkills, warn },
     agent,
-    (skill, file) => {
-      const path = join(skill.path, 'SKILL.md')
-      const source = listedSkillText(
-        skillFileResult(file, SKILL_FILE_MAX_BYTES),
-        path,
+  )
+  const found: SkillEntry[] = []
+  for (const skill of selected) {
+    const { file, path } = skill.metadata
+    if (!file.ok) {
+      listedSkillText(file, path, warn)
+      continue
+    }
+    const entry = orgSkillEntry(skill, agent)
+    if (!entry) continue
+    if (!entry.description) {
+      const line = listedSkillText(
+        await readFirstSkillLine(entry.path, file.bodyOffset),
+        entry.path,
         warn,
       )
-      if (source === null) return
-      const { entry } = orgSkillView(skill, path, source, request)
-      if (entry) found.push({ ...entry, org: true })
-    },
-  )
+      if (line === null) continue
+      entry.description = skillDescriptionLine(
+        safeSkillBody(line, agent, trusted),
+      )
+    }
+    found.push(entry)
+  }
   return found
 }
 
@@ -84,26 +76,30 @@ export async function readOrgSkill(
   const { repository, orgSkills, agent, name } = request
   const warn = () => {}
   try {
-    let result: SkillReadOutcome = SKILL_NOT_FOUND
-    await selectAgentSkills(
+    const { selected } = await selectAgentSkills(
       { cwd: repository, orgSkills, warn },
       agent,
-      (skill, file) => {
-        if (skill.shownName !== name) return
-        const source = skillFileResult(file, maxBytes)
-        if (!source.ok) {
-          result = source
-          return
-        }
-        const path = join(skill.path, 'SKILL.md')
-        const { entry, text } = orgSkillView(skill, path, source.text, {
-          ...request,
-          warn,
-        })
-        if (entry) result = skillReadText(text, maxBytes)
-      },
     )
-    return result
+    const skill = selected.find((skill) => skill.shownName === name)
+    if (!skill) return SKILL_NOT_FOUND
+    const { metadata } = skill
+    if (!metadata.file.ok) return metadata.file
+    const body = await readSkillContent(
+      metadata.path,
+      maxBytes,
+      metadata.file.bodyOffset,
+    )
+    if (!body.ok) return body
+    if (!orgSkillEntry(skill, agent)) return SKILL_NOT_FOUND
+    return skillReadText(
+      safeSkillContent(
+        metadata,
+        body.text,
+        agent,
+        isTrustedOrgSkills(orgSkills),
+      ),
+      maxBytes,
+    )
   } catch (error) {
     return skillReadFailure(error)
   }
