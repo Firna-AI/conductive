@@ -1,4 +1,4 @@
-import { basename, join } from 'node:path'
+import { join } from 'node:path'
 
 import type { Agent } from './generated/Agent'
 import type { HelperSkillSource } from './generated/HelperSkillSource'
@@ -7,14 +7,15 @@ import type { SkillEntry } from './generated/SkillEntry'
 import type { SkillReadOutcome } from './generated/SkillReadOutcome'
 import { isTrustedOrgSkills } from './providers/org-skills'
 import { safeSkillContent } from './providers/skill-metadata'
-import { selectAgentSkills } from './providers/skills'
+import { selectAgentSkills, type SelectedOrgSkill } from './providers/skills'
 import {
-  readSkillContent,
+  SKILL_FILE_MAX_BYTES,
   SKILL_NOT_FOUND,
+  skillFileResult,
   skillReadFailure,
   skillReadText,
 } from './skill-content'
-import { claudeSkill, codexSkill, readSkillFile } from './skill-read'
+import { claudeSkill, codexSkill, listedSkillText } from './skill-read'
 
 export interface OrgSkillsListRequest {
   repository: string
@@ -23,10 +24,8 @@ export interface OrgSkillsListRequest {
   warn: (message: string) => void
 }
 
-type OrgSkill = Awaited<ReturnType<typeof selectAgentSkills>>[number]
-
 function orgSkillView(
-  skill: OrgSkill,
+  skill: SelectedOrgSkill,
   path: string,
   source: string,
   request: OrgSkillsListRequest,
@@ -38,15 +37,12 @@ function orgSkillView(
     agent,
     isTrustedOrgSkills(orgSkills),
   )
-  const place = {
-    path,
-    folder: agent === 'claude' ? skill.alias : basename(skill.path),
-  }
+  const place = { path, folder: skill.shownName }
   const entry =
     agent === 'claude'
       ? claudeSkill(text, place, warn)
       : codexSkill(text, place, warn)
-  return { text, entry }
+  return { text, entry: entry && { ...entry, name: skill.shownName } }
 }
 
 /**
@@ -61,18 +57,22 @@ export async function listOrgSkills(
 ): Promise<SkillEntry[]> {
   const { repository, orgSkills, agent, warn } = request
   if (!orgSkills?.directory) return []
-  const selected = await selectAgentSkills(
+  const found: SkillEntry[] = []
+  await selectAgentSkills(
     { cwd: repository, orgSkills, warn },
     agent,
+    (skill, file) => {
+      const path = join(skill.path, 'SKILL.md')
+      const source = listedSkillText(
+        skillFileResult(file, SKILL_FILE_MAX_BYTES),
+        path,
+        warn,
+      )
+      if (source === null) return
+      const { entry } = orgSkillView(skill, path, source, request)
+      if (entry) found.push({ ...entry, org: true })
+    },
   )
-  const found: SkillEntry[] = []
-  for (const skill of selected) {
-    const path = join(skill.path, 'SKILL.md')
-    const source = await readSkillFile(path, warn)
-    if (source === null) continue
-    const { entry } = orgSkillView(skill, path, source, request)
-    if (entry) found.push({ ...entry, org: true })
-  }
   return found
 }
 
@@ -84,22 +84,26 @@ export async function readOrgSkill(
   const { repository, orgSkills, agent, name } = request
   const warn = () => {}
   try {
-    const selected = await selectAgentSkills(
+    let result: SkillReadOutcome = SKILL_NOT_FOUND
+    await selectAgentSkills(
       { cwd: repository, orgSkills, warn },
       agent,
+      (skill, file) => {
+        if (skill.shownName !== name) return
+        const source = skillFileResult(file, maxBytes)
+        if (!source.ok) {
+          result = source
+          return
+        }
+        const path = join(skill.path, 'SKILL.md')
+        const { entry, text } = orgSkillView(skill, path, source.text, {
+          ...request,
+          warn,
+        })
+        if (entry) result = skillReadText(text, maxBytes)
+      },
     )
-    const skill = selected.find((item) => item.shownName === name)
-    if (!skill) return SKILL_NOT_FOUND
-    const path = join(skill.path, 'SKILL.md')
-    const result = await readSkillContent(path, maxBytes)
-    if (!result.ok) return result
-    const { entry, text } = orgSkillView(skill, path, result.text, {
-      ...request,
-      warn,
-    })
-    return entry?.name === name
-      ? skillReadText(text, maxBytes)
-      : SKILL_NOT_FOUND
+    return result
   } catch (error) {
     return skillReadFailure(error)
   }

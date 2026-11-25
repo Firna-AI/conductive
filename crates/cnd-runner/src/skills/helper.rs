@@ -42,6 +42,12 @@ impl ScannedOrgSkills {
     }
 }
 
+/// One helper command retains its copy until the reply or process termination.
+struct SkillRequest {
+    command: HelperRequest,
+    _lease: Option<SkillsLease>,
+}
+
 /// Scanner keeps SDK caches in one credential-free helper process.
 pub struct NodeSkillScanner {
     ports: Arc<dyn HelperPorts>,
@@ -107,8 +113,9 @@ impl NodeSkillScanner {
     async fn request(
         &self,
         state: &mut Option<Arc<dyn HelperPort>>,
-        request: HelperRequest,
+        request: SkillRequest,
     ) -> Result<HelperOutput> {
+        let SkillRequest { command, _lease } = request;
         let mut stopped = self.stopped.subscribe();
         if *stopped.borrow() {
             return Err(Error::Canceled);
@@ -121,9 +128,9 @@ impl NodeSkillScanner {
                 port
             }
         };
-        let scan = matches!(request, HelperRequest::Skills { .. });
+        let scan = matches!(command, HelperRequest::Skills { .. });
         let action = async {
-            port.write(request).await?;
+            port.write(command).await?;
             self.receive(port.as_ref(), scan).await
         };
         let result = tokio::select! {
@@ -147,12 +154,15 @@ impl SkillScanner for NodeSkillScanner {
         let response = self
             .request(
                 &mut port,
-                HelperRequest::Skills {
-                    request_id: SCAN_ID.into(),
-                    repository: self.repository.clone(),
-                    home: self.home.clone(),
-                    reload,
-                    org_skills: self.org.as_ref().map(|org| org.options(lease.as_ref())),
+                SkillRequest {
+                    command: HelperRequest::Skills {
+                        request_id: SCAN_ID.into(),
+                        repository: self.repository.clone(),
+                        home: self.home.clone(),
+                        reload,
+                        org_skills: self.org.as_ref().map(|org| org.options(lease.as_ref())),
+                    },
+                    _lease: lease,
                 },
             )
             .await?;
@@ -164,31 +174,33 @@ impl SkillScanner for NodeSkillScanner {
 
     async fn read(&self, agent: Agent, skill: SkillEntry, max_bytes: u64) -> SkillReadOutcome {
         let mut port = self.port.lock().await;
-        let lease;
-        let source = if skill.org.is_some() {
+        let (source, lease) = if skill.org.is_some() {
             let Some(org) = &self.org else {
                 return read::not_found();
             };
-            let Some(current) = org.copy.current() else {
+            let Some(lease) = org.copy.current() else {
                 return read::not_found();
             };
-            lease = current;
-            HelperSkillSource::Org {
+            let source = HelperSkillSource::Org {
                 repository: self.repository.clone(),
                 org_skills: org.options(Some(&lease)),
                 agent,
                 name: skill.skill.name,
-            }
+            };
+            (source, Some(lease))
         } else {
-            HelperSkillSource::File { path: skill.path }
+            (HelperSkillSource::File { path: skill.path }, None)
         };
         match self
             .request(
                 &mut port,
-                HelperRequest::SkillRead {
-                    request_id: READ_ID.into(),
-                    max_bytes,
-                    source,
+                SkillRequest {
+                    command: HelperRequest::SkillRead {
+                        request_id: READ_ID.into(),
+                        max_bytes,
+                        source,
+                    },
+                    _lease: lease,
                 },
             )
             .await

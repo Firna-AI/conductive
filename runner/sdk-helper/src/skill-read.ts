@@ -1,4 +1,5 @@
 import type { SkillEntry } from './generated/SkillEntry'
+import type { SkillReadOutcome } from './generated/SkillReadOutcome'
 
 import { readSkillContent, SKILL_FILE_MAX_BYTES } from './skill-content'
 import { readFrontMatter, type FrontMatterValue } from './skill-front-matter'
@@ -79,12 +80,20 @@ export function codexSkill(
   }
 }
 
-/** The text of one `SKILL.md`. A failed read or a larger file warns and gives null. */
-export async function readSkillFile(
+async function readSkillFile(
   path: string,
   warn: (message: string) => void,
 ): Promise<string | null> {
   const result = await readSkillContent(path, SKILL_FILE_MAX_BYTES)
+  return listedSkillText(result, path, warn)
+}
+
+/** A failed read or a larger file warns and gives no text for the list. */
+export function listedSkillText(
+  result: SkillReadOutcome,
+  path: string,
+  warn: (message: string) => void,
+): string | null {
   if (result.ok) return result.text
   warn(
     `The skill file ${path} could not be read. The list leaves out its skill.`,

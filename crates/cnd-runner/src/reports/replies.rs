@@ -34,9 +34,19 @@ impl ReportDependencies {
         };
         let response = self
             .filter
-            .skill_response(RunnerSkillResult::Read { request_id, result })
-            .map(RunnerToWorkspace::RunnerSkillResult);
-        self.reply(response).await;
+            .skill_response(RunnerSkillResult::Read {
+                request_id: request_id.clone(),
+                result,
+            })
+            .unwrap_or_else(|_| {
+                tracing::warn!("The runner could not filter the skill read.");
+                RunnerSkillResult::Read {
+                    request_id,
+                    result: read::unavailable(),
+                }
+            });
+        self.reply(Ok(RunnerToWorkspace::RunnerSkillResult(response)))
+            .await;
     }
 
     async fn reply(&self, response: Result<RunnerToWorkspace>) {
@@ -49,3 +59,7 @@ impl ReportDependencies {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/replies_tests.rs"]
+mod replies_tests;

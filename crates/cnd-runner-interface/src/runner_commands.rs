@@ -163,7 +163,7 @@ pub enum RunnerControlCommand {
     RunnerChangeModel(RunnerChangeModel),
     /// RunnerFileCommand.
     RunnerFileCommand(RunnerFileCommand),
-    /// Direct skill read. Exported separately until the Worker sends it.
+    /// Direct skill read sent by the Worker and exported as a standalone type.
     RunnerReadSkill(RunnerReadSkill),
     /// RunnerReportRefresh.
     RunnerReportRefresh(RunnerReportRefresh),

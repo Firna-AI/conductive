@@ -1,14 +1,16 @@
-import { readFile, realpath, readdir, stat } from 'node:fs/promises'
+import { realpath, readdir, stat } from 'node:fs/promises'
 import { basename, join, relative } from 'node:path'
 
 import type { Agent } from '../generated/Agent'
+import { readSkillPrefix, type SkillFileRead } from '../skill-content'
 import { orgSkillFolders } from './skill-folders'
 import { isClaudeSkillAlias, skillMetadata } from './skill-metadata'
 import type { ProviderOptions } from './types'
 
 async function metadata(path: string, agent: Agent) {
-  const content = await readFile(join(path, 'SKILL.md'), 'utf8')
-  return skillMetadata(content, path, agent)
+  const file = await readSkillPrefix(join(path, 'SKILL.md'))
+  const value = skillMetadata(file.ok ? file.text : '', path, agent)
+  return { file, value }
 }
 
 async function repositoryNames(options: OrgSkillOptions, agent: Agent) {
@@ -32,7 +34,7 @@ async function repositoryNames(options: OrgSkillOptions, agent: Agent) {
           (entry.isFile() || entry.isSymbolicLink()),
       )
     ) {
-      const value = await metadata(directory, agent)
+      const { value } = await metadata(directory, agent)
       for (const name of value.aliases) result.add(name)
       if (agent === 'claude') result.add(basename(directory))
       if (!value.name)
@@ -59,17 +61,24 @@ export type OrgSkillOptions = Pick<
   'cwd' | 'orgSkills' | 'warn'
 >
 
+export interface SelectedOrgSkill {
+  name: string
+  path: string
+  shownName: string
+}
+
 export async function selectAgentSkills(
   options: OrgSkillOptions,
   agent: Agent,
+  onSelected?: (skill: SelectedOrgSkill, file: SkillFileRead) => void,
 ) {
   const skills = await orgSkillFolders(options)
   if (!skills.length) return []
   const local = await repositoryNames(options, agent)
-  const selected: ((typeof skills)[number] & { shownName: string })[] = []
+  const selected: SelectedOrgSkill[] = []
   const shown = new Map<string, string>()
   for (const skill of skills) {
-    const value = await metadata(skill.path, agent)
+    const { file, value } = await metadata(skill.path, agent)
     const path = relative(options.orgSkills?.directory ?? '', skill.path)
     if (!value.name) {
       options.warn(
@@ -87,7 +96,9 @@ export async function selectAgentSkills(
         )
       else {
         shown.set(value.name, path)
-        selected.push({ ...skill, shownName: value.name })
+        const selection = { ...skill, shownName: value.name }
+        selected.push(selection)
+        onSelected?.(selection, file)
       }
     }
   }

@@ -7,16 +7,20 @@
 
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
+use async_trait::async_trait;
 use cnd_runner_interface::agents::Agent;
 use cnd_runner_interface::runner_skills::SkillReadOutcome;
 use cnd_runner_interface::sdk_helper::{HelperOutput, HelperRequest, HelperSkillSource};
 use cnd_runner_interface::sdk_helper_options::OrgSkills as HelperOrgSkills;
 use cnd_runner_interface::skills::{AgentSkill, HelperSkillLists, SkillEntry};
 use cnd_runner_interface::wire::WireTrue;
+use tokio::sync::watch;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::emitter::EventEmitterMock;
+use crate::error::Result;
 use crate::filter::service::CredentialFilter;
 use crate::helper::boundary::{HelperPort, HelperPortMock, HelperPortsMock};
 use crate::skills::boundary::{OrgSkills, SkillReports, SkillsStorageMock};
@@ -27,9 +31,41 @@ use crate::skills::service::SkillsCopy;
 
 const OLD: &str = "/private/old/skills";
 const NEW: &str = "/private/new/skills";
+const NEXT: &str = "/private/next/skills";
+
+struct WaitingPort {
+    inner: Unimock,
+    started: watch::Sender<bool>,
+    release: watch::Receiver<bool>,
+}
+
+#[async_trait]
+impl HelperPort for WaitingPort {
+    async fn write(&self, request: HelperRequest) -> Result<()> {
+        self.inner.write(request).await
+    }
+
+    async fn read(&self) -> Result<Option<HelperOutput>> {
+        let output = HelperPort::read(&self.inner).await?;
+        if matches!(output, Some(HelperOutput::SkillRead { .. })) {
+            self.started.send_replace(true);
+            self.release.clone().wait_for(|value| *value).await.unwrap();
+        }
+        Ok(output)
+    }
+
+    async fn terminate(&self) -> Result<()> {
+        self.inner.terminate().await
+    }
+
+    async fn exited(&self) -> Result<()> {
+        self.inner.exited().await
+    }
+}
 
 #[tokio::test(start_paused = true)]
-async fn org_skill_read_uses_the_newly_published_copy() {
+async fn org_skill_read_leases_the_newly_published_copy_until_the_reply() {
+    let (sweep, mut swept) = watch::channel(Vec::new());
     let copy = Arc::new(SkillsCopy::new(
         Some("acme/skills".into()),
         Arc::new(Unimock::new((
@@ -41,11 +77,17 @@ async fn org_skill_read_uses_the_newly_published_copy() {
                     .answers(&|_, _| Ok(Some(PathBuf::from(OLD))))
                     .once()
                     .then()
-                    .answers(&|_, _| Ok(Some(PathBuf::from(NEW))));
+                    .answers(&|_, _| Ok(Some(PathBuf::from(NEW))))
+                    .once()
+                    .then()
+                    .answers(&|_, _| Ok(Some(PathBuf::from(NEXT))));
             }),
             SkillsStorageMock::sweep
                 .each_call(matching!("acme/skills", _))
-                .answers(&|_, _, _| Ok(())),
+                .answers_arc(Arc::new(move |_, _, paths| {
+                    sweep.send_replace(paths.to_vec());
+                    Ok(())
+                })),
         ))),
     ));
     let mut published = copy.changes();
@@ -57,7 +99,7 @@ async fn org_skill_read_uses_the_newly_published_copy() {
     let requests = Arc::new(Mutex::new(Vec::new()));
     let capture = requests.clone();
     let received = requests.clone();
-    let port: Arc<dyn HelperPort> = Arc::new(Unimock::new((
+    let inner = Unimock::new((
         HelperPortMock::write
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, request| {
@@ -108,7 +150,14 @@ async fn org_skill_read_uses_the_newly_published_copy() {
         HelperPortMock::terminate
             .some_call(matching!())
             .returns(Ok(())),
-    )));
+    ));
+    let (started, reading) = watch::channel(false);
+    let (release, waiting) = watch::channel(false);
+    let port: Arc<dyn HelperPort> = Arc::new(WaitingPort {
+        inner,
+        started,
+        release: waiting,
+    });
     let filter = Arc::new(CredentialFilter::default());
     let scanner = Arc::new(
         NodeSkillScanner::new(
@@ -142,10 +191,23 @@ async fn org_skill_read_uses_the_newly_published_copy() {
         .await
         .unwrap();
 
+    let read = reporter.read(Agent::Claude, "review".into(), 1_048_576);
+    tokio::pin!(read);
+    assert!(futures_util::poll!(&mut read).is_pending());
+    assert!(*reading.borrow());
+
+    let next = PathBuf::from(NEXT);
+    tokio::time::advance(Duration::from_secs(300)).await;
+    let retained = swept
+        .wait_for(|paths| paths.last() == Some(&next))
+        .await
+        .unwrap()
+        .clone();
+    assert_eq!(retained, vec![PathBuf::from(NEW), next.clone()]);
+
+    release.send_replace(true);
     assert_eq!(
-        reporter
-            .read(Agent::Claude, "review".into(), 1_048_576)
-            .await,
+        read.await,
         SkillReadOutcome::Success {
             ok: WireTrue,
             text: "New copy.".into()
@@ -168,6 +230,9 @@ async fn org_skill_read_uses_the_newly_published_copy() {
             },
         })
     );
+    tokio::time::advance(Duration::from_secs(300)).await;
+    swept.changed().await.unwrap();
+    assert_eq!(*swept.borrow(), vec![next]);
     reporter.close().await;
     copy.close().await;
 }
