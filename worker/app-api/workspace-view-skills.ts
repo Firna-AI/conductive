@@ -62,9 +62,12 @@ function tabKey(tab: WorkspaceTab): string {
   }
 }
 
-function tabOccurrences(tabs: readonly WorkspaceTab[]): string[] {
+function tabOccurrences(
+  tabs: readonly (WorkspaceTab | null)[],
+): (string | null)[] {
   const seen = new Map<string, number>()
   return tabs.map((tab) => {
+    if (tab === null) return null
     const key = tabKey(tab)
     const occurrence = seen.get(key) ?? 0
     seen.set(key, occurrence + 1)
@@ -74,7 +77,7 @@ function tabOccurrences(tabs: readonly WorkspaceTab[]): string[] {
 
 function rebuildSkillPlaces(
   skills: readonly SkillTabPlace[],
-  savedTabs: readonly WorkspaceTab[],
+  savedTabs: readonly (WorkspaceTab | null)[],
   openTabs: readonly WorkspaceTab[],
 ): SkillTabPlace[] {
   const openPlaces = new Map(
@@ -123,7 +126,7 @@ export function workspaceSkillPatch(
 export function withWorkspaceSkills(
   base: WorkspaceView,
   input: Record<string, unknown>,
-  savedTabs: readonly WorkspaceTab[],
+  savedTabs: readonly (WorkspaceTab | null)[],
 ): WorkspaceView | null {
   const skills = workspaceSkillPatch(input)
   if (!skills) return null

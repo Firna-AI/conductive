@@ -46,13 +46,13 @@ const save = (f: Fixture, userId: string, view: WorkspaceView) =>
 const read = (f: Fixture, userId: string) =>
   savedWorkspaceView(f.env.DB, WORKSPACE_ID, userId)
 
-it('closes repository tabs in every saved view and keeps the order of sessions and skills', async () => {
+it('keeps skills beside surviving sessions when a repository change closes tabs and a file reopens at the end', async () => {
   const f = await repositoryChangeFixture(harness)
   await save(f, f.owner.id, {
-    tabs: [first, file, preview, second, diff],
+    tabs: [first, file, second, diff, preview],
     activeTab: diff,
     temporaryTab: { kind: 'diff', path: 'src/app.ts' },
-    skillTabs: [{ ...kept, place: 3 }],
+    skillTabs: [{ ...kept, place: 2 }],
     fileList: 'changes',
     tool: 'preview',
   })
@@ -89,6 +89,37 @@ it('closes repository tabs in every saved view and keeps the order of sessions a
     fileList: 'checks',
     tool: 'desktop',
   })
+
+  const closed = await f.env.DB.prepare(
+    `SELECT json_extract(view_json, '$.skillBaseTabs') AS skillBaseTabs
+     FROM workspace_views WHERE workspace_id = ? AND user_id = ?`,
+  )
+    .bind(WORKSPACE_ID, f.owner.id)
+    .first<{ skillBaseTabs: string }>()
+  expect(JSON.parse(closed?.skillBaseTabs ?? 'null')).toEqual([
+    first,
+    null,
+    second,
+    null,
+    null,
+  ])
+
+  const reopenedView: WorkspaceView = {
+    tabs: [first, second, file],
+    activeTab: file,
+    temporaryTab: { kind: 'file', path: 'README.md' },
+    fileList: 'changes',
+    tool: 'preview',
+  }
+  const reopened = await save(f, f.owner.id, reopenedView)
+  const afterReopen = {
+    ...reopenedView,
+    skillTabs: [{ ...kept, place: 1 }],
+    activeSkill: null,
+    temporarySkill: null,
+  }
+  expect(reopened).toEqual(afterReopen)
+  expect(await read(f, f.owner.id)).toEqual(afterReopen)
 })
 
 it('keeps a tab of the new repository when a publication that lost its reply runs again', async () => {

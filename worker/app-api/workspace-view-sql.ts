@@ -1,5 +1,39 @@
 import { activeOrgIdPredicate } from '../data/org-access'
 
+const TAB_IDENTITY = `json_array(tab.value ->> '$.kind', CASE tab.value ->> '$.kind'
+  WHEN 'session' THEN tab.value ->> '$.sessionId'
+  WHEN 'preview' THEN tab.value ->> '$.port'
+  ELSE tab.value ->> '$.path' END)`
+
+function tabCounts(tabs: string): string {
+  return `SELECT ${TAB_IDENTITY} AS identity, COUNT(*) AS copies
+    FROM json_each(${tabs}) tab GROUP BY identity`
+}
+
+// A null keeps the slot for skill positions and prevents a reopened tab from
+// matching it. Counting copies matches the reader's handling of duplicate tabs.
+export function retainedSkillBaseTabs(saved: string, tabs: string): string {
+  const base = `CASE json_type(${saved}, '$.skillBaseTabs')
+    WHEN 'array' THEN ${saved} -> '$.skillBaseTabs' ELSE ${saved} -> '$.tabs' END`
+  return `(
+    WITH previous_tabs AS (${tabCounts(`${saved} -> '$.tabs'`)}),
+    next_tabs AS (${tabCounts(tabs)}),
+    base_tabs AS (
+      SELECT tab.key AS place, tab.value, ${TAB_IDENTITY} AS identity,
+        ROW_NUMBER() OVER (PARTITION BY ${TAB_IDENTITY} ORDER BY tab.key) AS occurrence
+      FROM json_each(${base}) tab
+    )
+    SELECT json_group_array(json(kept)) FROM (
+      SELECT CASE WHEN occurrence <= previous_tabs.copies AND occurrence <= next_tabs.copies
+        THEN base_tabs.value END AS kept
+      FROM base_tabs
+      LEFT JOIN previous_tabs USING (identity)
+      LEFT JOIN next_tabs USING (identity)
+      ORDER BY place
+    )
+  )`
+}
+
 // Kept previews still occupy their old slots among the non-preview tabs.
 // The skill places count against the tab list of the last save that sent them.
 export const SAVE_WORKSPACE_VIEW = `INSERT INTO workspace_views
@@ -60,7 +94,7 @@ export const SAVE_WORKSPACE_VIEW = `INSERT INTO workspace_views
       'skillTabs', json(skillTabs),
       'skillBaseTabs', json(CASE WHEN json_array_length(skillTabs) > 0 THEN
         CASE WHEN json_type(patch, '$.skillTabs') = 'array' THEN tabs
-          ELSE COALESCE(saved -> '$.skillBaseTabs', saved -> '$.tabs') END END),
+          ELSE ${retainedSkillBaseTabs('remaining.saved', 'remaining.tabs')} END END),
       'activeSkill', json(CASE WHEN activeTab = 'null' AND (closedSkill IS NULL OR
         (view ->> '$.activeSkill.agent', view ->> '$.activeSkill.name') IS NOT
         (closedSkill ->> '$.agent', closedSkill ->> '$.name'))

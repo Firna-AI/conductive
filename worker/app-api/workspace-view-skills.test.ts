@@ -160,7 +160,7 @@ it('uses the skill tabs from a concurrent save when an older app saves a tempora
   }
 })
 
-it('keeps each skill beside the surviving tabs when an older app closes a file', async () => {
+it('keeps each skill beside the surviving tabs when an older app closes and reopens a file at the end', async () => {
   const next = { kind: 'session', sessionId: 'next' }
   const saved = await requestView({
     ...withSkills,
@@ -187,6 +187,23 @@ it('keeps each skill beside the surviving tabs when an older app closes a file',
   }
   expect(await olderSave.json()).toMatchObject(expected)
   expect(await (await requestView()).json()).toMatchObject(expected)
+
+  const reopenedView = { ...olderView, tabs: [session, next, file] }
+  const reopened = await requestView(reopenedView)
+  expect(reopened.status).toBe(200)
+  const afterReopen = {
+    view: {
+      ...reopenedView,
+      skillTabs: [
+        { ...kept, place: 1 },
+        { ...temporary, place: 3 },
+      ],
+      activeSkill: temporary,
+      temporarySkill: temporary,
+    },
+  }
+  expect(await reopened.json()).toMatchObject(afterReopen)
+  expect(await (await requestView()).json()).toMatchObject(afterReopen)
 })
 
 it('leaves a skill tab kept when its temporary mark is invalid or names a closed skill', async () => {

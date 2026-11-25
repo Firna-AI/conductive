@@ -121,7 +121,9 @@ function readSavedView(json: string): WorkspaceView {
   const value = record(JSON.parse(json))
   const base = workspaceViewInput(value)
   const skillBase = Array.isArray(value.skillBaseTabs)
-    ? value.skillBaseTabs.map(viewTab)
+    ? value.skillBaseTabs.map((tab: unknown) =>
+        tab === null ? null : viewTab(tab),
+      )
     : base.tabs
   return withWorkspaceSkills(base, value, skillBase) ?? invalidView()
 }
