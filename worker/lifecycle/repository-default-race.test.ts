@@ -1,9 +1,18 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
+import { writeWorkspaceTarget } from '../github/base-data'
 import { activeWorkspace, isProcessed } from '../github/data'
-import { createHarness, type TestHarness } from '../test-support/harness'
+import {
+  createHarness,
+  TEST_TIME,
+  type TestHarness,
+} from '../test-support/harness'
 import { heldOperation } from '../test-support/held-operation'
-import { BASE_CHANGE_JOB_KEY } from './base-change-job'
+import {
+  BASE_CHANGE_JOB_KEY,
+  saveWorkspaceTargetChange,
+} from './base-change-job'
+import { baseChangeChatStorage } from './base-change-storage'
 import { repositoryDefaultRaceFixture } from './repository-default-race.test-support'
 
 let harness: TestHarness
@@ -183,4 +192,94 @@ it('closes an interrupted sync receipt and keeps one retry before completing the
   expect(f.installs().at(-1)?.command).toContain('refs/remotes/origin/main')
   expect(await f.pending()).toBeUndefined()
   expect(await f.storage.get('alarm:baseChange')).toBeUndefined()
+})
+
+it('replaces a default rename during its fetch and leaves its delivery receipt with the webhook', async () => {
+  const f = await repositoryDefaultRaceFixture(harness)
+  const { DB: db } = f.env
+  const saved = f.holdSave()
+  const fetched = heldOperation()
+  f.boat.beforeCommand = async (command) => {
+    if (command.includes('credential.helper=/usr/local/bin/'))
+      await fetched.wait()
+  }
+  const delivery = f.runDelivery(
+    'renamed-default',
+    async () => 'trunk',
+    saved.database,
+  )
+  try {
+    await saved.gate.entered
+    const pending = await f.pending()
+    const receipt = pending?.repositoryDeliveries?.[0]
+    if (!pending || !receipt)
+      throw new Error('Expected a pending rename receipt.')
+    const moving = f.advance()
+    try {
+      await fetched.entered
+      expect(await f.credentialSender(pending.id)).toBe(f.owner.id)
+      const move = await writeWorkspaceTarget(db, f.binding, 'release', 'main')
+      expect(move).toMatchObject({ target: 'release' })
+      if (!move) throw new Error('Expected a written target.')
+      await baseChangeChatStorage(f.storage).transaction((transaction) =>
+        saveWorkspaceTargetChange(transaction, move, TEST_TIME),
+      )
+      const next = await f.pending()
+      expect(next).toMatchObject({ target: 'release', failures: 0 })
+      expect(next?.id).not.toBe(pending.id)
+      expect(next).not.toHaveProperty('repositoryDeliveries')
+      expect(await isProcessed(db, receipt)).toBe(false)
+      expect(await f.credentialSender(pending.id)).toBeNull()
+    } finally {
+      fetched.release()
+      await moving
+    }
+    expect(f.installs()).toEqual([])
+    await f.advance()
+    expect(f.installs()).toHaveLength(1)
+    expect(f.installs()[0].command).toContain('refs/remotes/origin/release')
+    expect(await f.pending()).toBeUndefined()
+    expect(await isProcessed(db, receipt)).toBe(false)
+    saved.gate.release()
+    await delivery
+    expect(await isProcessed(db, receipt)).toBe(true)
+  } finally {
+    saved.gate.release()
+    await delivery
+  }
+  expect(
+    await activeWorkspace(db, f.binding.id, f.binding.orgId),
+  ).toMatchObject({
+    baseBranch: 'release',
+    defaultBranch: 'trunk',
+  })
+})
+
+it('keeps an explicit target when a default rename prepared from an older record arrives later', async () => {
+  const f = await repositoryDefaultRaceFixture(harness)
+  const { DB: db } = f.env
+  const older = f.older()
+  const delivery = f.runDelivery(
+    'late-preparation',
+    async () => 'trunk',
+    older.database,
+    older.saved,
+  )
+  try {
+    await older.gate.entered
+    const move = await writeWorkspaceTarget(db, f.binding, 'release', 'main')
+    expect(move).toMatchObject({ target: 'release' })
+    if (!move) throw new Error('Expected a written target.')
+    await baseChangeChatStorage(f.storage).transaction((transaction) =>
+      saveWorkspaceTargetChange(transaction, move, TEST_TIME),
+    )
+  } finally {
+    older.gate.release()
+    await delivery
+  }
+  expect(await f.pending()).toMatchObject({ target: 'release' })
+  await f.advance()
+  expect(f.installs()).toHaveLength(1)
+  expect(f.installs()[0].command).toContain('refs/remotes/origin/release')
+  expect(await f.pending()).toBeUndefined()
 })

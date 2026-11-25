@@ -15,24 +15,24 @@ export async function saveRepositoryDefaultChange(
   now: number,
 ): Promise<void> {
   await requireWorkspaceOrg(db, workspace.orgId, workspace.id)
-  const current = await activeWorkspace(db, workspace.id, workspace.orgId)
-  const row = await readWorkspace(db, workspace.orgId, workspace.id)
-  if (
-    !current ||
-    current.repositoryId !== workspace.repositoryId ||
-    current.branch !== workspace.branch ||
-    current.baseBranch != null ||
-    row.archivedAt !== null ||
-    row.state === 'archived'
-  )
-    return
   await storage.transaction(async (transaction) => {
     const pending = await transaction.get<BaseChangeJob | null>(
       BASE_CHANGE_JOB_KEY,
     )
+    const current = await activeWorkspace(db, workspace.id, workspace.orgId)
+    if (
+      !current ||
+      current.repositoryId !== workspace.repositoryId ||
+      current.branch !== workspace.branch ||
+      current.baseBranch != null
+    )
+      return
+    const row = await readWorkspace(db, workspace.orgId, workspace.id)
+    if (row.archivedAt !== null || row.state === 'archived') return
     const previous =
       pending?.binding.repositoryId === current.repositoryId &&
-      pending.binding.branch === current.branch
+      pending.binding.branch === current.branch &&
+      pending.target === undefined
         ? pending
         : undefined
     if (

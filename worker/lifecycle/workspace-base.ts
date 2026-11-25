@@ -81,15 +81,17 @@ export class WorkspaceBaseChanges {
         return job.repositoryBeforeSave
           ? await this.retry(job)
           : await this.finish(job)
-      const moved = await moveWorkspaceBase(
-        this.env.DB,
-        current.binding,
-        job.change,
+      if (
+        job.target === undefined &&
+        !(await moveWorkspaceBase(this.env.DB, current.binding, job.change))
       )
-      if (!moved) return await this.finish(job)
+        return await this.finish(job)
       if (await pendingWorkspaceChange(this.storage))
         return await this.retry(job)
-      const row = (await baseChangeWorkspace(this.env.DB, job))?.row
+      const row =
+        job.target === undefined
+          ? (await baseChangeWorkspace(this.env.DB, job))?.row
+          : current.row
       if (!row)
         return job.repositoryBeforeSave
           ? await this.retry(job)
@@ -117,7 +119,7 @@ export class WorkspaceBaseChanges {
         sandboxId: row.sandboxId,
         providerAccount: row.providerAccount,
       }
-      if (!(await this.authorizeFetch(job, scope))) return await this.retry(job)
+      if (!(await this.canAdvance(job, scope))) return
       this.scope = scope
       let fetched = false
       try {
@@ -134,13 +136,13 @@ export class WorkspaceBaseChanges {
         this.scope = null
       }
       if (!fetched) return await this.retry(job)
-      if (!(await this.authorizeFetch(job, scope))) return await this.retry(job)
+      if (!(await this.canAdvance(job, scope))) return
       const result = await provider.runCommand(
         row.sandboxId,
         baseChangeInstallCommand(source),
       )
       if (result.exitCode !== 0 || result.timedOut) return await this.retry(job)
-      if (!(await this.authorizeFetch(job, scope))) return await this.retry(job)
+      if (!(await this.canAdvance(job, scope))) return
       if (job.repositoryDeliveries?.length) {
         await closeRepositoryDefaultWrites(
           this.env.DB,
@@ -158,24 +160,39 @@ export class WorkspaceBaseChanges {
     }
   }
 
-  private async authorizeFetch(
+  private async canAdvance(
     job: BaseChangeJob,
     scope: FetchScope,
   ): Promise<boolean> {
+    const access = await this.fetchAccess(job, scope)
+    if (access === 'superseded') await this.finish(job)
+    if (access === 'blocked') await this.retry(job)
+    return access === 'allowed'
+  }
+
+  private async fetchAccess(
+    job: BaseChangeJob,
+    scope: FetchScope,
+  ): Promise<'superseded' | 'blocked' | 'allowed'> {
     const pending = await this.storage.get<BaseChangeJob | null>(
       BASE_CHANGE_JOB_KEY,
     )
-    if (!sameBaseChangeJob(pending, job) || scope.revision !== job.revision)
-      return false
+    if (
+      !sameBaseChangeJob(pending, job) ||
+      scope.id !== job.id ||
+      scope.revision !== job.revision
+    )
+      return 'superseded'
     const current = await baseChangeWorkspace(this.env.DB, pending)
-    return Boolean(
-      current &&
+    if (!current && pending.target !== undefined) return 'superseded'
+    return current &&
       baseChangeComputerReady(current.row) &&
       current.row.ownerUserId === scope.ownerUserId &&
       current.row.sandboxId === scope.sandboxId &&
       current.row.providerAccount === scope.providerAccount &&
-      !(await pendingWorkspaceChange(this.storage)),
-    )
+      !(await pendingWorkspaceChange(this.storage))
+      ? 'allowed'
+      : 'blocked'
   }
 
   async credentialSender(fetchId: string): Promise<string | null | undefined> {
@@ -185,7 +202,7 @@ export class WorkspaceBaseChanges {
     const job = await this.storage.get<BaseChangeJob | null>(
       BASE_CHANGE_JOB_KEY,
     )
-    if (!job || !(await this.authorizeFetch(job, scope))) return null
+    if (!job || (await this.fetchAccess(job, scope)) !== 'allowed') return null
     return this.scope === scope ? scope.ownerUserId : null
   }
 
@@ -213,7 +230,10 @@ export class WorkspaceBaseChanges {
         BASE_CHANGE_JOB_KEY,
       )
       if (!sameBaseChangeJob(pending, job)) return
-      const snapshot = await transaction.get<GitHubSnapshot>('github:state')
+      const snapshot =
+        job.target === undefined
+          ? await transaction.get<GitHubSnapshot>('github:state')
+          : undefined
       if (
         snapshot?.banner.branch === job.binding.branch &&
         snapshot.baseChange?.from === job.change.from &&

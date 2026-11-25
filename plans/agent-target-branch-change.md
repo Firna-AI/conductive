@@ -228,17 +228,22 @@ Depends on: 2
 The saved move today can only move a workspace to its default branch. This
 milestone adds an explicit target. No caller uses it yet.
 
-- [ ] Give the saved move in `worker/lifecycle/base-change-job.ts` one optional field for an explicit target. Such a move writes no repository record.
-- [ ] Keep the fetch with the owner's token, the isolated stage, the retry, and the resume for that kind.
-- [ ] Add one record write of a new target, guarded by the earlier stored value. Store the default branch as null.
-- [ ] Save the move only after that write succeeds. End the move when the record no longer names its target.
-- [ ] Let a new move replace an unfinished move. A replaced move of a renamed default ends as a change of the record ends it today.
-- [ ] Test beside `worker/features/base-moved.test.ts` and `worker/lifecycle/repository-default-race.test.ts`:
+- [x] Give the saved move in `worker/lifecycle/base-change-job.ts` one optional field for an explicit target. Such a move writes no repository record.
+- [x] Keep the fetch with the owner's token, the isolated stage, the retry, and the resume for that kind.
+- [x] Add one record write of a new target, guarded by the earlier stored value. Store the default branch as null.
+- [x] Save the move only after that write succeeds. End the move when the record no longer names its target.
+- [x] Let a new move replace an unfinished move. A replaced move of a renamed default ends as a change of the record ends it today.
+- [x] Clear the repair marker of a replaced deleted-base move and check the job ID of each fetch credential request.
+- [x] Recheck the stored base during the save of a default-rename move and keep the delivery receipts with their webhook.
+- [x] Check a move to the live default while the repository row still has the earlier default name.
+- [x] Test beside `worker/features/base-moved.test.ts` and `worker/lifecycle/repository-default-race.test.ts`:
   - the fetch and the install of an explicit target, a retry, a resume, and a hibernation
   - a replaced move of a deleted base and of a renamed default, with its delivery receipts
   - a target that the record no longer names
-- [ ] Test the previous Worker. A saved move of the new kind, read without its new field, writes no repository default and no target. A move to the default branch still completes.
-- [ ] Update `worker/lifecycle/moved-bases.md` and `worker/lifecycle/README.md`.
+- [x] Test the previous Worker. A saved move of the new kind, read without its new field, writes no repository default and no target. A move to the default branch still completes.
+- [x] Update `worker/lifecycle/moved-bases.md` and `worker/lifecycle/README.md`.
+
+Verification logs are in `.context/agent-target-branch-change/m3-checks/`.
 
 ## Milestone 4: The target follows the open pull request
 

@@ -123,8 +123,9 @@ of its fetch.
 ### Moved bases
 
 [Moved bases](moved-bases.md) gives the job that moves the base of a
-workspace in its cloud computer, after GitHub deletes the base or renames
-the default branch, with its retry, its owner fetch, and its tests.
+workspace in its cloud computer. The job handles a deleted base, a renamed
+default branch, and a new target. The guide gives the guarded target write,
+the owner fetch, and the retry.
 
 ### Repository change
 
