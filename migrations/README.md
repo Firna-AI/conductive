@@ -651,3 +651,11 @@ build measures before it saves the image. Existing rows keep null. The
 previous Worker does not read or write them, so it keeps working.
 [Image builds](../worker/lifecycle/image-builds.md#free-storage) says how
 the Worker fills them.
+
+`202611261500_build_requests.sql` adds the nullable column
+`image_build_jobs.requested_build_user_id`. It holds the admin who selected
+Build computer during a refresh, until the build starts when the refresh
+ends. Existing rows and previous Worker inserts get null. The previous
+Worker ignores the column, so it keeps working. A request on a refresh that
+the previous Worker ends starts no build.
+[Image builds](../worker/lifecycle/image-builds.md#build-jobs) owns it.

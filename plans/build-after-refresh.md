@@ -6,8 +6,8 @@ On 26 November 2026 the org Bookfolio looked as if Build computer did not
 work. A push started a refresh at 13:53 UTC. Cal added the repository
 `futex-ai/ui` at 13:55 and selected Build computer three times. The Worker
 answered each click with the running refresh and saved nothing. The tab
-showed "Building" with the log of the refresh, which held only the old
-repository. The added build of the new repository started by itself after
+kept the last build and Build computer, because the card lists no
+refresh. So nothing changed on screen. The added build of the new repository started by itself after
 the refresh, at 13:57, and succeeded at 14:01. A change of the install
 script alone gets no added build, so for such a change the click is lost.
 [Org image](../docs/protocol/org-image.md#the-org-image) says that Build
@@ -58,9 +58,10 @@ Cal chose C on 26 November 2026.
 The options check of 26 November 2026 found three points that need Cal.
 Its report is in `.context/build-after-refresh/options-check.md`.
 
-- **Decision 3:** Build computer is disabled while any job runs, so only a
-  tab that missed the refresh can send the click. Recommended: enable it
-  while the running job holds older settings and has no request.
+- **Decision 3:** withdrawn on 26 November 2026. The options check said
+  that Build computer is disabled during a refresh. It is not:
+  `latestBuild` in `src/app/latest-build.ts` counts only builds, so the
+  card keeps Build computer during a refresh.
 - **Decision 4:** A running build that holds older settings loses the
   click too. A push refresh becomes such a build when the image holds old
   values. Recommended: apply decision 1 to every running job that is not a
@@ -112,14 +113,17 @@ Design calls of the agent, 26 November 2026:
   added build, which needs no click, keeps the first active admin.
 - **One build at most.** A refresh with a mark that also gets an added
   build starts one build. Its starter is the admin who clicked.
-- **The tab learns that a build follows.** `ImageBuild` gets an optional
-  field that says when a build follows a running job. One SQL fragment
-  holds the added-build condition, with a form that the history reader can
-  use for each row. My call. Reason: the line and the end then use one
-  rule. An added build follows only a success, so the line for it waits for
-  open decision 5.
+- **The tab shows a refresh only after a good build.** While a refresh runs
+  and the newest build succeeded, the head says "Refreshing · <time>" and
+  keeps Build computer. The card shows no log of the refresh. After a
+  failed build, the card keeps the failed build and Try again, and only
+  adds the line of a request. My call, 26 November 2026. Reason: the card
+  lists only builds, and a refresh does not run the install script.
+- **The tab learns that a build follows.** `ImageBuild` gets the optional
+  field `buildRequested`, true on a running refresh with a request. Open
+  decision 5 can add the case of an added build.
 - **The POST answers with the refresh.** The answer of a click during a
-  refresh is the running refresh, now with `buildFollows: true`. Older
+  refresh is the running refresh, now with `buildRequested: true`. Older
   copies of the app and the Mac app ignore the field and show the refresh
   as before.
 - **Compatibility.** The migration only adds a nullable column, so the
@@ -143,30 +147,30 @@ Depends on: none
 The build card of the Cloud computer tab shows a running refresh and the
 line of the build that follows it.
 
-- [ ] Add a running refresh state to
+- [x] Add a running refresh state to
       `docs/mockups/src/components/settings/BuildSection.tsx`, with the
       head "Refreshing · <time>".
-- [ ] Add a running refresh state with the line "A build starts when this
+- [x] Add a running refresh state with the line "A build starts when this
       refresh ends."
 - [ ] Run `npm run mockups:check`. Smoke-test the changed entries.
-- [ ] Update the design and the TODOs of this plan for each problem that the
+- [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
 
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
-- [ ] Update [Org image](../docs/protocol/org-image.md): Build computer or
+- [x] Update [Org image](../docs/protocol/org-image.md): Build computer or
       Try again during a refresh starts a build when the refresh ends,
       also after a failed refresh. The starter is the admin who clicked.
       The tab names a running refresh and the build that follows it.
-- [ ] Update
+- [x] Update
       [Org image repositories](../docs/protocol/org-image-repositories.md)
       where it restates when a build follows a job.
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy page
       in `src/marketing/privacy.ts` in full. Update each sentence that
       restates a changed fact.
-- [ ] Read each public guide under `src/marketing/docs/` in full. Update
+- [x] Read each public guide under `src/marketing/docs/` in full. Update
       each sentence that restates a changed fact, such as the build after a
       refresh in `cloud-computer.md`.
 
@@ -174,21 +178,21 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add the migration of the nullable column
+- [x] Add the migration of the nullable column
       `image_build_jobs.requested_build_user_id`.
-- [ ] Mark the running refresh in `startImageBuild` when the route of Build
+- [x] Mark the running refresh in `startImageBuild` when the route of Build
       computer asks for a build. Fall back to a normal start when the mark
       matches no row.
-- [ ] Move the added-build condition of `worker/lifecycle/build-end-data.ts`
-      into one SQL fragment.
-- [ ] After the cleanup of a refresh, read the mark again and start the
+- [x] After the cleanup of a refresh, read the mark again and start the
       requested build for that admin. Start at most one build with the
       added build.
-- [ ] Add `buildFollows` to `ImageBuild` in `src/shared/org-settings.ts` and
+- [x] Add `buildRequested` to `ImageBuild` in `src/shared/org-settings.ts` and
       fill it in the build readers.
-- [ ] Add Worker tests: a click during a refresh, during a failed refresh,
-      a click by an admin who then loses the role, a mark with a waiting
-      repository, and a click as the refresh ends.
+- [x] Add Worker tests: a click during a refresh, during a failed refresh,
+      a click by an admin who then loses the role, and a click on a build
+      or on a refresh that ended.
+- [ ] Open decision 4: apply the request to a running build with older
+      settings, if Cal chooses F.
 
 ## Milestone 4: The Cloud computer tab
 
@@ -196,13 +200,15 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] Show "Refreshing · <time>" in `src/shell/settings/BuildCard.tsx` for a
+- [x] Show "Refreshing · <time>" in `src/shell/settings/BuildCard.tsx` for a
       running refresh.
-- [ ] Show "A build starts when this refresh ends." when the running refresh
-      has `buildFollows`.
-- [ ] Add app tests for both texts.
-- [ ] Update `src/shell/settings/` docs and `src/app/screens.md` where they
-      describe the build card.
+- [x] Show "A build starts when this refresh ends." when the running refresh
+      has `buildRequested`.
+- [x] Add app tests for both texts.
+- [ ] Open decision 5: the line for an added build after a refresh, if Cal
+      chooses B.
+- [x] Update `src/shell/settings/` docs and `src/app/screens.md` where they
+      describe the build card. They do not describe it.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

@@ -48,6 +48,19 @@ build.
 - A Build computer or a Try again during a switch build waits until that
   build ends (switch decision 2 D). Its time limit counts from then, as
   [What members see](switch-account.md#what-members-see) says.
+- A Build computer or a Try again during a refresh saves a request on the
+  refresh. The build starts when the refresh ends, also after a failed
+  refresh (refresh-build decision 1 B). Reason: a refresh does not run the
+  install script, so the click must not end with the refresh.
+- The last admin who selects it during the refresh is the starter of that
+  build. When that admin can no longer start a build, the request starts
+  none. The added build of the refresh, if it has one, then still starts.
+- A refresh with a request starts one build. That build also takes in
+  each repository that waits for an added build.
+- While a refresh runs after a good build, the Cloud computer tab shows
+  Refreshing and its run time in place of the last build, and it keeps
+  Build computer (refresh-build decision 2 C). After a request, it says
+  "A build starts when this refresh ends."
 - Done after an add of a repository also starts a build, as
   [Added repositories](org-image-repositories.md#added-repositories) says
   (decisions 240 and 295).

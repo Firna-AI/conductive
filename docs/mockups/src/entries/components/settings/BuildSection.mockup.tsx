@@ -25,6 +25,8 @@ export const buildSection = defineComponent({
       readOnly: { type: 'boolean' },
       /** A saved change waits for a build, so the history stays closed. */
       changeWaits: { type: 'boolean' },
+      /** A refresh that runs after a good build. */
+      refresh: { enum: ['running', 'requested'] },
     },
   } as const,
   props: { state: 'ready', builds: acmeBuilds },
@@ -33,6 +35,7 @@ export const buildSection = defineComponent({
       builds={props.builds}
       changeWaits={props.changeWaits}
       readOnly={props.readOnly}
+      refresh={props.refresh}
       state={props.state}
     />
   ),
@@ -43,6 +46,20 @@ export const buildSection = defineComponent({
       description:
         'A build that runs: its time, its live log, and the build that workspaces start from until it finishes.',
       props: { state: 'building' },
+    },
+    {
+      slug: 'refreshing',
+      title: 'Refreshing',
+      description:
+        'A refresh that runs after a good build, such as after a push. A refresh only fetches commits, so Build computer stays on.',
+      props: { refresh: 'running' },
+    },
+    {
+      slug: 'refreshing-requested',
+      title: 'Refreshing, build requested',
+      description:
+        'An admin selected Build computer while a refresh ran, after a change of the install script. The build starts when the refresh ends.',
+      props: { refresh: 'requested', changeWaits: true },
     },
     {
       slug: 'failed',

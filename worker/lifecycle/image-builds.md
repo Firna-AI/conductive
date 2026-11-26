@@ -83,6 +83,18 @@ The added build uses the first admin who is not suspended. A failed start
 keeps the published image and writes one fixed warning. A failed build
 starts no added build. A refresh after a failed build gets none either.
 
+Build computer and Try again pass `requested: true` to `startImageBuild`.
+During a refresh, `requestBuildAfterRefresh` in
+[`build-request.ts`](build-request.ts) saves the admin in
+`image_build_jobs.requested_build_user_id`, only while the refresh runs.
+When the refresh ended after the first read, the click starts the build at
+once. `startFollowingBuild` in [`first-image-build.ts`](first-image-build.ts)
+runs where a job becomes `done`: at the end of `cleanupBuild`, and in the
+failure path without a provider. It takes the request once and starts the
+build for that admin, else the added build. A failed start writes the
+`requested_image_build_start_failed` warning. The build readers return
+`buildRequested: true` for a running refresh with a request.
+
 A job that fails while the image coordinator advances it writes the
 `image_build_failed` warning, in `handleImageBuildFailure` of
 [`image-build-failure.ts`](image-build-failure.ts). Other paths that fail a

@@ -33,6 +33,14 @@ import styles from '../../../../../src/ui/components/settings/BuildSection.modul
 export type BuildState =
   'ready' | 'building' | 'waiting' | 'failed' | 'time-limit' | 'ended' | 'none'
 
+/**
+ * A refresh that runs after a good build, such as after a push. A refresh
+ * only fetches commits, so the card keeps Build computer. `requested` is a
+ * refresh during which an admin selected Build computer. The build starts
+ * when the refresh ends.
+ */
+export type RunningRefresh = 'running' | 'requested'
+
 /** The states whose card shows the log of a build. */
 type LogState = 'building' | 'waiting' | 'failed' | 'time-limit' | 'ended'
 
@@ -131,7 +139,21 @@ function HeadAction(props: { state: BuildState; readOnly: boolean }) {
   }
 }
 
-function Head(props: { state: BuildState; builds: OrgBuilds }) {
+function Head(props: {
+  state: BuildState
+  builds: OrgBuilds
+  refresh?: RunningRefresh
+}) {
+  if (props.state === 'ready' && props.refresh) {
+    return (
+      <statusText.Component
+        busy
+        label={`Refreshing · ${runningBuild.elapsed}`}
+        moklyInstance="build-state"
+        tone="active"
+      />
+    )
+  }
   if (buildRuns(props.state)) {
     const { elapsed } = props.state === 'waiting' ? waitingBuild : runningBuild
     return (
@@ -177,8 +199,21 @@ function buildingNote(lastGood: Build | undefined): string {
  * saved for it, such as the 60-minute limit, above the end of its log, and
  * the good build that workspaces still start from, if there is one.
  */
-function Body(props: { state: BuildState; builds: OrgBuilds }) {
+function Body(props: {
+  state: BuildState
+  builds: OrgBuilds
+  refresh?: RunningRefresh
+}) {
   const { state, builds } = props
+  if (state === 'ready' && props.refresh === 'requested') {
+    return (
+      <div className={styles.body}>
+        <sectionText.Component moklyInstance="requested-build-note">
+          A build starts when this refresh ends.
+        </sectionText.Component>
+      </div>
+    )
+  }
   if (state === 'none') {
     return (
       <div className={styles.body}>
@@ -233,16 +268,18 @@ export function BuildSection(props: {
    * a build, so the history stays closed.
    */
   changeWaits?: boolean
+  /** A refresh that runs after a good build, in the state `ready`. */
+  refresh?: RunningRefresh
 }) {
   const { state, builds } = props
   return (
     <section aria-label="Builds" className={styles.card}>
       <div className={styles.head}>
-        <Head builds={builds} state={state} />
+        <Head builds={builds} refresh={props.refresh} state={state} />
         <span className={styles.spacer} />
         <HeadAction readOnly={props.readOnly ?? false} state={state} />
       </div>
-      <Body builds={builds} state={state} />
+      <Body builds={builds} refresh={props.refresh} state={state} />
       {state === 'none' ? null : (
         <buildHistory.Component
           builds={builds.history.map(buildOf)}

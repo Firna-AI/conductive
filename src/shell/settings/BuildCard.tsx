@@ -4,6 +4,7 @@ import styles from '../../ui/components/settings/BuildSection.module.css'
 import type { ComputerModel } from '../../app/computer-model'
 import { currentBuild } from '../../app/current-build'
 import { latestBuild } from '../../app/org-model'
+import { runningRefresh } from '../../app/latest-build'
 import { changeWaits } from '../../app/repository-changes'
 import { useStore } from '../../app/store'
 import { formatElapsed } from '../../app/time'
@@ -25,12 +26,29 @@ import { inSentence, useWhen } from './when'
 
 const noEvents: readonly BuildLogEvent[] = []
 
+/** The note of a refresh during which an admin selected Build computer. */
+const requestedNote = (
+  <SectionText>A build starts when this refresh ends.</SectionText>
+)
+
 /** The time limit of each build, which the Worker applies. */
 const buildLimit = 'Each build has a 60-minute limit.'
 
-/** The state of the newest build: its time and result, or its run time. */
-function Head(props: { latest: ImageBuild; now: number; when: string }) {
-  const { latest } = props
+/**
+ * The state of the newest build: its time and result, or its run time. A
+ * refresh that runs after a good build shows its run time instead.
+ */
+function Head(props: {
+  latest: ImageBuild
+  refresh: ImageBuild | undefined
+  now: number
+  when: string
+}) {
+  const { latest, refresh } = props
+  if (latest.state === 'succeeded' && refresh) {
+    const elapsed = formatElapsed(props.now - refresh.startedAt)
+    return <StatusText busy label={`Refreshing · ${elapsed}`} tone="active" />
+  }
   if (latest.state === 'running') {
     const elapsed = formatElapsed(props.now - latest.startedAt)
     return <StatusText busy label={`Building · ${elapsed}`} tone="active" />
@@ -96,7 +114,9 @@ function FirstBuild(props: { build: Action<[]> }) {
  * message that the Worker saved for it, such as its time limit, above its
  * log. A failed build leaves the last good build in use. The history stays
  * closed while a saved change of the install script or of the repositories
- * waits for a build.
+ * waits for a build. A refresh that runs after a good build shows as
+ * Refreshing. After a Build computer during a refresh, the card says that
+ * the build starts when the refresh ends.
  */
 export function BuildCard(props: {
   builds: BuildsResponse
@@ -105,13 +125,15 @@ export function BuildCard(props: {
 }) {
   const latest = latestBuild(props.builds)
   const current = currentBuild(props.builds)
+  const refresh = runningRefresh(props.builds)
   const running = latest?.state === 'running'
-  const { now, when } = useWhen(running ? 1_000 : 60_000)
+  const { now, when } = useWhen(running || refresh ? 1_000 : 60_000)
   const log = useStore(props.computer.log)
   if (!latest) return <FirstBuild build={props.build} />
   const history = props.builds.builds
     .filter((build) => build.kind === 'build')
     .toSorted((a, b) => b.startedAt - a.startedAt)
+  const requested = refresh?.buildRequested === true
   const note = startsFrom(
     latest,
     current ? inSentence(when(current.startedAt)) : null,
@@ -119,11 +141,20 @@ export function BuildCard(props: {
   return (
     <section aria-label="Builds" className={styles.card}>
       <div className={styles.head}>
-        <Head latest={latest} now={now} when={when(latest.startedAt)} />
+        <Head
+          latest={latest}
+          now={now}
+          refresh={refresh}
+          when={when(latest.startedAt)}
+        />
         <span className={styles.spacer} />
         <HeadAction build={props.build} latest={latest} />
       </div>
-      {latest.state === 'succeeded' ? null : (
+      {latest.state === 'succeeded' ? (
+        requested ? (
+          <div className={styles.body}>{requestedNote}</div>
+        ) : null
+      ) : (
         <div className={styles.body}>
           {latest.state === 'failed' && latest.error ? (
             <SectionText>{latest.error}</SectionText>
@@ -137,6 +168,7 @@ export function BuildCard(props: {
           ) : (
             <BuildLog events={log?.events ?? noEvents} live={running} />
           )}
+          {requested ? requestedNote : null}
           {note ? <SectionText muted>{note}</SectionText> : null}
         </div>
       )}

@@ -201,4 +201,31 @@ describe('OrgTabContent', () => {
       'Building · 2m 14s Build computer Running the install script Workspaces start from the build of 3 hours ago until this one finishes. Each build has a 60-minute limit.',
     )
   })
+
+  test.each([
+    [false, 'Refreshing · 2m 14s Build computer History (1)'],
+    [
+      true,
+      'Refreshing · 2m 14s Build computer A build starts when this refresh ends. History (1)',
+    ],
+  ])(
+    'a running refresh names itself, with a requested build: %s',
+    async (buildRequested, expected) => {
+      const server = new FakeApiServer()
+      const refresh: ImageBuild = {
+        ...goodBuild,
+        id: 'refresh-running',
+        kind: 'refresh',
+        state: 'running',
+        startedAt: FAKE_TIME - 134_000,
+        completedAt: null,
+        durationMs: null,
+        ...(buildRequested ? { buildRequested } : {}),
+      }
+      const text = await computerText(server, refresh, [
+        'Updating the repositories\n',
+      ])
+      expect(text).toContain(expected)
+    },
+  )
 })

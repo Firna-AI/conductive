@@ -1,8 +1,12 @@
 import type {
   BuildLogEvent,
   BuildResponse,
-  ImageBuild,
 } from '../../src/shared/org-settings'
+import {
+  buildRequestedColumn,
+  readBuildRow,
+  type BuildRow,
+} from './build-request'
 import { HttpError } from '../http'
 import { BUILD_STORAGE_COLUMNS } from './image-storage'
 
@@ -14,12 +18,13 @@ export async function readBuildSnapshot(
   after = 0,
   limit = -1,
 ): Promise<BuildResponse> {
-  const [header, events] = await db.batch<ImageBuild | BuildLogEvent>([
+  const [header, events] = await db.batch<BuildRow | BuildLogEvent>([
     db
       .prepare(
         `SELECT id, org_id AS orgId, kind, state, started_at AS startedAt, completed_at AS completedAt,
      CASE WHEN completed_at IS NULL THEN NULL ELSE completed_at - started_at END AS durationMs,
-     error, ${BUILD_STORAGE_COLUMNS}
+     error, ${BUILD_STORAGE_COLUMNS},
+     ${buildRequestedColumn('image_builds')} AS buildRequested
      FROM image_builds WHERE org_id = ? AND id = ? AND operator_switch_id IS NULL`,
       )
       .bind(orgId, buildId),
@@ -40,5 +45,5 @@ export async function readBuildSnapshot(
     if (!('eventNumber' in event)) throw new Error('Invalid build log row')
     return event
   })
-  return { build, log }
+  return { build: readBuildRow(build), log }
 }

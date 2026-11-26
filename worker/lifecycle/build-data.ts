@@ -14,6 +14,11 @@ import type { ProviderRetryState } from './provider-retry'
 import type { SavedScript } from './saved-script'
 import { readBuildChanges } from './build-changes-data'
 import { writeBuildEnd } from './build-end-data'
+import {
+  buildRequestedColumn,
+  readBuildRow,
+  type BuildRow,
+} from './build-request'
 import type { SwitchBuildFailure } from './provider-switch-end'
 import { BUILD_STORAGE_COLUMNS } from './image-storage'
 
@@ -77,7 +82,8 @@ const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state, b.start
 
 const buildColumns = `id, org_id AS orgId, kind, state, started_at AS startedAt,
   completed_at AS completedAt, CASE WHEN completed_at IS NULL THEN NULL
-  ELSE completed_at - started_at END AS durationMs, error, ${BUILD_STORAGE_COLUMNS}`
+  ELSE completed_at - started_at END AS durationMs, error, ${BUILD_STORAGE_COLUMNS},
+  ${buildRequestedColumn('image_builds')} AS buildRequested`
 
 export async function readBuildJob(
   db: D1Database,
@@ -221,7 +227,8 @@ export async function readBuildHistory(
        AND operator_switch_id IS NULL ORDER BY started_at DESC, id DESC`,
     )
     .bind(orgId)
-    .all<ImageBuild>()
+    .all<BuildRow>()
+  const builds = results.map(readBuildRow)
   const image = await db
     .prepare(
       `SELECT i.image_build_id AS imageBuildId, b.operator_switch_id AS operatorSwitchId
@@ -231,10 +238,10 @@ export async function readBuildHistory(
     .bind(orgId, providerAccount)
     .first<{ imageBuildId: string | null; operatorSwitchId: string | null }>()
   return {
-    builds: results,
+    builds,
     currentImageBuildId:
       image && image.operatorSwitchId !== null
-        ? (results.find((build) => build.state === 'succeeded')?.id ?? null)
+        ? (builds.find((build) => build.state === 'succeeded')?.id ?? null)
         : (image?.imageBuildId ?? null),
     changes: await readBuildChanges(db, orgId, providerAccount),
   }

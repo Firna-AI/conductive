@@ -461,6 +461,10 @@ Changes during the first successful build get one extra build automatically.
 If that first build fails, **Try again** uses the saved settings.
 The build action stays unavailable while a build is running.
 
+While a refresh runs, **Cloud computer** shows **Refreshing**, and **Build computer** stays available.
+Select it to build after the refresh ends.
+The tab then says that a build starts when the refresh ends.
+
 ## Recover from a failed build
 
 Open **Cloud computer** to read the build log and its error.

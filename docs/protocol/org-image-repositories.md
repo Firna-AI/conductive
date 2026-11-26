@@ -74,6 +74,8 @@ adds Remove to the row menu of a chosen repository, as
 - So an add during a refresh after a failed build waits for Try again.
 - A job gets at most one added build. So an add during the first good
   build gets one added build, not two.
+- A refresh with a request of Build computer starts one build, which
+  takes in the adds, as [The org image](org-image.md#the-org-image) says.
 - The added build runs for an admin who is not suspended, as the added
   build of [The first build](org-image.md#the-first-build) does.
 - A build at each add was replaced (decision 295). Reason: a burst of
