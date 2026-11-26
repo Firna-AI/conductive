@@ -82,6 +82,9 @@ function endBuild(
       completedAt: at,
       durationMs: at - build.build.startedAt,
       error: plan.fails ? FAILURE : null,
+      // Each good build of the fake leaves the free storage of the fixture.
+      storageTotalBytes: plan.fails ? null : 50_100_000_000,
+      storageFreeBytes: plan.fails ? null : 31_200_000_000,
     },
   })
   if (plan.fails) return
@@ -157,6 +160,8 @@ export function startBuild(backend: DevBackend, org: OrgState): BuildResponse {
     completedAt: null,
     durationMs: null,
     error: null,
+    storageTotalBytes: null,
+    storageFreeBytes: null,
   }
   const build = withLines(
     { build: image, log: [] },

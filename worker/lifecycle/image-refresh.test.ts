@@ -10,6 +10,7 @@ import { finishImageBuild as finish } from './image-test-support'
 import { joinedMember } from '../operator/suspension-test-support'
 import { suspendUser } from '../operator/suspend-user'
 import { readOrgImage } from './org-image-data'
+import { STORAGE_COMMAND } from './image-storage'
 
 const backendFixture = setupBackendTests()
 
@@ -60,7 +61,8 @@ it('refreshes captured repositories and revision with new software and push thro
         defaultBranch: 'main',
       },
     ])
-    expect(boat.commands).toHaveLength(2)
+    expect(boat.commands).toHaveLength(3)
+    expect(boat.commands).toContain(STORAGE_COMMAND)
     expect(lifecycleCommandBody(boat.commands[0])).toContain(
       'update check --bootstrap',
     )

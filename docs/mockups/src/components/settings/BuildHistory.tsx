@@ -1,20 +1,27 @@
 import { ChevronRight } from 'lucide-react'
 import type { Build } from '../../fixtures/computer'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
+import { defined } from '../../defined'
 import { instanceKey } from '../../instanceKey'
 import styles from '../../../../../src/ui/components/settings/BuildSection.module.css'
 
 /**
- * A build as the data of its result: its time, its result, and its length,
- * without the saved message of a failed build. A Mokly part takes only the
- * fields of its schema.
+ * A build as the data of its result: its time, its result, its length, and
+ * the free storage of a good build, without the saved message of a failed
+ * build. A Mokly part takes only the fields of its schema.
  */
 export function buildOf(build: Build): Build {
-  return { when: build.when, result: build.result, duration: build.duration }
+  return {
+    when: build.when,
+    result: build.result,
+    duration: build.duration,
+    ...defined({ storage: build.storage }),
+  }
 }
 
 /**
- * The result of a build that ended: its length, and whether it failed.
+ * The result of a build that ended: its length, and whether it failed. A
+ * good build also shows the free storage that its image leaves.
  * `id` names the result for Mokly, such as the time of its build.
  */
 export function BuildResult(props: { build: Build; id: string }) {
@@ -31,11 +38,16 @@ export function BuildResult(props: { build: Build; id: string }) {
     )
   }
   return (
-    <statusText.Component
-      label={`Succeeded in ${build.duration}`}
-      moklyInstance={name}
-      tone="success"
-    />
+    <>
+      <statusText.Component
+        label={`Succeeded in ${build.duration}`}
+        moklyInstance={name}
+        tone="success"
+      />
+      {build.storage ? (
+        <span className={styles.storage}>{build.storage}</span>
+      ) : null}
+    </>
   )
 }
 

@@ -15,6 +15,7 @@ import { nativeImageRuntime } from './image-runtime-test-support'
 import { localSourceFixture } from './local-source-test-support'
 import { INSTALLATION_TOKEN } from './native-github-test-support'
 import { readSourceJob } from './source-data'
+import { STORAGE_COMMAND } from '../image-storage'
 
 const privateKey = generateKeyPairSync('rsa', { modulusLength: 2048 })
   .privateKey.export({ type: 'pkcs1', format: 'pem' })
@@ -89,11 +90,13 @@ it('keeps a native source fetch after a temporary status error and resumes witho
           ?.tokenCiphertext,
       ).toBeNull()
       order.push(
-        !detached
-          ? 'cleanup'
-          : command.includes('/tmp/conductive-install.sh')
-            ? 'install'
-            : 'software',
+        command === STORAGE_COMMAND
+          ? 'storage'
+          : !detached
+            ? 'cleanup'
+            : command.includes('/tmp/conductive-install.sh')
+              ? 'install'
+              : 'software',
       )
     }
     claim.release()
@@ -126,7 +129,7 @@ it('keeps a native source fetch after a temporary status error and resumes witho
         ['mint', 'claim', 'revoke', 'finalize'].includes(event),
       ),
     ).toEqual(['mint', 'revoke', 'mint', 'claim', 'revoke', 'finalize'])
-    expect(order).toEqual(['software', 'install', 'cleanup'])
+    expect(order).toEqual(['software', 'install', 'cleanup', 'storage'])
   } finally {
     claim.release()
     await fixture.dispose()

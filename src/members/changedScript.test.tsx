@@ -27,6 +27,8 @@ function build(id: string, state: ImageBuild['state']): ImageBuild {
     completedAt: ended ? now : null,
     durationMs: ended ? 134_000 : null,
     error: null,
+    storageTotalBytes: null,
+    storageFreeBytes: null,
   }
 }
 

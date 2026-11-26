@@ -2,6 +2,7 @@ import type { HttpFetch } from '../env'
 import { isRecord } from '../http'
 import type { SandboxState } from '../sandbox/provider'
 import { FakeBoat } from '../test-support/fake-boat'
+import { STORAGE_COMMAND } from './image-storage'
 
 /** Exercises BoatClient against the unchanged fake's public response override. */
 export class LifecycleBoat {
@@ -29,6 +30,8 @@ export class LifecycleBoat {
   beforeStatus?: () => Promise<void>
   synchronousExitCode = 0
   synchronousOutput = 'done\n'
+  /** The `df` line of the storage command: 50.1 GB, with 31.2 GB free. */
+  storageOutput = '50100000000 31200000000\n'
   deleteFailures = 0
   failStop = false
   stopReplyState: SandboxState = 'archived'
@@ -167,7 +170,10 @@ export class LifecycleBoat {
                 ok: true,
                 type: 'command.finished',
                 exitCode: this.synchronousExitCode,
-                stdout: this.synchronousOutput,
+                stdout:
+                  body.command === STORAGE_COMMAND
+                    ? this.storageOutput
+                    : this.synchronousOutput,
                 stderr: '',
                 timedOut: false,
               })

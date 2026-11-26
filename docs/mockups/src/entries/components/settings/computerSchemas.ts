@@ -53,7 +53,10 @@ const buildResults = [
   'failed',
 ] as const satisfies readonly Build['result'][]
 
-/** A build that ended, as `Build`: its time, its result, and its length. */
+/**
+ * A build that ended, as `Build`: its time, its result, its length, and the
+ * free storage of a good build.
+ */
 export const buildSchema = {
   type: 'object',
   additionalProperties: false,
@@ -62,6 +65,8 @@ export const buildSchema = {
     when: { type: 'string' },
     result: { enum: buildResults },
     duration: { type: 'string' },
+    /** The free storage of a good build, such as `31.2 GB free of 50.1 GB`. */
+    storage: { type: 'string' },
   },
 } as const
 

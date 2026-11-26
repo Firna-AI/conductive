@@ -28,6 +28,8 @@ function build(
     completedAt,
     durationMs: seconds * 1000,
     error: null,
+    storageTotalBytes: null,
+    storageFreeBytes: null,
   }
 }
 
@@ -72,8 +74,16 @@ describe('the read-only settings of a member', () => {
 
   it('show_the_builds_with_the_times_and_lengths_of_the_mockup', () => {
     const history = [
-      build('b4', now - 8 * 3_600_000, 401, 'succeeded'),
-      build('b3', Date.UTC(2026, 10, 4, 9), 362, 'succeeded'),
+      {
+        ...build('b4', now - 8 * 3_600_000, 401, 'succeeded'),
+        storageTotalBytes: 50_100_000_000,
+        storageFreeBytes: 31_200_000_000,
+      },
+      {
+        ...build('b3', Date.UTC(2026, 10, 4, 9), 362, 'succeeded'),
+        storageTotalBytes: 50_100_000_000,
+        storageFreeBytes: 31_640_000_000,
+      },
       build('b2', Date.UTC(2026, 10, 3, 15), 138, 'failed'),
       build('b1', Date.UTC(2026, 9, 28, 12), 433, 'succeeded'),
     ]
@@ -97,10 +107,11 @@ describe('the read-only settings of a member', () => {
       check(
         card(history),
         [
-          'Last build 8 hours ago Succeeded in 6m 41s',
+          'Last build 8 hours ago Succeeded in 6m 41s 31.2 GB free of 50.1 GB',
           'History (4)',
-          'Yesterday Succeeded in 6m 02s',
+          'Yesterday Succeeded in 6m 02s 31.6 GB free of 50.1 GB',
           '3 Nov Failed after 2m 18s',
+          // A build from before the measurement shows no storage text.
           '28 Oct Succeeded in 7m 13s',
         ],
         ['Building'],

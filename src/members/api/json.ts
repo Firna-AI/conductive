@@ -41,6 +41,11 @@ export function countOrNull(source: JsonObject, key: string): number | null {
   return source[key] === null ? null : count(source, key)
 }
 
+/** A count that an older Worker can leave out, which reads as null. */
+export function optionalCount(source: JsonObject, key: string): number | null {
+  return source[key] === undefined ? null : countOrNull(source, key)
+}
+
 export function flag(source: JsonObject, key: string): boolean {
   const value = source[key]
   if (typeof value !== 'boolean')

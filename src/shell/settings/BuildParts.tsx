@@ -2,6 +2,7 @@ import { ChevronRight, CircleAlert, Hammer, RotateCw } from 'lucide-react'
 import { StatusText } from '../../ui/components/common/StatusText'
 import styles from '../../ui/components/settings/BuildSection.module.css'
 import { formatDuration } from '../../app/time'
+import { buildStorage } from '../../app/build-storage'
 import type { ImageBuild } from '../../shared/org-settings'
 import { ActionButton, type ActionTone } from '../ui/actions'
 import type { Action } from '../ui/useAction'
@@ -12,7 +13,10 @@ export function buildLength(build: ImageBuild): number {
   return build.completedAt === null ? 0 : build.completedAt - build.startedAt
 }
 
-/** The result of a build: it runs, it succeeded in its length, or it failed. */
+/**
+ * The result of a build: it runs, it succeeded in its length, or it failed.
+ * A good build also shows the free storage that its image leaves.
+ */
 export function BuildResult(props: { build: ImageBuild }) {
   const { build } = props
   switch (build.state) {
@@ -26,13 +30,18 @@ export function BuildResult(props: { build: ImageBuild }) {
           tone="danger"
         />
       )
-    case 'succeeded':
+    case 'succeeded': {
+      const storage = buildStorage(build)
       return (
-        <StatusText
-          label={`Succeeded in ${formatDuration(buildLength(build))}`}
-          tone="success"
-        />
+        <>
+          <StatusText
+            label={`Succeeded in ${formatDuration(buildLength(build))}`}
+            tone="success"
+          />
+          {storage ? <span className={styles.storage}>{storage}</span> : null}
+        </>
       )
+    }
   }
 }
 

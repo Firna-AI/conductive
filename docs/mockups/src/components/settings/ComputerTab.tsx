@@ -83,7 +83,7 @@ function changedNotice(props: {
 /**
  * The cloud computer as the data of a Mokly part: each build without the
  * saved message of a failed build, because the data of a build holds only
- * its time, its result, and its length.
+ * its time, its result, its length, and the free storage of a good build.
  */
 export function computerData(computer: OrgComputer): OrgComputer {
   const { lastGood, ...rest } = computer
