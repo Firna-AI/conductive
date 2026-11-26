@@ -1,8 +1,8 @@
 import { useEffect, type ReactNode } from 'react'
 import { SearchX } from 'lucide-react'
 import { EmptyState } from '../ui/components/common/EmptyState'
-import type { Route } from '../app/router'
-import { routes } from '../app/router'
+import { routes, type Route } from '../app/router'
+import type { SettingsRoute } from '../app/settings-route'
 import { useStore } from '../app/store'
 import type { User } from '../shared/api'
 import type { OrgSummary } from '../shared/orgs'
@@ -15,7 +15,6 @@ import { Sidebar, type ListCurrent } from './list/Sidebar'
 import { NewWorkspaceScreen } from './new-workspace/NewWorkspaceScreen'
 import { AutomationScreen } from './automations/AutomationScreen'
 import { AutomationsScreen } from './automations/AutomationsScreen'
-import { OrgSettingsScreen } from './settings/OrgSettingsScreen'
 import { useShortcutOffer } from './shortcuts/shortcut-context'
 import { ActionButton } from './ui/actions'
 import { useGo, useOpenPage } from './ui/AppLink'
@@ -76,7 +75,7 @@ export function NotAvailable(props: { title: string }) {
   )
 }
 
-type OrgRoute = Extract<Route, { orgId: string }>
+type OrgRoute = Exclude<Extract<Route, { orgId: string }>, SettingsRoute>
 
 function screenOf(route: OrgRoute, org: OrgSummary, user: User): ReactNode {
   switch (route.screen) {
@@ -101,8 +100,6 @@ function screenOf(route: OrgRoute, org: OrgSummary, user: User): ReactNode {
           workspaceId={route.workspaceId}
         />
       )
-    case 'settings':
-      return <OrgSettingsScreen org={org} tab={route.tab} user={user} />
     case 'automations':
       return <AutomationsScreen org={org} />
     case 'new-automation':
@@ -136,8 +133,6 @@ function listCurrent(route: OrgRoute): ListCurrent {
       return { screen: 'new-workspace' }
     case 'workspace':
       return { screen: 'workspace', workspaceId: route.workspaceId }
-    case 'settings':
-      return { screen: 'settings' }
     case 'automations':
     case 'new-automation':
     case 'automation':
@@ -161,7 +156,7 @@ export function OrgRoutes(props: { route: OrgRoute; user: User }) {
     'workspace-list',
     listOrg === null ? null : () => open(routes.org(listOrg)),
   )
-  // A page without an org, such as the Account page, works on the last org.
+  // A page without an org, such as Get started, works on the last org.
   useEffect(() => {
     app.openOrg(props.route.orgId)
   }, [app, props.route.orgId])

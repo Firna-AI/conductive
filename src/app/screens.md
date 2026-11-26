@@ -52,7 +52,7 @@ the Help row of the command palette opens.
   Continue to workspaces. Without invitations, or after Continue to
   workspaces, it opens Get started or the org of Get started. The
   `?invite=` link of an invitation email leads there.
-- [Account and agent screens](account-screens.md) describes the account tabs,
+- [Account and agent screens](account-screens.md) describes Settings, the account tabs,
   keyboard shortcuts, sharing, own endpoint model lists, and the ChatGPT sign-in.
 - Create org asks for the name and the initials, and lists the
   repositories that the person and the GitHub App both reach, from
@@ -424,7 +424,7 @@ the requirements. The mockups `app/sign-in/waitlist`, `app/sign-in/join`,
   the code no more.
 - For a person with app access, a join link uses no code, and `/` opens as
   usual.
-- The General tab of the Account page ends with the invite code of the
+- Account › General ends with the invite code of the
   user: the invite link with Copy, the code, and the invites
   left. It has the states of the pause, of every invite used, and of a code
   that an operator turned off. During [open sign-up](../../docs/protocol/sign-ups.md#open-sign-up),

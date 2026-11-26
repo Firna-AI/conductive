@@ -161,7 +161,7 @@ that doc says.
 
 ## Agent logins
 
-- Each user connects their personal logins on the account page. An admin
+- Each user connects their personal logins in Account settings. An admin
   connects the org logins of an org on the Agents tab of the org settings,
   as [Org logins](org-logins.md) says.
 - A user connects Claude with a subscription token from
@@ -170,7 +170,7 @@ that doc says.
   [Own endpoint logins](own-endpoint-logins.md) says.
 - A user connects Codex with a device code sign-in to their ChatGPT plan,
   or with an OpenAI API key (decision 175).
-- The account page starts the device code sign-in. It shows the code,
+- The Agents tab of Account settings starts the device code sign-in. It shows the code,
   the OpenAI verification page, and the expiry. A code expires after 15 minutes.
 - The Worker alone holds the pending device state, encrypted for that
   signed-in user. A poll reports waiting, connected, expired, or failed

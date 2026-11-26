@@ -12,7 +12,7 @@ import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { mountScreen, settle } from '../test-mount'
 import { startedApp } from '../test-render'
-import { OrgSettingsScreen } from './OrgSettingsScreen'
+import { OrgTabContent } from './OrgTabContent'
 import { buildOf, changed, imageBuilds, noticesOf } from './test-builds'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -36,7 +36,7 @@ async function computerTab(builds: BuildsResponse) {
   if (boot.state !== 'ready' || !acme) throw new Error('The app did not start.')
   const view = mountScreen(
     app,
-    <OrgSettingsScreen org={acme} tab="cloud-computer" user={boot.user} />,
+    <OrgTabContent org={acme} tab="cloud-computer" user={boot.user} />,
   )
   await settle()
   const history = view.querySelector('section[aria-label="Builds"] details')

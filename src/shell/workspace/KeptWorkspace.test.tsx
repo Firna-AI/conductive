@@ -173,7 +173,7 @@ describe('a workspace that the tab showed', () => {
     )
   })
 
-  test('takes a login that the tab saves while away, and keeps its draft and Send', async () => {
+  test('takes a login that Settings saves over it, and keeps its draft, Send, and its connections', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
     const { account } = coreFixtures()
@@ -207,7 +207,6 @@ describe('a workspace that the tab showed', () => {
     click(byRole('button', 'Connect', view))
     await settle()
     const first = socket.opens.length
-    const kept = lastEvent(server)
     const before = server.requests.length
 
     go(here)
@@ -216,8 +215,9 @@ describe('a workspace that the tab showed', () => {
     expect(draftOf(view)).toBe('Keep this draft')
     expect(isOff(byLabel('Send', view))).toBe(false)
     await settle()
-    expect(socket.opens.slice(first)).toEqual([kept, kept, kept])
-    expect(chatRequests(server, before).sort()).toEqual(returnReads)
+    // The workspace stayed below Settings, so it opens and reads nothing.
+    expect(socket.opens.slice(first)).toEqual([])
+    expect(chatRequests(server, before)).toEqual([])
   })
 
   test('follows the default model, the org name, and the members that the app holds', async () => {

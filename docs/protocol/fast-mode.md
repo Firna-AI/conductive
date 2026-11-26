@@ -208,7 +208,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
     its own rules of order and delivery.
   - The cause in the model picker. The session then needs a field for its
     last fast state.
-  - The last fast state of each login, on the Account page. It needs a
+  - The last fast state of each login, in Account settings. It needs a
     migration, and the stored state can go out of date.
   - A read of the speed of each Codex answer in the model gateway. The
     gateway passes each answer unread.

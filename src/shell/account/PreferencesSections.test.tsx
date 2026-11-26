@@ -14,7 +14,7 @@ import { fakeUser } from '../../test-support/fixtures/core'
 import { holdAnimationFrames } from '../../test-support/mount'
 import { click, mountScreen, settle } from '../test-mount'
 import { startedApp } from '../test-render'
-import { AccountScreen } from './AccountScreen'
+import { AccountTabContent } from './AccountTabContent'
 import { sectionTitled } from './test-markup'
 
 /** The Preferences tab of the account of the fake API, mounted. */
@@ -24,7 +24,7 @@ async function mountPreferences(server: FakeApiServer) {
   const app = await startedApp(server, { fetch: held.fetch })
   const view = mountScreen(
     app,
-    <AccountScreen connect={null} tab="preferences" user={fakeUser} />,
+    <AccountTabContent connect={null} tab="preferences" user={fakeUser} />,
   )
   return { view, held }
 }

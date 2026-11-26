@@ -106,7 +106,7 @@ screen of this doc, on desktop and on a phone.
 - An email to each person who waits when the waitlist turns off was
   rejected. Reason: the app sends an email only at an approval
   (decision 162). A burst of email at the end of a pause was rejected too.
-- During open sign-up, the Account page shows a notice about the invites
+- During open sign-up, Account settings show a notice about the invites
   of the user, as [Referral codes](waitlist-codes.md#referral-codes) says.
 
 ## The Sign-ups box

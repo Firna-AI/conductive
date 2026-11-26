@@ -79,7 +79,7 @@ actions at `app/command-palette/actions`, and the settings at
   pull request actions. They stay where they are:
   - Resume shows on the stopped workspace itself.
   - The owner picker acts on a person.
-  - Sign out sits on the Account page, which the Sign-in row opens.
+  - Sign out sits in Account settings, which the Sign-in row opens.
   - A pull request action runs from the pull request bar, or from its key,
     as [Keyboard shortcuts](keyboard-shortcuts.md#commands) says.
 - Merge latest is not an action of the pull request bar, so this rule
@@ -169,9 +169,9 @@ actions at `app/command-palette/actions`, and the settings at
   of the org settings: General, Repositories, Cloud computer, Agents,
   Secrets, and Members. Its label is the name of the org and "settings",
   such as "Acme settings".
-- The second group, Account, holds five sections of the Account page:
+- The second group, Account, holds five sections of [Account settings](settings.md):
   Sign-in, GitHub, Agents, Favourites, and New workspaces. It also holds
-  Keyboard shortcuts, the fourth tab of the Account page.
+  Keyboard shortcuts, the fourth tab of Account settings.
 - Favourites opens the Preferences tab, which holds the
   [Favourites section](model-favourites.md#the-favourites-section) above
   New workspaces. Its search words hold "favorites", the American
@@ -181,18 +181,18 @@ actions at `app/command-palette/actions`, and the settings at
   [The model menu](model-favourites.md#the-model-menu) says.
 - In the Mac app, the Account group also holds
   [This Mac](desktop-commands.md#saved-choices), the sixth tab, which only
-  the Account page of the Mac app has.
-- The Stats tab of the Account page has no row, as
+  Account settings of the Mac app have.
+- The Stats tab of Account settings has no row, as
   [Account stats](account-stats.md#where-the-tab-shows) says.
-- The Deleted orgs section of the Account page has no row. Reason: it
+- The Deleted orgs section of Account settings has no row. Reason: it
   shows only while the person has a deleted org, and the palette treats a
   deleted org as absent.
-- The Account group lists its rows in the order of the Account page
+- The Account group lists its rows in the order of Account settings
   (decision 198). It goes tab by tab, and in each tab in the order of its
   sections. So Favourites comes before New workspaces, Keyboard shortcuts
   follows New workspaces, and in the Mac app This Mac ends the group.
-- Reason: the person already knows the order of the page, and a later row
+- Reason: the person already knows the order of the tabs, and a later row
   then has one clear place. A row in another place was rejected, because
-  the group then leaves the order of the page.
-- A row of the org settings opens its tab. A row of the Account group
-  opens the tab of the Account page that holds its section.
+  the group then leaves the order of the tabs.
+- A row of the org settings opens its tab of Settings. A row of the
+  Account group opens the tab of Account settings that holds its section.

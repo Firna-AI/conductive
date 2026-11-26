@@ -105,7 +105,7 @@ it.each(cases)(
         turnId: first.session.activeTurnId,
         error: {
           code: 'agent_login_required',
-          message: `Octocat's ${choice.agent === 'claude' ? 'Claude' : 'Codex'} login needs a public https:// endpoint with a host name. Update the login on the account page.`,
+          message: `Octocat's ${choice.agent === 'claude' ? 'Claude' : 'Codex'} login needs a public https:// endpoint with a host name. Update the login in Account settings.`,
         },
         retryMessageId: 'first',
         durationMs: 0,
