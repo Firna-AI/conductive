@@ -4,11 +4,11 @@ import {
 } from './lifecycle/image-sources/failure'
 import { runnerWorkFields } from './warning-runner-work'
 import { continueEndWarningFields } from './warning-continue'
+import { SIMPLE_WARNINGS } from './simple-warnings'
 import { activeTurnWarningFields } from './warning-active-turn'
 import {
   ATTACHMENT_STEPS,
   RUNNER_MESSAGE_STAGES,
-  SIMPLE_WARNINGS,
   type RunnerWarningFields,
   type WorkerWarning,
 } from './warning-types'

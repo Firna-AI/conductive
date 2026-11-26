@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-26, from branch `calummoore/sidebar-indicator-not-showing-4fri`, review finding 6.
-- **Location:** `worker/chat/active-turn-check.ts:61-63`, `worker/warning-types.ts:21-22`, `worker/chat/runner-warnings.md`, `src/marketing/privacy-uses.ts:194-216`.
+- **Location:** `worker/chat/active-turn-check.ts:61-63`, `worker/simple-warnings.ts`, `worker/chat/runner-warnings.md`, `src/marketing/privacy-uses.ts:194-216`.
 - **Reason:** The review found it after the two fix rounds of its branch.
 
 - **Source:** Review. **Category:** Docs or spec.

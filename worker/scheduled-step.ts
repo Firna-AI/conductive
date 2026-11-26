@@ -1,4 +1,4 @@
-import type { SIMPLE_WARNINGS } from './warning-types'
+import type { SIMPLE_WARNINGS } from './simple-warnings'
 import { warnWorker } from './warnings'
 
 export async function runScheduledStep(
