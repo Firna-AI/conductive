@@ -38,6 +38,11 @@ export type ChipWorkspace = {
    * colour, or `null` without one.
    */
   github: GitHubSummary | null
+  /**
+   * Whether a message waits for its cloud computer to start, which moves
+   * the list mark. Without it, a start stays still.
+   */
+  messageWaiting?: boolean
 }
 
 /** What the element that opens the page of a chip gets from it. */
@@ -85,10 +90,16 @@ export function WorkspaceChip(props: {
   /** A session icon and its spoken name, before the link name. */
   beforeName?: ReactNode
 }) {
-  const { label, name, github, status } = props.workspace
+  const { label, name, github, status, messageWaiting } = props.workspace
   const { removal } = props
   const className = useChipClass(removal)
-  const mark = <WorkspaceMark github={github} status={status} />
+  const mark = (
+    <WorkspaceMark
+      github={github}
+      messageWaiting={messageWaiting}
+      status={status}
+    />
+  )
   const chip: ChipOpener = {
     className,
     title: name,

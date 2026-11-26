@@ -139,3 +139,26 @@ it('recovers a legacy summary title and original turn end beyond the first histo
     working: false,
   })
 })
+
+it('says that a message waits only while the runner has not received it, and only when asked', async () => {
+  const fixture = await createChatFixture(harness)
+  const session = await fixture.createSession()
+  const asked = { messageWaiting: true }
+  expect(
+    await fixture.chat.workspaceSummary(WORKSPACE_ID, asked),
+  ).toMatchObject({ messageWaiting: false })
+  await fixture.send(session.id, 'waiting-message')
+  expect(
+    await fixture.chat.workspaceSummary(WORKSPACE_ID, asked),
+  ).toMatchObject({ messageWaiting: true, working: false })
+  // A read that does not ask leaves the answer out.
+  expect(await fixture.chat.workspaceSummary(WORKSPACE_ID)).not.toHaveProperty(
+    'messageWaiting',
+  )
+  const runner = await fixture.connect()
+  runner.emit({ type: 'runner.ready' })
+  await fixture.drain()
+  expect(
+    await fixture.chat.workspaceSummary(WORKSPACE_ID, asked),
+  ).toMatchObject({ messageWaiting: false, working: true })
+})

@@ -52,7 +52,8 @@ export function useChatLinks(): ChatLinks {
 
 /**
  * What a chip shows of its workspace now: the label, the name, the state,
- * and the GitHub state of its pull request.
+ * whether a message waits for the start, and the GitHub state of its pull
+ * request.
  */
 export function chipOf(workspace: Workspace): ChipWorkspace {
   return {
@@ -60,5 +61,6 @@ export function chipOf(workspace: Workspace): ChipWorkspace {
     name: nameLabel(workspace.name),
     status: workspace.state,
     github: workspace.github,
+    messageWaiting: workspace.messageWaiting,
   }
 }

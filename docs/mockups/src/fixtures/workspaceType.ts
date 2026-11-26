@@ -39,6 +39,12 @@ export type Workspace = {
   /** The status in the workspace list when the app opens. */
   status: ActivityStatus
   /**
+   * Whether a message waits for the cloud computer to start, such as the
+   * first message of a new workspace. The list mark moves only then while
+   * the workspace starts.
+   */
+  messageWaiting?: boolean
+  /**
    * The GitHub state of its pull request when the app opens, which the
    * list mark shows in colour. `null` is a branch without a pull request,
    * a pull request without checks, or one closed without a merge.

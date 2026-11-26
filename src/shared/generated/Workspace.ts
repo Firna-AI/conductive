@@ -85,6 +85,11 @@ export type Workspace = {
    */
   githubPullFromFork?: boolean
   /**
+   * Whether a message waits in the queue while the workspace starts.
+   * Only the list read sets it, and only for a starting workspace.
+   */
+  messageWaiting?: boolean
+  /**
    * created at.
    */
   createdAt: Timestamp

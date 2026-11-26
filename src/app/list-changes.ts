@@ -46,9 +46,28 @@ export function workspaceUpdated(workspace: Workspace): ListChange {
         sectionId: item.sectionId,
         github:
           item.branch === workspace.branch ? item.github : workspace.github,
+        ...waitingOf(item, workspace),
       })),
     }
   }
+}
+
+/**
+ * Whether a message waits for the start. Only the list read carries it, so
+ * a listed row keeps it while the row and the newer record both start. A
+ * value from an earlier start never moves the mark of a later start.
+ */
+function waitingOf(
+  item: Workspace,
+  workspace: Workspace,
+): Pick<Workspace, 'messageWaiting'> {
+  if (workspace.messageWaiting !== undefined)
+    return { messageWaiting: workspace.messageWaiting }
+  const keeps =
+    item.state === 'starting' &&
+    workspace.state === 'starting' &&
+    item.messageWaiting !== undefined
+  return keeps ? { messageWaiting: item.messageWaiting } : {}
 }
 
 /** The fields that only the list read carries, which a listed row keeps. */

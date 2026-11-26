@@ -144,7 +144,11 @@ export function WorkspaceRow({
           nested,
         )}
       >
-        <WorkspaceMark github={workspace.github} status={workspace.state} />
+        <WorkspaceMark
+          github={workspace.github}
+          messageWaiting={workspace.messageWaiting}
+          status={workspace.state}
+        />
         <WorkspaceNameField
           name={workspace.name}
           page={page}

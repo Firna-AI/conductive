@@ -59,7 +59,11 @@ export function RowContent(props: {
   const { workspace } = props
   return (
     <>
-      <WorkspaceMark github={workspace.github} status={workspace.state} />
+      <WorkspaceMark
+        github={workspace.github}
+        messageWaiting={workspace.messageWaiting}
+        status={workspace.state}
+      />
       <WorkspaceName
         className={styles.name}
         emphasis={nameEmphasis}

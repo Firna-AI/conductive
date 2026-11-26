@@ -115,8 +115,8 @@
 
 /*
  * Without motion, the lit cells keep the state: the ring of an agent that
- * works or of a start, and the middle column of an agent that needs
- * input. While only the checks run, the centre lights too, so the still
+ * works or of a start with a waiting message, and the middle column of
+ * an agent that needs input. While only the checks run, the centre lights too, so the still
  * mark does not read as an agent that works.
  */
 @media (prefers-reduced-motion: reduce) {

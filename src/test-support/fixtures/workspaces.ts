@@ -61,6 +61,9 @@ export function workspaceRecord(
     choice: { ...workspace.choice, fast: workspace.choice.fast ?? false },
     state: workspace.status,
     github: workspace.github,
+    ...(workspace.messageWaiting !== undefined && {
+      messageWaiting: workspace.messageWaiting,
+    }),
     ...times,
     restoreUntil: null,
     archivedAt: null,

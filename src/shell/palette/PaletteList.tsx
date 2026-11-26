@@ -88,7 +88,11 @@ function RowContent(props: {
   return (
     <>
       <span className={styles.lead}>
-        <WorkspaceMark github={workspace.github} status={workspace.state} />
+        <WorkspaceMark
+          github={workspace.github}
+          messageWaiting={workspace.messageWaiting}
+          status={workspace.state}
+        />
       </span>
       {row.numberLabel ? (
         <span className={styles.number}>{row.numberLabel}</span>

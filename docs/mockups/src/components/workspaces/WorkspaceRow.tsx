@@ -19,6 +19,15 @@ import {
 import rowMenu from '../../../../../src/ui/components/workspaces/RowMenu.module.css'
 import styles from '../../../../../src/ui/components/workspaces/WorkspaceRow.module.css'
 
+/**
+ * The waiting message of a row for its mark. Mokly takes only plain data,
+ * so a row without one passes no prop.
+ */
+function waitingOf(row: WorkspaceRow): { messageWaiting?: boolean } {
+  const { messageWaiting } = row.workspace
+  return messageWaiting === undefined ? {} : { messageWaiting }
+}
+
 /** How a drag shows a row: lifted under the pointer, or left behind. */
 export type RowDrag = 'lifted' | 'placeholder'
 
@@ -73,7 +82,11 @@ function RenameRow(props: {
         nestedClasses(row.indent, row.lines),
       )}
     >
-      <workspaceMark.Component github={row.github} status={row.status} />
+      <workspaceMark.Component
+        github={row.github}
+        {...waitingOf(row)}
+        status={row.status}
+      />
       <span
         aria-label="Workspace name"
         className={classes(rowMenu.field, page && rowMenu.fieldPage)}
@@ -169,7 +182,11 @@ export function WorkspaceRowView(props: {
   )
   const content = (
     <>
-      <workspaceMark.Component github={row.github} status={row.status} />
+      <workspaceMark.Component
+        github={row.github}
+        {...waitingOf(row)}
+        status={row.status}
+      />
       <WorkspaceName
         className={styles.name}
         emphasis={nameEmphasis}

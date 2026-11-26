@@ -29,6 +29,9 @@ function chipOf(row: WorkspaceRow): ChipWorkspace {
     name: row.workspace.name,
     status: row.status,
     github: row.github,
+    ...(row.workspace.messageWaiting !== undefined && {
+      messageWaiting: row.workspace.messageWaiting,
+    }),
   }
 }
 
@@ -52,6 +55,9 @@ export function LinkChip(props: {
         label: workspaceLabel(row.workspace.number),
         status: row.status,
         github: row.github,
+        ...(row.workspace.messageWaiting !== undefined && {
+          messageWaiting: row.workspace.messageWaiting,
+        }),
       },
       title: nameLabel(session.title),
     }

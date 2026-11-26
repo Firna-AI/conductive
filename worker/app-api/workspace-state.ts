@@ -24,8 +24,16 @@ export async function workspaceForViewer(
 ): Promise<Workspace> {
   if (workspace.archivedAt !== null || workspace.state === 'archived')
     return { ...workspace, state: 'archived' }
+  if (workspace.state === 'starting') {
+    // The list mark runs its light for a start only while a message waits.
+    // An object that runs older code leaves the answer out, which reads as
+    // no waiting message.
+    const summary = await workspaceBinding(env)
+      .getByName(workspace.id, { locationHint: 'weur' })
+      .readChatWorkspaceSummary({ messageWaiting: true })
+    return { ...workspace, messageWaiting: summary.messageWaiting === true }
+  }
   if (
-    workspace.state === 'starting' ||
     workspace.state === 'stopped' ||
     workspace.state === 'error' ||
     workspace.state === 'input'
