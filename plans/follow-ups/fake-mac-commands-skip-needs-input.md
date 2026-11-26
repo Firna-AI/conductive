@@ -1,0 +1,31 @@
+# Fake Mac commands do not set needs input
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-26, from branch `calummoore/needs-input-at-the-composer-milestones-3-j8a8`, an open problem of the milestone that added the needs-input mark of a session tab.
+- **Location:** `src/app/dev/options.ts`, the `mac` option. `src/test-support/fake-device-routes.ts:26`, `fakeDeviceRoutes`. `src/app/dev/secret-store.ts:109`, `followOpenRequests`. `src/chat/dev/dev-mac.ts:119`, `publish`.
+- **Reason:** The fakes never set needs input for their Mac commands, and the change that found it kept the workspace states of the fakes as they were.
+
+- **Terms:**
+  - **Development fake:** the sample backend that `npm run dev` gives the app, from `src/app/dev/` and `src/test-support/`. Its address options, such as `mac=waiting` or `secrets=late`, pick what it shows.
+  - **Needs input:** the workspace state `input`. The Worker sets it while a Mac command request or a secret request of the workspace waits (decision 68).
+  - **Needs-input mark:** the blue mark that replaces the icon of a session tab while its session holds an open request.
+- **Background:**
+  - `docs/protocol/agent-tools.md:233` says that while a Mac command request waits, its workspace shows needs input.
+  - For secret requests, the fake follows the Worker. `followOpenRequests` sets the workspace to `input` while a request waits or is late, and back to its earlier state when the last one ends.
+  - For Mac commands, `fakeDeviceRoutes` serves the requests of the `mac` option, but nothing changes the workspace state. The state comes from the `workspace` option, or it is `ready`.
+  - The tab mark comes from the open requests of each session, not from the workspace state.
+  - The chat development page under `src/chat/dev/` has the same gap at its start: its `state` option starts at `ready`. Its `publish` in `dev-mac.ts` moves `input` to `working` when the last waiting command ends.
+- **Problem:** With `mac=waiting`, the header of the fake workspace says Ready, while the session tab shows the needs-input mark. The milestone saw this in a browser on 26 November 2026.
+- **Impact if no action:** A developer who checks a waiting Mac command sees a state that the Worker never sends, and can take it for a bug of the app.
+- **Root question:** How does the development fake show the workspace state that the Worker gives while a Mac command waits?
+- **Options:**
+  - **A.** Pass `workspace=input` with `mac=waiting` by hand, and say so in `src/app/dev-fake.md`. Effort: Small.
+  - **B.** Start the fake workspace in `input` when the `mac` scenario holds a waiting request, unless the `workspace` option names a state. Do the same for the `state` option of the chat development page. Effort: Small.
+  - **C.** Let one function of the fake give the workspace `input` while any of its requests waits, a Mac command or a secret request, and its earlier state after the last one ends. Extend `followOpenRequests` to the Mac commands of the fake. Do the same at the start of the chat development page. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** C. One rule then follows the Worker for both kinds of request.
+- **Previous examples:** None found.
+- **Related:** None.
+- **Recommendation:** C. The header and the mark then agree in each scenario, as they do with the Worker.
+- **Action:** fix after merge, apply C, because the fakes are outside the change that found the problem.

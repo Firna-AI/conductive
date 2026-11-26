@@ -1,0 +1,32 @@
+# Partial history puts answered requests at the bottom
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-26, from branch `calummoore/needs-input-at-the-composer-milestones-3-j8a8`, review round 1, the wider fix D of finding 4, split off from its direct fix. It also holds a problem that the check of that finding found outside the scope, at `src/chat/device/session-commands.tsx:36`.
+- **Location:** `src/shared/transcript/command-placement.ts:33`, `placeCommands`. Its callers: `src/chat/device/session-commands.tsx:36`, `src/chat/secrets/session-secrets.tsx`, `src/shared/transcript/session-markdown.ts:108`, and `src/shared/secret-request-transcript.ts:108`.
+- **Reason:** The wider fix reaches the Mac command path, which the change that found it did not touch.
+
+- **Terms:**
+  - **Turn:** one run of the agent, with its messages, actions, and results.
+  - **Answered request:** a Mac command request or a secret request that has its result. It shows as a card at its place in its turn.
+  - **Partial history:** the chat of a session while its earlier history pages still load, or after one of them failed. The chat loads the newest page first and merges the earlier pages later. The `hydration` of a session state is `ready` only when every page has loaded.
+- **Background:**
+  - `placeCommands` puts each answered request at its place in its turn: after the items of its turn that began before the request, and before the end of the turn.
+  - When the turn of a request has no loaded item, `placeCommands` puts the request after the last loaded item. That fallback is right for a complete history, such as a Markdown copy of a session. In a partial history, the turn can sit on an earlier page that has not merged yet.
+  - The chat reads the Mac command requests of the whole workspace at once, not from the history pages. `sessionCommands` then places each answered Mac command of the shown session with `placeCommands`.
+  - The change that added this item fixed the fallback for the secret records of `sessionSecrets` only. While the history of the session is partial, such a record now waits for a row of its own turn. `placeCommands` itself keeps the fallback, and its other callers use it.
+  - `docs/protocol/workspace-events.md:55` says: "The chat shows each event of a session once and in event order, also when earlier history arrives after newer events." `docs/protocol/agent-tools.md:239` says that after its result, a Mac command shows at its place in the chat.
+- **Problem:** In a long session, an answered Mac command of an earlier page shows at the bottom of the chat, after newer turns, until the earlier pages merge. When an earlier page fails to load, the command stays there until the member loads the history again. `placeCommands` cannot tell a partial history from a complete one, so each caller gets the fallback unless it adds its own hold.
+- **Impact if no action:** A member reads a result as part of a newer turn. Each new caller of `placeCommands` can repeat the defect.
+- **Root question:** How does each caller of `placeCommands` place an answered request whose turn has not loaded yet?
+- **Options:**
+  - **A.** Give `sessionCommands` its own hold, as `sessionSecrets` has: while the history is partial, an answered Mac command waits for a row of its own turn. Check the places again when each page arrives. Effort: Small.
+  - **B.** Give `placeCommands` an optional mode for a partial history, in which a request needs a loaded item of its own turn. Use it in `sessionCommands` and `sessionSecrets`. A new caller that leaves out the mode still gets the fallback. Effort: Small.
+  - **C.** Change the fallback for every caller: a request whose turn has no loaded item follows the last loaded item that began before it, or comes first. It keeps the time order of the loaded items, but it can show inside a wrong turn until its own turn loads. Effort: Small.
+  - **D.** Make the history state a required input of `placeCommands`, such as `complete` or `partial`. In a partial history, a request whose turn has no loaded item gets no place until a row of its turn loads. `sessionCommands` and `sessionSecrets` pass `partial` until `hydration` is `ready`. The two callers of the Markdown copy of a session, in `session-markdown.ts` and `secret-request-transcript.ts`, pass `complete`. The hold of `sessionSecrets` then moves into the shared function. Add a test of an answered Mac command with an earlier page held back. Effort: Small.
+- **Left out:** A wait for the whole history before the chat shows any answered request, because a long chat would then show its newest results late.
+- **Wider fix:** D. Each caller must say whether its history is complete, so no caller gets the fallback by mistake.
+- **Previous examples:** Commit `f13c08300` (#281) added the newest-first history, with its own handling of content that arrives while earlier pages load.
+- **Related:** None.
+- **Recommendation:** D. It fixes the Mac commands and keeps every later caller from the same defect.
+- **Action:** fix after merge, apply D, because it reaches the Mac command path, which the change that found it did not touch.

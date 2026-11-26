@@ -127,9 +127,9 @@ decision number names a decision of the change that adds
 - A request for secrets of the org offers Deny and Allow for this session.
   Allow gives the session an approval of each secret that the request
   names.
-- Only the request, needs input, and the needs-input mark of its session
-  tab show that a request waits. The Mac app shows no notification for it,
-  as it does for a Mac command request.
+- No notice outside the screens of the app tells that a request waits. The
+  Mac app and a browser show no notification for it (secrets decision 13 A).
+  A [Mac command request](desktop-commands.md#the-request-on-the-mac) gets one from the Mac app.
 
 ## Covered requests
 

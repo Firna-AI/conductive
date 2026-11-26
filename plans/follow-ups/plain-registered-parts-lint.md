@@ -1,0 +1,41 @@
+# Mockups keep rendering plain registered parts
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from branch `calummoore/needs-input-at-the-composer-milestones-3-j8a8`, review round 1, the blocked wider fix B of finding 44, with the ten files that its check found outside the scope.
+- **Location:** `eslint.config.js`, a new rule for the files under `docs/mockups/src/`. `docs/mockups/registered-parts.md:44`, the wrapper rule. The ten files that the body lists.
+- **Reason:** The wider fix adds a new lint, and the user decides each new lint.
+
+- **Terms:**
+  - **Registered part:** a React part of the mockup catalogue that an entry module under `docs/mockups/src/entries/components/` registers with Mokly's `defineComponent`.
+  - **Wrapper:** the `Component` of an entry module, such as `iconButton.Component`. It renders the registered part and tells Mokly which part it is.
+  - **Plain part:** the part itself, imported from its source file, such as `IconButton` from `src/ui/components/common/actions.tsx`.
+  - **Mockup-only file:** a file under `docs/mockups/src/` that the app never reaches. The import lint of `eslint.config.js` keeps shipped code from importing `docs/mockups/`.
+  - **Changes:** the view of Mokly that compares the catalogue of a branch with `origin/main`. It lists an edit of a registered part under that part, with the screens that use it as its Affected screens.
+- **Background:**
+  - `docs/mockups/registered-parts.md` says under "How a screen uses a part": "A mockup screen and a part that only the mockups use render the wrapper, `part.Component`, in place of the plain part."
+  - The same doc keeps some uses plain on purpose: the parts in chat text, message blocks, Markdown blocks, and code lines, which have no stable key, and every part in a file that the app reaches.
+  - Pull request #607 registered the shared parts on 20 November 2026, as commit `061ec1961`. The active plan `plans/registered-mockup-parts.md` registers more parts in its open milestones, and it moves the plain uses of the files that those milestones name.
+  - Nothing checks the wrapper rule. A review finds each plain use by hand.
+  - On 21 and 22 November 2026, five pull requests added ten mockup-only files that render a plain `IconButton` or `ActionButton`. No plan and no other follow-up item names them:
+    - #617: `docs/mockups/src/components/operator/AccountSection.tsx` and `docs/mockups/src/components/operator/SwitchDialogs.tsx`, with `ActionButton`.
+    - #619: `docs/mockups/src/components/explain/ExplainButton.tsx`, with `ActionButton`, and `docs/mockups/src/components/explain/ExplainPopover.tsx`, with `IconButton`.
+    - #643: `docs/mockups/src/components/tools/ServiceList.tsx`, with `IconButton`, and `docs/mockups/src/components/tools/ServiceLog.tsx` and `docs/mockups/src/components/tools/ServiceParts.tsx`, with `ActionButton`.
+    - #644: `docs/mockups/src/components/new-workspace/BranchPicker.tsx`, with `IconButton` and `ActionButton`, and `docs/mockups/src/screens/newWorkspaceBranches.tsx`, with `ActionButton`.
+    - #647: `docs/mockups/src/components/files/ExpandedPicture.tsx`, with `IconButton`.
+  - On 26 November 2026, the review of the needs-input change found plain `IconButton` uses for Previous and Next in `docs/mockups/src/components/chat/RequestStack.tsx`. That change moved them to the wrapper.
+  - A count on 26 November 2026, at `origin/main` `d39eadc90`, found 25 mockup-only files that render a plain `IconButton` or `ActionButton`. With every registered part, it found 55 files that render at least one plain registered part. Some of those use the parts that the rule keeps plain.
+  - The count took 273 names from 197 source files: each name that an entry module imports from its source file and renders. Then it read the named imports and the rendered parts of each other file under `docs/mockups/src/`.
+- **Problem:** The wrapper rule depends on each author and each review. Ten files of five pull requests broke it in the two days after the registration.
+- **Impact if no action:** An edit of a shared part gives rows under each screen that renders it plain, and those screens miss from the Affected screens of the part. A reviewer who reads the entry of the part can miss them.
+- **Root question:** How does the catalogue keep each mockup-only use of a registered part on its wrapper?
+- **Options:**
+  - **A.** Keep the written rule and the reviews. Move the plain uses of the ten files to wrappers in one branch, with an instance name for each use. Effort: Medium.
+  - **B.** Add an ESLint `no-restricted-imports` rule for the files under `docs/mockups/src/`, except the entry modules under `docs/mockups/src/entries/components/`. It refuses a named import of a registered part from its source file, with a message that points to the wrapper rule. Read the names from the entry modules, so that each new registration joins the rule with no edit. Give the plain uses that the doc allows an exception. Move the ten files to wrappers in the same change, or list them as exceptions until they move. Effort: Medium.
+  - **C.** Add a script to `npm run mockups:check` that lists each plain use as a warning and does not fail. Effort: Medium.
+- **Left out:** A change of Mokly that finds plain parts in a screen, because Mokly's protocol says that it infers no component. A new registration for each plain use, because it splits the uses of one control.
+- **Wider fix:** B. It stops each new plain use where it starts, and each new registration joins it with no edit.
+- **Previous examples:** The ten files above, and the stack buttons of the needs-input change.
+- **Related:** `plans/registered-mockup-parts.md` moves the plain uses of the files that its open milestones name, so a rule of B needs exceptions for those files until they move. `plans/follow-ups/fixture-import-check.md` asks about another lint of the imports of mockup code.
+- **Recommendation:** B. Ten files with plain uses in two days show that the written rule alone does not hold, and names from the entry modules keep the rule current.
+- **Action:** ask the user, because B adds a new lint, and the user decides each new lint.

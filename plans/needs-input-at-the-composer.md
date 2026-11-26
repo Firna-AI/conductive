@@ -435,8 +435,7 @@ The docs agent's calls of 26 November 2026, in milestone 3:
 - "Stays in the chat" in `docs/architecture/flows.md` and
   `docs/protocol/secrets.md` stays, because the stack is part of the chat.
 - The split of `secret-requests.md`, now 299 lines, stays with its
-  follow-up items `secret-requests-doc-length.md` and
-  `protocol-state-doc-length.md`.
+  follow-up item `protocol-state-doc-length.md`.
 
 ## Milestone 1: Mockups
 
@@ -680,9 +679,9 @@ Depends on: 6 (review round 1)
 
 Depends on: 6 (review round 1)
 
-- [ ] Finding 83 C: the Secret requests page states the rule against a
+- [x] Finding 83 C: the Secret requests page states the rule against a
       notification, not a closed list of cues.
-- [ ] Record a follow-up item for each deferred finding, each split-off or
+- [x] Record a follow-up item for each deferred finding, each split-off or
       blocked wider fix, and each problem outside the scope.
 
 ## Post-merge follow-up (non-blocking)

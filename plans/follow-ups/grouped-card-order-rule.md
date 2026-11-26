@@ -1,0 +1,37 @@
+# Code and rule disagree on grouped card places
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from branch `calummoore/needs-input-at-the-composer-milestones-3-j8a8`, review round 1, finding 2 and its repeat, finding 81.
+- **Location:** `docs/protocol/request-stack.md:113`, the place of a card in "Requests for the same secrets". `src/ui/components/chat/requestStackOrder.ts:52`, `stackEntries`, with its comment at line 38. `src/chat/components/request-stack.test.ts:112`, the test of a card whose newest request waits. `docs/mockups/design-secrets.md:226`.
+- **Reason:** The recommended option changes a protocol requirement, and no user decision covers that change.
+
+- **Terms:**
+  - **Request stack:** the cards above the composer of a session that show its open requests, one card at a time. `docs/protocol/request-stack.md` holds its rules.
+  - **Waiting request:** an open request whose tool call still waits for its answer. The call of a secret request waits at most 90 seconds.
+  - **Late request:** a secret request that stays open after its tool call stopped waiting, after 90 seconds or at the end of its turn.
+  - **Grouped card:** one card for the open secret requests of a session for the same set of secrets. It shows the newest of them and says how often the agent asked, such as "Asked 3 times".
+- **Background:**
+  - The stack orders its cards in one order: first the waiting requests, then the late requests, each group oldest first (`docs/protocol/request-stack.md:53`). Reason: a call that waits has a time limit, and a late request has none.
+  - `docs/protocol/request-stack.md:113` places a grouped card: "The card is one place in the stack. It takes the place of the oldest request that it holds. When the call of its newest request waits, it goes with the requests whose calls wait. Reason: a new ask of the agent then does not move a card that already waits."
+  - That rule came from a design call of the UI agent on 20 November 2026, in the change that added the stack. No user decision chose it.
+  - The app and the mockups share one order function, `stackEntries`. It first puts each waiting request before each late request, each part oldest first. Then it forms the grouped cards, and each card keeps the place of its first request in that order.
+  - So in the code, a grouped card goes with the waiting cards while any of its requests waits, at the place of its oldest waiting request. Otherwise it takes the place of its oldest request.
+  - An older call ends first, so a late request is never newer than a waiting secret request of the same card.
+  - The public guide says, at `src/marketing/docs/sessions-and-chat.md:342`: "In each group, it shows requests the agent still waits for before late requests." It says nothing about grouped cards, so it fits the code.
+  - A probe on 26 November 2026 compared `stackEntries` with both rules over 20,000 random stacks of one to six requests. A secret request waited only when each newer secret request waited too. A Mac command request waited or not at random, and the view could answer it or not at random.
+  - The code matched option C below in all 20,000 stacks. It matched the rule in force in 18,614 of them.
+  - In the example of the problem below, the rule in force fails both of its own reasons. B waited before A asked again, and the new ask moves B down. The call of B is also older than the newest call of A, so its time limit ends first.
+- **Problem:** The code and the protocol place a grouped card differently when it holds an older late request and a newer waiting request. For late A at 10, waiting B at 20, and waiting A at 40, the code shows B first. The protocol puts the A card first, at the place of A at 10.
+- **Impact if no action:** The protocol states an order that the app does not show. A later change can bring the code to that rule, which fails both of its own reasons in the example.
+- **Root question:** Where does a grouped card go among the waiting cards when it holds a late request and a newer waiting request?
+- **Options:**
+  - **A.** Keep the rule in force. Form the cards as today, then sort them again: by the waiting state of the newest request of each card, then by the place of its oldest request. Keep the cards that this view can answer first. Add the three requests of the example to the order test. Effort: Small.
+  - **B.** Keep the rule in force. Form the cards in time order first, and keep the place of the oldest request on each card. Then apply the waiting rule and the answer rule to whole cards in `stackEntries`. Add the three requests of the example to the order test. Effort: Small.
+  - **C.** Keep the code, and change the rule to match it. A grouped card goes with the waiting cards while any of its requests waits, at the place of its oldest waiting request. Otherwise it takes the place of its oldest request. Update `docs/protocol/request-stack.md:113`, `docs/mockups/design-secrets.md:226`, and the comment of `stackEntries`. As for each change of a protocol fact, read both legal pages and each public guide in full for a sentence that restates the place. Add the three requests of the example to `src/chat/components/request-stack.test.ts`, so that a change of the order fails a test. Effort: Medium.
+- **Left out:** A place from the newest request of a card, because each new ask of the agent would then move its card. Separate order functions for the app and the mockups, because the examples could then disagree with the app.
+- **Wider fix:** B, if the user keeps the rule in force. The shared function then gives each card its place before it sorts the cards. With C, no wider fix is needed, because one function already orders the app and the mockups.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/repeated-ask-keeps-read-only-card.md` changes which card stays on top, in `src/chat/components/request-stack.ts`. The two fixes touch the same code and do not conflict.
+- **Recommendation:** C. The code already meets both reasons of the rule, and the rule in force fails both of them in the example.
+- **Action:** ask the user, because C changes the protocol rule of the place of a grouped card, and no user decision covers that change.
