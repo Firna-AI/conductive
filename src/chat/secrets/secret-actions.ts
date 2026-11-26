@@ -1,16 +1,18 @@
 import type { ApiClient } from '../../app/api/client'
 import {
   secretAnswerPath,
+  secretRequestsPath,
   type AnswerSecretRequest,
   type SecretRequest,
 } from '../../shared/secret-requests'
 import type { WorkspaceTarget } from '../api/client'
-import { record, type Reader } from '../api/json'
+import { list, record, type Reader } from '../api/json'
 import { showNotice, type ChatContext } from '../state/context'
 import { readRequest } from './read-secret-events'
 import {
   isOpen,
   withAnswer,
+  withRequestRead,
   withRequestReply,
   type SecretsSnapshot,
 } from './secret-snapshot'
@@ -18,9 +20,24 @@ import {
 const readAnswered: Reader<SecretRequest> = (value) =>
   readRequest(record(value, 'answer').request)
 
-/** The route of the answers of members, through the client of the chat. */
+/**
+ * The requests of the list of the workspace. The list also names the values
+ * that members gave for the workspace, which the chat does not read.
+ */
+const readRequests: Reader<readonly SecretRequest[]> = (value) =>
+  list(readRequest)(record(value, 'secret requests').requests)
+
+/**
+ * The routes of the secret requests, through the client of the chat: the
+ * list of every request of the workspace, and the answers of members.
+ */
 export function createSecretApi(client: ApiClient) {
   return {
+    requests: (target: WorkspaceTarget) =>
+      client.get(
+        secretRequestsPath(target.orgId, target.workspaceId),
+        readRequests,
+      ),
     answer: (
       target: WorkspaceTarget,
       requestId: string,
@@ -45,6 +62,32 @@ function update(
     ...snapshot,
     secrets: change(snapshot.secrets),
   }))
+}
+
+/**
+ * Reads the secret requests of every session of the workspace, so that the
+ * tab of each session that holds an open request shows the needs-input
+ * mark. The history of a session holds only its own requests. The chat
+ * reads them after the stream starts and after each reconnect, and the
+ * events of the stream follow. The read merges as `withRequestRead` says,
+ * so a late reply never takes back a newer state. A failed read changes
+ * nothing: the chat keeps the requests that it knows, and the next
+ * reconnect reads again.
+ */
+export async function readSecretRequests(context: ChatContext): Promise<void> {
+  if (!context.live()) return
+  let requests: readonly SecretRequest[]
+  try {
+    requests = await context.secrets.requests(context.target)
+  } catch {
+    return
+  }
+  if (!context.live()) return
+  // A read that changes nothing keeps the snapshot, so nothing draws again.
+  context.store.update((snapshot) => {
+    const secrets = withRequestRead(snapshot.secrets, requests)
+    return secrets === snapshot.secrets ? snapshot : { ...snapshot, secrets }
+  })
 }
 
 /** Whether a member can answer a request now: it is open, and no answer runs. */

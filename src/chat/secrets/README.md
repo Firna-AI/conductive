@@ -10,18 +10,34 @@ screens.
 
 ## Rules for this code
 
-- The chat reads the requests, the runs, and the late answers only from the
+- The chat reads the requests, the runs, and the late answers from the
   events of the workspace: `secrets.request.updated`, `secrets.run`, and
   `secrets.notice`. The newest page of the history of a session and the
-  live stream hold them, so the chat makes no read of its own. No event
-  holds a value, an output, a duration, or an exit code.
+  live stream hold them. No event holds a value, an output, a duration, or
+  an exit code.
+- The history of a session holds only its own requests. So the chat also
+  reads the requests of every session of the workspace, with the existing
+  `GET .../secret-requests` of the Worker. It reads them after the stream
+  starts, with the Mac commands, and after each later connect of the
+  stream, when the stored history of that connect has applied. The tab of
+  each session with an open request then shows the needs-input mark, also
+  when the chat never loaded the history of that session. A read before
+  the cutoff of the stream was rejected, because a change of another
+  session between the read and the cutoff would then get lost.
+- The read adds each open request, and the newer state of each request
+  that the chat knows. An ended request that the chat does not know waits
+  for the history of its session, which places it in its turn. A failed
+  read changes nothing: the events still come, and the next reconnect
+  reads again.
 - A request shows the state of its newest event number, as the contract
   of the events says, also when a clock gave that state an older time.
-  The reply of an answer has no event number. It shows at once when its
-  `updatedAt` is newer than the shown state. It stays until an event of the
-  same or a newer `updatedAt` arrives, so a late event cannot take the
-  answer back. The first event number of a request orders the requests
-  that were made at the same time.
+  The reply of an answer has no event number, and neither has the read. A
+  state of either shows at once when its `updatedAt` is newer than the
+  shown state. It stays until an event of the same or a newer `updatedAt`
+  arrives, so a late event cannot take the answer back. So a read that an
+  event overtook never takes back the state of that event either. The
+  first event number of a request orders the requests that were made at
+  the same time.
 - Each open request, whose tool call waits or that is late, waits in the
   stack of the requests just above the composer, with the waiting Mac
   commands, as [The request stack](../../../docs/protocol/request-stack.md)
@@ -83,7 +99,14 @@ screens.
   top of two late requests with "1 of 3", three requests for the same
   secret as one card with "Asked 3 times", and the order of a late request
   and a waiting Mac command in a browser and in the Mac app.
-- `secret-snapshot.test.ts` checks the merge of the states of a request.
+- `secret-snapshot.test.ts` checks the merge of the states of a request,
+  also from a read: a read adds an open request and the newer state of a
+  known request, but no older state and no unknown ended request.
+- `secret-reads.test.ts` drives the read through the controller and reads
+  the marks of the tab row. The read at the start marks the tab of another
+  session whose request no event holds. After a reconnect, the read adds
+  a request that no event holds, and the late state that it still holds
+  does not take back the newer state of an event.
 - `answer-request.test.tsx` mounts the chat and answers requests: Allow of
   a value waits for the value, a failed answer keeps it, and the answer
   sends the values with how long they last. A late Allow moves the request
@@ -101,9 +124,11 @@ screens.
 - `read-secret-events.ts`: the readers of the three events, which the
   reader of the stream calls.
 - `secret-snapshot.ts`: `SecretsSnapshot`, the requests, runs, and late
-  answers of the chat, and their merge.
-- `secret-actions.ts`: the route of the answers, `answerSecret`, and
-  `denySecrets`, the Deny of a card that hides requests.
+  answers of the chat, and their merge, with `withRequestRead` for a read.
+- `secret-actions.ts`: the routes of the list and of the answers,
+  `readSecretRequests`, the read of every request of the workspace,
+  `answerSecret`, and `denySecrets`, the Deny of a card that hides
+  requests.
 - `session-secrets.tsx`: `sessionSecrets`, the cards of the shown session,
   in the stack above the composer and at their places in the chat.
 - `waiting-secrets.tsx`: `waitingSecrets`, the open requests as the stack

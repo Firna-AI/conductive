@@ -224,6 +224,7 @@ describe('session parts', () => {
             title: 'Address autocomplete',
             name: 'Address autocomplete',
             running: false,
+            needsInput: false,
             selected: true,
           },
         ]}

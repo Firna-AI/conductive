@@ -8,6 +8,8 @@ import type {
 import { nameLabel } from '../../shared/name-label'
 
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
+import { isRunning, type ChatSnapshot } from '../state/chat-snapshot'
+import { waitsForMember } from '../state/open-requests'
 import { rowTabs, tabKey } from '../state/tab-order'
 
 /** A file, diff, or Preview tab of the saved view. The host draws it. */
@@ -83,9 +85,33 @@ export interface SessionTab {
   title: string
   /** The title of the session, or null while it has none. */
   name: Session['title']
+  /** The session runs a turn, so its tab shows the spinner. */
   running: boolean
+  /**
+   * The session holds an open request, so its tab shows the needs-input
+   * mark in place of its icon, also in place of the spinner.
+   */
+  needsInput: boolean
   /** The tab shows as the current one. */
   selected: boolean
+}
+
+/** What the icon of the tab of each session shows, by the ID of the session. */
+interface SessionMarks {
+  running: (sessionId: string) => boolean
+  needsInput: (sessionId: string) => boolean
+}
+
+/**
+ * The marks of the session tabs from the chat: a running turn, and an open
+ * request of the session, as `waitsForMember` says. Each tab gets them, also
+ * the shown tab.
+ */
+export function sessionMarks(snapshot: ChatSnapshot): SessionMarks {
+  return {
+    running: (sessionId) => isRunning(snapshot, sessionId),
+    needsInput: (sessionId) => waitsForMember(snapshot, sessionId),
+  }
 }
 
 /** A file or diff tab, which the host names and draws. */
@@ -134,13 +160,14 @@ export function shownTab(
  * The tabs of the row in the saved order. `shown` is the tab that shows as
  * the current one, if any, as `shownTab` gives it. `renderTab` names and
  * draws the file and diff tabs of the host. Without it, the row holds only
- * the session tabs. `isRunning` reads the current turn of each session.
+ * the session tabs. `marks` reads the running turn and the open requests of
+ * each session.
  */
 export function rowOf(
   view: WorkspaceView | null,
   sessions: readonly Session[],
   shown: WorkspaceTab | null,
-  isRunning: (sessionId: string) => boolean,
+  marks: SessionMarks,
   renderTab: RenderTab | undefined,
 ): RowTab[] {
   const records = new Map(sessions.map((item) => [item.id, item]))
@@ -160,7 +187,8 @@ export function rowOf(
           title,
           name,
           selected,
-          running: isRunning(session.id),
+          running: marks.running(session.id),
+          needsInput: marks.needsInput(session.id),
         },
       ]
     }

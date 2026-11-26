@@ -10,8 +10,9 @@ type NoticeEvent = Extract<SecretWorkspaceEvent, { type: 'secrets.notice' }>
 /**
  * A request as the chat knows it: its shown state, the newest and the first
  * event numbers of the request, and whether the shown state came from a
- * reply, such as of an answer, which no event gave yet. The first number
- * orders requests that were made at the same time.
+ * reply, such as of an answer or of the read of the requests, which no
+ * event gave yet. The first number orders requests that were made at the
+ * same time.
  */
 interface KnownRequest {
   request: SecretRequest
@@ -94,6 +95,28 @@ export function withRequestReply(
     replied: true,
   }
   return { ...secrets, requests: { ...secrets.requests, [request.id]: next } }
+}
+
+/**
+ * The requests of a read of every request of the workspace. A read has no
+ * event number, so each of its states shows as a reply does: only when it
+ * is newer than the shown state, by `updatedAt`. So a read that an event
+ * overtook never takes back the newer state of that event. The read adds
+ * each open request of any session, and the newer state of each request
+ * that the chat knows. An ended request that the chat does not know waits
+ * for the history of its session, which places it in its turn.
+ */
+export function withRequestRead(
+  secrets: SecretsSnapshot,
+  requests: readonly SecretRequest[],
+): SecretsSnapshot {
+  return requests.reduce(
+    (next, request) =>
+      isOpen(request) || Object.hasOwn(next.requests, request.id)
+        ? withRequestReply(next, request)
+        : next,
+    secrets,
+  )
 }
 
 /** The snapshot after the secret events of one batch, in their order. */

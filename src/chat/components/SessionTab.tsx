@@ -13,6 +13,23 @@ import type {
 } from './tab-row'
 
 /**
+ * The icon and the title of a session tab, in the row and on the lifted copy
+ * of a drag. The icon shows the needs-input mark while the session holds an
+ * open request, else the spinner while its turn runs, else the chat icon.
+ * The mark comes first, so a screen reader hears "Needs input" before the
+ * title.
+ */
+function TabFace(props: { tab: SessionTab }) {
+  const { tab } = props
+  return (
+    <>
+      <SessionTabIcon needsInput={tab.needsInput} running={tab.running} />
+      <span className={styles.title}>{tab.title}</span>
+    </>
+  )
+}
+
+/**
  * The tab of a session: a button that shows the session, and Close. Its
  * rename field takes the place of both while the user renames the session
  * from the tab menu. The field marks the tab, so the tab keeps a fill only
@@ -65,8 +82,7 @@ export function SessionTabItem(props: {
         onClick={() => props.onSelect(tab.id)}
         type="button"
       >
-        <SessionTabIcon running={tab.running} />
-        <span className={styles.title}>{tab.title}</span>
+        <TabFace tab={tab} />
       </button>
       <span {...close} className={styles.close}>
         <IconButton
@@ -81,15 +97,14 @@ export function SessionTabItem(props: {
 }
 
 /**
- * The copy of a session tab that a drag lifts above the page: its icon and
- * its whole title, with no control.
+ * The copy of a session tab that a drag lifts above the page: the icon of
+ * the tab, also the needs-input mark, and its whole title, with no control.
  */
-export function LiftedSessionTab(props: { title: string; running: boolean }) {
+export function LiftedSessionTab(props: { tab: SessionTab }) {
   return (
     <div className={classes(styles.tab, styles.lifted)}>
       <span className={styles.link}>
-        <SessionTabIcon running={props.running} />
-        <span className={styles.title}>{props.title}</span>
+        <TabFace tab={props.tab} />
       </span>
     </div>
   )

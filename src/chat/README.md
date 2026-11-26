@@ -5,7 +5,8 @@ chat of the open session with its composer. It shows messages, folded runs
 of tool calls, the folded work of each ended turn above its answer, the
 running turn, steer, Stop, failures with Try again, the start steps of the
 sandbox, the Mac commands and the secret requests of each turn, the stack
-of the open requests above the composer, Explain with the marks and the
+of the open requests above the composer, the needs-input mark of each
+session tab that holds an open request, Explain with the marks and the
 popover of each explanation, and the bar that takes the composer's place
 while the sandbox does not run. After a failed first start
 of a new workspace, that bar sits above the composer, which stays. The workspace screen
@@ -85,7 +86,8 @@ code that draws them.
 ## Rules for this code
 
 - [The tab row](tab-row.md) gives the rules of the one order of the
-  tabs, the mark of the temporary tab, the drag, the tab menu, and the
+  tabs, the mark of the temporary tab, the needs-input mark of a session
+  tab, the drag, the tab menu, and the
   scroll of the row, and the reader's place that each tab keeps. A move of
   the temporary tab to another place keeps it, and so does Keep open in its tab menu, through the `keep` that the
   host gives that tab.
@@ -190,6 +192,15 @@ too.
   and a value typed into a card leaves the page with the card when another
   card shows.
 - The popover of an explanation shows the stack of its session too.
+- The tab of each session that holds an open request shows the
+  needs-input mark, as [the tab row](tab-row.md) says. One rule,
+  `waitsForMember` of `state/open-requests.ts`, says whether a session
+  holds one, for its tab and for the mark of its explanation. A Mac
+  command that waits counts in every view, also in a browser, which cannot
+  answer it. The history of a session holds only its own secret requests,
+  so the chat also reads those of every session, at the start and after
+  each reconnect, as [the secret requests](secrets/README.md) say. The
+  read of the Mac commands already holds those of the whole workspace.
 
 ## Development page
 

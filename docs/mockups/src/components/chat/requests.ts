@@ -59,7 +59,7 @@ export function isPendingRequest(item: ChatItem): boolean {
  * app on the Mac of the sender, which gets each command of the chat, so
  * `macApp` says whether the view is that Mac app.
  */
-export function answersHere(item: ChatItem, macApp: boolean): boolean {
+function answersHere(item: ChatItem, macApp: boolean): boolean {
   return macApp || !isPendingCommand(item)
 }
 

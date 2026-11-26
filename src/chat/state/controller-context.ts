@@ -4,7 +4,7 @@ import { createChatApi, type WorkspaceTarget } from '../api/client'
 import type { StreamEnvelope } from '../api/read-workspace'
 import { DeviceReads, refreshDevices } from '../device/device-actions'
 import { createDeviceApi } from '../device/device-api'
-import { createSecretApi } from '../secrets/secret-actions'
+import { createSecretApi, readSecretRequests } from '../secrets/secret-actions'
 import { SessionReads } from '../links/session-reads'
 import {
   browserTimers,
@@ -68,6 +68,9 @@ export function createChatContext(
   let drafts = 0
   let files = 0
   let replay: SessionReplay | null = null
+  // The load reads the secret requests after the stream starts. Each later
+  // connect of the stream reads them again, after its stored history.
+  let connected = false
   const context: ChatContext = {
     target,
     api,
@@ -115,6 +118,8 @@ export function createChatContext(
           const complete = replay
           replay = null
           complete?.finish()
+          if (connected) void readSecretRequests(context)
+          connected = true
         }
       },
       deliver: (envelopes) => {

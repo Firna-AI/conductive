@@ -272,6 +272,23 @@ Contract owners:
 - The mark shows on the lifted copy of a drag, as the spinner does.
   Screen readers hear "Needs input" before the title of the tab, in the
   words of the header. The UI agent's call of 20 November 2026.
+- The chat reads the secret requests of every session after its stream
+  starts, with the Mac commands, and again after each later connect of the
+  stream, when its stored history has applied. A return to a workspace
+  that the browser tab keeps is such a connect, because its stream opens
+  again. Reason: a read before the cutoff of the stream can miss a change
+  of another session between the read and the cutoff. The UI agent's call
+  of 26 November 2026.
+- The read adds each open request, and the newer state of each request
+  that the chat knows, by `updatedAt`, as the reply of an answer does. It
+  adds no ended request that the chat does not know. Reason: such a
+  request takes its place in its turn, which can still be unloaded, so it
+  would show at the end of the chat until its history comes. The UI
+  agent's call of 26 November 2026.
+- A failed read changes nothing and shows no notice. Reason: the events
+  still come, the next reconnect reads again, and the mark only points to
+  a request that the stack of its session shows. The UI agent's call of 26
+  November 2026.
 - In the region, the late line stays at the end of the late card, as in
   the chat. When the region is full, the member scrolls it to read the
   line, as `app/secret-requests/several/waiting-and-late` shows. Reason:
@@ -568,25 +585,28 @@ Tags: ui
 
 Depends on: 4
 
-- [ ] Read the open secret requests of every session of the workspace with
+- [x] Read the open secret requests of every session of the workspace with
       the existing `GET .../secret-requests` read, at the start of the chat
       and after each reconnect. Merge them with the events, under the merge
       rules of `src/chat/secrets/secret-snapshot.ts`.
-- [ ] Give each session tab a `needsInput` flag in
+- [x] Give each session tab a `needsInput` flag in
       `src/chat/components/tab-row.ts`, from the open secret requests and
       the waiting Mac command requests of its session.
-- [ ] Show the mark in `src/chat/components/SessionTab.tsx` with the
+- [x] Show the mark in `src/chat/components/SessionTab.tsx` with the
       `SessionTabIcon` of the mockups, through its `needsInput` prop, also
       on the lifted copy of a drag.
-- [ ] Capture the pictures of the marketing site again with
+- [x] Capture the pictures of the marketing site again with
       `npm run marketing:pictures`. The Mac picture shows the tab of a
       waiting Mac command, which the mockups now draw with the needs-input
       mark.
-- [ ] Add DOM tests: a tab of another session shows the mark, the mark
+- [x] Add DOM tests: a tab of another session shows the mark, the mark
       wins over the spinner, and the mark ends with the answer.
-- [ ] Update `src/chat/README.md` and `src/chat/tab-row.md`.
-- [ ] Check the marks in a browser. Save the screenshots under
+- [x] Update `src/chat/README.md` and `src/chat/tab-row.md`.
+- [x] Check the marks in a browser. Save the screenshots under
       `.context/needs-input-at-the-composer/`.
+
+Evidence: `.context/needs-input-at-the-composer/m5/` holds the check logs,
+the break checks, the repeated runs, and the screenshots.
 
 ## Milestone 6: Verification, commit, review, and pull request
 

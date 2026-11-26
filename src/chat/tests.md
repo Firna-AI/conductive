@@ -278,6 +278,13 @@ status says, and no tab menu opens.
 wheel turns.
 `components/SessionTabs.test.tsx` renders the tab of a session with no
 title and its rename field.
+`components/NeedsInputMark.dom.test.tsx` mounts the chat and reads the
+icon of each tab of the row with `tabIcons` of the tab row kit. The tab of
+another session shows the needs-input mark while its late request is
+open, and the mark ends with the event of an answer in another view. The
+shown tab of a running turn shows the mark in place of the spinner, and
+the spinner comes back after the answer. A Mac command that waits marks
+the tab of its session in a browser, which cannot answer it.
 `components/chip-field/ChipTextField.test.tsx` pastes workspace links,
 steps over a chip, removes it with Backspace and Delete, restores a draft,
 copies, follows the list, and checks a field that takes no change. It

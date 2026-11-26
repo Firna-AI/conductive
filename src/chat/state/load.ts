@@ -1,6 +1,7 @@
 import type { SessionsResponse } from '../../shared/sessions'
 import type { OrderedWorkspaceResponse } from '../../shared/workspaces'
 import { refreshDevices } from '../device/device-actions'
+import { readSecretRequests } from '../secrets/secret-actions'
 import { messageOf, type ChatContext } from './context'
 import { hydrateNewest } from './history'
 import { confirmSessions, replaySessionRecords } from './session-records'
@@ -39,6 +40,9 @@ const none = Promise.resolve(null)
  *
  * The Mac commands load after the stream starts. A request that changes
  * after that read comes with a workspace event that the stream delivers.
+ * The secret requests of every session load then too, because the history
+ * of the shown session holds only its own requests. A request of another
+ * session that changes after the cutoff comes with its event.
  *
  * When app models own the account, the org, the models, and the members,
  * the load reads none of them and writes none of them. So no reply of an
@@ -110,5 +114,5 @@ export async function loadChat(context: ChatContext): Promise<void> {
   }
   const after = through ?? Math.min(detail.eventNumber, sessions.eventNumber)
   context.stream.start(after)
-  await refreshDevices(context)
+  await Promise.all([refreshDevices(context), readSecretRequests(context)])
 }

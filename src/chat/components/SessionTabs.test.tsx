@@ -29,7 +29,7 @@ function tabBar(
     null,
     [untitled],
     { kind: 'session', sessionId: untitled.id },
-    () => startedTurn(untitled) !== null,
+    { running: () => startedTurn(untitled) !== null, needsInput: () => false },
     undefined,
   )
   return renderToStaticMarkup(

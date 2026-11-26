@@ -22,18 +22,19 @@ import { CodeCopyProvider, useCodeCopyAction } from './components/code-copy'
 import { useSessionLinkCopy } from './components/session-link-copy'
 import { SessionTabs } from './components/SessionTabs'
 import { useTabKeys } from './components/tab-keys'
-import { rowOf, shownTab, type RenderTab } from './components/tab-row'
+import {
+  rowOf,
+  sessionMarks,
+  shownTab,
+  type RenderTab,
+} from './components/tab-row'
 import { ChatToasts, useTranscriptCopy } from './components/TranscriptCopy'
 import { useChatLinksOf } from './links/chat-links'
 import { LinksProvider } from './links/LinksContext'
 import { useMentionCopy } from './links/mention-copy'
 import { MentionsProvider, type ChatMentions } from './mentions/MentionsContext'
 import { tabSessions } from './state/archive-view'
-import {
-  isRunning,
-  type ChatSnapshot,
-  type Overlay,
-} from './state/chat-snapshot'
+import type { ChatSnapshot, Overlay } from './state/chat-snapshot'
 import type { ChatController } from './state/controller'
 import { withoutTabs } from './state/tab-order'
 import { browserCopy, type CopyServices } from './transcript-copy'
@@ -174,7 +175,7 @@ function ChatBody(
     snapshot.view,
     tabSessions(snapshot),
     shownTab(snapshot.view, active, content !== null),
-    (sessionId) => isRunning(snapshot, sessionId),
+    sessionMarks(snapshot),
     props.renderTab,
   )
   useTabKeys({ tabs, controller, history, copy })
