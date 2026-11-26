@@ -612,9 +612,9 @@ the break checks, the repeated runs, and the screenshots.
 
 Depends on: every other milestone
 
-- [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
+- [x] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
       targeted tests and the complete gate `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
@@ -625,6 +625,65 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+Evidence: `.context/needs-input-at-the-composer/gate/` holds the gate
+logs. The findings file of the branch is under
+`.context/reviews/calummoore/needs-input-at-the-composer-milestones-3-j8a8/`.
+
+## Milestone 7: Mockup fixes of review round 1
+
+Tags: mockup
+
+Depends on: 6 (review round 1)
+
+The review found defects in the mockups of milestones 1 and 2. Each TODO
+names its finding in the findings file of the branch.
+
+- [ ] Finding 84 C: a mockup chat runs while the sandbox is ready and its
+      last item is the Working line. Delete the hand-kept running lists.
+      Capture the Mac marketing pictures again. Delete the two follow-up
+      items about Stop on the waiting Mac command.
+- [ ] Finding 41 D: one walk for each stack example, from shared example
+      definitions. Answer controls outside the walk draw no link. Fix the
+      late card of `several/mac-command` and the command of
+      `mac-app/requests/with-secret` too.
+- [ ] Finding 42 C: the position pages and the step links come from the
+      card count of each fixture. Fix `app/chat/menu-placement` too.
+- [ ] Finding 43 B, or C when its conditions do not hold: each marked tab
+      keeps the open requests. Fix the code tab too.
+- [ ] Finding 44 A: the stack buttons use the registered Icon button.
+- [ ] Lay out the names and "Asked 3 times" as one wrapping row, so the
+      count does not wrap to an indented line at 460 to 640 px.
+- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+
+## Milestone 8: UI fixes of review round 1
+
+Tags: ui
+
+Depends on: 6 (review round 1)
+
+- [ ] Finding 1 D: a card leaves at once after its Allow. Its older
+      requests settle out of the stack until their own events, and one
+      list read releases the rest.
+- [ ] Finding 3 A: the focus rescue of the stack runs as a passive effect,
+      so the focus reaches the card on top or the composer after the value
+      sheet closes.
+- [ ] Finding 4 B: an answered request shows nowhere until a row of its
+      turn loads.
+- [ ] Finding 6 C: the grouped Deny test covers a failed hidden Deny and a
+      second press.
+- [ ] Finding 7 C: one list of the offered Mac scenarios for both
+      development pages.
+- [ ] Run the targeted tests, the typecheck, lint, and format check.
+
+## Milestone 9: Docs fixes of review round 1
+
+Depends on: 6 (review round 1)
+
+- [ ] Finding 83 C: the Secret requests page states the rule against a
+      notification, not a closed list of cues.
+- [ ] Record a follow-up item for each deferred finding, each split-off or
+      blocked wider fix, and each problem outside the scope.
 
 ## Post-merge follow-up (non-blocking)
 
