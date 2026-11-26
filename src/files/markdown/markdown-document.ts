@@ -15,7 +15,7 @@ export type MdInline =
 export type MdBlock =
   | { kind: 'heading'; level: HeadingLevel; text: MdInline[] }
   | { kind: 'paragraph'; text: MdInline[] }
-  | { kind: 'code'; text: string }
+  | { kind: 'code'; text: string; label: string | null }
   | { kind: 'quote'; blocks: MdBlock[] }
   | { kind: 'list'; ordered: boolean; start: number; items: MdListItem[] }
   | { kind: 'rule' }

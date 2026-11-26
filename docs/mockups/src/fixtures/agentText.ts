@@ -131,7 +131,7 @@ export const rule: TextBlock = { kind: 'rule' }
 
 /** A code block, with its text as the agent wrote it. */
 export function codeBlock(text: string): TextBlock {
-  return { kind: 'code', text }
+  return { kind: 'code', text, label: null }
 }
 
 /** A cell of a table: one part, or the parts of its inline text. */

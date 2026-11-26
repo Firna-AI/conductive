@@ -1,9 +1,13 @@
+import { rustApostrophe, type ApostropheToken } from './rust-apostrophe'
+
 /** The syntax rules of one language family, for the code view. */
 export interface Language {
   lineComments: readonly string[]
   blockComments: readonly (readonly [string, string])[]
   /** Openers and closers of strings. Multi-line strings can span lines. */
   strings: readonly { open: string; close: string; multiline: boolean }[]
+  /** Reads a character literal or a lifetime at an apostrophe. */
+  apostrophe?: (line: string, index: number) => ApostropheToken | null
   keywords: ReadonlySet<string>
   /** Keywords match in any case, as in SQL. */
   anyCase: boolean
@@ -49,6 +53,17 @@ const cFamily: Language = {
     public return select self short signed sizeof static struct super switch
     this throw throws trait true try type typedef union unsigned use using val
     var virtual void volatile when where while`),
+}
+
+const rust: Language = {
+  ...cStyle,
+  strings: [{ open: '"', close: '"', multiline: true }],
+  apostrophe: rustApostrophe,
+  keywords: words(`abstract as async await become box break const continue
+    crate do dyn else enum extern false final fn for gen if impl in let loop
+    macro match mod move mut override priv pub ref return self Self static
+    struct super trait true try type typeof unsafe unsized use virtual where
+    while yield`),
 }
 
 const hashComments = {
@@ -146,7 +161,7 @@ const byExtension: ReadonlyMap<string, Language> = new Map([
   ['go', cFamily],
   ['java', cFamily],
   ['kt', cFamily],
-  ['rs', cFamily],
+  ['rs', rust],
   ['scala', cFamily],
   ['swift', cFamily],
   ['dart', cFamily],
@@ -179,6 +194,11 @@ const byName: ReadonlyMap<string, Language> = new Map([
   ['.nvmrc', shell],
 ])
 
+/** The language of a lower-case extension without its leading dot. */
+export function languageOfExtension(extension: string): Language | null {
+  return byExtension.get(extension) ?? null
+}
+
 /** The language of a file name, or null when the view shows plain text. */
 export function languageOf(name: string): Language | null {
   const lower = name.toLowerCase()
@@ -186,5 +206,5 @@ export function languageOf(name: string): Language | null {
   if (named) return named
   if (lower.startsWith('.env')) return shell
   const dot = lower.lastIndexOf('.')
-  return dot < 0 ? null : (byExtension.get(lower.slice(dot + 1)) ?? null)
+  return dot < 0 ? null : languageOfExtension(lower.slice(dot + 1))
 }

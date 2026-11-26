@@ -83,6 +83,13 @@ export function highlightLines(
         mode = { kind: 'comment', close: block[1] }
         continue
       }
+      const apostrophe =
+        line[index] === "'" ? language.apostrophe?.(line, index) : null
+      if (apostrophe) {
+        add(apostrophe.kind, line.slice(index, apostrophe.end))
+        index = apostrophe.end
+        continue
+      }
       const string = language.strings.find((rule) =>
         line.startsWith(rule.open, index),
       )
