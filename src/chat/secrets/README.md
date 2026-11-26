@@ -22,12 +22,25 @@ screens.
   same or a newer `updatedAt` arrives, so a late event cannot take the
   answer back. The first event number of a request orders the requests
   that were made at the same time.
-- A request that waits for its tool call shows just above the composer, in
-  the region of the requests that wait, with the waiting Mac commands. The
-  oldest comes first.
+- Each open request, whose tool call waits or that is late, waits in the
+  stack of the requests just above the composer, with the waiting Mac
+  commands, as [The request stack](../../../docs/protocol/request-stack.md)
+  says. It stays out of its turn while it is open, and a late request keeps
+  its late line and its choices there. The stack orders its cards and
+  moves through them as [the chat README](../README.md#the-request-stack)
+  says.
+- A newer open request of the session hides each older one for the same
+  set of secrets, so one card shows the newest of them and says how often
+  the agent asked, such as "Asked 3 times". Its Allow is one answer, which
+  the Worker gives to each request that the grant covers. Its Deny sends
+  one Deny for each request of the card through `denySecrets`: the hidden
+  requests first, then the request that the card shows, so the card keeps
+  that request until it leaves. When a Deny of a hidden request fails, the
+  shown request stays open, with its choices.
 - Each other record takes its place in its turn as the copy of the session
   does, by its time and then its first event number, through
-  `placeCommands`. A request that ever became late never folds with the
+  `placeCommands`. So an answered or ended request leaves the stack at
+  once for its place. A request that ever became late never folds with the
   work of its turn. A request that a member allowed in time shows once, as
   its run. A request that a member denied in time shows as a denied run.
   Each run folds with its turn. The line of a late answer stays in view at
@@ -64,11 +77,22 @@ screens.
 - `secret-requests.test.tsx` renders the chat with secret events in its
   history: a request above the composer and its read-only form, the choices
   of a request with a name that a new secret cannot take, the runs in the
-  fold of their turn, and the lines of late, answered, and ended requests.
+  fold of their turn, an open late request above the composer, and the
+  lines of late, answered, and ended requests at their places.
+- `secret-stack.test.tsx` renders the stack: a request whose call waits on
+  top of two late requests with "1 of 3", three requests for the same
+  secret as one card with "Asked 3 times", and the order of a late request
+  and a waiting Mac command in a browser and in the Mac app.
 - `secret-snapshot.test.ts` checks the merge of the states of a request.
-- `answer-request.test.tsx` mounts the chat and answers a request for a
-  value: Allow waits for the value, a failed answer keeps it, and the answer
-  sends the values with how long they last.
+- `answer-request.test.tsx` mounts the chat and answers requests: Allow of
+  a value waits for the value, a failed answer keeps it, and the answer
+  sends the values with how long they last. A late Allow moves the request
+  from the stack to its place in its turn. The Deny of a card that hides
+  two requests sends three Denies, the shown request last, and its Allow
+  sends one Allow.
+- `../components/WaitingRequests.dom.test.tsx` and
+  `../components/request-stack.test.ts` test the stack itself, as the
+  [chat tests](../tests.md) say.
 - `../../shell/workspace/SecretValueSheet.test.tsx` opens the sheet of a
   value on a phone, in the whole app.
 
@@ -78,13 +102,17 @@ screens.
   reader of the stream calls.
 - `secret-snapshot.ts`: `SecretsSnapshot`, the requests, runs, and late
   answers of the chat, and their merge.
-- `secret-actions.ts`: the route of the answers, and `answerSecret`.
+- `secret-actions.ts`: the route of the answers, `answerSecret`, and
+  `denySecrets`, the Deny of a card that hides requests.
 - `session-secrets.tsx`: `sessionSecrets`, the cards of the shown session,
-  above the composer and at their places in the chat.
-- `SecretRequestCard.tsx`, `RequestAnswers.tsx`, and `ValueFields.tsx`: the
-  card of a request, its answers, the phone sheet, and the value fields.
+  in the stack above the composer and at their places in the chat.
+- `waiting-secrets.tsx`: `waitingSecrets`, the open requests as the stack
+  takes them, and the card on top with "Asked 3 times" and its Deny.
+- `SecretRequestCard.tsx`, `RequestParts.tsx`, `RequestAnswers.tsx`, and
+  `ValueFields.tsx`: the card of a request, its facts and its end, its
+  answers, the phone sheet, and the value fields.
 - `SecretRunCard.tsx`: a run, or a request denied in time.
 - `LateAnswerLine.tsx`: the line of the app after a late Allow.
 - `secret-words.ts`: the words of the cards.
-- `../components/WaitingRequests.tsx`: the region of the requests that
-  wait, with the Mac commands.
+- `../components/WaitingRequests.tsx`: the stack of the open requests,
+  with the Mac commands.

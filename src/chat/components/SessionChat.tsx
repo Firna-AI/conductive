@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
 import { modelLabel } from '../../shared/agents'
 
@@ -22,6 +22,7 @@ import {
   sessionLoginOf,
 } from '../state/session-login'
 import { ChatPane } from './ChatPane'
+import type { FieldHandle } from './chip-field/focus-plugins'
 import { placeMemory } from './chat-place'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
 import { Composer } from './Composer'
@@ -109,6 +110,8 @@ export function SessionChat(props: SessionChatProps) {
   )
   const status = historyStatus(state)
   const content = showsContent(state, starting !== null)
+  const field = useRef<FieldHandle>(null)
+  const focusComposer = useCallback(() => field.current?.focus(), [])
   const parts = useSessionParts({
     snapshot,
     controller,
@@ -116,6 +119,7 @@ export function SessionChat(props: SessionChatProps) {
     session,
     state,
     readOnly,
+    focusComposer,
   })
   const reader = loginReader(snapshot)
   const login = session ? sessionLoginOf(session, reader) : null
@@ -177,6 +181,7 @@ export function SessionChat(props: SessionChatProps) {
           choice={session.choice}
           draft={state.draft}
           favourites={snapshot.account?.favourites}
+          fieldRef={field}
           files={files}
           focus={props.composerFocus}
           login={loginLabelOf(login)}

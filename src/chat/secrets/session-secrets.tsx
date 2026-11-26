@@ -5,6 +5,7 @@ import type {
 } from '../../shared/secret-requests'
 import { placeCommands } from '../../shared/transcript/command-placement'
 import type { TranscriptInsert } from '../../shared/transcript/transcript-entries'
+import type { WaitingItem } from '../components/request-stack'
 import { KeptParts, sameData, sameElement } from '../components/same-data'
 import type { ChatSnapshot, SessionState } from '../state/chat-snapshot'
 import { loginReader } from '../state/session-login'
@@ -13,14 +14,8 @@ import { isOpen } from './secret-snapshot'
 import { keptLoginOwner, lateAnswerParts } from './secret-words'
 import { SecretRequestCard } from './SecretRequestCard'
 import { SecretRunCard } from './SecretRunCard'
+import { waitingSecrets } from './waiting-secrets'
 import { agentNames } from '../../shell/account/labels'
-
-/** A part that waits just above the composer, in the order of its time. */
-export interface WaitingItem {
-  key: string
-  createdAt: number
-  node: ReactNode
-}
 
 /** A secret record of the chat, before its place is known. */
 interface SecretRecord {
@@ -43,14 +38,16 @@ const placedCards = new KeptParts<TranscriptInsert<ReactNode>>(sameData)
 
 /**
  * The secret requests, runs, and late answers of the shown session, as the
- * events of the workspace give them. A request that waits for its tool call
- * waits just above the composer. Each other request is a card at its place
- * in its turn, and a request that ever became late never folds with the work
- * of its turn. A request that a member allowed in time shows once, as its
- * run. A request that a member denied in time shows as a denied run. Each
- * run folds with its turn, and the line of a late answer stays in view. The
+ * events of the workspace give them. Each open request, whose tool call
+ * waits or that is late, waits in the stack just above the composer, as
+ * `waiting` gives it. Each other request is a card at its place in its
+ * turn, and a request that became late never folds with the work of its
+ * turn. A request that a member allowed in time shows once, as its run. A
+ * request that a member denied in time shows as a denied run. Each run
+ * folds with its turn, and the line of a late answer stays in view. The
  * order follows the copy of the session: the time of each record, then its
- * first event. `choices` says that the chat takes answers.
+ * first event. `choices` says that the chat takes answers. `onDeny` denies
+ * each request of a card that hides older requests for the same secrets.
  */
 export function sessionSecrets(
   snapshot: ChatSnapshot,
@@ -59,6 +56,7 @@ export function sessionSecrets(
   props: {
     choices: boolean
     onAnswer: (requestId: string, answer: AnswerSecretRequest) => void
+    onDeny: (requestIds: readonly string[]) => void
   },
 ): { waiting: WaitingItem[]; inserts: TranscriptInsert<ReactNode>[] } {
   const { requests, runs, notices, answers } = snapshot.secrets
@@ -80,9 +78,9 @@ export function sessionSecrets(
     cards.keep(
       request,
       <SecretRequestCard
-        answering={answers[request.id] ?? null}
+        answering={null}
         choices={props.choices}
-        key={`${request.id}:${isOpen(request) ? 'open' : 'ended'}`}
+        key={`${request.id}:ended`}
         login={login}
         onAnswer={props.onAnswer}
         org={org}
@@ -93,16 +91,13 @@ export function sessionSecrets(
   const own = Object.values(requests).filter(
     ({ request }) => request.sessionId === sessionId,
   )
-  const waiting = own
-    .filter(({ request }) => request.state === 'waiting')
-    .map(({ request }) => ({
-      key: `secret:${request.id}`,
-      createdAt: request.createdAt,
-      node: card(request),
-    }))
+  const waiting = waitingSecrets(
+    own.filter(({ request }) => isOpen(request)),
+    { viewerId, org, login, answers, ...props },
+  )
   const records: SecretRecord[] = [
     ...own
-      .filter(({ request }) => request.state !== 'waiting' && !runs[request.id])
+      .filter(({ request }) => !isOpen(request) && !runs[request.id])
       .map(({ request, firstNumber }) => ({
         id: request.id,
         turnId: request.turnId,

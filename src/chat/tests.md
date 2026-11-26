@@ -564,6 +564,17 @@ order, also after the late copy of the first part.
 The tests of the secret requests are in the
 [README of the secret requests](secrets/README.md#tests).
 
+`components/request-stack.test.ts` checks the order of the stack of the
+open requests: the calls that wait first, then the late requests, one card
+for each set of secrets in the place of its oldest request, and the cards
+that the view cannot answer last. It also checks the card on top when a
+request joins or leaves, when the card on top leaves, and when a request
+that the view can answer joins a card that it cannot answer.
+`components/WaitingRequests.dom.test.tsx` mounts the chat with a stack: it
+moves through it with Previous and Next, keeps the card on top while a
+request joins and leaves, and moves the focus after a move to an end and
+after an answer, to the next card and then to the composer.
+
 `components/ReadOnlyChat.dom.test.tsx` checks the read-only behavior of both hosts.
 A right click and Shift and F10 open a tab menu with only the copy items, with no line.
 It changes `readOnly` during a rename and archives a kept chat during a close question.

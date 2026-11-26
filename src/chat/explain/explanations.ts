@@ -2,6 +2,7 @@ import type { Session } from '../../shared/generated/Session'
 import type { SessionAnchor } from '../../shared/generated/SessionAnchor'
 import { nameLabel } from '../../shared/name-label'
 import { requestsOf } from '../device/device-snapshot'
+import { isOpen } from '../secrets/secret-snapshot'
 import { isRunning, type ChatSnapshot } from '../state/chat-snapshot'
 import type { ExplainMarkState } from '../../ui/components/explain/explainCopy'
 
@@ -16,7 +17,8 @@ export interface Explanation {
 
 /**
  * A request of the agent of the session waits for a member: a Mac command
- * or a secret request.
+ * whose call waits, or an open secret request, whose call waits or that is
+ * late. Each of them waits in the stack above the composer.
  */
 export function waitsForMember(
   snapshot: ChatSnapshot,
@@ -25,8 +27,7 @@ export function waitsForMember(
   const commands = requestsOf(snapshot.devices, sessionId)
   if (commands.some((request) => request.state === 'waiting')) return true
   return Object.values(snapshot.secrets.requests).some(
-    ({ request }) =>
-      request.sessionId === sessionId && request.state === 'waiting',
+    ({ request }) => request.sessionId === sessionId && isOpen(request),
   )
 }
 

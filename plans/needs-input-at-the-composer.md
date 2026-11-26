@@ -364,6 +364,37 @@ card and the call above on the late line in a full region.
   left, the focus moves to the composer. Reason: the focus does not jump
   to an action that the member did not see. The UI agent's call of 20
   November 2026.
+- The app and the mockups draw the stack with one plain part,
+  `RequestStackFrame` in `src/ui/components/chat/`, and order it with one
+  function, `stackEntries` in `requestStackOrder.ts` there, with a reader
+  for each side. The mockup's `RequestStack.tsx` keeps only its cards and
+  the links of Previous and Next. Reason: the two cannot drift apart. The
+  UI agent's call of 26 November 2026.
+- When the card on top leaves, the card after it in the order shows, or
+  the card before it when it was the last. Reason: an answer shows the
+  next card, and the member keeps the walk through the stack. The UI
+  agent's call of 26 November 2026.
+- The stack holds the focus while any of its parts has it: the steps, the
+  card, and a sheet or a menu that the card opens. When the part that
+  holds it leaves, such as the steps when one card is left, the focus
+  moves to the card on top, or to the composer. A control that turns off
+  while its answer runs keeps the stack the holder. Reason: the focus never
+  drops to the page. The UI agent's call of 26 November 2026.
+- The page holds only the card on top. A value typed into a card leaves
+  the page when Previous or Next shows another card, and each card starts
+  at its top. Reason: the stack draws one card, as the mockups do, and a
+  value stays in the page only while its card shows. The UI agent's call
+  of 26 November 2026.
+- The Deny of a card that hides requests sends the Denies of the hidden
+  requests first, then the Deny of the request that the card shows. When
+  a Deny of a hidden request fails, the shown request stays open with its
+  choices, and a notice says that the answer was not sent. Reason: the
+  card keeps its command and its reason until it leaves. The UI agent's
+  call of 26 November 2026, under decision 3 B.
+- A late secret request counts as a request that waits for a member in the
+  marks of Explain and in the height of its phone sheet, as
+  `docs/protocol/request-stack.md` defines an open request. The UI agent's
+  call of 26 November 2026.
 
 ### Calls of the protocol docs
 
@@ -489,10 +520,10 @@ Tags: ui
 
 Depends on: 3
 
-- [ ] Put each open late request in the region in
+- [x] Put each open late request in the region in
       `src/chat/secrets/session-secrets.tsx`, and keep it out of its turn
       while it is open.
-- [ ] Order the region in `src/chat/components/WaitingRequests.tsx`: the
+- [x] Order the region in `src/chat/components/WaitingRequests.tsx`: the
       waiting requests first, then the late requests, each oldest first. A
       card that hides requests takes the place of the oldest request that
       it holds. Then put the cards that this view cannot answer after the
@@ -500,35 +531,35 @@ Depends on: 3
       takes an answer only where it shows its choices: `canAnswer` of
       `src/chat/device/device-snapshot.ts` holds, and the workspace is not
       read-only, as `src/chat/device/PendingCommands.tsx` decides.
-- [ ] Draw the region as the stack of the mockups, with "1 of 3",
+- [x] Draw the region as the stack of the mockups, with "1 of 3",
       Previous, and Next, and the keyboard. Use
       `docs/mockups/src/components/chat/RequestStack.module.css`, the words
       of `requestStackCopy.ts`, and the `stacked` class of each card.
       Move each of these mockup modules that the app then imports into
       `src/ui/components/`, as `src/ui/README.md` says.
-- [ ] Keep the card on top when a request joins or leaves the stack,
+- [x] Keep the card on top when a request joins or leaves the stack,
       except when this view cannot answer that card, and move the focus
       after Previous, Next, and an answer, as "The stack of requests"
       says.
-- [ ] Hide each older request behind a newer one of the same session for
+- [x] Hide each older request behind a newer one of the same session for
       the same set of secrets, with `askedTimes` of `secretRunCopy.ts`.
       Give Deny the outcome of decision 3.
-- [ ] Delete `.requests` and its fade from
+- [x] Delete `.requests` and its fade from
       `src/ui/components/chat/ChatPane.module.css` when the app
       draws the stack. Only the list region of the app uses them.
-- [ ] Update the tests in `src/chat/secrets/secret-requests.test.tsx` and
+- [x] Update the tests in `src/chat/secrets/secret-requests.test.tsx` and
       `src/chat/secrets/answer-request.test.tsx`: a late request shows above
       the composer, and its answer moves it to its place. Add tests of the
       stack, of its order in a browser and in the Mac app, of the merge,
       and of Deny.
-- [ ] Update `src/chat/secrets/README.md` and `src/chat/README.md`. Also
+- [x] Update `src/chat/secrets/README.md` and `src/chat/README.md`. Also
       update `src/chat/device/README.md` (many requests "scroll inside"
       the region) and `worker/secrets/README.md` ("`late` belongs in the
       chat"), which state the old place.
-- [ ] Check that the Explain popover (`src/chat/explain/PopoverChat.tsx`)
+- [x] Check that the Explain popover (`src/chat/explain/PopoverChat.tsx`)
       shows the stack, as `docs/protocol/explain.md` says that it shows a
       waiting request as the session tab does.
-- [ ] Check the flow in a browser on a computer and on a phone width. Save
+- [x] Check the flow in a browser on a computer and on a phone width. Save
       the screenshots under `.context/needs-input-at-the-composer/`.
 
 ## Milestone 5: The needs-input mark of a session tab

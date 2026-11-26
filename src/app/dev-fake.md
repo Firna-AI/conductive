@@ -283,23 +283,31 @@ socket takes the events of its workspace after its own cursor.
   workspace: the list with the values of the workspace, the answer of a
   member, and the removal of a value. An Allow in time sends the run of
   its request, and a late Allow sends the line of the app with the notice
-  of a new turn. A value for this workspace joins the list of the
-  workspace, and Save adds a secret of the org. `?secrets=<state>` puts a
-  state into the session of `checkout-autocomplete`, from
-  `dev/secret-request-seed.ts`. `waiting`, `value`, `mixed`,
-  `invalid-name`, and `mixed-invalid-name` wait for an answer above the
-  composer, so use them with `conversation=running`. `invalid-name` asks
-  for a value of Google Places key, a name that a new secret cannot take,
-  so Save as secret is off. `mixed-invalid-name` adds that name to a mixed
-  request.
-  `late`, `late-value`, `results`, and `ended` sit in a short turn after
-  the recorded one: a late request, a late request for a value, the runs
-  with a denied request and a late Allow with its line, and a request that
-  an Archive ended. The results also give MAPBOX_TOKEN a value for the
-  workspace, which Capabilities lists. As the Worker does, a request that
-  waits or is late gives the workspace the state `input`, so the header
-  says Needs input. The last answer gives back the state from before
-  (`followOpenRequests` of `dev/secret-store.ts`).
+  of a new turn. As the Worker does, an Allow also allows each other open
+  request that its grant covers, with no line of its own
+  (`dev/secret-allow.ts`). A value for this workspace joins the list of
+  the workspace, and Save adds a secret of the org. `?secrets=<state>`
+  puts a state into the session of `checkout-autocomplete`, from
+  `dev/secret-request-seed.ts`. Each open request waits in the stack above
+  the composer. `waiting`, `value`, `mixed`, `invalid-name`, and
+  `mixed-invalid-name` wait for the answer of their tool call, so use them
+  with `conversation=running`. `invalid-name` asks for a value of Google
+  Places key, a name that a new secret cannot take, so Save as secret is
+  off. `mixed-invalid-name` adds that name to a mixed request.
+  `waiting-and-late` is a stack of three, also with
+  `conversation=running`: a request of PROD_DATABASE_URL whose call waits
+  on top, then two late requests of the running turn, for VERCEL_TOKEN
+  with MAPBOX_TOKEN, and for MAPBOX_TOKEN.
+  `late`, `late-value`, `asked-again`, `results`, and `ended` sit in a
+  short turn after the recorded one: a late request, a late request for a
+  value, three late requests for PROD_DATABASE_URL that one card shows with
+  "Asked 3 times", the runs with a denied request and a late Allow with its
+  line, and a request that an Archive ended. The results also give
+  MAPBOX_TOKEN a value for the workspace, which Capabilities lists. As the
+  Worker does, a request that waits or is late gives the workspace the
+  state `input`, so the header says Needs input. The last answer gives
+  back the state from before (`followOpenRequests` of
+  `dev/secret-store.ts`).
 - `?capabilities=<state>` puts the notes of changes of the capabilities
   into the session of `checkout-autocomplete`, from
   `dev/capability-note-seed.ts`, as the pages of `app/capabilities/changed`
@@ -375,6 +383,11 @@ so its default applies.
   kept cloud computer, so `may-exist` shows an unresolved create request.
   Without the option, their records have none, as from an older Worker.
 - `conversation=<scenario>`: its recorded chat, such as `running`.
+- `mac=<scenario>`: the Mac commands of `checkout-autocomplete`, with the
+  values of the `mac` option of the
+  [chat development page](../chat/dev/README.md#options), such as
+  `waiting`. The app runs in a browser, so a command that waits shows its
+  state only, after the secret requests in the stack above the composer.
 - `banner=<state>`: its GitHub banner, such as `merged`. Its list mark
   shows the GitHub state of that bar.
 - `paths=masked`: two files whose real paths hold a fake secret value,

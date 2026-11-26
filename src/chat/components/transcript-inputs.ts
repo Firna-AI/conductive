@@ -10,8 +10,8 @@ import { sourceInsert } from './SourceLine'
 
 /**
  * The parts of the chat of the session `id` that come from the snapshot:
- * the Mac commands and the secret requests, with the ones that wait above
- * the composer, and the inputs of the transcript: its inserts, its readers,
+ * the Mac commands and the secret requests, with the open ones that wait in
+ * the stack above the composer, and the inputs of the transcript: its inserts, its readers,
  * and Try again. Each stays the same value while its data stays the same,
  * so a tick of the clock draws no row of the transcript again. The line of
  * a linked session to its source also stays while the session records stay.
@@ -38,9 +38,18 @@ export function useTranscriptInputs(
       void controller.answerSecret(requestId, answer),
     [controller],
   )
+  const onDeny = useCallback(
+    (requestIds: readonly string[]) => void controller.denySecrets(requestIds),
+    [controller],
+  )
   const secrets = useMemo(
-    () => sessionSecrets(snapshot, id, state, { choices: !readOnly, onAnswer }),
-    [snapshot, id, state, readOnly, onAnswer],
+    () =>
+      sessionSecrets(snapshot, id, state, {
+        choices: !readOnly,
+        onAnswer,
+        onDeny,
+      }),
+    [snapshot, id, state, readOnly, onAnswer, onDeny],
   )
   const { sessions, history } = snapshot
   const source = useMemo(

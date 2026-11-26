@@ -56,8 +56,9 @@ The parts and styles that the app shares live in
   Each button of the bar links to the page of its result.
   A grant until Stop shows Until you stop and Stop, with no Extend or Keep.
 - The requests that wait share one stack above the composer, from
-  `RequestStack` in `src/components/chat/`, with the requests for secrets,
-  as [secrets and Capabilities](design-secrets.md) gives. One card shows at
+  `RequestStack` in `src/components/chat/`, which draws the shared
+  `RequestStackFrame`, with the requests for secrets, as
+  [secrets and Capabilities](design-secrets.md) gives. One card shows at
   a time, and a place such as "1 of 4" with Previous and Next moves
   through the stack. The stack takes at most 40% of the window, so a long
   command scrolls inside its card, and an edge that cuts the command

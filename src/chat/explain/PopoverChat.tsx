@@ -1,9 +1,10 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
 import { popoverChatLabel } from '../../ui/components/explain/explainCopy'
 import { modelLabel } from '../../shared/agents'
 import { turnCopy } from '../../shared/transcript/turn-words'
 import { ChatPane } from '../components/ChatPane'
+import type { FieldHandle } from '../components/chip-field/focus-plugins'
 import {
   ActionNotice,
   BlockNotice,
@@ -92,6 +93,8 @@ export function PopoverChat(props: PopoverChatProps) {
   // The bar of a sandbox that does not run takes the place of the field, as
   // in a tab. A read-only workspace shows no field, so no bar either.
   const down = readOnly || (sandboxBar !== null && !keepsComposer)
+  const field = useRef<FieldHandle>(null)
+  const focusComposer = useCallback(() => field.current?.focus(), [])
   const parts = useSessionParts({
     snapshot,
     controller,
@@ -100,6 +103,7 @@ export function PopoverChat(props: PopoverChatProps) {
     state,
     readOnly,
     onOpenSession: props.onOpenSession,
+    focusComposer,
   })
   const closed = !snapshot.sessions.some((item) => item.id === sessionId)
   const login = session ? sessionLoginOf(session, loginReader(snapshot)) : null
@@ -159,6 +163,7 @@ export function PopoverChat(props: PopoverChatProps) {
         <FollowUpField
           blocked={block !== null}
           draft={state.draft}
+          fieldRef={field}
           files={files}
           onChangeText={(text) => controller.setDraft(sessionId, text)}
           onSend={props.onSend}

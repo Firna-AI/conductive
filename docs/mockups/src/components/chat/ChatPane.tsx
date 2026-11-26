@@ -17,12 +17,8 @@ import { composerData } from '../../entries/components/chat/capabilitiesSlot'
 import type { ComposerState } from './Composer'
 import { groupItems } from './groupItems'
 import { RequestStack } from './RequestStack'
-import {
-  answersHere,
-  isPendingRequest,
-  shownPlace,
-  stackEntries,
-} from './requests'
+import { isPendingRequest, shownPlace, stackReader } from './requests'
+import { stackEntries } from '../../../../../src/ui/components/chat/requestStackOrder'
 import { toolGroup } from '../../entries/components/chat/ToolGroup.mockup'
 import type { FoldState } from './WorkFold'
 import { workFold } from '../../entries/components/chat/WorkFold.mockup'
@@ -102,8 +98,9 @@ export function ChatPane(props: {
   const mac = useMacApp()
   const empty = props.items.length === 0 && !props.starting
   const composer = !props.problem || !replacesComposer(props.problem)
-  const requests = stackEntries(props.items, (item) =>
-    answersHere(item, mac !== undefined),
+  const requests = stackEntries(
+    props.items.filter(isPendingRequest),
+    stackReader(mac !== undefined),
   )
   const transcript = props.items.filter((item) => !isPendingRequest(item))
   const entries = groupItems(transcript).filter(

@@ -80,10 +80,11 @@ export function sandboxParts(props: {
  * The parts of the chat of one session that its tab and the popover of an
  * explanation share: the inputs of its transcript, as `useTranscriptInputs`
  * says, which are the lines and the cards at their places in the
- * transcript, its readers, and Try again, and the requests that wait for an
- * answer just above the field. The lines and the cards are the link of a
+ * transcript, its readers, and Try again, and the stack of the open
+ * requests just above the field. The lines and the cards are the link of a
  * linked session to its source, the Mac commands, and the secret requests.
- * A read-only workspace takes no answer.
+ * A read-only workspace takes no answer. `focusComposer` puts the focus in
+ * the field, as the stack asks when its last card leaves with the focus.
  */
 export function useSessionParts(props: {
   snapshot: ChatSnapshot
@@ -98,6 +99,7 @@ export function useSessionParts(props: {
    * tab shows that session in its own tab without it.
    */
   onOpenSession?: (sessionId: string) => void
+  focusComposer?: () => void
 }) {
   const { snapshot, controller, readOnly } = props
   const { commands, secrets, inserts, readers, onRetry } = useTranscriptInputs(
@@ -112,6 +114,7 @@ export function useSessionParts(props: {
   const viewerId = snapshot.account?.user.id ?? null
   const waiting = (
     <WaitingRequests
+      focusComposer={props.focusComposer}
       items={[
         ...pendingCommandItems({
           devices: snapshot.devices,
@@ -123,6 +126,7 @@ export function useSessionParts(props: {
         }),
         ...secrets.waiting,
       ]}
+      key={props.sessionId ?? ''}
     />
   )
   return { inserts, readers, onRetry, waiting }

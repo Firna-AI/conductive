@@ -47,11 +47,14 @@ const state = useThisMacState(mac)
   of a request. Only the reply of the latest read applies. A failed read
   keeps the requests that show, takes away the choices, and shows Try again.
 - A request that waits leaves its place in the chat and stays just above the
-  composer, one compact message for each request. The requests share one
-  region that takes at most 40% of the window, so the transcript and the
-  composer stay in view. A long command or many requests scroll inside it,
-  an edge that cuts a request fades, and the keyboard scrolls it from any
-  control in it. Once a request has its answer, it is a card in its turn:
+  composer, as a compact message in the stack of the open requests, with
+  the secret requests, as [the chat README](../README.md#the-request-stack)
+  says. The stack shows one card at a time and takes at most 40% of the
+  window, so the transcript and the composer stay in view. A long command
+  scrolls inside the outline of the card, an edge that cuts it fades, and
+  the keyboard scrolls it from any control in it. A window that cannot
+  answer a command puts it after the requests that it can answer. Once a
+  request has its answer, it is a card in its turn:
   after the items of the turn that came before the request, and before the
   end of the turn. The session log keeps the time of the first event of
   each item for that place. A card names its Mac by the name that the Mac
@@ -74,9 +77,9 @@ const state = useThisMacState(mac)
   IDs name a connection, and the Worker checks the session of the window.
 - The menu of the other ways to allow opens in the top layer, on
   `PopoverSurface` in `src/shell/ui/`, beside the actions of its request.
-  So the region of the requests never cuts it. It opens above the actions
+  So the stack of the requests never cuts it. It opens above the actions
   when it fits there, else on the side with more room, and it follows them
-  when the region scrolls. A narrow request puts its actions under the
+  when the card scrolls. A narrow request puts its actions under the
   command. The menu then starts at the actions and keeps inside their width.
 - An answer goes to the address of the `requestKey` of its record, which
   the Worker gives. The chat keeps the raw `requestId` for its own maps and
@@ -181,8 +184,8 @@ src/shell/new-workspace/NewWorkspaceMacGrant.test.tsx`.
 The layout of the requests needs a real browser. The Electron check
 [`approval-region.spec.ts`](../../../desktop/tests/approval-region.spec.ts)
 builds the development page, opens it in the window of the Mac app, and
-checks the bound of the region, the composer, keyboard scrolling, and the
-menu of Allow over the region. Build the Mac app first, then run
+checks the bound of the stack, the composer, keyboard scrolling of a long
+command in its card, Next, and the menu of Allow over the stack. Build the Mac app first, then run
 `npm --prefix desktop run test:electron -- tests/approval-region.spec.ts`.
 
 ### Key code
@@ -193,7 +196,7 @@ menu of Allow over the region. Build the Mac app first, then run
 - [`command-placement.ts`](../../shared/transcript/command-placement.ts):
   the place of each card in its turn.
 - `PendingCommands.tsx`, `CommandChoices.tsx`, and `CommandCard.tsx`: the
-  requests, their region, and the menu of Allow.
+  requests as cards of the stack, the menu of Allow, and the results.
 - [`command-words.ts`](../../shared/transcript/command-words.ts): the pure
   command names, state labels, notes, time limits, and output text.
   `command-text.ts` adds the icons and colours of each state.

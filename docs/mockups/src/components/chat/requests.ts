@@ -1,5 +1,9 @@
 import type { ChatItem } from '../../fixtures/conversations'
 import type { SecretRunItem } from '../../fixtures/secretRequests'
+import {
+  secretSetKey,
+  type StackReader,
+} from '../../../../../src/ui/components/chat/requestStackOrder'
 import { isPendingCommand } from './PendingCommand'
 
 /**
@@ -48,43 +52,6 @@ export function isPendingRequest(item: ChatItem): boolean {
 }
 
 /**
- * The open requests in the order of the region above the composer: the
- * requests whose tool calls wait first, then the late requests, each group
- * oldest first. A tool call that waits has a time limit, and a late request
- * has none.
- */
-export function pendingRequests(items: readonly ChatItem[]): ChatItem[] {
-  return [...items.filter(callWaits), ...items.filter(lateWaits)]
-}
-
-/**
- * One card of the stack of requests above the composer: an open request,
- * and the older open requests that it hides. A request for secrets hides
- * each older open request of its session for the same set of secrets, so
- * only the newest of them shows, and one answer settles each of them. A
- * command on a Mac never hides another request, because each Allow runs
- * one exact command.
- */
-export type StackEntry = {
-  item: ChatItem
-  hidden: readonly SecretRunItem[]
-}
-
-/** The names of the secrets of a request, as one key for the whole set. */
-function secretSet(item: SecretRunItem): string {
-  return item.request.secrets
-    .map((secret) => secret.name)
-    .sort()
-    .join('\n')
-}
-
-/** Whether two open requests ask for the same set of secrets. */
-function sameSecrets(a: ChatItem, b: ChatItem): boolean {
-  if (a.kind !== 'secret-run' || b.kind !== 'secret-run') return false
-  return secretSet(a) === secretSet(b)
-}
-
-/**
  * Whether this view can answer an open request. Any member who sees the
  * session answers a request for secrets, in a browser or in the Mac app.
  * Only the Mac app on the Mac that got a command answers that command, so
@@ -97,38 +64,21 @@ export function answersHere(item: ChatItem, macApp: boolean): boolean {
 }
 
 /**
- * The cards of the stack: first the cards that this view can answer, then
- * the cards that it cannot answer, such as a command on a Mac in a
- * browser. Each part keeps the order of the region, so the card on top is
- * one that the member can answer, whenever such a card exists. `answers`
- * says whether this view can answer a request. A card that hides older
- * requests takes the place of the oldest request that it holds, so a new
- * ask of the agent does not move a card that already waits. A request
- * whose call waits keeps its card among those whose calls wait. A chat
- * shows one session, so each request of `items` is of that session.
+ * What the order of the stack reads of the open requests of a chat, in a
+ * browser or in the Mac app, as `stackEntries` of the shared UI orders
+ * them. A chat shows one session, so each request is of that session. A
+ * request for secrets names its set of secrets, and a command on a Mac
+ * names none, so it never hides another request.
  */
-export function stackEntries(
-  items: readonly ChatItem[],
-  answers: (item: ChatItem) => boolean,
-): StackEntry[] {
-  const entries: StackEntry[] = []
-  for (const item of pendingRequests(items)) {
-    const at = entries.findIndex((entry) => sameSecrets(entry.item, item))
-    const shown = at === -1 ? undefined : entries[at].item
-    if (shown?.kind !== 'secret-run' || item.kind !== 'secret-run') {
-      entries.push({ item, hidden: [] })
-      continue
-    }
-    const hidden = entries[at].hidden
-    entries[at] =
-      items.indexOf(item) > items.indexOf(shown)
-        ? { item, hidden: [...hidden, shown] }
-        : { item: shown, hidden: [...hidden, item] }
+export function stackReader(macApp: boolean): StackReader<ChatItem> {
+  return {
+    secrets: (item) =>
+      item.kind === 'secret-run'
+        ? secretSetKey(item.request.secrets.map((secret) => secret.name))
+        : null,
+    callWaits,
+    answers: (item) => answersHere(item, macApp),
   }
-  return [
-    ...entries.filter((entry) => answers(entry.item)),
-    ...entries.filter((entry) => !answers(entry.item)),
-  ]
 }
 
 /**

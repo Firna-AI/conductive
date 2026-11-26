@@ -11,7 +11,11 @@ import {
   queryByText,
 } from '../../test-support/dom-queries'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
-import { asks, request } from '../../test-support/fixtures/secret-requests'
+import {
+  asks,
+  late,
+  request,
+} from '../../test-support/fixtures/secret-requests'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { MOUNTED_TEST_TIMEOUT, press, waitFor } from '../../test-support/mount'
 import {
@@ -134,6 +138,27 @@ describe('the marks of explanations', () => {
       ],
       highlights: ['Manual entry', 'checkout form', 'suggests', 'still works'],
     })
+  })
+
+  it('keeps Needs input on the mark while a late request of its explanation waits for a member, after its turn ended', async () => {
+    const ended = explanation('explain-late', anchorOf('still works'))
+    const secret = request('secret-late', asks.database, FAKE_TIME, {
+      ...late(FAKE_TIME + 90_000),
+      sessionId: ended.id,
+      turnId: 'turn-late',
+    })
+    await mountChat({
+      stored: [
+        recordEvent(ended),
+        {
+          type: 'secrets.request.updated',
+          sessionId: ended.id,
+          request: secret,
+        },
+      ],
+    })
+    await waitFor(() => markLabels().length === 1, 'the mark')
+    expect(markLabels()).toEqual(['Explain "still works", Needs input'])
   })
 
   it('covers the whole message with a mark whose text no longer matches, and a press on its text opens the popover', async () => {

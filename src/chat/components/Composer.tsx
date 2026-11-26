@@ -94,6 +94,11 @@ export interface ComposerProps {
   mention?: MentionRequest | null
   /** The field took the chip of `mention`. */
   onMentionTaken?: (request: MentionRequest) => void
+  /**
+   * Takes the handle of the message field, for the chat that moves the
+   * focus to it, such as after the last open request leaves the stack.
+   */
+  fieldRef?: RefObject<FieldHandle | null>
 }
 
 /**
@@ -145,7 +150,8 @@ function useComposerKeys(props: {
  */
 export function Composer(props: ComposerProps) {
   const picker = useRef<HTMLInputElement>(null)
-  const field = useRef<FieldHandle>(null)
+  const ownField = useRef<FieldHandle>(null)
+  const field = props.fieldRef ?? ownField
   const [mentionHost, setMentionHost] = useState<HTMLDivElement | null>(null)
   const { draft } = props
   useComposerKeys({

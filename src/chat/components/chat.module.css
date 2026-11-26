@@ -73,3 +73,12 @@
     opacity: 1;
   }
 }
+
+/*
+ * The card on top of the stack of requests. It takes the focus when the
+ * card that held it leaves, so a screen reader reads the new card. The
+ * outline of the stack frames it, so it draws no ring of its own.
+ */
+.stackCard {
+  outline: none;
+}

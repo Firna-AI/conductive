@@ -187,7 +187,13 @@ one.
   ended.
 - `RequestStack` in `src/components/chat/` draws the open requests of the
   session as a stack, one card at a time, as
-  `app/secret-requests/several/waiting-and-late` shows. The requests whose
+  `app/secret-requests/several/waiting-and-late` shows. It draws the
+  shared `RequestStackFrame` of
+  [`src/ui/components/chat/`](../../src/ui/components/chat/), which the
+  app draws too, with the cards of the mockups and the links of Previous
+  and Next. The shared `stackEntries` of `requestStackOrder.ts` there
+  orders the cards, with the reader `stackReader` of
+  `components/chat/requests.ts`. The requests whose
   calls wait come first, then the late requests, each group oldest first.
   A waiting call has a time limit, and a late request has none. The card
   on top is the first in that order, and an answer shows the next card.
@@ -207,7 +213,7 @@ one.
   Previous is off on the first card, and Next on the last. The keyboard
   reaches them before the actions of the card, and the place is a polite
   live region. One card shows no place, no buttons, and no edges.
-  `requestStackCopy.ts` holds the words.
+  `requestStackCopy.ts` of the shared UI holds the words.
 - The stack keeps its height limit of 40% of the window, also on a phone.
   The stack draws the outline of the card on top, so a long card scrolls
   inside it, and an edge that cuts the card fades. The card takes its

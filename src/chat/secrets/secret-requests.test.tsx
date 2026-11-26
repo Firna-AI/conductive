@@ -91,10 +91,16 @@ describe('secret requests in the chat', () => {
       secretId: 'cloudflare-read-only',
       description: olderSecret.description,
     }
+    // The stack shows one card at a time, so each request shows alone.
     const page = await renderSecrets({
       conversation: 'running',
       events: [
         updated(request('providers', asks.providers, FAKE_TIME + 8 * second)),
+      ],
+    })
+    const olderPage = await renderSecrets({
+      conversation: 'running',
+      events: [
         updated(
           request('older', asks.mapbox, FAKE_TIME + 9 * second, {
             secrets: [older, ...asks.mapbox.secrets],
@@ -108,8 +114,8 @@ describe('secret requests in the chat', () => {
     expect({
       providers: lifetimesOf(page, providers),
       providersText: textOfCard(page, providers),
-      stored: lifetimesOf(page, stored),
-      storedText: textOfCard(page, stored),
+      stored: lifetimesOf(olderPage, stored),
+      storedText: textOfCard(olderPage, stored),
     }).toEqual({
       providers: ['15 minutes', 'This workspace', 'Save as secret (off)'],
       providersText: expect.stringContaining(
@@ -146,7 +152,7 @@ describe('secret requests in the chat', () => {
     })
   })
 
-  test('a late request says that the agent stopped waiting, a late answer says who answered and what followed, also when the login of the starter is gone, with the line of the app, and an ended request says what ended it', async () => {
+  test('an open late request waits above the composer and says that the agent stopped waiting, while each ended late request stays unfolded at its place, a late answer says who answered and what followed, also when the login of the starter is gone, with the line of the app, and an ended request says what ended it', async () => {
     const asked = { turnId: SECRET_TURN }
     const open = request('open', asks.database, inWork, {
       ...late(inWork),
@@ -186,6 +192,7 @@ describe('secret requests in the chat', () => {
       events: secretTurn(start, resultEvents(inWork)),
     })
     expect({
+      cards: cardsOf(page),
       open: textOfCard(page, 'Request for PROD_DATABASE_URL'),
       buttons: buttonsOf(page, 'Request for PROD_DATABASE_URL'),
       unshared: textOfCard(page, 'Request for VERCEL_TOKEN'),
@@ -194,6 +201,12 @@ describe('secret requests in the chat', () => {
       given: textOfCard(results, 'Request for MAPBOX_TOKEN'),
       line: textOf(results.innerHTML),
     }).toEqual({
+      cards: [
+        'Request for VERCEL_TOKEN',
+        'Request for VERCEL_TOKEN, MAPBOX_TOKEN',
+        'Request for MAPBOX_TOKEN',
+        'Request for PROD_DATABASE_URL (above the composer)',
+      ],
       open: expect.stringMatching(
         /The agent stopped waiting\. Allow tells it in a new turn\.$/,
       ),

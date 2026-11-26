@@ -1,7 +1,9 @@
+import type { RefObject } from 'react'
 import { filesWait } from '../../app/draft-files'
 import { useShortcutOffer } from '../../shell/shortcuts/shortcut-context'
 import type { FieldFiles } from '../components/chip-field/attached-files'
 import { ChipTextField } from '../components/chip-field/ChipTextField'
+import type { FieldHandle } from '../components/chip-field/focus-plugins'
 import { SendButton, StopButton } from '../components/ComposerButtons'
 import { useSendKey } from '../components/send-key'
 import type { Draft } from '../state/chat-snapshot'
@@ -30,6 +32,8 @@ export function FollowUpField(props: {
   onChangeText: (text: string) => void
   onSend: () => void
   onStop: () => void
+  /** Takes the handle of the field, for the chat that moves the focus to it. */
+  fieldRef?: RefObject<FieldHandle | null>
 }) {
   const { draft } = props
   const empty = draft.text.trim() === '' && draft.files.length === 0
@@ -45,6 +49,7 @@ export function FollowUpField(props: {
         <ChipTextField
           caretAtEnd
           files={props.files}
+          handle={props.fieldRef}
           label={followUpLabel}
           lines={1}
           maxLines={4}

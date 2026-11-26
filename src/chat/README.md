@@ -4,7 +4,8 @@ The chat of a workspace: the session tabs with the session history, and the
 chat of the open session with its composer. It shows messages, folded runs
 of tool calls, the folded work of each ended turn above its answer, the
 running turn, steer, Stop, failures with Try again, the start steps of the
-sandbox, the Mac commands of each turn, Explain with the marks and the
+sandbox, the Mac commands and the secret requests of each turn, the stack
+of the open requests above the composer, Explain with the marks and the
 popover of each explanation, and the bar that takes the composer's place
 while the sandbox does not run. After a failed first start
 of a new workspace, that bar sits above the composer, which stays. The workspace screen
@@ -136,6 +137,8 @@ code that draws them.
   default login of a new session, and the linked sessions.
 - [The Mac commands](device/README.md) hold the rules of the requests,
   their answers, and the settings of the Mac.
+- [The request stack](#the-request-stack) below gives the rules of the
+  stack of the open requests above the composer.
 - [The secret requests](secrets/README.md) hold the rules of the requests
   for secrets, their answers, the runs, and the line of a late answer.
 - [Explain](explain/README.md) holds the rules of Explain by a selection,
@@ -155,6 +158,38 @@ code that draws them.
 - User-facing text follows the
   [names in the product](../../docs/protocol/agents-and-sessions.md#names-in-the-product):
   no "Claude Code", and no provider name.
+
+## The request stack
+
+[The request stack](../../docs/protocol/request-stack.md) states the
+requirements. `components/WaitingRequests.tsx` draws the open Mac commands
+and secret requests of the shown session, with the shared
+`RequestStackFrame` of `src/ui/components/chat/`, which the mockups draw
+too.
+
+- `stackCards` of `components/request-stack.ts` orders the cards with the
+  shared `stackEntries` of `src/ui/components/chat/requestStackOrder.ts`:
+  the calls that wait first, then the late requests, each oldest first,
+  with one card for each set of secrets, then the cards that this view
+  cannot answer. A Mac command card takes an answer only where it shows
+  its choices. A secret card takes one where the chat takes answers.
+- A card of secrets keeps one key while requests for its set join and
+  leave it, so `placeAfter` keeps it on top. `placeAfter` keeps the card
+  on top while a request joins or leaves, shows the next card when that
+  card leaves, and puts a new card that this view can answer on top of a
+  card that it cannot answer.
+- Previous and Next sit before the card, so the keyboard reaches them
+  first. A press that shows the first or the last card moves the focus to
+  the other button. The place is a polite live region.
+- The stack holds the focus while any of its parts has it, also a sheet
+  or a menu of a card. When the part that holds it leaves, such as a card
+  after its answer, the focus moves to the card on top, or to the field of
+  the composer when no card is left. So an answer in another view never
+  takes the focus from the composer.
+- Each session starts its own stack. The card on top starts at its top,
+  and a value typed into a card leaves the page with the card when another
+  card shows.
+- The popover of an explanation shows the stack of its session too.
 
 ## Development page
 

@@ -5,6 +5,7 @@ import type { BannerState } from '../../shared/github'
 import type { GetStartedStep } from '../../shared/onboarding'
 import { WORKSPACE_STATES } from '../../shared/workspace-read'
 import type { FakeApiOptions } from '../../test-support/fake-api'
+import type { FakeMacScenario } from '../../test-support/fixtures/devices'
 import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { getStartedOrder } from '../get-started'
 import type { DevUploadMode } from './attachment-routes'
@@ -39,6 +40,28 @@ const CONVERSATIONS = [
   'wake-other-workspace',
   'wake-during-turn',
 ] as const satisfies readonly RecordedChatScenario[]
+
+/**
+ * The Mac commands of `checkout-autocomplete`, as the `mac` option of the
+ * chat development page names them. The app runs in a browser, so a
+ * command that waits shows its state only.
+ */
+const MAC_COMMANDS = [
+  'none',
+  'waiting',
+  'longer',
+  'several',
+  'many',
+  'running',
+  'denied',
+  'done',
+  'exit-code',
+  'cut',
+  'timed-out',
+  'failed',
+  'unavailable',
+  'literal',
+] as const satisfies readonly FakeMacScenario[]
 
 /** The run lists of Review pull requests that the mockups also draw. */
 const REVIEW_RUNS = ['failed', 'skipped'] as const
@@ -195,6 +218,7 @@ export function readDevOptions(search: string): DevOptions {
       banner: pick(params, 'banner', BANNERS),
       paths: pick(params, 'paths', PATHS),
       subWorkspaces: params.get('subWorkspaces') === '1',
+      macCommands: pick(params, 'mac', MAC_COMMANDS),
     },
     archivedComputer:
       pick(params, 'archivedComputer', ARCHIVED_COMPUTER_STATES) ?? null,

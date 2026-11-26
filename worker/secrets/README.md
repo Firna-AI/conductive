@@ -128,11 +128,13 @@ event has the usual workspace ID, event number, and occurrence time.
 | `secrets.notice` | `sessionId`, `turnId`, `requestId`, `text` | App line for a delivered late answer |
 
 Request states are `waiting`, `late`, `allowed`, `denied`, and
-`not-answered`. `late` is also a permanent boolean. A request that ever
-became late stays unfolded after its answer. Place it at `createdAt` in
-its original turn. `waiting` belongs above the composer. `late` belongs
-in the chat. Both keep needs input while open. Denial uses `answeredBy`
-to name the member and says the command did not run.
+`not-answered`. `late` is also a permanent boolean. Both open states,
+`waiting` and `late`, belong in the
+[request stack](../../docs/protocol/request-stack.md) above the composer,
+and both keep needs input. After its answer or its end, place a request
+at `createdAt` in its original turn. A request that ever became late
+stays unfolded there. Denial uses `answeredBy` to name the member and
+says the command did not run.
 
 `notice` is null before a late allow. A delivered notice has
 `{ state: "sent", turnId }`. A failed admission has
