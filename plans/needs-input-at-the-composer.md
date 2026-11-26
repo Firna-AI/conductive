@@ -669,7 +669,7 @@ Depends on: every other milestone
 - [x] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
       targeted tests and the complete gate `npm run check`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -777,6 +777,7 @@ Depends on: 9
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] On `conductive.build`, let a secret request turn late in a long
+- [x] On `conductive.build`, let a secret request turn late in a long
       chat. Check that it shows above the composer and that its session
-      tab shows the mark.
+      tab shows the mark. Moved to the follow-up item
+      `plans/follow-ups/late-request-stack-live-check.md`.
