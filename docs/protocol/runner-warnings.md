@@ -2,8 +2,8 @@
 
 This doc holds the requirements and the decisions in force for the
 warnings that the Worker writes to its log about the connections of the
-agent runner, about turn ends with no Stop request, and about runner work
-that did not finish. It also covers the process-start ID that the runner
+agent runner, about turn ends with no Stop request, about active turns
+that do not run, and about runner work that did not finish. It also covers the process-start ID that the runner
 sends for these warnings. It belongs to
 [Agent runner](agent-runner.md).
 [Agent instructions](agent-instructions.md#what-the-instructions-hold)
@@ -96,6 +96,26 @@ decision about the warning for runner work that did not finish.
   So a store that fails writes no warning. A resent end, or a late event
   of an ended turn, writes no second warning.
 
+### Active turns that do not run
+
+- When the Worker sends the session list of a workspace, it writes a
+  warning for each session whose active turn does not count as running.
+- A session's active turn does not count as running in these cases: the
+  turn is not stored, the turn has ended, the turn waits but already has a
+  start time, or the turn runs but the workspace does not count it among
+  its running turns.
+- Reason: the chat then shows the turn as working, while the sidebar and
+  the idle stop treat the workspace as idle. The log shows the state of
+  the turn and why it does not count, so an operator can find the cause.
+- An operator route that shows the session and turn records was rejected
+  for now. Reason: a warning in the log needs no new route, and the
+  operator already reads the log.
+- The warning changes no record and no reply. A session list read that
+  cannot finish the check still sends the list, and writes one warning
+  that the check did not finish.
+- The Worker writes the warning at each session list read while the
+  session stays this way. So the log also shows how long it lasts.
+
 ## Runner work that did not finish
 
 - The Worker writes a warning for each runner work that starts in a watch
@@ -142,17 +162,22 @@ decision about the warning for runner work that did not finish.
 
 ## What a warning holds
 
-- Each warning holds its kind and the workspace ID. It also holds the
-  connection ID, the stream ID, the process-start ID, and the protocol
-  version of a runner connection. A turn-end warning also holds the turn
+- Each warning holds its kind and the workspace ID. A warning about a
+  runner connection, a turn end, or runner work also holds the connection
+  ID, the stream ID, the process-start ID, and the protocol version of a
+  runner connection. A turn-end warning also holds the turn
   ID and the state of the end.
+- A warning about an active turn that does not run holds the workspace ID,
+  the session ID, the turn ID, the stored state of the turn, the reason,
+  and the start time of the turn.
 - A turn-end warning names the runner connection that is current when the
   workspace stores the end, with the process-start ID of that connection.
   It does not name the connection or the runner start that took the turn.
 - A value that is not known, such as the connection of a turn end with no
   current runner connection, is null.
-- A warning holds only IDs, the protocol version, the state of an end, and
-  a fixed text for its kind. A warning about runner work that did not
+- A warning holds only IDs, the protocol version, the state of an end or
+  of a turn, the reason of an active turn warning, a start time, and a
+  fixed text for its kind. A warning about runner work that did not
   finish also holds the kind, the stage, the event type, the event number,
   and the size of that work. It holds no secret, no token, no text of a
   message, no content of a file, no error text, and no close reason.
