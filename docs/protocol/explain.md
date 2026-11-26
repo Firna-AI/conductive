@@ -238,7 +238,16 @@ in the design of the chat gives the look of each part.
   the turn.
 - A request of the agent that waits for a member, such as a secret request,
   shows in the popover as it shows at the end of a session tab.
-- The chat scrolls inside the popover, and its newest line stays in view.
+- The chat scrolls inside the popover. While a turn runs, its newest line
+  stays in view.
+- When a turn ends, the chat shows the top of its answer, so the member
+  reads the answer from its start. The popover also opens there on an ended
+  turn. An answer that fits in the popover keeps the newest line in view. A
+  member who reads higher up when the turn ends stays at that place.
+- Reason: the popover is small, and the member wants to read each answer
+  from its top. The user asked for this on 24 November 2026. A session tab
+  keeps the newest line in view, as
+  [The scroll of the chat](chat-scroll.md) says.
 - The popover leaves out the written prompt. The tab of the explanation
   shows it as a normal message, so nothing is hidden. Reason: the quote in
   the header names what the chat is about.

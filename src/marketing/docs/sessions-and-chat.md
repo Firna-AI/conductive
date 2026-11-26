@@ -374,6 +374,7 @@ The tab that you read stays shown.
 The answer shows in a small panel by the text.
 On a phone, the panel is a sheet over half the screen.
 Drag its handle up to see more.
+When a turn ends, the panel shows the top of the answer, unless you read an earlier part of its chat.
 Ask a follow-up at the foot of the panel.
 A follow-up during a turn guides that turn.
 **Stop** ends the turn.

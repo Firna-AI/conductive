@@ -122,8 +122,10 @@ export async function mountLongTurn() {
 }
 
 /** The scroll box of the chat and its transcript, while a transcript shows. */
-function chatBox(): { scroller: HTMLElement; transcript: HTMLElement } | null {
-  const scroller = queryByLabel('Chat')?.firstElementChild
+function chatBoxOf(
+  label: string,
+): { scroller: HTMLElement; transcript: HTMLElement } | null {
+  const scroller = queryByLabel(label)?.firstElementChild
   const transcript = scroller?.firstElementChild
   if (!(scroller instanceof HTMLElement && transcript instanceof HTMLElement)) {
     return null
@@ -135,21 +137,28 @@ function chatBox(): { scroller: HTMLElement; transcript: HTMLElement } | null {
 /**
  * Lays the chat out as a browser lays out its reversed scroll box: the box
  * shows 120 px from 100 px down, each row of the transcript is 40 px high,
- * and the scroll position counts up from the bottom to 0. A row's top
- * follows the rows below it. A browser keeps each position in the range,
- * and a new box, such as after the chat shows again, starts at the bottom.
+ * or as high as `rowHeight` gives, and the scroll position counts up from
+ * the bottom to 0. A row's top follows the rows below it. A browser keeps
+ * each position in the range, and a new box, such as after the chat shows
+ * again, starts at the bottom. `label` names the chat, "Chat" by default.
  */
-export function layOutChat() {
-  const [top, height, row] = [100, 120, 40]
+export function layOutChat(
+  options: { label?: string; rowHeight?: (row: Element) => number } = {},
+) {
+  const [top, height] = [100, 120]
+  const label = options.label ?? 'Chat'
+  const rowHeight = options.rowHeight ?? (() => 40)
+  const chatBox = () => chatBoxOf(label)
   const box = () => {
     const found = chatBox()
     if (!found) throw new Error('No transcript scrolls')
     return found
   }
   const rows = () => Array.from(chatBox()?.transcript.children ?? [])
-  const content = () => rows().length * row
-  const below = (element: Element) =>
-    (rows().length - rows().indexOf(element)) * row
+  const sum = (list: readonly Element[]) =>
+    list.reduce((total, element) => total + rowHeight(element), 0)
+  const content = () => sum(rows())
+  const below = (element: Element) => sum(rows().slice(rows().indexOf(element)))
   let position = 0
   let owner: Element | null = null
   const own = (element: Element) => {
@@ -191,7 +200,7 @@ export function layOutChat() {
       const y = top + height - position - below(rowOwn)
       return DOMRect.fromRect({
         y,
-        height: this === shown?.transcript ? content() : row,
+        height: this === shown?.transcript ? content() : rowHeight(rowOwn),
       })
     },
   )
