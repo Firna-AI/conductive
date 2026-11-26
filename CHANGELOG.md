@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.36.0](https://github.com/Firna-AI/conductive/compare/v0.35.0...v0.36.0) (2026-11-26)
+
+
+### Features
+
+* bound the workspace object memory of history and file reports ([#675](https://github.com/Firna-AI/conductive/issues/675)) ([45d1ce5](https://github.com/Firna-AI/conductive/commit/45d1ce51ee1c3b3bc0e0406bbdfaba0c004251ae))
+* **chat:** close the Explain popover at a press outside it ([#664](https://github.com/Firna-AI/conductive/issues/664)) ([3d66bbb](https://github.com/Firna-AI/conductive/commit/3d66bbbf681f6f1532b589619e1caf8c45416ddd))
+* **files:** read the bucketed projection layout ([#674](https://github.com/Firna-AI/conductive/issues/674)) ([aeaf623](https://github.com/Firna-AI/conductive/commit/aeaf6234d8fc27ee7c8ac9ddcc94c42dd4e04650))
+* limit runner file reports to 50,000 entries and 1,000 changes ([d0801de](https://github.com/Firna-AI/conductive/commit/d0801ded86ee04e85fb811b08a5bd0e66965a98b))
+* **list:** run the light of the list mark while a workspace starts ([#667](https://github.com/Firna-AI/conductive/issues/667)) ([459af2a](https://github.com/Firna-AI/conductive/commit/459af2a78d055277d3eab04c8e7f3c6dbfdfc9b8))
+* **list:** show the open workspace under its collapsed section ([#684](https://github.com/Firna-AI/conductive/issues/684)) ([04b251e](https://github.com/Firna-AI/conductive/commit/04b251e8a3d9e030b1c15624dd112c6232736c4b))
+* **merge-queue:** add a merge queue that lands pull requests as one stack ([#681](https://github.com/Firna-AI/conductive/issues/681)) ([a89df57](https://github.com/Firna-AI/conductive/commit/a89df57e5dbb90acb0d1afb61499b5036883e70d))
+* read workspace state for new tabs instead of replaying history ([4fdb5bc](https://github.com/Firna-AI/conductive/commit/4fdb5bc7dfefdc0cf966486af91be1dd283dca4b))
+* **runner:** show agent pages with their sandbox files and fonts ([#670](https://github.com/Firna-AI/conductive/issues/670)) ([84d105f](https://github.com/Firna-AI/conductive/commit/84d105f0a95181a68330a9cc8a6cd6b3556c3dc6))
+* **settings:** remove a repository from its row menu ([#689](https://github.com/Firna-AI/conductive/issues/689)) ([d4af787](https://github.com/Firna-AI/conductive/commit/d4af7873d282a35fdeb4074902bb1bb5f6686011))
+* **settings:** show the cloud computer scripts as code ([#663](https://github.com/Firna-AI/conductive/issues/663)) ([48b8a3a](https://github.com/Firna-AI/conductive/commit/48b8a3a98ef7fe45f493060cec764cfbe7beda4d))
+* tell agents the capabilities of their workspace ([#660](https://github.com/Firna-AI/conductive/issues/660)) ([aa1f344](https://github.com/Firna-AI/conductive/commit/aa1f344eed91b2b110a178e2400284a4b17bf4b1))
+* **tools:** get_message also gives finished agent messages ([#665](https://github.com/Firna-AI/conductive/issues/665)) ([25ef1bb](https://github.com/Firna-AI/conductive/commit/25ef1bb7f257bf7524f7602d048332162c108786))
+
+
+### Bug Fixes
+
+* **files:** keep select all and copy inside the code of a file tab ([#668](https://github.com/Firna-AI/conductive/issues/668)) ([b2ff01c](https://github.com/Firna-AI/conductive/commit/b2ff01c55b556d22f1e31568909ce0ed4f0a9252))
+* **images:** refresh renamed repositories and log why a repository load failed ([#687](https://github.com/Firna-AI/conductive/issues/687)) ([0e4153c](https://github.com/Firna-AI/conductive/commit/0e4153cddfe3b538c3a053c931e8f6c2fa2b3f77))
+* **lifecycle:** start a resume that comes during a pending stop ([#680](https://github.com/Firna-AI/conductive/issues/680)) ([f73711a](https://github.com/Firna-AI/conductive/commit/f73711ae04fe931f48f138544b6a233e88e4a350))
+* **runner:** name the tool and the skill on "Used" tool lines ([#662](https://github.com/Firna-AI/conductive/issues/662)) ([eb7bb9a](https://github.com/Firna-AI/conductive/commit/eb7bb9a24771570ce932737de7b58750b75bc920))
+
 ## [0.35.0](https://github.com/Firna-AI/conductive/compare/v0.34.0...v0.35.0) (2026-11-23)
 
 
