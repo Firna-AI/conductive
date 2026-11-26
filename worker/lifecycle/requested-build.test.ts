@@ -1,5 +1,12 @@
 import { expect, it, vi } from 'vitest'
 
+import {
+  orgSettingsPaths,
+  type BuildResponse,
+} from '../../src/shared/org-settings'
+import { createApp } from '../application'
+import { TEST_ORIGIN } from '../test-support/harness'
+
 import { setupBackendTests } from './backend-test-hooks'
 import { SOFTWARE } from './backend-test-support'
 import {
@@ -51,8 +58,13 @@ async function addRepository(db: D1Database, orgId: string) {
     .run()
 }
 
+/**
+ * Starts a refresh and saves a new install script. A second admin joins,
+ * so that no test passes only because the org lost its last admin.
+ */
 async function startRefresh(fixture: ReturnType<typeof fixtureForTest>) {
   const { images, org, user } = fixture
+  await addAdmin(images.env.DB, org.id, 'second-admin')
   const input = { orgId: org.id, userId: user.id, software: SOFTWARE }
   const refresh = await startImageBuild(images, { ...input, kind: 'refresh' })
   await changeInstallScript(images.env.DB, org.id)
@@ -122,6 +134,10 @@ it('starts no requested build when the admin who asked lost the role', async () 
     .run()
   const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
   await finishImageBuild(fixture, refresh)
+  expect(await readBuildJob(db, org.id, refresh)).toMatchObject({
+    state: 'succeeded',
+    phase: 'done',
+  })
   expect(await runningBuild(db, org.id)).toBe(null)
   expect(warning.mock.calls).toContainEqual([
     {
@@ -155,7 +171,6 @@ it('starts the requested build for the last admin who asked', async () => {
   const fixture = fixtureForTest()
   const { images, org } = fixture
   const db = images.env.DB
-  await addAdmin(db, org.id, 'second-admin')
   const { refresh, click } = await startRefresh(fixture)
   await startImageBuild(images, click)
   await startImageBuild(images, { ...click, userId: 'second-admin' })
@@ -198,7 +213,6 @@ it('starts the added build when the requested build cannot start', async () => {
   const fixture = fixtureForTest()
   const { images, org, user } = fixture
   const db = images.env.DB
-  await addAdmin(db, org.id, 'second-admin')
   const { refresh, click } = await startRefresh(fixture)
   await startImageBuild(images, click)
   await addRepository(db, org.id)
@@ -240,4 +254,30 @@ it('starts one build when an admin selects Build computer before the refresh cle
   await finishImageBuild(fixture, refresh)
   expect(await runningBuild(db, org.id)).toBe(null)
   expect((await readBuildHistory(db, org.id)).builds).toHaveLength(3)
+})
+
+it('saves a request when Build computer posts during a refresh', async () => {
+  const fixture = fixtureForTest()
+  const { org, runtime, session } = fixture
+  const { refresh } = await startRefresh(fixture)
+  const response = await createApp(runtime.dependencies).fetch(
+    new Request(TEST_ORIGIN + orgSettingsPaths.builds(org.id), {
+      method: 'POST',
+      headers: {
+        Cookie: session,
+        Origin: TEST_ORIGIN,
+        'Content-Type': 'application/json',
+      },
+      body: '{}',
+    }),
+    runtime.env,
+  )
+  expect(response.status).toBe(202)
+  const { build }: BuildResponse = await response.json()
+  expect(build).toMatchObject({
+    id: refresh,
+    kind: 'refresh',
+    state: 'running',
+    buildRequested: true,
+  })
 })

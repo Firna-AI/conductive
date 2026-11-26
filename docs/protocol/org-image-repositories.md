@@ -133,8 +133,9 @@ adds Remove to the row menu of a chosen repository, as
   3. In each other case, the notice says that the change waits for the
      next build. An admin gets Build computer. This case covers a running
      refresh, a removal alone, and a build that could not start.
-- A refresh never counts as a running build. Reason: the build card of
-  the Cloud computer tab does not show a refresh.
+- A refresh never counts as a running build. Reason: a refresh adds no
+  repository and does not run the install script, so a waiting change
+  still waits for a build.
 - The words say "after the build", not "after this build". Reason: an add
   during a build waits for the added build that follows it.
 - On the Cloud computer tab, the notice has no button, also for an admin.

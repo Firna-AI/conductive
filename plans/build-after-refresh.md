@@ -73,6 +73,11 @@ Its report is in `.context/build-after-refresh/options-check.md`.
   that such an add after a failed build waits for Try again disagree with
   the code. Recommended: keep the request for Done and update the protocol
   doc, the guide, and the design call.
+- **Decision 15:** from review round 2. Try again and Build computer in
+  the repository notice of the Repositories tab also save a request
+  during a refresh, but that tab does not change. Recommended: the notice
+  says "A build starts when this refresh ends." while a running refresh
+  has a request, from one helper that the build card uses too.
 - **Decision 5:** The added build follows only a successful job.
   Recommended: show "A build starts if this refresh succeeds." for that
   case, and keep "A build starts when this refresh ends." for a request.
@@ -234,6 +239,10 @@ Depends on: every other milestone
       `plans/follow-ups/requested-build-start-race.md`, and 12 B into
       `plans/follow-ups/build-card-shared-part.md`. Open: 7. This change
       closes `plans/follow-ups/build-during-refresh-starts-nothing.md`.
+- [x] Review round 2 found findings 14 to 17. Fixed: 14 (a route test and
+      an app test of the click), 16 (the protocol reason), and 17 (a second
+      admin in each request test). Deferred: 14 C into
+      `plans/follow-ups/build-start-request-flag.md`. Open: 15.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
