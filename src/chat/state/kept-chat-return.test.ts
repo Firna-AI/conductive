@@ -6,7 +6,7 @@ import { chatFor } from './test-kit'
 const sessionId = FAKE_IDS.session
 const turnId = 'turn-1'
 
-it('ends the shown running turn when it ended while the kept chat was hidden', async () => {
+it('shows the turn end and no running turn when it ended while the kept chat was hidden', async () => {
   const chat = chatFor({ conversation: 'running' })
   await chat.controller.start()
   const shownTurn = () =>
@@ -45,4 +45,9 @@ it('ends the shown running turn when it ended while the kept chat was hidden', a
   chat.controller.show()
 
   expect(shownTurn()).toBeNull()
+  const ends = (
+    chat.controller.getSnapshot().sessionStates[sessionId]?.transcript.items ??
+    []
+  ).filter((item) => item.kind === 'turn-end' && item.turnId === turnId)
+  expect(ends).toEqual([expect.objectContaining({ durationMs: 60_000 })])
 })
