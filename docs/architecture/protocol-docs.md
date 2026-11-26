@@ -12,8 +12,8 @@ This page lists each protocol doc and what it covers.
   that belong to it.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
   the chat shows, and the events.
-  [Chat protocol docs](protocol-docs-chat.md) lists the docs that belong to
-  it.
+  [Chat protocol docs](protocol-docs-chat.md) lists the docs that belong
+  to it.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
@@ -88,6 +88,17 @@ This page lists each protocol doc and what it covers.
   - [Repository changes on GitHub](../protocol/repository-changes-on-github.md):
     a new name or default branch of a repository, the saved values, and the
     build that the change starts.
+  - [GitHub banner: merge and after](../protocol/github-banner-merge.md):
+    Merge, Ready for review, Continue and Archive after the merge, and the
+    merge record.
+- [Merge queue](../protocol/merge-queue.md): the queue of each repository,
+  who may join, member stacks, the leave, the merge, and the failures.
+  - [Merge queue: the GitHub stack](../protocol/merge-queue-stack.md): the
+    stack of a queue, its restacks, the restack turns, and the re-order.
+  - [Merge queue in the app](../protocol/merge-queue-in-the-app.md): the
+    Merge queue group of the list, Add to merge queue, the bar of a queued
+    workspace, Remove from queue, Merge on a queued workspace, its prompts,
+    and the commands.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a
   sandbox, and Mac commands.
   - [Agent tool access](../protocol/agent-tool-access.md): what each call
@@ -128,8 +139,8 @@ This page lists each protocol doc and what it covers.
   - [Delete org](../protocol/delete-org.md): the end of an org, its restore
     within 7 days, and the delete of its data.
   - [Sections](../protocol/sections.md): the sections of an org, the moves
-    of workspaces between them, the Archived group, and the rows of the
-    workspace list.
+    of workspaces between them, the Archived group, the place of the Merge
+    queue group, and the rows of the workspace list.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
   extra hours, the seller and the tax, the pricing page, and the planned
   billing changes. Use is free until billing starts.
@@ -167,6 +178,7 @@ This page lists each protocol doc and what it covers.
 - [Keyboard shortcuts](../protocol/keyboard-shortcuts.md): the commands that
   keys run, where a key goes, and where the changes of a person live.
   - [Keyboard shortcuts: the keys](../protocol/keyboard-shortcuts-keys.md)
+    - [Keyboard shortcuts: the keys of the browsers](../protocol/keyboard-shortcuts-browser-keys.md)
   - [Keyboard shortcuts: fixed keys and text keys](../protocol/keyboard-shortcuts-fixed-keys.md)
   - [Keyboard shortcuts: the hosts](../protocol/keyboard-shortcuts-hosts.md)
   - [Keyboard shortcuts: matching a press](../protocol/keyboard-shortcuts-matching.md)
@@ -215,6 +227,9 @@ This page lists each protocol doc and what it covers.
   Worker as a member.
   - [GitHub tokens: image builds](../protocol/github-tokens-image-builds.md):
     the GitHub tokens that an image job uses to copy the repositories.
+  - [GitHub tokens: the Worker as a member](../protocol/github-tokens-worker.md):
+    the merges, Ready for review, the branch reads, the fetches of Continue
+    and of a moved base, and the steps of the merge queue.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
   agent session gets, and the skills of a message.
   - [Session instructions](../protocol/session-instructions.md): the same

@@ -36,7 +36,9 @@ export interface PointerDrag<T, P> {
 
 export interface PointerDragOptions<T, P> {
   /** The drop place at the pointer. `last` is the place before this move. */
-  locate: (item: T, x: number, y: number, last: P) => P
+  locate: (item: T, x: number, y: number, last: P, from: P) => P
+  /** Read the place again at the coordinates of the release. */
+  locateOnRelease?: true
   /**
    * The release of a drag. A long press that ends with no move comes here
    * too, with `moved` false. Escape, a cancel of the browser, and an unmount
@@ -136,7 +138,7 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
       show({
         item,
         from,
-        place: latest.current.locate(item, x, y, from),
+        place: latest.current.locate(item, x, y, from, from),
         x,
         y,
         box,
@@ -150,7 +152,7 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
       const current = press.current
       if (!current || event.pointerId !== current.pointerId) return
       // The release came out of sight, such as over a menu of the system.
-      if ((event.buttons & 1) === 0) return finish(false)
+      if ((event.buttons & 1) === 0) return finish()
       current.x = event.clientX
       current.y = event.clientY
       const distance = Math.hypot(
@@ -158,7 +160,7 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
         current.y - current.startY,
       )
       if (!current.lifted) {
-        if (current.touch && distance > touchSlop) finish(false)
+        if (current.touch && distance > touchSlop) finish()
         else if (!current.touch && distance > dragDistance) lift(current)
         return
       }
@@ -171,6 +173,7 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
           current.x,
           current.y,
           state.place,
+          state.from,
         ),
         x: current.x,
         y: current.y,
@@ -191,6 +194,7 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
         current.x,
         current.y,
         state.place,
+        state.from,
       )
       if (!Object.is(place, state.place)) show({ ...state, place })
     }
@@ -201,12 +205,12 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
       cancel.current()
     }
     function onUp(event: PointerEvent) {
-      if (event.pointerId === press.current?.pointerId) finish(true)
+      if (event.pointerId === press.current?.pointerId) finish(event)
     }
     function onCancel(event: PointerEvent) {
-      if (event.pointerId === press.current?.pointerId) finish(false)
+      if (event.pointerId === press.current?.pointerId) finish()
     }
-    function finish(release: boolean) {
+    function finish(release?: PointerEvent) {
       const current = press.current
       const state = dragging.current
       if (current?.timer) clearTimeout(current.timer)
@@ -221,7 +225,12 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
       if (!current?.lifted) return
       clickWait.current?.()
       clickWait.current = stopNextClick()
-      if (release && state) latest.current.drop(state)
+      if (!release || !state) return
+      const { locate, locateOnRelease, drop } = latest.current
+      if (!locateOnRelease) return drop(state)
+      const { clientX: x, clientY: y } = release
+      const place = locate(state.item, x, y, state.place, state.from)
+      drop({ ...state, x, y, place })
     }
     start.current = (next) => {
       press.current = next
@@ -236,15 +245,15 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
       })
       if (next.touch) next.timer = setTimeout(() => lift(next), longPress)
     }
-    end.current = () => finish(false)
+    end.current = () => finish()
     cancel.current = () => {
       if (!press.current) return
       // The press stays until its release, so that the release selects nothing.
       if (press.current.lifted) show(null)
-      else finish(false)
+      else finish()
     }
     return () => {
-      finish(false)
+      finish()
       clickWait.current?.()
     }
   }, [])

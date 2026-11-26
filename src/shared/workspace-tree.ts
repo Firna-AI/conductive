@@ -5,7 +5,7 @@ export const MAX_WORKSPACE_DEPTH = 3
 
 export type TreeWorkspace = Pick<
   Workspace,
-  'id' | 'parentId' | 'sectionId' | 'state' | 'createdAt'
+  'id' | 'parentId' | 'sectionId' | 'state' | 'createdAt' | 'mergeQueue'
 >
 
 export interface WorkspacePlacement<T extends TreeWorkspace> {
@@ -16,8 +16,20 @@ export interface WorkspacePlacement<T extends TreeWorkspace> {
 }
 
 /**
- * Input keeps the existing places of top-level rows, including archived rows.
- * Output contains live rows with their shown section, parent, and depth.
+ * Whether a workspace shows in no section: an archived one shows in the
+ * Archived group, and a queued one in the Merge queue group (decision
+ * 318). Its live sub-workspaces show under the nearest workspace above
+ * them that shows in a section.
+ */
+export function leavesSection(workspace: TreeWorkspace): boolean {
+  return workspace.state === 'archived' || workspace.mergeQueue !== undefined
+}
+
+/**
+ * Input keeps the existing places of top-level rows, including archived and
+ * queued rows. Output contains the rows of the sections: the live
+ * workspaces that are not queued, with their shown section, parent, and
+ * depth.
  */
 export function placeWorkspaces<T extends TreeWorkspace>(
   workspaces: readonly T[],
@@ -36,10 +48,10 @@ export function placeWorkspaces<T extends TreeWorkspace>(
       siblings.push(workspace)
       children.set(workspace.parentId, siblings)
     }
-    if (workspace.state === 'archived') continue
+    if (leavesSection(workspace)) continue
     let ancestor = byId.get(workspace.parentId ?? '')
     const seen = new Set([workspace.id])
-    while (ancestor?.state === 'archived' && !seen.has(ancestor.id)) {
+    while (ancestor && leavesSection(ancestor) && !seen.has(ancestor.id)) {
       seen.add(ancestor.id)
       ancestor = byId.get(ancestor.parentId ?? '')
     }
@@ -57,7 +69,7 @@ export function placeWorkspaces<T extends TreeWorkspace>(
     if (visited.has(workspace.id)) return
     visited.add(workspace.id)
     let shown = parent
-    if (workspace.state !== 'archived') {
+    if (!leavesSection(workspace)) {
       shown = {
         workspace,
         sectionId:

@@ -49,7 +49,8 @@ actions at `app/command-palette/actions`, and the settings at
 - On the All tab and on the Actions tab, the actions come in this order:
   1. While a workspace is open, its actions: New session, Session history,
      a Go to row for each tab of the right column, New terminal, Merge
-     latest, and Archive workspace. The Go to rows lead to All files,
+     latest, Add to merge queue or Remove from queue, and Archive
+     workspace. The Go to rows lead to All files,
      Changes, Checks, Terminal, and Preview. Desktop has no Go to row while
      the app hides it, as [Desktop](workspace-tools.md#desktop) says. An
      archived workspace offers only Session history and Restore workspace.
@@ -83,19 +84,26 @@ actions at `app/command-palette/actions`, and the settings at
     as [Keyboard shortcuts](keyboard-shortcuts.md#commands) says.
 - Merge latest is not an action of the pull request bar, so this rule
   does not cover it.
+- Add to merge queue and Remove from queue are the exceptions among the
+  pull request actions. The menus of a workspace offer them too, so the
+  palette offers them, as
+  [Commands](merge-queue-in-the-app.md#commands) says (decision 317).
 
 ## Merge latest
 
-- Merge latest asks the agent to merge the latest target branch into the
-  branch of the open workspace. Its row names the target branch, such as
-  "Merge latest main". The target branch is the base branch that the
-  [pull request bar](github-banner.md) shows.
-- The row sends a fixed prompt at once, as an
+- The Merge latest row names its target branch, such as "Merge latest
+  main". A click reads the stored workspace state to choose its prompt.
+- The row sends a fixed prompt as an
   [agent action](github-banner.md#agent-actions) of the bar does (merge
-  latest decision 1 A, 17 November 2026). The prompt asks the agent to
-  fetch the target branch from GitHub and merge it. When the branch
+  latest decision 1 A, 17 November 2026). Outside the queue, the prompt
+  asks the agent to fetch the base branch from GitHub and merge it. When the branch
   already has each commit, the agent says so and stops. Otherwise it
   resolves each conflict, runs the tests, then commits and pushes.
+- While the workspace is in the merge queue, the row names the branch
+  selected by queue order. The prompt rebases this layer onto that branch,
+  as
+  [The prompts of a queued workspace](merge-queue-in-the-app.md#the-prompts-of-a-queued-workspace)
+  says.
 - It follows the rules of
   [Messages from the bar](messages-and-attachments.md#messages-from-the-bar).
 - Reason: the agent does each step that changes code, on a fixed prompt

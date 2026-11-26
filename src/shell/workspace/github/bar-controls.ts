@@ -1,4 +1,10 @@
-import { useCallback, useSyncExternalStore } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from 'react'
 import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
 import { anyTurnRuns } from '../../../chat/state/chat-snapshot'
@@ -14,6 +20,7 @@ import type { GitHubSubscription } from '../../../github/useGitHubState'
 import { useOrgModel } from '../../context'
 import type { WorkspaceContext } from '../features'
 import { useKeptFiles } from '../files/workspace-files'
+import type { WorkspaceQueue } from './workspace-queue'
 
 /**
  * The one action store of the bar of the open workspace, over the services
@@ -76,12 +83,14 @@ export function useShowChat(context: WorkspaceContext): () => void {
  * send: the chat in place of a file on desktop, and the chat tab on a
  * phone. Without an open session, the chat shows, where the member can
  * start one. A sent prompt keeps the view. A result after the connection
- * of the press ends also keeps the view and selects no session.
+ * of the press ends also keeps the view and selects no session. `queue`
+ * gives the merge queue of the workspace, from the list of the org.
  */
 export function useScreenControls(
   context: WorkspaceContext,
   github: GitHubFeed,
   actions: BarActions,
+  queue: WorkspaceQueue,
 ): BarControls | null {
   const files = useKeptFiles(context)
   const localWork = useSyncExternalStore(files.subscribe, () =>
@@ -92,6 +101,21 @@ export function useScreenControls(
     anyTurnRuns(chat.getSnapshot()),
   )
   const showChat = useShowChat(context)
+  // The presses run the writes of the latest render, so the controls
+  // change only with the facts of the queue.
+  const latest = useRef(queue)
+  useEffect(() => {
+    latest.current = queue
+  })
+  const { input } = queue
+  const queueScreen = useMemo(
+    () => ({
+      input,
+      add: () => latest.current.add(),
+      remove: () => latest.current.remove(),
+    }),
+    [input],
+  )
   return useBarControls({
     github,
     actions,
@@ -101,5 +125,6 @@ export function useScreenControls(
     archive: context.archive,
     archiving: context.running === 'archive',
     showChat,
+    queue: queueScreen,
   })
 }

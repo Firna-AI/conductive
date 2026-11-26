@@ -85,6 +85,7 @@ describe('the All tab of the palette', () => {
     await openPaletteTab(routes.org(org), { server })
     pressCommand('command-palette', 'other', document.body)
     typeText(searchField(), 'to')
+    await settle()
     const palette = byRole('dialog', 'Search')
     // The status part is not a row: the first action is highlighted.
     expect({

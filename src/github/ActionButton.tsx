@@ -36,6 +36,7 @@ export function ActionButton(props: {
   tint?: ButtonTint | null
   busy?: boolean
   commandKey?: CommandKey
+  tooltip?: string
   disabled?: boolean
 }) {
   const size = props.touch ? touchControl : control
@@ -71,9 +72,10 @@ export function ActionButton(props: {
       </Button>
     </TintedTheme>
   )
-  if (!props.commandKey) return button
+  const title = props.commandKey?.title ?? props.tooltip
+  if (title === undefined) return button
   return (
-    <span className={styles.contents} title={props.commandKey.title}>
+    <span className={styles.contents} title={title}>
       {button}
     </span>
   )

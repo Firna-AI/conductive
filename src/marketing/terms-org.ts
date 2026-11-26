@@ -11,7 +11,8 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
   title: 'Working in an org',
   blocks: [
     list(
-      text`Every member of an org sees all of its workspaces and automations.
+      text`Every member of an org sees all of its workspaces, automations,
+        and merge queues.
         A removed workspace opens by direct link or chat link, with
         read-only chat.
         In an active org, members can send messages in workspaces that are
@@ -68,9 +69,10 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         cannot be used. If no usable login serves the sender, the message
         cannot run. Each turn's git calls use a GitHub token of the
         member whose message started the turn.
-        Pushes and pull requests show as that member. A merge from the app
-        uses the GitHub token of the member who clicks. GitHub shows that
-        member as the merger and checks their rights and the branch rules.
+        Pushes and pull requests show as that member. Selecting a merge
+        action uses the GitHub token of the member who selects it, including
+        in the queue. GitHub shows that member as the merger and checks
+        their rights and the branch rules.
         Ready for review of a draft pull request also uses the GitHub token
         of the member who clicks, and GitHub checks their rights.
         Outside an agent turn, the GitHub CLI uses the workspace owner's
@@ -79,6 +81,17 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
       text`That GitHub token reaches every repository where that person
         installed the GitHub App and has access, not only the
         repositories of the org.`,
+      text`Adding a pull request to the merge queue lets ${productName}
+        change its target, rebase its branch, and merge it when ready.
+        An automatic merge uses the stored GitHub token of the member who
+        added the last pull request that the queue asks GitHub to merge.
+        If the creator of the queue's GitHub stack cannot remove it,
+        ${productName} can use the token of the member whose action caused
+        a queue entry to leave, or the workspace owner's token. The member
+        must still belong to the org and have GitHub write access to the
+        repository.
+        The queue sends agent turns as the member who added the pull
+        request. The turn uses the session's agent login.`,
       text`Each personal login has a setting that lets other members use
         it in the sessions that you start on it. For a Claude
         subscription or a ChatGPT sign-in, the setting starts off. For an API key or an own
@@ -182,6 +195,7 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
       text`A tool message, an accepted late answer to a secret request,
         or an accepted watch wake can start a stopped workspace's cloud
         computer.
+        The merge queue can also start the computer for an agent turn.
         The start follows the same checks as opening the workspace. ${productName}
         sets no limit on how many sessions or messages agents create.
         Repeated replies can spend agent logins and keep computers running.

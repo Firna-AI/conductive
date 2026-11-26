@@ -1,7 +1,7 @@
 import { copyText } from '../clipboard'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { devOrgOrderRoute } from '../../test-support/dev-org-order-route'
-import { FAKE_TIME } from '../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { API_PATHS } from '../../shared/api'
 import { createApiClient } from '../api/client'
 import { browserDelay } from '../events'
@@ -31,6 +31,7 @@ import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
 import { orgLoginRoutes } from './org-login-routes'
 import { orgRoutes } from './org-routes'
+import { queueRoutes, seedMergeQueue } from './queue-routes'
 import { automationRoutes } from './automation-routes'
 import { devFileTransport } from './progress-fixture'
 import { routeFetch, RouteError, type Route } from './router'
@@ -69,6 +70,8 @@ export function createFakeServices(search: string): AppServices {
   const now = () => Date.now() + offset
   const newId = () => crypto.randomUUID()
   seedSkills(state, options.skills, options.skillsTrusted)
+  const acme = state.orgs.find((org) => org.org.id === FAKE_IDS.org)
+  if (acme) seedMergeQueue(acme, options.mergeQueue)
   const backend = createBackend(state, server.events, now, newId)
   seedSecretRequests(backend, server.events, options.secrets)
   seedCapabilityNotes(server.events, options.capabilities)
@@ -93,6 +96,7 @@ export function createFakeServices(search: string): AppServices {
     ...orgRoutes(backend),
     ...sectionRoutes(backend),
     ...workspaceRoutes(backend),
+    ...queueRoutes(backend, server.fetch),
     ...createRoutes(backend, options.branchCheck),
     ...branchRoutes(backend, options.branches),
     ...attachmentRoutes(backend, options.upload),

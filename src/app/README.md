@@ -273,6 +273,8 @@ the drag, and the operator section.
 [Key code: the workspace list and the workspace models](key-code-workspaces.md)
 covers the workspace list with its menus, Archive and Restore, and the
 models of an open workspace and of New workspace.
+The list's merge queue controls use the saved GitHub facts and filtered
+branch labels from the workspace list response.
 [Key code: drafts and attached files](key-code-drafts.md) covers the draft
 text, the attached files, and their uploads, which the chat and New
 workspace share.

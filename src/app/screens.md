@@ -175,6 +175,29 @@ the Help row of the command palette opens.
   `list-trees.ts`). So these rows stay where they showed: while the
   Archive runs, after its reply, after an event of the archived record,
   and after the next read of the list.
+- The Merge queue group shows at the top of the list while a queue of
+  the org has entries, as
+  [The Merge queue group](../../docs/protocol/merge-queue-in-the-app.md#the-merge-queue-group)
+  says. `groupWorkspaces` leaves each queued workspace out of the
+  sections, and `placeWorkspaces` places its live sub-workspaces under the
+  nearest workspace above them that is not queued, as for an archived
+  parent (decision 318). The list read alone carries the entry, so a
+  newer record of a listed row keeps it on the same branch. The group
+  has one block for each repository, in the order of the repositories,
+  and a block names its repository only while two or more queues have
+  entries. A line of the shared `MergeQueue.module.css` joins the marks
+  of a block. The group collapses for this view only, as the Archived
+  group does, because the collapse has no stored value.
+- A member with write access drags an entry inside its block, by a long
+  press on a phone, or moves it by Alt with Up or Down. Each moves the
+  whole unit of the entry. During each drag of a row of a section, the
+  group shows as a drop target. A row that can join takes the outline of
+  the block of its repository, or the zone of the group when that
+  repository has no queue with entries, or when the group is collapsed.
+  A row that cannot join names its reason there and takes no drop. Add,
+  Remove, and each move show at once, and go back with a toast when the
+  Worker refuses them. The list then reads again, because the Worker can
+  change more entries, such as the lower pull requests of a member stack.
 - A move of a workspace row by keys keeps the focus on the row. The list
   gives back only a lost focus, as a layer does: when a render takes the
   focused row out of the page and the focus falls to the page, the

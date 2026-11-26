@@ -61,7 +61,10 @@ const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly
   Give it a value that changes each minute.
 - `controls` gives the actions, the link, and the message of the state that
   shows, from the one action state of the screen, as
-  [The actions of the bar](actions.md) says. The bar and the row draw only
+  [The actions of the bar](actions.md) says. It also gives the merge queue
+  of the workspace: Add to merge queue, and the line of a queued
+  workspace with Remove from queue, as
+  [The merge queue](actions.md#the-merge-queue) says. The bar and the row draw only
   what it gives. After a merge, Archive shows only to the workspace owner
   and the admins. `archive` runs the app's Archive, which archives at once
   with one request, and `archiving` makes the button busy while it runs.
@@ -113,6 +116,10 @@ store. `BarActions` calls it, as [The actions of the bar](actions.md) says.
   so it stays out of the shared GitHub store and its events.
 - `merge` starts a merge of the head that the member saw. It returns a
   pending app job with its `mergeId`, or a completed merge.
+- The bar reads the count of open pull requests that land in a stack
+  merge and whether a lower pull request is queued. `mergeQueue` sends the
+  checked count and head when a member merges an unqueued top through the
+  queue of this org.
 - `mergeResult` reads that job once. Only the member who started the job
   can read it.
 - A refusal throws `GitHubActionError` with the app's error `code` and its
@@ -152,7 +159,8 @@ The store applies them in this way:
   stored state.
   `useGitHubState` connects the store and subscribes the views through
   `useWorkspaceStore` in `src/app/workspace-store.ts`.
-- A live GitHub event shows at once, and it cancels a read that runs.
+- A live GitHub event shows its banner and checks at once. An in-flight
+  read can still update the queue for the same pull request.
 - A history that comes before a read shows at once. The reply of the read
   then replaces it, because the read returns the current state.
 - A history that comes during a read, or after its reply shows, has no known
@@ -173,8 +181,8 @@ connected:
 
 - The store waits five minutes after a read ends, then reads again. The
   wait is a choice of the app, not a product limit.
-- A live event that cancels a read starts the wait too. A live event keeps
-  a wait that runs, so events never put off a backup read.
+- A live event starts the wait when no read or timer runs. A live event
+  keeps a wait that runs, so events never put off a backup read.
 - A backup read never overlaps another read, because each read stops the
   wait.
 - A backup read shows no loading. When it fails, the state or the error that
@@ -200,11 +208,11 @@ mounts it, and the production build leaves it out.
   a turn that runs, and `continue` how Continue ends. `branches` is
   `plain`, the default, `masked`, `masked-continue`, or
   `masked-repository`. `masked` gives the target branch a fake secret
-  value and its label, in the stored and fresh
-  replies, the live events, and the question of Continue. So the screens
-  show "[redacted]", and the prompts keep the real name. The workspace
-  branch stays plain, because the screen compares it with the workspace
-  record. The question of `masked` has no label of its own, as from an
+  value and its label in the stored and fresh replies, the live events,
+  and the question of Continue. The screens show "[redacted]".
+  Prompts outside the queue use the real name. The workspace branch
+  stays plain, because the screen compares it with the workspace record.
+  The question of `masked` has no label of its own, as from an
   older Worker, so the dialog takes the label of the bar.
   `masked-continue` also gives the value and its label to the workspace
   branch, to a changed file of the question, and to the new branch. It
@@ -263,7 +271,9 @@ mounts it, and the production build leaves it out.
   banner, the checks, and the stored state, and check them against the
   contract, with the head commit of the pull request. They keep the
   optional labels `displayBranch`, `displayBaseBranch`, and
-  `displayBaseMoved` of the banner.
+  `displayBaseMoved` of the banner, and the optional queue state of a
+  queued workspace, which the snapshot keeps as `queue`. The queue state
+  can give filtered branch labels and the rebase input from queue order.
 - `githubActions.ts` and `githubActionParse.ts`: the action client and the
   checks of its replies. `githubActions.test.ts` checks the requests, the
   replies, the refusal codes, and replies outside the contract.

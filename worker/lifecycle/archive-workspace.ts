@@ -5,10 +5,13 @@ import {
   markWorkspaceArchived,
 } from '../app-api/archive-data'
 import { readWorkspace, workspaceView } from './workspace-data'
+import { leaveWorkspaceQueue } from '../merge-queue/wake'
+import type { QueueTurn } from '../chat/queue-turn'
 
 interface ArchiveOperations {
   reserveArchive(): Promise<void>
   archiveLifecycle(): Promise<void>
+  outside: QueueTurn['outside']
 }
 
 export async function archiveWorkspace(
@@ -20,7 +23,7 @@ export async function archiveWorkspace(
   origin: string,
   operations: ArchiveOperations,
 ): Promise<WorkspaceResponse> {
-  const row = await archiveWorkspaceAccess(env, orgId, workspaceId, userId)
+  let row = await archiveWorkspaceAccess(env, orgId, workspaceId, userId)
   if (row.archivedAt === null) {
     await operations.reserveArchive()
     await markWorkspaceArchived(
@@ -30,9 +33,16 @@ export async function archiveWorkspace(
       userId,
       dependencies.now(),
     )
-    await archiveWorkspaceAccess(env, orgId, workspaceId, userId)
+    row = await archiveWorkspaceAccess(env, orgId, workspaceId, userId)
   }
-  await operations.archiveLifecycle()
+  try {
+    await operations.archiveLifecycle()
+  } finally {
+    if (row.archivedAt !== null)
+      await operations.outside(() =>
+        leaveWorkspaceQueue(env, row, 'archived', { actorId: userId }),
+      )
+  }
   const saved = await readWorkspace(env.DB, orgId, workspaceId)
   return { workspace: workspaceView(saved, origin), start: null, error: null }
 }

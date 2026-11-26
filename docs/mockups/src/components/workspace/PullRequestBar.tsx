@@ -1,7 +1,8 @@
 import { ChevronRight, GitBranch, GitPullRequest } from 'lucide-react'
-import { pullRequest } from '../../fixtures/pullRequests'
-import type { Workspace } from '../../fixtures/workspaces'
+import { bannerSummary, pullRequest } from '../../fixtures/pullRequests'
+import { baseBranchOf, type Workspace } from '../../fixtures/workspaces'
 import { barPaths, checksPaths } from '../../paths'
+import { queuePaths } from '../../queuePaths'
 import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import {
@@ -19,7 +20,9 @@ import {
   stateLabel,
 } from '../../entries/components/workspace/barParts.mockup'
 import { prStatusData } from '../../entries/components/workspace/barSchemas'
+import { queueLine } from '../../entries/components/workspace/QueueBarParts.mockup'
 import { hasPullRequest, prStatus } from './prStatus'
+import { queueRowText } from '../../../../../src/ui/components/workspace/queueCopy'
 import styles from './PullRequestBar.module.css'
 
 /**
@@ -38,16 +41,31 @@ function Actions(props: { bar: BarModel }) {
  * The pull request of the workspace branch, at the top of the right column:
  * its number, which opens it on GitHub, its checks and merge state, and its
  * main action. A branch without a pull request shows its target and Create
- * pull request. A message, such as a refusal of GitHub, shows under the bar.
- * Beside an action, a narrow bar drops its detail.
+ * pull request. A message, such as a refusal of GitHub, shows under the bar,
+ * and then the line of a queued workspace. Beside an action, a narrow bar
+ * drops its detail.
  */
 export function PullRequestBar(props: { bar: BarModel; workspace: Workspace }) {
   const { bar, workspace } = props
   const { banner } = bar
-  const withActions = bar.actions.length > 0 && styles.withActions
-  const message = bar.message ? (
-    <barMessage.Component kind={bar.message} workspace={workspace} />
-  ) : null
+  const line = bar.queue?.line
+  const buttons = bar.actions.length > 0 || bar.queue?.add === true
+  const withActions = buttons && styles.withActions
+  const message = (
+    <>
+      {bar.message ? (
+        <barMessage.Component kind={bar.message} workspace={workspace} />
+      ) : null}
+      {line ? (
+        <queueLine.Component
+          github={bannerSummary(banner)}
+          line={line}
+          moklyInstance="queue-line"
+          workspace={workspace}
+        />
+      ) : null}
+    </>
+  )
   if (!hasPullRequest(banner)) {
     const note =
       banner === 'none' ? barLabels.noPullRequest : barLabels.noCommits
@@ -65,7 +83,8 @@ export function PullRequestBar(props: { bar: BarModel; workspace: Workspace }) {
       </>
     )
   }
-  const status = prStatus(banner)
+  // A queued workspace conflicts with the branch below it in the queue.
+  const status = prStatus(banner, line ? baseBranchOf(workspace) : undefined)
   return (
     <>
       <div className={classes(styles.bar, styles[status.tone], withActions)}>
@@ -87,7 +106,8 @@ export function PullRequestBar(props: { bar: BarModel; workspace: Workspace }) {
 /**
  * The compact pull request row at the top of a workspace on a phone. It
  * opens the Checks tab, whose top holds the actions of the bar. A branch
- * without a pull request and without an action is not a link.
+ * without a pull request and without an action is not a link. A queued
+ * workspace names its place.
  */
 export function PullRequestRow(props: { bar: BarModel }) {
   const { bar } = props
@@ -116,14 +136,16 @@ export function PullRequestRow(props: { bar: BarModel }) {
     )
   }
   const status = prStatus(banner)
+  const line = bar.queue?.line
   return (
     <ScreenLink
       className={classes(styles.row, styles[status.tone])}
-      to={checksPaths[banner]}
+      to={line ? queuePaths.bar : checksPaths[banner]}
     >
       <span className={styles.number}>#{pullRequest.number}</span>
       <stateLabel.Component status={prStatusData(status)} />
       <span className={styles.spacer} />
+      {line ? <span className={styles.queue}>{queueRowText(line)}</span> : null}
       <ChevronRight className={styles.muted} size={15} />
     </ScreenLink>
   )

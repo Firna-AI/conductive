@@ -3,6 +3,7 @@ import {
   gitHubAccesses,
   localWorkKinds,
 } from '../../../../src/ui/components/workspace/barModel'
+import { workspaceQueueStates } from './queueBarStates'
 
 /**
  * The parts of the workspace state that choose the actions of the pull
@@ -46,6 +47,12 @@ export const barStateProperties = {
    * the workspace after the change, on a new branch of acme/billing-service.
    */
   repositoryMove: { enum: ['none', 'changing', 'changed'] },
+  /**
+   * The merge queue of the open workspace, as `workspaceQueueStates` says:
+   * the bar, the header menu, and the Merge queue group of the sidebar.
+   * It is optional, so a state without it draws no part of the queue.
+   */
+  queue: { enum: workspaceQueueStates },
 } as const
 
 export const barStateKeys = [

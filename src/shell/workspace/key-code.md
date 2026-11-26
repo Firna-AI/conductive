@@ -128,7 +128,8 @@ this guide.
   column, Archive, or Restore. `useNewTerminalOffer` offers New terminal
   for the Terminal tool, where the Go to rows show, while the + of the
   terminal tabs takes a press. Merge latest has no control: it runs
-  `github/merge-latest.ts`.
+  `github/merge-latest.ts`. Add to merge queue and Remove from queue run
+  the merge queue of the screen.
 - `tools/tool-events.ts`: `ToolEvents`, the events of the tools from the
   ordered stream. It keeps the revokes of previews, the latest report of the
   listening ports, and the first failed repair of that report since it. A
@@ -150,7 +151,12 @@ this guide.
   palette. It sends its prompt through the store of the bar actions, and
   `useShowChat` of `bar-controls.ts` shows the chat when the prompt did
   not go out, as [Agent actions](../../github/actions.md#agent-actions)
-  says.
+  says. `github/workspace-queue.tsx`: `useWorkspaceQueue`, the merge queue
+  of the open workspace from the list of the org, which the bar and the
+  palette share, with the question of Remove from queue in
+  `QueueQuestion`. `useQueueKnown` gives the menu of the header the number
+  and the trunk that the bar knows. `github/BarQueue.test.tsx` checks the
+  line, Remove from queue with its question, Add, and the palette row.
 - `kept-connections.tsx`: `KeptConnections`, the one connection of the
   kept files, of the kept previews, of the kept services, and of the kept
   files preview for the whole screen.

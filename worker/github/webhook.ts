@@ -2,6 +2,7 @@ import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { BodyBudgetExceeded, readBoundedBody } from '../http/bounded-body'
 import type { GitHubRefreshWorkspace } from './contracts'
+import { ageRepositoryListFacts } from '../merge-queue/list-facts-data'
 import {
   completeDelivery,
   isProcessed,
@@ -19,6 +20,7 @@ import {
   webhookRepository,
   webhookRoute,
   type GitHubPullRequestEvent,
+  type WebhookRoute,
 } from './webhook-routing'
 
 export const GITHUB_WEBHOOK_BODY_BYTES = 26 * 1024 * 1024
@@ -43,6 +45,7 @@ export interface GitHubWebhookDependencies {
   ) => Promise<void>
   /** Without it, the handler ignores repository changes. */
   repositoryChange?: RepositoryChangeDependencies
+  queue?: (route: WebhookRoute) => Promise<void>
 }
 
 async function authenticatedBody(
@@ -153,8 +156,16 @@ export async function handleGitHubWebhook(
         dependencies.now,
       )
     const route = webhookRoute(event, value)
-    if (route === null || (await isProcessed(env.DB, deliveryId)))
+    const agesList = event === 'pull_request' && repository
+    if ((!route && !agesList) || (await isProcessed(env.DB, deliveryId)))
       return new Response(null, { status: 204 })
+    if (agesList)
+      await ageRepositoryListFacts(
+        env.DB,
+        agesList.repositoryId,
+        agesList.installationId,
+      )
+    if (route === null) return new Response(null, { status: 204 })
     await recordDelivery(env.DB, deliveryId, dependencies.now())
     let pullRequestFailure: { error: unknown } | undefined
     try {
@@ -219,6 +230,7 @@ export async function handleGitHubWebhook(
     if (pullRequestFailure) throw pullRequestFailure.error
     if (mergeFailure) throw mergeFailure.error
     if (failure) throw failure.error
+    await dependencies.queue?.(route)
     await completeDelivery(env.DB, deliveryId, dependencies.now())
     return new Response(null, { status: 204 })
   } catch (error) {

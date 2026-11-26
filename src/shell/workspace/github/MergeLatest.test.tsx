@@ -48,9 +48,15 @@ function serveReleaseTarget(
   server: FakeApiServer,
   target: Target = { baseBranch: 'release/2026' },
 ): void {
-  const { banner } = toolFixtures('ready-to-merge').banner
+  const {
+    banner: { banner },
+    checks,
+  } = toolFixtures('ready-to-merge')
   server.json('GET', githubPaths.banner(org, id), {
     banner: { ...banner, ...target },
+  })
+  server.json('GET', githubPaths.stored(org, id), {
+    state: { banner: { ...banner, ...target }, checks },
   })
 }
 
@@ -113,6 +119,54 @@ describe('Merge latest in the palette', () => {
       }).toEqual({ names: [name], sends: [prompt] })
     },
   )
+
+  test('asks for a rebase when the stored queue is newer than the palette row', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ banner: 'ready-to-merge' })
+    serveWork(server, 'none')
+    serveReleaseTarget(server)
+    const { rows } = await searchMergeLatest(server)
+    expect(rows.map(accessibleName)).toEqual(['Merge latest release/2026'])
+    server.json('GET', githubPaths.stored(org, id), {
+      state: null,
+      queue: {
+        place: 2,
+        count: 2,
+        belowPullNumber: 479,
+        trunk: 'main',
+        state: 'queued',
+        wait: null,
+        rebase: {
+          base: 'calummoore/apple-pay-secret123',
+          label: { text: 'calummoore/apple-pay-[redacted]' },
+          baseHead: 'b'.repeat(40),
+          oldBase: 'a'.repeat(40),
+        },
+      },
+    })
+    const [row] = rows
+    if (row) click(row)
+    await settle()
+    const [request] = await sends(server)
+    const text: unknown = Object(request).text
+    expect(text).toEqual(
+      expect.stringContaining(
+        `git rebase --onto ${'b'.repeat(40)} ${'a'.repeat(40)}`,
+      ),
+    )
+    expect(text).toEqual(
+      expect.stringContaining('git fetch origin refs/pull/479/head'),
+    )
+    expect(text).toEqual(
+      expect.stringContaining(
+        'git push --force-with-lease --force-if-includes',
+      ),
+    )
+    expect(text).toEqual(
+      expect.stringContaining('calummoore/apple-pay-[redacted]'),
+    )
+    expect(text).not.toEqual(expect.stringContaining('secret123'))
+  })
 
   test('a send that fails shows the chat of the session, whose composer names the cause', async () => {
     holdAnimationFrames()

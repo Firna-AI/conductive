@@ -22,6 +22,25 @@ const noPullRequest = {
   localWork: false,
 } as const
 
+/** Place 3 of 3 of the merge queue, on #479, with Remove from queue. */
+const queuedLine = {
+  kind: 'entry',
+  place: 3,
+  size: 3,
+  below: 479,
+  step: 'waiting',
+  remove: true,
+} as const
+
+/** A queued pull request whose checks run. */
+const queuedBar = {
+  banner: 'checks-running',
+  actions: [],
+  link: 'open',
+  localWork: false,
+  queue: { add: false, line: queuedLine },
+} as const
+
 /** The pull request bar at the top of the right column, registered with Mokly. */
 export const pullRequestBar = defineComponent({
   slug: 'pull-request-bar',
@@ -66,6 +85,13 @@ export const pullRequestBar = defineComponent({
       description: 'The refusal of GitHub under the bar.',
       props: { bar: { ...readyBar, message: 'merge-refused' } },
     },
+    {
+      slug: 'queued',
+      title: 'Queued',
+      description:
+        'A queued pull request: the line of the merge queue under the bar names its place and the pull request below it, with Remove from queue.',
+      props: { bar: queuedBar },
+    },
   ],
 })
 
@@ -96,6 +122,12 @@ export const pullRequestRow = defineComponent({
       title: 'No commits',
       description: 'A branch without commits and without an action.',
       props: { bar: { banner: 'no-commits', actions: [], localWork: false } },
+    },
+    {
+      slug: 'queued',
+      title: 'Queued',
+      description: 'A queued pull request names its place in the queue.',
+      props: { bar: queuedBar },
     },
   ],
 })

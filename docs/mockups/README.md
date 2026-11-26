@@ -95,8 +95,9 @@ of the org settings, the Capabilities pages, the child pages of
 `app/secret-requests`, and the flow `user-flows/secret-request`.
 The [account](catalogue-account.md) page gives the child pages of
 `app/account`. The
-[workspace menu and sub-workspaces](catalogue-workspace-list.md) page gives
-the child pages of `app/workspace-menu` and `app/sub-workspaces`. The
+[workspace menu, sub-workspaces, and the merge queue](catalogue-workspace-list.md)
+page gives the child pages of `app/workspace-menu`, `app/sub-workspaces`,
+and `app/merge-queue`. The
 [first build and waiting repositories](catalogue-org-builds.md) page gives
 the first build of a new org and the repositories that wait for a build.
 
@@ -151,7 +152,7 @@ as [`src/ui/components/chat/`](../../src/ui/components/chat/).
 | `src/components/`         | Layout and parts that only the mockups use, where `@firna/ui` has none |
 | `src/fixtures/`           | The sample orgs, members, workspaces, agents, chats, and files, and the drawn screenshots of the image files |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
-| `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, `src/servicePaths.ts` for the services of the Preview tool, and `src/limitedListPaths.ts`, the table from each file page to its limited page |
+| `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, `src/servicePaths.ts` for the services of the Preview tool, `src/queuePaths.ts` for the merge queue, and `src/limitedListPaths.ts` for the limited page of each file page |
 | `src/defined.ts`, `src/instanceKey.ts` | Helpers for the wrappers of registered parts: props without undefined values, and instance names |
 | `../../src/ui/`           | The shared UI: the parts that the app uses too, with the screen styles and words, the design tokens in `design/`, the theme in `theme.ts`, the global stylesheet `render.css`, and Inter with its licence in `fonts/`. Its [README](../../src/ui/README.md) gives the folders |
 | `../../src/shared/brand.ts` | The name "Conductive", its domains, its repository, and DMG names |
@@ -198,7 +199,10 @@ as [`src/ui/components/chat/`](../../src/ui/components/chat/).
   `src/screens/serviceState.ts` holds the services of the Preview tool and
   what lies open over them, which `src/screens/workspaceServices.tsx`
   draws. The pages of the services start from `servicesWorkspace` in
-  `src/screens/servicesWorkspace.ts`.
+  `src/screens/servicesWorkspace.ts`. `src/screens/queueBarStates.ts`
+  holds the merge queue of the open workspace, and
+  `src/screens/queueStates.tsx` the merge queues of the list, from the
+  queues of `src/screens/queueSpecs.ts`.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from

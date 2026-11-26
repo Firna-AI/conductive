@@ -23,6 +23,7 @@ import type {
 } from '../../shared/workspaces'
 import { FAKE_IDS, FAKE_ORIGIN, FAKE_TIME, fakeUser, fakeUsers } from './core'
 import { removedWorkspace } from './removed-workspace'
+import { repositoryFixtures } from './repositories'
 import { routes } from '../../app/router'
 
 /**
@@ -103,6 +104,16 @@ export function workspaceFixtures(
   })
   const workspaces: WorkspacesResponse = {
     workspaces: [...listed, removedWorkspace()],
+    repositories: repositoryFixtures(
+      FAKE_IDS.org,
+    ).repositories.repositories.map(
+      ({ id, fullName, defaultBranch, selected }) => ({
+        id,
+        fullName,
+        defaultBranch,
+        selected,
+      }),
+    ),
   }
   const workspace = workspaces.workspaces.find(
     (item) => item.id === FAKE_IDS.workspace,

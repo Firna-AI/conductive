@@ -2,9 +2,11 @@ import { useMemo, useSyncExternalStore } from 'react'
 import {
   mergeLatestLabel,
   mergeLatestPrompt,
+  mergeLatestRebasePrompt,
 } from '../../../ui/components/workspace/mergeLatestCopy'
 import { baseBranchLabel } from '../../../github/bannerStatus'
 import type { BarActions } from '../../../github/barActions'
+import { queuedRebase } from '../../../github/barPrompts'
 import { offersAgentActions } from '../../../github/barView'
 import type { GitHubFeed } from '../../../github/githubStore'
 import type { WorkspaceContext } from '../features'
@@ -24,7 +26,9 @@ export interface MergeLatest {
  * a time (merge latest decision 1 A). It needs the target branch from the
  * GitHub state of the branch, and the access that offers the agent
  * actions. A read-only workspace and a merged pull request offer none: a
- * merged branch continues from the target branch. A prompt that did not go
+ * merged branch continues from the target branch. While the workspace is
+ * in the merge queue, its prompt asks for a rebase in place of a merge. A
+ * prompt that did not go
  * out shows the chat, where the composer names the cause, while the
  * connection of the press stays connected.
  */
@@ -39,18 +43,28 @@ export function useMergeLatest(
   const { state } = github
   return useMemo(() => {
     if (readOnly || state.status !== 'ready') return null
-    const { banner } = state.snapshot
+    const { banner, queue } = state.snapshot
     if (banner.state === 'merged') return null
     if (!offersAgentActions(shown.capabilities)) return null
-    const base = banner.baseBranch
+    const rebase = queue ? queuedRebase(queue) : null
     return {
-      // The row shows the label, which hides each secret value. The prompt
-      // keeps the real name, which Git needs.
-      label: mergeLatestLabel(baseBranchLabel(banner)),
+      label: mergeLatestLabel(
+        queue
+          ? (rebase?.label?.text ?? 'the queue base')
+          : baseBranchLabel(banner),
+      ),
       run: () => {
-        void actions.sendPrompt(mergeLatestPrompt(base)).then((result) => {
-          if (result !== null && result !== 'sent') showChat()
-        })
+        void actions
+          .sendPrompt(({ state, queue }) =>
+            queue
+              ? mergeLatestRebasePrompt(queuedRebase(queue))
+              : mergeLatestPrompt(
+                  state?.banner.baseBranch ?? banner.baseBranch,
+                ),
+          )
+          .then((result) => {
+            if (result !== null && result !== 'sent') showChat()
+          })
       },
     }
   }, [readOnly, state, shown.capabilities, actions, showChat])

@@ -1,4 +1,5 @@
 import type { ReceiverStorage } from '../members/receiver-storage'
+import type { QUEUE_FIX_REPORT } from '../chat/queue-fix-records'
 
 export type AlarmSource =
   | 'lifecycle'
@@ -11,6 +12,7 @@ export type AlarmSource =
   | 'continue'
   | 'repository-change'
   | 'automation-report'
+  | typeof QUEUE_FIX_REPORT
   | 'session-watches'
   | 'browser'
   | 'runner'

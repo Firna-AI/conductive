@@ -5,6 +5,7 @@
     "sections",
     "workspace-menu",
     "sub-workspaces",
+    "merge-queue",
     "command-palette",
     "feedback",
     "orgs",

@@ -177,6 +177,8 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
     'squash',
     'rebase',
   ]),
+  palette('add-to-merge-queue', 'Workspace'),
+  palette('remove-from-merge-queue', 'Workspace'),
   command(
     'continue-after-merge',
     'Workspace',

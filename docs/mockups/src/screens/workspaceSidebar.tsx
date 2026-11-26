@@ -13,6 +13,8 @@ import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import type { Workspace } from '../fixtures/workspaces'
 import type { ActivityStatus } from '../../../../src/ui/components/workspaces/activityStatus'
 import { changedWorkspaces } from './orgWorkspaces'
+import { queueSpecOf } from './queueBarStates'
+import { queueListOf, queuedKeys, sectionsWithout } from './queueLists'
 import { isRemoved } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 
@@ -24,8 +26,10 @@ import type { WorkspaceState } from './workspaceState'
  * group, with Restore while its last day has not passed. A removed
  * workspace, which a link opened, has no row: the Archived group stays
  * closed, with its count, and no row is selected. In a suspended org every
- * row shows stopped, and nothing in the sidebar changes the org.
- * `shortcuts` holds the person's changes, for the key of the Search row.
+ * row shows stopped, and nothing in the sidebar changes the org. A state
+ * of the merge queue shows its queues in the Merge queue group, and their
+ * workspaces leave their sections. `shortcuts` holds the person's changes,
+ * for the key of the Search row.
  */
 export function workspaceSidebar(props: {
   state: WorkspaceState
@@ -41,13 +45,15 @@ export function workspaceSidebar(props: {
       ? { ...props.workspace, updated: 'now' }
       : props.workspace
   if (status !== 'archived') {
-    const sections = suspended
+    const spec = suspended ? undefined : queueSpecOf(state.queue)
+    const listed = suspended
       ? suspendedSections(workspace)
       : workspaceSections(
           { workspace, status },
           undefined,
           changedWorkspaces(state),
         )
+    const sections = spec ? sectionsWithout(listed, queuedKeys(spec)) : listed
     return (
       <sidebar.Component
         moklyInstance="sidebar"
@@ -55,7 +61,10 @@ export function workspaceSidebar(props: {
         sections={plainData(sections)}
         suspended={suspended}
         viewer={viewer}
-        {...defined({ shortcuts })}
+        {...defined({
+          queue: spec && plainData(queueListOf(spec, { workspace, status })),
+          shortcuts,
+        })}
       />
     )
   }

@@ -4,11 +4,13 @@ import type { UserMessage } from '../../shared/generated/UserMessage'
 import type { StartStep } from '../../shared/generated/StartStep'
 import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import { createWorkspaceReader } from '../../shared/workspace-read'
+import { readWorkspaceListRepositories } from '../../shared/merge-queue-read'
 import type {
   CreateWorkspaceResponse,
   OrderedWorkspaceResponse,
   RestartWorkspaceResponse,
   WorkspaceResponse,
+  WorkspacesResponse,
 } from '../../shared/workspaces'
 import {
   choice,
@@ -129,6 +131,15 @@ export function readCreated(value: unknown): CreateWorkspaceResponse {
 
 export function readWorkspaces(value: unknown): Workspace[] {
   return items(record(value, 'workspaces'), 'workspaces', readWorkspace)
+}
+
+export function readWorkspaceList(value: unknown): WorkspacesResponse {
+  const body = record(value, 'workspaces')
+  const repositories = readWorkspaceListRepositories(body.repositories)
+  return {
+    workspaces: items(body, 'workspaces', readWorkspace),
+    ...(repositories !== undefined && { repositories }),
+  }
 }
 
 /** The reply of Restart: whether the newest software came before it. */

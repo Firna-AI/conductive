@@ -3,6 +3,7 @@ import {
   type TreeWorkspace,
 } from '../../src/shared/workspace-tree'
 import { namedBranchSql } from '../lifecycle/workspace-branch'
+import { listedQueueEntries, queueEntryBindingSql } from '../merge-queue/read'
 import {
   guardedBatch,
   guardedStatement,
@@ -13,7 +14,7 @@ import {
 import { shellSections } from './shell-data'
 
 export async function readWorkspaceTree(db: D1Database, orgId: string) {
-  const [workspaces, sections] = await Promise.all([
+  const [stored, sections, entries] = await Promise.all([
     shellRead(
       db,
       `SELECT id, number, parent_workspace_id AS parentId, section_id AS sectionId,
@@ -22,11 +23,16 @@ export async function readWorkspaceTree(db: D1Database, orgId: string) {
       [orgId],
     ).all<TreeWorkspace & { number: number }>(),
     shellSections(db, orgId, ''),
+    listedQueueEntries(db, orgId),
   ])
+  const workspaces = stored.results.map((workspace) => ({
+    ...workspace,
+    mergeQueue: entries.get(workspace.id),
+  }))
   return {
-    workspaces: workspaces.results,
+    workspaces,
     sections,
-    rows: placeWorkspaces(workspaces.results, sections),
+    rows: placeWorkspaces(workspaces, sections),
   }
 }
 
@@ -49,34 +55,38 @@ export async function readWorkspaceMove(
   }
 }
 
-export const workspaceTreeSql = `WITH RECURSIVE tree_rows AS MATERIALIZED (
+export const workspaceTreeSql = `WITH RECURSIVE queued(id) AS MATERIALIZED (
+  SELECT e.workspace_id FROM merge_queue_entries e ${queueEntryBindingSql} WHERE q.org_id = ?1
+), tree_rows AS MATERIALIZED (
   SELECT w.*, archived_at IS NULL AND state != 'archived' AS live,
+    queued.id IS NOT NULL AS queued,
+    archived_at IS NULL AND state != 'archived' AND queued.id IS NULL AS shown,
     COALESCE(
       (SELECT id FROM sections WHERE org_id = ?1 AND id = w.section_id),
       (SELECT id FROM sections WHERE org_id = ?1 ORDER BY is_default DESC, position LIMIT 1),
       section_id) AS shown_section_id
-  FROM workspaces w WHERE org_id = ?1
+  FROM workspaces w LEFT JOIN queued ON queued.id = w.id WHERE org_id = ?1
 ), ancestors(id, ancestor_id) AS (
   SELECT id, parent_workspace_id FROM tree_rows WHERE parent_workspace_id IS NOT NULL
   UNION
   SELECT a.id, p.parent_workspace_id FROM ancestors a
   JOIN tree_rows p ON p.id = a.ancestor_id WHERE p.parent_workspace_id IS NOT NULL
 ), top_level AS MATERIALIZED (
-  SELECT w.* FROM tree_rows w WHERE live AND NOT EXISTS (
+  SELECT w.* FROM tree_rows w WHERE shown AND NOT EXISTS (
     SELECT 1 FROM ancestors a JOIN tree_rows p ON p.id = a.ancestor_id
-    WHERE a.id = w.id AND p.live
+    WHERE a.id = w.id AND p.shown
   )
 ), subtree(id) AS (
   SELECT id FROM tree_rows WHERE id = ?2
   UNION
   SELECT w.id FROM tree_rows w JOIN subtree t ON w.parent_workspace_id = t.id
-), promotion_path(id, live) AS (
-  SELECT id, live FROM tree_rows WHERE parent_workspace_id = ?2
+), promotion_path(id, shown) AS (
+  SELECT id, shown FROM tree_rows WHERE parent_workspace_id = ?2
   UNION
-  SELECT w.id, w.live FROM tree_rows w
-  JOIN promotion_path p ON w.parent_workspace_id = p.id WHERE NOT p.live
+  SELECT w.id, w.shown FROM tree_rows w
+  JOIN promotion_path p ON w.parent_workspace_id = p.id WHERE NOT p.shown
 ), promoted AS MATERIALIZED (
-  SELECT id FROM promotion_path WHERE live
+  SELECT id FROM promotion_path WHERE shown
 )`
 
 interface TreeWrite {
@@ -96,10 +106,11 @@ async function writeWorkspaceTree(
 ) {
   const { orgId, workspaceId } = operation
   const moving = `${workspaceTreeSql}, moving AS MATERIALIZED (
-    SELECT id, COALESCE(?3, section_id) AS destination FROM top_level
-    WHERE id = ?2 AND (?4 = 0 OR section_id != ?3)
+    SELECT id, queued, COALESCE(?3, shown_section_id) AS destination FROM tree_rows
+    WHERE id = ?2 AND live AND (?4 = 0 OR section_id != ?3)
+      AND (id IN (SELECT id FROM top_level) OR (?4 = 1 AND queued))
       AND ${shellGuard}
-      AND EXISTS (SELECT 1 FROM sections WHERE org_id = ?1 AND id = COALESCE(?3, section_id))
+      AND EXISTS (SELECT 1 FROM sections WHERE org_id = ?1 AND id = COALESCE(?3, shown_section_id))
   )`
   const bindings = [
     orgId,
@@ -114,13 +125,13 @@ async function writeWorkspaceTree(
       operation,
       `${moving}, siblings AS MATERIALIZED (
          SELECT id, ROW_NUMBER() OVER (ORDER BY position, created_at, id) - 1 AS rank
-         FROM top_level WHERE shown_section_id = (SELECT destination FROM moving) AND id != ?2
+         FROM top_level WHERE shown_section_id = (SELECT destination FROM moving WHERE NOT queued) AND id != ?2
        ), destination AS MATERIALIZED (
          SELECT MIN(?5, COUNT(*)) AS position FROM siblings
        ), ranks AS MATERIALIZED (
          SELECT siblings.id, rank + (rank >= destination.position) AS position
          FROM siblings CROSS JOIN destination
-         UNION ALL SELECT moving.id, destination.position FROM moving CROSS JOIN destination
+         UNION ALL SELECT moving.id, destination.position FROM moving CROSS JOIN destination WHERE NOT moving.queued
        ) UPDATE workspaces SET position = (
          SELECT ranks.position FROM ranks WHERE ranks.id = workspaces.id
        ) WHERE org_id = ?1 AND id IN (SELECT id FROM ranks) AND EXISTS (SELECT 1 FROM moving)`,
@@ -131,7 +142,8 @@ async function writeWorkspaceTree(
       operation,
       `${moving} UPDATE workspaces SET
        section_id = (SELECT destination FROM moving), updated_at = MAX(updated_at, ?5)
-       WHERE org_id = ?1 AND id IN (SELECT id FROM subtree) AND EXISTS (SELECT 1 FROM moving)
+       WHERE org_id = ?1 AND id IN (SELECT id FROM subtree) AND EXISTS (
+         SELECT 1 FROM moving WHERE NOT queued OR id = workspaces.id)
        RETURNING id`,
       [...bindings, operation.now],
     ),
@@ -189,7 +201,8 @@ export async function writeShellWorkspace(
     input,
     `${workspaceTreeSql}, changing AS MATERIALIZED (
          SELECT id FROM tree_rows WHERE id = ?2 AND (?3 IS NOT NULL OR
-           (${moving ? 'id IN (SELECT id FROM top_level)' : '1'} AND (?6 = 0 OR section_id != ?5)))
+           (${moving ? '(id IN (SELECT id FROM top_level) OR (?6 = 1 AND queued))' : '1'}
+            AND (?6 = 0 OR section_id != ?5)))
        ) UPDATE workspaces SET name = COALESCE(?3, name), branch = ${branchSql},
          updated_at = CASE WHEN id IN (SELECT id FROM changing) THEN MAX(updated_at, ?4) ELSE updated_at END
        WHERE id = ?2 AND ${guard}

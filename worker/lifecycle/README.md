@@ -44,6 +44,10 @@ gives the create, read, resume, and activity routes of a workspace to
   [Automatic restart](../../docs/protocol/restart-the-software.md#automatic-restart) says.
 - Give the GitHub CLI the workspace owner's token outside an agent turn.
 
+An accepted [merge queue fix message](../merge-queue/README.md) uses
+[`startAcceptedMessage`](accepted-message-start.ts) to resume a stopped
+computer as the member who queued the work.
+
 ## Integration points
 
 ### Browser routes
@@ -75,6 +79,8 @@ The metadata command does not depend on the current HEAD, and a failed update do
 It leaves both settings unchanged when the new base has no remote-tracking reference.
 An unfinished base move uses [the saved move job](#moved-bases) before startup.
 That startup skips its ordinary metadata command, so it cannot apply an unfinished move before the fetch.
+The [merge queue](../merge-queue/README.md) also uses the saved move for
+an explicit base and uses the owner fetch for a guarded branch sync.
 Try again keeps the saved start and base branches with its new allocation.
 
 The browser create takes optional workspace capabilities.
@@ -108,6 +114,9 @@ and the publication of the events. It also gives the creates and resumes.
 when the next run comes, and when the start sets the provider auto-stop.
 [Turn recovery and the shown state](recovery-and-shown-state.md) gives the
 turn repair from the committed chat and the one writer of the shown state.
+Archive, Continue, and repository change use the prior workspace binding
+to remove its [merge queue entry](../merge-queue/README.md). They give the
+coordinator the member who caused the leave for the base reset.
 
 ### Continue
 

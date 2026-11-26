@@ -193,7 +193,7 @@ The default section stays available.
 
 A sub-workspace is a workspace nested under another workspace, its parent.
 A tree contains a top-level workspace and all sub-workspaces nested under it.
-Sub-workspaces follow their parent when it moves between sections.
+Sub-workspaces that are in sections follow their parent when it moves between sections.
 Each tree stays open in the list.
 Collapsing a section hides the workspaces in it, except the workspace that you have open.
 
@@ -207,9 +207,17 @@ Every member of the org sees the same order of sections.
 
 You can also select **Move to section** in the top-level row's menu.
 This moves the whole tree to the top of the section you choose.
-In the list, a nested row moves only with its top-level workspace.
+Between sections, a nested row moves with its top-level workspace.
 Its menu has no **Move to section**.
 To move a workspace under another parent, or out of its tree, ask an agent.
+
+Queued workspaces leave their sections and show in **Merge queue** at the top of the list.
+A queued sub-workspace has its own row in this group.
+When a parent joins, its sub-workspaces in sections show under the nearest workspace above them that is in a section.
+If none is in a section, they show at the top level.
+They return under their parent when it returns to its section.
+
+- [Use the merge queue](/docs/pull-requests#merge-queue)
 
 ## Let an agent manage workspaces
 
@@ -308,6 +316,8 @@ The start follows the same checks as opening the workspace.
 An accepted watch wake can also start the computer.
 It returns to the session that set the watch.
 The start follows the same checks as opening the workspace.
+
+The merge queue can start the computer for an agent turn that resolves a rebase conflict.
 
 **Stop** in chat interrupts an agent turn.
 Services keep running after this Stop.
@@ -447,6 +457,7 @@ A shell that runs a command keeps its folder.
 File tabs of the old repository close.
 The startup script runs in the new folder at the next start.
 The old branch, its pull request, and the files in the old folder stay.
+If the pull request was queued, it leaves the merge queue.
 
 If the change fails, the workspace keeps its repository and branch, and a message names the reason.
 If changed files in the new folder clash with its latest default branch, commit or discard them, then try again.
@@ -475,10 +486,11 @@ Archive works while the computer is running, stopped, starting, or has an error.
 Archive does not check for uncommitted files or unpushed commits.
 It asks no confirmation question.
 Archive stops the computer and its agent work at once.
+Archiving a queued workspace removes its pull request from the merge queue.
 
 Sub-workspaces that are not archived keep working when you archive their parent.
-They take the archived row's place in the list.
-They show under the nearest workspace above them that is not archived.
+If the parent was in a section, its sub-workspaces in that section take its place.
+Sub-workspaces in sections show under the nearest workspace above them that is in a section.
 If none remains above them, they show at the top level.
 
 Conductive keeps the computer and its files for 14 days after Archive.
@@ -510,9 +522,9 @@ It also gives the day the workspace leaves the list, even when Restore is unavai
 
 Restore brings back the workspace with its files and agent sessions.
 A top-level workspace returns to its section and its place in the list.
-A restored sub-workspace shows under the nearest workspace above it that is not archived.
+A restored sub-workspace shows under the nearest workspace above it that is in a section.
 It shows at the top level when none remains above it.
-Restoring a parent puts its sub-workspaces that are not archived back under it.
+Restoring a parent puts its sub-workspaces in sections back under it.
 
 The workspace comes back stopped.
 Restore does not start its computer.

@@ -26,6 +26,7 @@ import { feedbackRoute } from './app-api/feedback'
 import { branchesRoute } from './app-api/branches'
 import { secretsRoute } from './app-api/secrets'
 import { capabilitiesRoute } from './app-api/capabilities'
+import { mergeQueueRoute } from './app-api/merge-queue'
 
 export { routeDevice } from './devices/router'
 
@@ -98,6 +99,8 @@ export async function route(
     dependencies,
   )
   if (featureShell) return featureShell
+  const mergeQueue = await mergeQueueRoute(request, env, context)
+  if (mergeQueue) return mergeQueue
   const archive = await archiveRoute(request, env, context)
   if (archive) return archive
   const continued = await continueRoute(request, env, context)
@@ -108,7 +111,7 @@ export async function route(
   if (restart) return restart
   const boot = await bootRoute(request, env, context, dependencies)
   if (boot) return boot
-  const shell = await shellRoute(request, env, context, dependencies)
+  const shell = await shellRoute(request, env, context, dependencies, execution)
   if (shell) return shell
   const lifecycle = await chatLifecycleRoute(
     request,

@@ -25,7 +25,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 23 November 2026.`,
+  it uses it, and who gets it. Effective date: 24 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -140,6 +140,10 @@ export const privacyDocument: LegalDocument = {
           your browser until you clear its saved data. The providers above
           can keep their own records under their
           terms and privacy notices.`,
+        paragraph`For a pending merge queue stack cleanup, ${productName}
+          keeps the workspace and the member whose action caused the entry
+          to leave. It uses this record to choose an account for cleanup
+          retries. It clears the record when the stack is gone.`,
         paragraph`The team keeps each feedback email in its inbox while it
           helps to improve ${productName}. It deletes the email when it no
           longer helps, or when the sender asks. ${productName} keeps no copy

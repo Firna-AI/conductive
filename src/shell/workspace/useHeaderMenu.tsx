@@ -6,7 +6,9 @@ import { useStore, valueOf } from '../../app/store'
 import { useOrgAccess, useOrgModel } from '../context'
 import { belowRow, type RowMenu } from '../list/row-menu'
 import { useListActions } from '../list/useListActions'
+import { useListQueue } from '../list/useListQueue'
 import { useRowMenus } from '../list/useRowMenus'
+import { useQueueKnown } from './github/workspace-queue'
 import type { WorkspaceContext } from './features'
 
 /** Gives the focus back to `node`, when the page still shows it. */
@@ -49,19 +51,24 @@ export function useHeaderMenu(context: WorkspaceContext): {
   const groups =
     sections.state === 'ready' && workspaces.state === 'ready'
       ? groupWorkspaces(sections.value, workspaces.value, listTime)
-      : { sections: [], archived: [] }
+      : { sections: [], queued: [], archived: [] }
+  const queue = useListQueue(model, valueOf(workspaces) ?? [], groups.queued)
+  const known = useQueueKnown(workspace.id)
   const { menus, layer } = useRowMenus({
     orgId: org.id,
     viewer,
     groups: groups.sections,
+    queued: groups.queued,
     archived: groups.archived,
     readOnly: suspended,
     move,
+    queue: { ...queue.rows, known },
   })
   const listed = [
     ...groups.sections.flatMap((group) =>
       group.rows.map((row) => row.workspace),
     ),
+    ...groups.queued,
     ...groups.archived,
   ].find((item) => item.id === workspace.id)
   const menu = listed ? menus(listed) : undefined

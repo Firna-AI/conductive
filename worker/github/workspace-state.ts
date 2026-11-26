@@ -8,6 +8,8 @@ import type {
   GitHubStateTransaction,
 } from './contracts'
 
+const GITHUB_STATE_KEY = 'github:state'
+
 /** Keep one instance per workspace DO. Reads and commits share its queue. */
 export class WorkspaceGitHubState {
   private pending: Promise<unknown> = Promise.resolve()
@@ -56,10 +58,13 @@ export class WorkspaceGitHubState {
       await this.port.run(authorize, (operation) =>
         operation.transaction(async (transaction) => {
           await prepare?.(transaction, snapshot)
-          const stored = await transaction.get<GitHubSnapshot>('github:state')
+          const stored = await transaction.get<GitHubSnapshot>(GITHUB_STATE_KEY)
           if (stored && sameGitHubState(stored, snapshot)) {
-            if (stored.baseChange && !snapshot.baseChange)
-              await transaction.put('github:state', snapshot)
+            if (
+              (stored.baseChange && !snapshot.baseChange) ||
+              stored.stackBelow?.join() !== snapshot.stackBelow?.join()
+            )
+              await transaction.put(GITHUB_STATE_KEY, snapshot)
             if (key !== null)
               await transaction.put(key, {
                 snapshot,
@@ -67,7 +72,7 @@ export class WorkspaceGitHubState {
               } satisfies GitHubDeliveryReceipt)
             return
           }
-          await transaction.put('github:state', snapshot)
+          await transaction.put(GITHUB_STATE_KEY, snapshot)
           const { workspaceId, eventNumber, occurredAt } =
             await transaction.emit(githubUpdated(snapshot))
           if (key !== null)
@@ -120,7 +125,7 @@ export class WorkspaceGitHubState {
 
   /** The last committed snapshot. Read it inside a refresh read. */
   stored(): Promise<GitHubSnapshot | undefined> {
-    return this.port.read<GitHubSnapshot>('github:state')
+    return this.port.read<GitHubSnapshot>(GITHUB_STATE_KEY)
   }
 
   scheduleRefresh(

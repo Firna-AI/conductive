@@ -1,4 +1,5 @@
 import type { Workspace } from './generated/Workspace'
+import type { WorkspaceListRepository } from './generated/WorkspaceListRepository'
 
 import type { UserMessage } from './generated/UserMessage'
 import type { WorkspaceStart } from './generated/WorkspaceStart'
@@ -64,6 +65,7 @@ export interface OrderedWorkspaceResponse extends WorkspaceResponse {
 }
 export interface WorkspacesResponse {
   workspaces: readonly Workspace[]
+  repositories?: readonly WorkspaceListRepository[]
 }
 export interface CreateWorkspaceRequest {
   repositoryId: string

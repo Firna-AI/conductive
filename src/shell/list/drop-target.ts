@@ -8,6 +8,21 @@ export interface DropTarget {
   index: number
 }
 
+/** A row of a section over the Merge queue group, which a drop adds. */
+export interface QueuePlace {
+  readonly queue: true
+}
+
+/** The one place of the Merge queue group, so that a move keeps it. */
+export const intoQueue: QueuePlace = { queue: true }
+
+/** Where a dragged row of a section lands: a section, or the merge queue. */
+export type RowPlace = DropTarget | QueuePlace
+
+export function isQueuePlace(place: RowPlace): place is QueuePlace {
+  return 'queue' in place
+}
+
 type ElementRef = (node: HTMLElement | null) => void
 
 /**
@@ -16,11 +31,22 @@ type ElementRef = (node: HTMLElement | null) => void
  * callback ref, so the drag reads only the elements of its own list.
  */
 export class DropLayout {
+  private queueGroup: HTMLElement | null = null
   private readonly sections = new Map<string, HTMLElement>()
   private readonly rows = new Map<
     string,
     { sectionId: string; treeId: string; element: HTMLElement }
   >()
+
+  /** The ref of the Merge queue group, while it shows. */
+  readonly group: ElementRef = (node) => {
+    this.queueGroup = node
+  }
+
+  /** Whether the pointer is over the Merge queue group. */
+  inGroup(hit: Element | null): boolean {
+    return this.queueGroup?.contains(hit) ?? false
+  }
 
   section(sectionId: string): ElementRef {
     return (node) => {
@@ -65,13 +91,16 @@ export class DropLayout {
    * is below it. A tree spans its top-level row and each row nested under
    * it, so a drop never falls between two rows of one tree.
    */
-  targetAt(workspaceId: string, y: number): DropTarget | null {
-    const hit = [...this.sections].find(([, element]) => {
-      const box = element.getBoundingClientRect()
-      return box.height > 0 && y >= box.top && y <= box.bottom
-    })
-    if (!hit) return null
-    const [sectionId] = hit
+  targetAt(
+    workspaceId: string,
+    hit: Element | null,
+    y: number,
+  ): DropTarget | null {
+    const section = [...this.sections].find(([, element]) =>
+      element.contains(hit),
+    )
+    if (!section) return null
+    const [sectionId] = section
     const trees = new Map<string, { top: number; bottom: number }>()
     for (const row of this.rows.values()) {
       if (row.sectionId !== sectionId || row.treeId === workspaceId) continue

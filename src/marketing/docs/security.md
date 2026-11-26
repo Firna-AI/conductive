@@ -42,10 +42,15 @@ A wake that joins a running turn keeps that turn's sender.
 | GitHub commands in any workspace terminal | The workspace owner's GitHub account |
 | GitHub CLI outside a turn | The workspace owner's GitHub account |
 | Merge from the pull request bar | The GitHub account of the member who selects Merge |
+| Automatic merge from the queue | The GitHub account of the member who added the last pull request that the queue asks GitHub to merge |
+| Cleanup of the queue's GitHub stack | The creator's GitHub account, then the member whose action caused the entry to leave, then the workspace owner |
+| Agent message sent by the merge queue | The member who added the pull request, under the session's login rules |
 | Ready for review from the pull request bar | The GitHub account of the member who selects Ready for review |
+| Mark a draft ready when adding it to the queue | The GitHub account of the member who adds it |
 | Continue's repository fetch | The GitHub account of the member who selects Continue |
 | A repository change's fetch | The GitHub account of the member who changes the repository |
 | Base branch fetch when no member starts the move | The workspace owner's GitHub account |
+| Base branch fetch for a queued pull request | The workspace owner's GitHub account |
 | Commit in an agent turn | The turn sender, as author and committer |
 | Commit outside a turn, including Terminal and scripts | The workspace owner by default, as author and committer |
 | A request to run a Mac command | The turn sender's connected Mac |
@@ -77,10 +82,13 @@ Every member using a workspace terminal uses the same owner identity for GitHub 
 GitHub access can include repositories outside the Conductive org.
 It reaches repositories that both the GitHub account and the GitHub App can reach.
 
-GitHub checks the clicking member's access and branch rules for a merge.
+GitHub checks the account that requests a merge and enforces the branch rules.
+Stack cleanup checks current org membership and GitHub write access before each attempt.
 GitHub also checks the clicking member's access for Ready for review.
 Every org member can Continue after a merge, but their GitHub account needs repository read access for its fetch.
 Every org member can also change a workspace's repository, and their GitHub account needs read access to the new repository for its fetch.
+
+- [Use the merge queue](/docs/pull-requests#merge-queue)
 
 ## Understand what agents can reach
 
@@ -205,10 +213,11 @@ Removing a login from Account does not revoke a copy held elsewhere.
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
 Continue and a repository change also bring the member's GitHub token into the cloud computer during their branch fetch.
-Conductive also fetches a new base when GitHub deletes a workspace's base branch.
-A workspace that follows the default also gets this fetch when GitHub changes that default branch.
+Outside the queue, Conductive also fetches a new base when GitHub deletes a workspace's base branch.
+Conductive also fetches the new default for those workspaces when they follow that branch.
 When no member starts this move, the fetch brings the workspace owner's GitHub token into the cloud computer.
 This includes GitHub events, automatic retries, and resumes of stopped cloud computers.
+The merge queue also uses the workspace owner's GitHub token to fetch a new base.
 Code or members with terminal access can read these GitHub tokens while their fetches run.
 
 Removing a member ends their ordinary access to the org.
@@ -265,6 +274,8 @@ Earlier chat and logs keep their text.
 Changed or encoded values can still appear.
 File content, pictures in agent replies, diff content, downloaded files, and Terminal do not hide secret values.
 Some displayed path labels hide values, but the browser still receives real file paths.
+Merge queue controls and prompts hide these values in branch labels.
+Queue prompts use pull request numbers and commits in Git commands.
 
 - [Set environment variables](/docs/cloud-computer#set-environment-variables)
 

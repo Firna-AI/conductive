@@ -1,3 +1,9 @@
+import {
+  queueRebaseInstructions,
+  queueSyncInstructions,
+  type QueueRebaseTarget,
+} from './queueRebaseCopy'
+
 /**
  * The words of the actions of the pull request bar: the labels, the
  * messages under the bar, and the fixed prompts that the agent actions send
@@ -64,6 +70,7 @@ export type BarMessageKind =
   | 'merge-moved-head'
   | 'merge-no-right'
   | 'merge-refused'
+  | 'merge-stack-held'
   | 'ready-no-right'
   | 'ready-pull-changed'
   | 'ready-refused'
@@ -94,6 +101,8 @@ export function barMessageText(
       return `Not merged: your GitHub access doesn't allow merges into ${branches.base}.`
     case 'merge-refused':
       return 'GitHub refused the merge.'
+    case 'merge-stack-held':
+      return "Another org's merge queue holds a pull request below this one."
     case 'ready-no-right':
       return "Not marked ready: your GitHub access doesn't allow changes to this pull request."
     case 'ready-pull-changed':
@@ -155,6 +164,22 @@ export type PromptFacts = {
   failedChecks: readonly string[]
   /** The GitHub logins of the reviewers who requested changes. */
   reviewers: readonly string[]
+  /**
+   * The workspace is in the merge queue, whose GitHub stack needs a linear
+   * history. So Resolve conflicts asks for a rebase onto `base`, the branch
+   * of the pull request below it, in place of a merge.
+   */
+  rebase?: QueueRebaseTarget
+}
+
+/** The facts that the restack prompt of the merge queue names. */
+export type RestackFacts = QueueRebaseTarget & {
+  baseHead: string
+  oldBase: string
+  /** The number of the pull request that moves. */
+  number: number
+  /** The new GitHub head after a rewrite. */
+  sync?: { head: string }
 }
 
 /** A list in running text: "a", "a and b", or "a, b, and c". */
@@ -176,6 +201,30 @@ const commitAndPush =
   'Commit the changes that are not committed, with a clear message, and push this branch.'
 
 /**
+ * Resolve conflicts of a workspace in the merge queue: a rebase onto the
+ * branch below, so that the history stays linear, and a push that replaces
+ * only the branch that the agent read.
+ */
+function rebaseConflicts(number: number, target: QueueRebaseTarget): string {
+  return `Resolve conflicts in pull request #${number}, because the merge queue needs a linear history. ${queueRebaseInstructions(target)}`
+}
+
+/**
+ * The fixed prompt of a restack: the one fix turn that the merge queue
+ * sends, as a message of the queuer, when a layer must move onto the
+ * newest head of the branch below it and the rebase of GitHub hit a
+ * conflict (decision 321 A). It names the new head and the old base
+ * commit, so that `--onto` moves only the own commits of the branch, also
+ * after a squash merge below it.
+ */
+export function restackPrompt(facts: RestackFacts): string {
+  const steps = facts.sync
+    ? `GitHub rewrote its branch. Carry the local work onto the new GitHub head. ${queueSyncInstructions(facts.number, facts.sync.head, facts.oldBase)}`
+    : queueRebaseInstructions(facts)
+  return `Pull request #${facts.number} is in the merge queue. ${steps} Keep the branch history linear and keep the pull request open.`
+}
+
+/**
  * The fixed prompt of each agent action. A prompt that needs the GitHub CLI
  * says what to do when `gh` is missing or fails, as in a workspace from an
  * older org image. No prompt asks for a reply on GitHub, because a reply
@@ -193,6 +242,7 @@ export function agentPrompt(action: AgentAction, facts: PromptFacts): string {
     case 'fix-checks':
       return `These checks failed on ${pr}: ${listText(facts.failedChecks)}. Find out why with \`gh pr checks ${facts.number}\`, and read the logs of failed GitHub Actions jobs with \`gh run view --log-failed\`. For a check from another service, read its details, or run it locally. Fix the cause, then commit and push. If \`gh\` is missing or fails, run the failed checks locally, and say that \`gh\` failed.`
     case 'resolve-conflicts':
+      if (facts.rebase) return rebaseConflicts(facts.number, facts.rebase)
       return `Pull request #${facts.number} has conflicts with \`${facts.base}\`. Fetch \`origin/${facts.base}\` and merge it into this branch. Resolve each conflict, run the tests, then commit and push.`
     case 'address-review':
       return `${requesters(facts.reviewers)} requested changes on ${pr}. Read the open review comments with \`gh\`, make the changes, then commit and push. Don't reply on GitHub. If \`gh\` is missing or fails, stop and say that \`gh\` failed.`

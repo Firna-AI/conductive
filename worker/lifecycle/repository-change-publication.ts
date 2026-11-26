@@ -3,6 +3,7 @@ import { markFilesMoved } from '../files/storage'
 import { providerForAccount } from '../sandbox/client'
 import { warnWorker } from '../warnings'
 import { WarningId } from '../warning-values'
+import { leaveWorkspaceQueue } from '../merge-queue/wake'
 import { repositoryChangeSettleCommand } from './repository-change-commands'
 import { storeChangedRepository } from './repository-change-data'
 import {
@@ -21,6 +22,9 @@ export async function publishRepositoryChange(
 ): Promise<void> {
   await requireActiveOrg(options.env.DB, job.binding.orgId)
   const row = await storeChangedRepository(options, job)
+  await leaveWorkspaceQueue(options.env, job.binding, 'repository-changed', {
+    actorId: job.member.id,
+  })
   await options.chat.authorizedWorkspaceOperation(
     job.binding.id,
     async () => {

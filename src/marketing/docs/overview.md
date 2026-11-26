@@ -70,7 +70,8 @@ The workspace keeps your conversation beside the code and tools.
 
 The pull request bar offers actions for the next step.
 It can ask the agent to prepare or fix a pull request.
-It can mark a draft ready for review and merge it with your GitHub account.
+Use it to mark a draft ready for review or merge with your GitHub account.
+You can also add a pull request to the merge queue.
 After a merge, **Continue** starts a new branch in the same workspace.
 The cloud computer and sessions stay.
 

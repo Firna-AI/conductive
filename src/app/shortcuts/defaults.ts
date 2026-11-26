@@ -80,6 +80,8 @@ const defaults: Readonly<Record<PlainId, Defaults>> = {
   'commit-and-push': { mac: ['Shift+Meta+Y'], other: ['Ctrl+Shift+Y'] },
   'mark-ready-for-review': { mac: [], other: [] },
   'merge-pull-request': { mac: ['Shift+Meta+M'], other: ['Ctrl+Shift+M'] },
+  'add-to-merge-queue': { mac: [], other: [] },
+  'remove-from-merge-queue': { mac: [], other: [] },
   'continue-after-merge': { mac: [], other: [] },
   'open-pull-request': { mac: ['Shift+Meta+G'], other: ['Ctrl+Shift+G'] },
   'go-to-all-files': { mac: [], other: [] },

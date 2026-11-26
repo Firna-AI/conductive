@@ -28,7 +28,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 23 November 2026.`,
+  accepted it. Effective date: 24 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -172,6 +172,8 @@ export const termsDocument: LegalDocument = {
           watches. Text that steers its agent can make it ask for a command
           on the owner's Mac. A command that the owner always allowed then
           runs without asking.`,
+        paragraph`A merge queue turn can ask for a command on the Mac of
+          the member who added the pull request.`,
         paragraph`An allowed command runs with your own permissions on the
           Mac, in the folder that the request names. An always-allowed
           command runs in any folder that a later request names.`,
@@ -200,7 +202,8 @@ export const termsDocument: LegalDocument = {
           closes its previews and terminals, and blocks each start, build,
           and automation run. Its members keep their accounts and their other
           orgs. They can still open the org and read its chat history.
-          Nothing in the org can change, except that a member can leave it.
+          The suspension empties its merge queues.
+          Leaving is the only change a member can make in the org.
           An admin can leave only while another admin whose account is not
           suspended remains.`,
         paragraph`A stopped cloud computer gets no restart to keep its disk

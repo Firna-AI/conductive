@@ -9,6 +9,7 @@ import { repositories, type RepositoryKey } from '../fixtures/repositories'
 import { movedBranch, movedRepository } from '../fixtures/repositoryMove'
 import type { Workspace } from '../fixtures/workspaces'
 import { isRunning } from './composerFor'
+import { mergeStackOf, openQueueFacts, queueBaseOf } from './queueBarStates'
 import { serviceControls } from './serviceState'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -35,6 +36,10 @@ export function barOf(
     // busy state between.
     archiving: false,
     baseMoved: state.base === 'moved',
+    ...defined({
+      queue: openQueueFacts(state.queue),
+      stack: mergeStackOf(state.queue),
+    }),
   })
 }
 
@@ -99,10 +104,13 @@ type WorkspaceBase = Pick<Workspace, 'baseBranch' | 'movedBase'>
 /**
  * The base branch of the workspace: its own, the picked branch that a
  * start stacked it on, or the default branch after GitHub deleted that
- * branch, which `movedBase` then names. It holds no undefined field, because
- * the registered parts of Mokly take the workspace as data.
+ * branch, which `movedBase` then names. A queued workspace stores the
+ * branch of the layer below it. It holds no undefined field, because the
+ * registered parts of Mokly take the workspace as data.
  */
 function baseOf(state: WorkspaceState, workspace: Workspace): WorkspaceBase {
+  const queued = queueBaseOf(state.queue)
+  if (queued) return { baseBranch: queued }
   switch (state.base) {
     case 'own':
       return defined({ baseBranch: workspace.baseBranch })

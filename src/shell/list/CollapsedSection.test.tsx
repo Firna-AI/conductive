@@ -5,8 +5,13 @@ import { describe, expect, test } from 'vitest'
 import { memoryNavigation } from '../../app/navigation'
 import { routes } from '../../app/router'
 import { windowKeys } from '../../app/services'
+import { workspacesPath } from '../../shared/workspaces'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, fakeUser } from '../../test-support/fixtures/core'
+import {
+  billingQueue,
+  withMergeQueue,
+} from '../../test-support/fixtures/merge-queue'
 import { withSubWorkspaces } from '../../test-support/fixtures/sub-workspaces'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { pressHintKey } from '../shortcuts/shortcut-test-kit'
@@ -77,5 +82,36 @@ describe('a collapsed section that holds the open workspace', () => {
       moved: { prevented: true, requests: 0 },
       previous: 'suggestion-list',
     })
+  })
+
+  test('shows an open queued workspace only in the merge queue', async () => {
+    const server = new FakeApiServer({ subWorkspaces: true })
+    server.json('GET', workspacesPath(org), {
+      ...workspaceFixtures().workspaces,
+      workspaces: withMergeQueue(trees, billingQueue),
+    })
+    const app = await startedApp(server)
+    await app.org(org).reload('list')
+    const view = mountScreen(
+      app,
+      <OrgList
+        orgId={org}
+        selectedId="retry-queue"
+        variant="sidebar"
+        viewer={fakeUser}
+      />,
+      { navigation: memoryNavigation(routes.workspace(org, 'retry-queue')) },
+    )
+    await settle()
+    expect(rowsOf(view, 'Merge queue')).toEqual([
+      'webhook-retries',
+      'retry-queue',
+    ])
+    expect(rowsOf(view, 'Infra')).toEqual([])
+    const href = routes.workspace(org, 'retry-queue')
+    const copies = view.querySelectorAll(`a[href="${href}"]`)
+    expect(
+      [...copies].map((link) => link.getAttribute('aria-current')),
+    ).toEqual(['page'])
   })
 })

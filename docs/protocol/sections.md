@@ -3,8 +3,9 @@
 This doc holds the requirements and the decisions in force for the
 sections of an org and the rows of its workspace list. It covers the menu
 and the order of the sections, the moves of workspaces between them, the
-Archived group and its counts, and the Archive, Restore, and open of a
-row. It belongs to [Orgs and members](orgs-and-members.md). The terms are
+Archived group and its counts, the place of the Merge queue group, and the
+Archive, Restore, and open of a row. It belongs to
+[Orgs and members](orgs-and-members.md). The terms are
 those of the [architecture doc](../architecture.md#terms). A decision
 number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
@@ -14,8 +15,9 @@ number names a dated record, as
 - Sections are groupings of workspaces that the people of the org define.
   A section is not tied to a repository.
 - A section can hold trees of workspaces. Each sub-workspace shows nested
-  under the row of its parent, as [The list](sub-workspaces.md#the-list)
-  says.
+  under the row of its parent, as [The list](sub-workspace-list.md#the-list)
+  says. A queued workspace shows in the Merge queue group instead, as
+  [The Merge queue group](#the-merge-queue-group) says.
 - Each section collapses, and has a menu with New workspace, Rename section,
   Move section up, Move section down, New section, and Delete section, in
   that order. The first section has no Move section up, and the last
@@ -42,7 +44,8 @@ number names a dated record, as
   or by Move section up and Move section down. On a phone, a long press
   lifts the header. A click on the header that drags nothing still
   collapses the section. General moves like any other section. The
-  Archived group stays at the end of the list.
+  Archived group stays at the end of the list, and the Merge queue group
+  stays at its top.
 - A member sees the order that another member changed at the next read
   of the list, as for a rename.
 - New workspace at the top of the list puts the workspace in General, the
@@ -57,10 +60,13 @@ number names a dated record, as
   [menu of a workspace row](workspace-menu.md#move-to-section) moves it too.
 - Each of these moves of a row also moves each workspace nested under it.
   A nested row has none of these moves, as
-  [Moves](sub-workspaces.md#moves) says.
+  [Moves](sub-workspace-list.md#moves) says.
+- A queued row has no Move to section, and a drag moves it only inside its
+  block of the Merge queue group, as
+  [Drags](merge-queue-in-the-app.md#drags) says.
 - Deleting a section moves its workspaces to General, also the archived
-  ones. Reason: no workspace gets lost, and a Restore always has a section
-  to go back to.
+  and the queued ones. Reason: no workspace gets lost, and a Restore or a
+  leave of the queue always has a section to go back to.
 - The app keeps each archived workspace in the Archived group at the end
   of the list until its Restore ends (decision 518). The users do not edit
   that group. [Removed workspaces](workspace-life.md#removed-workspaces)
@@ -72,6 +78,19 @@ number names a dated record, as
 - Reason: a count then matches the rows in the list.
 - The page of an org with an empty list asks for a first workspace, also
   when the org has removed workspaces.
+
+## The Merge queue group
+
+- The list shows the Merge queue group at its top, above the sections,
+  while a queue of the org has entries.
+  [The Merge queue group](merge-queue-in-the-app.md#the-merge-queue-group)
+  gives its blocks, its rows, and its drags.
+- A queued workspace shows only in that group, not in its section, as an
+  archived workspace shows only in the Archived group (decision 318). It
+  keeps its own section, and it shows there again when it leaves the
+  queue.
+- Its live sub-workspaces that are not queued move up a level, as
+  [A queued workspace](sub-workspace-list.md#a-queued-workspace) says.
 
 ## Workspace rows
 

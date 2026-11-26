@@ -23,6 +23,10 @@ folders that this doc uses. The terms are those of the
   whose base follows that default, as
   [A new default branch on GitHub](base-branches.md#a-new-default-branch-on-github)
   says. A workspace with a stored base keeps its target.
+- A rename of the default branch keeps the merge queue of the repository,
+  and a switch to another branch empties it, as
+  [One queue for each repository](merge-queue.md#one-queue-for-each-repository)
+  says.
 - Reason: the repository list adds the names of the repositories that a
   member's own GitHub token reaches. Without the webhook, a member with
   such a token saw the new name, and every other member saw the old name.

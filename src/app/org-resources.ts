@@ -12,7 +12,7 @@ import type { ApiClient } from './api/client'
 import { items, record } from './api/parse'
 import { readSection } from './api/read-core'
 import { readAutomations, type ListedAutomation } from './api/read-automations'
-import { readWorkspaces } from './api/read-workspaces'
+import { readWorkspaceList } from './api/read-workspaces'
 import {
   readBuilds,
   readMembers,
@@ -44,9 +44,9 @@ export function orgResources(api: ApiClient, orgId: string): OrgResources {
         api.get(sectionsPath(orgId), (body) =>
           items(record(body), 'sections', readSection),
         ),
-        api.get(workspacesPath(orgId), readWorkspaces),
+        api.get(workspacesPath(orgId), readWorkspaceList),
       ])
-      return { sections, workspaces }
+      return { sections, ...workspaces }
     }),
     repositories: new Resource<readonly Repository[]>(() =>
       api.get(orgSettingsPaths.repositories(orgId), readRepositories),

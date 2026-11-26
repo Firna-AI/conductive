@@ -1,11 +1,9 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import { useRef, useState } from 'react'
+import type { QueueMenuAction } from '../../app/merge-queue'
 import { classes } from '../../ui/components/common/classes'
 import menuStyles from '../../ui/components/common/Menu.module.css'
-import type {
-  Submenu,
-  WorkspaceMenuItem,
-} from '../../ui/components/workspaces/workspaceMenu'
+import type { Submenu } from '../../ui/components/workspaces/workspaceMenu'
 import { OwnerChoices, useOwnerChoices } from '../../members/OwnerChoices'
 import { nameLabel } from '../../shared/name-label'
 import type { Section } from '../../shared/sections'
@@ -16,6 +14,7 @@ import { MenuList } from '../ui/MenuList'
 import { PointMenu, useChoiceFocus } from '../ui/PointMenu'
 import { Sheet } from '../ui/Sheet'
 import type { MenuOpening } from './row-menu'
+import type { RowMenuItem } from './row-queue'
 
 /** What the actions of the menu do to the workspace of the row. */
 export interface RowActions {
@@ -26,6 +25,8 @@ export interface RowActions {
   archive: (workspace: Workspace) => void
   /** The owner changed. The workspace is the API's answer. */
   reassigned: (workspace: Workspace) => void
+  /** Add to merge queue, or Remove from queue, which asks first. */
+  queue: (workspace: Workspace, action: QueueMenuAction) => void
 }
 
 type OpenChoices = { id: Submenu; focus: boolean }
@@ -64,7 +65,7 @@ export function RowMenu(props: {
   /** The section that shows the row. */
   sectionId: string | null
   sections: readonly Section[]
-  items: readonly WorkspaceMenuItem[]
+  items: readonly RowMenuItem[]
   opening: MenuOpening
   phone: boolean
   actions: RowActions
@@ -112,6 +113,11 @@ export function RowMenu(props: {
   }
   const entries = props.items.map((item): MenuEntry => {
     if (item.kind === 'divider') return item
+    if (item.kind === 'queue') {
+      const { label, icon } = item
+      const run = () => actions.queue(workspace, item.action)
+      return { kind: 'item', label, icon, onSelect: act(run) }
+    }
     const { action, label, icon } = item
     if (action === 'move' || action === 'reassign') {
       return { kind: 'submenu', id: action, label, icon }

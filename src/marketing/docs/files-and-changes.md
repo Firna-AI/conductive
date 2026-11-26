@@ -221,7 +221,8 @@ After **Continue**, the base is the branch that the pull request merged into, if
 Otherwise, the base is the repository's default branch.
 After a repository change, the base is the latest default branch of the new repository.
 A base that follows the default also follows a later rename of that default branch.
-If GitHub deletes the base branch, Conductive fetches the default branch into the cloud computer.
+While a workspace is queued, its base follows its pull request's target on GitHub.
+Outside the queue, if GitHub deletes the base branch, Conductive fetches the default branch into the cloud computer.
 The cloud computer uses the new base only after that fetch succeeds.
 The comparison starts at the common commit of the workspace branch and its base branch.
 Newer commits on the base branch therefore stay out of **Changes**.

@@ -81,6 +81,14 @@ export function workspaceRoutes(backend: DevBackend): Route[] {
       answer: ({ params }) =>
         json({
           workspaces: orgOf(params).workspaces,
+          repositories: orgOf(params).repositories.map(
+            ({ id, fullName, defaultBranch, selected }) => ({
+              id,
+              fullName,
+              defaultBranch,
+              selected,
+            }),
+          ),
         } satisfies WorkspacesResponse),
     },
     {

@@ -81,6 +81,11 @@ gives their rules.
   gives both reply shapes.
 - `writeAgentSession(input)` accepts trusted tool requests after exact-object, org, archive, and current-sender checks inside the queue.
   The [tools README](../tools/README.md#session-writes) gives its machine routes and resume behavior.
+- `writeMergeQueueFix(fix)` accepts a restack request from the merge queue.
+  [Queue fix admission](queue-fix.ts) checks that each session is idle and
+  uses the newest open session and its login. It stores an ordinary message
+  from the queuer. The turn's terminal transaction saves its report for
+  the workspace alarm.
 - `manageAgentSession(input, origin)` renames, closes, or stops a session for the stored sender of a tool call.
   It runs the same checks inside the queue, and it uses no admission or resume.
   [Queued management](../tools/sessions.md#queued-management) gives its routes and replies.

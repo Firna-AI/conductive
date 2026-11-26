@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from branch `calummoore/follow-up-a-waiting-request-hides-nj94`, in the docs work for the follow-up item "A waiting request hides Starting from the app".
-- **Location:** `docs/protocol/secret-requests.md`, the sections "Temporary values" at line 189 and "Mixed requests" at line 230. `docs/protocol/workspace-life.md`, the section "Removed workspaces" at line 209. `docs/architecture/protocol-docs.md:87-92` and `docs/architecture/protocol-docs-workspaces.md:25-27`, the index entries of the two docs.
+- **Location:** `docs/protocol/secret-requests.md`, the sections "Temporary values" at line 189 and "Mixed requests" at line 230. `docs/protocol/workspace-life.md`, the section "Removed workspaces" at line 209. `docs/architecture/protocol-docs.md:53-58` and `docs/architecture/protocol-docs-workspaces.md:46-48`, the index entries of the two docs.
 - **Reason:** The branch that found it adds one rule to each doc and keeps a narrow scope, and the split moves sections that the branch does not change.
 
 - **Terms:**

@@ -6,6 +6,12 @@ import type {
 } from '../../../../../../src/ui/components/workspace/barCopy'
 import type { PrStatus } from '../../../components/workspace/prStatus'
 import { bannerStates } from '../../../../../../src/ui/components/workspace/barModel'
+import {
+  mergeProblems,
+  queueSteps,
+  queueWaits,
+  turnWaits,
+} from '../../../../../../src/ui/components/workspace/queueModel'
 import { iconKeyOf, iconKeys, type IconKey } from '../common/icons'
 
 /** The agent actions of the bar, as `AgentAction` lists them. */
@@ -30,6 +36,7 @@ export const barMessageKinds = [
   'merge-moved-head',
   'merge-no-right',
   'merge-refused',
+  'merge-stack-held',
   'ready-no-right',
   'ready-pull-changed',
   'ready-refused',
@@ -55,6 +62,9 @@ const barActionSchema = {
         kind: { const: 'merge' },
         method: { enum: mergeMethods },
         busy: { type: 'boolean' },
+        /** The layers of the merge queue that land with it. */
+        below: { type: 'integer', minimum: 0 },
+        stackCount: { type: 'integer', minimum: 2 },
       },
     },
     {
@@ -92,6 +102,32 @@ const barActionSchema = {
   ],
 } as const
 
+/** The line of a queued workspace under the bar, as `QueueLine`. */
+export const queueLineSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['kind', 'place', 'size', 'below', 'step', 'remove'],
+  properties: {
+    kind: { const: 'entry' },
+    place: { type: 'integer', minimum: 1 },
+    size: { type: 'integer', minimum: 1 },
+    /** The pull request below it, or null for the bottom layer. */
+    below: { anyOf: [{ type: 'integer', minimum: 1 }, { type: 'null' }] },
+    step: { enum: queueSteps },
+    /** The lowest layer below it that the queue waits for. */
+    waitsFor: { type: 'integer', minimum: 1 },
+    /** Why the queue could not merge it. */
+    problem: { enum: mergeProblems },
+    /** What holds the message that the queue sends as the queuer. */
+    turnWait: { enum: turnWaits },
+    queueWait: { enum: queueWaits },
+    stackedAbove: { type: 'integer', minimum: 1 },
+    remove: { type: 'boolean' },
+    /** The cloud computer holds work that is not pushed. */
+    localWork: { const: true },
+  },
+} as const
+
 /** What the bar and the top of the Checks tab show, as `BarModel`. */
 export const barModelSchema = {
   type: 'object',
@@ -105,6 +141,13 @@ export const barModelSchema = {
     message: { enum: barMessageKinds },
     /** The sandbox has local work, so Continue asks first. */
     localWork: { type: 'boolean' },
+    /** The merge queue: Add to merge queue, and the line of an entry. */
+    queue: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['add'],
+      properties: { add: { type: 'boolean' }, line: queueLineSchema },
+    },
   },
 } as const
 

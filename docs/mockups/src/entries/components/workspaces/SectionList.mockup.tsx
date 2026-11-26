@@ -3,6 +3,7 @@ import { SectionList } from '../../../components/workspaces/SectionList'
 import { sectionDrag } from '../../../fixtures/sections'
 import { workspaceDrag } from '../../../fixtures/workspaces'
 import { acmeSections, adminViewer, openInCollapsedSections } from './listPages'
+import { mergeQueueSchema, queueDragSchema } from './queueSchemas'
 import { listDragSchema, listMenuSchema, rowFocusSchema } from './rowSchemas'
 import {
   membershipSchema,
@@ -23,6 +24,12 @@ export const sectionListProperties = {
   viewer: membershipSchema,
   /** The row whose menu, field, or hover the view draws. */
   focus: rowFocusSchema,
+  /** The Merge queue group at the top of the list. */
+  queue: mergeQueueSchema,
+  /** A drag that the Merge queue group draws. */
+  queueDrag: queueDragSchema,
+  /** The rows whose menus offer Add to merge queue. */
+  queueable: { type: 'array', items: { type: 'string' } },
 } as const
 
 /**
@@ -34,7 +41,7 @@ export const sectionList = defineComponent({
   slug: 'section-list',
   title: 'Section list',
   description:
-    'The sections of the org, each a group of workspaces that the user made, with the Archived group at the end. A collapsed section shows only its header and its count, and the row of the open workspace when it holds that workspace. A workspace moves to another section by drag and drop, and a section moves by a drag of its header. The sidebar uses compact rows, and the list page taller rows for touch. Its own page shows the sections of Acme in the sidebar.',
+    'The sections of the org, with the Merge queue group first when it has entries and the Archived group at the end. A collapsed section shows its header and count. It also shows the open workspace when that row belongs to the section. A workspace moves to another section by drag and drop, and a section moves by a drag of its header. The sidebar uses compact rows, and the list page taller rows for touch. Its own page shows the sections of Acme in the sidebar.',
   relatedDocs: ['docs/mockups/orgs-and-logins.md'],
   propSchema: {
     type: 'object',
@@ -58,6 +65,9 @@ export const sectionList = defineComponent({
       focus={props.focus}
       menu={props.menu}
       menuStyle={props.menuStyle}
+      queue={props.queue}
+      queueDrag={props.queueDrag}
+      queueable={props.queueable}
       readOnly={props.readOnly}
       sections={props.sections}
       variant={props.variant}

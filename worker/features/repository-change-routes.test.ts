@@ -36,6 +36,7 @@ it('changes the repository through real routes: refusals, a runner that cannot m
   const f = await continueRoutesFixture(bundle)
   const sockets: WebSocket[] = []
   try {
+    expect((await f.queueOldBranch()).status).toBe(204)
     const billing = new RepositoryGitHub(f.github)
     billing.repositoryId = 77
     billing.fullName = 'example/billing'
@@ -84,6 +85,7 @@ it('changes the repository through real routes: refusals, a runner that cannot m
           expectedRepositoryId: 'chat-repository',
           expectedBranch: 'changes',
           repositoryId,
+          allowWork: true,
         }),
       })
     const error = async (response: { json(): Promise<unknown> }) =>
@@ -128,6 +130,7 @@ it('changes the repository through real routes: refusals, a runner that cannot m
       code: 'workspace_software_outdated',
       message: 'Restart the software, then try again.',
     })
+    expect(await f.queuedPulls()).toEqual([2])
     let turn = record(await outdated.inbox.next())
     while (turn.type !== 'turn') turn = record(await outdated.inbox.next())
     outdated.emit({
@@ -161,6 +164,7 @@ it('changes the repository through real routes: refusals, a runner that cannot m
     expect(started.status).toBe(202)
     const changeId = string(record(await started.json()).changeId)
     await drive((state) => state.get(REPOSITORY_CHANGE_JOB_KEY) === null)
+    expect(await f.queuedPulls()).toEqual([])
     const done = await f.request(
       workspacePaths.repositoryResult(OUTER_ORG, OUTER_WORKSPACE, changeId),
       { headers: { Cookie: f.cookies.memberCookie } },
