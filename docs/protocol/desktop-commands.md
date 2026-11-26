@@ -84,9 +84,13 @@ workspace can ask, as
 - A dialog over the app was rejected. Reason: the user chose a compact
   message in the chat, with the command and its actions.
 - While a request waits, the row of its workspace shows needs input on
-  every page of the Mac app. A click on that row opens the request
-  (decision 68). Starting shows over needs input, as
-  [Secret requests](secret-requests.md#the-request) says.
+  every page of the Mac app (decision 68). Starting shows over needs
+  input, as [Secret requests](secret-requests.md#the-request) says.
+- A click on that row opens the workspace at the tab that showed last, as
+  [The shown tab at a return](tab-row.md#the-shown-tab-at-a-return) says.
+  The session tab of the request shows the needs-input mark, and the
+  request stack of that session shows the request, as
+  [The needs-input mark](tab-row.md#the-needs-input-mark) says.
 - When the Mac app is in the background, a notification of macOS tells of
   the request. The notification opens the workspace of the request.
 - The notification comes from the Mac app. The page still gets no

@@ -19,6 +19,9 @@ This page lists the protocol docs that belong to
 - [The scroll of the chat](../protocol/chat-scroll.md): the row that
   stays in view, the scroll after a send, and the place that each tab
   keeps.
+- [The request stack](../protocol/request-stack.md): the open requests of
+  a session above its composer, the order of their cards, the moves
+  through the stack, and the requests for the same secrets.
 - [File mentions](../protocol/file-mentions.md): the list of `@` in the
   composer, the chips of files and folders, Add to chat, the sent chips
   of attached files, and the removal of each chip of the composer.

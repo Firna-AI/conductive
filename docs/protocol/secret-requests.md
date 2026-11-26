@@ -108,9 +108,9 @@ decision number names a decision of the change that adds
   will run.
 - Reason: a member sees what the agent says it will run before the answer,
   also on a late request.
-- While the call waits, the request shows as a card just above the
-  composer of its session, with the waiting
-  [Mac command requests](agent-tools.md#what-the-chat-shows).
+- The request shows as a card in the [request stack](request-stack.md)
+  above the composer of its session. It stays there until a member
+  answers it or it ends, also after it becomes late.
 - While a request waits, its workspace shows needs input (decision 68).
   The workspace keeps needs input while any of its requests waits, also a
   late request.
@@ -123,12 +123,13 @@ decision number names a decision of the change that adds
   ready again. A new field or event for that was rejected, because the
   state already shows Starting. An end of the open requests at a Restart
   was rejected, because a member can still answer a late request.
-- The composer keeps Stop while a request waits, because the turn runs.
+- While the call waits, the composer keeps Stop, because the turn runs.
 - A request for secrets of the org offers Deny and Allow for this session.
   Allow gives the session an approval of each secret that the request
   names.
-- Only the request and needs input show that a request waits. The Mac app
-  shows no notification for it, as it does for a Mac command request.
+- Only the request, needs input, and the needs-input mark of its session
+  tab show that a request waits. The Mac app shows no notification for it,
+  as it does for a Mac command request.
 
 ## Covered requests
 
@@ -147,8 +148,12 @@ decision number names a decision of the change that adds
 - Reason: an agent often asks again after its request becomes late. The
   member then answers once, and no call waits for an answer that it
   already has.
-- A Deny ends only its own request. Reason: a Deny judges one command, and
-  the agent can ask again with a better reason.
+- A Deny ends only the requests of its card, as
+  [Requests for the same secrets](request-stack.md#requests-for-the-same-secrets)
+  says. A Deny that also ends each other open request that names only the
+  denied secrets was rejected, because it can end a different, valid
+  request. A Deny refuses no later request, because the agent can ask
+  again with a better reason.
 - A settle of the requests that a grant of Capabilities covers was
   rejected. Each such write must then reach every workspace that it
   covers, for a rare case. So was a new call that waits on the open

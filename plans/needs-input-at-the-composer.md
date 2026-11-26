@@ -23,6 +23,7 @@ events, the runner messages, or stored data.
 
 Contract owners:
 
+- [The request stack](../docs/protocol/request-stack.md).
 - [Late secret requests](../docs/protocol/secret-late-answers.md).
 - [Secret requests](../docs/protocol/secret-requests.md).
 - [Agent tools](../docs/protocol/agent-tools.md#what-the-chat-shows).
@@ -364,6 +365,31 @@ card and the call above on the late line in a full region.
   to an action that the member did not see. The UI agent's call of 20
   November 2026.
 
+### Calls of the protocol docs
+
+The docs agent's calls of 26 November 2026, in milestone 3:
+
+- One new page, `docs/protocol/request-stack.md`, holds the rules of the
+  stack, and `secret-requests.md` and `agent-tools.md` link to it. Reason:
+  the stack holds both kinds of request, each fact lives in one place, and
+  `secret-requests.md` would pass 300 lines.
+- The page belongs to Chat and events, and `protocol-docs-chat.md`
+  indexes it, because the stack is part of the chat.
+- A late request in its turn never folds "so its answer and its line stay
+  in view". The old reason, that it still waits for a member, no longer
+  holds.
+- The focus moves to the new card on top only when the card that holds
+  the focus leaves. So an answer in another view never takes the focus
+  from the composer.
+- The composer keeps Stop while the call of a request waits, not while a
+  late request waits. Stop follows the running turn.
+- The tab mark rule states the result, not the read of every session.
+- "Stays in the chat" in `docs/architecture/flows.md` and
+  `docs/protocol/secrets.md` stays, because the stack is part of the chat.
+- The split of `secret-requests.md`, now 299 lines, stays with its
+  follow-up items `secret-requests-doc-length.md` and
+  `protocol-state-doc-length.md`.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -430,32 +456,32 @@ Depends on: 2
 The protocol docs state the new place of a late request and the mark of a
 session tab.
 
-- [ ] Update `docs/protocol/secret-late-answers.md` "Late requests": a late
+- [x] Update `docs/protocol/secret-late-answers.md` "Late requests": a late
       request stays above the composer until a member answers it or it
       ends, then takes its place in its turn.
-- [ ] Update `docs/protocol/secret-requests.md` and
+- [x] Update `docs/protocol/secret-requests.md` and
       `docs/protocol/agent-tools.md` "What the chat shows" so that the
       region holds each open request.
-- [ ] Add the needs-input mark of a session tab to
+- [x] Add the needs-input mark of a session tab to
       `docs/protocol/tab-row.md`.
-- [ ] Update `docs/protocol/workspace-marks.md`: the needs-input form of
+- [x] Update `docs/protocol/workspace-marks.md`: the needs-input form of
       the list mark also shows on a session tab that holds an open
       request.
-- [ ] Update `plans/follow-ups/mockup-tab-row-clips-shown-tab.md`: `full`
+- [x] Update `plans/follow-ups/mockup-tab-row-clips-shown-tab.md`: `full`
       is now a child page of `app/tabs`, with the same path, not a variant.
-- [ ] State the stack, the merge of requests for the same secrets, and
+- [x] State the stack, the merge of requests for the same secrets, and
       the outcomes of decisions 3 and 4 in `docs/protocol/secret-requests.md`
       and `docs/protocol/agent-tools.md`. Replace the sentence that the
       member scrolls through all waiting requests.
-- [ ] Correct `docs/protocol/desktop-commands.md`: a click on the row opens
+- [x] Correct `docs/protocol/desktop-commands.md`: a click on the row opens
       the workspace, and the marked tab shows the request.
-- [ ] Check `docs/protocol/chat-and-events.md` "The work of a turn" and the
+- [x] Check `docs/protocol/chat-and-events.md` "The work of a turn" and the
       architecture doc for sentences that restate the old place.
 - [ ] Read the Terms page and the Privacy page in full. Update each
       sentence that restates a changed fact.
 - [ ] Read each public guide in `src/marketing/docs/` in full. Update each
       sentence that restates a changed fact.
-- [ ] Check each relative link of the changed Markdown files.
+- [x] Check each relative link of the changed Markdown files.
 
 ## Milestone 4: Late requests above the composer
 
@@ -495,7 +521,13 @@ Depends on: 3
       the composer, and its answer moves it to its place. Add tests of the
       stack, of its order in a browser and in the Mac app, of the merge,
       and of Deny.
-- [ ] Update `src/chat/secrets/README.md` and `src/chat/README.md`.
+- [ ] Update `src/chat/secrets/README.md` and `src/chat/README.md`. Also
+      update `src/chat/device/README.md` (many requests "scroll inside"
+      the region) and `worker/secrets/README.md` ("`late` belongs in the
+      chat"), which state the old place.
+- [ ] Check that the Explain popover (`src/chat/explain/PopoverChat.tsx`)
+      shows the stack, as `docs/protocol/explain.md` says that it shows a
+      waiting request as the session tab does.
 - [ ] Check the flow in a browser on a computer and on a phone width. Save
       the screenshots under `.context/needs-input-at-the-composer/`.
 

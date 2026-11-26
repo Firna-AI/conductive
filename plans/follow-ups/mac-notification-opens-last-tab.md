@@ -11,7 +11,7 @@
   - **Session address:** the address `/orgs/<org>/workspaces/<workspace>/sessions/<session>`, which shows that session. `src/shared/session-link.ts` builds it.
 - **Background:** When the Mac app is in the background, a macOS notification tells of a Mac command request. A click opens the workspace address with `sessionId` and `deviceRequestId` in the query. Commit `cbd9c0790` added the two parameters.
 - **Problem:** No code reads the two parameters. The router reads a session only from the path. So the click shows the tab that showed last in that workspace, which is not always the session of the request. The comment of `workspaceDeviceAddress` says that the notification "opens the pending request".
-- **Impact if no action:** A member who clicks the notification can land on another tab. The needs-input mark of the session tab, from `plans/needs-input-at-the-composer.md`, then shows which tab to open.
+- **Impact if no action:** A member who clicks the notification can land on another tab. The needs-input mark of the session tab then shows which tab to open, as "The needs-input mark" in `docs/protocol/tab-row.md` says.
 - **Root question:** Where does a click on the notification of a Mac command request take the member?
 - **Options:**
   - **A.** Build the session address of the request in `workspaceDeviceAddress`, and drop the two parameters. Older Mac apps keep the old address, which still opens the workspace. Effort: Small.

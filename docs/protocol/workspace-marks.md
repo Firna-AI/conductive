@@ -1,6 +1,8 @@
 # Workspace list marks
 
-This page belongs to [Workspace life](workspace-life.md).
+This page belongs to [Workspace life](workspace-life.md). A needs-input
+decision names a decision of the change that keeps each open request
+above the composer, as [The request stack](request-stack.md) says.
 
 - The list mark of a workspace is a grid of 3 × 3 cells. It shows in the
   list, in the rows of the command palette, and in the chips. It means the
@@ -39,6 +41,10 @@ This page belongs to [Workspace life](workspace-life.md).
   workspace still shows it.
 - A pulse in the colour of the GitHub state was rejected, because the user
   asked for a blue mark when the workspace needs something from the user.
+- A session tab whose session holds an open request also shows the
+  needs-input form of the mark (needs-input decision 2 B). A tab shows no
+  other form of the mark, and screen readers hear only "Needs input"
+  there, as [The needs-input mark](tab-row.md#the-needs-input-mark) says.
 - The light also runs around the ring while the checks run, also when the
   agent does not work (the user's decision of 11 November 2026). Reason:
   the light means that the workspace waits on something and the user does

@@ -3,13 +3,16 @@
 This page belongs to [Agents and sessions](agents-and-sessions.md). It
 holds the requirements and the decisions in force for the tab row of the
 centre column of a workspace. It covers the order of the tabs, their
-moves, the scroll of the row, the place that each tab keeps, the tab
-that shows at a return to the workspace, and the tab menu. The terms are
+moves, the scroll of the row, and the place that each tab keeps. It also
+covers the needs-input mark of a session tab, the tab that shows at a
+return to the workspace, and the tab menu. The terms are
 those of the [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A file row menu decision number names a decision of the change that
 adds the menu of the rows of All files and Changes, as
-[File row menu](file-row-menu.md) says.
+[File row menu](file-row-menu.md) says. A needs-input decision names a
+decision of the change that keeps each open request above the composer,
+as [The request stack](request-stack.md) says.
 
 - The tab row of the centre column shows the session tabs, the file and
   diff tabs, and the Preview tabs in one order (decision 186). A Preview
@@ -58,6 +61,35 @@ adds the menu of the rows of All files and Changes, as
   session. When it opens again, a session tab shows the bottom, and a file
   or diff tab shows the top. The user chose this on 13 November 2026.
 
+## The needs-input mark
+
+- A session tab whose session holds an open request shows the needs-input
+  mark in place of its icon (needs-input decision 2 B). An open request is
+  a Mac command request or a secret request that waits for a member, as
+  [The request stack](request-stack.md#what-the-stack-holds) says.
+- Reason: the mark shows from every tab which session waits for a member,
+  also on a phone, where the row holds only the session tabs.
+- No sign on the tabs was rejected, because a member must then open the
+  tabs one by one to find the request.
+- Each session tab shows the mark while its session holds an open request,
+  also while another tab shows. The shown tab carries the mark too.
+  Reason: the same rule for each tab is simpler, and the request stack of
+  the shown tab holds the request.
+- The mark is the needs-input form of the list mark, as
+  [Workspace list marks](workspace-marks.md) says: blue, in the accent
+  colour, with its slow pulse. With reduced motion, it takes the still
+  form of that page.
+- Reason: needs input then looks the same in the workspace list and in the
+  tab row. The Needs input mark of the workspace header was not chosen for
+  that reason.
+- The mark wins over the spinner of a running turn. Reason: the member
+  must act.
+- The mark takes the size of the icon, so the title of the tab does not
+  move when the mark comes or goes.
+- The lifted copy of a dragged tab shows the mark too.
+- Screen readers hear "Needs input" before the title of the tab, in the
+  words of the workspace header.
+
 ## The shown tab at a return
 
 - A return to a workspace at its address alone shows the tab that showed
@@ -83,6 +115,12 @@ adds the menu of the rows of All files and Changes, as
 - A restore of the shown tab starts no Resume of a stopped cloud computer
   of its own. The open of the workspace resumes it, as
   [Stop and resume](workspace-life.md#stop-and-resume) says.
+- A return to a workspace that needs input follows the same rules. The
+  needs-input mark then shows which session tab holds the request, as
+  [The needs-input mark](#the-needs-input-mark) says.
+- A return that opens the session of the oldest open request was
+  rejected. It breaks the rule above, which the user chose on 17 November
+  2026.
 
 ## The tab menu
 
