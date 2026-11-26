@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
 import { popoverChatLabel } from '../../ui/components/explain/explainCopy'
 import { modelLabel } from '../../shared/agents'
@@ -11,6 +11,7 @@ import {
   LinkedSessionNotice,
   ReopenNotice,
 } from '../components/ChatNotices'
+import { ComposerPlace, useComposerPlace } from '../components/composer-place'
 import {
   sandboxParts,
   useSessionParts,
@@ -72,9 +73,10 @@ function promptOf(state: SessionState): string | null {
  * member, and the follow-up field. While the cloud computer does not run,
  * the bar of a tab, such as the bar with Resume, takes the place of the
  * field, as it takes the place of the composer. After a failed first start,
- * the field stays under it. A closed explanation names how it opens again
- * over the field. A read-only workspace shows the chat to read, with no
- * field.
+ * the field stays under it. The place of the composer holds the bar and the
+ * field, as `useComposerPlace` says. A closed explanation names how it
+ * opens again over the field. A read-only workspace shows the chat to read,
+ * with no field.
  */
 export function PopoverChat(props: PopoverChatProps) {
   const { snapshot, controller, sessionId, readOnly } = props
@@ -94,7 +96,7 @@ export function PopoverChat(props: PopoverChatProps) {
   // in a tab. A read-only workspace shows no field, so no bar either.
   const down = readOnly || (sandboxBar !== null && !keepsComposer)
   const field = useRef<FieldHandle>(null)
-  const focusComposer = useCallback(() => field.current?.focus(), [])
+  const { place: composerPlace, focus: focusComposer } = useComposerPlace(field)
   const parts = useSessionParts({
     snapshot,
     controller,
@@ -157,21 +159,23 @@ export function PopoverChat(props: PopoverChatProps) {
         />
       ) : null}
       {parts.waiting}
-      {readOnly ? null : sandboxBar}
-      {closed && !down ? <ReopenNotice /> : null}
-      {down ? null : (
-        <FollowUpField
-          blocked={block !== null}
-          draft={state.draft}
-          fieldRef={field}
-          files={files}
-          onChangeText={(text) => controller.setDraft(sessionId, text)}
-          onSend={props.onSend}
-          onStop={() => void controller.interrupt(sessionId)}
-          running={state.transcript.turn !== null}
-          stopping={state.stopping}
-        />
-      )}
+      <ComposerPlace ref={composerPlace}>
+        {readOnly ? null : sandboxBar}
+        {closed && !down ? <ReopenNotice /> : null}
+        {down ? null : (
+          <FollowUpField
+            blocked={block !== null}
+            draft={state.draft}
+            fieldRef={field}
+            files={files}
+            onChangeText={(text) => controller.setDraft(sessionId, text)}
+            onSend={props.onSend}
+            onStop={() => void controller.interrupt(sessionId)}
+            running={state.transcript.turn !== null}
+            stopping={state.stopping}
+          />
+        )}
+      </ComposerPlace>
     </>
   )
   return (

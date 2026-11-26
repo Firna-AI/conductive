@@ -26,7 +26,9 @@ export interface StackedSecrets {
  * The card of an open request on top of the stack, in its stacked form.
  * When it hides older requests for the same secrets, it says how often the
  * agent asked, and its Deny also denies each of them, the shown request
- * last. An answer of any of them makes the card wait for it.
+ * last. An answer of any of them makes the card wait for it. The card has
+ * no key of its request: the stack names each showing of the card, so a
+ * newer request for the same secrets keeps the form of the card.
  */
 function stackedCard(
   request: SecretRequest,
@@ -43,7 +45,6 @@ function stackedCard(
       choices={shared.choices}
       hides={ids.length}
       inStack
-      key={`${request.id}:open`}
       login={shared.login}
       onAnswer={
         ids.length === 0

@@ -19,6 +19,7 @@ import type { AnswerKind } from './secret-snapshot'
 import { missingNames } from '../../shared/secret-late-answer'
 import { endLine, type RecoveryLogin } from './secret-words'
 import {
+  draftFor,
   draftReady,
   emptyDraft,
   ValueFields,
@@ -34,10 +35,13 @@ import {
  * the card on a computer, and in a sheet that Give a value opens on a phone.
  * A late request says that the agent stopped waiting. A request that ended
  * shows its answer, or Not answered, and a line says what followed. Give
- * the card a key that changes when the request ends, so a typed value
- * leaves the page with the choices. In the stack above the composer, the
- * stack draws the outline of the card, and a card that hides older
- * requests for the same secrets says how often the agent asked.
+ * the card at its place a key that changes when the request ends, so a
+ * typed value leaves the page with the choices. In the stack above the
+ * composer, the stack draws the outline of the card and names each showing
+ * of it, so a newer request for the same secrets keeps the typed values,
+ * how long they last, the focus, and the sheet. A value stays only for a
+ * name that still asks for one. A card that hides older requests for the
+ * same secrets says how often the agent asked.
  */
 export function SecretRequestCard(props: {
   request: SecretRequest
@@ -59,9 +63,11 @@ export function SecretRequestCard(props: {
 }) {
   const { request, answering } = props
   const phone = useTouch()
-  const [draft, setDraft] = useState<ValueDraft>(emptyDraft)
+  const [typed, setDraft] = useState<ValueDraft>(emptyDraft)
   const [sheet, setSheet] = useState(false)
   const missing = missingNames(request)
+  const draft = draftFor(typed, missing)
+  if (draft !== typed) setDraft(draft)
   const values = missing.length > 0
   const open = isOpen(request)
   const choices = props.choices && open

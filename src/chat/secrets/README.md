@@ -93,9 +93,14 @@ screens.
   choices says what Save as secret needs. The names of secrets of the org do
   not count, and 15 minutes and This workspace stay.
 - A value leaves the browser once, in the answer. A failed answer keeps the
-  typed value and gives the choices back, with a notice. The card of a
-  request mounts again when the request ends, so a typed value leaves the
-  page with the choices.
+  typed value and gives the choices back, with a notice. In the stack, a
+  newer request for the same secrets keeps the card, with the typed
+  values, how long they last, the focus, and the sheet of a phone, and
+  Allow sends them in the answer to the newer request. A value stays only
+  for a name that still asks for one. The card starts again when another
+  card shows, or when no request of it carries over, as
+  [the chat README](../README.md#the-request-stack) says. When the card
+  leaves the stack, a typed value leaves the page with the choices.
 - The words come from the shared `secretRunCopy.ts`, and the line of
   Save as secret from `secretNameCopy.ts`. The mockup words of a grant, of
   a late answer, and of an answered request take the fixture people of the
@@ -125,13 +130,18 @@ screens.
   session whose request no event holds. After a reconnect, the read adds
   a request that no event holds, and the late state that it still holds
   does not take back the newer state of an event. After the Allow of a
-  card in another view, the requests that the card hides count for no
-  mark until one read, which gives back each one that is still open, also
-  when the read fails.
+  card, the requests that the card hides count for no mark until one read
+  after the Allow ended, which gives back each one that is still open,
+  also when the read fails. It checks each source of the Allow: the event
+  of another view, the reply of this window alone, and the event of the
+  Allow while the answer of this window runs, which reads only after the
+  reply.
 - `answer-request.test.tsx` mounts the chat and answers requests: Allow of
   a value waits for the value, a failed answer keeps it, and the answer
-  sends the values with how long they last. A late Allow moves the request
-  from the stack to its place in its turn.
+  sends the values with how long they last. A newer request for the same
+  secret keeps the typed value, how long it lasts, and the focus, and
+  Allow sends them in the answer to the newer request. A late Allow moves
+  the request from the stack to its place in its turn.
 - `answer-group.test.tsx` mounts the chat and answers a card that hides
   two requests. Its Deny sends three Denies, the shown request last. When
   the Deny of a hidden request fails, the card keeps the shown request with

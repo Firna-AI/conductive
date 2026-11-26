@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest'
+import type { MessageSender } from '../../shared/generated/MessageSender'
 import {
   secretRequestsPath,
   type SecretRequest,
@@ -7,6 +8,7 @@ import {
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import {
   asks,
+  cal,
   late,
   priya,
   request,
@@ -18,7 +20,13 @@ import { tabSessions } from '../state/archive-view'
 import type { ChatController } from '../state/controller'
 import { chatFor } from '../state/test-kit'
 import type { StreamListener } from '../stream/workspace-stream'
-import { lateRequest, storeEvents, updated } from './secret-test-kit'
+import { waitsForAnswer } from './secret-open'
+import {
+  answerPathOf,
+  lateRequest,
+  storeEvents,
+  updated,
+} from './secret-test-kit'
 
 const listPath = secretRequestsPath(FAKE_IDS.org, FAKE_IDS.workspace)
 const shortly = { timeout: 10_000 }
@@ -65,46 +73,101 @@ const [postcode, country, cities] = [
   ),
 ]
 
-/** A request that Priya allowed in another view, a second after its state. */
-function allowed(item: SecretRequest): SecretRequest {
+/**
+ * A request that a member allowed, by default Priya in another view, a
+ * second after its state.
+ */
+function allowed(item: SecretRequest, by = priya): SecretRequest {
   return {
     ...item,
     state: 'allowed',
-    answeredBy: priya,
+    answeredBy: by,
     updatedAt: item.updatedAt + second,
   }
 }
 
+/** The open requests of the chat that wait for an answer, by ID. */
+function waiting(controller: ChatController): string[] {
+  const { secrets } = controller.getSnapshot()
+  return Object.values(secrets.requests).flatMap(({ request }) =>
+    waitsForAnswer(secrets, request) ? [request.id] : [],
+  )
+}
+
 /**
- * The Allow of the card of the three requests in another view, which hides
- * the two older ones. It gives the mark of the tab of the shown session
- * while the read of the list after that Allow waits, and the number of
- * reads when that read with `body` and `status` gave the mark back.
+ * Where the Allow of the card of the three requests comes from: the event
+ * of another view, or an Allow of this window, whose reply comes alone or
+ * after the event of that Allow.
  */
-async function aroundAllow(body: unknown, status: number) {
+type AllowSource = 'another view' | 'reply alone' | 'event, then reply'
+
+/**
+ * The Allow of the card of the three requests, which hides the two older
+ * ones, from `source`. It gives the number of reads of the list just before
+ * the reply of an Allow of this window, the mark of the tab of the shown
+ * session while the read of the list after that Allow waits, and, when
+ * that read with `body` and `status` gave the mark back, the number of
+ * reads and the requests that wait.
+ */
+async function aroundAllow(source: AllowSource, body: unknown, status = 200) {
   const chat = chatFor()
   storeEvents(chat.server, [postcode, country, cities].map(updated))
   await chat.controller.start()
-  const reply = deferred<unknown>()
-  chat.server.json('GET', listPath, reply.promise, status)
-  chat.emit({
-    type: 'secrets.request.updated',
-    sessionId: FAKE_IDS.session,
-    request: allowed(cities),
+  const list = deferred<unknown>()
+  chat.server.json('GET', listPath, list.promise, status)
+  const reply = deferred()
+  chat.server.handle('POST', answerPathOf(cities), async () => {
+    await reply.promise
+    return Response.json({ request: allowed(cities, cal) })
   })
+  const event = (by: MessageSender) =>
+    chat.emit({
+      type: 'secrets.request.updated',
+      sessionId: FAKE_IDS.session,
+      request: allowed(cities, by),
+    })
+  let beforeReply: number | null = null
+  if (source === 'another view') event(priya)
+  else {
+    const answer = chat.controller.answerSecret(cities.id, { kind: 'allow' })
+    if (source === 'event, then reply') {
+      // The Worker publishes the Allow of the shown request before it replies.
+      event(cal)
+      await vi.waitFor(
+        () =>
+          expect(
+            chat.controller.getSnapshot().secrets.requests.cities?.request
+              .state,
+          ).toBe('allowed'),
+        shortly,
+      )
+    }
+    beforeReply = chat.requests('GET', listPath).length
+    reply.resolve()
+    await answer
+  }
   await vi.waitFor(
-    () => expect(chat.requests('GET', listPath)).toHaveLength(2),
+    () =>
+      expect(
+        chat.requests('GET', listPath),
+        `${source}: the reads of the list`,
+      ).toHaveLength(2),
     shortly,
   )
   const whileRead = marksOf(chat.controller)[FAKE_IDS.session]
-  reply.resolve(body)
+  list.resolve(body)
   await vi.waitFor(
-    () => expect(marksOf(chat.controller)[FAKE_IDS.session]).toBe(true),
+    () =>
+      expect(
+        marksOf(chat.controller)[FAKE_IDS.session],
+        `${source}: the mark after the read`,
+      ).toBe(true),
     shortly,
   )
   const reads = chat.requests('GET', listPath).length
+  const back = waiting(chat.controller)
   chat.controller.stop()
-  return { whileRead, reads }
+  return { beforeReply, whileRead, reads, back }
 }
 
 describe('the read of the secret requests of every session', () => {
@@ -184,20 +247,43 @@ describe('the read of the secret requests of every session', () => {
     chat.controller.stop()
   })
 
-  test('after the Allow of a card in another view, keeps the requests that the card hides off the tab mark until one read, which gives back each request that is still open, also when the read fails', async () => {
+  test('after the Allow of a card, from another view or from this window with its reply alone or after its event, keeps the requests that the card hides off the tab mark until one read after the Allow ended, which gives back each request that is still open, also when the read fails', async () => {
     // The Worker allowed `postcode` too, but the grant did not cover
     // `country`, and the events of neither came yet.
-    const read = await aroundAllow(
-      listOf([allowed(postcode), country, allowed(cities)]),
-      200,
-    )
-    const failed = await aroundAllow(
-      { error: { code: 'internal_error', message: 'The server is busy.' } },
-      500,
-    )
-    expect({ read, failed }).toEqual({
-      read: { whileRead: false, reads: 2 },
-      failed: { whileRead: false, reads: 2 },
+    const read = listOf([allowed(postcode), country, allowed(cities)])
+    const failure = {
+      error: { code: 'internal_error', message: 'The server is busy.' },
+    }
+    expect({
+      otherView: await aroundAllow('another view', read),
+      replyAlone: await aroundAllow('reply alone', read),
+      eventFirst: await aroundAllow('event, then reply', read),
+      failedRead: await aroundAllow('another view', failure, 500),
+    }).toEqual({
+      otherView: {
+        beforeReply: null,
+        whileRead: false,
+        reads: 2,
+        back: ['country'],
+      },
+      replyAlone: {
+        beforeReply: 1,
+        whileRead: false,
+        reads: 2,
+        back: ['country'],
+      },
+      eventFirst: {
+        beforeReply: 1,
+        whileRead: false,
+        reads: 2,
+        back: ['country'],
+      },
+      failedRead: {
+        beforeReply: null,
+        whileRead: false,
+        reads: 2,
+        back: ['postcode', 'country'],
+      },
     })
   })
 })

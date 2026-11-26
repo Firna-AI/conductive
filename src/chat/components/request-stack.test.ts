@@ -2,7 +2,9 @@ import { describe, expect, test } from 'vitest'
 import { secretSetKey } from '../../ui/components/chat/requestStackOrder'
 import {
   emptyPlace,
+  noShowing,
   placeAfter,
+  showingAfter,
   stackCards,
   type StackCard,
   type StackPlace,
@@ -60,15 +62,17 @@ function moveTo(id: string, items: readonly WaitingItem[]) {
   })
 }
 
+/** A step of the stack: a list of the open requests, or a move of the member. */
+type Step = readonly WaitingItem[] | ((place: StackPlace) => StackPlace)
+
 /**
- * The card on top after each step, from a fresh stack: a list of the open
- * requests, or a move of the member.
+ * The card on top after each step, from a fresh stack, and the count of its
+ * showing.
  */
-function tops(
-  ...steps: (readonly WaitingItem[] | ((place: StackPlace) => StackPlace))[]
-): (string | null)[] {
+function walk(steps: readonly Step[]) {
   let place = emptyPlace
   let cards: StackCard[] = []
+  let showing = noShowing
   return steps.map((step) => {
     if (typeof step === 'function') place = step(place)
     else {
@@ -76,8 +80,14 @@ function tops(
       place = placeAfter(place, cards)
     }
     const top = cards.find((card) => card.key === place.top)
-    return top ? named(top) : null
+    showing = showingAfter(showing, top)
+    return { top: top ? named(top) : null, showing: showing.count }
   })
+}
+
+/** The card on top after each step, from a fresh stack. */
+function tops(...steps: Step[]): (string | null)[] {
+  return walk(steps).map(({ top }) => top)
 }
 
 describe('the stack of requests above the composer', () => {
@@ -143,6 +153,30 @@ describe('the stack of requests above the composer', () => {
     expect(tops([late, other], [late, other, again])).toEqual([
       'late',
       'again hides late',
+    ])
+  })
+
+  test('keeps the showing of the card on top while a request of it carries over, and starts a new one when another card shows or when none carries over', () => {
+    const late = secret('late', 10, ['PROD_DATABASE_URL'])
+    const again = secret('again', 20, ['PROD_DATABASE_URL'])
+    const anew = secret('anew', 30, ['PROD_DATABASE_URL'])
+    const other = secret('other', 40, ['VERCEL_TOKEN'])
+    expect(
+      walk([
+        [late, other],
+        [late, again, other],
+        [again, other],
+        [anew, other],
+        moveTo('other', [anew, other]),
+        moveTo('anew', [anew, other]),
+      ]),
+    ).toEqual([
+      { top: 'late', showing: 1 },
+      { top: 'again hides late', showing: 1 },
+      { top: 'again', showing: 1 },
+      { top: 'anew', showing: 2 },
+      { top: 'other', showing: 3 },
+      { top: 'anew', showing: 4 },
     ])
   })
 

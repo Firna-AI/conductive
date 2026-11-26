@@ -20,8 +20,10 @@ import {
   SECRET_TURN,
 } from '../../test-support/fixtures/secret-requests'
 import { secretTurn } from '../../test-support/fixtures/secret-turn'
+import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { MOUNTED_TEST_TIMEOUT, press, waitFor } from '../../test-support/mount'
 import { stackOf, storeEvents } from '../secrets/secret-test-kit'
+import { textOf } from './render-kit'
 import { first, mountChat, second as debounce } from './tab-drag-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -174,5 +176,55 @@ describe('the stack of requests above the composer', () => {
       onCard: Boolean(onCard),
       composer: document.activeElement === byRole('textbox', 'Message'),
     }).toEqual({ onCard: true, composer: true })
+  })
+
+  test('while the sandbox is stopped, the last answer moves the focus to the place of the composer, which holds the stopped bar, and the composer takes it when the sandbox starts', async () => {
+    const server = new FakeApiServer({ workspaceState: 'stopped' })
+    const open = lateRequest('database', asks.database, inWork)
+    storeEvents(server, secretTurn(start, [updated(open)]))
+    server.json(
+      'POST',
+      secretAnswerPath(FAKE_IDS.org, FAKE_IDS.workspace, open.id),
+      {
+        request: {
+          ...open,
+          state: 'allowed',
+          answeredBy: cal,
+          updatedAt: open.updatedAt + second,
+        },
+      },
+    )
+    await mountChat({ server, tabs: [first, debounce], viewport: 'desktop' })
+    await focusOn(stackButton('Allow for this session'))
+    await press(stackButton('Allow for this session'))
+    await waitFor(() => queryByRole('group', region) === null, 'the answer')
+    const focused = document.activeElement
+    const place =
+      focused instanceof HTMLElement ? textOf(focused.outerHTML).trim() : null
+    // The Worker starts the sandbox for the turn that tells the agent.
+    const { workspace } = workspaceFixtures('stopped').detail
+    await act(async () =>
+      storeEvents(server, [
+        [
+          {
+            type: 'workspace.updated',
+            workspace: {
+              ...workspace,
+              state: 'starting',
+              updatedAt: open.updatedAt + 2 * second,
+            },
+          },
+          open.updatedAt + 2 * second,
+        ],
+      ]),
+    )
+    const field = await waitFor(
+      () => queryByRole('textbox', 'Message'),
+      'the composer',
+    )
+    expect({ place, composer: document.activeElement === field }).toEqual({
+      place: 'Sandbox stopped Your files and chat are saved. Resume',
+      composer: true,
+    })
   })
 })

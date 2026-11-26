@@ -446,6 +446,19 @@ The UI agent's calls of 26 November 2026, in milestone 7:
 - `app/chat/menu-placement` shows the long script alone, in the chat
   `mac-waiting-script`, so it draws no stack without pages.
 
+The UI agent's calls of 26 November 2026, in milestone 11 (review
+round 2). They extend the calls above on the focus and on typed values:
+
+- With no card left, the focus moves to the place of the composer: its
+  field, or the place itself while a bar takes the place of the
+  composer, such as while the sandbox is stopped. The field takes the
+  focus when it shows again. Reason: the focus never drops to the page.
+- A newer request for the same secrets keeps the card, with its typed
+  values, how long they last, the focus, and the sheet. The card starts
+  again when no request of it carries over. A value stays only for a
+  name that still asks for one. Reason: the member does not type a value
+  again because the agent asked again.
+
 ### Calls of the protocol docs
 
 The docs agent's calls of 26 November 2026, in milestone 3:
@@ -738,13 +751,13 @@ Tags: ui
 
 Depends on: 8
 
-- [ ] Finding 86 B: a newer ask for the same secrets keeps the card, its
+- [x] Finding 86 B: a newer ask for the same secrets keeps the card, its
       typed values, its focus, and its sheet.
-- [ ] Finding 88 D: one place for the composer in each chat footer takes
+- [x] Finding 88 D: one place for the composer in each chat footer takes
       the focus when no card is left, also under the stopped bar.
-- [ ] Finding 89 D: the release-read test covers each order of the reply
+- [x] Finding 89 D: the release-read test covers each order of the reply
       and the events of a grouped Allow.
-- [ ] Run the targeted tests, the typecheck, lint, and format check.
+- [x] Run the targeted tests, the typecheck, lint, and format check.
 
 ## Milestone 12: Docs fixes of review round 2
 

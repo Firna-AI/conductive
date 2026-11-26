@@ -82,3 +82,24 @@
 .stackCard {
   outline: none;
 }
+
+/*
+ * The place of the composer at the foot of the chat: the composer, or the
+ * bar that takes its place. Its parts keep the gap of the foot, and an
+ * empty place takes no room and no gap. It takes the focus when the last
+ * card of the stack leaves while the bar shows, and it is no control, so it
+ * draws no ring.
+ */
+.composerPlace {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
+}
+
+.composerPlace:empty {
+  display: none;
+}
+
+.composerPlace:focus {
+  outline: none;
+}

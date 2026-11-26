@@ -1,6 +1,8 @@
 // @vitest-environment happy-dom
 
+import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
+import type { SecretRequest } from '../../shared/secret-requests'
 import {
   byRole,
   queryByRole,
@@ -28,6 +30,7 @@ import {
 } from '../components/tab-drag-test-kit'
 import {
   answerPathOf,
+  answersSent,
   cardsOf,
   lateRequest,
   stackName,
@@ -46,6 +49,17 @@ const inWork = start + 300
 function isOff(name: string): boolean {
   const button = byRole('button', name, byRole('group', stackName))
   return button instanceof HTMLButtonElement && button.disabled
+}
+
+/** A request after Cal gave its value for this workspace, a second later. */
+function allowedFor(item: SecretRequest): SecretRequest {
+  return {
+    ...item,
+    state: 'allowed',
+    answeredBy: cal,
+    lifetime: 'workspace',
+    updatedAt: item.updatedAt + second,
+  }
 }
 
 describe('the answer to a secret request', () => {
@@ -108,6 +122,51 @@ describe('the answer to a secret request', () => {
     expect(await Promise.all(sent.map((item) => item.clone().json()))).toEqual([
       answer,
       answer,
+    ])
+  })
+
+  test('a newer request for the same secret keeps the typed value, how long it lasts, and the focus in the field, and Allow sends them to the newer request', async () => {
+    const server = new FakeApiServer({ conversation: 'running' })
+    const asked = request('asked', asks.mapbox, FAKE_TIME + 8 * second)
+    const again = request('again', asks.mapbox, FAKE_TIME + 9 * second, {
+      reason: 'Check the suggestions of the geocoding API again.',
+    })
+    storeEvents(server, [updated(asked)])
+    server.handle('POST', answerPathOf(again), async () => {
+      // The Worker allows the older request that the grant covers, with its
+      // own event, before it replies.
+      storeEvents(server, [updated(allowedFor(asked))])
+      return Response.json({ request: allowedFor(again) })
+    })
+    await mountChat({ server, tabs: [first, debounce], viewport: 'desktop' })
+    await press(byRole('radio', 'This workspace'))
+    const field = byRole('textbox', 'Value of MAPBOX_TOKEN')
+    await typeText(field, 'pk.mapbox-value')
+    await act(async () => storeEvents(server, [updated(again)]))
+    await waitFor(() => queryByText(again.reason), 'the newer request')
+    const shown = byRole('textbox', 'Value of MAPBOX_TOKEN')
+    expect({
+      sameField: shown === field,
+      focused: document.activeElement === field,
+      value: shown instanceof HTMLInputElement ? shown.value : null,
+      lifetime: byRole('radio', 'This workspace').getAttribute('aria-checked'),
+    }).toEqual({
+      sameField: true,
+      focused: true,
+      value: 'pk.mapbox-value',
+      lifetime: 'true',
+    })
+    await press(byRole('button', 'Allow', byRole('group', stackName)))
+    await waitFor(() => queryByRole('group', stackName) === null, 'the answer')
+    expect(await answersSent(server)).toEqual([
+      {
+        path: answerPathOf(again),
+        body: {
+          kind: 'values',
+          lifetime: 'workspace',
+          values: { MAPBOX_TOKEN: 'pk.mapbox-value' },
+        },
+      },
     ])
   })
 

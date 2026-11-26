@@ -185,18 +185,26 @@ too.
   the other button. The place is a polite live region.
 - The stack holds the focus while any of its parts has it, also a sheet
   or a menu of a card. When the part that holds it leaves, such as a card
-  after its answer, the focus moves to the card on top, or to the field of
-  the composer when no card is left. So an answer in another view never
-  takes the focus from the composer. That move is an effect, so it comes
-  after the cleanups of the parts that left: the value sheet of a phone
-  keeps the page inert until its cleanup. The stack holds the focus until
-  a target takes it.
+  after its answer, the focus moves to the card on top. With no card
+  left, it moves to the place of the composer, which the foot of each
+  chat draws around the composer and the bar that takes its place, as
+  `components/composer-place.tsx` says: to the field, or to the place
+  while the bar shows, such as while the sandbox is stopped, and then to
+  the field when it shows again. So an answer in another view never takes
+  the focus from the composer. That move is an effect, so it comes after
+  the cleanups of the parts that left: the value sheet of a phone keeps
+  the page inert until its cleanup. The stack holds the focus until the
+  card on top takes it, or until it gives the focus to the place of the
+  composer.
 - A card leaves at once after its Allow. The requests that it hid settle
   out of the stack until their own events, and one read of the list gives
   back the rest, as [the secret requests](secrets/README.md) say.
 - Each session starts its own stack. The card on top starts at its top,
   and a value typed into a card leaves the page with the card when another
-  card shows.
+  card shows. `showingAfter` keeps the card on top, with its typed values,
+  its focus, and its sheet, while a request of it carries over, such as a
+  newer request for the same secrets. A new showing starts when no
+  request of it carries over.
 - The popover of an explanation shows the stack of its session too.
 - The tab of each session that holds an open request shows the
   needs-input mark, as [the tab row](tab-row.md) says. One rule,

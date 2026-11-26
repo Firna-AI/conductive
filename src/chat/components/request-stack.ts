@@ -121,3 +121,44 @@ export function placeAfter(
   const top = card?.item.answerable === false && fresh ? fresh.key : shown
   return { top, order: keys }
 }
+
+/**
+ * One showing of the card on top: the key of the card, the IDs of the
+ * requests that it holds, and a count that names the showing. The parts of
+ * a card, such as the values that a member types, last for one showing.
+ */
+export interface CardShowing {
+  card: string | null
+  holds: readonly string[]
+  count: number
+}
+
+export const noShowing: CardShowing = { card: null, holds: [], count: 0 }
+
+/**
+ * The showing of the card on top after a change of the stack. A request
+ * that joins or leaves the card keeps its showing, so a newer request for
+ * the same secrets keeps the values that a member typed. A new showing
+ * starts when another card shows, or when no request of the card carries
+ * over, such as when each of its requests ended and the agent asked again
+ * for the same secrets in the same change. An empty stack keeps the last
+ * showing, because its card no longer draws.
+ */
+export function showingAfter(
+  showing: CardShowing,
+  top: StackCard | undefined,
+): CardShowing {
+  if (top === undefined) return showing
+  const holds = [top.item.id, ...top.hidden.map((item) => item.id)]
+  const carries =
+    top.key === showing.card && holds.some((id) => showing.holds.includes(id))
+  const same =
+    holds.length === showing.holds.length &&
+    holds.every((id, index) => showing.holds[index] === id)
+  if (carries && same) return showing
+  return {
+    card: top.key,
+    holds,
+    count: carries ? showing.count : showing.count + 1,
+  }
+}

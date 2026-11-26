@@ -9,10 +9,13 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { requestStackWords } from '../../ui/components/chat/requestStackCopy'
 import { RequestStackFrame } from '../../ui/components/chat/RequestStackFrame'
 import { IconButton } from '../../shell/ui/actions'
+import { focusLost } from '../../shell/ui/lost-focus'
 import local from './chat.module.css'
 import {
   emptyPlace,
+  noShowing,
   placeAfter,
+  showingAfter,
   stackCards,
   type StackPlace,
   type WaitingItem,
@@ -39,19 +42,14 @@ function holdsFocus(event: FocusEvent): boolean {
   return target.getAttribute('aria-disabled') === 'true'
 }
 
-/** Whether the focus is on no element, such as after its element left. */
-function focusLost(): boolean {
-  const active = document.activeElement
-  return active === null || active === document.body || !active.isConnected
-}
-
 /**
  * The open requests of the shown session, just above the composer, as a
  * stack that shows one card at a time, in the order of `stackCards`. The
  * stack starts with its first card on top, and Previous and Next move
  * through it. A request that joins or leaves keeps the card on top, as
- * `placeAfter` says. Give the stack the key of its session, so each
- * session starts its own stack.
+ * `placeAfter` says. The card on top keeps its parts, such as the values
+ * that a member types, while it shows, as `showingAfter` says. Give the
+ * stack the key of its session, so each session starts its own stack.
  *
  * The stack holds the focus while any of its parts has it, also a sheet or
  * a menu that a card opens. After a move to the first or the last card,
@@ -59,10 +57,12 @@ function focusLost(): boolean {
  * the focus, such as a card after its answer, takes the focus with it: the
  * focus then moves to the card on top, so a screen reader reads it and the
  * next Tab reaches its first action. With no card left, `focusComposer`
- * puts the focus in the field of the composer. This rescue is an effect, so
- * it comes after the cleanups of the parts that left. A value sheet keeps
- * the page inert until its cleanup, and its own focus return can go to a
- * button that is off. The stack holds the focus until a target takes it.
+ * puts the focus in the place of the composer, which each layout of the
+ * chat draws, and the stack no longer holds the focus. This rescue is an
+ * effect, so it comes after the cleanups of the parts that left. A value
+ * sheet keeps the page inert until its cleanup, and its own focus return
+ * can go to a button that is off. The stack holds the focus until the card
+ * on top takes it, or until it gives the focus to the composer.
  */
 export function WaitingRequests(props: {
   items: readonly WaitingItem[]
@@ -72,6 +72,7 @@ export function WaitingRequests(props: {
   const [kept, setKept] = useState<StackPlace>(emptyPlace)
   const place = placeAfter(kept, cards)
   if (!samePlace(place, kept)) setKept(place)
+  const [showing, setShowing] = useState(noShowing)
   const inside = useRef(false)
   const card = useRef<HTMLDivElement>(null)
   const previous = useRef<HTMLElement>(null)
@@ -91,25 +92,27 @@ export function WaitingRequests(props: {
       card.current.focus()
       return
     }
+    inside.current = false
     focusComposer?.()
-    if (!focusComposer || !focusLost()) inside.current = false
   })
   const at = Math.max(
     cards.findIndex((item) => item.key === place.top),
     0,
   )
   const top = cards.at(at)
+  const shown = showingAfter(showing, top)
+  if (shown !== showing) setShowing(shown)
   if (top === undefined) return null
   const last = cards.length - 1
   const move = (to: number) => {
-    const shown = cards.at(to)
-    if (shown === undefined || to < 0) return
+    const target = cards.at(to)
+    if (target === undefined || to < 0) return
     step.current = to === 0 ? 'next' : to === last ? 'previous' : null
-    setKept({ top: shown.key, order: place.order })
+    setKept({ top: target.key, order: place.order })
   }
   return (
     <RequestStackFrame
-      cardKey={top.key}
+      cardKey={`${shown.count}`}
       count={cards.length}
       next={
         <IconButton

@@ -94,7 +94,9 @@ keeps it after the merge.
 - When the card that holds the focus leaves, such as after its answer, the
   focus moves to the new card on top. A screen reader then reads that
   card, and the next Tab reaches its first action. With no card left, the
-  focus moves to the composer.
+  focus moves to the composer. While a bar takes the place of the
+  composer, such as while the sandbox is stopped, the focus moves to that
+  place, and to the composer when it shows again.
 - Reason: the focus never jumps to an action that the member did not see.
 
 ## Requests for the same secrets

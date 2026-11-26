@@ -84,7 +84,8 @@ export function sandboxParts(props: {
  * requests just above the field. The lines and the cards are the link of a
  * linked session to its source, the Mac commands, and the secret requests.
  * A read-only workspace takes no answer. `focusComposer` puts the focus in
- * the field, as the stack asks when its last card leaves with the focus.
+ * the place of the composer, as the stack asks when its last card leaves
+ * with the focus.
  */
 export function useSessionParts(props: {
   snapshot: ChatSnapshot

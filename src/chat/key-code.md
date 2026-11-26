@@ -285,10 +285,10 @@ is relative to `src/chat/`, the folder of this guide.
 - `components/WaitingRequests.tsx`: the stack just above the composer of
   the open Mac commands and secret requests, with Previous, Next, and the
   moves of the focus. `components/request-stack.ts` holds `WaitingItem`,
-  `stackCards`, the order of its cards, and `placeAfter`, the card on top
-  after a change. The shared `RequestStackFrame` and `stackEntries` of
-  `../ui/components/chat/` draw and order the stack of the app and of the
-  mockups.
+  `stackCards`, the order of its cards, `placeAfter`, the card on top
+  after a change, and `showingAfter`, how long its parts last. The shared
+  `RequestStackFrame` and `stackEntries` of `../ui/components/chat/` draw
+  and order the stack of the app and of the mockups.
 - `dev/`: the development page, its fake writes, its scripted agent, its
   Mac, the `loss` scenario in `dev/dev-loss.ts`, and the `starter` option
   in `dev/dev-logins.ts`. `dev/dev-answers.ts` holds the plans and the
