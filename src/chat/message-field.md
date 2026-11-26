@@ -46,6 +46,10 @@ that those chips show, from the attach to the send.
   that loads later make a skill chip of each skill text that a list of
   either agent names, so a chip stays a chip after a change of the model.
   Typed text stays text. The draft keeps the skill text, such as `/plans`.
+  A press on the name of a skill chip opens the skill tab of the skill of
+  `agent`, else of the other agent, through `skillTabs` of the mentions,
+  as a press on the name of a file chip opens its file. The press takes no
+  focus, so the caret stays in the text.
 - A composer can give the field the files of its draft as `files`, a
   `FieldFiles`. Only a field with `files` reads marks and shows the chips
   of attached files.
@@ -215,7 +219,8 @@ that those chips show, from the attach to the send.
   node of a link that waits for its workspace. `file-mention-nodes.tsx`
   holds the file chip node and the node of a mention or a skill text that
   waits for its list. `skill-mention-nodes.tsx` holds the skill chip node,
-  its chip, and the agent of the field. `field-nodes.ts` turns a draft
+  its chip with the name that opens the skill tab, and the agent of the
+  field. `field-nodes.ts` turns a draft
   text or a paste into nodes.
   `field-content.ts` turns nodes into the draft text and the copy text,
   and reconciles the chips with the list. `mention-content.ts` reconciles

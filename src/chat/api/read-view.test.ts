@@ -133,3 +133,56 @@ describe('Preview tabs', () => {
     }
   })
 })
+
+describe('skill tabs', () => {
+  const plans = { agent: 'claude', name: 'plans' }
+  const review = { agent: 'codex', name: 'review' }
+
+  it('reads each skill tab at its place in the whole row, after the Preview tabs take theirs, with its active and temporary marks', () => {
+    const reply = readViewReply({
+      view: {
+        ...view,
+        previewTabs: [{ port: 3000, place: 1 }],
+        skillTabs: [
+          { ...review, place: 9 },
+          { ...plans, place: 0 },
+        ],
+        activeSkill: review,
+        temporarySkill: plans,
+      },
+    })
+    expect(reply.view).toEqual({
+      ...view,
+      tabs: [
+        { kind: 'skill', ...plans },
+        view.tabs[0],
+        { kind: 'preview', port: 3000 },
+        view.tabs[1],
+        { kind: 'skill', ...review },
+      ],
+      activeTab: { kind: 'skill', ...review },
+      temporaryTab: { kind: 'skill', ...plans },
+    })
+  })
+
+  it('drops a skill tab that does not read, and a mark that names no open skill tab, and keeps the rest of the view', () => {
+    const reply = readViewReply({
+      view: {
+        ...view,
+        skillTabs: [
+          { agent: 'gemini', name: 'plans', place: 0 },
+          { agent: 'claude', name: 'two words', place: 0 },
+          { ...plans, place: -1 },
+          { ...review, place: 1 },
+        ],
+        activeSkill: plans,
+        temporarySkill: { agent: 'codex', name: 'closed' },
+      },
+    })
+    expect(reply.view).toEqual({
+      ...view,
+      tabs: [view.tabs[0], { kind: 'skill', ...review }, view.tabs[1]],
+      temporaryTab: null,
+    })
+  })
+})

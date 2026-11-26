@@ -84,7 +84,7 @@ function UserBubble(props: { item: UserItem; marks?: MessageMarks }) {
             mentions
             moklyInstance="text"
             text={item.text}
-            {...defined({ waits: item.queued })}
+            {...defined({ waits: item.queued, pointer: item.pointer })}
           />
         )}
       </div>

@@ -1,11 +1,16 @@
-import { mkdir, writeFile } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
+import { execFileSync } from 'node:child_process'
+import { constants } from 'node:fs'
+import { mkdir, open, readFile, symlink, writeFile } from 'node:fs/promises'
+import { basename, dirname, join } from 'node:path'
 
-import { expect, it } from 'vitest'
+import { expect, it, onTestFinished } from 'vitest'
 
 import { scannerFixture, skillText } from '../test-support/skills'
 import type { OrgSkills } from './generated/OrgSkills'
+import { prepareCodexSkills } from './providers/codex-skills'
+import { ProviderLifetime } from './providers/lifetime'
 import { withOrgSkillPaths } from './providers/skill-input'
+import { readOrgSkill } from './skill-org'
 
 async function orgCopy(home: string) {
   const directory = join(
@@ -19,6 +24,22 @@ async function orgCopy(home: string) {
   }
   const skills: OrgSkills = { repository: 'acme/skills', directory }
   return { directory, write, skills }
+}
+
+async function linkSkill(path: string, target: string) {
+  await mkdir(dirname(path), { recursive: true })
+  await symlink(target, path)
+}
+
+function readClaudeOrgSkill(
+  repository: string,
+  orgSkills: OrgSkills,
+  name: string,
+) {
+  return readOrgSkill(
+    { type: 'org', repository, orgSkills, agent: 'claude', name },
+    1_048_576,
+  )
 }
 
 it('lists the org skills after the workspace skills, as an agent start loads them', async () => {
@@ -44,8 +65,9 @@ it('lists the org skills after the workspace skills, as an agent start loads the
       'Run `!git status`.',
     ),
   )
-  await org.write('skills/no-description/SKILL.md', '# Only a heading\n')
   const path = (folder: string) => join(org.directory, 'skills', folder)
+  await org.write('skills/no-description/content.md', '# Only a heading\n')
+  await linkSkill(join(path('no-description'), 'SKILL.md'), 'content.md')
   expect(await h.scanner.scan(false, org.skills)).toEqual({
     claude: [
       {
@@ -58,11 +80,13 @@ it('lists the org skills after the workspace skills, as an agent start loads the
         description: 'Commit and push.',
         manualOnly: true,
         path: join(path('finish-work'), 'SKILL.md'),
+        org: true,
       },
       {
         name: 'no-description',
         description: 'Only a heading',
         path: join(path('no-description'), 'SKILL.md'),
+        org: true,
       },
     ],
     codex: [
@@ -70,11 +94,13 @@ it('lists the org skills after the workspace skills, as an agent start loads the
         name: 'finish-work',
         description: 'Commit and push.',
         path: join(path('finish-work'), 'SKILL.md'),
+        org: true,
       },
       {
         name: 'plans',
         description: 'Org plans.',
         path: join(path('plans'), 'SKILL.md'),
+        org: true,
       },
     ],
   })
@@ -102,6 +128,157 @@ it('lists no org skills without a copy or after a failed read', async () => {
   expect(h.warnings).toContain(
     'The org skills could not be listed. The list holds no org skills.',
   )
+})
+
+it('lists and reads a regular org skill when another candidate links to a FIFO', async () => {
+  const h = await scannerFixture()
+  const org = await orgCopy(h.home)
+  const text = skillText({ name: 'review', description: 'Review the code.' })
+  await org.write('skills/review/SKILL.md', text)
+  const fifo = join(org.directory, 'pipe')
+  execFileSync('mkfifo', [fifo])
+  const pipe = await open(fifo, constants.O_RDWR | constants.O_NONBLOCK)
+  onTestFinished(() => pipe.close())
+  await linkSkill(join(org.directory, 'skills/pipe/SKILL.md'), fifo)
+
+  const { claude } = await h.scanner.scan(false, org.skills)
+  expect(claude.map((skill) => skill.name)).toEqual(['review'])
+  expect(await readClaudeOrgSkill(h.root, org.skills, 'review')).toEqual({
+    ok: true,
+    text,
+  })
+  expect(await readClaudeOrgSkill(h.root, org.skills, 'pipe')).toEqual({
+    ok: false,
+    error: {
+      code: 'skill_unavailable',
+      message: 'The skill could not be read.',
+    },
+  })
+})
+
+it('keeps workspace precedence regardless of size and limits the org tab text', async () => {
+  const h = await scannerFixture()
+  const org = await orgCopy(h.home)
+  const body = 'x'.repeat(1_048_576)
+  const oversized = skillText(
+    { name: 'oversized', description: 'Too large.' },
+    body,
+  )
+  const target = join(org.directory, 'skills/oversized/content.md')
+  await org.write('skills/oversized/content.md', oversized)
+  await linkSkill(join(org.directory, 'skills/oversized/SKILL.md'), target)
+
+  await org.write(
+    'skills/review/SKILL.md',
+    skillText({ name: 'review', description: 'Org skill.' }),
+  )
+  await org.write(
+    'skills/shadowed/SKILL.md',
+    skillText({ name: 'shadowed', description: 'Org skill.' }),
+  )
+  await h.write(
+    'early/SKILL.md',
+    skillText({ name: 'shadowed', description: 'Workspace skill.' }, body),
+  )
+  await h.write(
+    'late/SKILL.md',
+    `---\n# ${body}\nname: review\ndescription: Workspace skill.\n---\n`,
+  )
+  await linkSkill(
+    join(h.root, '.claude/skills/early/SKILL.md'),
+    join(h.root, 'early/SKILL.md'),
+  )
+  await linkSkill(
+    join(h.root, '.claude/skills/late/SKILL.md'),
+    join(h.root, 'late/SKILL.md'),
+  )
+
+  const { claude } = await h.scanner.scan(false, org.skills)
+  expect(claude.map((skill) => skill.name)).toEqual(['oversized'])
+  expect(await readClaudeOrgSkill(h.root, org.skills, 'review')).toEqual({
+    ok: false,
+    error: { code: 'skill_not_found', message: 'The skill was not found.' },
+  })
+  expect(await readClaudeOrgSkill(h.root, org.skills, 'shadowed')).toEqual({
+    ok: false,
+    error: { code: 'skill_not_found', message: 'The skill was not found.' },
+  })
+  expect(await readClaudeOrgSkill(h.root, org.skills, 'oversized')).toEqual({
+    ok: false,
+    error: {
+      code: 'skill_too_large',
+      message: 'The skill is too large.',
+      sizeBytes: 1_048_624,
+      limitBytes: 1_048_576,
+    },
+  })
+})
+
+it('keeps the first duplicate org skill when its header exceeds the tab limit', async () => {
+  const h = await scannerFixture()
+  const org = await orgCopy(h.home)
+  const first = 'skills/first/SKILL.md'
+  const fields = { name: 'review', description: 'First skill.' }
+  const safe = skillText(fields, 'First body.\n')
+  const source = safe.replace('---\n', `---\n# ${'x'.repeat(1_048_576)}\n`)
+  await org.write(first, source)
+  await org.write(
+    'skills/second/SKILL.md',
+    skillText({ ...fields, description: 'Second skill.' }, 'Second body.\n'),
+  )
+
+  const listed = await h.scanner.scan(false, org.skills)
+  const entry = { ...fields, path: join(org.directory, first), org: true }
+  expect(listed).toEqual({ claude: [entry], codex: [entry] })
+  expect(
+    await readOrgSkill(
+      {
+        type: 'org',
+        repository: h.root,
+        orgSkills: org.skills,
+        agent: 'codex',
+        name: 'review',
+      },
+      1_048_576,
+    ),
+  ).toEqual({
+    ok: false,
+    error: {
+      code: 'skill_too_large',
+      message: 'The skill is too large.',
+      sizeBytes: Buffer.byteLength(source),
+      limitBytes: 1_048_576,
+    },
+  })
+
+  const lifetime = new ProviderLifetime()
+  onTestFinished(() => lifetime.close())
+  const view = await prepareCodexSkills(
+    { ...h.options, orgSkills: org.skills },
+    lifetime,
+  )
+  expect(view.extraRoots.map((path) => basename(path))).toEqual(['first'])
+  const exported = join(view.extraRoots[0], 'SKILL.md')
+  expect([...view.inputs]).toEqual([['review', exported]])
+  expect(await readFile(exported, 'utf8')).toBe(safe)
+})
+
+it('lists and reads a Claude org skill under its declared name with a Unicode line separator', async () => {
+  const h = await scannerFixture()
+  const org = await orgCopy(h.home)
+  const text = skillText(
+    { name: 'declared-name', description: 'Review\u2028the code.' },
+    'Body.\n',
+  )
+  const path = 'skills/folder-name/SKILL.md'
+  await org.write(path, text)
+
+  const { claude } = await h.scanner.scan(false, org.skills)
+  expect(claude.map((skill) => skill.name)).toEqual(['declared-name'])
+  expect(await readClaudeOrgSkill(h.root, org.skills, claude[0].name)).toEqual({
+    ok: true,
+    text,
+  })
 })
 
 it('gives an org skill of the list its path in the view of the agent start', () => {

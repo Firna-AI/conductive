@@ -15,6 +15,8 @@ export interface TurnTokenRoute {
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true })
+const NATIVE_TOKEN_PREFIXES = ['sk-ant-api-', 'sk-ant-oat01-', 'sk-']
+const TOKEN_VERSION = 'gt1'
 
 function nativeTokenPrefix(login: AgentLoginKind): string {
   if (login.agent === 'codex') return 'sk-'
@@ -22,11 +24,7 @@ function nativeTokenPrefix(login: AgentLoginKind): string {
 }
 
 function tokenPrefix(token: string): string {
-  return (
-    ['sk-ant-api-', 'sk-ant-oat01-', 'sk-'].find((prefix) =>
-      token.startsWith(prefix),
-    ) ?? ''
-  )
+  return NATIVE_TOKEN_PREFIXES.find((prefix) => token.startsWith(prefix)) ?? ''
 }
 
 export function turnTokenMatchesKind(
@@ -54,7 +52,7 @@ export function turnTokenRoute(token: string): TurnTokenRoute | null {
     .slice(tokenPrefix(token).length)
     .split('.')
   if (
-    version !== 'gt1' ||
+    version !== TOKEN_VERSION ||
     !routing ||
     !signature ||
     extra !== undefined ||
@@ -131,7 +129,7 @@ export async function deriveTurnToken(
     await tokenKey(secret),
     tokenInput(route, state, prefix),
   )
-  return `${prefix}gt1.${routingPart(route)}.${base64Url(new Uint8Array(signature))}`
+  return `${prefix}${TOKEN_VERSION}.${routingPart(route)}.${base64Url(new Uint8Array(signature))}`
 }
 
 export async function verifyTurnToken(
@@ -149,4 +147,32 @@ export async function verifyTurnToken(
     bytes,
     tokenInput(route, state, tokenPrefix(token)),
   )
+}
+
+export async function workspaceTurnTokensIn(
+  text: string,
+  workspaceId: string,
+  secret: string,
+  loadState: (turnId: string) => Promise<TurnTokenState | undefined>,
+): Promise<string[]> {
+  // Look ahead so a candidate can start inside another match.
+  const pattern = new RegExp(
+    `(?=((?:${NATIVE_TOKEN_PREFIXES.join('|')})${TOKEN_VERSION}\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]{43}))`,
+    'g',
+  )
+  const candidates = new Set(
+    Array.from(text.matchAll(pattern), ([, token]) => token),
+  )
+  const states = new Map<string, TurnTokenState | undefined>()
+  const tokens: string[] = []
+  for (const token of candidates) {
+    const route = turnTokenRoute(token)
+    if (!route || route.workspaceId !== workspaceId) continue
+    if (!states.has(route.turnId))
+      states.set(route.turnId, await loadState(route.turnId))
+    const state = states.get(route.turnId)
+    if (state && (await verifyTurnToken(token, route, state, secret)))
+      tokens.push(token)
+  }
+  return tokens
 }

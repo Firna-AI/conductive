@@ -32,6 +32,8 @@ export const messageField = defineComponent({
       files: { type: 'array', items: attachmentSchema },
       /** The pointer over the icon of the first chip. */
       pointer: { type: 'boolean' },
+      /** The pointer over the name of the first chip, a skill chip. */
+      namePointer: { type: 'boolean' },
       /** The caret at this index of the text. */
       caret: { type: 'integer', minimum: 0 },
     },
@@ -48,6 +50,7 @@ export const messageField = defineComponent({
       files={props.files}
       lines={props.lines}
       maxLines={props.maxLines}
+      namePointer={props.namePointer}
       placeholder={props.placeholder}
       pointer={props.pointer}
       text={props.text}

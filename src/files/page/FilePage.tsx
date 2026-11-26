@@ -24,7 +24,8 @@ import styles from './FilePage.module.css'
 const readFile = (client: FilesClient, path: string, signal: AbortSignal) =>
   client.readFile(path, signal)
 
-function lineCount(lines: number): string {
+/** The line count of a text in the header of a page, such as "24 lines". */
+export function lineCount(lines: number): string {
   return `${lines} ${lines === 1 ? 'line' : 'lines'}`
 }
 

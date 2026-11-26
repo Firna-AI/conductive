@@ -1,14 +1,18 @@
+import type { Agent } from './generated/Agent'
 import type { SkillEntry } from './generated/SkillEntry'
-import { readFile } from 'node:fs/promises'
+import type { SkillReadOutcome } from './generated/SkillReadOutcome'
 
+import type { SelectedOrgSkill } from './providers/skills'
+import {
+  readRegularSkill,
+  readSkillContent,
+  SKILL_FILE_MAX_BYTES,
+} from './skill-content'
 import { readFrontMatter, type FrontMatterValue } from './skill-front-matter'
 import type { SkillFile } from './skill-files'
 
 /** The path of one `SKILL.md`, and the name of the folder that the agent sees. */
 type SkillPlace = Pick<SkillFile, 'path' | 'folder'>
-
-/** A larger `SKILL.md` warns and leaves out its skill. */
-const SKILL_FILE_MAX_BYTES = 1_048_576
 
 /**
  * Claude names a skill after the front matter `name`, else its folder. Its
@@ -26,7 +30,7 @@ export async function readClaudeSkill(
 }
 
 /** The Claude entry of the text of one `SKILL.md`, as `readClaudeSkill` says. */
-export function claudeSkill(
+function claudeSkill(
   source: string,
   file: SkillPlace,
   warn: (message: string) => void,
@@ -38,11 +42,12 @@ export function claudeSkill(
     )
   const fields = front.fields ?? new Map<string, FrontMatterValue>()
   const invocable = fields.get('user-invocable')
-  if (invocable !== undefined && !isTrue(invocable)) return null
+  if (invocable !== undefined && !isTrue(text(invocable))) return null
   return {
     name: text(fields.get('name')) || file.folder,
-    description: text(fields.get('description')) || firstLine(front.body),
-    ...(isTrue(fields.get('disable-model-invocation'))
+    description:
+      text(fields.get('description')) || skillDescriptionLine(front.body),
+    ...(isTrue(text(fields.get('disable-model-invocation')))
       ? { manualOnly: true }
       : {}),
     path: file.path,
@@ -61,8 +66,25 @@ export async function readCodexSkill(
   return source === null ? null : codexSkill(source, file, warn)
 }
 
+export async function readableCodexSkills(
+  skills: readonly SkillEntry[],
+  warn: (message: string) => void,
+): Promise<SkillEntry[]> {
+  const found: SkillEntry[] = []
+  for (const skill of skills) {
+    const opened = await readRegularSkill(
+      skill.path,
+      'agent',
+      async () => true,
+    ).catch(() => false)
+    if (opened === true) found.push(skill)
+    else warnUnreadableSkill(skill.path, warn)
+  }
+  return found
+}
+
 /** The Codex entry of the text of one `SKILL.md`, as `readCodexSkill` says. */
-export function codexSkill(
+function codexSkill(
   source: string,
   file: SkillPlace,
   warn: (message: string) => void,
@@ -82,34 +104,64 @@ export function codexSkill(
   }
 }
 
-/** The text of one `SKILL.md`. A failed read or a larger file warns and gives null. */
-export async function readSkillFile(
+export function orgSkillEntry(
+  skill: SelectedOrgSkill,
+  agent: Agent,
+): SkillEntry | null {
+  const { frontmatter, path } = skill.metadata
+  const invocable = frontmatter['user-invocable']
+  if (
+    agent === 'claude' &&
+    invocable !== undefined &&
+    !isTrue(String(invocable))
+  )
+    return null
+  return {
+    name: skill.shownName,
+    description: String(frontmatter.description ?? '').trim(),
+    path,
+    org: true,
+    ...(agent === 'claude' &&
+    isTrue(String(frontmatter['disable-model-invocation']))
+      ? { manualOnly: true }
+      : {}),
+  }
+}
+
+async function readSkillFile(
   path: string,
   warn: (message: string) => void,
 ): Promise<string | null> {
-  try {
-    const bytes = await readFile(path)
-    if (bytes.length > SKILL_FILE_MAX_BYTES) throw new Error('Too large.')
-    return bytes.toString('utf8')
-  } catch {
-    warn(
-      `The skill file ${path} could not be read. The list leaves out its skill.`,
-    )
-    return null
-  }
+  const result = await readSkillContent(path, SKILL_FILE_MAX_BYTES)
+  return listedSkillText(result, path, warn)
+}
+
+/** A failed read warns and gives no text for the list. */
+export function listedSkillText(
+  result: SkillReadOutcome,
+  path: string,
+  warn: (message: string) => void,
+): string | null {
+  if (result.ok) return result.text
+  warnUnreadableSkill(path, warn)
+  return null
+}
+
+function warnUnreadableSkill(path: string, warn: (message: string) => void) {
+  warn(
+    `The skill file ${path} could not be read. The list leaves out its skill.`,
+  )
 }
 
 function text(value: FrontMatterValue | undefined): string {
   return value?.kind === 'text' ? value.text.trim() : ''
 }
 
-function isTrue(value: FrontMatterValue | undefined): boolean {
-  return (
-    value?.kind === 'text' && /^(?:true|yes|on|1)$/i.test(value.text.trim())
-  )
+function isTrue(value: string): boolean {
+  return /^(?:true|yes|on|1)$/i.test(value.trim())
 }
 
-function firstLine(body: string): string {
+export function skillDescriptionLine(body: string): string {
   for (const line of body.split(/\r?\n/)) {
     const trimmed = line.trim()
     if (trimmed) return /^#+\s+(\S.*)$/.exec(trimmed)?.[1] ?? trimmed

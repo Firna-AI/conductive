@@ -1,0 +1,72 @@
+/*
+ * The header of a skill tab. Its first line is the line of a file page:
+ * the name of the skill in the quiet chip, and the switch at the end. The
+ * description of the skill follows on its own lines.
+ */
+.header {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 8px 8px var(--ui-pad-x);
+  border-bottom: 1px solid var(--ui-border);
+  box-sizing: border-box;
+}
+
+.line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: calc(var(--ui-bar-height) - 2px);
+}
+
+/*
+ * The skill icon in the chip. It stays on a narrow page, where a file page
+ * drops the icon of its file, because the chip holds no folder.
+ */
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-right: 6px;
+  color: var(--ui-muted);
+}
+
+/*
+ * The agent of the skill after its name, such as "Claude skill", muted. It
+ * keeps its width, so a narrow page shortens the name first.
+ */
+.agent {
+  flex-shrink: 0;
+  padding: 0 4px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  white-space: nowrap;
+}
+
+/*
+ * The description of the skill, muted, in at most three lines. Its title
+ * gives the whole text.
+ */
+.description {
+  display: -webkit-box;
+  overflow: hidden;
+  max-width: 72ch;
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* A spinner and one line, while the read of the text runs. */
+.loading {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}

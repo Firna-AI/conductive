@@ -12,6 +12,16 @@ export type Skill = {
 }
 
 /**
+ * The skill of the chip that the chats send, and of the skill tab that a
+ * press on that chip opens.
+ */
+export const plansSkill: Skill = {
+  name: 'plans',
+  description:
+    'Use before you write any code or start an implementation, when the user asks for a plan, or when you add a decision to a plan.',
+}
+
+/**
  * The skills of Checkout address autocomplete, in name order. The runner
  * cuts each description to 300 characters, and the list cuts it again to
  * one line.
@@ -37,11 +47,7 @@ export const skills: readonly Skill[] = [
     description:
       'Use before you create or change a mockup under docs/mockups, a screen component, or a user flow.',
   },
-  {
-    name: 'plans',
-    description:
-      'Use before you write any code or start an implementation, when the user asks for a plan, or when you add a decision to a plan.',
-  },
+  plansSkill,
   {
     name: 'product-ui',
     description:
@@ -84,44 +90,55 @@ const skillAnswer: readonly TextBlock[] = [
   ),
 ]
 
+/** The turn after the message with the skill chip: the work and the answer. */
+const skillTurn = [
+  {
+    kind: 'tool',
+    id: 'skill-read',
+    tool: 'read',
+    target: 'src/app/checkout/AddressForm.tsx',
+    status: 'done',
+  },
+  {
+    kind: 'tool',
+    id: 'skill-plan',
+    tool: 'create',
+    target: 'plans/saved-address-book.md',
+    detail: '+64',
+    status: 'done',
+  },
+  { kind: 'agent', id: 'skill-answer', blocks: skillAnswer },
+  {
+    kind: 'turn-end',
+    id: 'skill-turn-end',
+    duration: '1m 12s',
+    files: [
+      {
+        path: 'plans/saved-address-book.md',
+        change: 'added',
+        added: 64,
+        removed: 0,
+      },
+    ],
+  },
+] as const satisfies readonly ChatItem[]
+
 /**
  * The chats of Checkout address autocomplete after a message with a skill
- * chip. `history` is the finished turn before it.
+ * chip. `history` is the finished turn before it. In `skill-answer-pointer`
+ * the pointer is over the skill chip of the sent message.
  */
 export function skillConversations(history: readonly ChatItem[]) {
   return {
     'skill-answer': [
       ...history,
       { kind: 'user', id: 'skill-ask', text: skillChipDraft },
-      {
-        kind: 'tool',
-        id: 'skill-read',
-        tool: 'read',
-        target: 'src/app/checkout/AddressForm.tsx',
-        status: 'done',
-      },
-      {
-        kind: 'tool',
-        id: 'skill-plan',
-        tool: 'create',
-        target: 'plans/saved-address-book.md',
-        detail: '+64',
-        status: 'done',
-      },
-      { kind: 'agent', id: 'skill-answer', blocks: skillAnswer },
-      {
-        kind: 'turn-end',
-        id: 'skill-turn-end',
-        duration: '1m 12s',
-        files: [
-          {
-            path: 'plans/saved-address-book.md',
-            change: 'added',
-            added: 64,
-            removed: 0,
-          },
-        ],
-      },
+      ...skillTurn,
+    ],
+    'skill-answer-pointer': [
+      ...history,
+      { kind: 'user', id: 'skill-ask', text: skillChipDraft, pointer: true },
+      ...skillTurn,
     ],
   } as const satisfies Record<string, readonly ChatItem[]>
 }

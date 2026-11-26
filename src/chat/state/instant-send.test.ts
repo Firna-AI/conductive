@@ -57,6 +57,13 @@ describe('a message while its send waits', () => {
         text: sent,
         attachments: [expect.objectContaining({ id: 'attachment-1' })],
         state: 'queued',
+        // The waiting message names the agent of its send, for its chips.
+        choice: {
+          agent: 'claude',
+          model: 'Opus 5.5',
+          effort: 'high',
+          fast: false,
+        },
       },
     ])
     chat.held.splice(0, 1)[0]()

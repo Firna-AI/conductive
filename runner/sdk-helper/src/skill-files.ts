@@ -1,4 +1,4 @@
-import { readdir, stat } from 'node:fs/promises'
+import { readdir, realpath, stat } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 
 const SKILL_FILE = 'SKILL.md'
@@ -13,7 +13,7 @@ export interface SkillFile {
   path: string
   /** The name of the folder that holds it. */
   folder: string
-  /** Its size, times, and inode, or the code of its failed stat. */
+  /** Its target name and file stats, or the code of its failed scan. */
   signature: string
 }
 
@@ -123,10 +123,11 @@ async function skillFile(path: string): Promise<SkillFile | null> {
   try {
     const stats = await stat(path)
     if (stats.isDirectory()) return null
+    const targetName = basename(await realpath(path))
     return {
       path,
       folder,
-      signature: `${stats.size}:${stats.mtimeMs}:${stats.ctimeMs}:${stats.ino}`,
+      signature: `${stats.size}:${stats.mtimeMs}:${stats.ctimeMs}:${stats.ino}:${targetName}`,
     }
   } catch (error) {
     if (missing(error)) return null

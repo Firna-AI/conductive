@@ -59,6 +59,8 @@ const userItem = {
     queued: { type: 'boolean' },
     /** Sent while a turn runs: it joins that turn as a new part. */
     during: { const: true },
+    /** The pointer is over its first skill chip, as a view cannot hover. */
+    pointer: { const: true },
   },
 } as const
 

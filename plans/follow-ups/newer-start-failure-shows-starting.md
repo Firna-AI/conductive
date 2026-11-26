@@ -1,0 +1,50 @@
+# A newer start failure still shows Starting
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 3, finding 113.
+- **Location:** `src/shell/workspace/sandbox-view.ts:165-175` (`resumes`, `resumingAtOpen`, and `resuming` of `sandboxView`), `src/shell/workspace/WorkspaceScreen.tsx:85-89` and `:142-153`, `src/app/workspace-model.ts:36-43` (`opened`), `:108-151` (`open`), and `:218-256` (`resume`), `src/app/workspace-detail-order.ts:89-146` (`wait`, `confirm`, and `event`), `src/shell/workspace/WorkspaceHeader.tsx:74`.
+- **Reason:** The case is rare, and the fix also moves the wait of the Resume of the open, which is on `origin/main`.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Resume of the open:** the Resume that the open of a workspace sends for a stopped sandbox, or for one whose later start failed (`WorkspaceModel.open`).
+  - **Wait of a Resume:** the time in which the app shows that a Resume starts the sandbox. The header shows Starting, and the tools and each tab without content show the wait, with no Resume.
+  - **Ordered state:** `DetailOrder` in `src/app/workspace-detail-order.ts`. By their event numbers, it shows a read, a Resume reply, or a stream event only when nothing newer has shown.
+- **Background:**
+  - "The resume" in `docs/protocol/stop-and-resume.md:84-103` gives the rule. A tab open, or a press on Resume or Try again, can ask for a Resume. Each such Resume shows Starting at once. This lasts until the reply of that Resume or a newer state of the sandbox.
+  - Cal chose this rule on 25 November 2026 for the skill tabs change (skill tab decision 5 B). When the Resume fails, the header and the parts show the state of the sandbox again, such as the stopped state with Resume.
+  - The Resume of the open shows Starting, and the composer in place of the bar, until the open ends. "A bar shows if that Resume fails." (`stop-and-resume.md:56-70`).
+  - `sandboxView` computes the wait from the current state and two flags (`sandbox-view.ts:165-175`):
+    - `resumes`: nothing refuses the start, and the sandbox is `stopped`, or `error` after a later start. A failed first start does not count.
+    - `resumingAtOpen = resumes && !opened`. `WorkspaceModel.opened` turns true when the open and its Resume end.
+    - `resuming = resumingAtOpen || (resumes && resumePending)`. `resumePending` is the busy flag of the `useAction` of `model.resume()` in the screen (`WorkspaceScreen.tsx:89` and `:152`). It ends only with the reply.
+  - The header shows Starting while `resuming` holds (`WorkspaceHeader.tsx:74`). `contentState` gives the tools and the pages the wait in place of their panel (`sandbox-view.ts:52-56`).
+  - `WorkspaceModel.resume` already orders its reply. The reply shows only when no newer state came first (`workspace-model.ts:218-256`, with `DetailOrder.wait` and `DetailOrder.confirm`).
+  - On `origin/main`, only the Resume of the open has the wait, with the same rule (`resumingAtOpen` in `src/shell/workspace/sandbox-view.ts`). Commit `c5818dfcf` of the skill tabs change gave each other Resume the wait.
+  - A change of a protocol doc also needs a read of both legal pages and of each public guide, as `AGENTS.md` says.
+- **Problem:**
+  - A start can fail while the reply of its Resume still waits. The stream then shows the `error` state of a later start.
+  - That newer state meets `resumes` again. With the reply still pending, `resuming` holds. So the header shows Starting again, and the parts show the wait with no Try again.
+  - This lasts until the reply, not until the newer state that the protocol names.
+  - The Resume of the open has the same defect. Until the open ends, Starting stays, and the composer hides the bar of the failed start.
+- **Impact if no action:** For the time of the reply, a member sees Starting for a start that already failed, with no error and no Try again. A slow reply makes that time longer.
+- **Root question:** How does the app end the wait of each Resume at the first newer state of the sandbox, not only at its reply?
+- **Options:**
+  - **A.** Let the screen track the order. Keep the state or the event number at each press, and end the wait of `resumePending` at a newer state. Cost: the screen keeps a second copy of the order that the model already keeps, and the Resume of the open keeps its own rule. Effort: Small.
+  - **B.** Let the workspace model own the wait of every Resume beside its ordered state.
+    - The model starts the wait at each `resume()`, also at the Resume of the open.
+    - It ends the wait at the reply, or at the first newer state of the sandbox that `DetailOrder` shows, such as `error`.
+    - `sandboxView` reads that wait in place of `resumePending` and of `!opened`. The bar of the open then shows the error of a failed start at once.
+    - In "The resume" of `docs/protocol/stop-and-resume.md:56-65`, say that the wait of the open also ends at a newer state of the sandbox, as for each other Resume.
+    - Test: a start fails while the Resume reply is held, for a press, for a tab open, and for the open. The header then shows the error state, and the late reply changes nothing.
+    - Effort: Medium.
+- **Left out:**
+  - Change nothing. The wait then breaks the rule of "The resume" in `docs/protocol/stop-and-resume.md`.
+  - Drop the wait before the reply. It reverses skill tab decision 5 B, which stays.
+  - Only two approaches are real. The wait can end only where the app sees both the request and the states: the screen or the model. The Worker cannot end a wait that the browser keeps.
+- **Wider fix:** B. One owner of the wait beside the ordered state ends each wait at the first newer state, for each caller of Resume, the open included.
+- **Previous examples:** Commit `c5818dfcf` of 25 November 2026 added the wait of each Resume in the screen. `plans/follow-ups/held-start-after-stop-gaps.md` records a stopped state with Resume after the reply of a held Resume.
+- **Related:** `plans/follow-ups/held-start-after-stop-gaps.md`. Both items change what shows around the reply of a Resume. There, the reply of a held Resume shows the stopped state with Resume until the start event. Its option B makes that reply show Starting. With B here, the owner of the wait is also the place to keep the wait across such a reply. No options conflict.
+- **Recommendation:** B. One owner keeps the wait and the ordered state together, so no caller of Resume can show Starting over a newer state.
+- **Action:** fix after merge, apply B, because the case is rare, and B also moves the wait of the Resume of the open on `origin/main`.

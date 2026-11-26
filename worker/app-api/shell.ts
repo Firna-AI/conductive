@@ -2,7 +2,7 @@ import { membersPath } from '../../src/shared/members'
 import { orgSettingsPaths } from '../../src/shared/org-settings'
 import { sectionsPath } from '../../src/shared/sections'
 import { workspaceViewPath } from '../../src/shared/workspace-view'
-import { viewReply, viewToWire } from '../../src/shared/workspace-view-wire'
+import { viewReply } from '../../src/shared/workspace-view-wire'
 import { workspacePaths, workspacesPath } from '../../src/shared/workspaces'
 import { counter } from '../chat/inputs'
 import type { AppDependencies, AppEnv } from '../env'
@@ -27,12 +27,7 @@ import {
   workspaceBinding,
   workspaceForViewer,
 } from './workspace-state'
-import {
-  savedWorkspaceView,
-  saveWorkspaceView,
-  keepsStoredPreviewTabs,
-  workspaceViewSave,
-} from './workspace-view'
+import { savedWorkspaceView, saveWorkspaceView } from './workspace-view'
 
 export async function shellRoute(
   request: Request,
@@ -100,18 +95,11 @@ export async function shellRoute(
     })
   if (path === viewPath && request.method === 'PUT') {
     requireWritableWorkspace(workspace)
-    // An older copy of the app saves no Preview tab, so its save keeps the
-    // stored ones.
-    const stored = keepsStoredPreviewTabs(context.body)
-      ? (viewToWire(await savedWorkspaceView(env.DB, workspaceId, userId))
-          .previewTabs ?? [])
-      : []
-    const view = workspaceViewSave(context.body, stored)
-    await saveWorkspaceView(env.DB, {
+    const view = await saveWorkspaceView(env.DB, {
       workspaceId,
       orgId,
       userId,
-      view,
+      view: context.body,
       now: dependencies.now(),
     })
     return Response.json({

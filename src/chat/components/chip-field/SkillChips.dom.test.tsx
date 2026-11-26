@@ -59,17 +59,39 @@ describe('skill chips in the message field', () => {
     })
   })
 
-  test('a press on a chip opens nothing, and its × removes it', async () => {
-    const view = await mountMentionField({ value: 'Run /plans now' })
+  test('a press on the name of a chip opens the skill of the agent of the composer, else of the other agent, takes no focus, and its × removes the chip', async () => {
+    const view = await mountMentionField({ value: 'Run /review and /plans' })
     const controls = Array.from(
       view.field.querySelectorAll('a, button'),
       (control) => accessibleName(control),
     )
+    const name = (skill: string) => byRole('button', skill, view.field)
+    const down = new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true,
+    })
+    name('review').dispatchEvent(down)
+    await press(name('review'))
+    await view.chooseAgent('codex')
+    await press(name('review'))
+    await press(name('plans'))
     await press(byRole('button', 'Remove plans', view.field))
-    expect({ controls, chips: view.chips(), draft: view.draft() }).toEqual({
-      controls: ['Remove plans'],
-      chips: [],
-      draft: 'Run  now',
+    expect({
+      controls,
+      focus: down.defaultPrevented,
+      opened: view.openedSkills,
+      chips: view.chips(),
+      draft: view.draft(),
+    }).toEqual({
+      controls: ['Remove review', 'review', 'Remove plans', 'plans'],
+      focus: true,
+      opened: [
+        { agent: 'claude', name: 'review' },
+        { agent: 'codex', name: 'review' },
+        { agent: 'claude', name: 'plans' },
+      ],
+      chips: ['Skill review'],
+      draft: 'Run /review and ',
     })
   })
 

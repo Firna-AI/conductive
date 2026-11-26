@@ -161,8 +161,9 @@ decision of the change that reads Markdown with one parser, as
   the sandbox is stopped or starts, or after its later start failed, a tab
   keeps the file that it already shows, as the lists keep their copy.
 - Otherwise the tab shows the state of the sandbox in place of the file,
-  with the Resume or Try again of that state. While the sandbox starts, the
-  tab shows that it waits for the sandbox.
+  with the Resume or Try again of that state. While the sandbox starts, or
+  a Resume runs, the tab shows that it waits for the sandbox, as
+  [The resume](stop-and-resume.md#the-resume) says.
 - Opening a file or diff tab resumes a stopped sandbox, as
   [Stop and resume](workspace-life.md#stop-and-resume) says.
 - When the runner cannot read the repository, it sends `files.unavailable`

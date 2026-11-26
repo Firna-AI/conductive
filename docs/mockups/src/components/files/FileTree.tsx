@@ -23,13 +23,15 @@ function Disclosure(props: { entry: TreeEntry }) {
 /**
  * One row of the tree. The row of the open file is marked, and the row of
  * an open menu keeps the fill of a hover, as a tab with an open menu does.
- * `id` is the instance key of the path of its entry.
+ * `id` is the instance key of the path of its entry. A Markdown file leads
+ * to `markdownTo`, and each other file to the tab of its kind.
  */
 function Row(props: {
   entry: TreeEntry
   id: string
   open: boolean
   menuOpen: boolean
+  markdownTo: string
 }) {
   const { entry } = props
   const content = (
@@ -70,7 +72,11 @@ function Row(props: {
       aria-current={props.open ? 'page' : undefined}
       className={className}
       style={indent}
-      to={previewPaths[entry.preview]}
+      to={
+        entry.preview === 'markdown'
+          ? props.markdownTo
+          : previewPaths[entry.preview]
+      }
     >
       {content}
     </ScreenLink>
@@ -94,12 +100,15 @@ function pathsOf(entries: readonly TreeEntry[]): string[] {
 
 /**
  * Every file of the workspace branch, as a tree. A file opens as a tab in
- * the centre column, and the row of the open file is marked. `menu` is the
- * open menu of a file or a folder row, at the pointer or under a sheet.
+ * the centre column, and the row of the open file is marked. `markdownTo`
+ * is the page of the Markdown file, when it differs from its plain
+ * preview. `menu` is the open menu of a file or a folder row, at the
+ * pointer or under a sheet.
  */
 export function FileTree(props: {
   entries: readonly TreeEntry[]
   open?: TreeEntry['preview']
+  markdownTo?: string
   menu?: FileRowMenu
 }) {
   const paths = pathsOf(props.entries)
@@ -112,6 +121,7 @@ export function FileTree(props: {
             <Row
               entry={entry}
               id={instanceKey(paths[index] ?? entry.name)}
+              markdownTo={props.markdownTo ?? previewPaths.markdown}
               menuOpen={menu !== undefined}
               open={entry.preview !== undefined && entry.preview === props.open}
             />

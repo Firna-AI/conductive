@@ -40,3 +40,8 @@ It holds the requirements after a workspace moves to another repository.
   warning.
 - Each open file tab and diff tab of the old repository closes. Reason:
   its path is no longer a path of the workspace's repository.
+- Each skill tab stays open, and a temporary skill tab stays temporary.
+  Reason: a skill tab names an agent and a skill, not a path of the
+  repository. A skill that the list of its agent no longer holds after
+  the change shows the notice of a removed skill, as
+  [Notices](skill-tabs.md#notices) says.

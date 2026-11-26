@@ -3,10 +3,11 @@
 import { describe, expect, test } from 'vitest'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { UserMessage } from '../../shared/generated/UserMessage'
+import type { SkillIdentity } from '../../shared/skills'
 import { accessibleName } from '../../test-support/dom-queries'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import { senderSnapshot } from '../../test-support/fixtures/workspaces'
-import { mount } from '../../test-support/mount'
+import { mount, press } from '../../test-support/mount'
 import { AgentText } from '../components/AgentText'
 import { UserBubble } from '../components/TranscriptItem'
 import {
@@ -30,32 +31,45 @@ const opus: AgentChoice = {
   fast: false,
 }
 
-/** A sent message of a member with `text`. */
-function sent(text: string): UserMessage {
+const sol: AgentChoice = {
+  agent: 'codex',
+  model: 'GPT-6.1 Sol',
+  effort: 'high',
+  fast: false,
+}
+
+/** A sent message of a member with `text`, to the agent of `choice`. */
+function sent(text: string, choice: AgentChoice = opus): UserMessage {
   return {
     id: 'message-1',
     sessionId: FAKE_IDS.session,
     sender: senderSnapshot(fakeUser),
     text,
     attachments: [],
-    choice: opus,
+    choice,
     createdAt: FAKE_TIME,
     state: 'sent',
   }
 }
 
+/** The address of a skill tab, as the fake skill tabs give it. */
+const tabHref = (skill: SkillIdentity) => `/skills/${skill.agent}/${skill.name}`
+
 /**
- * Mounts `text` as the chat draws it: a sent message of a member, or with
- * `answer`, an answer of the agent.
+ * Mounts `text` as the chat draws it: a sent message of a member, to the
+ * agent of `choice`, or with `answer`, an answer of the agent. The skill
+ * tabs record each skill that a chip opens.
  */
 async function mountText(
   text: string,
   skills: FakeSkills | null,
-  answer = false,
+  options: { answer?: boolean; choice?: AgentChoice } = {},
 ) {
+  const opened: SkillIdentity[] = []
   const value: ChatMentions | null = skills && {
     files: { subscribe: () => () => undefined, getSnapshot: () => noFiles },
     skills,
+    skillTabs: { open: (skill) => opened.push(skill), href: tabHref },
     openFile: () => undefined,
     showFolder: () => undefined,
     href: (item) => `/files/${item.path}`,
@@ -64,28 +78,30 @@ async function mountText(
     <LinksProvider value={{ links: { orgId: FAKE_IDS.org, workspaces: [] } }}>
       <MentionsProvider value={value}>
         <Copying>
-          {answer ? (
+          {options.answer ? (
             <AgentText id="agent:1" text={text} />
           ) : (
-            <UserBubble message={sent(text)} />
+            <UserBubble message={sent(text, options.choice)} />
           )}
         </Copying>
       </MentionsProvider>
     </LinksProvider>,
   )
+  const chipElements = () =>
+    Array.from(container.querySelectorAll<HTMLElement>('[data-mention]'))
   const chips = () =>
-    Array.from(container.querySelectorAll('[data-mention]'), (chip) => ({
+    chipElements().map((chip) => ({
       name: accessibleName(chip),
       title: chip.getAttribute('title'),
-      tag: chip.tagName,
+      href: chip.getAttribute('href'),
     }))
-  return { container, chips }
+  return { container, chips, chipElements, opened }
 }
 
 const text = 'Run /plans and /codex-tests now, not /tmp, `/review` or src/plans'
 
 describe('skill chips in a sent message', () => {
-  test('a skill text of a skill of either agent is a chip that opens nothing, and every other skill text and code stays text', async () => {
+  test('a skill text of a skill of either agent is a chip that links to its skill tab, and every other skill text and code stays text', async () => {
     const view = await mountText(text, new FakeSkills())
     expect({
       chips: view.chips(),
@@ -96,16 +112,66 @@ describe('skill chips in a sent message', () => {
         {
           name: 'Skill plans',
           title: 'Use before you write or change a plan file.',
-          tag: 'SPAN',
+          href: '/skills/claude/plans',
         },
         {
           name: 'Skill codex-tests',
           title: 'Run the tests of the repository.',
-          tag: 'SPAN',
+          href: '/skills/codex/codex-tests',
         },
       ],
       code: '/review',
       text: 'Run Skill plans/plans and Skill codex-tests/codex-tests now, not /tmp, /review or src/plans',
+    })
+  })
+
+  test('a press on a chip opens the skill of the agent of the message, else of the other agent, and the title follows the same skill', async () => {
+    const both = 'Run /review then /plans'
+    const claude = await mountText(both, new FakeSkills())
+    const codex = await mountText(both, new FakeSkills(), { choice: sol })
+    for (const view of [claude, codex]) {
+      for (const chip of view.chipElements()) await press(chip)
+    }
+    expect({
+      claude: { chips: claude.chips(), opened: claude.opened },
+      codex: { chips: codex.chips(), opened: codex.opened },
+    }).toEqual({
+      claude: {
+        chips: [
+          {
+            name: 'Skill review',
+            title: 'Review the diff of the branch.',
+            href: '/skills/claude/review',
+          },
+          {
+            name: 'Skill plans',
+            title: 'Use before you write or change a plan file.',
+            href: '/skills/claude/plans',
+          },
+        ],
+        opened: [
+          { agent: 'claude', name: 'review' },
+          { agent: 'claude', name: 'plans' },
+        ],
+      },
+      codex: {
+        chips: [
+          {
+            name: 'Skill review',
+            title: 'Review the diff with Codex.',
+            href: '/skills/codex/review',
+          },
+          {
+            name: 'Skill plans',
+            title: 'Use before you write or change a plan file.',
+            href: '/skills/claude/plans',
+          },
+        ],
+        opened: [
+          { agent: 'codex', name: 'review' },
+          { agent: 'claude', name: 'plans' },
+        ],
+      },
     })
   })
 
@@ -137,7 +203,9 @@ describe('skill chips in a sent message', () => {
   })
 
   test('an answer keeps each skill text as text', async () => {
-    const view = await mountText('Run /plans now', new FakeSkills(), true)
+    const view = await mountText('Run /plans now', new FakeSkills(), {
+      answer: true,
+    })
     expect({
       chips: view.chips(),
       text: view.container.textContent,

@@ -27,6 +27,7 @@ import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { choiceOf } from './composerChoice'
+import { chipPointerOf } from './composerPointer'
 import { mentionListFor } from './mentionComposer'
 import { loginOwnerOf, otherStarter, sessionLoginFor } from './sessionStarter'
 import { skillChipFor, skillListFor } from './skillComposer'
@@ -108,14 +109,6 @@ const dropDrafts: Partial<
 
 /** The composer states whose Send leads to the message with its files. */
 const sendsFiles = new Set<ComposerKey>(['attachments', 'too-large'])
-
-/** The states that draw the pointer over the icon of the first chip. */
-const pointerStates = new Set<ComposerKey>([
-  'file-chip-pointer',
-  'skill-chip-pointer',
-  'workspace-link-pointer',
-  'attachment-pointer',
-])
 
 /**
  * The draft of a state with chips: file chips, a skill chip, the chip of
@@ -274,7 +267,7 @@ export function composerFor(
       state.composer === 'drop-over' &&
       viewport === 'desktop',
     caret: drop?.caret ?? addedCaret,
-    pointer: !fresh && pointerStates.has(state.composer),
+    ...chipPointerOf(state.composer, fresh),
     capabilities: workspaceCapabilities(state, viewport),
     menu: { open: state.composer === 'menu', to: paths.capabilitiesMenu },
   }

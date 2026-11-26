@@ -6,7 +6,9 @@ for the list of `/`, and the order of the list. The terms are those of
 [Skill mentions](skill-mentions.md#terms). A skill list decision number,
 such as skill list decision 1, names a decision of the change that adds
 the list of skills, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. A skill tab
+decision number names a decision of the change that adds the
+[skill tabs](skill-tabs.md).
 
 ## The sources of the skills
 
@@ -73,13 +75,19 @@ the list of skills, as
   needs a description, as Codex does, so the Codex list leaves out a skill
   without one.
 - The list holds every skill that the agent loads, except a skill whose
-  name holds white space and a Claude skill that Claude hides from its
-  menu, as said above. The runner warns for a name with white space.
+  name holds white space, a Claude skill that Claude hides from its menu,
+  as said above, and a skill whose `SKILL.md` the runner refuses, as said
+  below. The runner warns for a name with white space.
   Reason: no skill text can hold such a name. A stricter rule for names
   was rejected, because the list would then hide skills that the agent
   runs.
 - A `SKILL.md` that the runner cannot read leaves out only its skill, and
   the runner warns.
+- The same holds for a `SKILL.md` that the runner refuses, such as a link
+  to a file of another name. [The read](skill-tabs.md#the-read) gives this
+  rule, its exception for the org skills, and its reason (skill tab
+  decision 3 B). The agent can still load such a skill, so the list and
+  the agent differ for it.
 - Each list holds each name once. Of two skills with one name, the list
   keeps the one that the agent gives first.
 - The list holds skills only. It holds no built-in command of an agent,

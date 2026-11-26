@@ -300,6 +300,23 @@ socket takes the events of its workspace after its own cursor.
   waits or is late gives the workspace the state `input`, so the header
   says Needs input. The last answer gives back the state from before
   (`followOpenRequests` of `dev/secret-store.ts`).
+- `?skillChips=1` puts a skills report and two sent messages of Cal with
+  skill chips into the history of `checkout-autocomplete`, after its
+  recorded chat, from `dev/skill-tab-routes.ts`. The report lists the
+  Claude skills `findings`, as an org skill, `plans`, as a skill of the
+  repository, and `review`, and the Codex skill `review`, with the texts
+  of `dev/skill-texts.ts`. The first message went to Claude and the second
+  to Codex, so the chip `review` of each opens the skill of its own agent.
+  The skill read route answers as the Worker does: the text, a refusal of
+  a skill that the fake does not hold, and the refusal of a cloud computer
+  that is stopped or starts. `?skillRead=<state>` also puts them in, and
+  gives each read its answer: `gone`, `too-large`, `older-software`,
+  `failed`, or `wait`, which never answers. With `gone`, the report also
+  leaves out `plans`, so its tab shows the name without a description.
+  With `failed`, Try again reads again and fails again, because the tab
+  also reads again after each skills report. Open a tab at its address,
+  such as
+  `http://127.0.0.1:5173/orgs/acme/workspaces/checkout-autocomplete/skills/claude/plans?skillRead=gone`.
 - `?capabilities=<state>` puts the notes of changes of the capabilities
   into the session of `checkout-autocomplete`, from
   `dev/capability-note-seed.ts`, as the pages of `app/capabilities/changed`
@@ -458,3 +475,7 @@ so its default applies.
   switch of the provider account, as `switch-seed.ts` lists them.
 - `switchSave=fail`: each Switch account and Stop switch fails, so the
   question shows its error.
+- `skillChips=1`: `checkout-autocomplete` has a skills report and two sent
+  messages with skill chips, whose skill tabs read the texts of the fake.
+- `skillRead=gone|too-large|older-software|failed|wait`: as `skillChips=1`,
+  and each read of a skill gets that answer in place of its text.

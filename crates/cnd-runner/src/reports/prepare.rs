@@ -3,6 +3,7 @@
 use cnd_runner_interface::file_tree::RunnerFileEvent;
 use cnd_runner_interface::runner::RunnerEvent;
 use cnd_runner_interface::runner_files::RunnerFileResponse;
+use cnd_runner_interface::runner_skills::RunnerSkillResult;
 
 use crate::error::Result;
 
@@ -14,6 +15,8 @@ pub trait ReportFilter: Send + Sync {
     fn report(&self, event: RunnerEvent) -> Result<RunnerEvent>;
     /// Filter displayed file text without changing its request identity or real path.
     fn response(&self, response: RunnerFileResponse) -> Result<RunnerFileResponse>;
+    /// Filter the complete skill text before sending its direct reply.
+    fn skill_response(&self, response: RunnerSkillResult) -> Result<RunnerSkillResult>;
 }
 
 /// Identity preparation for compositions with no known credentials.
@@ -27,6 +30,9 @@ impl ReportFilter for UnfilteredReports {
         Ok(event)
     }
     fn response(&self, response: RunnerFileResponse) -> Result<RunnerFileResponse> {
+        Ok(response)
+    }
+    fn skill_response(&self, response: RunnerSkillResult) -> Result<RunnerSkillResult> {
         Ok(response)
     }
 }

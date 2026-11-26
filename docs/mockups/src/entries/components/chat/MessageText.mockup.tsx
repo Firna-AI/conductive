@@ -137,10 +137,18 @@ function RegisteredMessageText(props: {
   files?: readonly Attachment[]
   mentions?: boolean
   waits?: boolean
+  pointer?: boolean
 }) {
   const files = props.files ?? []
   const parts = useSentParts(props.text, files, props.mentions === true)
-  return <MessageText files={files} parts={parts} waits={props.waits} />
+  return (
+    <MessageText
+      files={files}
+      parts={parts}
+      pointer={props.pointer}
+      waits={props.waits}
+    />
+  )
 }
 
 /**
@@ -153,7 +161,7 @@ export const messageText = defineComponent({
   slug: 'message-text',
   title: 'Message text',
   description:
-    'The text of a message of a member, as typed. Each part in backticks is code, and each link to a workspace of the org is a chip that opens the workspace. Each other web address is a link, and a Markdown link shows as typed. Each mention of a file or a folder is a chip, each skill of the list is a skill chip, and the mention of an attached file shows the chip of that file. The text of an answer is not this part. Its own page shows a message that links a workspace.',
+    'The text of a message of a member, as typed. Each part in backticks is code, and each link to a workspace of the org is a chip that opens the workspace. Each other web address is a link, and a Markdown link shows as typed. Each mention of a file or a folder is a chip, each skill of the list is a skill chip that opens the skill tab, and the mention of an attached file shows the chip of that file. The text of an answer is not this part. Its own page shows a message that links a workspace.',
   relatedDocs: ['docs/mockups/design-chat.md'],
   propSchema: {
     type: 'object',
@@ -167,6 +175,8 @@ export const messageText = defineComponent({
       files: { type: 'array', items: attachmentSchema },
       /** The message waits for the cloud computer. */
       waits: { type: 'boolean' },
+      /** The pointer over the first skill chip, as a view cannot hover. */
+      pointer: { type: 'boolean' },
     },
   } as const,
   props: { text: followUpTask },
@@ -176,8 +186,15 @@ export const messageText = defineComponent({
       slug: 'skill',
       title: 'Skill chip',
       description:
-        'A message of a member that starts with the chip of a skill, which opens nothing.',
+        'A message of a member that starts with the chip of a skill, which opens the skill tab.',
       props: { mentions: true, text: skillChipDraft },
+    },
+    {
+      slug: 'skill-pointer',
+      title: 'Skill chip under the pointer',
+      description:
+        'The pointer is over the skill chip, which takes the fill of a hover, as each chip that opens a page does.',
+      props: { mentions: true, text: skillChipDraft, pointer: true },
     },
     {
       slug: 'mentions',

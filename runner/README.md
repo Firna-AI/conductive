@@ -8,7 +8,8 @@ repository, the listening ports, and the skills of each agent.
 The runner opens one outbound WebSocket to the workspace Durable Object.
 It speaks runner protocol version 2. It sends numbered events. It gets
 turns, messages, interrupts, model changes, file requests, and report
-requests. [Agent runner](../docs/protocol/agent-runner.md) and
+requests. It also gets skill reads by agent and name.
+[Agent runner](../docs/protocol/agent-runner.md) and
 [Model gateway](../docs/protocol/model-gateway.md) state its requirements,
 and the [shared contracts](../src/shared/README.md) define its messages.
 
@@ -19,6 +20,11 @@ says.
 The `hello` advertises every login kind that this runner can run.
 The Worker checks that list before dispatching a turn or message.
 A login kind that a runner does not advertise gets no command, and the turn fails with recovery steps.
+
+The `hello` advertises `skillReads: true` so the Worker can send
+`skill.read`. The runner sends the result outside the chat history.
+[Skill reads](../docs/protocol/skill-tabs.md#skill-reads) gives the command
+and its result.
 
 The `hello` also names the repository folder of the runner, as
 `repositoryFolder`. Only such a runner gets `repository.move`, because an

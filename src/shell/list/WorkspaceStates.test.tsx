@@ -59,6 +59,7 @@ describe('workspace states', () => {
             readOnly: false,
             panel: null,
             resumingAtOpen: false,
+            resuming: false,
             // The header offers no Resume, so it never runs.
             resume: {
               run: () => undefined,

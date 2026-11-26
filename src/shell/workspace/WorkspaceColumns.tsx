@@ -22,6 +22,7 @@ import { useShortcutOffer } from '../shortcuts/shortcut-context'
 import { IconButton } from '../ui/actions'
 import { AppLink } from '../ui/AppLink'
 import type { WorkspaceContext } from './features'
+import { skillPlace } from './skills/skill-address'
 import { shownTool, toolOffered } from './tools/tool-address'
 import workspace from './workspace.module.css'
 
@@ -121,9 +122,11 @@ const shownPhoneTabs = phoneTabs.filter(
 
 /**
  * The view of a phone from the address after the workspace. The address of
- * a hidden tool shows Terminal, with its tab.
+ * a hidden tool shows Terminal, with its tab. The address of a skill tab
+ * shows the skill as a page of the Files tab, as a file is.
  */
 export function phoneView(view: readonly string[]): PhoneView {
+  if (skillPlace(view)) return 'files'
   const named = phoneTabs.find((tab) => tab.view === view[0])?.view ?? 'chat'
   return named === 'chat' || named === 'files' ? named : shownTool(named)
 }

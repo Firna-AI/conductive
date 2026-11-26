@@ -1,25 +1,41 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
-import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
+import type {
+  TemporaryTab,
+  WorkspaceTab,
+  WorkspaceView,
+} from '../../shared/workspace-view'
 import type { OrderedWorkspaceResponse } from '../../shared/workspaces'
 import { afterRestore, isArchived } from './archive-view'
 import type { ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
 import { withView } from './saved-view'
 
+/** A tab that stays at a repository change: a session or a skill tab. */
+function staysAtMove(tab: WorkspaceTab | TemporaryTab | null): boolean {
+  return tab?.kind === 'session' || tab?.kind === 'skill'
+}
+
 /**
- * The view without its file and diff tabs, after a repository change: their
- * paths belong to the folder of the old repository. A file or diff that
- * showed gives its place to the session of the chat.
+ * The view without its file, diff, and Preview tabs, after a repository
+ * change: their paths belong to the folder of the old repository. A tab
+ * that closes and showed gives its place to the session of the chat. A
+ * skill tab stays, as the Worker keeps it in the saved view, and reads the
+ * skill of the new lists.
  */
 function withoutFileTabs(
   view: WorkspaceView,
   activeSessionId: string | null,
 ): WorkspaceView {
-  const tabs = view.tabs.filter((tab) => tab.kind === 'session')
+  const tabs = view.tabs.filter(staysAtMove)
   const active = view.activeTab
-  const showsFile = active !== null && active.kind !== 'session'
-  if (tabs.length === view.tabs.length && !showsFile && !view.temporaryTab)
+  const showsFile = active !== null && !staysAtMove(active)
+  const mark = staysAtMove(view.temporaryTab) ? view.temporaryTab : null
+  if (
+    tabs.length === view.tabs.length &&
+    !showsFile &&
+    mark === view.temporaryTab
+  )
     return view
   const session: WorkspaceTab | null = activeSessionId
     ? { kind: 'session', sessionId: activeSessionId }
@@ -28,7 +44,7 @@ function withoutFileTabs(
     ...view,
     tabs,
     activeTab: showsFile ? session : active,
-    temporaryTab: null,
+    temporaryTab: mark,
   }
 }
 

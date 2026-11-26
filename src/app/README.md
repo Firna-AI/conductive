@@ -18,7 +18,8 @@ pull request bar, and the owner picker. A host can give its own parts, as
 - [The development fake](dev-fake.md) gives the query options of the dev
   wiring in `dev/`, such as `?operator=1`. It also covers its fake routes:
   the uploads and their copies, Create org, feedback, the operator
-  section, the waitlist, the automations, and the workspace numbers.
+  section, the waitlist, the automations, the skill reads, and the
+  workspace numbers.
 - The workspace screen shows the real chat over the dev fake. The fake
   sends no chat event, so a sent message stays pending, and a new session
   adds no tab. It answers each chat write with a recorded reply and

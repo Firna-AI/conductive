@@ -1,0 +1,41 @@
+# The skill reply check lacks a filter test
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 3, finding 114.
+- **Location:** `worker/skills/runner.test.ts`, `worker/chat/runner-read-requests.ts:75-98` (`requestWithAccess`, with the final check at `:94-96`), `worker/skills/runner.ts:87-110` (`RunnerSkillReads.read`), `worker/skills/handler.ts:56-75`, `worker/skills/output.ts:8-27` (`filterSkillText`), `worker/features/skill-reads.test.ts:153-172`.
+- **Reason:** The order of the checks is right today, and the skill tabs branch used both of its review fix rounds.
+
+- **Source:** Review. **Category:** Test.
+- **Terms:**
+  - **Shared read operation:** `requestWithAccess` of `RunnerReadRequests` in `worker/chat/runner-read-requests.ts`. It checks the access of the caller before it sends a read to the runner, and again before it returns the reply.
+  - **Secret filter:** `filterSkillText` in `worker/skills/output.ts`. It hides the secret values and the tokens of the workspace in a skill text. It is async, because it reads the secret values and the tokens first.
+- **Background:**
+  - On 25 November 2026, Cal chose two access checks for each skill read (skill tab decision 4 B). The Worker checks the access of the member right before the send to the runner, and again before it gives the text to the browser.
+  - "The read" in `docs/protocol/skill-tabs.md:82-90` states the rule. A member who loses access meanwhile gets the reply of a member without access, and no text.
+  - In the shared read operation, the parse of the reply runs first, and the final check after it. `return await input.parse(reply)` stands in a `try`, and `await authorize()` in its `finally` (`runner-read-requests.ts:94-96`).
+  - For a skill read, the parse checks the result and runs the secret filter: `parse: (value) => filter(parseSkillResult(value))` (`worker/skills/runner.ts:105`). The route gives the async secret filter (`worker/skills/handler.ts:58`).
+  - So the final check also catches an access that ends while the secret filter runs.
+  - The route test "withholds a skill reply after the requesting member loses access" removes the member before the runner replies (`worker/features/skill-reads.test.ts:153-172`).
+  - The unit tests in `worker/skills/runner.test.ts` use a synchronous filter, `(text) => text`, and an access check that always passes (lines 7-10).
+  - `heldOperation` in `worker/test-support/held-operation.ts` holds an async step until the test releases it. It gives `entered`, `release`, and `wait`.
+- **Problem:** No test fails when the final check moves before the secret filter. The route test ends the access before the reply, so a check before the filter refuses too. The unit tests never end the access.
+- **Impact if no action:** A later change can move the final check before the secret filter, and every test still passes. A member who loses access while the filter runs then gets the skill text.
+- **Root question:** Which test fails when the final access check of a skill read no longer runs after the secret filter?
+- **Options:**
+  - **A.** Add a unit test to `worker/skills/runner.test.ts`.
+    - Read with `RunnerSkillReads.read` and the queue `async () => true` of the existing tests, which sends nothing.
+    - Give a filter that waits on a `heldOperation`.
+    - Give an access check that throws `HttpError(404, 'workspace_not_found', ...)` once the test ends the access.
+    - Deliver a reply with text through `reads.receive`. Wait for `entered`, end the access, then release the filter.
+    - Expect the read to reject with the status 404 and the code `workspace_not_found`, and never to resolve with the text.
+    - Check once that the test fails when `await authorize()` moves before `input.parse(reply)` in `runner-read-requests.ts:94-96`.
+    - Effort: Small.
+  - **B.** Add a route test to `worker/features/skill-reads.test.ts` that holds the secret filter, removes the member, and releases the filter. Cost: a new hold of the filter in `worker/features/entry.test-support.ts`, beside `holdRunnerAccess`. Effort: Medium.
+- **Left out:**
+  - A test for each kind of read through the shared read operation. Only the skill reads use it today, as `plans/follow-ups/file-reads-after-access-ends.md` says.
+  - Only two places can hold the filter: the unit of the skill reads, or the route.
+- **Wider fix:** None. The final check already lives in the one shared read operation, so each read through it gets the same order. The new test guards that order.
+- **Previous examples:** The route test "sends no skill command after the requesting member loses access before dispatch" holds the access check of the send in the same way (`worker/features/skill-reads.test.ts:174-199`).
+- **Recommendation:** A. A unit test holds the filter with no Worker fixture, and it fails when the check moves.
+- **Action:** fix after merge, apply A, because the order is right today, and the skill tabs branch used both of its review fix rounds.

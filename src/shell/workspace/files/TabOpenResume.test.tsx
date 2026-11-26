@@ -2,10 +2,15 @@
 
 import { act } from 'react'
 import { expect, test, vi } from 'vitest'
+import { HeldRequests } from '../../../app/test-kit'
 import type { FilesTab } from '../../../files/navigation'
 import { filePaths } from '../../../shared/files'
 import { workspacePaths } from '../../../shared/workspaces'
-import { byLabel, byRole } from '../../../test-support/dom-queries'
+import {
+  byLabel,
+  byRole,
+  queryAllByRole,
+} from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import {
   FAKE_IDS,
@@ -21,6 +26,7 @@ import {
 import { nextEnvelope } from '../../../test-support/recorded-repairs'
 import { routes } from '../../../app/router'
 import { click, settle } from '../../test-mount'
+import { headerStates } from '../header-test-kit'
 import { linkTo, openTab } from '../wiring-test-kit'
 import { filesHref } from './files-address'
 
@@ -68,6 +74,61 @@ test('resume a stopped sandbox at each open of a diff, also of the one that show
   await settle()
 
   expect(resumes(server)).toBe(3)
+})
+
+test('until the reply of the Resume that the open of a diff sends, the tab waits with no Resume, the header shows Starting, and nothing reads, and a failed Resume shows the stopped state again', async () => {
+  holdAnimationFrames()
+  const server = new FakeApiServer({ workspaceState: 'stopped' })
+  const held = new HeldRequests(server)
+  const { view } = await openTab(server, filesHref(org, id, formDiff), {
+    fetch: held.fetch,
+  })
+  const resumePath = workspacePaths.resume(org, id)
+  // The open of the workspace resumed it. The Resume of the open of the
+  // diff fails.
+  server.json(
+    'POST',
+    resumePath,
+    {
+      error: {
+        code: 'workspace_start_failed',
+        message: "The cloud computer didn't start. Try again.",
+      },
+    },
+    503,
+  )
+  const shown = () => ({
+    page: byRole('region', 'useAddressAutocomplete.ts', view).textContent,
+    resume: queryAllByRole('button', 'Resume', view).length,
+    header: headerStates(view),
+    reads: sent(server, 'GET', filePaths.diff(org, id, hookPath)),
+  })
+
+  held.holdAnswer('POST', resumePath)
+  const changes = byLabel('Changed files', byLabel('Files and tools', view))
+  click(linkTo(changes, filesHref(org, id, hookDiff)))
+  await settle()
+  const waiting = shown()
+  held.release('POST', resumePath)
+  await settle()
+
+  // The header of the page keeps the path and the changed lines.
+  const header = `${hookPath}+64`
+  expect({ resumes: resumes(server), waiting, after: shown() }).toEqual({
+    resumes: 2,
+    waiting: {
+      page: `${header}Waiting for the sandbox`,
+      resume: 0,
+      header: ['Starting'],
+      reads: 0,
+    },
+    after: {
+      page: `${header}Sandbox stoppedYour files and chat are saved.Resume`,
+      resume: 1,
+      header: ['Stopped'],
+      reads: 0,
+    },
+  })
 })
 
 test.each([

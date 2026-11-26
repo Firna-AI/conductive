@@ -149,6 +149,7 @@ export function WorkspaceScreen(props: {
     computer: workspace.archivedComputer?.state,
     removed,
     opened,
+    resumePending: resume.pending,
   })
   const context: WorkspaceContext = {
     org: props.org,
@@ -158,6 +159,7 @@ export function WorkspaceScreen(props: {
     readOnly: suspended || sandbox === 'archived',
     panel: sandboxParts.panel,
     resumingAtOpen: sandboxParts.resumingAtOpen,
+    resuming: sandboxParts.resuming,
     resume,
     viewport,
     view: props.view,
@@ -179,11 +181,8 @@ export function WorkspaceScreen(props: {
   const phone = viewport === 'phone'
   // The state of a sandbox that does not run, in place of a part: the
   // notice of the bar, with the words of a refusal, or the wait of a start,
-  // also while the open resumes the sandbox.
-  const shownState = contentState(
-    sandboxParts.panel,
-    sandboxParts.resumingAtOpen,
-  )
+  // also while a Resume of this visit runs, as of the open or a press.
+  const shownState = contentState(context)
   const down =
     shownState === null ? null : (
       <SandboxPanel

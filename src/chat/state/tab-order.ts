@@ -11,7 +11,9 @@ export type TabPlace = { before: WorkspaceTab } | { after: WorkspaceTab }
 /**
  * The key of a tab, or of the mark of the temporary tab. One file or diff
  * keeps its identity when its display mode changes, so the mark, which
- * names no mode, has the key of its tab. A port has one Preview tab.
+ * names no mode, has the key of its tab. A port has one Preview tab. A
+ * skill tab holds one skill of one agent. No agent holds a `/`, so the key
+ * of a skill with a `/` in its name stays apart from each other key.
  */
 export function tabKey(tab: WorkspaceTab | TemporaryTab): string {
   switch (tab.kind) {
@@ -19,6 +21,8 @@ export function tabKey(tab: WorkspaceTab | TemporaryTab): string {
       return `session:${tab.sessionId}`
     case 'preview':
       return `preview:${tab.port}`
+    case 'skill':
+      return `skill:${tab.agent}/${tab.name}`
     default:
       return `${tab.kind}:${tab.path}`
   }

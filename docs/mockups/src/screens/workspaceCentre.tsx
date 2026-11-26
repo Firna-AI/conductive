@@ -2,10 +2,13 @@ import type { ReactNode } from 'react'
 import { defined } from '../defined'
 import type { FileTabView } from '../components/files/FilesPanel'
 import { filePage } from '../entries/components/files/FilePage.mockup'
+import { skillPage } from '../entries/components/files/SkillPage.mockup'
+import { plansAgent } from '../fixtures/skillFiles'
 import { paths } from '../paths'
 import { PreviewPage } from '../components/tools/PreviewPage'
 import { SandboxPanel } from '../components/workspace/SandboxNotice'
 import { openFile } from './workspaceFileTab'
+import { openSkill, showsSkillText } from './workspaceSkillTab'
 import { filePlaceholder } from './workspaceParts'
 import { panelState } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
@@ -27,11 +30,27 @@ function expandedScreen(file: FileTabView): string | undefined {
 
 /**
  * What the centre of the desktop shows under the tab row: the file or the
- * diff of a file tab, the page of the Preview tab (decision 288), or else
- * the chat. While the sandbox does not run, the Preview tab shows the
- * sandbox state in place of the page, with its action.
+ * diff of a file tab, the skill of a skill tab, the page of the Preview tab
+ * (decision 288), or else the chat. While the sandbox does not run, the
+ * Preview tab shows the sandbox state in place of the page, with its
+ * action. A skill tab shows the state of the sandbox as a file tab does.
+ * While it shows no text, such as while its text loads, a stopped sandbox
+ * takes the place of its notice too, as `filePlaceholder` says.
  */
 export function centreOf(state: WorkspaceState, chat: ReactNode): ReactNode {
+  const skill = openSkill(state)
+  if (skill) {
+    return (
+      <skillPage.Component
+        agent={plansAgent}
+        moklyInstance="skill-page"
+        view={skill}
+        {...defined({
+          placeholder: filePlaceholder(state, true, showsSkillText(skill)),
+        })}
+      />
+    )
+  }
   const file = openFile(state)
   if (file) {
     return (
