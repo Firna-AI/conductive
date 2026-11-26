@@ -8,23 +8,64 @@ export interface Token {
   text: string
 }
 
-type Mode =
-  | { kind: 'code' }
-  | { kind: 'comment'; close: string }
-  | { kind: 'string'; close: string; multiline: boolean }
+type StringMode = {
+  kind: 'string'
+  close: string
+  multiline: boolean
+  escapes: boolean
+}
+
+type Mode = { kind: 'code' } | { kind: 'comment'; close: string } | StringMode
 
 const code: Mode = { kind: 'code' }
 const numberToken =
   /0[xX][\da-fA-F_]+|0[bB][01_]+|\d[\d_]*(?:\.\d[\d_]*)?(?:[eE][+-]?\d+)?/y
 const wordToken = /[A-Za-z_$][\w$]*/y
 
-/** The index of `close` from `from`, skipping characters after a backslash. */
-function closeAt(line: string, close: string, from: number): number {
+/**
+ * Finds the closer and skips backslash escapes when enabled.
+ * Each candidate quote for a Rust raw string scans a separate run of hashes.
+ */
+function closeAt(
+  line: string,
+  close: string,
+  from: number,
+  escapes: boolean,
+): number {
+  const first = close[0]
   for (let index = from; index < line.length; index += 1) {
-    if (line[index] === '\\') index += 1
-    else if (line.startsWith(close, index)) return index
+    const char = line[index]
+    if (escapes && char === '\\') index += 1
+    else if (char === first && line.startsWith(close, index)) return index
   }
   return -1
+}
+
+function stringAt(
+  line: string,
+  index: number,
+  rules: Language['strings'],
+): { open: string; mode: StringMode } | null {
+  for (const rule of rules) {
+    const delimiters =
+      'match' in rule
+        ? rule.match(line, index)
+        : line.startsWith(rule.open, index)
+          ? rule
+          : null
+    if (delimiters) {
+      return {
+        open: delimiters.open,
+        mode: {
+          kind: 'string',
+          close: delimiters.close,
+          multiline: rule.multiline,
+          escapes: rule.escapes ?? true,
+        },
+      }
+    }
+  }
+  return null
 }
 
 function wordKind(word: string, language: Language): TokenKind {
@@ -58,9 +99,9 @@ export function highlightLines(
       if (mode.kind !== 'code') {
         const kind = mode.kind
         const end =
-          kind === 'comment'
+          mode.kind === 'comment'
             ? line.indexOf(mode.close, index)
-            : closeAt(line, mode.close, index)
+            : closeAt(line, mode.close, index, mode.escapes)
         if (end < 0) {
           add(kind, line.slice(index))
           break
@@ -90,25 +131,23 @@ export function highlightLines(
         index = apostrophe.end
         continue
       }
-      const string = language.strings.find((rule) =>
-        line.startsWith(rule.open, index),
-      )
+      const string = stringAt(line, index, language.strings)
       if (string) {
         add('string', string.open)
         index += string.open.length
-        mode = { kind: 'string', ...string }
+        mode = string.mode
         continue
       }
       const pattern = /\d/.test(line[index]) ? numberToken : wordToken
       pattern.lastIndex = index
-      const match = /[\w$]/.test(line[index - 1] ?? '')
+      const text = /[\w$]/.test(line[index - 1] ?? '')
         ? null
-        : pattern.exec(line)
-      if (match) {
+        : (language.rawIdentifier?.(line, index) ?? pattern.exec(line)?.[0])
+      if (text) {
         const kind =
-          pattern === numberToken ? 'number' : wordKind(match[0], language)
-        add(kind, match[0])
-        index += match[0].length
+          pattern === numberToken ? 'number' : wordKind(text, language)
+        add(kind, text)
+        index += text.length
         continue
       }
       add('plain', line[index])

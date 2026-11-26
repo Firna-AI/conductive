@@ -1,13 +1,24 @@
 import { rustApostrophe, type ApostropheToken } from './rust-apostrophe'
 
+interface StringDelimiters {
+  open: string
+  close: string
+}
+
+type StringRule = { multiline: boolean; escapes?: boolean } & (
+  | StringDelimiters
+  | { match: (line: string, index: number) => StringDelimiters | null }
+)
+
 /** The syntax rules of one language family, for the code view. */
 export interface Language {
   lineComments: readonly string[]
   blockComments: readonly (readonly [string, string])[]
   /** Openers and closers of strings. Multi-line strings can span lines. */
-  strings: readonly { open: string; close: string; multiline: boolean }[]
+  strings: readonly StringRule[]
   /** Reads a character literal or a lifetime at an apostrophe. */
   apostrophe?: (line: string, index: number) => ApostropheToken | null
+  rawIdentifier?: (line: string, index: number) => string | null
   keywords: ReadonlySet<string>
   /** Keywords match in any case, as in SQL. */
   anyCase: boolean
@@ -55,10 +66,32 @@ const cFamily: Language = {
     var virtual void volatile when where while`),
 }
 
+const rustRawString = /(?:[bc])?r(#*)"/y
+const rustRawIdentifier = /r#[\p{XID_Start}_]\p{XID_Continue}*/uy
+
+function matchAt(pattern: RegExp, line: string, index: number) {
+  pattern.lastIndex = index
+  return pattern.exec(line)
+}
+
 const rust: Language = {
   ...cStyle,
-  strings: [{ open: '"', close: '"', multiline: true }],
+  strings: [
+    {
+      match: (line, index) => {
+        const opener = matchAt(rustRawString, line, index)
+        return opener && { open: opener[0], close: '"' + opener[1] }
+      },
+      escapes: false,
+      multiline: true,
+    },
+    { open: 'b"', close: '"', multiline: true },
+    { open: 'c"', close: '"', multiline: true },
+    { open: '"', close: '"', multiline: true },
+  ],
   apostrophe: rustApostrophe,
+  rawIdentifier: (line, index) =>
+    matchAt(rustRawIdentifier, line, index)?.[0] ?? null,
   keywords: words(`abstract as async await become box break const continue
     crate do dyn else enum extern false final fn for gen if impl in let loop
     macro match mod move mut override priv pub ref return self Self static
