@@ -165,6 +165,14 @@ export interface ImageBuild {
   completedAt: Timestamp | null
   durationMs: number | null
   error: string | null
+  /**
+   * The size and the free space in bytes of the disk that a good build
+   * leaves for each new cloud computer. Null while the build runs, after a
+   * failure, when the measurement failed, for a build of another provider
+   * account, and from an older Worker, which leaves them out.
+   */
+  storageTotalBytes: number | null
+  storageFreeBytes: number | null
 }
 export interface BuildLogEvent {
   eventNumber: number

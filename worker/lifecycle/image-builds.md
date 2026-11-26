@@ -171,6 +171,22 @@ step saved.
   `withImageSourceCleanup(env, fetch, hooks)` from `image-sources/members.ts`,
   as the [source loader](repository-layout.md#the-source-loader) says.
 
+## Free storage
+
+The save step of each build and refresh measures the free storage of the
+image, as [The org image](../../docs/protocol/org-image.md#the-org-image)
+requires. While the job has no snapshot name, `measureImageStorage` in
+[`image-storage.ts`](image-storage.ts) runs `df` on the home folder after
+the command journals are removed. `saveImageStorage` writes the size and
+the "Avail" bytes to `image_builds.storage_total_bytes` and
+`storage_free_bytes`. A repeat of the step writes the same columns again.
+A failed or unreadable `df` records the `image_storage_unmeasured` warning
+and leaves both columns null, and the save goes on.
+
+`BUILD_STORAGE_COLUMNS` gives the two fields of `ImageBuild` to the build
+list and the build snapshot. It returns them only for a good build of the
+org's current provider account, and null for every other row.
+
 ## Step records
 
 Each build and refresh writes the job step records of

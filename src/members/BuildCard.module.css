@@ -26,6 +26,13 @@
   font-size: var(--ui-text-md);
 }
 
+/* The free storage of a good build, beside its result. */
+.storage {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
 .body {
   display: flex;
   flex-direction: column;
@@ -95,9 +102,11 @@
 
 .build {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 2px 12px;
   min-height: 30px;
+  padding: 4px 0;
 }
 
 .build + .build {

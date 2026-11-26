@@ -27,6 +27,8 @@ const done: ImageBuild = {
   completedAt: now - 8 * 3_600_000,
   durationMs: 401_000,
   error: null,
+  storageTotalBytes: null,
+  storageFreeBytes: null,
 }
 // The newest build failed, so the view shows its log without a spinner. The
 // continuous animation of Firna's spinner keeps an async `act` from settling

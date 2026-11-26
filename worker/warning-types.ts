@@ -30,6 +30,7 @@ export const SIMPLE_WARNINGS = {
     'A private service transfer was discarded. The runner connection stays open.',
   runner_service_negotiation_unavailable:
     'Service support could not be negotiated. The runner connection continues without services.',
+  image_storage_unmeasured: 'The free storage of a build was not measured.',
   provider_switch_wake_failed:
     'The provider account switch remains saved for its next image alarm.',
   provider_accounts_invalid:

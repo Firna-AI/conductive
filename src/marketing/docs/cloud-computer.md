@@ -405,6 +405,8 @@ An [automatic software update](#apply-setup-changes) adds support for these name
 
 A successful build updates the starting setup for new workspaces.
 A failed build keeps the last successful setup.
+Each successful build shows the free storage that it leaves for new workspaces, such as "31.2 GB free of 50.1 GB".
+Use it to check that your repositories and install script leave enough space.
 Existing workspaces keep their files.
 
 Selecting **Done** after you add repositories starts a build automatically.

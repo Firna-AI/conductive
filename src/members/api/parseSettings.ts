@@ -12,6 +12,7 @@ import type { SkillFolderClash } from '../../shared/skill-folders'
 import {
   count,
   countOrNull,
+  optionalCount,
   flag,
   list,
   nested,
@@ -133,6 +134,8 @@ function imageBuild(value: unknown): ImageBuild {
     completedAt: countOrNull(source, 'completedAt'),
     durationMs: countOrNull(source, 'durationMs'),
     error: textOrNull(source, 'error'),
+    storageTotalBytes: optionalCount(source, 'storageTotalBytes'),
+    storageFreeBytes: optionalCount(source, 'storageFreeBytes'),
   }
 }
 

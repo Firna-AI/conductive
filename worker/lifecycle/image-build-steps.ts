@@ -17,6 +17,7 @@ import {
 } from './repository-locations'
 import { readRepositories } from './settings-data'
 import { IMAGE_BUILD_TIME_LIMIT_MS, JobTimeLimit } from './job-time-limit'
+import { measureImageStorage, saveImageStorage } from './image-storage'
 
 export async function advanceBuildStep(
   runtime: ImageRuntime,
@@ -57,8 +58,11 @@ export async function advanceBuildStep(
   )
     throw new JobTimeLimit('build')
   if (job.phase === 'snapshot') {
-    if (job.snapshotName === null)
+    if (job.snapshotName === null) {
       await clearImageCommands(provider, job.sandboxId)
+      const storage = await measureImageStorage(provider, job.sandboxId)
+      if (storage) await saveImageStorage(env.DB, buildId, storage)
+    }
     await requireActiveOrg(env.DB, orgId)
     const snapshot = await createResource(
       runtime.env.DB,

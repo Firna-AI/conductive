@@ -50,6 +50,8 @@ const goodBuild: ImageBuild = {
   completedAt: FAKE_TIME - 3 * hour + 401_000,
   durationMs: 401_000,
   error: null,
+  storageTotalBytes: null,
+  storageFreeBytes: null,
 }
 
 /**

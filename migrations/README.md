@@ -101,6 +101,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Parallel image sources | `202611161200`–`202611161259` |
 | Sub-workspaces | `202611161700`–`202611161759` |
 | Merge queue | `202611231200`–`202611231259` |
+| Build free storage | `202611261200`–`202611261259` |
 
 ## Key code
 
@@ -642,3 +643,11 @@ inserts get null. The migration changes no existing column, default, or
 constraint, so the previous Worker keeps working. The
 [source loader](../worker/lifecycle/repository-layout.md#the-source-loader)
 owns these records.
+
+`202611261200_image_build_storage.sql` adds the nullable integer columns
+`image_builds.storage_total_bytes` and `image_builds.storage_free_bytes`.
+They hold the size and the free space of the disk of a build, which the
+build measures before it saves the image. Existing rows keep null. The
+previous Worker does not read or write them, so it keeps working.
+[Image builds](../worker/lifecycle/image-builds.md#free-storage) says how
+the Worker fills them.

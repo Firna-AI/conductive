@@ -64,6 +64,8 @@ function buildOf(
     completedAt: durationMs === null ? null : startedAt + durationMs,
     durationMs,
     error,
+    storageTotalBytes: null,
+    storageFreeBytes: null,
   }
 }
 

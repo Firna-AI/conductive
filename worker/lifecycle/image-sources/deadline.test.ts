@@ -9,6 +9,7 @@ import { readOrgImage } from '../org-image-data'
 import { nativeImageRuntime } from './image-runtime-test-support'
 import { localSourceFixture } from './local-source-test-support'
 import { readSourceJob } from './source-data'
+import { STORAGE_COMMAND } from '../image-storage'
 
 const privateKey = generateKeyPairSync('rsa', { modulusLength: 2048 })
   .privateKey.export({ type: 'pkcs1', format: 'pem' })
@@ -82,11 +83,13 @@ it('returns each alarm while native Git runs and renews the builder before allow
           ?.tokenCiphertext,
       ).toBeNull()
       order.push(
-        !detached
-          ? 'cleanup'
-          : command.includes('/tmp/conductive-install.sh')
-            ? 'install'
-            : 'software',
+        command === STORAGE_COMMAND
+          ? 'storage'
+          : !detached
+            ? 'cleanup'
+            : command.includes('/tmp/conductive-install.sh')
+              ? 'install'
+              : 'software',
       )
     }
     let complete = false
@@ -95,7 +98,7 @@ it('returns each alarm while native Git runs and renews the builder before allow
       complete = await advance()
     }
     expect(complete).toBe(true)
-    expect(order).toEqual(['software', 'install', 'cleanup'])
+    expect(order).toEqual(['software', 'install', 'cleanup', 'storage'])
     expect(
       (await readBuild(fixture.env.DB, fixture.org.id, fixture.input.buildId))
         .build.state,

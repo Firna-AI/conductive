@@ -112,22 +112,47 @@ export const newEnvVar = { name: 'SENTRY_DSN', value: 'https://sentry.example' }
 
 type BuildResult = 'succeeded' | 'failed'
 
-export type Build = { when: string; result: BuildResult; duration: string }
+/**
+ * A build that ended. A good build also gives the free storage that its
+ * image leaves for each new cloud computer, measured before the save.
+ */
+export type Build = {
+  when: string
+  result: BuildResult
+  duration: string
+  storage?: string
+}
 
 /** The newest good build, which every workspace starts from. */
 export const lastBuild: Build = {
   when: '8 hours ago',
   result: 'succeeded',
   duration: '6m 41s',
+  storage: '31.2 GB free of 50.1 GB',
 }
 
 /** The builds of the computer, newest first. */
 export const buildHistory: readonly Build[] = [
   lastBuild,
-  { when: 'Yesterday', result: 'succeeded', duration: '6m 02s' },
+  {
+    when: 'Yesterday',
+    result: 'succeeded',
+    duration: '6m 02s',
+    storage: '31.6 GB free of 50.1 GB',
+  },
   { when: '3 Nov', result: 'failed', duration: '2m 18s' },
-  { when: '3 Nov', result: 'succeeded', duration: '5m 57s' },
-  { when: '28 Oct', result: 'succeeded', duration: '7m 13s' },
+  {
+    when: '3 Nov',
+    result: 'succeeded',
+    duration: '5m 57s',
+    storage: '33.0 GB free of 50.1 GB',
+  },
+  {
+    when: '28 Oct',
+    result: 'succeeded',
+    duration: '7m 13s',
+    storage: '33.4 GB free of 50.1 GB',
+  },
 ]
 
 /** The build that runs, in that state. */
@@ -164,6 +189,7 @@ export const firstGoodBuild: Build = {
   when: '1 minute ago',
   result: 'succeeded',
   duration: '4m 52s',
+  storage: '41.8 GB free of 50.1 GB',
 }
 
 /**

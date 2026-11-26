@@ -144,6 +144,8 @@ function readBuild(value: unknown): ImageBuild {
     completedAt: maybeCount(build, 'completedAt'),
     durationMs: maybeCount(build, 'durationMs'),
     error: maybeText(build, 'error'),
+    storageTotalBytes: maybeCount(build, 'storageTotalBytes'),
+    storageFreeBytes: maybeCount(build, 'storageFreeBytes'),
   }
 }
 

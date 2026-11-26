@@ -14,7 +14,9 @@ decision number names a dated record, as
 decision number names a decision of the change that adds E2B as the second
 [sandbox provider](workspaces-and-sandboxes.md#the-provider), as that doc
 says. A switch decision number names a decision of the change that adds
-[Switch account](switch-account.md), as that doc says.
+[Switch account](switch-account.md), as that doc says. A storage decision
+number names a decision of the change that shows the free storage of a
+build.
 
 ## The org image
 
@@ -85,6 +87,26 @@ says. A switch decision number names a decision of the change that adds
   when that build succeeds, as [The first build](#the-first-build) says.
 - The Cloud computer tab lists the builds, each with its time, its result,
   and its length.
+- Each good build also shows the free storage that its image leaves for
+  each new cloud computer, with the size of the disk, such as "31.2 GB
+  free of 50.1 GB" (storage decision 1). Reason: an admin then sees when
+  the install script and the repositories fill the disk.
+- A build measures the free storage just before it saves the image. The
+  free storage is the space that the user of the cloud computer can write,
+  on the disk of the home folder.
+- A failed build shows no free storage, because it does not replace the
+  image. A build without a measurement, such as a build from before the
+  measurement, shows none either.
+- The free storage only informs. When the measurement fails, the build
+  goes on and shows no free storage. Reason: a failed measurement does not
+  make the image wrong.
+- After the org moves to another provider account, the builds of the
+  earlier account show no free storage. Reason: they measured another
+  disk.
+- A log line with the free storage, and a list of the size of each
+  repository folder, were rejected (storage decision 1). Reason: the card
+  hides the log of a good build, and the size list adds time to each
+  build.
 - A push to the default branch of a chosen repository refreshes the org
   image, at most once in 30 minutes. A daily timer refreshes it too. Each
   automatic refresh needs an admin who is not suspended, as
