@@ -75,42 +75,44 @@ Depends on: none
 The admin build card and the member build card show the free storage of
 a good build.
 
-- [ ] Add the free storage to the build result of a good build in
+- [x] Add the free storage to the build result of a good build in
       `docs/mockups/src/components/settings/BuildHistory.tsx` and the card
       head in `BuildSection.tsx`, with fixture values.
-- [ ] Show the same text on the member card mockups.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed entries.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+- [x] Show the same text on the member card mockups.
+- [x] Run `npm run mockups:check`. Smoke-test the changed entries.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. On a phone, the free storage of a history row wraps
+      under its time, so each row got a small padding.
 
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
-- [ ] State the requirement in `docs/protocol/org-image.md`: the build
+- [x] State the requirement in `docs/protocol/org-image.md`: the build
       list gives each good build its free storage, with storage decision 1
       and the design calls that are requirements.
-- [ ] Update the guide `src/marketing/docs/cloud-computer.md`.
-- [ ] Read the Terms and Privacy pages in full. Change a sentence only when
+- [x] Update the guide `src/marketing/docs/cloud-computer.md`.
+- [x] Read the Terms and Privacy pages in full. Change a sentence only when
       it restates the changed fact.
 
 ## Milestone 3: Measure and store the free storage
 
 Depends on: 2
 
-- [ ] Add a migration with two nullable `image_builds` columns for the
+- [x] Add a migration with two nullable `image_builds` columns for the
       total bytes and the free bytes. Reserve its range in
       `migrations/README.md`, and describe it there.
-- [ ] Measure with `df` in the save step, before the snapshot, only while
+- [x] Measure with `df` in the save step, before the snapshot, only while
       the build has no snapshot name. Store both numbers. On a failure,
       record a warning and continue.
-- [ ] Return `storageTotalBytes` and `storageFreeBytes` from the build
+- [x] Return `storageTotalBytes` and `storageFreeBytes` from the build
       list and the build snapshot queries, only for a good build of the
       current provider account. Add them to `ImageBuild` and its reader as
       nullable fields that an older Worker can leave out.
-- [ ] Add Worker tests: a stored number, a failed measurement, a refresh,
-      and a build of another provider account.
-- [ ] Update `worker/lifecycle/image-builds.md`.
+- [x] Add Worker tests: a stored number, a failed measurement, and a
+      build of another provider account. The refresh test checks that a
+      refresh runs the measurement too.
+- [x] Update `worker/lifecycle/image-builds.md`.
 
 ## Milestone 4: Show the free storage
 
@@ -118,19 +120,19 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] Show the free storage on the admin card in
+- [x] Show the free storage on the admin card in
       `src/shell/settings/BuildParts.tsx` and `BuildCard.tsx`.
-- [ ] Show it on the member card in `src/members/BuildCard.tsx`.
-- [ ] Add values to the dev fakes, and add tests for the text.
-- [ ] Check both cards in a browser and save a screenshot under
+- [x] Show it on the member card in `src/members/BuildCard.tsx`.
+- [x] Add values to the dev fakes, and add tests for the text.
+- [x] Check both cards in a browser and save a screenshot under
       `.context/build-free-storage/`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `CLAUDE.md`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run the targeted tests and the complete gate named in `CLAUDE.md`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record

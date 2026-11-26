@@ -185,6 +185,8 @@ describe('the org settings of a member who is not an admin', () => {
       state: 'succeeded',
       completedAt: FAKE_TIME,
       durationMs: 134_000,
+      storageTotalBytes: 50_100_000_000,
+      storageFreeBytes: 31_200_000_000,
     }
     server.json('GET', buildPath(org, running.id), { build: ended, log: more })
     server.json('GET', orgSettingsPaths.builds(org), history(ended))
@@ -201,7 +203,7 @@ describe('the org settings of a member who is not an admin', () => {
       head: expect.stringContaining('Building · 2m 14s') as unknown,
       followed: 'Cloning 3 repositories\nadded 1184 packages\n',
       ended: expect.stringContaining(
-        'Last build Just now Succeeded in 2m 14s',
+        'Last build Just now Succeeded in 2m 14s 31.2 GB free of 50.1 GB',
       ) as unknown,
     })
   })

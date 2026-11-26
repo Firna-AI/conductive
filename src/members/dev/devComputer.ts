@@ -30,6 +30,11 @@ const MINUTE = 60_000
 const HOUR = 60 * MINUTE
 const DAY = 24 * HOUR
 
+/** The free storage of a good build: each later build fills a little more. */
+function storageFree(ago: number): number {
+  return 31_200_000_000 + Math.round(ago / HOUR) * 10_000_000
+}
+
 function finished(
   id: string,
   ago: number,
@@ -49,6 +54,8 @@ function finished(
       state === 'failed'
         ? 'The install script stopped with exit code 1.'
         : null,
+    storageTotalBytes: state === 'succeeded' ? 50_100_000_000 : null,
+    storageFreeBytes: state === 'succeeded' ? storageFree(ago) : null,
   }
 }
 

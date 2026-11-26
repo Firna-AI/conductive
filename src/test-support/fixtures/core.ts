@@ -170,6 +170,8 @@ export function coreFixtures(role: OrgRole = 'admin') {
       completedAt: FAKE_TIME,
       durationMs: 401_000,
       error: null,
+      storageTotalBytes: 50_100_000_000,
+      storageFreeBytes: 31_200_000_000,
     },
     log: [
       {

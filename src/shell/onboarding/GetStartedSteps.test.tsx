@@ -120,6 +120,8 @@ describe('the steps of Get started', () => {
       completedAt: FAKE_TIME - 582_000,
       durationMs: 138_000,
       error: 'The cloud computer image could not build.',
+      storageTotalBytes: null,
+      storageFreeBytes: null,
     }
     const started: ImageBuild = {
       ...failed,

@@ -26,6 +26,8 @@ export function buildOf(
     completedAt: ended ? FAKE_TIME - ago + 60_000 : null,
     durationMs: ended ? 60_000 : null,
     error: state === 'failed' ? 'The install script failed.' : null,
+    storageTotalBytes: null,
+    storageFreeBytes: null,
   }
 }
 

@@ -17,7 +17,7 @@ export const buildResult = defineComponent({
   slug: 'build-result',
   title: 'Build result',
   description:
-    'The result of a build that ended: its length, in green when it succeeded, or in rose with an icon when it failed. Its own page shows the newest good build of Acme.',
+    'The result of a build that ended: its length, in green when it succeeded, or in rose with an icon when it failed. A good build also shows the free storage that its image leaves, with the size of the disk. Its own page shows the newest good build of Acme.',
   relatedDocs: ['docs/mockups/catalogue.md'],
   propSchema: {
     type: 'object',
@@ -46,7 +46,7 @@ export const buildHistory = defineComponent({
   slug: 'build-history',
   title: 'Build history',
   description:
-    'The builds of the cloud computer that ended, newest first, in a fold with their count: each build with its time and its result. It shows once a build has ended. Its own page shows the open history of Acme.',
+    'The builds of the cloud computer that ended, newest first, in a fold with their count: each build with its time and its result, and the free storage of a good build. It shows once a build has ended. Its own page shows the open history of Acme.',
   relatedDocs: ['docs/mockups/catalogue.md'],
   propSchema: {
     type: 'object',

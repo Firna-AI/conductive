@@ -1,4 +1,5 @@
 import { ChevronRight, CircleAlert } from 'lucide-react'
+import { buildStorage } from '../app/build-storage'
 import { changeWaits } from '../app/repository-changes'
 import type {
   BuildLogEvent,
@@ -25,6 +26,7 @@ function length(build: ImageBuild): string {
   return formatDuration(build.durationMs ?? end - build.startedAt)
 }
 
+/** The result of a build, and the free storage of a good build. */
 function Result(props: { build: ImageBuild }) {
   if (props.build.state === 'failed') {
     return (
@@ -35,8 +37,15 @@ function Result(props: { build: ImageBuild }) {
       />
     )
   }
+  const storage = buildStorage(props.build)
   return (
-    <StatusText label={`Succeeded in ${length(props.build)}`} tone="success" />
+    <>
+      <StatusText
+        label={`Succeeded in ${length(props.build)}`}
+        tone="success"
+      />
+      {storage ? <span className={styles.storage}>{storage}</span> : null}
+    </>
   )
 }
 

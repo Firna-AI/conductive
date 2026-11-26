@@ -46,6 +46,8 @@ function build(
     completedAt: ended ? now - ago + 60_000 : null,
     durationMs: ended ? 60_000 : null,
     error: null,
+    storageTotalBytes: null,
+    storageFreeBytes: null,
   }
 }
 

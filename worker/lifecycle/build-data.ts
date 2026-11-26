@@ -15,6 +15,7 @@ import type { SavedScript } from './saved-script'
 import { readBuildChanges } from './build-changes-data'
 import { writeBuildEnd } from './build-end-data'
 import type { SwitchBuildFailure } from './provider-switch-end'
+import { BUILD_STORAGE_COLUMNS } from './image-storage'
 
 export type BuildPhase =
   | 'create'
@@ -76,7 +77,7 @@ const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state, b.start
 
 const buildColumns = `id, org_id AS orgId, kind, state, started_at AS startedAt,
   completed_at AS completedAt, CASE WHEN completed_at IS NULL THEN NULL
-  ELSE completed_at - started_at END AS durationMs, error`
+  ELSE completed_at - started_at END AS durationMs, error, ${BUILD_STORAGE_COLUMNS}`
 
 export async function readBuildJob(
   db: D1Database,
