@@ -138,6 +138,29 @@ describe('the colours of a code block', () => {
     })
   })
 
+  it('colours a labelled code block while the answer streams', async () => {
+    const fence = '```rust\n'
+    const { container, rerender } = await mount(
+      <AgentText id="agent:1" live text={fence + 'fn main() {'} />,
+    )
+    const updates = [
+      { text: 'fn main() {\n\tlet gree', strings: [] },
+      { text: 'fn main() {\n\tlet greeting = "hi";\n}', strings: ['"hi"'] },
+    ]
+    for (const { text, strings } of updates) {
+      await rerender(<AgentText id="agent:1" live text={fence + text} />)
+      const [pre] = container.querySelectorAll('pre')
+      expect(
+        {
+          text: pre?.textContent,
+          keywords: keywordsOf(pre),
+          strings: textsOf(pre, codeStyles.string),
+        },
+        text,
+      ).toEqual({ text, keywords: ['fn', 'let'], strings })
+    }
+  })
+
   it('gives Explain the text of a coloured block as the agent wrote it', async () => {
     const explained = {
       [messageAttributes.chat]: 'chat',

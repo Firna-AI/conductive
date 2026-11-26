@@ -20,7 +20,8 @@ export interface Language {
   apostrophe?: (line: string, index: number) => ApostropheToken | null
   rawIdentifier?: (line: string, index: number) => string | null
   keywords: ReadonlySet<string>
-  /** Keywords match in any case, as in SQL. */
+  builtInTypes?: ReadonlySet<string>
+  /** Keywords and built-in types match in any case, as in SQL. */
   anyCase: boolean
   /** Names that start with a capital letter show as types. */
   capitalTypes: boolean
@@ -97,6 +98,8 @@ const rust: Language = {
     macro match mod move mut override priv pub ref return self Self static
     struct super trait true try type typeof unsafe unsized use virtual where
     while yield`),
+  builtInTypes: words(`bool char str i8 i16 i32 i64 i128 isize
+    u8 u16 u32 u64 u128 usize f32 f64`),
 }
 
 const hashComments = {

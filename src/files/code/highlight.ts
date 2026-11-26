@@ -71,6 +71,7 @@ function stringAt(
 function wordKind(word: string, language: Language): TokenKind {
   const key = language.anyCase ? word.toLowerCase() : word
   if (language.keywords.has(key)) return 'keyword'
+  if (language.builtInTypes?.has(key)) return 'type'
   return language.capitalTypes && /^[A-Z]/.test(word) ? 'type' : 'plain'
 }
 

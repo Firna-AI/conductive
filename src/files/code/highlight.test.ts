@@ -25,6 +25,34 @@ it('uses Rust keywords in Rust file tabs', () => {
   ])
 })
 
+it('colours Rust primitive types and keeps raw names and number suffixes plain', () => {
+  const tokens = highlightLines(
+    ['fn valid(ch: char) -> bool', 'let r#bool: usize = 250u64 as usize;'],
+    languageOf('lib.rs'),
+  )
+  expect(tokens).toEqual([
+    [
+      { kind: 'keyword', text: 'fn' },
+      { kind: 'plain', text: ' valid(ch: ' },
+      { kind: 'type', text: 'char' },
+      { kind: 'plain', text: ') -> ' },
+      { kind: 'type', text: 'bool' },
+    ],
+    [
+      { kind: 'keyword', text: 'let' },
+      { kind: 'plain', text: ' r#bool: ' },
+      { kind: 'type', text: 'usize' },
+      { kind: 'plain', text: ' = ' },
+      { kind: 'number', text: '250' },
+      { kind: 'plain', text: 'u64 ' },
+      { kind: 'keyword', text: 'as' },
+      { kind: 'plain', text: ' ' },
+      { kind: 'type', text: 'usize' },
+      { kind: 'plain', text: ';' },
+    ],
+  ])
+})
+
 it('keeps Rust lifetimes plain and colours character literals as strings', () => {
   const lines = [
     "impl<'a> Tool for Weather<'a> {",

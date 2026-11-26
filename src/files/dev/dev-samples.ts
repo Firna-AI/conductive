@@ -44,13 +44,13 @@ const { suggestions, loading } = useAddressAutocomplete(line1)
 
 ## Tests
 
-\`\`\`bash
+\`\`\`
 npm test
 \`\`\`
 
 ### End-to-end tests
 
-\`\`\`bash
+\`\`\`
 npx playwright test
 \`\`\`
 `

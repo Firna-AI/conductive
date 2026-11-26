@@ -80,6 +80,8 @@ requirement settles it or it has a clearly best option.
     such as `as`, `dyn`, `async`, and `unsafe`, and without `new`, `null`,
     or `this`. Reason: the mockups showed `::new` as a keyword, and Rust
     shares the C family list today. Mockup finding 2 B.
+    Rust primitive types show the type colour (review finding 3 C,
+    26 November 2026).
 15. One shared part draws coloured lines with line feeds between them,
     `CodeText` in `src/files/code/`, beside `TokenSpans`. The chat, the
     file preview, and the mockups use it. Reason: the mockups built
