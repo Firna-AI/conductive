@@ -211,8 +211,8 @@ Depends on: 1, 2, 3, 4
 
 - [ ] Run the targeted tests, the complete gate, and the Rust checks named
       in `CLAUDE.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
