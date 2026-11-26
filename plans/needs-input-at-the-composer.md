@@ -477,9 +477,9 @@ session tab.
       the workspace, and the marked tab shows the request.
 - [x] Check `docs/protocol/chat-and-events.md` "The work of a turn" and the
       architecture doc for sentences that restate the old place.
-- [ ] Read the Terms page and the Privacy page in full. Update each
+- [x] Read the Terms page and the Privacy page in full. Update each
       sentence that restates a changed fact.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
+- [x] Read each public guide in `src/marketing/docs/` in full. Update each
       sentence that restates a changed fact.
 - [x] Check each relative link of the changed Markdown files.
 

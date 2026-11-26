@@ -145,7 +145,7 @@ Archived workspaces keep a faint grey mark.
 
 A light runs around the mark while the agent works, the workspace starts, or the checks run.
 The moving light means that you do not need to act.
-The mark turns blue and pulses when the agent needs input.
+The mark turns blue and pulses when a request needs a member's answer.
 The pull request bar still shows the state of the pull request.
 With reduced motion, a still ring means the agent works or the workspace starts.
 A still blue middle column means it needs input.
@@ -153,10 +153,15 @@ Bold workspace names mark unread output.
 
 The command palette and workspace links use the same marks.
 
+On a computer, select a workspace's row to return to the tab you last viewed there.
+On a phone, the workspace opens at the chat.
+Open a marked session tab to find its requests above the message box.
+
 Sessions in one workspace share its files and branch.
 Use **+** for a new conversation on that same task.
 
 - [Use sessions and chat](/docs/sessions-and-chat)
+- [Find and answer requests](/docs/sessions-and-chat#find-and-answer-requests)
 
 ## Copy a workspace link
 
