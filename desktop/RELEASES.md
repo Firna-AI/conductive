@@ -126,7 +126,7 @@ A release happens in these steps:
 
 The publish job uploads the two ZIP files, their block maps, the two DMG files, and `latest-mac.yml`.
 Each signed release names its DMGs `Conductive-mac-arm64.dmg` and `Conductive-mac-x64.dmg`, without the version.
-`desktop/scripts/release.ts` builds a DMG-only electron-builder override from `macDmgNames` in [the shared brand module](../docs/mockups/src/brand.ts).
+`desktop/scripts/release.ts` builds a DMG-only electron-builder override from `macDmgNames` in [the shared brand module](../src/shared/brand.ts).
 The ZIP files and their block maps keep the versioned names from `artifactName` in `electron-builder.yml`.
 `latest-mac.yml` keeps its name.
 Ad-hoc packages also keep the names from `artifactName`.
@@ -214,7 +214,7 @@ After that, the app updates itself.
 ## Updates
 
 electron-updater reads the GitHub releases of `Firna-AI/conductive`.
-The [shared brand file](../docs/mockups/src/brand.ts) holds that name for the update feed, the publish step, and the site's download links.
+The [shared brand file](../src/shared/brand.ts) holds that name for the update feed, the publish step, and the site's download links.
 The `publish` block of `electron-builder.yml` repeats it.
 Releases up to `v0.8.0` read the old name of the repository, `Firna-AI/remote-code`.
 GitHub redirects the old name to the new one.

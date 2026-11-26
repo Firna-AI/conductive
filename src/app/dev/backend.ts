@@ -1,5 +1,5 @@
 import type { Workspace } from '../../shared/generated/Workspace'
-import { orgSuspendedReason } from '../../../docs/mockups/src/components/orgs/suspension'
+import { orgSuspendedReason } from '../../ui/components/orgs/suspension'
 import { orgPath } from '../../shared/api'
 import type { WorkspaceEvent } from '../../shared/events'
 import { leaveOrgPath } from '../../shared/orgs'
@@ -17,8 +17,7 @@ export interface DevBackend {
   /** The time now, in Unix milliseconds. It starts at `FAKE_TIME`. */
   readonly now: () => number
   readonly newId: () => string
-  /** The newest event number in the shared development stream. */
-  readonly eventNumber: number
+  readonly events: FakeWorkspaceEvents
   /** Sends a live event of a workspace to each open stream. */
   readonly emit: (workspaceId: string, event: WorkspaceEvent) => void
 }
@@ -29,20 +28,15 @@ export function createBackend(
   now: () => number,
   newId: () => string,
 ): DevBackend {
-  // The filter keeps no event, so the call copies no history.
-  const eventNumber = () =>
-    events.history(Number.MAX_SAFE_INTEGER).throughEventNumber
   return {
     state,
     now,
     newId,
-    get eventNumber() {
-      return eventNumber()
-    },
+    events,
     emit: (workspaceId, event) => {
       events.emit({
         workspaceId,
-        eventNumber: eventNumber() + 1,
+        eventNumber: events.last(workspaceId) + 1,
         occurredAt: now(),
         event,
       })
@@ -122,9 +116,8 @@ export function workspaceDetail(
 
 /**
  * Puts a changed workspace in its place in the list, and sends it to the
- * open tabs. A stream sends its whole history when it opens, and the app
- * applies each `workspace.updated` again. So every change sends one, and
- * the last one of each workspace is its state now. An Archive gives the
+ * open tabs. A read gives the current record and its cutoff. A stream
+ * sends the updates after its cursor. An Archive gives the
  * live workspaces under the archived one its section and its place, as
  * the Worker does.
  */

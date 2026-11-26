@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, beforeEach, expect, it } from 'vitest'
+import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest'
 
 import { createApp } from './application'
 import { SOFTWARE } from './lifecycle/backend-test-support'
@@ -22,13 +22,111 @@ beforeAll(async () => {
 beforeEach(async () => {
   fixture = await realRuntimeFixture(bundle)
 })
-afterEach(async () => fixture.dispose())
+afterEach(async () => {
+  vi.restoreAllMocks()
+  await fixture.dispose()
+})
 
 const event: ScheduledController = {
   cron: '*/15 * * * *',
   scheduledTime: 0,
   noRetry() {},
 }
+
+it.each([
+  {
+    step: 'feedback sends',
+    query: 'DELETE FROM feedback_sends',
+    kind: 'feedback_send_cleanup_failed',
+    message:
+      'Feedback send record cleanup failed. It runs again at the next timer.',
+    remaining: [],
+  },
+  {
+    step: 'Codex devices',
+    query: 'DELETE FROM codex_devices',
+    kind: 'codex_device_cleanup_failed',
+    message: 'Codex device cleanup failed. It runs again at the next timer.',
+    remaining: [],
+  },
+  {
+    step: 'job records',
+    query: 'DELETE FROM job_steps',
+    kind: 'job_record_cleanup_failed',
+    message:
+      'The deletion of old job step records failed. It runs again at the next timer.',
+    remaining: ['expired-job', 'expired-job'],
+  },
+])(
+  'continues maintenance and warns once when $step cleanup fails',
+  async (failure) => {
+    const now = Date.now()
+    const db = fixture.env.DB
+    const old = now - 90 * 86_400_000 - 1
+    await db.batch([
+      db
+        .prepare(
+          `INSERT INTO job_steps (job_id, step, job_kind, org_id, started_at)
+         VALUES ('expired-job', 'phase:machine', 'resume', 'runtime-org', ?)`,
+        )
+        .bind(old),
+      db
+        .prepare(
+          `INSERT INTO job_runs (job_id, run_number, job_kind, org_id, phase, began_at, ended_at)
+         VALUES ('expired-job', 1, 'resume', 'runtime-org', 'machine', ?, ?)`,
+        )
+        .bind(old, old),
+    ])
+    const queries = [
+      ['DELETE FROM feedback_sends', 'feedback sends'],
+      ['DELETE FROM codex_devices', 'Codex devices'],
+      ['DELETE FROM job_steps', 'job records'],
+      ['purge_after AS deletesAt', 'deleted org purge'],
+      ['SELECT w.id FROM workspaces w WHERE', 'lifecycle alarm repair'],
+      ['SELECT DISTINCT provider_account AS account', 'software image repair'],
+      ["FROM approval_emails WHERE state = 'pending'", 'approval email retry'],
+    ] as const
+    const calls: string[] = []
+    const failing = new Proxy(db, {
+      get(target, property, receiver) {
+        if (property !== 'prepare')
+          return Reflect.get(target, property, receiver)
+        return (sql: string) => {
+          const step = queries.find(([query]) => sql.includes(query))?.[1]
+          if (step) calls.push(step)
+          if (sql.includes(failure.query))
+            throw new Error('Private cleanup error marker')
+          return target.prepare(sql)
+        }
+      },
+    })
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    await expect(
+      createApp({
+        now: () => now,
+        fetch: withSoftwareRelease(fixture.boat.fetch),
+      }).scheduled(event, { ...fixture.env, DB: failing }),
+    ).resolves.toBeUndefined()
+    expect(calls).toEqual([
+      'feedback sends',
+      'Codex devices',
+      'job records',
+      'deleted org purge',
+      'lifecycle alarm repair',
+      'software image repair',
+      'approval email retry',
+    ])
+    const left = await db
+      .prepare(
+        'SELECT job_id AS id FROM job_steps UNION ALL SELECT job_id AS id FROM job_runs',
+      )
+      .all<{ id: string }>()
+    expect(left.results.map((row) => row.id)).toEqual(failure.remaining)
+    expect(warn.mock.calls).toEqual([
+      [{ kind: failure.kind, message: failure.message }],
+    ])
+  },
+)
 
 it('starts a lifted org daily refresh at the next scheduled repair', async () => {
   const runtime = workspaceRuntime(fixture.env)

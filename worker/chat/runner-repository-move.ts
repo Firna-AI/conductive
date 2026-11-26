@@ -72,40 +72,49 @@ export class RepositoryMoves {
     ChatDependencies,
     'readRepository' | 'readBranches' | 'randomId'
   >
+  private readonly persist: (active: ActiveRunner) => Promise<void>
 
   constructor(
     dependencies: Pick<
       ChatDependencies,
       'readRepository' | 'readBranches' | 'randomId'
     >,
+    persist: (active: ActiveRunner) => Promise<void>,
   ) {
     this.dependencies = dependencies
+    this.persist = persist
   }
 
   /** Turns wait while the folders differ. One move goes to each connection. */
   async check(active: ActiveRunner): Promise<RepositoryCheck> {
-    if (active.repositoryFolder === undefined)
+    if (active.state.repositoryFolder === undefined)
       return { state: 'ready', repository: null }
-    const record = await this.dependencies.readRepository(active.workspace.id)
+    const record = await this.dependencies.readRepository(
+      active.state.workspace.id,
+    )
     if (!record) return { state: 'ready', repository: null }
     const { repository, folders } = record
-    if (repository.folder === active.repositoryFolder)
+    if (repository.folder === active.state.repositoryFolder)
       return { state: 'ready', repository }
     // A folder outside the stored folders comes from older start variables,
     // not from a repository change. The runner keeps it, as before.
-    if (!folders.includes(active.repositoryFolder))
+    if (!folders.includes(active.state.repositoryFolder))
       return { state: 'ready', repository: null }
-    const move = active.repositoryMove
+    const move = active.state.repositoryMove
     if (move?.refused) return { state: 'refused' }
     if (move?.folder === repository.folder) return { state: 'wait' }
-    const branches = await this.dependencies.readBranches(active.workspace.id)
+    const branches = await this.dependencies.readBranches(
+      active.state.workspace.id,
+    )
     if (!branches) return { state: 'wait' }
     const commandId = this.dependencies.randomId()
-    active.repositoryMove = {
+    active.state.repositoryMove = {
       commandId,
       folder: repository.folder,
       refused: false,
     }
+    // Save before the send, so a wake cannot repeat the move on this socket.
+    await this.persist(active)
     await active.peer.send({
       type: 'repository.move',
       commandId,
@@ -116,16 +125,20 @@ export class RepositoryMoves {
   }
 
   /** A refused move keeps the runner in its folder until the next hello. */
-  refused(active: ActiveRunner, reply: IncomingRepositoryMoveRefused): void {
+  async refused(
+    active: ActiveRunner,
+    reply: IncomingRepositoryMoveRefused,
+  ): Promise<void> {
     warnWorker({
       kind: 'runner_repository_move_refused',
-      workspaceId: WarningId.checked(active.workspace.id),
+      workspaceId: WarningId.checked(active.state.workspace.id),
       reason: reply.reason,
     })
-    active.repositoryMove = {
+    active.state.repositoryMove = {
       commandId: reply.commandId,
-      folder: active.repositoryMove?.folder ?? '',
+      folder: active.state.repositoryMove?.folder ?? '',
       refused: true,
     }
+    await this.persist(active)
   }
 }

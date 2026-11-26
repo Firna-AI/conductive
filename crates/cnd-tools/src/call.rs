@@ -9,6 +9,7 @@ use cnd_runner_interface::tools::{
     secrets::RunWithSecretsRequest,
     session_actions::{AgentCloseSessionRequest, AgentRenameSessionRequest},
     session_reads::{AgentListSessionsRequest, AgentReadSessionRequest},
+    session_watches::AgentWatchSessionRequest,
     sessions::{AgentCreateSessionRequest, AgentSendMessageRequest},
     workspaces::{
         AgentCreateWorkspaceRequest, AgentListWorkspacesRequest, AgentMoveWorkspaceRequest,
@@ -18,7 +19,7 @@ use cnd_runner_interface::tools::{
 
 use crate::process::CommandInput;
 
-/// The 26 public tool identities.
+/// The 27 public tool identities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum Name {
@@ -42,6 +43,7 @@ pub(crate) enum Name {
     RenameSession,
     CloseSession,
     StopSession,
+    WatchSession,
     GetMessage,
     CreateSection,
     DeleteSection,
@@ -73,6 +75,7 @@ pub(crate) enum Call {
     RenameSession(String, String, AgentRenameSessionRequest),
     CloseSession(String, String, AgentCloseSessionRequest),
     StopSession(String, String),
+    WatchSession(String, String, AgentWatchSessionRequest),
     GetMessage(String, String, String),
     CreateSection(AgentCreateSectionRequest),
     DeleteSection(String),
@@ -104,6 +107,7 @@ impl Call {
             Self::RenameSession(..) => Name::RenameSession,
             Self::CloseSession(..) => Name::CloseSession,
             Self::StopSession(..) => Name::StopSession,
+            Self::WatchSession(..) => Name::WatchSession,
             Self::GetMessage(..) => Name::GetMessage,
             Self::CreateSection(..) => Name::CreateSection,
             Self::DeleteSection(..) => Name::DeleteSection,

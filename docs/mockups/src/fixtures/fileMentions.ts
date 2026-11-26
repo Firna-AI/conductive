@@ -1,15 +1,7 @@
+import type { MentionEntry } from '../../../../src/ui/components/chat/mentionEntry'
+import type { TextBlock } from '../../../../src/chat/markdown/agent-blocks'
+import { code, p } from './agentText'
 import type { ChatItem } from './conversations'
-
-/**
- * A file or a folder of the branch, as the kept file tree has it: its path
- * inside the repository. The list of `@` and the chips read these entries.
- */
-export type MentionEntry = {
-  path: string
-  folder: boolean
-  /** The tab that a press on the chip of this file shows, when drawn. */
-  preview?: 'code' | 'markdown' | 'screenshot'
-}
 
 /**
  * The folder of the repository of Checkout address autocomplete in its
@@ -62,12 +54,14 @@ export const mentionEntries: readonly MentionEntry[] = [
 
 /**
  * The drafts of the list of `@`. The text after the last `@` is the query.
- * `none` names no file, and `start` has no query yet.
+ * `none` names no file, and `start` has no query yet. `omitted` names
+ * tsconfig.json, which a limited tree leaves out.
  */
 export const mentionDrafts = {
   query: 'Reuse the postcode check from @addr',
   start: 'Compare the lookup with @',
   none: 'Reuse the postcode check from @zipcode',
+  omitted: 'Turn on strict mode in @tsconfig',
 } as const
 
 /**
@@ -93,9 +87,19 @@ const mentionAsk =
  * The answer of the agent. Its mentions and the path `src/lib` in code show
  * as file chips, and the function name stays code.
  */
-const mentionAnswer: readonly string[] = [
-  'I moved the lookup into a new `lookupAddress` function in @src/lib/ and kept @src/app/checkout/useAddressAutocomplete.ts as a thin wrapper, so the address form did not change.',
-  'The cart can now import `lookupAddress` from `src/lib`. The checkout tests still pass.',
+const mentionAnswer: readonly TextBlock[] = [
+  p(
+    'I moved the lookup into a new ',
+    code('lookupAddress'),
+    ' function in @src/lib/ and kept @src/app/checkout/useAddressAutocomplete.ts as a thin wrapper, so the address form did not change.',
+  ),
+  p(
+    'The cart can now import ',
+    code('lookupAddress'),
+    ' from ',
+    code('src/lib'),
+    '. The checkout tests still pass.',
+  ),
 ]
 
 /**

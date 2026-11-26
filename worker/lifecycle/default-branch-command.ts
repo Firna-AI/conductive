@@ -4,13 +4,22 @@ import {
   commitAuthorEnvironment,
 } from '../../src/shared/commit-author'
 import { shellQuote } from './commands'
+import { fetchBranchCommand } from './fetch-branch-command'
+import {
+  BASE_BRANCH_MISSING_EXIT,
+  START_BRANCH_MISSING_EXIT,
+} from './start-branch-failure'
 
 export function defaultBranchCommand(input: {
   directory: string
   defaultBranch: string
+  startBranch?: string
+  baseBranch?: string
   turnId: string
   sender: Pick<User, 'githubId' | 'githubLogin' | 'displayName'>
 }): string {
+  const startBranch = input.startBranch ?? input.defaultBranch
+  const baseBranch = input.baseBranch ?? input.defaultBranch
   const identity = Object.entries(
     commitAuthorEnvironment(commitAuthor(input.sender)),
   )
@@ -33,6 +42,7 @@ if [ -z "$conductive_remote_refs" ]; then
     fi
   fi
 fi
-git fetch origin ${shellQuote(`+refs/heads/${input.defaultBranch}:refs/remotes/origin/${input.defaultBranch}`)}
-git symbolic-ref refs/remotes/origin/HEAD ${shellQuote(`refs/remotes/origin/${input.defaultBranch}`)}`
+${fetchBranchCommand(startBranch, START_BRANCH_MISSING_EXIT)}
+${baseBranch === startBranch ? '' : fetchBranchCommand(baseBranch, BASE_BRANCH_MISSING_EXIT)}
+git symbolic-ref refs/remotes/origin/HEAD ${shellQuote(`refs/remotes/origin/${baseBranch}`)}`
 }

@@ -24,7 +24,7 @@ mac:
 dmg:
   writeUpdateInfo: false
 publish:
-  # Keep owner and repo equal to sourceRepository in docs/mockups/src/brand.ts.
+  # Keep owner and repo equal to sourceRepository in src/shared/brand.ts.
   provider: github
   owner: Firna-AI
   repo: conductive

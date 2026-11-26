@@ -1,5 +1,4 @@
 import {
-  IDLE_MS,
   LIFECYCLE_STATE_KEY,
   TURN_HEARTBEAT_MS,
   type DurableLifecycleState,
@@ -71,7 +70,9 @@ export async function scheduleLifecycleState(
     return
   }
   if (state.startStop === 'pending') {
-    await storage.setAlarm(now() + 30_000)
+    // A held start waits for this stop, so the check comes sooner.
+    const held = (await hooks.startHeld?.()) ?? false
+    await storage.setAlarm(now() + (held ? 5_000 : 30_000))
     return
   }
   const startPending = (await hooks.startPending?.()) ?? false
@@ -88,7 +89,7 @@ export async function scheduleLifecycleState(
           ? now() + 5_000
           : state.runningSessions.length
             ? now() + TURN_HEARTBEAT_MS
-            : state.lastActivityAt + IDLE_MS
+            : state.lastActivityAt + (await hooks.idleMs())
   if (alarm === null || state.state === 'archived') await storage.deleteAlarm()
   else {
     const next = Math.min(

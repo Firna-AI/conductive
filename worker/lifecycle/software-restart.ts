@@ -6,7 +6,7 @@ import {
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import { orgProviderForAccount } from '../sandbox/client'
-import type { SandboxProvider } from '../sandbox/provider'
+import type { CommandResult } from '../sandbox/provider'
 import type { WorkspaceTarget } from '../previews/types'
 import { terminalRestartCommand } from '../terminal/support'
 import { warnWorker } from '../warnings'
@@ -77,15 +77,34 @@ export async function changeRestart(
   )
 }
 
-async function checkForUpdates(
-  provider: SandboxProvider,
-  sandboxId: string,
-): Promise<RestartWorkspaceResponse['updateCheck']> {
+async function commandSucceeded(
+  run: (command: string) => Promise<CommandResult>,
+  command: string,
+): Promise<boolean> {
   try {
-    const result = await provider.runCommand(sandboxId, UPDATE_CHECK_COMMAND)
-    return result.exitCode === 0 && !result.timedOut ? 'ok' : 'failed'
+    const result = await run(command)
+    return result.exitCode === 0 && !result.timedOut
   } catch {
-    return 'failed'
+    return false
+  }
+}
+
+export async function runSoftwareRestart(
+  run: (command: string) => Promise<CommandResult>,
+): Promise<RestartWorkspaceResponse> {
+  const checked = await commandSucceeded(run, UPDATE_CHECK_COMMAND)
+  if (!(await commandSucceeded(run, RESTART_COMMAND))) throw restartFailed()
+  return { updateCheck: checked ? 'ok' : 'failed' }
+}
+
+export async function refreshAfterRestart(
+  target: WorkspaceTarget,
+  refresh: (target: WorkspaceTarget) => Promise<void>,
+): Promise<void> {
+  try {
+    await refresh(target)
+  } catch {
+    warnWorker({ kind: 'terminal_restart_refresh_failed' })
   }
 }
 
@@ -106,7 +125,8 @@ export async function restartWorkspaceSoftware(input: {
   await requireActiveOrg(env.DB, orgId)
   await requireOrgMember(env.DB, orgId, userId)
   const row = await readWorkspace(env.DB, orgId, workspaceId)
-  if (row.archivedAt !== null || !row.sandboxId) throw workspaceNotRunning()
+  const sandboxId = row.sandboxId
+  if (row.archivedAt !== null || !sandboxId) throw workspaceNotRunning()
   await requireActiveWorkspaceOwner(env.DB, row.ownerUserId, orgId)
   const provider = await orgProviderForAccount(
     env,
@@ -116,29 +136,24 @@ export async function restartWorkspaceSoftware(input: {
     row.providerAccount,
   )
   await input.step('begin')
-  const updateCheck = await checkForUpdates(provider, row.sandboxId)
-  const restarted = await provider
-    .runCommand(row.sandboxId, RESTART_COMMAND)
-    .then(
-      (result) => result.exitCode === 0 && !result.timedOut,
-      () => false,
-    )
-  if (!restarted) {
-    await input.step('fail')
-    throw restartFailed()
-  }
+  let result: RestartWorkspaceResponse
   try {
-    await input.step({
-      terminal: {
-        orgId,
-        workspaceId,
-        sandboxId: row.sandboxId,
-        providerAccount: row.providerAccount,
-        state: row.state,
-      },
-    })
-  } catch {
-    warnWorker({ kind: 'terminal_restart_refresh_failed' })
+    result = await runSoftwareRestart((command) =>
+      provider.runCommand(sandboxId, command),
+    )
+  } catch (error) {
+    await input.step('fail')
+    throw error
   }
-  return { updateCheck }
+  await refreshAfterRestart(
+    {
+      orgId,
+      workspaceId,
+      sandboxId,
+      providerAccount: row.providerAccount,
+      state: row.state,
+    },
+    (terminal) => input.step({ terminal }),
+  )
+  return result
 }

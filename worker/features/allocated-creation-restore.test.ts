@@ -44,6 +44,10 @@ it.each(['ready', 'fetch'] as const)(
       configuration: RETAINED_CONFIGURATION,
     }))
     const { id, sessionId } = await admitRetainedCreation(active)
+    if (phase === 'ready')
+      active.boat.afterCreate = async (sandboxId) => {
+        active.boat.states.set(sandboxId, 'provisioning')
+      }
     const original = await advanceRetainedCreation(active, id, phase)
     const sandboxId = string(original.allocatedSandboxId)
     const commandsBefore = active.boat.commands.length

@@ -5,16 +5,20 @@ import type {
   CreateAutomationRequest,
   Automation,
   AutomationAuthorFilterInput,
+  AutomationCapabilities,
   AutomationTrigger,
   AutomationTriggerInput,
   UpdateAutomationRequest,
 } from '../shared/automations'
 import type { Section } from '../shared/sections'
 import { cronProblem } from './automation-cron'
+import { withPreapproval } from './capabilities-model'
 
 /**
  * An automation as its owner edits it. The triggers hold logins, as a save
  * sends them, and no cron for a preset, which the Worker computes.
+ * `capabilities` holds the chosen secrets, which each run workspace starts
+ * with as pre-approvals.
  */
 export interface AutomationDraft {
   name: string
@@ -23,6 +27,7 @@ export interface AutomationDraft {
   sectionId: string
   prompt: string
   choice: AgentChoice
+  capabilities: AutomationCapabilities
   timeZone: string
   triggers: readonly AutomationTriggerInput[]
 }
@@ -63,15 +68,17 @@ export function draftOf(automation: Automation): AutomationDraft {
     sectionId: automation.sectionId,
     prompt: automation.prompt,
     choice: automation.choice,
+    capabilities: automation.capabilities,
     timeZone: automation.timeZone,
     triggers: automation.triggers.map(triggerInputOf),
   }
 }
 
 /**
- * The draft of a new automation: active, without a name, a prompt, or a
- * trigger, in the first chosen repository of the org and its General
- * section, with the owner's default model and the time zone of the browser.
+ * The draft of a new automation: active, without a name, a prompt, a chosen
+ * secret, or a trigger, in the first chosen repository of the org and its
+ * General section, with the owner's default model and the time zone of the
+ * browser.
  */
 export function newAutomationDraft(defaults: {
   repositories: readonly Repository[]
@@ -90,13 +97,43 @@ export function newAutomationDraft(defaults: {
     sectionId: general?.id ?? '',
     prompt: '',
     choice: defaults.choice,
+    capabilities: { preapprovedSecretIds: [] },
     timeZone: defaults.timeZone,
     triggers: [],
   }
 }
 
+/** The draft with one chosen secret added or taken out. */
+export function withChosenSecret(
+  draft: AutomationDraft,
+  secretId: string,
+  on: boolean,
+): AutomationDraft {
+  const { preapprovedSecretIds } = draft.capabilities
+  return {
+    ...draft,
+    capabilities: {
+      preapprovedSecretIds: withPreapproval(preapprovedSecretIds, secretId, on),
+    },
+  }
+}
+
 function sameList(a: readonly string[], b: readonly string[]): boolean {
   return a.length === b.length && a.every((item, index) => item === b[index])
+}
+
+/**
+ * Whether two lists of chosen secrets name the same secrets. The order does
+ * not count: the Worker gives them in its own order, and a check that the
+ * owner takes back leaves the secrets as they were.
+ */
+function sameCapabilities(
+  a: AutomationCapabilities,
+  b: AutomationCapabilities,
+): boolean {
+  const left = new Set(a.preapprovedSecretIds)
+  const right = new Set(b.preapprovedSecretIds)
+  return left.size === right.size && [...left].every((id) => right.has(id))
 }
 
 function sameAuthors(
@@ -180,6 +217,7 @@ export const draftFields: FieldEqualities<AutomationDraft> = {
   sectionId: Object.is,
   prompt: Object.is,
   choice: sameChoice,
+  capabilities: sameCapabilities,
   timeZone: Object.is,
   triggers: sameTriggers,
 }
@@ -188,7 +226,10 @@ export function sameDraft(a: AutomationDraft, b: AutomationDraft): boolean {
   return Object.keys(updateRequest(a, b)).length === 0
 }
 
-/** The request that creates an automation from its draft. */
+/**
+ * The request that creates an automation from its draft. It names the
+ * chosen secrets, also when the list is empty.
+ */
 export function createRequest(draft: AutomationDraft): CreateAutomationRequest {
   return { ...draft, triggers: [...draft.triggers] }
 }
@@ -197,6 +238,8 @@ export function createRequest(draft: AutomationDraft): CreateAutomationRequest {
  * The fields of the draft that differ from the saved automation. The Worker
  * keeps each field that an update leaves out. So an edit sends Active only
  * when the owner changed it, and keeps a turn-off of the app since the read.
+ * It sends the chosen secrets only when the owner changed which secrets
+ * they are, and then the whole list.
  */
 export function updateRequest(
   saved: AutomationDraft,
@@ -211,6 +254,10 @@ export function updateRequest(
   if (changed('sectionId')) request.sectionId = draft.sectionId
   if (changed('prompt')) request.prompt = draft.prompt
   if (changed('choice')) request.choice = draft.choice
+  if (changed('capabilities')) {
+    const { preapprovedSecretIds } = draft.capabilities
+    request.capabilities = { preapprovedSecretIds: [...preapprovedSecretIds] }
+  }
   if (changed('timeZone')) request.timeZone = draft.timeZone
   if (changed('triggers')) request.triggers = [...draft.triggers]
   return request

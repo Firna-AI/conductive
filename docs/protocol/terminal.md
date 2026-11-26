@@ -36,6 +36,9 @@ terminals at `app/tools` and its child pages.
 - Reason: a member can run two commands at once, such as a dev server and
   a test run, with no tmux keys. The members share the chat sessions in
   the same way.
+- A server can also run as a [service](services.md), which the Preview tool
+  lists. A service is no terminal. It has no shell and no screen, and it
+  does not count toward the limit of 10 terminals.
 - A private list of terminals for each member was rejected. A hidden shell
   still holds its ports and its memory, and the other members cannot see
   why. The privacy exists only in the app, because every shell runs as the
@@ -128,24 +131,30 @@ terminals at `app/tools` and its child pages.
 - Reason: a + there would open a copy of the first shell. A row with one
   tab, no close button, and no + gives the user nothing.
 - This lasts until the terminal service of a newer release starts, at a
-  later start of the sandbox or at a [Restart](restart-the-software.md)
-  (terminal tabs decision 6 B). An automatic software update brings that
-  release. An install while the workspace is idle does not restart the
-  terminal service, as
+  later start of the sandbox or at a restart of the software (terminal
+  tabs decision 6 B). [Restart the software](restart-the-software.md)
+  gives each kind of restart that restarts the terminal service. An
+  automatic software update brings that release. An install while the
+  workspace is idle does not restart the terminal service, as
   [Installs at idle](sandbox-software.md#installs-at-idle) says.
-- After a Restart, the Terminal tool shows the row of terminal tabs with no
-  reload when the new terminal service opens several shells.
+- After a restart of the software, the Terminal tool shows the row of
+  terminal tabs with no reload when the new terminal service opens several
+  shells.
 - Reason: Restart is the control that a member presses to apply new
   software, and it keeps every shell. Terminal tabs only at a later start
   were rejected, because a member of a workspace that stays on then waits
   for a stop and a resume.
-- An automatic restart of the terminal service while no terminal is
-  connected was rejected. It needs a new privileged command, a block of
-  new connections, and a notice to the other tabs. A terminal ID inside
-  the data stream of each connection, so that an older terminal service
-  opens several shells, was rejected too. It adds a second path for the
-  terminal ID, which needs its own security review, and a sandbox with
-  even older terminal software still waits.
+- A restart of the terminal service alone, which the Worker starts by
+  itself while no terminal is connected, was rejected. It needs a new
+  privileged command, a block of new connections, and a notice to the
+  other tabs. The
+  [automatic restart](restart-the-software.md#automatic-restart) is not
+  that option. It restarts the terminal service together with the agent
+  runner and the preview relay.
+- A terminal ID inside the data stream of each connection, so that an
+  older terminal service opens several shells, was rejected too. It adds a
+  second path for the terminal ID, which needs its own security review,
+  and a sandbox with even older terminal software still waits.
 - Terminal 1 is the shell that such software opens. So an update of the
   software ends no running shell.
 - A Mac app build from before terminal tabs keeps one working terminal,

@@ -38,22 +38,12 @@ it('ends a timed-out resume and blocks later startup until durable stop cleanup 
   expect(fixture.boat.stopIds).toEqual(['bx_1', 'bx_1'])
   expect(await start.retry()).toBe(false)
   fixture.boat.failStop = false
+  // The refused Try again waits for the cleanup, and starts at its end.
   await start.tick(deadlineAt + 60_000)
-  expect(fixture.boat.states.get('bx_1')).toBe('archived')
-  expect(await start.actor.readLifecycle()).toMatchObject({
-    state: 'error',
-    error: timeout,
-  })
-  await start.tick(deadlineAt + 65_000)
-  expect(await start.actor.readLifecycle()).toMatchObject({
-    state: 'error',
-    error: timeout,
-  })
-  expect(await start.retry()).toBe(true)
-  expect(fixture.boat.commands).toHaveLength(commands)
-  await start.tick(deadlineAt + 66_000)
-  expect(fixture.boat.resumeIds).toEqual(['bx_1', 'bx_1'])
   expect(fixture.boat.stopIds).toEqual(['bx_1', 'bx_1', 'bx_1'])
+  expect(fixture.boat.resumeIds).toEqual(['bx_1', 'bx_1'])
+  expect(await start.job()).toMatchObject({ attempt: 'later-resume' })
+  expect(await start.retry()).toBe(false)
 })
 
 it('keeps a failed resume after late runner readiness and permits a safe new ready attempt', async () => {
@@ -120,8 +110,8 @@ it('completes cancellation while failed stops retry beyond the original resume d
   expect(await start.wait()).toEqual(cancelled)
   expect(await start.retry()).toBe(false)
   fixture.boat.failStop = false
+  // The refused Try again waits for the cleanup, and starts at its end.
   await start.tick(deadlineAt + 330_000)
-  expect(fixture.boat.states.get('bx_1')).toBe('archived')
-  expect((await start.actor.readLifecycle())?.state).toBe('stopped')
-  expect(await start.retry()).toBe(true)
+  expect(fixture.boat.resumeIds).toEqual(['bx_1', 'bx_1'])
+  expect(await start.job()).toMatchObject({ attempt: 'later-resume' })
 })

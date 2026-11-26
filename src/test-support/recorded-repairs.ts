@@ -1,5 +1,6 @@
 import type { RunnerReportKind } from '../shared/generated/RunnerReportKind'
 import { detectedServers } from '../../docs/mockups/src/fixtures/previews'
+import { skills } from '../../docs/mockups/src/fixtures/skills'
 import type { RunnerEventRefused } from '../shared/chat-events'
 import type { WorkspaceEvent, WorkspaceEventEnvelope } from '../shared/events'
 import type { FakeWorkspaceEvents } from './fake-events'
@@ -66,6 +67,8 @@ export function fullReport(kind: RunnerReportKind): WorkspaceEvent {
       return { type: kind, name: 'Checkout address autocomplete' }
     case 'ports.updated':
       return { type: kind, ports: detectedServers }
+    case 'skills.updated':
+      return { type: kind, skills: { claude: skills, codex: skills } }
   }
 }
 
@@ -75,8 +78,7 @@ export function nextEnvelope(
   event: WorkspaceEvent,
   occurredAt: number,
 ): WorkspaceEventEnvelope {
-  // The filter keeps no event, so the call copies no history.
-  const last = events.history(Number.MAX_SAFE_INTEGER).throughEventNumber
+  const last = events.last(FAKE_IDS.workspace)
   return {
     workspaceId: FAKE_IDS.workspace,
     eventNumber: last + 1,
@@ -116,6 +118,7 @@ const minutesAgo: Readonly<Record<RunnerReportKind, number>> = {
   'files.snapshot': 3,
   'changes.updated': 4,
   'ports.updated': 3,
+  'skills.updated': 2,
 }
 
 /**

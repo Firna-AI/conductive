@@ -1,4 +1,5 @@
 import { requireActiveOrg } from '../data/user-access'
+import { leaveWorkspaceQueue } from '../merge-queue/wake'
 import { workspaceRecord } from './workspace-data'
 import { storeContinuedBranch } from './continue-data'
 import {
@@ -16,11 +17,14 @@ export async function publishContinue(
 ): Promise<void> {
   await requireActiveOrg(options.env.DB, job.binding.orgId)
   const row = await storeContinuedBranch(options, job)
+  await leaveWorkspaceQueue(options.env, job.binding, 'continued', {
+    actorId: job.member.id,
+  })
   const binding = {
     ...job.binding,
     branch: job.branch,
-    defaultBranch: job.baseBranch,
-    baseBranch: job.baseBranch,
+    defaultBranch: job.defaultBranch,
+    baseBranch: job.baseBranch === job.defaultBranch ? null : job.baseBranch,
   }
   await options.chat.authorizedWorkspaceOperation(
     job.binding.id,

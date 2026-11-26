@@ -1,14 +1,18 @@
 # GitHub tokens
 
 This doc states how a cloud computer gets GitHub access, who its commits
-name as their author, and how the Worker acts on GitHub as a member. It
-also states which GitHub tokens an image job uses to copy the
-repositories. An image job is a build or a refresh of the org image.
+name as their author, and how the Worker acts on GitHub as a member.
+[GitHub tokens: the Worker as a member](github-tokens-worker.md) states
+the merges, the branch reads, the fetches of the trusted jobs, and the
+steps of the merge queue.
+[GitHub tokens: image builds](github-tokens-image-builds.md) states which
+GitHub tokens an image job uses to copy the repositories. An image job is
+a build or a refresh of the org image.
 [Access and security](access-and-security.md) states the shared access
 rules. A decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says. A parallel
-copy decision number names a decision of the change that copies the
-repositories of an image job in parallel.
+[Decision numbers](../architecture.md#decision-numbers) says. A skills
+decision number names a decision of the change that adds the
+[skills repository](org-skills.md), as that doc says.
 
 ## Git and the GitHub CLI
 
@@ -28,9 +32,12 @@ repositories of an image job in parallel.
   terminal and for each connection.
 - A supplied turn ID must name a current turn. An unknown or ended turn
   never falls back to the workspace owner.
-- A trusted Continue job and a trusted repository change job are the
-  other cases. Each fetch gets the token of the member who pressed the
-  action, as [Continue](#continue) says.
+- Trusted jobs are the other cases. The fetch of a Continue job or of a
+  repository change job gets the token of the member who pressed the
+  action, as [Continue](github-tokens-worker.md#continue) says. The fetch
+  of a moved base, also of a base move of a queued workspace, gets the
+  token of the workspace owner, as
+  [A moved base](github-tokens-worker.md#a-moved-base) says.
 - Each command that an agent runs in a turn has the ID of that turn. This
   holds also in a shell that loads the sandbox's own variables again, such
   as the login shell in which Codex runs each command.
@@ -131,57 +138,34 @@ repositories of an image job in parallel.
 
 ## Image builds and refreshes
 
-- A build or a refresh copies each repository of the image with Git in the
-  build sandbox, as decision 90 requires. Each copy uses its own GitHub App
-  installation token, which can only read the contents of that one
-  repository.
-- The copies of one image job run in parallel. Each copy has its own token
-  and its own one-use build grant.
-- The Git commands of an image job copy and check out its repositories.
-  These commands run at the same time only when they fit together in a
-  memory budget. The budget comes from the size of each repository that
-  GitHub reports and from the free memory of the build sandbox (parallel
-  copy decision 1). So a large repository copies alone. Many small
-  repositories copy together.
-- These ways were rejected (parallel copy decision 1):
-  - All copies at once, and a fixed number of copies or Git commands at
-    once in place of the budget. Only the budget lets a large repository
-    copy alone and many small ones copy together.
-  - One sandbox command for all copies. Each token then lives from the
-    start of that command until the slowest copy ends.
-- To read the size of each repository, the Worker uses installation tokens
-  that can only read metadata. Each token covers the repositories of the
-  job in one installation, at most 500 of them. When an installation has
-  more than 500 repositories of the job, each further batch of at most 500
-  gets its own token. Each metadata token stays in the Worker and never
-  reaches the build sandbox. The Worker revokes every metadata token before
-  the first copy starts.
-- The Worker gives each clone token only to the Git command of its copy.
-  The Worker and Git do not write it to command text, command history, a
-  remote URL, a Git config, a file, or a saved snapshot.
-- The Git command gets the token with a one-use build grant. The grant
-  works once, and only for its own build and repository.
-- The Worker revokes each clone token as soon as its Git command ends, also
-  when the command fails. A failed copy fails the job. The Worker then
-  revokes each token of the job that still works.
-- The job goes on only after GitHub confirms the revocation of every token
-  of the job. Before that, the job starts no checkout, software step,
-  install script, snapshot, or other repository code.
-- Risk: a later build and a refresh start from the last org image. A
-  program with root access that an earlier install left in that image can
-  read the clone token of a later copy. That token can only read its own
-  repository, which the image already holds. The Worker revokes it when
-  the copy ends.
-- A build of an org without an org image starts from the software image or
-  from the base image, where no org code has run.
-- Reason: Git in the build sandbox copies a repository of any size, and the
-  Git data does not pass through the Worker. Larger uploads and stored
-  progress were rejected, because one repository or one Git response must
-  still fit in one Worker job. A Git proxy in the Worker and a Workflow
-  were rejected, because each puts a new service in the path of the Git
-  data.
+- [GitHub tokens: image builds](github-tokens-image-builds.md) states how
+  a build or a refresh copies each repository with its own installation
+  token.
 - A workspace sandbox never gets an installation token. Its Git gets
   GitHub tokens only from the git credential helper.
+
+## The skills repository
+
+- The runner copies the [skills repository](org-skills.md) of the org,
+  and checks it for new commits, with no GitHub token (skills
+  decision 6 A). So only a public repository gives skills.
+- For the copy and its checks, Git gets no token from the git credential
+  helper, and it asks for no password. So a private or missing repository
+  fails at once.
+- Reason: the copy and its checks run outside any agent turn, and Git
+  gets no GitHub access there, as
+  [Git and the GitHub CLI](#git-and-the-github-cli) says.
+  [Public repositories only](org-skills.md#public-repositories-only)
+  gives the ways with a token that were rejected.
+- The Worker looks up the skills repository for the Skills section of the
+  org settings, as [The list of skills](org-skills.md#the-list-of-skills)
+  says. It reads GitHub with the GitHub sign-in of the member who views
+  the section. The answer goes only to that member.
+- The lookup only reads. It reads the record of the repository and the
+  file tree of its default branch.
+- Reason: one request for the file tree finds every skill. A sign-in gets
+  a higher GitHub rate limit than a request with no token. A lookup with
+  no token was rejected for that reason.
 
 ## The Actions permission
 
@@ -207,48 +191,25 @@ repositories of an image job in parallel.
 
 ## Merge as the member
 
-- The Worker reads, for each member, the access of that member to the
-  repository and the merge method that GitHub gives that member
-  (decision 221). It reads with the member's own GitHub token, and the
-  answer goes only to that member.
-- A member may merge when GitHub gives that member write access or more.
-  GitHub still checks the rules of the branch at the merge.
-- Reason: GitHub reports no single field for the right to merge.
-- The Worker merges with the GitHub token of the member who clicks Merge
-  (decision 220). GitHub then shows that member as the merger, and checks
-  the rights of that member.
-- A merge with a token of the app was rejected. GitHub would then show the
-  app as the merger, and skip the rights of the member.
-- The Worker refuses a merge for a person who is not a member of the org,
-  in a suspended org, and in an archived workspace.
-- No GitHub error text reaches the browser. The Worker gives each refusal
-  of GitHub as an error code of the app.
-- The Worker also marks a draft ready for review with the GitHub token of
-  the member who clicks Ready for review, as
-  [Ready for review](github-banner.md#ready-for-review) says. The same
-  access rule, refusals, and error codes of the app apply. The user chose
-  this on 17 November 2026.
+[Merge as the member](github-tokens-worker.md#merge-as-the-member) states
+whose GitHub token a merge and Ready for review use.
+
+## Branch reads
+
+[Branch reads](github-tokens-worker.md#branch-reads) states whose GitHub
+token reads the branches of a repository.
 
 ## Continue
 
-- Continue fetches the latest default branch with the GitHub token of the
-  member who pressed Continue (decision 226). GitHub then checks the read
-  access of that member.
-- The workspace runs this fetch as a trusted Continue job, as it runs the
-  fetch of a create. The credential route gives the token to that job only
-  while its fetch runs.
-- The token reaches only that fetch. No Git setting and no hook of the
-  repository folder runs with it. Reason: agent code can change the Git
-  settings and the hooks of the repository folder.
-- Every member may press Continue (decision 224). So the token of a member
-  who is not the owner reaches the sandbox of the owner for the fetch, as
-  it does for a message of that member.
-- A [repository change](repository-change.md) fetches the latest default
-  branch of the new repository in the same way, with the token of the
-  member who changes the repository.
-- These ways were rejected (decision 226):
-  - The token of the workspace owner, through the mode that `gh` uses
-    outside a turn. It works only in a workspace from a newer org image.
-  - An installation token that reads only the one repository. A workspace
-    sandbox then gets an installation token, and the fetch needs the revoke
-    steps of image builds.
+[Continue](github-tokens-worker.md#continue) states whose GitHub token the
+fetch of Continue and of a repository change uses.
+
+## A moved base
+
+[A moved base](github-tokens-worker.md#a-moved-base) states whose GitHub
+token the fetch of a moved base uses.
+
+## The merge queue
+
+[The merge queue](github-tokens-worker.md#the-merge-queue) states whose
+GitHub token each step of the merge queue uses.

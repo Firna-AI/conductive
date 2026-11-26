@@ -1,20 +1,19 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { Square, X } from 'lucide-react'
 import { nameLabel } from '../../../../src/shared/name-label'
-import { ActionButton } from '../components/common/actions'
-import { ToastLayer } from '../components/common/ToastLayer'
-import { ConfirmDialog, DialogText } from '../components/common/ConfirmDialog'
-import { FailureToast } from '../components/common/FailureToast'
-import { Menu } from '../components/common/Menu'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import {
+  confirmDialog,
+  dialogText,
+} from '../entries/components/common/ConfirmDialog.mockup'
+import { failureToast } from '../entries/components/common/FailureToast.mockup'
+import { menu } from '../entries/components/common/Menu.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { Sheet } from '../components/common/Sheet'
+import { sheet } from '../entries/components/common/Sheet.mockup'
 import { RowMenuSheet } from '../components/files/FileRowMenu'
-import { pathResults } from '../components/files/rowMenuCopy'
-import { CommandPalette } from '../components/palette/CommandPalette'
+import { commandPalette } from '../entries/components/palette/CommandPalette.mockup'
 import type { PaletteContext } from '../components/palette/paletteContent'
-import { ArchivedToast } from '../components/workspace/ArchivedToast'
-import { ContinueDialog } from '../components/workspace/ContinueDialog'
+import { continueDialog } from '../entries/components/workspace/ContinueDialog.mockup'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
 import {
   RestartDialog,
@@ -22,18 +21,22 @@ import {
   UpdateCheckToast,
 } from '../components/workspace/RestartParts'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
-import { TabMenuSheet } from '../components/workspace/TabMenu'
-import { transcriptToasts } from '../components/workspace/transcriptCopy'
+import { tabMenuSheet } from '../entries/components/workspace/TabMenu.mockup'
+import { plainData } from '../defined'
 import { workspaceSessions } from '../fixtures/sessions'
 import { closedTerminal, cloudComputerSilent } from '../fixtures/terminals'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { valueSheet } from './requestSheets'
+import { explainOverlay } from './explainPopover'
+import { expandedPage } from './workspaceExpanded'
 import { headerMenuOf } from './workspaceHeaderMenu'
+import { RemoveQueueDialog } from './queueOverlays'
 import { capabilitiesSheet } from './workspaceCapabilities'
 import { openFile } from './workspaceFileTab'
 import { repositoryOverlay } from './workspaceRepositoryOverlay'
 import { rowMenuOf } from './workspaceRowMenu'
+import { serviceOverlay } from './workspaceServices'
 import type { WorkspaceState } from './workspaceState'
 import { historyFor } from './workspaceTabs'
 
@@ -45,8 +48,11 @@ export function workspacePalette(
 ): ReactNode {
   if (state.palette === 'closed') return null
   return (
-    <CommandPalette
-      context={viewport === 'mobile' ? { archivable: false } : context}
+    <commandPalette.Component
+      context={plainData(
+        viewport === 'mobile' ? { archivable: false } : context,
+      )}
+      moklyInstance="command-palette"
       view={state.palette}
       viewport={viewport}
     />
@@ -60,25 +66,32 @@ export function workspacePalette(
 function CloseSessionDialog(props: { viewport: Viewport }) {
   const session = workspaceSessions[0]
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           <ScreenLink asChild to={paths.chat}>
-            <ActionButton>Cancel</ActionButton>
+            <actionButton.Component moklyInstance="dialog-cancel">
+              Cancel
+            </actionButton.Component>
           </ScreenLink>
-          <ActionButton icon={Square} tone="primary">
+          <actionButton.Component
+            icon="square"
+            moklyInstance="dialog-stop-and-close"
+            tone="primary"
+          >
             Stop and close
-          </ActionButton>
+          </actionButton.Component>
         </>
       }
+      moklyInstance="close-session-dialog"
       title="Stop the turn and close the tab?"
       viewport={props.viewport}
     >
-      <DialogText>
+      <dialogText.Component moklyInstance="session-moves">
         The agent is working in {nameLabel(session.title)}. The session moves to
         the session history, where you can reopen it.
-      </DialogText>
-    </ConfirmDialog>
+      </dialogText.Component>
+    </confirmDialog.Component>
   )
 }
 
@@ -89,58 +102,42 @@ function CloseSessionDialog(props: { viewport: Viewport }) {
  */
 function CloseTerminalDialog(props: { viewport: Viewport }) {
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           <ScreenLink asChild to={paths.terminal}>
-            <ActionButton>Cancel</ActionButton>
+            <actionButton.Component moklyInstance="dialog-cancel">
+              Cancel
+            </actionButton.Component>
           </ScreenLink>
-          <ActionButton icon={X} tone="danger">
+          <actionButton.Component
+            icon="x"
+            moklyInstance="dialog-close-terminal"
+            tone="danger"
+          >
             Close terminal
-          </ActionButton>
+          </actionButton.Component>
         </>
       }
+      moklyInstance="close-terminal-dialog"
       title={`Close ${closedTerminal}?`}
       viewport={props.viewport}
     >
-      <DialogText>
+      <dialogText.Component moklyInstance="terminal-ends">
         Its shell and any running commands end for everyone in this workspace.
-      </DialogText>
-    </ConfirmDialog>
+      </dialogText.Component>
+    </confirmDialog.Component>
   )
 }
 
 /** The toast of a terminal that did not open or close, with its message. */
 function TerminalFailure(props: { title: string; viewport: Viewport }) {
   return (
-    <FailureToast
+    <failureToast.Component
       message={cloudComputerSilent}
+      moklyInstance="terminal-failure"
       phone={props.viewport === 'mobile'}
       title={props.title}
-    />
-  )
-}
-
-/**
- * The toast after a copy from a menu, if any: Copy path from a row menu or
- * a tab menu, or a copy of a session transcript from the tab menu. It lies
- * over the workspace at the place of the toasts of the app.
- */
-export function copyToast(
-  state: WorkspaceState,
-  viewport: Viewport,
-): ReactNode {
-  const path = state.copyPath !== 'none'
-  const result = path ? state.copyPath : state.copyTranscript
-  if (result === 'none') return null
-  const words = path ? pathResults : transcriptToasts
-  return (
-    <ToastLayer
-      phone={viewport === 'mobile'}
-      toast={{
-        title: words[result],
-        tone: result === 'copied' ? 'success' : 'error',
-      }}
     />
   )
 }
@@ -159,7 +156,8 @@ function rowMenuSheet(state: WorkspaceState, viewport: Viewport): ReactNode {
  * What lies open over a workspace. Desktop draws the menus beside their
  * buttons, the tab menu below its tab, and the menu of a row of the Files
  * panel at the pointer, so only the dialog lies over the app. A phone draws
- * each one as a sheet, and the open Capabilities control too. `row` holds
+ * each one as a sheet, and the open Capabilities control too. The popover
+ * of an explanation lies over both, as `explainOverlay` says. `row` holds
  * the tabs that the viewport shows, the tab whose menu is open, if any, and
  * whether the workspace is read-only, which leaves items out of that menu.
  * Desktop draws the workspace menu of the header at the pointer in the
@@ -175,7 +173,9 @@ export function workspaceOverlay(
   switch (state.overlay) {
     case 'none':
       return (
+        explainOverlay(state, viewport, row.readOnly) ??
         capabilitiesSheet(state, viewport) ??
+        serviceOverlay(state, viewport) ??
         (mobile ? rowMenuSheet(state, viewport) : null)
       )
     case 'restarting':
@@ -189,26 +189,34 @@ export function workspaceOverlay(
     case 'close-session':
       return <CloseSessionDialog viewport={viewport} />
     case 'continue-unpushed':
-      return <ContinueDialog viewport={viewport} workspace={workspace} />
+      return (
+        <continueDialog.Component
+          moklyInstance="continue-dialog"
+          viewport={viewport}
+          workspace={workspace}
+        />
+      )
     case 'history':
       return mobile ? (
-        <Sheet title="Session history">
-          <Menu
+        <sheet.Component moklyInstance="history-sheet" title="Session history">
+          <menu.Component
             entries={historyFor(state)}
             label="Session history"
+            moklyInstance="history-menu"
             placement="sheet"
           />
-        </Sheet>
+        </sheet.Component>
       ) : null
     case 'reassign':
       return mobile ? (
-        <Sheet title={workspace.name}>
-          <Menu
+        <sheet.Component moklyInstance="owner-sheet" title={workspace.name}>
+          <menu.Component
             entries={reassignMenu(workspace.owner)}
             label="Owner"
+            moklyInstance="owner-menu"
             placement="sheet"
           />
-        </Sheet>
+        </sheet.Component>
       ) : null
     case 'repository':
     case 'repository-change':
@@ -216,10 +224,11 @@ export function workspaceOverlay(
       return repositoryOverlay(state.overlay, workspace, viewport)
     case 'tab-menu':
       return mobile && row.menuTab ? (
-        <TabMenuSheet
+        <tabMenuSheet.Component
+          moklyInstance="tab-menu-sheet"
           readOnly={row.readOnly}
           tab={row.menuTab}
-          tabs={row.tabs}
+          tabs={plainData(row.tabs)}
         />
       ) : null
     case 'close-terminal':
@@ -242,35 +251,29 @@ export function workspaceOverlay(
       return valueSheet(state, viewport)
     case 'workspace-menu':
       return mobile ? (
-        <Sheet title={workspace.name}>
-          <Menu
+        <sheet.Component
+          moklyInstance="workspace-menu-sheet"
+          title={workspace.name}
+        >
+          <menu.Component
             entries={headerMenuOf(state, workspace.owner)}
             label={workspace.name}
+            moklyInstance="workspace-menu"
             placement="sheet"
           />
-        </Sheet>
+        </sheet.Component>
       ) : null
     case 'header-rename':
       return null
-  }
-}
-
-/**
- * The toast of the state, over the whole screen. Just after Archive, the
- * toast names the workspace and offers Restore, which does what Restore on
- * the archived bar does.
- */
-export function workspaceToast(
-  state: WorkspaceState,
-  workspace: Workspace,
-  viewport: Viewport,
-): ReactNode {
-  switch (state.toast) {
-    case 'none':
-      return null
-    case 'archived':
+    case 'expanded-page':
+      return mobile ? null : expandedPage(state)
+    case 'remove-from-queue':
       return (
-        <ArchivedToast name={workspace.name} phone={viewport === 'mobile'} />
+        <RemoveQueueDialog
+          state={state.queue}
+          viewport={viewport}
+          workspace={workspace}
+        />
       )
   }
 }

@@ -106,7 +106,7 @@ describe('the row menu of the Files panel', () => {
     })
   })
 
-  it('on a phone, opens a sheet with the name of a row of Changes after a long press of a finger that holds still, opens no diff with the click after it, and opens nothing for a mouse or a finger that moves', async () => {
+  it('on a phone, opens a sheet with the name of a row of Changes after a long press of a finger that holds still, opens no diff with the click after it, and opens nothing for a mouse, a finger that moves, or a hold that Escape ends, which takes the key from the page', async () => {
     const server = new FakeApiServer()
     server.json('GET', filePaths.changes(org, workspace), {
       baseBranch: 'main',
@@ -143,6 +143,7 @@ describe('the row menu of the Files panel', () => {
 
     vi.useFakeTimers()
     let early: { mouse: boolean; scroll: boolean }
+    let cancelled: { taken: boolean; sheet: boolean }
     let hold: { browserMenu: boolean }
     let release: { sheet: boolean; click: boolean; marked: boolean }
     try {
@@ -157,6 +158,20 @@ describe('the row menu of the Files panel', () => {
       act(() => vi.advanceTimersByTime(450))
       pointer(window, 'pointerup', { ...finger, clientY: 40, buttons: 0 })
       early = { mouse, scroll: sheet() }
+
+      // Escape ends a held press, so its release opens nothing.
+      pointer(moved, 'pointerdown', finger)
+      act(() => vi.advanceTimersByTime(450))
+      const escape = new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      })
+      act(() => {
+        moved.dispatchEvent(escape)
+      })
+      pointer(window, 'pointerup', { ...finger, buttons: 0 })
+      cancelled = { taken: escape.defaultPrevented, sheet: sheet() }
 
       pointer(moved, 'pointerdown', finger)
       act(() => vi.advanceTimersByTime(450))
@@ -178,8 +193,17 @@ describe('the row menu of the Files panel', () => {
     rightClick(link({ kind: 'diff', path: 'src/lib/old.ts' }))
     await press(byRole('menuitem', 'Copy path'))
 
-    expect({ early, hold, release, opened, closed, pressed }).toEqual({
+    expect({
+      early,
+      cancelled,
+      hold,
+      release,
+      opened,
+      closed,
+      pressed,
+    }).toEqual({
       early: { mouse: false, scroll: false },
+      cancelled: { taken: true, sheet: false },
       hold: { browserMenu: false },
       release: { sheet: true, click: false, marked: true },
       opened: [{ name: 'Copy path', off: false }],

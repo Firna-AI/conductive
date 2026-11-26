@@ -1,15 +1,15 @@
 import type { Viewport } from '@mokly/mokly'
 import { Button } from '@firna/ui/button'
 import { termsAgreement } from '../../../../src/marketing/legal-text'
-import { classes } from '../components/common/classes'
-import { GitHubMark } from '../components/common/GitHubMark'
+import { classes } from '../../../../src/ui/components/common/classes'
+import { githubMark } from '../entries/components/common/GitHubMark.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { CatalogueText } from '../components/marketing/CatalogueText'
 import { SitePage } from '../components/marketing/SitePage'
 import { TextPage } from '../components/marketing/TextPage'
-import { noop } from '../noop'
+import { noop } from '../../../../src/ui/noop'
 import { paths } from '../paths'
-import { signInCopy } from './signInCopy'
+import { signInCopy } from '../../../../src/ui/screens/signInCopy'
 import styles from './TermsConsentScreen.module.css'
 
 /**
@@ -36,7 +36,13 @@ export function TermsConsentScreen(props: { viewport: Viewport }) {
             <ScreenLink asChild to={paths.getStarted}>
               <Button
                 block={mobile}
-                iconNode={<GitHubMark className={styles.mark} size={16} />}
+                iconNode={
+                  <githubMark.Component
+                    className={styles.mark}
+                    moklyInstance="consent-github"
+                    size={16}
+                  />
+                }
                 onPress={noop}
                 size="lg"
                 tone="primary"

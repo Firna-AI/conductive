@@ -1,5 +1,5 @@
 /*
- * Styles that the interactive parts add to the mockup styles. The mockups
+ * Styles that the interactive parts add to the shared styles. The mockups
  * draw rows and menus as plain boxes; the app draws them as buttons, so
  * these rules remove the default look of a button.
  */
@@ -55,8 +55,9 @@
 
 /*
  * A menu item that is off fades its parts, except its note, through the
- * `disabled` style of the mockup menu, so that the reader can read why it
- * is off. The button itself keeps its opacity, so no part fades twice.
+ * `disabled` style of the shared `Menu.module.css`, so that the reader can
+ * read why it is off. The button itself keeps its opacity, so no part fades
+ * twice.
  */
 .menuItem:disabled {
   opacity: 1;

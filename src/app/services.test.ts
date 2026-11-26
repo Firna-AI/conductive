@@ -1,8 +1,6 @@
 // @vitest-environment happy-dom
 
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { attachmentUploadPartPath } from '../shared/messages'
-import { createLiveServices } from './live-services'
 import {
   windowInput,
   windowKeys,
@@ -10,9 +8,12 @@ import {
   type KeyPress,
 } from './services'
 
+const pageAddress = window.location.href
+
 afterEach(() => {
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
+  window.location.href = pageAddress
 })
 
 describe('windowInput', () => {
@@ -104,66 +105,50 @@ test('window keys hold a layout modifier until its own keyup or blur and share i
   }
 })
 
-describe('createLiveServices', () => {
-  test('uploads a raw part on the page origin with the cookie and measured progress through native XHR', async () => {
-    const fetched = vi
-      .spyOn(window, 'fetch')
-      .mockResolvedValue(Response.json({ etag: 'etag-1' }))
-    const opened: [string, string][] = []
-    const sent: Blob[] = []
-    const seen: { credentials: boolean; headers: [string, string][] }[] = []
-    class Upload {
-      withCredentials = false
-      readonly status = 200
-      readonly responseText = '{"partNumber":1,"etag":"etag-1"}'
-      readonly headers: [string, string][] = []
-      readonly upload = new EventTarget()
-      private load: () => void = () => {}
-      open(method: string, url: string) {
-        opened.push([method, url])
-      }
-      setRequestHeader(name: string, value: string) {
-        this.headers.push([name, value])
-      }
-      addEventListener(type: string, listener: () => void) {
-        if (type === 'load') this.load = listener
-      }
-      send(body: Blob) {
-        sent.push(body)
-        seen.push({ credentials: this.withCredentials, headers: this.headers })
-        this.upload.dispatchEvent(new ProgressEvent('progress', { loaded: 2 }))
-        this.load()
-      }
-      abort() {}
+test('window keys remember only first-press consumption by physical key across subscriptions until keyup or blur', () => {
+  const heard: [string, boolean, boolean][] = []
+  const hear = (press: KeyPress) => {
+    heard.push([press.code, press.repeat, press.firstPressConsumed])
+    if (press.code === 'KeyK' || press.repeat) {
+      press.preventDefault()
+      press.stopPropagation()
     }
-    vi.stubGlobal('XMLHttpRequest', Upload)
-    const part = new File(['png'], 'overlap.png', { type: 'image/png' })
-    const path = attachmentUploadPartPath(
-      'org-one',
-      { type: 'workspace', workspaceId: 'workspace-one' },
-      'upload-1',
-      1,
+  }
+  let stop = windowKeys(window)(hear)
+  const send = (type: string, key: string, code: string, repeat = false) =>
+    window.dispatchEvent(
+      new KeyboardEvent(type, { key, code, repeat, cancelable: true }),
     )
-    const progress: number[] = []
-    const services = createLiveServices(window)
-    await expect(
-      services.api.sendPart(path, part, (body) => body, {
-        progress: (sentBytes) => progress.push(sentBytes),
-        signal: new AbortController().signal,
-      }),
-    ).resolves.toEqual({ partNumber: 1, etag: 'etag-1' })
-    expect({ opened, seen, progress }).toEqual({
-      opened: [['PUT', path]],
-      seen: [
-        {
-          credentials: true,
-          headers: [['Content-Type', 'application/octet-stream']],
-        },
-      ],
-      progress: [2],
-    })
-    expect(sent).toHaveLength(1)
-    expect(sent[0]).toBe(part)
-    expect(fetched).not.toHaveBeenCalled()
-  })
+  try {
+    send('keydown', 'k', 'KeyK')
+    send('keydown', 'a', 'KeyA')
+    send('keydown', 'a', 'KeyA', true)
+    send('keydown', 'a', 'KeyA', true)
+    stop()
+    send('keyup', 'a', 'KeyA')
+    stop = windowKeys(window)(hear)
+    send('keydown', 'л', 'KeyK', true)
+    stop()
+    send('keyup', 'л', 'KeyK')
+    stop = windowKeys(window)(hear)
+    send('keydown', 'k', 'KeyK', true)
+    send('keydown', 'k', 'KeyK')
+    stop()
+    window.dispatchEvent(new Event('blur'))
+    stop = windowKeys(window)(hear)
+    send('keydown', 'k', 'KeyK', true)
+    expect(heard).toEqual([
+      ['KeyK', false, false],
+      ['KeyA', false, false],
+      ['KeyA', true, false],
+      ['KeyA', true, false],
+      ['KeyK', true, true],
+      ['KeyK', true, false],
+      ['KeyK', false, false],
+      ['KeyK', true, false],
+    ])
+  } finally {
+    window.dispatchEvent(new Event('blur'))
+    stop()
+  }
 })

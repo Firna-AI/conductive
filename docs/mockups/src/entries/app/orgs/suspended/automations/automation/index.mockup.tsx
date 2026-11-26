@@ -8,9 +8,9 @@ import {
 export const suspendedAutomation = defineScreen({
   title: 'Automation of a suspended org',
   description:
-    "Cal's automation that reviews pull requests, after the operator suspended Acme. The notice of the org is at the top. The facts, the triggers, and the prompt show without fields, and the page has no Save, Run now, Delete, Turn off, or Add trigger. The runs show the stop of the suspension, and the run that waited in the queue shows as skipped, because Acme is suspended. A phone shows the Automation and Runs tabs, each under the notice.",
+    "Cal's automation that reviews pull requests, after the operator suspended Acme. The notice of the org is at the top. The facts, the triggers, and the prompt show without fields, with the line of the secrets that the runs use, and the page has no Save, Run now, Delete, Turn off, or Add trigger. The runs show the stop of the suspension, and the run that waited in the queue shows as skipped, because Acme is suspended. A phone shows the Automation and Runs tabs, each under the notice.",
   rationale:
-    'Nothing in a suspended org can change, also for the owner or an admin, so every person reads the automation. The notice says why, so the page does not say that only the owner can change it. No line names the logins of runs, because a suspended org starts no run.',
+    'Nothing in a suspended org can change, also for the owner or an admin, so every person reads the automation. The notice says why, so the page does not say that only the owner can change it. No line names the logins of runs, and no hint warns about pull requests, because a suspended org starts no run. The line of the secrets that the runs use stays, because the settings of a suspended org stay readable.',
   relatedDocs: [],
   propSchema: automationStateSchema,
   props: { ...ownerAutomation, org: 'suspended', runs: 'suspended' },

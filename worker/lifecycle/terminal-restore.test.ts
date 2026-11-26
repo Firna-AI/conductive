@@ -30,12 +30,24 @@ it('rebuilds the startup runtime of a retained terminal checkpoint after Restore
   const active = (fixture = await retainedCreationFixture(bundle))
   const { id } = await admitRetainedCreation(active)
   await advanceRetainedCreation(active, id, 'startup')
-  for (let step = 0; step < 4; step++)
+  const fetch = active.boat.fetch
+  active.boat.fetch = async (request) =>
+    new URL(request.url).pathname.endsWith('/files')
+      ? Response.json({ ok: false, code: 'unavailable' }, { status: 503 })
+      : fetch(request)
+  for (let step = 0; step < 4; step++) {
+    if ((await retainedCreationJob(active, id)).phase === 'terminal-password')
+      break
     await active.actor(id).advanceStartAlarm()
+  }
   const original = await retainedCreationJob(active, id)
-  expect(original).toMatchObject({ phase: 'terminal-password' })
+  expect(original).toMatchObject({
+    phase: 'terminal-password',
+    providerRetry: { failures: 1 },
+  })
   expect(active.boat.fileReads).toEqual([])
   await deleteAndRestoreCreation(active)
+  active.boat.fetch = fetch
   const before = active.boat.commandRequests.length
   active.boat.terminalPassword = 'c'.repeat(64)
   const resumed = await active.request(workspacePaths.resume(OUTER_ORG, id), {

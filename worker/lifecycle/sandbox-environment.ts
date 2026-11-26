@@ -3,6 +3,8 @@ import {
   COMMIT_AUTHOR_VARIABLES,
   commitAuthor,
 } from '../../src/shared/commit-author'
+import { isSkillsRepository } from '../../src/shared/skill-folders'
+import { effectiveTrustedSkillsRepository } from '../../src/shared/skills-repository-settings'
 import { TOOL_ENV } from '../../src/shared/agent-tools'
 import { MAX_WORKSPACE_DEPTH } from '../../src/shared/workspace-tree'
 import { readUser } from '../data/users'
@@ -17,6 +19,7 @@ import {
   type RepositoryLocation,
 } from './repository-locations'
 import { readWorkspaceToken } from './tokens'
+import { readImageSettings } from './settings-data'
 import type { WorkspaceRow } from './workspace-row'
 
 /**
@@ -49,6 +52,10 @@ export async function sandboxEnvironment(
 ): Promise<Record<string, string>> {
   const { workspace, environment, locations } = input
   const token = await readWorkspaceToken(env, workspace.id)
+  const { skillsRepository, trustedSkillsRepository } = await readImageSettings(
+    env.DB,
+    workspace.orgId,
+  )
   const tree = await workspaceParent(env.DB, workspace.orgId, workspace.id)
   if (!tree)
     throw new HttpError(
@@ -83,6 +90,13 @@ export async function sandboxEnvironment(
     CONDUCTIVE_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
     CONDUCTIVE_DEFAULT_BRANCH: input.defaultBranch,
     CONDUCTIVE_WORKSPACE_BRANCH: workspace.branch,
+    CONDUCTIVE_SKILLS_REPOSITORY: isSkillsRepository(skillsRepository)
+      ? skillsRepository
+      : '',
+    CONDUCTIVE_TRUSTED_SKILLS_REPOSITORY: effectiveTrustedSkillsRepository(
+      skillsRepository,
+      trustedSkillsRepository,
+    ),
     CONDUCTIVE_REPOSITORY_DIR: repositoryLocation(
       locations,
       workspace.repositoryId,

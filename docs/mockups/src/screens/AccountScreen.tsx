@@ -1,24 +1,34 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
-import type { RailState } from '../components/layout/OrgRail'
-import { Page } from '../components/layout/Page'
-import { useMacApp } from '../components/mac/MacApp'
 import {
-  AccountTabs,
-  AgentsSection,
-  GitHubSection,
-  SignInSection,
-} from '../components/settings/AccountSections'
-import { DeletedOrgsSection } from '../components/settings/DeletedOrgsSection'
-import { InviteCodeSection } from '../components/settings/InviteCodeSection'
-import { DefaultsSection } from '../components/settings/PreferencesSections'
-import { StatsTab } from './accountStats'
-import { ResetShortcutsDialog } from '../components/settings/ResetShortcutsDialog'
-import { ShortcutsTab } from '../components/settings/ShortcutsSections'
-import { ThisMacSection } from '../components/settings/ThisMacSection'
+  appFrame,
+  mobileFrame,
+} from '../entries/components/layout/AppFrame.mockup'
+import type { RailState } from '../components/layout/OrgRail'
+import { page as pagePart } from '../entries/components/layout/Page.mockup'
+import { useMacApp } from '../../../../src/ui/components/mac/MacApp'
+// The tabs come first, so that their styles keep their place in the bundle.
+import { accountTabs } from '../entries/components/settings/AccountTabs.mockup'
+import {
+  agentsSection,
+  gitHubSection,
+  signInSection,
+} from '../entries/components/settings/AccountSections.mockup'
+import { deletedOrgsSection } from '../entries/components/settings/DeletedOrgsSection.mockup'
+import {
+  addFavouriteSheet,
+  favouritesSection,
+} from '../entries/components/settings/FavouritesSection.mockup'
+import { inviteCodeSection } from '../entries/components/settings/InviteCodeSection.mockup'
+import { defaultsSection } from '../entries/components/settings/PreferencesSections.mockup'
+import { placedModelMenu } from '../entries/components/chat/PlacedModelMenu.mockup'
+import { statsTab } from '../entries/components/screens/accountStats.mockup'
+import { resetShortcutsDialog } from '../entries/components/settings/ResetShortcutsDialog.mockup'
+import { shortcutsTab } from '../entries/components/settings/ShortcutsSections.mockup'
+import { thisMacSection } from '../entries/components/settings/ThisMacSection.mockup'
 import { workspaceSections } from '../components/workspaces/sections'
-import { Sidebar } from '../components/workspaces/Sidebar'
+import { sidebar as sidebarPart } from '../entries/components/workspaces/Sidebar.mockup'
+import { fastChoice } from '../fixtures/agents'
 import { account, orgList, orgs } from '../fixtures/orgs'
 import {
   editedShortcuts,
@@ -28,7 +38,8 @@ import type { ShortcutHost } from '../fixtures/shortcutHosts'
 import { viewerMembership } from '../fixtures/members'
 import { paths } from '../paths'
 import type { AccountState, AccountView } from './accountState'
-import { agentsFor } from './accountAgents'
+import { agentsFor, hiddenModelsFor } from './accountAgents'
+import { defined, plainData } from '../defined'
 
 const connectedRail: RailState = { orgs: orgList, current: 'account' }
 
@@ -43,14 +54,21 @@ const firstRunRail: RailState = { orgs: [], current: 'account', firstRun: true }
 function GeneralTab(props: { state: AccountState }) {
   return (
     <>
-      <SignInSection />
-      <GitHubSection connected={props.state.connections === 'connected'} />
-      <InviteCodeSection
+      <signInSection.Component moklyInstance="sign-in" />
+      <gitHubSection.Component
+        connected={props.state.connections === 'connected'}
+        moklyInstance="github"
+      />
+      <inviteCodeSection.Component
         fresh={props.state.connections !== 'connected'}
+        moklyInstance="invite-code"
         openSignUp={props.state.openSignUp === 'on'}
         state={props.state.invites}
       />
-      <DeletedOrgsSection state={props.state.deletedOrgs} />
+      <deletedOrgsSection.Component
+        moklyInstance="deleted-orgs"
+        state={props.state.deletedOrgs}
+      />
     </>
   )
 }
@@ -67,28 +85,49 @@ function TabContent(props: {
     case 'general':
       return <GeneralTab state={{ ...state, tab: 'general' }} />
     case 'agents':
-      return <AgentsSection {...agentsFor({ ...state, tab: 'agents' })} />
+      return (
+        <agentsSection.Component
+          moklyInstance="agents"
+          {...plainData(agentsFor({ ...state, tab: 'agents' }))}
+        />
+      )
     case 'preferences':
       return (
-        <DefaultsSection
-          fastMenu={state.modelMenu === 'open-fast'}
-          saveFailed={state.save === 'failed'}
-          view={state.view}
-        />
+        <>
+          <favouritesSection.Component
+            favourites={state.favourites}
+            hiddenModels={hiddenModelsFor({ ...state, tab: 'preferences' })}
+            moklyInstance="favourites"
+            saveFailed={state.save === 'favourites-failed'}
+          />
+          <defaultsSection.Component
+            fastMenu={state.modelMenu === 'open-fast'}
+            moklyInstance="defaults"
+            saveFailed={state.save === 'failed'}
+            view={state.view}
+          />
+        </>
       )
     case 'shortcuts':
       return (
-        <ShortcutsTab
+        <shortcutsTab.Component
           change={state.keyChange}
           changes={props.changes}
           host={props.host}
+          moklyInstance="shortcuts"
           search={state.shortcutSearch}
         />
       )
     case 'stats':
-      return <StatsTab stats={state.stats} viewport={props.viewport} />
+      return (
+        <statsTab.Component
+          moklyInstance="stats"
+          stats={state.stats}
+          viewport={props.viewport}
+        />
+      )
     case 'this-mac':
-      return <ThisMacSection />
+      return <thisMacSection.Component moklyInstance="this-mac" />
   }
 }
 
@@ -96,21 +135,20 @@ function TabContent(props: {
  * The account, in tabs. General holds the GitHub sign-in, the GitHub App,
  * and the invite code of the user. Agents holds the logins of Claude and
  * Codex that every org shares, with the share setting of each login and
- * the host of an own endpoint. Preferences holds how new
- * workspaces start: their model, and how New workspace opens. Keyboard
+ * the host of an own endpoint. Preferences holds the favourites of the
+ * model menu, then how new workspaces start: their model, and how New
+ * workspace opens. Keyboard
  * shortcuts holds the keys of the host: the Mac app, or the browser and the
  * keyboard of `state.host`. Stats holds the person's own counts. The Mac
  * app adds This Mac, with the commands
  * that always run on this Mac. The product is free, so the page shows no
  * plan and no billing, and the sandbox provider stays out of sight. With the
  * person's changes to the shortcuts, the Search row of the Mac app's
- * sidebar shows the person's key of the palette. `content` takes the place
- * of the content of the tab, for a page that draws other settings.
+ * sidebar shows the person's key of the palette.
  */
 export function AccountScreen(props: {
   state: AccountView
   viewport: Viewport
-  content?: ReactNode
 }) {
   const { state } = props
   const mac = useMacApp()
@@ -123,56 +161,88 @@ export function AccountScreen(props: {
     ? { label: 'Workspaces', to: paths.shell }
     : { label: 'Get started', to: paths.getStarted }
   const page = (
-    <Page
-      back={mobile ? back : undefined}
+    <pagePart.Component
       subtitle={`@${account.login}`}
-      tabs={<AccountTabs flow={mobile} host={host} tab={state.tab} />}
+      {...defined({ back: mobile ? back : undefined })}
+      tabs={
+        <accountTabs.Component
+          flow={mobile}
+          host={host}
+          moklyInstance="account-tabs"
+          tab={state.tab}
+        />
+      }
       title="Account"
       viewport={props.viewport}
     >
-      {props.content ?? (
-        <TabContent
-          changes={changes}
-          host={host}
-          state={state}
-          viewport={props.viewport}
-        />
-      )}
-    </Page>
+      <TabContent
+        changes={changes}
+        host={host}
+        state={state}
+        viewport={props.viewport}
+      />
+    </pagePart.Component>
   )
   // Reset all asks first: a dialog over the account, or a sheet on a phone.
   const dialog =
     state.tab === 'shortcuts' && state.keyChange === 'reset-all' ? (
-      <ResetShortcutsDialog
+      <resetShortcutsDialog.Component
         changed={Object.keys(changes).length}
         host={host}
+        moklyInstance="reset-shortcuts-dialog"
         viewport={props.viewport}
       />
-    ) : null
+    ) : undefined
+  // The open menu of the default model lies above the page, at its picker.
+  const modelMenu =
+    state.tab === 'preferences' && state.modelMenu === 'open-fast' ? (
+      <placedModelMenu.Component
+        choice={fastChoice}
+        moklyInstance="default-model-menu"
+        placement="below"
+      />
+    ) : undefined
   if (mobile) {
+    // A phone opens the list of Add a favourite in a sheet.
+    const addSheet =
+      state.tab === 'preferences' && state.favourites === 'add-open' ? (
+        <addFavouriteSheet.Component
+          hiddenModels={hiddenModelsFor({ ...state, tab: 'preferences' })}
+          moklyInstance="add-favourite-sheet"
+        />
+      ) : null
     return (
-      <MobileFrame>
+      <mobileFrame.Component>
         {page}
         {dialog}
-      </MobileFrame>
+        {modelMenu}
+        {addSheet}
+      </mobileFrame.Component>
     )
   }
   // The Mac app keeps the sidebar of the org beside the account.
   const sidebar = mac ? (
-    <Sidebar
+    <sidebarPart.Component
+      moklyInstance="sidebar"
       org={orgs.acme}
-      sections={workspaceSections(undefined, mac.needsInput)}
+      sections={plainData(workspaceSections(undefined, mac.needsInput))}
       shortcuts={changes}
       viewer={viewerMembership('admin')}
     />
   ) : undefined
+  const overlay: ReactNode =
+    dialog || modelMenu ? (
+      <>
+        {dialog}
+        {modelMenu}
+      </>
+    ) : undefined
   return (
-    <AppFrame
-      overlay={dialog}
+    <appFrame.Component
       rail={connected ? connectedRail : firstRunRail}
-      sidebar={sidebar}
+      {...defined({ overlay, sidebar })}
     >
       {page}
-    </AppFrame>
+    </appFrame.Component>
   )
 }

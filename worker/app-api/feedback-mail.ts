@@ -1,4 +1,4 @@
-import { productName } from '../../docs/mockups/src/brand'
+import { productName } from '../../src/shared/brand'
 import type { User } from '../../src/shared/api'
 import { FEEDBACK_SENDS_PER_HOUR } from '../../src/shared/feedback'
 import type { AppDependencies, AppEnv } from '../env'

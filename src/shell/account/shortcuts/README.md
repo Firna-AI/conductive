@@ -59,13 +59,18 @@ npm run test -- src/shell/account/shortcuts
 ```
 
 `ShortcutRecorder.test.tsx` and `ShortcutsTab.test.tsx` mount the whole
-app in a Chrome tab, on a Mac unless a case names Linux, over the fake
-API, with `shortcuts-test-kit.ts`. The fake answers each save with the
-reply that the test sets, so each test also checks the request that the
-tab sent. A case that holds a layout switch key presses GroupNext on the
-physical key of a modifier, and the window loses the focus at the end of
-the test, which lets go of the switch. `tab-rows.test.ts` checks the rows
-of each host in Node.
+app over the fake API, with `shortcuts-test-kit.ts`. The app runs in a
+Chrome tab on a Mac, unless a case names another system, such as Linux or
+Windows. The fake answers each save with the reply that the test sets, so
+each test also checks the request that the tab sent. A case that holds a
+layout switch key presses GroupNext on the physical key of a modifier, and
+the window loses the focus at the end of the test, which lets go of the
+switch. `tab-rows.test.ts` checks the rows of each host in Node.
+
+A case of `ShortcutsTab.test.tsx` on Windows starts with `Ctrl++` as the
+saved key of Command palette. The row shows the chips Ctrl and +. A screen
+reader hears Control Plus for the key and in the names of Change and
+Remove.
 
 ### Key Code
 
@@ -82,8 +87,10 @@ of each host in Node.
 - [CommandRow.tsx](CommandRow.tsx) and [RowStates.tsx](RowStates.tsx): the
   row of a command in each state, and the fixed row.
 - [ShortcutParts.tsx](ShortcutParts.tsx): `Recorder`, `KeyButton`, and the
-  lines under a row. [ShortcutIntro.tsx](ShortcutIntro.tsx): the lines,
-  Reset all, and its question.
+  lines under a row. `Keys`, `KeyButton`, and `spokenKey` draw and name
+  each key from the tokens of `shortcutTokens`.
+  [ShortcutIntro.tsx](ShortcutIntro.tsx): the lines, Reset all, and its
+  question.
 
 ### Related Docs
 

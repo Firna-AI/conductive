@@ -17,7 +17,7 @@
 - **Options:**
   - **A.** Change the sentence to say that an action on a bar without a tint takes the outline tone. Effort: Small.
   - **B.** Limit the comment to the tint that `barTint` returns, and delete the sentence about the fill. The rule stays in `ActionButton.tsx`, `BarActions.tsx`, and `design-bar.md`. Effort: Small.
-  - **C.** Give the fill rule one code home: a helper beside `TintedTheme` in `docs/mockups/src/components/common/tint.tsx` that gives a tinted button the primary tone and every other button the outline tone. Call it from `ActionButton.tsx` and `BarActions.tsx`, narrow the comment as in B, and update `plans/follow-ups/bar-button-fills-untested.md`, which names the rule in `ActionButton.tsx`. Effort: Small.
+  - **C.** Give the fill rule one code home: a helper beside `TintedTheme` in `src/ui/components/common/tint.tsx` that gives a tinted button the primary tone and every other button the outline tone. Call it from `ActionButton.tsx` and `BarActions.tsx`, narrow the comment as in B, and update `plans/follow-ups/bar-button-fills-untested.md`, which names the rule in `ActionButton.tsx`. Effort: Small.
 - **Left out:**
   - Keep the comment: it keeps the contradiction.
   - Restore the primary fill: it breaks the user's choice.

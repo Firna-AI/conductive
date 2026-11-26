@@ -1,10 +1,11 @@
 import { SegmentedControl, type SegmentOption } from '@firna/ui/segmented'
 import { defaultChoice, fastChoice } from '../../fixtures/agents'
-import { noop } from '../../noop'
-import { ModelPicker } from '../chat/ModelPicker'
-import { useControlSizes } from '../common/touch'
-import { Section } from './Section'
-import styles from './AccountSections.module.css'
+import { noop } from '../../../../../src/ui/noop'
+import { modelPicker } from '../../entries/components/chat/ModelPicker.mockup'
+import { placedModelAnchor } from '../../entries/components/chat/PlacedModelMenu.mockup'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import { section } from '../../entries/components/settings/Section.mockup'
+import styles from '../../../../../src/ui/components/settings/AccountSections.module.css'
 
 /**
  * How New workspace opens on a computer: as the page, or as a dialog over
@@ -49,22 +50,38 @@ function NewWorkspaceViewChoice(props: {
  * The New workspaces section of Preferences: the model, the effort, and the
  * speed that new workspaces start with, and how New workspace opens. Each
  * change saves at once. A failed save shows its error and keeps the saved
- * choice. `fastMenu` draws the menu of the picker open, with fast mode on.
+ * choice. `fastMenu` opens the picker, with fast mode on. The screen then
+ * draws its menu above the page with `PlacedModelMenu`, so the box of the
+ * page does not cut it, because the picker sits low under Favourites.
  */
 export function DefaultsSection(props: {
   view: NewWorkspaceView
   saveFailed: boolean
   fastMenu?: boolean
 }) {
+  const picker = (
+    <modelPicker.Component
+      choice={props.fastMenu ? fastChoice : defaultChoice}
+      menu={false}
+      moklyInstance="default-model"
+      open={props.fastMenu === true}
+    />
+  )
   return (
-    <Section description="How you start new workspaces." title="New workspaces">
+    <section.Component
+      description="How you start new workspaces."
+      moklyInstance="new-workspaces"
+      title="New workspaces"
+    >
       <div className={styles.defaults}>
         <span className={styles.defaultsLabel}>Model and effort</span>
-        <ModelPicker
-          choice={props.fastMenu ? fastChoice : defaultChoice}
-          open={props.fastMenu}
-          placement="below-start"
-        />
+        {props.fastMenu ? (
+          <placedModelAnchor.Component moklyInstance="default-model-anchor">
+            {picker}
+          </placedModelAnchor.Component>
+        ) : (
+          picker
+        )}
         <span className={styles.defaultsLabel}>{viewLabel}</span>
         <div className={styles.defaultsWide}>
           <NewWorkspaceViewChoice
@@ -73,6 +90,6 @@ export function DefaultsSection(props: {
           />
         </div>
       </div>
-    </Section>
+    </section.Component>
   )
 }

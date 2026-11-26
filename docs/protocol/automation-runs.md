@@ -10,7 +10,9 @@ number names a dated record, as
 decision number names a decision of the change that adds
 [secrets](secrets.md), as that doc says. An org login decision number
 names a decision of the change that adds the org logins, as
-[Tokens and secrets](tokens-and-secrets.md) says.
+[Tokens and secrets](tokens-and-secrets.md) says. An automation
+capabilities decision number names a decision of the change that adds
+Capabilities to automations, as [Automations](automations.md) says.
 
 ## A run is a workspace
 
@@ -56,12 +58,53 @@ names a decision of the change that adds the org logins, as
   the session, as
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says.
-- A run workspace starts with no pre-approved secret, as
-  [Grants](secrets.md#grants) says. Its Mac access is off, as
-  [Mac access](secrets.md#mac-access) says (secrets decision 18 A).
-- A secret request of a run waits for a member, as each request does
-  (secrets decision 5 C). [Turns that no person started](secrets.md#turns-that-no-person-started)
-  gives the reason and the risk.
+- [The secrets of a run](#the-secrets-of-a-run) states which secrets the
+  run uses with no request.
+
+## The secrets of a run
+
+- A run workspace starts with the
+  [chosen secrets](automations.md#chosen-secrets) of its automation as
+  pre-approvals (automation capabilities decision 1 A). So each session
+  there uses them with no request, as [Grants](secrets.md#grants) says.
+- The run workspace records the owner as the member who pre-approved each
+  of them. Every member can remove each one in the Capabilities of the run
+  workspace, as for each pre-approval (secrets decision 8 B).
+- The run takes the chosen secrets of its automation at its create, and it
+  keeps them for each retry of that create. A later change of the chosen
+  secrets changes no run workspace that exists.
+- A secret that a member deletes during the start leaves the list, and the
+  run goes on without it. Reason: the run can still do the work that needs
+  no such secret. A deleted secret ends each of its grants anyway, as
+  [Storage](secrets.md#storage) says.
+- A run workspace starts with no grant on any Mac. An automation has no
+  choice of Mac access (automation capabilities decision 2 A), as
+  [The control of an automation](capabilities.md#the-control-of-an-automation)
+  says.
+- The agents of a run can still ask for a command on the Mac of the
+  sender of their turn, from the first turn of the run, as
+  [Agents can always ask](mac-access.md#agents-can-always-ask) says. The
+  owner sends the first turn. [Risks](mac-access.md#risks) states the
+  risk.
+- A workspace that the agent of a run creates with the workspace tools
+  gets no capability. It starts with no pre-approval, as
+  [Grants](secrets.md#grants) says, and with no grant on any Mac. Reason:
+  the owner chose the secrets for the run workspaces only.
+- A request of a run for each other secret waits for a member, as each
+  request does (secrets decision 5 C).
+  [Turns that no person started](secrets.md#turns-that-no-person-started)
+  gives the reason and the risks.
+- A grant that ends with the first turn of the run was rejected, as a run
+  grant and as a session approval of the first session. With it, each
+  later turn in the run workspace asks again, and it costs more work.
+- A run workspace that reads the current chosen secrets of its automation
+  at each use was rejected, because a member could then not remove one of
+  them in one run workspace.
+- Pre-approvals that serve only the turns that the owner sends were
+  rejected. They still stay in each kept run workspace, and they would be
+  the first grant that depends on the sender.
+- Allow for this automation on a request card was rejected, because the
+  first run still waits for a member.
 
 ## When a run starts
 
@@ -119,6 +162,10 @@ names a decision of the change that adds the org logins, as
 - The run text copies no title and no body of a pull request.
 - Reason: the agent reads the pull request itself, and the facts stay
   short.
+- The run text names no chosen secret. Reason: the agent instructions of
+  the first session already name the secrets that it uses with no request,
+  as [The capabilities](agent-instructions-changes.md#the-capabilities)
+  says. `list_secrets` gives the whole list.
 
 ## Run states
 

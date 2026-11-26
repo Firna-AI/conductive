@@ -105,6 +105,7 @@ export async function automationsRoute(
       userId,
       previous === null,
       body.active !== undefined,
+      body.capabilities !== undefined,
     ))
   ) {
     if (previous) await checkWriteAccess(env, orgId, previous.id, userId, false)

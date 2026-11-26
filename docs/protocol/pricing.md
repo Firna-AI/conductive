@@ -89,7 +89,7 @@ month, in US dollars.
   day 14 of a stop.
 - Reason: the org pays for all its compute, and one rule is the easiest
   for an org to check.
-- A cloud computer stops after 30 minutes without activity, unless an
+- A cloud computer stops after a set time without activity, unless an
   agent turn runs, as [Stop and resume](workspace-life.md#stop-and-resume)
   states. A stopped cloud computer uses no hours.
 
@@ -164,7 +164,11 @@ hand. An accountant should confirm them before the first sale.
   - the size of each cloud computer
   - the one pool of the org
   - the rule that every minute of every cloud computer counts
-  - the stop after 30 minutes without activity, unless an agent turn runs
+  - the stop after a set time without activity, unless an agent turn runs.
+    The page gives no number, because the operator can change the
+    [stop time](stop-and-resume.md#the-stop) at any time. A number that the
+    Worker fills in when it serves the page was rejected by Cal on
+    20 November 2026, and so were the fixed number and the longest time.
   - the price of an extra hour, and its monthly limit
 - The page offers no way to choose or buy a plan. No plan has an action,
   and no plan is marked as the best. Reason: billing has not started, and

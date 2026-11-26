@@ -12,6 +12,7 @@ import {
   checkRunnerEventLimits,
 } from './runner-event-limits'
 import { checkDisplayedPortReport } from './port-reports'
+import { checkDisplayedSkillReport } from './skill-reports'
 import { parseToolDetailPart } from './tool-detail-input'
 
 export interface IncomingRunnerEnvelope {
@@ -62,6 +63,8 @@ export function parseRunnerTransport(
         ? { completeToolDetails: true }
         : {}),
       ...(input.fileServer === true ? { fileServer: true } : {}),
+      ...(input.capabilityNotices === true ? { capabilityNotices: true } : {}),
+      ...(input.services === true ? { services: true } : {}),
       ...(input.loginKinds === undefined
         ? {}
         : { loginKinds: parseLoginKinds(input.loginKinds) }),
@@ -120,13 +123,15 @@ export function parseRunnerEnvelope(
   return parseRunnerPayload(input)
 }
 
-/** File display labels can grow after the raw transport checks have passed. */
+/** Display labels can grow after the raw transport checks have passed. */
 export function parseRunnerOutputEnvelope(
   input: RunnerEventEnvelope,
 ): RunnerEventEnvelope {
   const parsed = parseRunnerPayload(input)
   if (parsed.event.type === 'ports.updated')
     checkDisplayedPortReport(parsed.event)
+  if (parsed.event.type === 'skills.updated')
+    checkDisplayedSkillReport(parsed.event)
   if (
     parsed.event.type !== 'files.snapshot' &&
     parsed.event.type !== 'files.changed' &&

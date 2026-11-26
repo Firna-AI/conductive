@@ -1,7 +1,7 @@
 import { paths } from '../../paths'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
-import styles from './LegalLinks.module.css'
+import styles from '../../../../../src/ui/components/marketing/LegalLinks.module.css'
 
 /** The legal pages of the site, as the user chose for decision 35. */
 const legalPages = [

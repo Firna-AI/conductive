@@ -1,8 +1,13 @@
 import type { ReactNode } from 'react'
-import { Menu, type MenuEntry } from '../common/Menu'
+import { iconKeyOf } from '../../entries/components/common/icons'
+import { menu as menuPart } from '../../entries/components/common/Menu.mockup'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
+import { sheet } from '../../entries/components/common/Sheet.mockup'
 import { PointMenu } from '../common/PointMenu'
-import { Sheet } from '../common/Sheet'
-import { addToChatItem, copyPathItem } from './rowMenuCopy'
+import {
+  addToChatItem,
+  copyPathItem,
+} from '../../../../../src/ui/components/files/rowMenuCopy'
 import styles from './FileRowMenu.module.css'
 
 /**
@@ -10,13 +15,19 @@ import styles from './FileRowMenu.module.css'
  * change: the path of the row from the root of the repository, the name
  * that the row shows, and the items. A right click opens it at the pointer
  * on desktop. A phone draws it as a sheet over the screen, and the row
- * keeps its mark under the sheet.
+ * keeps its mark under the sheet. The items are JSON, with the key of each
+ * icon, as the registered menu takes them.
  */
 export type FileRowMenu = {
   path: string
   name: string
-  entries: readonly MenuEntry[]
+  entries: readonly MenuEntryData[]
   at: 'pointer' | 'sheet'
+}
+
+/** An item of a row menu, with the key of its icon. */
+function item(copy: typeof copyPathItem): MenuEntryData {
+  return { kind: 'item', label: copy.label, icon: iconKeyOf(copy.icon) }
 }
 
 /**
@@ -26,10 +37,10 @@ export type FileRowMenu = {
  * now, such as a deleted file of Changes or a row while the bar of the
  * cloud computer takes the place of the message field, has only Copy path.
  */
-export function rowMenuEntries(addToChat: boolean): MenuEntry[] {
-  const copy: MenuEntry = { kind: 'item', ...copyPathItem }
+export function rowMenuEntries(addToChat: boolean): MenuEntryData[] {
+  const copy = item(copyPathItem)
   if (!addToChat) return [copy]
-  return [{ kind: 'item', ...addToChatItem }, { kind: 'divider' }, copy]
+  return [item(addToChatItem), { kind: 'divider' }, copy]
 }
 
 /**
@@ -55,8 +66,13 @@ export function RowMenuItem(props: {
 export function RowMenuSheet(props: { menu: FileRowMenu }) {
   const { menu } = props
   return (
-    <Sheet title={menu.name}>
-      <Menu entries={menu.entries} label={menu.name} placement="sheet" />
-    </Sheet>
+    <sheet.Component moklyInstance="file-row-menu-sheet" title={menu.name}>
+      <menuPart.Component
+        entries={menu.entries}
+        label={menu.name}
+        moklyInstance="file-row-menu"
+        placement="sheet"
+      />
+    </sheet.Component>
   )
 }

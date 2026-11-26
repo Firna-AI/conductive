@@ -1,7 +1,10 @@
 import type { BuildPhase } from './lifecycle/build-data'
+import type { ImageSourceFailureDetails } from './lifecycle/image-sources/failure'
 import type { RepairKind } from './lifecycle/repair-data'
 import type { WorkspaceStartJob } from './lifecycle/start-types'
 import type { WorkspaceArchiveState } from './lifecycle/archive-types'
+import type { ContinueJob } from './lifecycle/continue-types'
+import type { ContinueStopCause } from './lifecycle/continue-stop-causes'
 import type {
   ErrorSummary,
   WarningCode,
@@ -14,6 +17,21 @@ import type { GatewayRefusal } from './model-gateway/errors'
 import type { UnexpectedErrorFields } from './unexpected-error'
 
 export const SIMPLE_WARNINGS = {
+  capability_notes_failed: 'Capability notes could not be kept.',
+  capability_notes_unavailable:
+    'The workspace object is unavailable. The capability route uses the direct save path.',
+  starting_favourite_skipped:
+    'An entry of CONDUCTIVE_STARTING_FAVOURITES was skipped.',
+  saved_favourites_unreadable:
+    'The saved model favourites of an account could not be read. The account uses the starting favourites.',
+  starting_favourites_fallback:
+    'CONDUCTIVE_STARTING_FAVOURITES has no usable entries. Starting favourites use the app default when available.',
+  runner_service_message_invalid:
+    'A private service transfer was discarded. The runner connection stays open.',
+  runner_service_negotiation_unavailable:
+    'Service support could not be negotiated. The runner connection continues without services.',
+  provider_switch_wake_failed:
+    'The provider account switch remains saved for its next image alarm.',
   provider_accounts_invalid:
     'Some sandbox provider accounts are not configured correctly.',
   provider_assignment_weights_recovered:
@@ -24,6 +42,12 @@ export const SIMPLE_WARNINGS = {
     'A runner hello had an invalid file server announcement. It counts as no file server.',
   workspace_alarm_failed:
     'Workspace alarm work failed. Its durable deadline will retry.',
+  files_projection_chunks_discarded:
+    'A file projection write discarded damaged chunks.',
+  start_record_failed:
+    'A job step record of a start could not be saved. The start goes on without it.',
+  start_record_send_failed:
+    'The job step records of a start could not be sent. The shown state was saved without them.',
   terminal_restart_refresh_failed:
     'The terminal credentials and support could not be refreshed after Restart.',
   automation_schedule_failed:
@@ -32,6 +56,16 @@ export const SIMPLE_WARNINGS = {
     'A queued automation run could not start. The next scan will try again.',
   automation_background_start_failed:
     'A pull request run could not start in the background.',
+  merge_queue_fix_retry:
+    'A merge queue fix step failed. The queue alarm will retry it.',
+  merge_queue_report_failed:
+    'A merge queue turn report failed. The workspace alarm will retry it.',
+  merge_queue_merge_retry:
+    'A merge queue merge step failed. The queue alarm will retry it.',
+  merge_queue_step_retry:
+    'A merge queue step failed. The queue alarm will retry it.',
+  merge_queue_refresh_failed:
+    'The merged pull request was recorded. The workspace GitHub refresh failed.',
   marketing_site_unavailable: 'The built marketing site is not available.',
   turn_speed_invalid:
     'A turn end had a speed that the Worker does not know. It counts as standard speed.',
@@ -55,8 +89,18 @@ export const SIMPLE_WARNINGS = {
     'The retry of approval emails failed. It runs again at the next timer.',
   feedback_send_cleanup_failed:
     'Feedback send record cleanup failed. It runs again at the next timer.',
+  codex_device_cleanup_failed:
+    'Codex device cleanup failed. It runs again at the next timer.',
+  record_cleanup_failed:
+    'Record cleanup failed. It runs again at the next timer.',
+  lifecycle_alarm_repair_failed:
+    'Lifecycle alarm repair failed. It runs again at the next timer.',
   software_image_repair_failed:
     'Software image repair failed. It runs again at the next timer.',
+  job_record_cleanup_failed:
+    'The deletion of old job step records failed. It runs again at the next timer.',
+  merge_queue_list_cleanup_failed:
+    'The deletion of expired merge queue list facts failed. It runs again at the next timer.',
   software_image_cleanup_failed:
     'Software image cleanup failed. It runs again at the next timer.',
   attachment_cleanup_retry: 'An attachment cleanup will retry.',
@@ -89,6 +133,26 @@ export const RUNNER_MESSAGE_STAGES = [
 
 export type RunnerMessageStage = (typeof RUNNER_MESSAGE_STAGES)[number]
 
+/** The runner work that a workspace marks just after a runner connects. */
+export const RUNNER_WORK_KINDS = [
+  'hello',
+  'event',
+  'file_result',
+  'move_refused',
+  'flush',
+] as const
+
+type RunnerWorkKind = (typeof RUNNER_WORK_KINDS)[number]
+
+/** Values that `runner_work_interrupted` checks again before it logs them. */
+export interface RunnerWorkFields {
+  work: RunnerWorkKind | 'unknown'
+  stage: RunnerMessageStage | null
+  eventType: string | null
+  eventNumber: number | null
+  size: number | null
+}
+
 /** The provider step of a file check or download into a cloud computer. */
 export const ATTACHMENT_STEPS = ['check', 'start', 'status', 'command'] as const
 
@@ -107,6 +171,8 @@ export type WorkerWarning =
   | (RunnerWarningFields & {
       kind: 'runner_connected' | 'runner_disconnected'
     })
+  | (RunnerWarningFields &
+      RunnerWorkFields & { kind: 'runner_work_interrupted' })
   | (RunnerWarningFields & {
       kind: 'turn_ended_without_stop_request'
       turnId: WarningId
@@ -166,6 +232,12 @@ export type WorkerWarning =
       cancelled: boolean
     }
   | {
+      kind: 'workspace_continue_ended'
+      workspaceId: WarningId
+      phase: ContinueJob['phase']
+      stopCause: ContinueStopCause
+    }
+  | {
       kind: 'workspace_first_message_failed'
       workspaceId: WarningId
       error: ErrorSummary
@@ -210,6 +282,8 @@ export type WorkerWarning =
       kind: 'image_build_failed'
       buildId: WarningId
       phase: BuildPhase
+      sourceStep: ImageSourceFailureDetails['sourceStep'] | null
+      githubStatus: number | null
       error: ErrorSummary
     }
   | {

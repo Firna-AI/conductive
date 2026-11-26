@@ -1,5 +1,6 @@
 import type { AutomationTriggerInput } from '../../src/shared/automations'
 import type { TestHarness } from '../test-support/harness'
+import { seedAutomation } from '../test-support/d1-seeds'
 import { runFixture } from './runs.test-support'
 import { automationSchedule } from './schedules'
 
@@ -18,16 +19,7 @@ export async function scanFixture(harness: TestHarness) {
     timeZone = 'Europe/London',
   ) => {
     if (id !== 'automation-one')
-      await db
-        .prepare(
-          `INSERT INTO automations
-        (id, org_id, owner_user_id, name, repository_id, section_id, prompt, agent, model, effort,
-         time_zone, triggers_json, created_at, updated_at)
-        SELECT ?, org_id, owner_user_id, name, repository_id, section_id, prompt, agent, model, effort,
-          time_zone, triggers_json, created_at, updated_at FROM automations WHERE id = 'automation-one'`,
-        )
-        .bind(id)
-        .run()
+      await seedAutomation(db, { id, copyFrom: 'automation-one' }).run()
     await db
       .prepare(
         'UPDATE automations SET triggers_json = ?, time_zone = ?, next_run_at = ? WHERE id = ?',

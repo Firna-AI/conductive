@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AppModel } from './app/app-model'
 import { useFileDropGuard } from './app/file-drags'
+import { useKeyboardViewport } from './app/keyboard-viewport'
 import { NavigationContext, type Navigation } from './app/navigation'
 import { PanelLayout } from './app/panels'
 import { ServicesContext, type AppServices } from './app/services'
@@ -22,7 +23,8 @@ import {
  * `features` gives the parts of a workspace that later milestones build,
  * such as the chat, the files, and the tools. A drop of files outside each
  * message box does nothing, as `useFileDropGuard` says, so the browser
- * never opens a file in place of the app.
+ * never opens a file in place of the app. While an on-screen keyboard
+ * shows, the app ends at the keyboard, as `useKeyboardViewport` says.
  */
 export function App(props: {
   services: AppServices
@@ -33,6 +35,7 @@ export function App(props: {
   const [panels] = useState(() => new PanelLayout(props.services.storage))
   const viewport = useViewport()
   useFileDropGuard()
+  useKeyboardViewport()
   return (
     <ServicesContext.Provider value={app.services}>
       <AppModelContext.Provider value={app}>

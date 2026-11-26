@@ -14,6 +14,7 @@ import { runsPage } from '../../test-support/fixtures/automation-runs'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { record } from '../api/parse'
 import { requireOrg, type DevBackend } from './backend'
+import { createdCapabilities } from './capability-routes'
 import { startWorkspace } from './create-routes'
 import {
   ownerRequired,
@@ -57,7 +58,8 @@ function runText(automation: Automation): string {
  * create that the fake refuses, such as without an image, with the code
  * and the words of the refusal. A prompt that contains `fail` stands for a
  * cloud computer that did not start: the run fails and keeps its
- * workspace, in the error state with Try again.
+ * workspace, in the error state with Try again. The workspace starts with
+ * the chosen secrets of the automation pre-approved, and Mac access off.
  */
 function startRun(
   backend: DevBackend,
@@ -74,6 +76,10 @@ function startRun(
     const error = { code: 'agent_login_required', message }
     return { ...run, state: 'failed', error }
   }
+  const capabilities = createdCapabilities(backend.state, org.org.id, {
+    ...automation.capabilities,
+    macAccess: false,
+  })
   let created: CreateWorkspaceResponse
   try {
     created = startWorkspace(backend, org, {
@@ -93,6 +99,7 @@ function startRun(
     return { ...run, state: 'failed', error: refusal }
   }
   const workspaceId = created.workspace.id
+  capabilities.keep(workspaceId)
   if (!created.error) return { ...run, workspaceId }
   const { code, message } = created.error
   return { ...run, state: 'failed', workspaceId, error: { code, message } }

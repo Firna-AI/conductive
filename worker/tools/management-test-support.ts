@@ -50,6 +50,7 @@ export async function toolRouteFixture(harness: TestHarness) {
     workspace,
     session: { id: session.id, link: session.link },
     message: {
+      author: 'member',
       id: 'message / one',
       sessionId: session.id,
       sender: sample.message.sender,

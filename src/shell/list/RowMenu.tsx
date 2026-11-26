@@ -1,11 +1,9 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import { useRef, useState } from 'react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import menuStyles from '../../../docs/mockups/src/components/common/Menu.module.css'
-import type {
-  Submenu,
-  WorkspaceMenuItem,
-} from '../../../docs/mockups/src/components/workspaces/workspaceMenu'
+import type { QueueMenuAction } from '../../app/merge-queue'
+import { classes } from '../../ui/components/common/classes'
+import menuStyles from '../../ui/components/common/Menu.module.css'
+import type { Submenu } from '../../ui/components/workspaces/workspaceMenu'
 import { OwnerChoices, useOwnerChoices } from '../../members/OwnerChoices'
 import { nameLabel } from '../../shared/name-label'
 import type { Section } from '../../shared/sections'
@@ -16,6 +14,7 @@ import { MenuList } from '../ui/MenuList'
 import { PointMenu, useChoiceFocus } from '../ui/PointMenu'
 import { Sheet } from '../ui/Sheet'
 import type { MenuOpening } from './row-menu'
+import type { RowMenuItem } from './row-queue'
 
 /** What the actions of the menu do to the workspace of the row. */
 export interface RowActions {
@@ -26,6 +25,8 @@ export interface RowActions {
   archive: (workspace: Workspace) => void
   /** The owner changed. The workspace is the API's answer. */
   reassigned: (workspace: Workspace) => void
+  /** Add to merge queue, or Remove from queue, which asks first. */
+  queue: (workspace: Workspace, action: QueueMenuAction) => void
 }
 
 type OpenChoices = { id: Submenu; focus: boolean }
@@ -54,14 +55,17 @@ function sectionEntries(
  * phone sheet whose choices take the place of the actions. Copy link copies
  * the link of the workspace, and each other action changes the workspace of
  * the row. While a change of the owner runs, the menu refuses to close, so
- * its result or its error shows in it.
+ * its result or its error shows in it. A change that takes Reassign to away
+ * ends that state, and the answer of its change then changes nothing. A
+ * render that takes away the item with the focus gives the focus back to
+ * the menu, on desktop and in the sheet.
  */
 export function RowMenu(props: {
   workspace: Workspace
   /** The section that shows the row. */
   sectionId: string | null
   sections: readonly Section[]
-  items: readonly WorkspaceMenuItem[]
+  items: readonly RowMenuItem[]
   opening: MenuOpening
   phone: boolean
   actions: RowActions
@@ -70,16 +74,24 @@ export function RowMenu(props: {
   const { workspace, actions, phone } = props
   const name = nameLabel(workspace.name)
   const [choices, setChoices] = useState<OpenChoices | null>(null)
+  const available = (id: Submenu) =>
+    props.items.some((item) => item.kind === 'action' && item.action === id)
   const owner = useOwnerChoices({
     api: useMembersApi(workspace.orgId),
     workspace,
     onReassigned: actions.reassigned,
     close: props.close,
+    // The state keeps to Reassign to, as the owner picker of the header keys
+    // its state to `canReassign`. A change of the access that takes Reassign
+    // to away drops its change and its error. The other actions then work
+    // again, and the answer of that change changes nothing.
+    scope: `${workspace.orgId}/${workspace.id}/${available('reassign')}`,
   })
   const content = useRef<HTMLDivElement>(null)
+  // The sheet gives a focus that a render loses back to its first action.
+  // Choices that show in place of the actions take the focus here before
+  // that: the checked choice, else the first.
   useChoiceFocus(content, phone && choices !== null)
-  const available = (id: Submenu) =>
-    props.items.some((item) => item.kind === 'action' && item.action === id)
   // A change of the access can take the action of the open choices away.
   if (choices && !available(choices.id)) setChoices(null)
   const close = () => {
@@ -101,6 +113,11 @@ export function RowMenu(props: {
   }
   const entries = props.items.map((item): MenuEntry => {
     if (item.kind === 'divider') return item
+    if (item.kind === 'queue') {
+      const { label, icon } = item
+      const run = () => actions.queue(workspace, item.action)
+      return { kind: 'item', label, icon, onSelect: act(run) }
+    }
     const { action, label, icon } = item
     if (action === 'move' || action === 'reassign') {
       return { kind: 'submenu', id: action, label, icon }

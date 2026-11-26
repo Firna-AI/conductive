@@ -1,4 +1,4 @@
-# Workspace links, file mentions, and tools
+# Workspace links, file and skill mentions, and tools
 
 These pages are part of [the mockup catalogue](catalogue.md).
 
@@ -50,8 +50,8 @@ decisions 1 to 3 of the terminal tabs change, with the test run of
 Terminal 2 shown. Its child
 pages show the other states of the terminals, the Preview tool, from
 decisions 220 C and 221 D, the Preview tabs of the centre row, from
-decisions 288 to 292, its list after a failed repair, and the hidden
-Desktop:
+decisions 288 to 292, its list after a failed repair, the services of the
+Preview tool, and the hidden Desktop:
 
 - `app/tools/terminals` has the one terminal that a workspace starts
   with. Its `limit` variant has ten terminals, with the + off and the line
@@ -114,9 +114,67 @@ Desktop:
   it as one small file, from `worker/previews/opening-page.ts`. Its
   `failed` variant has "Preview not available" and asks the user to open
   the preview again from the workspace.
+- `app/tools/services` has the services of the Preview tool, from
+  services decision 19 A of 20 November 2026. A service is a named server
+  that runs outside every agent turn, until the cloud computer stops, and
+  that never keeps the cloud computer running. The tool lists the services
+  above its servers, under the heading Services, and the servers that no
+  service runs under Servers. Each row has three lines. The first holds the
+  exact name, the filtered label of the program and its folder, the scroll
+  icon of Show log, and the menu button. The second holds the state, the
+  time, and where the service started: the session that the workspace
+  matched, as a link, or Local command. The last holds every port as a
+  button that opens its preview, or "No port". On a phone the list shows
+  after "+", under the tabs of the open previews. The page shows only its
+  canonical screen, with `storybook`, `web`, and `worker` running. Its
+  child pages:
+  - `app/tools/services/ended` has a run that ended with exit code 0, a run
+    that failed with exit code 1, and a command that could not start. Its
+    `memory` variant has `storybook` after the cloud computer ran out of
+    memory, which shows Failed and Out of memory.
+  - `app/tools/services/ports` has `dev`, one service with nine ports. Its
+    line of ports wraps, and the controls keep their place.
+  - `app/tools/services/unavailable` has a report with no service, whose
+    line asks the user to have the agent start one. Its `older-software`
+    variant has software without services, which shows the tool as before,
+    and its `stopped` variant has a stopped cloud computer, whose tools show
+    the state of the cloud computer with Resume.
+  - `app/tools/services/load-failed` has a first read of the list that
+    failed. Under Services, the notice "The services didn't load", with the
+    message of the server and Try again, takes the place of the rows. No
+    port leaves Servers for a service, and the Other port row stays. A
+    later read that fails keeps the last list with no notice, as
+    `app/tools/services` draws it.
+  - `app/tools/services/menu` has the menu of `web`, with Restart and Stop,
+    and a sheet on a phone. Its `read-only` variant has the rows of a viewer
+    who may not restart the software: no menu, and the header state as
+    plain text.
+  - `app/tools/services/stop` has the question "Stop web?" in a dialog, and
+    in a sheet on a phone. Its `stopping` variant has the Stop while it
+    runs, and its `stopped` variant has `web` after the Stop, while the
+    Preview tab of port 3000 stays.
+  - `app/tools/services/restart` has the Restart of `web`, which runs with
+    no question. Its `restarted` variant has the new run.
+  - `app/tools/services/results` has the toast of a Stop that failed. Its
+    `unconfirmed` variant has the toast of a Stop whose reply was lost, over
+    the actual state, and its `stale` variant has the toast of a Stop that
+    named a run that had already ended.
+  - `app/tools/services/log` has the log of `web` in a dialog, and in a
+    sheet on a phone, with the line that says that earlier output is left
+    out. Its variants have the log while it loads, a read that failed, a
+    log with no output yet, and the log of `storybook` after its memory
+    failure.
 - `app/tools/desktop` has the hidden Desktop. It moved into its own
   folder and kept its path, so that `app/tools` shows only its canonical
   screen.
+
+The flow `user-flows/stop-a-service` goes from the list of services,
+through the menu of `web` and the question, to `web` after the Stop. The
+flow `user-flows/restart-a-service` goes from the list, through the menu,
+to the new run of `web`. The flow `user-flows/read-a-failed-service-log`
+goes from the failed row of `storybook` to the end of its log.
+`app/restart` names the services too: Restart in the header keeps them
+running, and the commands that agents started end with the runner.
 
 `app/file-mentions` draws the list of `@` and the file chips of decisions
 213 to 217. Its canonical screen has the query `@addr` in Checkout address
@@ -126,7 +184,18 @@ pages:
 - `app/file-mentions/list` has the list without a query, folders first.
   Its `no-match` variant says "Nothing matches “zipcode”", its `loading`
   variant says "Loading files…", and its `unavailable` variant says that
-  the list of all files is unavailable.
+  the list of all files is unavailable. Its `limited` variant has the
+  limited lists of a large branch, from item 3 A of runner file report
+  limits, which Cal chose on 23 November 2026. The list of `@` reads the
+  one tree of All files, which leaves out `tsconfig.json`. So `@tsconfig`
+  finds nothing, and the line says "Nothing matches “tsconfig”. Some files
+  are not listed, so type the path or ask the agent." A typed path stays
+  text in the message. In an answer, a path that the tree leaves out stays
+  text or code, with no chip. A Markdown link to it shows as the text that
+  the agent typed, and it opens nothing. An image of it shows only its
+  label, or nothing when the label is blank. An attached file keeps its
+  chip. Only a direct read of the path, such as the address of a file tab,
+  opens the file. `app/files/limited` draws the same tree in All files.
 - `app/file-mentions/chips` has a file chip and a folder chip in the
   message box. Its `pointer` variant has the pointer over the icon of the
   file chip, where a × takes the place of the icon. Its `sent` variant has
@@ -161,3 +230,24 @@ message, and ends with a press on the file chip, which opens
 from the answer of `app/file-mentions/answers` to the file tab at the
 lines, `app/files/code/at-line`. Then a press on the picture of the
 screenshot opens it in the file tab, `app/files/image/from-answer`.
+
+`app/skill-mentions` draws the list of `/` and the skill chip of the plan
+of the skill list. Its canonical screen has the query `/pl` at the start of
+a message in Checkout address autocomplete. The list lies above the message
+box, where the list of `@` lies. Each row has the skill icon, the name, and
+the description of a skill, muted and cut with an ellipsis. `plans` comes
+first and is highlighted, then the skills whose descriptions hold the
+query. Its child pages:
+
+- `app/skill-mentions/list` has the list without a query, in name order.
+  Its `loading` variant says "Loading skills…", its `unavailable` variant
+  says "The list of skills is unavailable", and its `none` variant says
+  "This repository has no skills" for `/` alone.
+- `app/skill-mentions/chips` has the skill chip `plans` at the start of
+  the message box. Its `pointer` variant has the pointer over the icon of
+  the chip, where a × takes the place of the icon. Its `sent` variant has
+  the sent message with the chip, and the answer of the agent.
+
+On a phone the skill chip keeps its icon and ends with a ×, as each chip
+of the composer does. The flow `user-flows/use-a-skill` goes from the
+query `/pl`, through the pick of `plans`, to the sent message.

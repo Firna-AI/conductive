@@ -17,7 +17,7 @@ use crate::error::{Error, ErrorResultExt, InputError, Result};
 use crate::process::CommandInput;
 use crate::secrets::input;
 
-use super::{lists, writes};
+use super::{lists, watches, writes};
 
 pub(crate) fn parse(name: Name, fields: &Map<String, Value>, request_id: &str) -> Result<Call> {
     let workspace =
@@ -76,6 +76,7 @@ pub(crate) fn parse(name: Name, fields: &Map<String, Value>, request_id: &str) -
             )
         }
         Name::StopSession => Call::StopSession(workspace()?, session()?),
+        Name::WatchSession => Call::WatchSession(workspace()?, session()?, watches::parse(fields)?),
         Name::GetMessage => Call::GetMessage(workspace()?, session()?, text(fields, "messageId")?),
         Name::CreateSection => Call::CreateSection(AgentCreateSectionRequest {
             name: text(fields, "name")?,

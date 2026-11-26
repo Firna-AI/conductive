@@ -9,14 +9,17 @@ provider, the org image, and the startup script. The terms are those of the
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A chat link decision number names a decision of the change that
 makes each web address of chat text a link, as
-[Chat links](chat-links.md) says. The
+[Chat links](chat-links.md) says. A Markdown parser decision names a
+decision of the change that reads Markdown with one parser, as
+[Chat Markdown](chat-markdown.md) says. The
 [mockup catalogue](../mockups/catalogue.md) draws the tools at
 `app/files` and `app/tools`.
 
 ## Files and changes
 
-- All files shows every file of the branch as a tree. A small mark shows
-  each added or changed file.
+- All files shows the files of the branch as a tree, up to the limit of
+  its report, as [Report limits](file-reports.md#report-limits) says. A
+  small mark shows each added or changed file.
 - All files also shows the files of the context folder that Git ignores,
   without a mark, as
   [The context folder](repository-folders.md#the-context-folder) says.
@@ -26,6 +29,19 @@ makes each web address of chat text a link, as
 - Markdown shows rendered, with a switch to its source. Code shows with line
   numbers and syntax colours. An HTML file shows as a page, with a switch to
   its source, as [HTML file preview](html-file-preview.md) says.
+- The Markdown preview reads a file with the parser of the chat, by the
+  rules of CommonMark with the tables and the strikethrough of GitHub, as
+  [Formatting](chat-markdown.md#formatting) says (Markdown parser decision
+  3 C, 16 November 2026). Quotes, rules, strong text, emphasis,
+  strikethrough, task boxes, headings, and tables have the same look as in
+  the chat.
+- HTML in a Markdown file shows as text. A line-break tag, `<br>`,
+  `<br/>`, or `<br />` in any letter case, shows as a line break, also in a
+  table cell, as [Line breaks](chat-markdown.md#line-breaks) says
+  (Markdown parser decision 1, 16 November 2026).
+- Reason: a file of the repository is untrusted, so no HTML of a file
+  reaches the page. A table of a file with line-break tags then reads as
+  on GitHub.
 - A file tab can open at a line or a range of lines, such as from a file
   chip of an answer with a line target, as
   [Line targets](file-mentions-answers.md#line-targets) says (answer
@@ -54,40 +70,43 @@ makes each web address of chat text a link, as
 - Unlike chat text, the Markdown preview also links a `mailto` address,
   an address with a user name or a password, and an address of the app
   that names no page.
+- An image of the Markdown preview shows its alt text, and no picture
+  loads. At a web address, the alt text is a link to that address, with
+  the rules of a link of the Markdown preview (Markdown parser decision
+  10 B, 18 November 2026). Any other image shows its alt text only.
+- Reason: such an image then shows as in an agent message, as
+  [Chat links](chat-links.md#bare-addresses-and-markdown-links) says. The
+  alt text without a link was not chosen for that reason. No picture
+  loads, because a picture at a web address makes the browser of each
+  reader call a server that the file chose.
 - The header of a file tab can copy and download the file.
+- Select all, Cmd+A on a Mac or Ctrl+A, in the text or the diff of a file
+  tab selects only that text, without the line numbers. A press in the
+  text gives it the focus. Reason: Cal asked on 23 November 2026, because
+  select all selected the whole app, with its lists and tabs.
+- A copy of a selection in the text of a file gives the source text of
+  the selected part of each line, with its empty lines. Each line end
+  that the selection passes becomes a line feed. After select all, it
+  gives the whole text that the view shows. A copy at a caret, with no
+  text selected, leaves the clipboard as it is. The Copy of the header
+  stays the exact copy of the file. Reason: the browser left each empty
+  line out of such a copy.
 - Reading a file has a size limit of 5 MiB, or 5,242,880 bytes.
   Reason: Boat's file read stops at 5 MiB, so a file read that falls back
   to it cannot read more.
-- A PNG, JPEG, GIF, or WebP file up to the read limit shows as a picture
-  (decision 265 B). This holds for each image of the workspace, also one
-  that All files or the chip of a sent message opens.
-- The tab knows such a file by the extension of its name. Reason: the file
-  reads do not give the correct media type for each of these images.
-- The picture keeps its proportions, in the middle of the tab. It shows at
-  its own size, or smaller, so that it fits the width and the height of the
-  tab.
-- When the browser cannot draw the bytes, the tab shows "Download this file
-  to open it", with Download, as for each other binary file.
-- An image over the read limit shows "Open this file in the terminal", as
-  each other file over the limit does.
-- The header keeps Copy and Download. Copy is off for a picture, as for
-  each other binary file.
-- An SVG file stays text with line numbers. Reason: its source is what a
-  member edits.
-- Reason: a press on a screenshot then shows its picture in the file tab,
-  for each image of the workspace, with no new route. A tab with only
-  Download was rejected, because a member then downloads each screenshot
-  to see it.
-- A read of a larger attached image from the storage of the app, and a
-  picture of each attached image in its message, were not chosen. Each
-  needs a new read route with its access checks, or many large reads.
+- [Pictures in file tabs](file-pictures.md) states how a file tab shows a
+  PNG, JPEG, GIF, or WebP file, with its zoom bar and its expanded view.
 - The Markdown preview fills short table rows only up to 65,536 empty
   cells in one file. Then it shows the rest of the file as text
   (decision 88).
 - Changes lists the files that the branch changes against its base branch,
   from the merge base of the two, as [Base branches](base-branches.md)
-  says. Its summary gives the number of changed files and the lines that
-  they add and remove.
+  says, up to the limit of its report.
+- The summary of Changes gives all changed files and the lines that they
+  add and remove, and the count of its tab gives all changed files. Each
+  adds the omitted totals to the `summary` of the report, which counts
+  only the listed files, as [Omitted totals](file-reports.md#omitted-totals)
+  says.
 - A press on a changed file opens its diff against the base branch. The
   diff opens in the temporary tab, as a file does. The diff shows the
   syntax colours of the file, as code does.
@@ -111,51 +130,31 @@ makes each web address of chat text a link, as
   does not document it and can change it. A timer that compares the
   identity of the folder was rejected, because the app already has a
   documented signal for the end of the restore.
-- Runner file reports hold at most 256 KiB, or 262,144 bytes, of compact UTF-8 JSON per event.
-  This includes the event type, metadata, escapes, and delimiters. It excludes the runner envelope.
-- The complete runner envelope also meets the
-  [runner event limit](agent-runner.md#the-agent-runner).
-  Reason: paths have no fixed byte length, so an item count cannot bound an event.
-- Full trees and branch changes lists use numbered parts of one revision (decision 76).
-  Every path and entry stays whole. Each path appears once in the complete report.
-- Tree reports and branch changes reports have independent revision sequences within one runner stream.
-  A new stream starts both at revision 1 with full reports.
-- Each part gives its revision, part number, and total part count as positive safe integers.
-  Part numbers start at 1 and end at the fixed total part count.
-- The runner sends parts in order from one consistent captured state.
-  It does not interleave revisions of one report kind, including tree deltas.
-- A single-part or empty report uses part number 1 and total part count 1.
-  Each changes part repeats the full report's base branch and summary.
-- The summary counts the complete list, rather than one part.
-  The workspace joins entries in part order and uses the full report atomically.
-- A report becomes complete only after every part is stored.
-  The workspace keeps the last complete report while parts are pending.
-- Parts never join across streams, report kinds, or revisions.
-  A conflicting repeated part is invalid. An identical repeated part never counts twice.
-- A resend keeps its stream, runner event number, and payload.
-  A reconnect keeps pending parts. Confirmation of a part includes its durable assembly state.
-- A refused part, a newer full report, or a new stream discards the incomplete report.
-- A new full report has a newer revision than the last applied report of its kind.
-  It can skip unapplied revisions to recover missing or refused data.
-- After a refused tree report or tree delta, the workspace asks for one full file tree, as
-  [Lost workspace updates](agent-runner.md#lost-workspace-updates) says (decision 96).
-  After a refused changes report, it asks for one full changes list.
-- After the refused update, each part of that kind belongs to a replacement.
-  The only exception is a remaining part of the refused report or of an earlier report.
-- A stored new part 1 after the refused update starts a replacement, also at the revision of the refused report.
-- An invalid part counts as a replacement unless its stream, revision, and part number show a remaining part.
-  A tree delta is never a replacement, and it never ends or fails an open tree repair.
-- Each tree delta holds at most 512 changes and meets the same 256 KiB event budget.
-  A large update uses several deltas, each with the next consecutive tree revision.
-- Reason: the count cap also bounds the tree work of each event.
-- A delta applies only after its previous tree revision is complete.
-  The runner increases the branch changes revision by 1 for each new full changes report.
-- A browser file event and a browser file response contain complete reports.
-  They never expose a runner part as a full tree or changes list.
+- [File reports](file-reports.md) states the limits, the omitted totals,
+  the parts, the revisions, and the repairs of the runner's reports of
+  both lists.
+- When the tree report omits entries, All files shows a notice with their
+  number. It names files and folders, because the limit counts folders
+  too: "18,412 files and folders are not listed. Find them in the
+  terminal, or ask the agent."
+- When the changes report omits files, Changes shows a notice with their
+  number: "The totals include 1,243 files that are not listed. Review them
+  in the terminal, or ask the agent."
+- Each count comes from the report, not from the limit. A report without
+  omitted totals shows no notice, and Changes then counts only its rows.
+  The [mockups](../mockups/catalogue-attachments-and-files.md) draw the
+  notices at `app/files/limited` and `app/files/changes/limited`.
+- A limited list is not a failed scan and not an empty repository. Each
+  new complete report replaces its counts at once, and a count of zero
+  removes its notice.
+- A member reaches an omitted file in the terminal, or through the agent.
+  A file tab and a diff tab read their path directly, so a link or an
+  open tab of an omitted path still works.
 - The runner reads one file or one diff on request. When the runner is not
   connected, a file read falls back to the file read of the provider.
-- The Durable Object keeps the last tree and the last changes, so both tabs
-  still show them while the sandbox sleeps and while it starts again.
+- The Durable Object keeps the last tree and the last changes, with their
+  omitted totals. So both tabs still show them and their notices while
+  the sandbox sleeps and while it starts again.
 - Reason: Boat's API can run `git` and read files only while the sandbox
   runs, one request at a time, and with no live updates.
 - While the sandbox does not run, a file or diff tab reads nothing. While
@@ -173,8 +172,8 @@ makes each web address of chat text a link, as
 - The workspace then marks the file tree as unavailable, and each open tab
   gets the mark. The changes list keeps its last complete report.
 - The tree that the workspace serves then carries `unavailable: true`. It
-  keeps the entries and the revision of the last tree. Before the first
-  complete tree, it has revision 0 and no entries.
+  keeps the entries, the revision, and the omitted entry count of the last
+  tree. Before the first complete tree, it has revision 0 and no entries.
 - These empty entries mean an unknown tree, not an empty branch.
 - Only a complete full tree clears the mark. A tree delta and an incomplete
   full tree keep it.
@@ -183,6 +182,10 @@ makes each web address of chat text a link, as
 - All files then keeps the last tree, and a notice says that the latest list
   is unavailable. Before the first complete tree, All files says that the
   list is unavailable, in place of the tree.
+- A limited list keeps its notice of omitted entries or files while its
+  latest list is unavailable, and after a
+  [failed repair](lost-workspace-updates.md) of the list. The notice of
+  that state shows too, each notice in its own place.
 - Reason: the user can tell an old or unknown tree from the latest one. A
   failed scan with no mark was rejected, because the tab then shows an old
   tree as the latest one.

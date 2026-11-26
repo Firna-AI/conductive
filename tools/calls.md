@@ -1,7 +1,8 @@
 # Workspace tool calls
 
 This page belongs to the [workspace CLI and MCP server](README.md). It
-gives the 26 calls of both tools, their options, and their replies.
+gives the 27 Worker calls, their options, and their replies.
+The five [local service calls](services.md) use the same CLI and MCP server.
 [Agent tools](../docs/protocol/agent-tools.md#workspace-tools) and the
 pages that it links state the requirements.
 
@@ -15,7 +16,7 @@ with `conductive`.
 | --- | --- | --- |
 | `list_workspaces` | `workspaces list [--owner MEMBER_ID] [--parent ID] [--state STATE] [--repository ID] [--query TEXT] [--updated-since MILLISECONDS] [--archived true\|false] [--removed true\|false] [--limit NUMBER] [--offset NUMBER]` | Read |
 | `get_workspace` | `workspaces get [--workspace ID]` | Read |
-| `create_workspace` | `workspaces create --repository ID --message TEXT [--agent claude\|codex --model NAME] [--effort LEVEL] [--fast true\|false] [--section ID] [--parent ID] [--name TEXT] [--first-session-title TEXT] [--request-id ID]` | Write |
+| `create_workspace` | `workspaces create --repository ID --message TEXT [--agent claude\|codex --model NAME] [--effort LEVEL] [--fast true\|false] [--section ID] [--parent ID] [--name TEXT] [--first-session-title TEXT] [--request-id ID] [--start-branch BRANCH] [--base-branch BRANCH]` | Write |
 | `rename_workspace` | `workspaces rename --name TEXT [--workspace ID]` | Write |
 | `move_workspace` | `workspaces move [--section ID] [--parent ID \| --top-level] [--workspace ID]` | Write |
 | `archive_workspace` | `workspaces archive [--workspace ID]` | Write |
@@ -32,6 +33,7 @@ with `conductive`.
 | `rename_session` | `sessions rename --session ID --title TEXT [--workspace ID]` | Write |
 | `close_session` | `sessions close --session ID [--workspace ID] [--stop-running-turn]` | Write |
 | `stop_session` | `sessions stop --session ID [--workspace ID]` | Write |
+| `watch_session` | `sessions watch --session ID [--workspace ID] [--turn-id ID]` | Write |
 | `get_message` | `messages get --session ID --message-id ID [--workspace ID]` | Read |
 | `list_previews` | `previews list [--workspace ID]` | Read |
 | `open_preview` | `previews open --port NUMBER [--workspace ID]` | Write |
@@ -122,7 +124,7 @@ rules.
   message started that turn, with that member's rights in the app. A
   message of another member during the turn does not change this.
 - Every member can rename and move a workspace, rename, close, and stop a
-  session, create and delete sections, and open and close previews.
+  session, watch a turn, create and delete sections, and open and close previews.
 - Only the workspace owner or an org admin can archive a workspace.
   Another sender gets HTTP 403 `archive_forbidden`, and nothing changes.
 - The CLI help and the MCP descriptions give these rules. They ask the
@@ -141,6 +143,13 @@ Nesting stops at depth 3. A create under a workspace at depth 3 fails with `nest
 The error gives the `parentId` for a sibling. Pass that ID with `--parent`.
 Start the sibling's name with a one-word group prefix, such as "Limits: ".
 The create reply can give a `notice` about the section, as [Sub-workspaces](../docs/protocol/sub-workspaces.md) says.
+`--start-branch` supplies the first commit of the workspace branch.
+`--base-branch` sets its pull request target and Changes comparison.
+With neither option, both branches use the repository default.
+With only one option, both use that branch.
+The MCP fields are `startBranch` and `baseBranch`.
+Each named non-default branch gets the [branch check](../docs/protocol/start-from-a-branch.md#the-branch-check) with the calling turn sender's GitHub token.
+Creation replay runs before that check and keeps the original branches.
 The first message runs as the sender of the calling turn.
 `--name` gives an optional workspace name, and `--first-session-title` an optional title of the first session.
 Their help says: "Use plain words separated by spaces. Avoid underscores unless the user tells you to add them."
@@ -150,6 +159,7 @@ It keeps each underscore, as [Names from the workspace tools](../docs/protocol/t
 A blank result counts as no name, and the app shows "Untitled".
 The name does not change the branch.
 The create answer holds the stored name, the first session ID, and its absolute `sessionLink`.
+It also gives the initial accepted `turnId`. An older Worker can omit that field.
 Create gives the complete workspace record, with its number and canonical web link.
 That record gives `parentId`, or `null` for a top-level workspace.
 That record also gives `github`, the GitHub summary of the workspace, or null.
@@ -277,6 +287,40 @@ Otherwise `state` is `stopping` while the runner stops the turn, or `stopped`.
 Stopping or closing the calling session can end the calling turn.
 A rename, a close, or a stop starts no computer.
 A stop through the tools, also through a close, records the calling session as its source, as [Stop source](../worker/tools/sessions.md#stop-source) says.
+
+## Session watches
+
+`sessions watch --session ID [--workspace ID] [--turn-id ID]` and MCP
+`watch_session` use `POST /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/watch`.
+The body is `{ turnId?: string }`. Omitted workspace sends `current`.
+The Worker reads the calling session and member from the active calling turn.
+
+Use the actual receiving session and exact `turnId` returned with the work, when available.
+Without `turnId`, watch selects current queued, running, or stopping work.
+The reply gives `workspace`, linked `session`, and a flattened state:
+
+- `watching`, with `watchId` and exact `turnId`.
+- `idle`, with no watch or wake.
+- `finished`, `failed`, or `stopped`, with `turnId`, for an ended exact turn.
+  These replies set no watch and send no wake.
+
+The call returns at once. Repeats coalesce for the same calling session,
+member, exact target, and valid Stop period. They return the same `watchId`.
+The call takes no request ID and adds no watch flags to send or create calls.
+Only the exact active calling turn gets HTTP 400 `invalid_input`.
+An unknown turn or a turn of another session gets HTTP 404 `turn_not_found`.
+The common tool access and error rules apply.
+
+Set the watch, then end the reply when only that watched work remains.
+After a wake, use `read_session` for the result.
+An idle or ended reply means read the session at once.
+A turn end does not mean the whole delegated task is complete.
+Explicit Stop of the calling session drops older pending wakes.
+Automatic idle computer stops keep watches.
+Delivery rechecks current member and session login access.
+A new wake turn acts for the member who set the watch.
+A wake that joins a running turn keeps that turn's sender.
+[Session watches](../docs/protocol/session-watches.md) states the requirements.
 
 ## Sections and previews
 

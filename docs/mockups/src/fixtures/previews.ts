@@ -1,6 +1,6 @@
 import type { ListeningPort } from '../../../../src/shared/generated/ListeningPort'
 import { previewPath } from '../../../../src/shared/previews'
-import { appDomain } from '../brand'
+import { appDomain } from '../../../../src/shared/brand'
 import { orgs } from './orgs'
 import { checkoutAutocomplete } from './workspaces'
 

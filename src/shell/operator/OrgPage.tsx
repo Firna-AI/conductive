@@ -1,150 +1,101 @@
-import { Ban, Trash2 } from 'lucide-react'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import {
-  deletedOrgBody,
-  suspendedOrgBody,
-  type OrgDeletion,
-  type QuestionTarget,
-} from '../../../docs/mockups/src/components/operator/operatorCopy'
-import { orgAccountWords } from '../../../docs/mockups/src/components/operator/providerCopy'
-import { WorkspaceStates } from '../../../docs/mockups/src/components/operator/WorkspaceStates'
-import { DetailList } from '../../../docs/mockups/src/components/settings/DetailList'
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
+import { useEffect, useState } from 'react'
+import type { QuestionTarget } from '../../ui/components/operator/operatorCopy'
+import { liftSwitchLine } from '../../ui/components/operator/switchCopy'
 import { readOperatorOrg } from '../../app/api/read-operator-pages'
+import { OperatorOrgSwitch } from '../../app/operator-org-switch'
+import { OperatorProviders } from '../../app/operator-providers'
 import { OperatorTarget } from '../../app/operator-target'
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'
-import { roleLabels } from '../../members/people'
+import { useStore, type Loadable } from '../../app/store'
 import {
   operatorOrgPath,
   orgSuspensionPath,
   type OperatorOrgDetail,
-  type OperatorOrgMember,
 } from '../../shared/operator'
+import type { OperatorProvidersResponse } from '../../shared/operator-providers'
 import { useApp } from '../context'
 import { Loaded } from '../settings/LoadState'
-import { counted, formatCount, formatLongDay, formatShortDay } from './format'
+import {
+  newSwitchWait,
+  orgSwitchOf,
+  switchRuns,
+  switchTargets,
+} from './account-switch'
+import { StopSwitchDialog, SwitchDialog } from './AccountSwitchDialogs'
 import { OperatorPage } from './OperatorPage'
+import { OrgDetails, useDeletion } from './OrgDetails'
 import { LiftDialog, SuspendDialog } from './TargetDialogs'
-import { suspensionTitle, TargetAction, useTargetPage } from './TargetPage'
-import { Joined, TargetList, TargetRow, TargetState } from './TargetParts'
+import { TargetAction, useTargetPage, type Question } from './TargetPage'
 
 /**
- * The deletion of an org, with the day when everything of it is deleted, as
- * the page writes it, or `null` when no admin deleted the org.
+ * The paragraph that the question of Lift adds while a switch waits for
+ * Lift, because Lift then starts the switch build.
  */
-function useDeletion(org: OperatorOrgDetail | null): OrgDeletion | null {
-  const { now, timeZone } = useServices()
-  if (!org?.deletion) return null
-  const { purgeAt } = org.deletion
-  return {
-    purge: purgeAt === null ? null : formatShortDay(purgeAt, now(), timeZone),
-  }
+function liftExtra(org: OperatorOrgDetail): string | undefined {
+  const item = org.providerSwitch
+  return item?.state === 'waiting' && item.waitReason === 'suspended'
+    ? liftSwitchLine(item.toAccount)
+    : undefined
 }
 
 /**
- * The notices of a suspended or a deleted org, at the top of its page. An org
- * can be both, so the page can show both. The texts of a deleted org claim
- * nothing that its members can open, and a suspension stops its restore.
+ * The questions of the Provider account box: Switch account, with the
+ * configured accounts other than the account of the org, and Stop switch
+ * while a switch waits or builds. A question that the state no longer
+ * allows shows nothing.
  */
-function OrgNotices(props: {
+function SwitchQuestions(props: {
   org: OperatorOrgDetail
-  stopping: number | null
+  question: Question | null
+  accounts: Loadable<OperatorProvidersResponse>
+  switches: OperatorOrgSwitch
+  close: () => void
 }) {
-  const { org } = props
+  const { org, question, accounts, switches, close } = props
   const { now, timeZone } = useServices()
-  const deletion = useDeletion(org)
-  const today = now()
-  return (
-    <>
-      {org.suspension ? (
-        <Notice
-          body={suspendedOrgBody(org.name, props.stopping ?? 0, deletion)}
-          icon={Ban}
-          title={suspensionTitle(org.suspension, today, timeZone)}
-        />
-      ) : null}
-      {org.deletion && deletion ? (
-        <Notice
-          body={deletedOrgBody(org.name, deletion, org.suspension !== null)}
-          icon={Trash2}
-          title={`Deleted on ${formatShortDay(org.deletion.deletedAt, today, timeZone)}`}
-        />
-      ) : null}
-    </>
+  const clock = { now: now(), timeZone }
+  const item = orgSwitchOf(org, clock)
+  if (question === 'stop-switch' && item && switchRuns(item)) {
+    return (
+      <StopSwitchDialog
+        close={close}
+        from={org.providerAccount}
+        item={item}
+        org={org.name}
+        stop={() => switches.stop()}
+      />
+    )
+  }
+  if (
+    question !== 'switch' ||
+    org.switchAvailable !== true ||
+    accounts.state !== 'ready'
   )
-}
-
-/** A member, with the name on GitHub and the state of a suspended member. */
-function MemberRow(props: { member: OperatorOrgMember }) {
-  const { member } = props
-  const state = member.suspended ? <TargetState status="suspended" /> : null
+    return null
+  const ids = accounts.value.accounts.map((account) => account.id)
+  const targets = switchTargets(ids, org.providerAccount)
+  if (targets.length === 0) return null
   return (
-    <TargetRow
-      detail={
-        member.name || state ? (
-          <Joined parts={[member.name, state]} />
-        ) : undefined
+    <SwitchDialog
+      close={close}
+      from={org.providerAccount}
+      org={org.name}
+      switchTo={(to, endRunningJob) =>
+        switches.switchTo({ providerAccount: to, endRunningJob })
       }
-      end={roleLabels[member.role]}
-      target={{ kind: 'user', login: member.login, name: member.name }}
-      to={routes.operatorUser(member.githubId)}
+      targets={targets}
+      wait={newSwitchWait(org, clock)}
     />
   )
 }
 
 /**
- * The page of an org for the operator: its state, its details with its
- * provider account by its ID, its workspaces in each state, and its members
- * with their names and roles. Each member opens the page of that user.
- */
-function OrgDetails(props: {
-  org: OperatorOrgDetail
-  stopping: number | null
-}) {
-  const { org } = props
-  const { timeZone } = useServices()
-  return (
-    <>
-      <OrgNotices org={org} stopping={props.stopping} />
-      <Section title="Details">
-        <DetailList
-          rows={[
-            { term: 'Org ID', value: org.id, mono: true },
-            {
-              term: orgAccountWords.term,
-              value: org.providerAccount,
-              mono: true,
-            },
-            { term: 'Created', value: formatLongDay(org.createdAt, timeZone) },
-            { term: 'Repositories', value: formatCount(org.repositories) },
-          ]}
-        />
-      </Section>
-      <WorkspaceStates
-        builds={{ count: org.running.builds, page: 'org' }}
-        counts={org.workspaceStates}
-      />
-      <Section
-        description={counted(org.members.length, 'member', 'members')}
-        title="Members"
-      >
-        {org.members.length > 0 ? (
-          <TargetList label={`Members of ${org.name}`}>
-            {org.members.map((member) => (
-              <MemberRow key={member.githubId} member={member} />
-            ))}
-          </TargetList>
-        ) : null}
-      </Section>
-    </>
-  )
-}
-
-/**
  * The page of one org, from the Orgs tab or a link, with Suspend, or Lift for a
- * suspended org. A deleted org still has Suspend. After either, the page reads
- * the org again.
+ * suspended org, in its header. A deleted org still has Suspend. The Provider
+ * account box has Switch account, or Stop switch while a switch waits or
+ * builds. The page reads the configured accounts when it opens, for Switch
+ * account. After each write, the page reads the org again.
  */
 export function OrgPage(props: { orgId: string }) {
   const app = useApp()
@@ -160,6 +111,12 @@ export function OrgPage(props: { orgId: string }) {
       ),
   )
   const { target, detail, question, ask } = page
+  const [switches] = useState(
+    () => new OperatorOrgSwitch(app, props.orgId, target.detail),
+  )
+  const [providers] = useState(() => new OperatorProviders(app))
+  useEffect(() => providers.state.watch(), [providers])
+  const accounts = useStore(providers.state.value)
   const org = detail.state === 'ready' ? detail.value : null
   const deletion = useDeletion(org)
   const named: QuestionTarget | null = org
@@ -187,7 +144,15 @@ export function OrgPage(props: { orgId: string }) {
         retry={() => target.detail.refresh()}
         value={detail}
       >
-        {(value) => <OrgDetails org={value} stopping={page.stopping} />}
+        {(value) => (
+          <OrgDetails
+            accounts={accounts}
+            ask={ask}
+            org={value}
+            retryAccounts={() => providers.state.refresh()}
+            stopping={page.stopping}
+          />
+        )}
       </Loaded>
       {named && question === 'suspend' ? (
         <SuspendDialog
@@ -197,8 +162,22 @@ export function OrgPage(props: { orgId: string }) {
           target={named}
         />
       ) : null}
-      {named && question === 'lift' ? (
-        <LiftDialog close={close} lift={() => target.lift()} target={named} />
+      {org && named && question === 'lift' ? (
+        <LiftDialog
+          close={close}
+          extra={liftExtra(org)}
+          lift={() => target.lift()}
+          target={named}
+        />
+      ) : null}
+      {org ? (
+        <SwitchQuestions
+          accounts={accounts}
+          close={close}
+          org={org}
+          question={question}
+          switches={switches}
+        />
       ) : null}
     </OperatorPage>
   )

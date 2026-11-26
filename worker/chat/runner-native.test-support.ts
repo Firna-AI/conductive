@@ -70,6 +70,10 @@ export function runnerControls(
       eventNumber = 0,
       protocolVersion: RunnerProtocolVersion = 2,
       processStartId?: RunnerHello['processStartId'],
+      capabilities: Pick<
+        RunnerHello,
+        'repositoryFolder' | 'loginKinds' | 'fileServer'
+      > = {},
     ) => {
       const response = await runtime.dispatchFetch(
         `${MACHINE_ORIGIN}${MACHINE_PATHS.runner}`,
@@ -87,6 +91,7 @@ export function runnerControls(
         eventNumber,
         protocolVersion,
         processStartId,
+        ...capabilities,
       })
       expect(await runner.inbox.next()).toEqual({
         type: 'welcome',

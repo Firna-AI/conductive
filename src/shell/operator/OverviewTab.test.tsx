@@ -3,6 +3,7 @@
 import { describe, expect, onTestFinished, test, vi } from 'vitest'
 import { HeldRequests } from '../../app/test-kit'
 import { operatorOverviewPath } from '../../shared/operator'
+import { operatorProvidersPath } from '../../shared/operator-providers'
 import {
   byLabel,
   byRole,
@@ -63,6 +64,7 @@ describe('the Overview of the operator section', () => {
     expect(await operatorRequests(server)).toEqual([
       `GET ${overviewPath}`,
       'GET /api/operator/orgs/org_k3str3l',
+      `GET ${operatorProvidersPath()}`,
     ])
   })
 
@@ -173,10 +175,10 @@ describe('the Overview of the operator section', () => {
       retried: queryByRole('region', 'Totals') !== null,
     }).toEqual({
       loading:
-        'AC Acme Alt 1 Alt 1 FX Futex Alt 2 Alt 2 FI Firna Alt 3 Alt 3 Operator C Operator Overview Orgs Users Waitlist Invite codes Providers Workspaces Long runs Org Owner Cloud computer Last activity Running for New workspaces New users Largest orgs Org Members Workspaces Running',
+        'AC Acme Alt 1 Alt 1 FX Futex Alt 2 Alt 2 FI Firna Alt 3 Alt 3 Operator C Operator Overview Orgs Users Waitlist Invite codes Providers Settings Workspaces Long runs Org Owner Cloud computer Last activity Running for New workspaces New users Largest orgs Org Members Workspaces Running',
       longRunRows: 10,
       failed:
-        'AC Acme Alt 1 Alt 1 FX Futex Alt 2 Alt 2 FI Firna Alt 3 Alt 3 Operator C Operator Overview Orgs Users Waitlist Invite codes Providers The numbers could not load Try again',
+        'AC Acme Alt 1 Alt 1 FX Futex Alt 2 Alt 2 FI Firna Alt 3 Alt 3 Operator C Operator Overview Orgs Users Waitlist Invite codes Providers Settings The numbers could not load Try again',
       retried: true,
     })
     expect(await operatorRequests(server)).toEqual([

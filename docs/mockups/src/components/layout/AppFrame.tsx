@@ -1,16 +1,18 @@
 import type { ReactNode } from 'react'
-import { classes } from '../common/classes'
-import { TouchScreen } from '../common/touch'
-import { useMacApp } from '../mac/MacApp'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { TouchScreen } from '../../../../../src/ui/components/common/touch'
+import { useMacApp } from '../../../../../src/ui/components/mac/MacApp'
 import { WindowControls } from '../mac/WindowControls'
-import { acmeRail, OrgRail, type RailState } from './OrgRail'
-import { ResizeHandle, sidebarWidth } from './ResizeHandle'
+import { acmeRail, type RailState } from './OrgRail'
+import { orgRail } from '../../entries/components/layout/OrgRail.mockup'
+import { sidebarWidth } from '../../../../../src/ui/components/layout/ResizeHandle'
+import { resizeHandle } from '../../entries/components/layout/ResizeHandle.mockup'
 import {
   CornerControlsProvider,
   SidebarToggleProvider,
   type SidebarView,
 } from './sidebarPlace'
-import styles from './AppFrame.module.css'
+import styles from '../../../../../src/ui/components/layout/AppFrame.module.css'
 
 /**
  * The desktop app: the org rail, the sidebar of the org, and the main area.
@@ -35,7 +37,10 @@ export function AppFrame(props: {
   const view = props.sidebar ? (props.sidebarView ?? 'shown') : 'shown'
   const corner = mac !== undefined && view !== 'shown'
   const rail = (
-    <OrgRail {...(props.rail ?? acmeRail)} popover={view === 'popover'} />
+    <orgRail.Component
+      {...(props.rail ?? acmeRail)}
+      popover={view === 'popover'}
+    />
   )
   const sidebar =
     props.sidebar && view === 'shown' ? (
@@ -43,7 +48,7 @@ export function AppFrame(props: {
         <SidebarToggleProvider value={mac ? undefined : 'hide'}>
           {props.sidebar}
         </SidebarToggleProvider>
-        <ResizeHandle
+        <resizeHandle.Component
           edge="right"
           label="Resize the sidebar"
           width={sidebarWidth}

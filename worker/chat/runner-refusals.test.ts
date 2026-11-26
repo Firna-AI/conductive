@@ -198,6 +198,13 @@ it('keeps workspace refusal context null when extra fields name an active turn',
     sessionId: context.sessionId,
     turnId: 'foreign',
   })
+  await fixture.receive(3, { type: 'ports.updated', ...context, ports: null })
+  await fixture.receive(4, { type: 'ports.updated', ...context, ports: null })
+  await fixture.receive(5, {
+    type: 'files.unavailable',
+    ...context,
+    discarded: 'x'.repeat(RUNNER_EVENT_MAX_BYTES),
+  })
   expect((await fixture.history()).events.map(({ event }) => event)).toEqual([
     {
       type: 'runner.event-refused',
@@ -217,7 +224,43 @@ it('keeps workspace refusal context null when extra fields name an active turn',
       sessionId: null,
       turnId: null,
     },
+    {
+      type: 'runner.event-refused',
+      streamId: 'stream',
+      runnerEventNumber: 3,
+      runnerEventType: 'ports.updated',
+      reason: 'invalid',
+      sessionId: null,
+      turnId: null,
+    },
+    {
+      type: 'runner.event-refused',
+      streamId: 'stream',
+      runnerEventNumber: 4,
+      runnerEventType: 'ports.updated',
+      reason: 'invalid',
+      sessionId: null,
+      turnId: null,
+      repairFailed: true,
+    },
+    {
+      type: 'runner.event-refused',
+      streamId: 'stream',
+      runnerEventNumber: 5,
+      runnerEventType: 'files.unavailable',
+      reason: 'too_large',
+      sessionId: null,
+      turnId: null,
+    },
   ])
+  expect(
+    fixture.sent
+      .filter((message) => message.type === 'report.refresh')
+      .map((command) => command.kind),
+  ).toEqual(['workspace.title', 'ports.updated'])
+  expect(
+    await fixture.read((view) => view.repairs.get('ports.updated')),
+  ).toMatchObject({ state: 'failed', sent: true })
   expect(
     (await fixture.read((view) => view.session(context.sessionId)))
       ?.activeTurnId,

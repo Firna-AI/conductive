@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"
+    />
     <meta
       name="theme-color"
       media="(prefers-color-scheme: light)"
@@ -18,8 +21,46 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>Conductive</title>
+    <style>
+      /*
+       * iOS 26 and later blur the top edge of a Home Screen web app, and the
+       * blur reaches the header of the page. WebKit skips the blur when a
+       * fixed box with a solid background covers the top edge: at least 90%
+       * of the width and more than 10px tall. It then fills the edge with the
+       * colour of that box. This band is that box, in the colour of the bar.
+       * `background-clip: text` paints nothing, because the band has no
+       * text, and the band takes no taps. WebKit reads the colour from the
+       * style. The band lives here, so it exists from the first frame.
+       */
+      .top-edge {
+        display: none;
+      }
+
+      @supports (-webkit-touch-callout: none) {
+        @media (display-mode: standalone) {
+          .top-edge {
+            display: block;
+            position: fixed;
+            inset: 0 0 auto;
+            z-index: 2147483647;
+            height: 12px;
+            background-color: var(--ui-bar, #0e0f11);
+            -webkit-background-clip: text;
+            background-clip: text;
+            pointer-events: none;
+          }
+        }
+      }
+
+      @media (prefers-color-scheme: light) {
+        .top-edge {
+          background-color: var(--ui-bar, #fbfcfd);
+        }
+      }
+    </style>
   </head>
   <body>
+    <div class="top-edge" aria-hidden="true"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

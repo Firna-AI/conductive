@@ -54,7 +54,9 @@ refresh. A transient Boat error keeps the job step for the next alarm,
 within the [retry window](image-builds.md#provider-retries), except a source
 command start. For a workspace object, it:
 
-- runs the queued start of a create or a resume, one phase at a time
+- runs the queued start of a create or a resume. One run can advance the
+  start by more than one phase, as
+  [The start loop](start-loop.md) says
 - finishes Archive initialization and uncertain allocation recovery before normal start work,
   also after the Restore window, until the workspace row holds the recovered ID
 - stops and retains archived sandboxes, bridges an old disk without secrets, and deletes at the archive deadline.
@@ -65,12 +67,15 @@ command start. For a workspace object, it:
 - repairs the running turns from the committed chat before its deadline
   and idle decisions, as
   [Turn recovery](recovery-and-shown-state.md#turn-recovery) says
-- stops the sandbox after 30 minutes without activity or a running turn
+- stops the sandbox after the [stop time](README.md#the-stop-time)
+  without activity or a running turn
 - extends the Boat auto-stop deadline while a turn runs, unless the owner
   is suspended
 - applies the state in each deadline reply, even when the saved runner
   flag says connected
 - reads the sandbox state from Boat while the runner is not connected
+- checks for an [automatic restart](#automatic-restart) after it completes
+  the regular lifecycle step of a running workspace with a runner that is away
 - watches the restore after each create and resume until Boat reports its
   end, or until a stop, an error, an archive, or a new start, as
   [Creates and resumes](#creates-and-resumes) says
@@ -110,7 +115,11 @@ Browser responses keep the plain string log of the shared contract.
 The `fetch` of the class opens the workspace event socket at
 `workspaceEventsPath` of `src/shared/events.ts`. Forward the browser's
 upgrade request without changes, because the object runs the browser gate
-itself. The socket sends the stored history first, then each new event.
+itself. The socket sends the stored history after the requested event
+number first, then each new event. The workspace GET gives a seed and its
+cutoff for a new workspace stream. Older apps can request a replay from
+event 0. [Workspace events](../../docs/protocol/workspace-events.md) gives
+the read and replay rules.
 
 An admitted failed create keeps its workspace and normal event socket.
 Every current member can read its chat, queued messages, and saved cause.
@@ -126,6 +135,38 @@ production `Workspace` sends each `workspace.updated` and `start.updated`
 event to `WorkspaceChat`, through `commitWorkspaceEvent` or the `publish`
 argument of a chat hook. Chat stores and numbers the only workspace event
 history, with chat and lifecycle events.
+
+### Automatic restart
+
+`runnerDisconnectedAt` in the lifecycle state holds the time when the
+runner connection closed. For an older state with no time, the alarm
+starts the count when it first sees the runner away. `automaticRestartAt`
+records the attempt until the runner is ready again. The same state write
+sets `softwareRestartAt` for the shared restart deadline and shows Starting.
+
+The lifecycle alarm finishes its reconciliation and stop checks first.
+It reads the oldest queued message from the pending chat commands. When
+the two times are due, it confirms that the provider still shows a
+running sandbox and checks access to the captured sandbox and account.
+[Automatic restart](../../docs/protocol/restart-the-software.md#automatic-restart)
+gives the requirements.
+
+The alarm runner tracks the restart commands in a separate task.
+`QueueTurn.outside` releases the chat queue during each command. The
+regular alarm can apply the restart deadline while a command waits.
+Before the restart command, the alarm checks receiver and workspace access
+outside the chat queue. Readiness during these checks cancels the restart
+and keeps the running turns active.
+
+Back in the queue, the alarm checks that the attempt is current and its
+deadline is still open. It saves `automaticRestartSubmitted` and ends the
+running turns. Chat keeps their undelivered messages for the next ready
+runner. The alarm then submits the command outside the queue.
+
+After the submission record, a hello on the saved stream resumes replay
+and keeps Starting.
+A new `runner.ready` before the deadline ends Starting and releases the
+waiting messages.
 
 ## Creates and resumes
 
@@ -151,11 +192,16 @@ create and resume. The workspace object runs that start:
 - The write that ends the `records` phase stores the admission in the start
   job. The end of the create moves it to the completed creation record. A
   repeat with other content still gets the admitted first message.
+- The creation plan keeps the start branch beside the base branch and
+  optional pull request start commit. Older plans use the base, then the
+  default branch when the start branch is absent. A replay uses this plan
+  before any new branch check.
 - Resume restarts only a stopped or failed workspace. A resumed
   sandbox gets fresh env vars and runs the startup script again, but it
   fetches no code. A start older than the last stop cannot restart it.
 - After a failed first start, Resume instead queues a replacement create.
-  It keeps the workspace, branch, repository, creation date, and first-message IDs.
+  It keeps the workspace, workspace branch, start branch, base branch,
+  repository, creation date, and first-message IDs.
   It uses the current image and settings, with a fresh token and allocation key.
   It keeps the original preparation sender and the current retry requester separate.
   Previous cleanup finishes before new allocation, including after a restart.
@@ -167,7 +213,8 @@ create and resume. The workspace object runs that start:
   Its running steps become failed before the workspace error event is published.
   If no step is running or failed, the controller records the failed start itself.
   A later sandbox error after successful creation adds no such step.
-- Each start gives the sandbox the default branch of its repository. It
+- Each start gives the sandbox its base branch, with the repository default
+  as the fallback for a null base. It
   gives no setting for the computer tools, because Boat writes the entry
   of the `computer` server into the sandbox, as
   [What it does](../../runner/README.md#what-it-does) says.
@@ -218,6 +265,9 @@ create and resume. The workspace object runs that start:
   differs from the first, the call throws `StartSuperseded`. The advance
   then ends with no further write, as after a lost reply. The lifecycle
   run sets the start due time one second later.
+- One lifecycle run can advance the start through more than one phase,
+  and it polls a running command or a sandbox that is not ready every
+  250 milliseconds. [The start loop](start-loop.md) gives the rules.
 - The storage reads and writes of a start stay in its queue task. So do
   its calls to the controller and to `DurableLifecycle`, with each
   lifecycle state write. The token write, the admission, the runner
@@ -240,6 +290,15 @@ create and resume. The workspace object runs that start:
   stop, so Restore leaves a pending stop to the lifecycle. So no Archive
   or Restore step reads or changes the sandbox while a cancelled start
   call can still reach the provider.
+- No start begins while a pending stop runs, so that a start never
+  overlaps the old stop. A resume or a Try again in that time, such as the
+  open just after Archive and Restore, is held in
+  [`start-after-stop.ts`](start-after-stop.ts). The newest request
+  replaces an older one. While a start is held, the lifecycle checks the
+  stop at once and then every 5 seconds, not every 30 seconds. When the
+  stop ends, the next lifecycle run queues the held start with every
+  admission check again. An Archive after the request changes the stop
+  epoch and drops it. So does a wait past the start time limit.
 - The first lifecycle prepare of each create and resume also starts the
   restore watch. After a start from a saved snapshot, Boat downloads the
   file content in the background. The
@@ -263,8 +322,8 @@ create and resume. The workspace object runs that start:
   - A stop, an error, an archive, or a new start ends the watch. An access
     stop, such as at an org suspension, also ends it when Boat still runs
     the sandbox and the stop waits for a retry. The watch has no deadline
-    of its own, so it can last until a stop, such as the idle stop after 30
-    minutes without activity.
+    of its own, so it can last until a stop, such as the idle stop after the
+    stop time without activity.
   - A disk retention restart starts no watch, because it starts no
     terminal.
 - The end of a create stores its result in the object, with the first
@@ -280,6 +339,54 @@ create and resume. The workspace object runs that start:
   seconds, and a later resume waits for confirmation. Cleanup keeps the
   saved failure message. Late runner reports cannot revive that failed
   start.
+
+## Start step records
+
+`StartJobRecords` in [`start-job-records.ts`](start-job-records.ts) keeps
+the job step records of the creates and resumes of one workspace object.
+[Job step records](README.md#job-step-records) gives the D1 statements.
+
+- `createWorkspaceIntegration` makes one `StartJobRecords` for each
+  object, and gives its `env` to the lifecycle controller. That env reads
+  each value from the env of the object, except its D1 binding, which
+  comes from [`timed-d1.ts`](timed-d1.ts). `observeProviders` in
+  [`client.ts`](../sandbox/client.ts) marks that binding. So
+  `providerForAccount` gives each provider of that env, and of a copy of
+  it, through [`timed-provider.ts`](timed-provider.ts).
+- `StartRunTimer` in [`start-run-timer.ts`](start-run-timer.ts) adds each
+  D1 and provider call to the open run of a start. A command status read
+  counts as a poll. `WorkspaceLifecycle.alarmLifecycle` gives the timer the
+  wait to enter the chat queue, and `startGuard` gives the wait to enter it
+  again after each outside call. A call of another queue turn during an
+  outside call of the run also counts in the run. A call while no run is
+  open counts nowhere.
+- `runWorkspaceAlarm` calls `begin` with the `dueAt` of
+  `WorkspaceAlarms.begin`, and `end` after the `finish` of the run. A run
+  whose begin finds a start job that is not cancelled is a run of the
+  start. Its end adds one run row with the next run number of the job.
+- `startJobStorage` in [`start-record-storage.ts`](start-record-storage.ts)
+  wraps the start storage. The begin of a job saves the record meta of the
+  job and opens its first phase. Each phase change of a running job closes
+  the old phase and opens the new phase. The end of the job closes each
+  step that is still open, as `done` or `failed`.
+- In the `machine` and `ready` phases, a create or resume request opens
+  `computer:request`. Its reply closes that step and opens
+  `computer:boot`. The first read that shows a ready sandbox closes
+  `computer:boot`. These marks wait in memory until the next write of the
+  records in the queue.
+- [`start-record-buffer.ts`](start-record-buffer.ts) keeps each row under
+  its own key in the object storage. Only a job with record meta gets
+  rows, so a job from before the records gets none. A step row of the
+  running job stays after its send, so that later changes merge into it.
+- [`start-record-send.ts`](start-record-send.ts) sends the rows.
+  `WorkspaceStateProjection` gives them to `persistLifecycleState`, which
+  writes at most 50 rows in the D1 batch of the shown state. Each send
+  first copies the steps of the running start from the lifecycle state,
+  for the step IDs that the Worker sets. When that batch fails, the shown
+  state is written alone and the rows are dropped. The run that ends a
+  start sends the rest of the rows in more batches.
+- A failed record is dropped with the warning `start_record_failed` or
+  `start_record_send_failed`, and the start goes on.
 
 ## The git credential sender
 

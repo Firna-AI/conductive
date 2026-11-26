@@ -2,14 +2,14 @@ import {
   useRef,
   type KeyboardEvent,
   type PointerEvent,
-  type ReactNode,
+  type RefObject,
 } from 'react'
-import { Check, ChevronRight } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import type { MenuPlacement } from '../../../docs/mockups/src/components/common/Menu'
-import menu from '../../../docs/mockups/src/components/common/Menu.module.css'
-import { SwitchPicture } from '../../../docs/mockups/src/components/common/SwitchPicture'
-import type { MenuAction, MenuEntry, MenuSubmenu, MenuSwitch } from './Menu'
+import { ChevronLeft } from 'lucide-react'
+import { classes } from '../../ui/components/common/classes'
+import type { MenuPlacement } from '../../ui/components/common/Menu'
+import menu from '../../ui/components/common/Menu.module.css'
+import type { MenuEntry } from './Menu'
+import { ActionItem, SubmenuItem, SwitchItem } from './menu-items'
 import { useLayerFocus } from './Overlay'
 import ui from './ui.module.css'
 
@@ -63,107 +63,6 @@ function moveFocus(
   items[target]?.focus()
 }
 
-function Item(props: { entry: MenuAction; close: () => void; busy: boolean }) {
-  const { entry, busy } = props
-  const Icon = entry.icon
-  const choice = entry.checked !== undefined
-  let lead: ReactNode = null
-  if (entry.mark) lead = <span className={menu.mark}>{entry.mark}</span>
-  else if (Icon) lead = <Icon aria-hidden className={menu.icon} size={14} />
-  return (
-    <button
-      aria-checked={choice ? entry.checked : undefined}
-      aria-disabled={busy || undefined}
-      className={classes(
-        menu.item,
-        ui.plainButton,
-        ui.menuItem,
-        entry.tone === 'danger' && menu.danger,
-        (entry.disabled || busy) && menu.disabled,
-      )}
-      disabled={entry.disabled}
-      onClick={() => {
-        if (busy) return
-        props.close()
-        entry.onSelect()
-      }}
-      role={choice ? 'menuitemradio' : 'menuitem'}
-      tabIndex={-1}
-      type="button"
-    >
-      {lead}
-      <span className={menu.label}>{entry.label}</span>
-      {entry.detail ? (
-        <span className={menu.detail}>{entry.detail}</span>
-      ) : null}
-      {entry.checked ? (
-        <Check aria-hidden className={menu.check} size={14} />
-      ) : null}
-    </button>
-  )
-}
-
-/**
- * The row of a switch: its label and the switch, as the mockup draws it. A
- * press changes it, and the menu stays open.
- */
-function SwitchItem(props: { entry: MenuSwitch; busy: boolean }) {
-  const { entry, busy } = props
-  return (
-    <button
-      aria-checked={entry.on}
-      aria-disabled={busy || undefined}
-      className={classes(
-        menu.item,
-        ui.plainButton,
-        ui.menuItem,
-        busy && menu.disabled,
-      )}
-      onClick={() => {
-        if (!busy) entry.onToggle()
-      }}
-      role="menuitemcheckbox"
-      tabIndex={-1}
-      type="button"
-    >
-      <span className={menu.label}>{entry.label}</span>
-      <SwitchPicture on={entry.on} />
-    </button>
-  )
-}
-
-/**
- * An item that shows its choices: beside the menu at a point, or in place
- * of the menu in a sheet. An arrow at its end says so. Its open choices
- * keep it highlighted.
- */
-function SubmenuItem(props: { entry: MenuSubmenu; submenus?: SubmenuControl }) {
-  const { entry, submenus } = props
-  const Icon = entry.icon
-  const open = submenus?.open === entry.id
-  return (
-    <button
-      aria-expanded={open}
-      aria-haspopup="menu"
-      className={classes(
-        menu.item,
-        ui.plainButton,
-        ui.menuItem,
-        open && menu.highlighted,
-      )}
-      data-submenu={entry.id}
-      onClick={() => submenus?.show(entry.id, true)}
-      role="menuitem"
-      tabIndex={-1}
-      type="button"
-    >
-      {Icon ? <Icon aria-hidden className={menu.icon} size={14} /> : null}
-      <span className={menu.label}>{entry.label}</span>
-      <ChevronRight aria-hidden className={menu.icon} size={14} />
-    </button>
-  )
-}
-
 /** The item of the list under the pointer, if any. */
 function itemAt(event: PointerEvent<HTMLDivElement>): HTMLElement | null {
   const { target } = event
@@ -177,13 +76,18 @@ function itemAt(event: PointerEvent<HTMLDivElement>): HTMLElement | null {
  * press on an item with a submenu show its choices. At a point, the item
  * under the pointer takes the focus, so one row shows the highlight, and a
  * hover shows the choices of an item, or closes the choices of another.
- * With `focus`, the list moves the focus into itself as it opens and back
- * as it closes. A list in a sheet leaves the focus to the sheet, which is
- * modal, and a menu at a point moves the focus itself.
+ * With `hover`, a list beside its trigger does the same for a mouse or a
+ * pen, and the focus moves only out of choices that close. With `back`, the
+ * list shows the choices of an item in place of its menu: Back at its top
+ * and the left arrow call `back`, which shows the menu again. With `focus`,
+ * the list moves the focus into itself as it opens and back as it closes. A
+ * list in a sheet leaves the focus to the sheet, which is modal, and a menu
+ * at a point moves the focus itself.
  *
  * While `busy`, each item and each switch is off: it fades, a screen reader
- * hears it as off, and a press does nothing. It can still take the focus,
- * so the focus stays in the list, and the arrow keys still move it.
+ * hears it as off, and a press does nothing. An item with a submenu shows
+ * no choices. Each can still take the focus, so the focus stays in the
+ * list, and the arrow keys still move it. Back still works.
  */
 export function MenuList(props: {
   label: string
@@ -192,11 +96,16 @@ export function MenuList(props: {
   close: () => void
   wide?: boolean
   submenus?: SubmenuControl
+  hover?: boolean
+  back?: () => void
+  /** Takes the element of the list, for an owner that shows its choices. */
+  listRef?: RefObject<HTMLDivElement | null>
   focus?: boolean
   busy?: boolean
 }) {
-  const list = useRef<HTMLDivElement>(null)
-  const { placement, submenus } = props
+  const own = useRef<HTMLDivElement>(null)
+  const list = props.listRef ?? own
+  const { placement, submenus, back } = props
   const busy = props.busy ?? false
   const point = placement === 'point'
   useLayerFocus(list, {
@@ -208,18 +117,34 @@ export function MenuList(props: {
     const id = active instanceof HTMLElement ? active.dataset.submenu : null
     if (event.key === 'ArrowRight' && id && submenus) {
       event.preventDefault()
-      submenus.show(id, true)
+      if (!busy) submenus.show(id, true)
+      return
+    }
+    if (event.key === 'ArrowLeft' && back) {
+      event.preventDefault()
+      back()
       return
     }
     moveFocus(event, props.close, point)
   }
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (!point) return
     const item = itemAt(event)
     if (!item) return
-    if (item !== document.activeElement) item.focus({ preventScroll: true })
-    const id = item.dataset.submenu ?? null
-    if (submenus && submenus.open !== id) submenus.show(id, false)
+    if (point) {
+      if (item !== document.activeElement) item.focus({ preventScroll: true })
+      const id = item.dataset.submenu ?? null
+      if (submenus && submenus.open !== id) submenus.show(id, false)
+      return
+    }
+    // Only a mouse or a pen hovers. A touch that moves over the rows, as in
+    // a scroll of the menu, shows no choices.
+    if (!props.hover || !submenus || event.pointerType === 'touch') return
+    const id = busy ? null : (item.dataset.submenu ?? null)
+    if (submenus.open === id) return
+    if (!event.currentTarget.contains(document.activeElement)) {
+      item.focus({ preventScroll: true })
+    }
+    submenus.show(id, false)
   }
   return (
     <div
@@ -234,20 +159,43 @@ export function MenuList(props: {
       ref={list}
       role="menu"
     >
+      {back ? (
+        <>
+          <ActionItem
+            busy={false}
+            entry={{
+              kind: 'item',
+              label: 'Back',
+              icon: ChevronLeft,
+              onSelect: back,
+            }}
+            select={back}
+          />
+          <hr className={menu.divider} />
+        </>
+      ) : null}
       {props.entries.map((entry, index) => {
         switch (entry.kind) {
           case 'item':
             return (
-              <Item
+              <ActionItem
                 busy={busy}
-                close={props.close}
                 entry={entry}
                 key={entry.id ?? entry.label}
+                select={() => {
+                  props.close()
+                  entry.onSelect()
+                }}
               />
             )
           case 'submenu':
             return (
-              <SubmenuItem entry={entry} key={entry.id} submenus={submenus} />
+              <SubmenuItem
+                busy={busy}
+                entry={entry}
+                key={entry.id}
+                submenus={submenus}
+              />
             )
           case 'switch':
             return <SwitchItem busy={busy} entry={entry} key={entry.label} />

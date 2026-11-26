@@ -1,6 +1,8 @@
 import type { Workspace } from '../../shared/generated/Workspace'
-import { helpGroupLabel } from '../../../docs/mockups/src/components/feedback/feedbackCopy'
+import { helpGroupLabel } from '../../ui/components/feedback/feedbackCopy'
+import { queueLabels } from '../../ui/components/workspace/queueCopy'
 
+import { queueBlocks } from '../merge-queue'
 import { routes } from '../router'
 import { groupWorkspaces } from '../sections'
 import { valueOf } from '../store'
@@ -26,7 +28,9 @@ const recentLimit = 5
 
 /**
  * The workspaces of the org: by section in the order of the list, flat,
- * with each sub-workspace in the section that shows it, and archived.
+ * with each sub-workspace in the section that shows it, and archived. The
+ * queued workspaces come first, as the Merge queue group of the list, in
+ * the order of its blocks.
  */
 interface OrgWorkspaces {
   sections: readonly { label: string; workspaces: readonly Workspace[] }[]
@@ -41,11 +45,22 @@ function orgWorkspaces(source: PaletteSource): OrgWorkspaces {
   }
   const { sections, workspaces } = source.list.value
   const groups = groupWorkspaces(sections, workspaces, source.listTime)
+  const repositories = (valueOf(source.repositories) ?? []).filter(
+    (repository) => repository.selected,
+  )
+  const queued = queueBlocks(groups.queued, repositories).flatMap(
+    (block) => block.entries,
+  )
   return {
-    sections: groups.sections.map((group) => ({
-      label: group.section.name,
-      workspaces: group.rows.map((row) => row.workspace),
-    })),
+    sections: [
+      ...(queued.length > 0
+        ? [{ label: queueLabels.group, workspaces: queued }]
+        : []),
+      ...groups.sections.map((group) => ({
+        label: group.section.name,
+        workspaces: group.rows.map((row) => row.workspace),
+      })),
+    ],
     archived: groups.archived,
   }
 }
@@ -115,9 +130,7 @@ export function actionGroups(source: PaletteBase): PaletteGroup[] {
     )
     orgRows.push(...offeredRows(list))
   }
-  const others = source.orgs.filter(
-    (other) => !other.deletion && other.id !== org?.id,
-  )
+  const others = source.orgs.filter((other) => other.id !== org?.id)
   const window = offers.filter((offer) => offer.scope.kind === 'window')
   return [
     { label: workspace.name, rows: offeredRows(workspace.offers) },

@@ -1,6 +1,6 @@
 import { warnWorker } from '../warnings'
+import { readOrgProviderAccount } from '../data/org-provider-account'
 import type { ImageRuntime } from './image-builds'
-import { scheduleIdleImage } from './image-schedule'
 import type { ImageSoftwareArtifact } from './image-software'
 import { workspaceOwnerChangedHook } from './ownership-maintenance'
 import {
@@ -29,8 +29,13 @@ export async function repairLifecycleAlarms(
     pendingWorkspaces: 0,
     pendingOrgs: 0,
   }
-  const repair = async (kind: RepairKind, id: string) => {
+  const repair = async (
+    kind: RepairKind,
+    id: string,
+    switchPending: boolean,
+  ) => {
     if (
+      !switchPending &&
       !(await deferOverdueRepair(env.DB, kind, id, dependencies.now(), cutoff))
     )
       return
@@ -38,12 +43,19 @@ export async function repairLifecycleAlarms(
     else result.orgs++
     try {
       if (kind === 'workspace') await check(id)
-      else await scheduleIdleImage(images, id, await software())
+      else
+        await images.scheduler.schedule(
+          id,
+          await software(),
+          dependencies.now(),
+          null,
+          await readOrgProviderAccount(env.DB, id),
+        )
     } catch {
       if (kind === 'workspace') result.pendingWorkspaces++
       else result.pendingOrgs++
     } finally {
-      attempted.push({ kind, id })
+      if (!switchPending) attempted.push({ kind, id })
     }
   }
   for (const kind of ['workspace', 'org'] as const) {
@@ -55,7 +67,8 @@ export async function repairLifecycleAlarms(
         limit: REPAIR_LIMIT,
       })
     const selected = rows.slice(0, REPAIR_LIMIT)
-    for (const { id } of selected) await repair(kind, id)
+    for (const { id, switchPending } of selected)
+      await repair(kind, id, switchPending === 1)
   }
   await settleLifecycleRepairs(env.DB, attempted, dependencies.now(), cutoff)
   if (result.pendingWorkspaces || result.pendingOrgs)

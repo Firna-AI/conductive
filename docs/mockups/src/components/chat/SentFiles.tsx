@@ -1,9 +1,10 @@
 import type { Attachment } from '../../fixtures/attachments'
-import { classes } from '../common/classes'
-import { KindIcon } from './attachedFileParts'
-import { formatSize } from './sizes'
-import styles from './AttachmentChips.module.css'
-import states from './AttachmentStates.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { kindIcon } from '../../entries/components/chat/attachedFileParts.mockup'
+import { instanceKey } from '../../instanceKey'
+import { formatSize } from '../../../../../src/ui/components/chat/sizes'
+import styles from '../../../../../src/ui/components/chat/AttachmentChips.module.css'
+import states from '../../../../../src/ui/components/chat/AttachmentStates.module.css'
 
 /**
  * The files of a sent message that its text does not show, under its
@@ -19,7 +20,12 @@ export function SentFiles(props: { files: readonly Attachment[] }) {
     >
       {props.files.map((file) => (
         <li className={classes(styles.chip, states.fixed)} key={file.id}>
-          <KindIcon className={styles.icon} kind={file.kind} size={13} />
+          <kindIcon.Component
+            className={styles.icon}
+            kind={file.kind}
+            moklyInstance={`kind-${instanceKey(file.id)}`}
+            size={13}
+          />
           <span className={styles.name}>{file.name}</span>
           <span className={styles.size}>{formatSize(file.sizeBytes)}</span>
         </li>

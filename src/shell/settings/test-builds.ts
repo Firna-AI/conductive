@@ -1,4 +1,4 @@
-import noticeStyles from '../../../docs/mockups/src/components/common/Notice.module.css'
+import noticeStyles from '../../ui/components/common/Notice.module.css'
 import type { BuildsResponse, ImageBuild } from '../../shared/org-settings'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { textOf } from '../test-render'

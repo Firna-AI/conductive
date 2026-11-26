@@ -1,7 +1,7 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { SitePage } from '../components/marketing/SitePage'
 import { TextPage } from '../components/marketing/TextPage'
-import { githubSetupCopy } from './githubSetupCopy'
+import { githubSetupCopy } from '../../../../src/ui/screens/githubSetupCopy'
 
 export const githubSetupSchema = {
   type: 'object',

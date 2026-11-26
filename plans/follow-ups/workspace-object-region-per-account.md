@@ -1,30 +1,36 @@
 # Place workspace objects near a non-EU account
 
-- **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Fix after merge.
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
 - **Added:** 2026-11-20, from branch `calummoore/eu-boat-alternatives-5977`, which drops the EU rule for sandbox providers.
 - **Location:** Each `getByName(…, { locationHint: 'weur' })` call of the workspace Durable Object namespace, in `worker/lifecycle/runtime.ts`, `worker/app-api/lifecycle.ts`, `worker/app-api/shell.ts`, `worker/app-api/workspace-state.ts`, `worker/members/composition.ts`, and `worker/operator/stop-computers.ts`. The same namespace also opens the org-image object of each org, in `worker/lifecycle/runtime.ts`, and the computer-stop object of each org, in `worker/operator/stop-computers.ts`. Both use the same hint.
-- **Reason:** Every provider account runs in Western Europe today, so the fixed hint is right until an account in another region exists.
+- **Reason:** Only test orgs run on the `e2b` account until the Privacy page names the United States, so the latency reaches no real org before the user chooses.
+- **Related:** `plans/follow-ups/e2b-production-account.md` holds the request to E2B support that option C extends, and the Privacy page step that option C removes.
 
 - **Source:** Design. **Category:** Performance.
 - **Terms:**
   - **Workspace object:** The Cloudflare Durable Object of one workspace. It holds the open tabs and the connection of the agent runner in the sandbox.
-  - **Location hint:** The Cloudflare option that places a Durable Object in a region when the object is first created. The object stays there after that.
-  - **Provider account:** An account of the app with a sandbox provider, such as `boat` or `e2b`. Each org runs on one account for its whole life.
+  - **Location hint:** The Cloudflare option that places a Durable Object in a region when the object is first created. The object stays there after that. `weur` is Western Europe, and `wnam` is Western North America.
+  - **Provider account:** An account of the app with a sandbox provider, such as `boat` or `e2b`. Each org runs on one account at a time. An operator can switch it, and each workspace keeps its own account.
+  - **E2B cluster:** A region of E2B, with its own domain. Each E2B project belongs to one cluster.
 - **Background:**
   - On 20 November 2026, the user chose that a provider account can run in any region. The EU is not a requirement. `docs/protocol/provider-accounts.md`, section "Regions", holds this rule.
   - The app first chose Western Europe only because Boat's machines run there.
+  - On 20 November 2026, the user also chose to give the Worker the current E2B project, which runs in E2B's default cluster, `e2b.app`. E2B's region table places that cluster in Google Cloud `us-west1`, in Oregon, in the United States. The Worker secret `SANDBOX_PROVIDER_ACCOUNTS` got the `e2b` account that day. `docs/protocol/provider-keys.md` holds the choice.
   - Every call that opens a workspace object passes the location hint `weur`. The hint is a constant, not a value of the account.
   - `docs/architecture/components.md` says that every workspace object gets the Western Europe hint, whatever its account. Each runner message passes between the object and the sandbox.
   - The D1 database and the attachment bucket stay in Western Europe. Cloudflare fixes their place when it creates them.
-- **Problem:** A workspace on an account outside Western Europe would still get a workspace object in Western Europe. Each runner message would then cross the ocean, which adds about 70 to 100 ms to each round trip.
-- **Impact if no action:** Nothing changes while every account runs in Western Europe. A future account in another region gets slower chat events and tool replies.
+  - Before a real org runs on `e2b`, the Privacy page must name the United States and the protection of the transfer from the UK. `plans/follow-ups/e2b-production-account.md` holds this step. On 20 November 2026, the user said that E2B consented to the app's use, so no consent step remains. An E2B project in the EU needs no United States entry on the Privacy page.
+  - E2B gives its EU cluster, in Google Cloud `europe-west1` in Belgium, after the project has a payment method and support turns the cluster on. Nothing moves between E2B clusters. A move needs a new project, a new key, a new template build, and a new value of the secret. The Pro plan, which the production account needs, also needs a payment method.
+- **Problem:** Each workspace on `e2b` gets a workspace object in Western Europe, while its sandbox runs in Oregon. Each runner message then crosses the Atlantic and North America. A round trip between Western Europe and Oregon takes about 140 ms. This number is an estimate, not a measurement.
+- **Impact if no action:** Test orgs on `e2b` get slower chat events and tool replies now. Real orgs on `e2b` get the same, when they may run there.
 - **Root question:** How does a workspace object run near the sandbox of its workspace?
 - **Options:**
-  - **A.** Add a location hint to each account in the provider account settings, with `weur` as the default. Pass the hint of the org's account when a new workspace object, org-image object, or computer-stop object is created. Effort: Medium.
+  - **A.** Add a location hint to each account in the provider account settings, with `weur` as the default. Give `e2b` the hint `wnam`. Pass the hint of the org's account when a new workspace object, org-image object, or computer-stop object is created. Effort: Medium.
   - **B.** Keep `weur` for every workspace and accept the latency for accounts in other regions. Effort: Small.
-- **Left out:** A move of existing workspace objects, because Cloudflare keeps an object where it was first created, and no org changes its account.
+  - **C.** Move the E2B account to E2B's EU cluster. Add the EU cluster to the request to E2B support in `plans/follow-ups/e2b-production-account.md`. Delete the test orgs on `e2b` first, because their sandboxes stay in the old project. Build the template in the new project, and set the secret with its key and EU domain. Every account then runs in Western Europe, and the Privacy page needs no United States entry for E2B. This reverses the user's choice of 20 November 2026 to use the default cluster, and `docs/protocol/provider-keys.md` changes with it. Effort: Small.
+- **Left out:** A move of existing workspace objects, because Cloudflare keeps an object where it was first created, and each workspace keeps its account. A switch of the org changes only the account of new workspaces.
 - **Wider fix:** A, because it ties the place of each workspace object to its account.
 - **Previous examples:** Commit `d05c47df6` planned the D1 database in Western Europe to be near Boat's machines.
-- **Recommendation:** A. It costs little once an account in another region exists, and the latency hits every runner message.
-- **Action:** fix after merge, apply A, in the change that adds the first account outside Western Europe, because the fixed hint is right until then.
+- **Recommendation:** C. The request to E2B support must happen anyway for the disk and the Pro plan, so the EU cluster adds one line and one template build, and it also removes the Privacy page step. Keep A for the first account that cannot run in Western Europe. The first recommendation was A, before an account outside Western Europe existed.
+- **Action:** ask the user, before the first real org runs on `e2b`.

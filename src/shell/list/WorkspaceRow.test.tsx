@@ -1,6 +1,6 @@
 import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
 import { describe, expect, test } from 'vitest'
-import styles from '../../../docs/mockups/src/components/workspaces/WorkspaceRow.module.css'
+import styles from '../../ui/components/workspaces/WorkspaceRow.module.css'
 
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_TIME } from '../../test-support/fixtures/core'

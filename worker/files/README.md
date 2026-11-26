@@ -2,7 +2,7 @@
 
 This module serves the Files and Changes API for Conductive.
 It keeps the runner's last tree and branch changes in workspace Durable Object storage.
-It joins the numbered parts of each full runner report before it stores the complete report.
+It checks the numbered parts on arrival and joins each full runner report at its last part.
 It also sends file and diff requests to the connected runner.
 Each diff request names the base branch of the workspace's last complete changes report.
 Without that report, it names the stored workspace base branch, with the repository default as a fallback.
@@ -18,20 +18,46 @@ It reads the captured checkout folder from D1.
 
 Create one `WorkspaceFiles` instance, called `files` here, for each workspace Durable Object.
 Pass `durableFilesStorage(ctx.storage)` and a unique request ID function to its constructor.
-The storage adapter commits a manifest and JSON chunks in one storage transaction.
-Its interface provides `get`, `getMany`, and an atomic `write` of updates and removals.
+The adapter provides `get` and `getMany` for reads.
+Its `transaction` callback provides `get`, `getMany`, `put`, and `delete` in one storage transaction.
+The `delete` call reports whether it removed a key.
 Each chunk has at most 65,536 JavaScript string characters.
 This bounds each stored value without limiting repository size.
 The projection is the last complete tree and branch changes that the API serves.
 The assembly state holds the stored report parts and the revision progress of the current runner stream.
 Both use storage keys that start with `files:`.
 Keep one instance active in an object.
-An unavailable-tree event marks the stored tree and keeps its entries and revision.
+An unavailable-tree event marks the stored tree and keeps its entries, revision, and omitted entry count.
 `markFilesMoved` in [storage.ts](storage.ts) gives the same mark after a [repository change](../lifecycle/repository-change.md#publication), in its publication transaction, and drops the stored changes of the old folder.
 So the Changes API returns `file_unavailable` until the runner reports the new folder, and the next complete tree clears the mark.
 Before any complete tree, the marked tree has revision zero and no cached entries.
 Only a complete snapshot clears the mark.
 A delta or an incomplete report keeps it.
+
+The stored projection has one of two layouts.
+The old layout stores each list as one JSON text in chunks.
+The bucket layout splits each list into 64 buckets by a hash of the item path, with an order text for the list order.
+This module reads both layouts and writes list data in the bucket layout.
+The manifest keeps each list's omission metadata with its other fields.
+The tree manifest records the tree revision beside a known omitted entry count.
+Tree reads use that count only when the two revisions match. A previous Worker can advance the tree during rollback while keeping the earlier count and its revision.
+A full report replaces its list and that metadata together. A list without the field keeps it absent.
+A full report writes buckets with changed digests.
+It writes the order text when it changes or when it cannot read the stored order text.
+A tree delta reads buckets one at a time. A delta with one or more removes visits each tree bucket at most once because a folder's entries can be in any bucket.
+A delta of absent-path removes leaves the row and order chunks alone.
+An empty delta reads no row bucket. It can set the omitted entry count in the manifest.
+A delta without a count keeps a valid saved count and advances its revision with the tree.
+A connection reset updates the manifest. An unavailable-tree mark and a repository move update the manifest of a bucket projection without reading list items.
+The first list write or tree mark of an old projection converts retained lists one entry at a time.
+It reads the old chunks in bounded batches.
+A repository move converts the old tree and deletes the old Changes chunks.
+The same transaction writes the bucket data and manifest and removes the old keys.
+The reader release can read this layout and converts it back to the old layout on its next write after a rollback.
+An older Worker that writes a full report without omission metadata stores that list without it.
+A damaged projection gives HTTP 502 `file_unavailable` when read.
+A write that only discards damaged chunks finishes and logs a warning.
+Cleanup stops at the first missing key in each chunk sequence.
 
 Runner file events reach this module through one of two integrations.
 The combined integration joins report parts in the runner transaction of the chat backend.
@@ -39,9 +65,9 @@ The standalone integration takes only complete reports.
 
 ### Combined integration with the chat backend
 
-The [chat backend](../chat/integration/README.md#milestone-9-files) owns the runner stream, its cursor, and its confirmations.
+The [chat backend](../chat/integration/README.md#files) owns the runner stream, its cursor, and its confirmations.
 It creates `RunnerFileReports` on `ChatTransaction.files`.
-That adapter writes in the chat transaction of the runner message.
+That adapter runs the files transaction callback in the chat transaction of the runner message.
 So the assembly state, the projection, the history event, and the cursor commit together before the confirm.
 
 On each `hello`, the chat backend calls `beginStream(streamId)`.
@@ -50,18 +76,31 @@ The last complete tree and changes stay, and the projection then belongs to the 
 A reconnect of the same stream keeps its revisions and pending parts.
 
 Each new file event that passes the event checks goes to `accept(event)`.
-It checks each part against the stored parts of its report before it writes anything.
-It stores each tree or changes part as a part manifest and JSON chunks, together with the assembly state.
+It checks each part's revision, part number, and part count on arrival.
+It reads the stored copy of a repeated part to check that the copies are identical.
+The assembly state keeps the omission metadata of part 1 for either kind of report.
+For a changes report, it also keeps the base branch, the status counts, and the listed summary of part 1.
+`accept` compares those fields with each later part on arrival.
+A later part with other fields is invalid.
+An older assembly state can lack these fields.
+If the saved fields are absent or malformed, `accept` reads part 1 once when the next new part arrives.
+It saves the recovered fields with the new part.
+The counts are the current branch's `unpushedCommits` and the runner's raw status count, `uncommittedFileCount`.
+Older runners can omit either count.
+The stored report and API keep an omitted count absent.
+`accept` stores each tree or changes part with the assembly state.
+It stores each part as a manifest and JSON chunks.
 Each chunk has at most 65,536 JavaScript string characters.
 The chat backend applies the byte limits to the raw runner event.
 Its filter can then add masked display labels, so a stored part can be larger than those limits.
 A part stored as one value, without a manifest, stays readable.
 A newer revision, a refusal, and a new stream remove each obsolete part with its chunks.
-After the last part, `accept` joins the entries in part order.
-A complete changes report must have a summary that counts its files and the sum of their added and removed lines.
-It also keeps two counts across parts, storage, and publication: the current branch's `unpushedCommits`, and `uncommittedFileCount`, the raw status count of the runner.
-Each part of a report must repeat the same counts, or the part is invalid.
-Reports from older runner images can omit either count. The stored report and API keep it absent.
+When the last part arrives, `accept` loads the stored parts once.
+It joins all entries in part order.
+It checks the saved parts for matching omission metadata because a previous Worker can have stored parts during a rollback.
+It refuses the last part if a path occurs more than once.
+It also refuses the last part if the report is empty and has more than one part.
+For a changes report, it checks that the summary counts the listed files and their added and removed lines.
 `accept` then applies the complete report to the projection and returns it for the history and the browser tabs.
 It returns `null` while parts are pending and for an identical repeated part.
 It applies a tree delta only when the delta has the next tree revision and no tree report is incomplete.
@@ -77,8 +116,8 @@ The last complete tree and changes stay in the projection while parts are pendin
 The chat backend's `runnerEventStored` hook is a notification after the commit and the confirm.
 It must not apply a file report again.
 
-On this path, `files` serves the API from the same Durable Object storage.
-Its `tree` and `changes` methods read the complete projection.
+On this path, the tree and changes routes read the projection in the chat queue.
+The `WorkspaceFiles` port serves file and diff requests and reads the cached changes report for the diff base.
 For each accepted runner socket, call `files.runner.attach(physicalConnectionId, send)` with a fresh ID.
 A ready runner socket that the workspace object restores after a wake attaches again with the same ID.
 Call `files.runner.detach(physicalConnectionId)` when that socket closes.
@@ -93,6 +132,7 @@ After the owner accepts and authenticates a runner connection, call `files.conne
 Use a fresh `connectionId` for each physical connection, including a reconnect of the same runner stream.
 Call `files.disconnect(connectionId)` when that socket closes.
 The instance serializes the file updates and reads of this integration.
+Its `tree` and `changes` methods each read their own list of the projection.
 
 The workspace owner keeps the shared handshake, stream cursor, event numbers, confirmations, and resend rules.
 It passes each accepted file event to `await files.state.apply(connectionId, event)` in event order.
@@ -131,12 +171,22 @@ It checks sign-in, host, Origin, org membership, workspace ownership, and archiv
 Each org member can read its active workspaces.
 The handler serves the shared tree, content, download, changes, and diff paths.
 It returns the last stored lists while the sandbox sleeps.
-Before the first tree report or unavailable-tree mark, it returns `file_unavailable` for the tree.
+
+The list routes load the output filter after the request gates.
+They wait for the shared read-state recovery when it must run.
+One chat-queued view gives the list and its `stateRead`.
+This field gives the event number, the first open repair failure of that list, and the repository ID at that event number.
+Omission metadata is part of the list payload.
+The handler filters the list after the queued read.
+A missing list gives HTTP 503 `file_unavailable` with `stateRead`.
+For the tree, this can occur before the first tree report or unavailable-tree mark.
+See [The state of a new tab](../../docs/protocol/workspace-events.md#the-state-of-a-new-tab).
 
 Required options:
 
 - `maxFileBytes`: the backend file size limit in bytes. Production uses `FILE_READ_MAX_BYTES`, which is 5,242,880 bytes. It applies to each file version and each patch field.
-- `workspaceFiles`: a resolver for the authorized workspace's `WorkspaceFilesPort`.
+- `fileLists`: the tree and changes readers that supply the list and `stateRead`.
+- `workspaceFiles`: a resolver for the authorized workspace's `WorkspaceFilesPort` for content, downloads, and diffs.
 - `repositoryRoot`: the absolute checkout directory in the sandbox for that workspace.
 - `fetch`: the server's provider transport.
 - `now`: the clock for the existing request gate.
@@ -192,13 +242,19 @@ Chat history remains readable through its separate access path.
 ## Development
 
 Run `npm run test -- worker/files` from the repository root with Node 24.
-The tests that use `createFilesStorage` in `test-support/storage.ts` run SQLite Durable Object storage in Miniflare.
+`createFilesStorage` in `test-support/storage.ts` runs the transaction callback on a staged copy in Node.
+The adapter sends the staged writes to SQLite Durable Object storage in Miniflare.
 Its `evict` evicts the object, so that a test can check a reload.
+The bucket reader tests use `writeBucketProjection` in `test-support/bucket-builder.ts` and a fixed record with literal keys, symbols, and manifest values.
+The writer tests check which buckets each operation reads and writes.
+They check conversion from old records to buckets and inject a failure during a standalone write to check rollback.
+[files-projection-commit.test.ts](../chat/files-projection-commit.test.ts) checks connection resets and repository moves at both native chat commit boundaries.
 `report-storage.test.ts` uses the native SQLite storage of the production workspace object.
 It checks that a part stored as one value stays readable, and that each removal also removes the chunks.
 The API tests use local D1, the existing fake runner, and FakeBoat.
-The part joining and report repair tests run through the chat backend:
-`npm run test -- worker/chat/runner-file-parts.test.ts worker/chat/runner-files-durable.test.ts worker/chat/runner-repair-parts.test.ts worker/chat/runner-receipt-crash.test.ts worker/chat/runner-grown-reports.test.ts`.
+`runner-part-checks.test.ts` checks the storage reads, changes fields, and older assembly state.
+The part joining and report repair tests run through the chat backend.
+Run `npm run test -- worker/chat/runner-file worker/chat/runner-repair-parts.test.ts worker/chat/runner-receipt-crash.test.ts worker/chat/runner-grown-reports.test.ts`.
 `runner-grown-reports.test.ts` checks tree and changes parts that masking makes larger than one storage value.
 It runs on the production workspace object with the native SQLite value limit.
 File reports remain in Durable Object storage.
@@ -209,12 +265,20 @@ The D1 workspace schema holds the base branch.
 - [Production composition](../features/workspace.ts) mounts the gated handler and resolves the captured checkout folder.
 - [workspace.ts](workspace.ts) exposes the workspace integration object and RPC port.
 - [handlers.ts](handlers.ts) exposes the gated HTTP handler and its required options.
+- [list-reads.ts](list-reads.ts) reads each list and its cutoff from the same chat view.
 - [state.ts](state.ts) applies snapshots and tree updates and keeps branch changes.
-- [runner-reports.ts](runner-reports.ts) joins runner report parts and applies each complete report in the caller's transaction.
-- [report-storage.ts](report-storage.ts) keeps the assembly state and the stored parts of each report kind, as part manifests and chunks. Its `storedReportKeys` lists each part key and chunk key that a removal needs.
+- [runner-reports.ts](runner-reports.ts) checks runner report parts on arrival and applies each complete report in the caller's transaction.
+- [report-storage.ts](report-storage.ts) keeps the assembly state with the comparison fields of part 1.
+  It stores each part as a manifest and chunks.
+  Its `storedReportKeys` lists each part key and chunk key that a removal needs.
 - [report-generation.ts](report-generation.ts) reads the newest stored revision and the incomplete revision of a report kind for repair checks.
 - [runner-input.ts](runner-input.ts) parses a runner file event with its revision and part fields.
-- [storage.ts](storage.ts) adapts Durable Object storage and writes the chunks atomically.
+- `readFilesManifest` and `readFileList` read the manifest and one list in either layout. `markFilesMoved` marks the projection after a repository move. [storage.ts](storage.ts)
+- [bucket-layout.ts](bucket-layout.ts) defines the bucket layout in its doc comment and parses the bucket manifest.
+- [bucket-read.ts](bucket-read.ts) reads one list of the bucket layout from its buckets and its order text.
+- `writeBucketList` writes changed buckets and list order. [bucket-write.ts](bucket-write.ts)
+- `writeTreeDelta` applies an ordered tree delta. [bucket-delta.ts](bucket-delta.ts)
+- `convertFilesProjection` converts old lists during the transaction that changes the projection. [bucket-convert.ts](bucket-convert.ts)
 - [runner.ts](runner.ts) matches file and diff commands to their results.
 - [boat.ts](boat.ts) converts the provider's file read result for the browser.
 - [data.ts](data.ts) reads the workspace and repository relationship from D1, with the sandbox ID and its provider account.
@@ -222,5 +286,6 @@ The D1 workspace schema holds the base branch.
 See the [shared contracts](../../src/shared/README.md),
 [backend fakes](../test-support/README.md),
 [runner event rules](../../docs/protocol/agent-runner.md#the-agent-runner),
-[lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates), and
-[file requirements](../../docs/protocol/workspace-tools.md#files-and-changes).
+[lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates),
+[file requirements](../../docs/protocol/workspace-tools.md#files-and-changes), and
+[file report requirements](../../docs/protocol/file-reports.md).

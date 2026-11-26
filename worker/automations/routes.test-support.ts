@@ -11,6 +11,7 @@ import {
   write,
 } from '../members/members-test-support'
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
+import { seedAutomation } from '../test-support/d1-seeds'
 
 export async function automationFixture(harness: TestHarness) {
   const people = await memberFixture(harness)
@@ -25,7 +26,10 @@ export async function automationFixture(harness: TestHarness) {
       VALUES ('automation-repository', ?, 101, 'example/automations', 'main', 1, 91)`,
     ).bind(org.id),
   ])
-  const input: CreateAutomationRequest = {
+  const input: CreateAutomationRequest & {
+    name: string
+    sectionId: string
+  } = {
     name: 'Morning summary',
     repositoryId: 'automation-repository',
     sectionId: 'general-members-org',
@@ -41,32 +45,25 @@ export async function automationFixture(harness: TestHarness) {
     triggers: [{ kind: 'daily', time: { hour: 9, minute: 0 } }],
   }
   const seed = async (id = 'automation-one', owner: User = member.user) => {
-    await harness.env.DB.prepare(
-      `INSERT INTO automations
-      (id, org_id, owner_user_id, name, repository_id, section_id, prompt, agent, model, effort,
-       time_zone, triggers_json, next_run_at, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-      .bind(
-        id,
-        org.id,
-        owner.id,
-        input.name,
-        input.repositoryId,
-        input.sectionId,
-        input.prompt,
-        input.choice.agent,
-        input.choice.model,
-        input.choice.effort,
-        input.timeZone,
-        JSON.stringify([
-          { kind: 'daily', time: { hour: 9, minute: 0 }, cron: '0 9 * * *' },
-        ]),
-        TEST_TIME + 60_000,
-        TEST_TIME,
-        TEST_TIME,
-      )
-      .run()
+    await seedAutomation(harness.env.DB, {
+      id,
+      orgId: org.id,
+      ownerUserId: owner.id,
+      name: input.name,
+      repositoryId: input.repositoryId,
+      sectionId: input.sectionId,
+      prompt: input.prompt,
+      agent: input.choice.agent,
+      model: input.choice.model,
+      effort: input.choice.effort,
+      timeZone: input.timeZone,
+      triggersJson: JSON.stringify([
+        { kind: 'daily', time: { hour: 9, minute: 0 }, cron: '0 9 * * *' },
+      ]),
+      nextRunAt: TEST_TIME + 60_000,
+      createdAt: TEST_TIME,
+      updatedAt: TEST_TIME,
+    }).run()
     return automationPath(org.id, id)
   }
   const create = async (overrides: Partial<CreateAutomationRequest> = {}) => {

@@ -1,9 +1,9 @@
 import type {
   GitHubCapabilities,
-  GitHubMergeMethod,
   GitHubMergeResponse,
   GitHubReadyResponse,
 } from '../shared/github'
+import type { GitHubMergeMethod } from '../shared/generated/GitHubMergeMethod'
 
 function isActionRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)

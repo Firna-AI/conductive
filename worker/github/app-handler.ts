@@ -6,6 +6,8 @@ import {
 import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { gate } from '../security/gate'
+import { queueBarState, queueLeaveBase } from '../merge-queue/read'
+import { queueOfPulls } from '../merge-queue/data'
 import type {
   GitHubRefreshWorkspace,
   GitHubSnapshot,
@@ -14,6 +16,7 @@ import type {
 } from './contracts'
 import { activeWorkspace } from './data'
 import { githubFailure } from './parsers'
+import { githubBranchLabels } from './output'
 
 export interface GitHubAppDependencies {
   now: () => number
@@ -28,25 +31,91 @@ export interface GitHubAppDependencies {
 function storedBody(
   workspace: GitHubWorkspace,
   stored: GitHubSnapshot | undefined,
+  queued: boolean,
+  labels: Awaited<ReturnType<typeof githubBranchLabels>>,
 ): GitHubStoredResponse {
   if (!stored || stored.banner.branch !== workspace.branch)
     return { state: null }
-  return { state: { banner: stored.banner, checks: stored.checks } }
+  return {
+    state: {
+      banner: labels.banner(bannerForQueue(stored, queued)),
+      checks: stored.checks,
+    },
+  }
+}
+
+function bannerForQueue(snapshot: GitHubSnapshot, queued: boolean) {
+  return queued && snapshot.pullBaseBranch
+    ? { ...snapshot.banner, baseBranch: snapshot.pullBaseBranch }
+    : snapshot.banner
 }
 
 async function readBody(
+  env: AppEnv,
   workspace: GitHubWorkspace,
   route: string | undefined,
   userId: string,
   dependencies: GitHubAppDependencies,
 ) {
-  if (route === '/stored')
-    return storedBody(workspace, await dependencies.stored(workspace))
+  if (route === '/stored') {
+    const [stored, labels] = await Promise.all([
+      dependencies.stored(workspace),
+      githubBranchLabels(env, workspace),
+    ])
+    const queueBar = await readQueueBar(env, workspace, stored, labels)
+    return {
+      ...storedBody(workspace, stored, !!queueBar.queue, labels),
+      ...queueBar,
+    }
+  }
   const snapshot = await dependencies.refresh(workspace, { userId })
   if (snapshot === null) throw githubFailure()
-  return route === '/checks'
-    ? (snapshot.checks satisfies GitHubChecksResponse)
-    : ({ banner: snapshot.banner } satisfies GitHubBannerResponse)
+  if (route === '/checks') return snapshot.checks satisfies GitHubChecksResponse
+  const labels = await githubBranchLabels(env, workspace)
+  const queueBar = await readQueueBar(env, workspace, snapshot, labels)
+  return {
+    banner: labels.banner(bannerForQueue(snapshot, !!queueBar.queue)),
+    ...queueBar,
+  } satisfies GitHubBannerResponse
+}
+
+async function readQueueBar(
+  env: AppEnv,
+  workspace: GitHubWorkspace,
+  snapshot: GitHubSnapshot | undefined,
+  labels: Awaited<ReturnType<typeof githubBranchLabels>>,
+): Promise<Pick<GitHubBannerResponse, 'queue' | 'queueLeave' | 'mergeStack'>> {
+  const current =
+    snapshot?.banner.branch === workspace.branch ? snapshot : undefined
+  const below = current?.stackBelow
+  const [queue, stackQueue] = await Promise.all([
+    queueBarState(env.DB, workspace, current),
+    below?.length
+      ? queueOfPulls(
+          env.DB,
+          {
+            orgId: workspace.orgId,
+            githubRepositoryId: workspace.repositoryId,
+          },
+          below,
+        )
+      : null,
+  ])
+  const stack = below?.length
+    ? { mergeStack: { count: below.length + 1, queue: stackQueue } }
+    : {}
+  if (queue)
+    return {
+      ...stack,
+      queue: {
+        ...queue,
+        trunkLabel: labels.branch(queue.trunk),
+        rebase: { ...queue.rebase, label: labels.branch(queue.rebase.base) },
+      },
+    }
+  const base = await queueLeaveBase(env.DB, workspace, current)
+  if (!base || !current) return stack
+  return { ...stack, queueLeave: { baseBranch: labels.branch(base).text } }
 }
 
 /** App endpoint. This handler owns its gate. Do not gate the same request twice. */
@@ -92,6 +161,7 @@ export async function handleGitHubRead(
         'The workspace is not available.',
       )
     const body = await readBody(
+      env,
       workspace,
       match[2],
       context.user.id,

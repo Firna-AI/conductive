@@ -53,6 +53,7 @@ export class ClaudeEvents {
   private readonly messages: ClaudeMessages
   private readonly background: ClaudeBackground
   private readonly continueInput?: (userMessageIds: readonly string[]) => string
+  private readonly read?: (inputIds: readonly string[]) => void
   readonly speed: ClaudeSpeed
   stopped = false
 
@@ -63,12 +64,14 @@ export class ClaudeEvents {
     background = new ClaudeBackground(emit),
     fast = false,
     continueInput?: (userMessageIds: readonly string[]) => string,
+    read?: (inputIds: readonly string[]) => void,
   ) {
     this.ids = ids
     this.hasOutstanding = hasOutstanding
     this.emit = emit
     this.background = background
     this.continueInput = continueInput
+    this.read = read
     this.messages = new ClaudeMessages(emit)
     this.speed = new ClaudeSpeed(emit, fast)
   }
@@ -155,6 +158,7 @@ export class ClaudeEvents {
     }
     if (input.type === 'result') {
       this.messages.finish()
+      this.read?.(reply.userMessageIds)
       const outcome = claudeOutcome(
         input,
         this.errorKind,

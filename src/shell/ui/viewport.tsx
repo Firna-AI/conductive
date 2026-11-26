@@ -4,7 +4,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react'
-import { TouchScreen } from '../../../docs/mockups/src/components/common/touch'
+import { TouchScreen } from '../../ui/components/common/touch'
 
 /**
  * The two layouts of the mockups: the desktop app, which narrows with the

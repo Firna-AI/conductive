@@ -18,10 +18,17 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 `Workspace.link` is its absolute web link, with org and workspace IDs.
 `AgentWorkspaceSummary` gives the same number and link.
 `Workspace.github` is the GitHub summary of its pull request, or null.
+The list can also give `Workspace.mergeQueue`, `githubCanWrite`, and
+`githubPullBase`. A queue entry can include the planned removal base and
+the entries that leave with it. `mergeQueueLabels` holds filtered branch
+labels for the list's queue controls.
+The [merge queue paths](merge-queue.ts) build the member routes.
 `GitHubSummary` comes from `generated/`. `githubSummary` in `github.ts` gives
 it from a banner: the state of the bar, or null without a pull request and
 for a closed pull request.
 `checksSummary` gives the checks of a pull request as one value, for the bar.
+`GitHubBanner.baseMoved` optionally names the deleted base that the repository default replaced, and `displayBaseMoved` is its masked label.
+The Worker keeps it until a pull request opens, for the status message of the bar.
 [The GitHub state](../../docs/protocol/github-banner.md#the-github-state) states their order.
 `readGitHubSummary` in `github-read.ts` keeps a known summary and reads an absent or unknown value as null.
 The browser readers and the sandbox tools use it, so an older reply still reads.
@@ -31,6 +38,27 @@ Its imports carry types only.
 `nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
 
 Each area owns its paths and payloads. Import from that area directly.
+`OrgSettings.skillsRepository` in `org-settings.ts` gives the saved text.
+Older replies may omit it. `UpdateOrgSettingsRequest.skillsRepository`
+changes it. `OrgSettings.trustedSkillsRepository` gives the trusted name,
+or empty text. Older replies may omit it and mean untrusted.
+`UpdateOrgSettingsRequest.trustedSkillsRepository` grants trust to that name
+or clears trust with empty text. `savedSkillsRepositorySettings` in
+`skills-repository-settings.ts` resolves both fields against the current
+settings on each save attempt. It normalizes links and compares valid
+names without letter case. The saved source keeps its display spelling.
+`effectiveTrustedSkillsRepository` gives the matching lowercase identity,
+or empty text, for startup environment construction.
+`orgSettingsPaths.skills` names the separate lookup route.
+`SkillsRepositoryLookupResponse` gives the saved `repository`, sorted skill
+names, `notice`, and name `clashes`. No repository means empty names and no
+notice. The notice is `private`, `not-found`, `no-skills`, `incomplete`,
+`failed`, or null. An incomplete list can still have skill names.
+`findSkillFolders` in `skill-folders.ts` takes relative repository file
+paths and the repository name. It returns sorted `{ name, path }` skills
+and `{ name, keptPath, skippedPath }` clashes. A root skill has path `.`.
+`isSkillsRepository` checks the strict `owner/name` form before a URL or
+command uses it. Both functions have no runtime imports.
 `org-settings.ts` owns org login paths beside the other org settings paths.
 `org-agent-logins.ts` defines org login writes, metadata, and model-read
 responses. A member's metadata omits the optional endpoint model list.
@@ -48,7 +76,8 @@ It also owns workspace capability reads and patches, with pre-approved
 secret IDs, Mac access, and session approval metadata and removals.
 `CreateWorkspaceRequest.capabilities` in `workspaces.ts` carries the
 capabilities of a new workspace. An absent choice gives no pre-approval
-and Mac access off.
+and Mac access off. The page sends only the pre-approved secrets, because
+the stored Mac access gates nothing (Mac access decision 7).
 
 `api.ts` keeps the existing sign-in and org paths and common records.
 `API_PATHS.orgOrder` names `PUT /api/org-order`, outside the paths of one org.
@@ -68,6 +97,27 @@ Other errors keep the code and message only.
 `EmptyRequest` means an empty JSON object, including DELETE requests.
 `repositoryPath` names one repository of an org. PUT adds it and DELETE
 removes it. Each request sends `EmptyRequest` and returns the current list.
+`branches.ts` owns `repositoryBranchesPath` and `RepositoryBranchesResponse`.
+The live branch reply holds only branches that GitHub lists, newest commit first.
+Commit dates use Unix milliseconds, or null when GitHub gives no date.
+The browser adds its default row from the saved repository record and filters the list for search.
+`Repository.imageReady` and `Repository.ready` in `org-settings.ts` say
+whether the org has an image, and whether that image holds the repository,
+as the [App API rules](../../worker/app-api/README.md#rules) say. The
+current Worker always sends both, in the list and in these replies. The
+fields are optional, because a reply from a previous Worker omits them.
+The browser reader then keeps them absent, and New workspace takes the
+waiting repositories from the builds. An older copy of the app ignores the
+fields.
+
+`OrderedWorkspaceResponse` in [workspaces.ts](workspaces.ts) gives the
+workspace, start, error, and event number for GET and Resume. GET also
+gives `seed` from the same cutoff. The optional member supports older
+Workers. [The read types](workspace-state-read.ts) define its port and
+skills events and the first failure of each open notice. A null event
+means there is no stored report. A stored event can carry a null port or
+skills list. The file also defines `FilesStateRead`, with an event number,
+repository ID, and failed repair for a Files list.
 
 [Runner contracts](runner-contracts.md) gives the handshake, commands, events,
 confirmations, reports, and credentials.
@@ -109,7 +159,7 @@ Each form has plain, percent-encoded, and JSON-escaped variants, including escap
 Shorter parts match only inside a whole address form.
 `endpoint-host.ts` owns its public host check.
 It accepts only public host names and refuses every IPv4 and IPv6 address.
-It reads the product domain from `productDomain` in `docs/mockups/src/brand.ts`.
+It reads the product domain from `productDomain` in `src/shared/brand.ts`.
 Worker callers also pass `env.PREVIEW_DOMAIN` as an extra refused domain.
 The form and fake API use the same builder without preview configuration.
 The builder preserves queries, removes fragments and trailing slashes, and removes a final `/v1` for Claude.
@@ -174,14 +224,34 @@ browser event stream, and the session paths, logins, and replies.
 It uses generated `SessionLogin`, or null when no login serves that owner.
 Every reader gets that value without a secret, endpoint host, or full address.
 It does not change the automation owner's GitHub identity.
+`AutomationResponse.chosenSecrets` gives each chosen secret of the automation as its `id` and `name` from `OrgSecret` in `secrets.ts`.
+It never holds a value.
+It sorts by name, then by ID, as the org secrets list does.
+The current Worker always sends it, as an empty list when no secret is chosen.
+The field is optional, because a reply from a previous Worker omits it.
+The app then takes the names from the org secrets list.
+An older copy of the app ignores the field.
 
 `terms.ts` names the current revision of the Terms, `TERMS_VERSION`.
+`termsRevision(document)` computes it from the text of `termsDocument` in [`terms.ts`](../marketing/terms.ts): `terms-` and a 14-digit hex digest.
+A change to any word of the Terms gives a new revision, so nobody sets it by hand.
+The digest covers the whole `LegalDocument` data, also its block kinds and its paragraph breaks.
+So a new field or a new paragraph break also gives a new revision, and each user then records a new time of first acceptance.
 `acceptedTermsSignInPath(inviteCode?)` gives the sign-in path that carries that revision and an optional join code.
 [Terms consent](../../worker/security/README.md#terms-consent) gives the rules of sign-in.
 `operator.ts` defines the operator overview, directories, and user and org
 suspensions. Operator org rows and pages include `providerAccount`.
 `operator-providers.ts` defines the operator-only account list, integer
 weights, org counts, last operator change, and the GET and PUT path.
+`operator-switch.ts` defines the operator's org account switch path,
+request, record, stop reply, and org detail fields. Switch records carry
+the operator and time of each request and stop, wait reasons, job identity,
+build times, a failure cause, and the account-change time. The detail
+adds the newest visible switch, last completed switch, running job, wait
+reason, and workspace counts by account. These fields are optional on
+`OperatorOrgDetail` for existing readers and older replies.
+The optional `switchAvailable` boolean permits new switch actions only
+when true. Existing switch reads and Stop do not depend on it.
 The user records in `operator.ts` include `OperatorUserAccess` from
 `operator-waitlist.ts`. That module also defines waitlist, approval, code,
 pause, and waitlist switch paths and replies. `operatorWaitlistSwitchPath`
@@ -234,6 +304,23 @@ per-target outer alias and no credential.
   `workspaceRestoreUntil`, and `workspaceRemovedAt` between the Worker and
   the app. `workspaceRemovedAt(archivedAt, now)` returns the removal time
   when it is at or before `now`, else null. It needs no cloud computer ID.
+- [The workspace record reader](workspace-read.ts) reads each field of a
+  `Workspace` record for the app, the chat, and the Members tab. Each area
+  makes its reader with `createWorkspaceReader`. Each area gives it its own
+  JSON readers and its readers of the owner and the agent choice. Each area
+  also gives its own error for an unknown state. `WORKSPACE_STATES` lists
+  the known workspace states.
+- [The archived computer reader](archived-computer-read.ts) reads the
+  optional `Workspace.archivedComputer`. The workspace record reader and
+  `createdWorkspace` in `worker/tools/workspace-replies.ts` use it.
+  `readArchivedComputer` keeps a known state with a safe, non-negative
+  cutoff time. It drops a missing, malformed, or future value, and it
+  rejects no record for it. The record then keeps the older notice.
+  `ARCHIVED_COMPUTER_STATES` lists the known states.
+- [The merge queue readers](merge-queue-read.ts) read the optional list
+  facts, repository metadata, bar state, and leave notice. Each reader
+  keeps the known fields when an optional field is missing or malformed.
+  [Merge queue paths](merge-queue.ts) give the member routes.
 - [Workspace views](workspace-view.ts) define the saved view and its
   `temporaryTab` field. The field names one file or diff by kind and path,
   without a display mode, or is null. The Worker and browser readers use

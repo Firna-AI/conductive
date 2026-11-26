@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process'
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 
 import { afterEach, beforeEach, expect, it, onTestFinished, vi } from 'vitest'
 
@@ -64,6 +64,8 @@ async function fixture() {
     })
     return sdk.open(parameters)
   }
+  const directory = () =>
+    sdk.parameters?.options?.env?.ANTHROPIC_CONFIG_DIR ?? home
   const credential = () => {
     const env = sdk.parameters?.options?.env
     return join(
@@ -72,7 +74,7 @@ async function fixture() {
       `${env?.ANTHROPIC_PROFILE ?? 'missing'}.json`,
     )
   }
-  return { child, sdk, options, start, credential }
+  return { child, sdk, options, start, directory, credential }
 }
 
 it('starts Claude with profile selectors and no gateway settings or credential descriptor', async () => {
@@ -86,8 +88,8 @@ it('starts Claude with profile selectors and no gateway settings or credential d
   )(h.options)
   onTestFinished(() => provider.close())
   const options = h.sdk.parameters?.options
-  expect(options?.env?.ANTHROPIC_CONFIG_DIR).toBe(
-    join(h.options.home, '.conductive', 'anthropic'),
+  expect(dirname(h.directory())).toBe(
+    join(h.options.home, '.conductive', 'anthropic', 'credentials'),
   )
   expect(options?.env?.ANTHROPIC_PROFILE).toMatch(/^[A-Za-z0-9_.-]+$/)
   expect(options?.settingSources).toEqual(['project'])
@@ -112,6 +114,7 @@ it('starts Claude with profile selectors and no gateway settings or credential d
   )
   await provider.close()
   expect(await readFile(h.credential(), 'utf8').catch(() => null)).toBe(null)
+  expect(await stat(h.directory()).catch(() => null)).toBe(null)
   expect(h.child.signals).toEqual(['SIGTERM'])
 })
 
@@ -171,6 +174,7 @@ it('removes a Claude profile after SDK setup fails and after an active start is 
   expect(await readFile(failed.credential(), 'utf8').catch(() => null)).toBe(
     null,
   )
+  expect(await stat(failed.directory()).catch(() => null)).toBe(null)
   expect(failed.child.signals).toEqual(['SIGTERM'])
   const h = await fixture()
   const controller = new AbortController()
@@ -185,7 +189,35 @@ it('removes a Claude profile after SDK setup fails and after an active start is 
   controller.abort()
   await provider.close()
   expect(await readFile(h.credential(), 'utf8').catch(() => null)).toBe(null)
+  expect(await stat(h.directory()).catch(() => null)).toBe(null)
   expect(h.child.signals).toEqual(['SIGTERM'])
+})
+
+it('removes a killed Claude profile and its lock only after process exit', async () => {
+  const h = await fixture()
+  h.child.exitOnSignal = null
+  const provider = await createClaudeFactory(
+    h.start,
+    () => '/fake/claude',
+  )(h.options)
+  await mkdir(join(h.directory(), 'credentials.lock'))
+  let closed = false
+  const closing = provider.close().then(() => {
+    closed = true
+  })
+  onTestFinished(async () => {
+    h.child.exit(null, 'SIGKILL')
+    await closing
+  })
+  expect(h.child.signals).toEqual(['SIGTERM'])
+  expect(closed).toBe(false)
+  expect(await readFile(h.credential(), 'utf8')).toBe(
+    '{"access_token":"sk-ant-api-turn-token"}',
+  )
+  h.child.exit(null, 'SIGKILL')
+  await closing
+  expect(closed).toBe(true)
+  expect(await stat(h.directory()).catch(() => null)).toBe(null)
 })
 
 it('waits for a canceled profile preparation and removes its token before teardown ends', async () => {
@@ -229,6 +261,7 @@ it('waits for a canceled profile preparation and removes its token before teardo
   await closing
   expect(ended).toBe(true)
   expect(await readFile(credential, 'utf8').catch(() => null)).toBe(null)
+  expect(await stat(profile.directory).catch(() => null)).toBe(null)
   const next = await writeClaudeProfile(
     h.options.home,
     h.options.sessionId,
@@ -236,9 +269,14 @@ it('waits for a canceled profile preparation and removes its token before teardo
     'next-turn-token',
   )
   expect(next.name).toBe(profile.name)
+  expect(next.directory).not.toBe(profile.directory)
   await lifetime.close()
-  expect(await readFile(credential, 'utf8').catch(() => null)).toBe(
-    '{"access_token":"next-turn-token"}',
-  )
+  expect(await readFile(credential, 'utf8').catch(() => null)).toBe(null)
+  expect(
+    await readFile(
+      join(next.directory, 'credentials', `${next.name}.json`),
+      'utf8',
+    ),
+  ).toBe('{"access_token":"next-turn-token"}')
   await next.remove()
 })

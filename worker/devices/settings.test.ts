@@ -208,7 +208,8 @@ it('rejects only the oversized settings waiter and keeps commands and other sett
   expect(await response.json()).toEqual({
     error: {
       code: 'settings_result_too_large',
-      message: 'The Mac settings reply is too large.',
+      message:
+        'The Mac settings reply is too large. Remove saved commands in This Mac, then try again.',
     },
   })
   const settings = {

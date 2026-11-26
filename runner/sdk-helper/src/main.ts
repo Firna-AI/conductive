@@ -4,16 +4,22 @@ import { createCodexFactory } from './providers/codex'
 import { warmClaude } from './providers/binaries'
 import { readRequest } from './read-request'
 import { HelperSession } from './session'
+import { SkillInputs } from './providers/skill-input'
 
 const end = () => {
   process.stdin.destroy()
   process.stdout.end()
 }
+const skills = new SkillInputs()
 const session = new HelperSession(
-  { claude: createClaudeFactory(), codex: createCodexFactory() },
+  {
+    claude: createClaudeFactory(),
+    codex: createCodexFactory(undefined, undefined, skills),
+  },
   (output) => process.stdout.write(`${JSON.stringify(output)}\n`),
   warmClaude,
   end,
+  skills,
 )
 let stopping = false
 const stop = () => {

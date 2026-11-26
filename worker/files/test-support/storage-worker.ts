@@ -1,10 +1,22 @@
 import { DurableObject } from 'cloudflare:workers'
 
 import { isRecord } from '../../http'
+import { FILES_KEY } from '../bucket-layout'
+import { FilesState } from '../state'
 import { durableFilesStorage, type FilesStorage } from '../storage'
+import { writeStorageRecord } from './storage-record'
 
 interface StorageWorkerEnv {
   FILES: DurableObjectNamespace<StoredFiles>
+}
+
+class BucketWriteFailure extends Error {
+  readonly keys: string[]
+
+  constructor(keys: string[]) {
+    super('Test bucket write failed')
+    this.keys = keys
+  }
 }
 
 export class StoredFiles extends DurableObject<StorageWorkerEnv> {
@@ -18,6 +30,7 @@ export class StoredFiles extends DurableObject<StorageWorkerEnv> {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url)
     if (url.searchParams.has('inspect')) return this.inspect()
+    if (request.method === 'PATCH') return this.applyEvent(await request.json())
     if (request.method === 'POST') {
       const value: unknown = await request.json()
       if (!isRecord(value)) throw new Error('Invalid storage read request')
@@ -30,7 +43,8 @@ export class StoredFiles extends DurableObject<StorageWorkerEnv> {
       if (!isRecord(value) || !isRecord(value.updates)) {
         throw new Error('Invalid storage write request')
       }
-      await this.files.write(value.updates, readKeys(value.removals))
+      const removals = readKeys(value.removals)
+      await writeStorageRecord(this.files, value.updates, removals)
       return new Response(null, { status: 204 })
     }
     const key = url.searchParams.get('key')
@@ -39,21 +53,58 @@ export class StoredFiles extends DurableObject<StorageWorkerEnv> {
     return Response.json(value === undefined ? {} : { value })
   }
 
+  private async applyEvent(value: unknown): Promise<Response> {
+    if (!isRecord(value) || typeof value.connectionId !== 'string')
+      throw new Error('Invalid standalone apply request')
+    const { connectionId, event, failAfterBucketWrites } = value
+    const keys: string[] = []
+    const storage: FilesStorage = {
+      ...this.files,
+      transaction: (work) =>
+        this.files.transaction((transaction) =>
+          work({
+            ...transaction,
+            async put(key, next) {
+              await transaction.put(key, next)
+              if (key.startsWith(`${FILES_KEY}:tree:bucket:`)) {
+                keys.push(key)
+                if (keys.length === failAfterBucketWrites)
+                  throw new BucketWriteFailure(keys)
+              }
+            },
+          }),
+        ),
+    }
+    try {
+      return Response.json(
+        await new FilesState(storage).apply(connectionId, event),
+      )
+    } catch (error) {
+      if (!(error instanceof BucketWriteFailure)) throw error
+      return Response.json(error.keys, { status: 409 })
+    }
+  }
+
   private async inspect(): Promise<Response> {
-    const entries = await this.ctx.storage.list<unknown>({
-      prefix: 'files:state:v1',
-    })
+    const prefix = `${FILES_KEY}:`
+    const entries = await this.ctx.storage.list<unknown>({ prefix })
     const sizes = [...entries.values()]
       .filter((value): value is string => typeof value === 'string')
       .map((value) => new TextEncoder().encode(value).byteLength)
-    const keys = [...entries.keys()]
+    const keys = [...entries.keys()].map((key) => key.slice(prefix.length))
     return Response.json({
       chunks: sizes.length,
-      treeChunks: keys.filter((key) => key.startsWith('files:state:v1:tree:'))
+      treeChunks: keys.filter((key) => /^tree:\d+$/.test(key)).length,
+      changesChunks: keys.filter((key) => /^changes:\d+$/.test(key)).length,
+      treeBucketChunks: keys.filter((key) => /^tree:bucket:\d+:\d+$/.test(key))
         .length,
-      changesChunks: keys.filter((key) =>
-        key.startsWith('files:state:v1:changes:'),
+      changesBucketChunks: keys.filter((key) =>
+        /^changes:bucket:\d+:\d+$/.test(key),
       ).length,
+      treeOrderChunks: keys.filter((key) => /^tree:order:\d+$/.test(key))
+        .length,
+      changesOrderChunks: keys.filter((key) => /^changes:order:\d+$/.test(key))
+        .length,
       maxBytes: Math.max(0, ...sizes),
       totalBytes: sizes.reduce((sum, size) => sum + size, 0),
     })

@@ -9,6 +9,7 @@ import {
   type SyntheticEvent,
 } from 'react'
 import { useModalLayer } from '../../shell/ui/layers'
+import { controlsOf } from '../../shell/ui/tab-stops'
 
 /**
  * Asks a dialog, a sheet, or a menu to close. While its action runs, the
@@ -28,17 +29,38 @@ export function requestClose(busy: boolean, close: () => void): boolean {
 export const DialogClose = createContext<() => boolean>(() => false)
 
 /**
+ * Places the focus of a dialog that `showModal()` opened: on `saved`, the
+ * element that had the focus before the browser closed the dialog, else on
+ * the control with `data-autofocus`. Without either, the browser's own pick
+ * stays, unless it is a part marked `data-skip-first-focus`, such as a body
+ * that only the code focuses: then the first control takes the focus. So a
+ * marked part that the user focused keeps the focus when the dialog opens
+ * again.
+ */
+function placeFocus(dialog: HTMLDialogElement, saved: Element | null): void {
+  const target = saved ?? dialog.querySelector('[data-autofocus]')
+  if (target instanceof HTMLElement) {
+    target.focus()
+  } else if (document.activeElement?.matches('[data-skip-first-focus]')) {
+    controlsOf(dialog)[0]?.focus()
+  }
+}
+
+/**
  * Opens a `<dialog>` as a modal when it mounts, and closes it when it
  * unmounts. The browser keeps the focus inside the dialog. When it opens,
- * the control with `data-autofocus` takes the focus, or else the first
- * control. When it closes, the focus goes back to the element that had it
- * before.
+ * the control with `data-autofocus` takes the focus, or else the browser's
+ * pick: the first element that can take the focus. A part marked
+ * `data-skip-first-focus` never takes that first focus: the first control
+ * takes it instead. When it closes, the focus goes back to the element that
+ * had it before.
  *
  * Every request to close goes through `dismiss`: a Cancel button, Escape, a
  * press on the dimmed page, and a close by the browser itself, which can
  * close the dialog without a `cancel` event that the page can prevent. While
  * `busy`, `dismiss` refuses. A dialog that the browser closed then opens
- * again, with the focus where it was. An unmount is no request to close.
+ * again, with the focus where it was, also on a marked part that the user
+ * focused. An unmount is no request to close.
  *
  * The dialog element must have no padding of its own, so that a press on
  * its content never counts as a press on the dimmed page. While it is
@@ -68,24 +90,24 @@ export function useModalDialog(
       if (event.target instanceof Element) focused = event.target
     }
     // The browser has closed the dialog already. A refused close opens it
-    // again, with the focus on the control that had it.
+    // again, with the focus on the element that had it. `showModal()` moves
+    // the focus and its `focusin` replaces `focused`, so that element is
+    // kept before it.
     function onClose() {
       // A browser queues the close event. The close of an earlier cleanup,
       // such as in StrictMode, can arrive after the dialog opened again.
       if (!dialog || dialog.open) return
       if (dismiss()) return
+      const saved =
+        focused?.isConnected && dialog.contains(focused) ? focused : null
       dialog.showModal()
-      const back =
-        focused?.isConnected && dialog.contains(focused)
-          ? focused
-          : dialog.querySelector('[data-autofocus]')
-      if (back instanceof HTMLElement) back.focus()
+      placeFocus(dialog, saved)
     }
     dialog.addEventListener('focusin', onFocusIn)
     dialog.addEventListener('close', onClose)
     if (!dialog.open) dialog.showModal()
-    // The browser focuses the first control. A marked control goes first.
-    dialog.querySelector<HTMLElement>('[data-autofocus]')?.focus()
+    // The browser focuses the first element that can take the focus.
+    placeFocus(dialog, null)
     return () => {
       // The listener goes first, so this close is no request to close.
       dialog.removeEventListener('close', onClose)

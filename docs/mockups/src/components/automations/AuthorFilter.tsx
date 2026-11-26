@@ -1,8 +1,8 @@
 import type { TriggerEdit } from '../../fixtures/automationTriggers'
 import { orgs } from '../../fixtures/orgs'
 import { LoginField } from './LoginField'
-import { membersEntry } from './triggerCopy'
-import styles from './AuthorFilter.module.css'
+import { membersEntry } from '../../../../../src/ui/components/automations/triggerCopy'
+import styles from '../../../../../src/ui/components/automations/AuthorFilter.module.css'
 
 /**
  * The author filter of a pull request trigger (decision 506 C): an "is"

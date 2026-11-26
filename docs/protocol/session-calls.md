@@ -5,6 +5,8 @@ session calls of the workspace tools. With these calls, an agent starts a
 session, lists the sessions of a workspace, sends a message to a session,
 and reads a session. [Session management](session-management.md) states
 the calls that get, rename, close, and stop a session, and get a message.
+[Session watches](session-watches.md) states the call that watches one
+turn of a session.
 This doc belongs to [Agent tools](agent-tools.md), which covers the
 workspace tools, their other calls, and Mac commands. The terms are those
 of the [architecture doc](../architecture.md#terms). A decision number
@@ -34,8 +36,9 @@ at `app/workspace-links/sent-by`.
 | Rename a session | `rename_session` | `conductive sessions rename` | `POST /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/rename` | An active turn |
 | Close a session | `close_session` | `conductive sessions close` | `POST /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/close` | An active turn |
 | Stop a session | `stop_session` | `conductive sessions stop` | `POST /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/stop` | An active turn |
+| Watch a session | `watch_session` | `conductive sessions watch` | `POST /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/watch` | An active turn |
 
-- Both workspace tools give the nine calls. Their routes are on
+- Both workspace tools give the ten calls. Their routes are on
   `api.conductive.build`, as the routes of the other calls are.
 - Each call takes a workspace ID. A call without one names the calling
   workspace.
@@ -197,34 +200,15 @@ at `app/workspace-links/sent-by`.
   and message of that check. A repeat keeps that acceptance and can try
   the start again under the same rules as an open.
 
+## Watch a session
+
+[Session watches](session-watches.md) states the call that watches one
+turn of a session, and the wake that tells the calling session of its end.
+
 ## The `Sent by:` line
 
-- The Worker adds a blank line, a `---` line, and a `Sent by:` line at the
-  end of the text of each tool message (decision 259).
-- The `Sent by:` line holds `Sent by:`, a space, and the session link of
-  the calling turn (decision 261).
-- The text before these lines stays exactly the text of the call.
-- The stored message holds these lines. So the agent, the chat, a copy,
-  and a read all show them.
-- The chat shows the lines as text, as it shows the text of each message.
-  Only the session link shows as a session chip, as
-  [Session chips](workspace-links.md#session-chips) says.
-- The title request of a new workspace reads only the text before these
-  lines, as
-  [The title of a new workspace](workspace-and-session-names.md#the-title-of-a-new-workspace)
-  says.
-- Reason: members and agents see which session sent the message. The run
-  text of an automation also puts its facts after a `---` line, as
-  [The run text](automation-runs.md#the-run-text) says.
-- Risk: a member or an agent can type the same lines. So the lines inform
-  the reader only, and no access depends on them.
-- No mark, and a mark in the sender line only, were rejected. A member
-  would then take the text as the words of the member who sent it.
-- A mark that each reader builds from a field of the message was rejected.
-  It needs a new field, and changes in the history, the copy, and the
-  chat.
-- A line at the start of the text was rejected, because the first line of
-  a first message becomes the title of its session.
+[The `Sent by:` line](sent-by-line.md) states the line that ends the
+text of each tool message, with the session link of the calling turn.
 
 ## No limit
 
@@ -251,3 +235,5 @@ at `app/workspace-links/sent-by`.
   - A `Sent by:` line names the session that sent its message.
   - An agent does not answer a tool message only to confirm it (decision
     262).
+- [Tool descriptions and guidance](session-watches.md#tool-descriptions-and-guidance)
+  states the text of the watch call.

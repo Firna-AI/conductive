@@ -5,7 +5,6 @@ import type {
 } from '../../src/shared/org-settings'
 import { HttpError } from '../http'
 import { readOrgProviderAccount } from '../data/org-provider-account'
-import { readOrgImage } from './org-image-data'
 import type { CommandStatus } from '../sandbox/provider'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
 import { readBuildSnapshot } from './build-log-reader'
@@ -15,6 +14,7 @@ import type { ProviderRetryState } from './provider-retry'
 import type { SavedScript } from './saved-script'
 import { readBuildChanges } from './build-changes-data'
 import { writeBuildEnd } from './build-end-data'
+import type { SwitchBuildFailure } from './provider-switch-end'
 
 export type BuildPhase =
   | 'create'
@@ -31,6 +31,9 @@ export type BuildPhase =
 export interface BuildJob {
   providerRetry: ProviderRetryState | null
   startedAt: number
+  executionStartedAt?: number | null
+  operatorSwitchId?: string | null
+  waitingForSwitchId?: string | null
   buildId: string
   orgId: string
   providerAccount: string
@@ -56,6 +59,8 @@ export interface BuildJob {
 }
 
 const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state, b.started_at AS startedAt,
+  b.execution_started_at AS executionStartedAt, b.operator_switch_id AS operatorSwitchId,
+  b.waiting_for_switch_id AS waitingForSwitchId,
   b.sandbox_id AS sandboxId, b.snapshot_name AS snapshotName,
   b.provider_account AS providerAccount,
   b.settings_revision AS settingsRevision, b.runner_protocol_version AS runnerProtocolVersion,
@@ -96,11 +101,25 @@ export async function runningBuild(
 ): Promise<string | null> {
   const row = await db
     .prepare(
-      "SELECT id FROM image_builds WHERE org_id = ? AND state = 'running'",
+      "SELECT id FROM image_builds WHERE org_id = ? AND state = 'running' AND waiting_for_switch_id IS NULL",
     )
     .bind(orgId)
     .first<{ id: string }>()
   return row?.id ?? null
+}
+
+/** The one statement of a phase change. It resets the command of the job. */
+export function buildPhaseStatement(
+  db: D1Database,
+  buildId: string,
+  phase: BuildPhase,
+  processId: number | null = null,
+): D1PreparedStatement {
+  return db
+    .prepare(
+      'UPDATE image_build_jobs SET phase = ?, process_id = ?, stdout_offset = 0, stderr_offset = 0 WHERE build_id = ?',
+    )
+    .bind(phase, processId, buildId)
 }
 
 export async function updateBuildJob(
@@ -109,12 +128,7 @@ export async function updateBuildJob(
   phase: BuildPhase,
   processId: number | null = null,
 ): Promise<void> {
-  await db
-    .prepare(
-      'UPDATE image_build_jobs SET phase = ?, process_id = ?, stdout_offset = 0, stderr_offset = 0 WHERE build_id = ?',
-    )
-    .bind(phase, processId, buildId)
-    .run()
+  await buildPhaseStatement(db, buildId, phase, processId).run()
 }
 
 export async function assignBuildSandbox(
@@ -176,8 +190,9 @@ export async function writeBuildLog(
   buildId: string,
   text: string,
   now: number,
+  records: readonly D1PreparedStatement[] = [],
 ): Promise<void> {
-  await db.batch(buildLogStatements(db, buildId, text, now))
+  await db.batch([...buildLogStatements(db, buildId, text, now), ...records])
 }
 
 export async function failBuild(
@@ -185,8 +200,13 @@ export async function failBuild(
   buildId: string,
   message: string,
   now: number,
+  failure: SwitchBuildFailure = {},
 ): Promise<void> {
-  await writeBuildEnd(db, { state: 'failed', buildId, message }, now)
+  await writeBuildEnd(
+    db,
+    { state: 'failed', buildId, message, ...failure },
+    now,
+  )
 }
 
 export async function readBuildHistory(
@@ -196,14 +216,25 @@ export async function readBuildHistory(
   const providerAccount = await readOrgProviderAccount(db, orgId)
   const { results } = await db
     .prepare(
-      `SELECT ${buildColumns} FROM image_builds WHERE org_id = ? ORDER BY started_at DESC, id DESC`,
+      `SELECT ${buildColumns} FROM image_builds WHERE org_id = ?
+       AND operator_switch_id IS NULL ORDER BY started_at DESC, id DESC`,
     )
     .bind(orgId)
     .all<ImageBuild>()
-  const image = await readOrgImage(db, orgId, providerAccount)
+  const image = await db
+    .prepare(
+      `SELECT i.image_build_id AS imageBuildId, b.operator_switch_id AS operatorSwitchId
+       FROM org_images i LEFT JOIN image_builds b ON b.id = i.image_build_id
+       WHERE i.org_id = ? AND i.provider_account = ?`,
+    )
+    .bind(orgId, providerAccount)
+    .first<{ imageBuildId: string | null; operatorSwitchId: string | null }>()
   return {
     builds: results,
-    currentImageBuildId: image?.imageBuildId ?? null,
+    currentImageBuildId:
+      image && image.operatorSwitchId !== null
+        ? (results.find((build) => build.state === 'succeeded')?.id ?? null)
+        : (image?.imageBuildId ?? null),
     changes: await readBuildChanges(db, orgId, providerAccount),
   }
 }

@@ -1,8 +1,11 @@
 import type { AgentReadSessionRequest } from '../../src/shared/generated/AgentReadSessionRequest'
 import type { AgentListSessionsRequest } from '../../src/shared/generated/AgentListSessionsRequest'
+import type { AgentGetMessageRequest } from '../../src/shared/generated/AgentGetMessageRequest'
+import type { AgentGetMessageResponse } from '../../src/shared/generated/AgentGetMessageResponse'
 import { AGENT_TRANSCRIPT_MAX_BYTES } from '../../src/shared/agent-sessions'
 import { sessionLink } from '../../src/shared/session-link'
 import { jsonBytes } from '../../src/shared/event-limits'
+import { finishedAgentMessage } from '../chat/agent-message'
 import { AttachmentWorkspace } from '../chat/attachment-workspace'
 import { buildSessionTranscript } from '../chat/session-transcript'
 import { transcriptWindow } from '../chat/transcript-window'
@@ -83,34 +86,67 @@ export class AgentSessionReadWorkspace extends AttachmentWorkspace {
     sessionId: string,
     messageId: string,
     origin: string,
+    // Last and optional: during a deploy, the previous Worker calls this
+    // object without it, and an older object ignores it.
+    input: AgentGetMessageRequest = { agentMessages: false },
   ) {
     return featureResult(() =>
-      this.chat.readWorkspace(workspaceId, async (view) => {
-        const workspace = await toolSessionWorkspace(
-          this.env.DB,
-          orgId,
-          workspaceId,
-          origin,
-        )
-        await sessionFor(view, sessionId)
-        const stored = await view.message(messageId)
-        if (!stored || stored.sessionId !== sessionId)
-          throw new HttpError(
-            404,
-            'message_not_found',
-            'The message is not available.',
+      this.chat.readWorkspace(
+        workspaceId,
+        async (view): Promise<AgentGetMessageResponse> => {
+          const workspace = await toolSessionWorkspace(
+            this.env.DB,
+            orgId,
+            workspaceId,
+            origin,
           )
-        const { id, sender, text, state, createdAt } = stored
-        return {
-          workspace,
-          session: {
+          await sessionFor(view, sessionId)
+          const session = {
             id: sessionId,
             link: sessionLink(origin, orgId, workspaceId, sessionId),
-          },
-          message: { id, sessionId, sender, text, state, createdAt },
-          turnId: (await view.messageTurn(id)) ?? null,
-        }
-      }),
+          }
+          const stored = await view.message(messageId)
+          if (stored?.sessionId === sessionId) {
+            const { id, sender, text, state, createdAt } = stored
+            return {
+              workspace,
+              session,
+              message: {
+                author: 'member',
+                id,
+                sessionId,
+                sender,
+                text,
+                state,
+                createdAt,
+              },
+              turnId: (await view.messageTurn(id)) ?? null,
+            }
+          }
+          const answer = input.agentMessages
+            ? await finishedAgentMessage(view, sessionId, messageId)
+            : undefined
+          if (!answer)
+            throw new HttpError(
+              404,
+              'message_not_found',
+              'The message is not available.',
+            )
+          const { event, occurredAt } = answer
+          return {
+            workspace,
+            session,
+            message: {
+              author: 'agent',
+              id: event.messageId,
+              sessionId,
+              text: event.text,
+              createdAt: occurredAt,
+            },
+            turnId: event.turnId,
+          }
+        },
+      ),
     )
   }
 

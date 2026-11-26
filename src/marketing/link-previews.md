@@ -27,7 +27,7 @@ The user approved this image after the X header design work. It uses:
 - The approved [light brand lockup](../../docs/brand/conductive-lockup-light.svg)
   without changes.
 - The homepage headline in Inter, weight 650, under the font's
-  [SIL Open Font License](../../docs/mockups/src/fonts/Inter-OFL.txt).
+  [SIL Open Font License](../ui/fonts/Inter-OFL.txt).
 
 The image gives the app equal 64-pixel side margins and crops it at the
 bottom. Its layout and source inputs are tracked in the repository.

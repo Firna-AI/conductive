@@ -26,7 +26,8 @@ function isWork(item: TranscriptItem, turnId: string): item is WorkItem {
 
 /**
  * The parts of a turn: the positions of its items in the chat, split at
- * each of its messages. A message starts a part and belongs to none.
+ * each of its messages and wake lines. A message or a wake line starts a
+ * part and belongs to none, so it never folds.
  */
 function partsOf(
   items: readonly TranscriptItem[],
@@ -34,7 +35,8 @@ function partsOf(
 ): number[][] {
   const parts: number[][] = [[]]
   for (const position of positions) {
-    if (items[position].kind === 'user') parts.push([])
+    const { kind } = items[position]
+    if (kind === 'user' || kind === 'wake') parts.push([])
     else parts.at(-1)?.push(position)
   }
   return parts

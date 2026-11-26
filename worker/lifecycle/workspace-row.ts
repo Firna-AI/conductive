@@ -1,5 +1,6 @@
 import type { Workspace } from '../../src/shared/generated/Workspace'
 import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
+import type { ArchivedComputerState } from '../../src/shared/generated/ArchivedComputerState'
 
 export interface WorkspaceRow {
   id: string
@@ -24,6 +25,7 @@ export interface WorkspaceRow {
   createdAt: number
   updatedAt: number
   archivedAt: number | null
+  archivedComputerState: ArchivedComputerState | null
   stoppedAt: number | null
   nextDiskKeepaliveAt: number | null
   agent: Workspace['choice']['agent']

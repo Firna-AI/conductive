@@ -1,15 +1,17 @@
 import type { ReactNode } from 'react'
 import type { Org } from '../../fixtures/orgs'
 import { paths } from '../../paths'
-import { KeyChips, type Shortcut } from '../common/KeyChips'
-import { Menu, type MenuEntry } from '../common/Menu'
+import type { Shortcut } from '../../../../../src/ui/components/common/KeyChips'
+import { keyChips } from '../../entries/components/common/KeyChips.mockup'
+import { menu as menuPart } from '../../entries/components/common/Menu.mockup'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { ScreenLink } from '../common/ScreenLink'
-import a11y from '../common/a11y.module.css'
-import { classes } from '../common/classes'
-import orgDrag from '../orgs/OrgDrag.module.css'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import orgDrag from '../../../../../src/ui/components/orgs/OrgDrag.module.css'
 import { orgLinks } from '../orgs/orgLinks'
-import { OrgTile } from '../orgs/OrgTile'
-import styles from './OrgRail.module.css'
+import { orgTile } from '../../entries/components/orgs/OrgTile.mockup'
+import styles from '../../../../../src/ui/components/layout/OrgRail.module.css'
 
 export function RailLink(props: {
   label: string
@@ -60,7 +62,7 @@ function orgLink(
 
 /** The square of an org in the rail. */
 export function RailTile(props: { org: Org; current: boolean }) {
-  return <OrgTile current={props.current} org={props.org} size={26} />
+  return <orgTile.Component current={props.current} org={props.org} size={26} />
 }
 
 /**
@@ -78,7 +80,7 @@ export function OrgItem(props: {
   shortcut?: Shortcut
   state?: OrgState
   placeholder?: boolean
-  menu?: readonly MenuEntry[]
+  menu?: readonly MenuEntryData[]
 }) {
   const { org, menu } = props
   const { to, label } = orgLink(org, props.state)
@@ -114,14 +116,18 @@ export function OrgItem(props: {
           {org.name}
           {props.shortcut ? (
             <span className={styles.hintKey}>
-              <KeyChips shortcut={props.shortcut} />
+              <keyChips.Component shortcut={props.shortcut} />
             </span>
           ) : null}
         </span>
       ) : null}
       {menu ? (
         <span className={styles.pointer}>
-          <Menu entries={menu} label={org.name} placement="point" />
+          <menuPart.Component
+            entries={menu}
+            label={org.name}
+            placement="point"
+          />
         </span>
       ) : null}
     </li>

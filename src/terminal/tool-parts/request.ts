@@ -35,6 +35,17 @@ const unreadable: ToolError = {
   message: 'The request failed. Try again.',
 }
 
+/**
+ * Whether a failed request has no answer of the API: no connection, a reply
+ * without the error of the API, or a body that `parse` refused. A write may
+ * then have run or not.
+ */
+export function isUnanswered(error: ToolError): boolean {
+  return (
+    error === networkFailed || error === requestFailed || error === unreadable
+  )
+}
+
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }

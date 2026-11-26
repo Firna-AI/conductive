@@ -1,6 +1,8 @@
 import type { HttpFetch } from '../../env'
+import { githubFailureStatus } from '../../github/parsers'
 import { isRecord } from '../../http'
 import { githubJson, githubRequest } from '../../github/transport'
+import { ImageSourceStepError } from './failure'
 import type { MetadataRepository } from './metadata-plan'
 
 const MINIMUM_SOURCE_MEMORY = 256 * 1024 * 1024
@@ -24,7 +26,12 @@ export async function readMetadataSizes(
         const result = await githubJson(
           fetch,
           githubRequest(`/repositories/${source.githubRepositoryId}`, token),
-        )
+        ).catch((error: unknown) => {
+          throw new ImageSourceStepError(
+            'metadata_read',
+            githubFailureStatus(error),
+          )
+        })
         const size = isRecord(result) ? result.size : null
         estimates[index].estimateBytes =
           typeof size === 'number' && Number.isSafeInteger(size) && size >= 0

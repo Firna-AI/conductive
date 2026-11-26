@@ -8,9 +8,14 @@ import type {
   GitHubWorkspace,
 } from './contracts'
 import { activeWorkspace } from './data'
+import { recordPullRequestMerge } from './merge-record-data'
 import { saveWorkspaceGitHubSummary } from './summary-data'
 import { readMergeWorkspace } from './merge-access'
 import type { WorkspaceGitHubState } from './workspace-state'
+import { moveWorkspaceBase } from './base-data'
+import { saveBaseChangeJob } from '../lifecycle/base-change-job'
+import { scopeForQueueWorkspace } from '../merge-queue/data'
+import { readStackPrefix } from '../merge-queue/stack-read'
 
 // Three fresh reads, one second apart, bound GitHub's merge-state retry work.
 const MERGE_STATE_RETRY_LIMIT = 3
@@ -38,6 +43,11 @@ async function needsRead(
     banner.state !== 'merged' &&
     banner.state !== 'closed'
   if (!otherPush) return open
+  if (
+    workspace.baseBranch != null &&
+    signal.pushBranch === workspace.baseBranch
+  )
+    return true
   return (
     open && signal.pushBranch === (workspace.baseBranch ?? banner.baseBranch)
   )
@@ -63,6 +73,30 @@ function tabReadKey(
   ])
 }
 
+async function stackBelow(
+  snapshot: GitHubSnapshot,
+  previous: GitHubSnapshot | undefined,
+  read: (() => ReturnType<typeof readStackPrefix>) | undefined,
+) {
+  const { banner, pullBaseBranch } = snapshot
+  if (
+    !banner.pullRequest ||
+    banner.state === 'closed' ||
+    banner.state === 'merged'
+  )
+    return undefined
+  if (read) {
+    const prefix = await read().catch(() => undefined)
+    if (prefix !== undefined)
+      return prefix?.layers.slice(0, -1).map(({ number }) => number) ?? []
+  }
+  if (
+    previous?.banner.pullRequest?.number === banner.pullRequest.number &&
+    previous.pullBaseBranch === pullBaseBranch
+  )
+    return previous.stackBelow
+}
+
 /**
  * Call inside the workspace DO. It rechecks access before reads and commits.
  * A tab read joins an equal tab read that has not ended, so the banner and
@@ -77,7 +111,8 @@ export function refreshWorkspace(
   dependencies: GitHubReadDependencies,
 ): Promise<GitHubSnapshot | null> {
   const key = tabReadKey(workspace, signal)
-  const read = () => readAndCommit(db, workspace, signal, state, dependencies)
+  const read = () =>
+    readAndCommit(db, workspace, signal, state, dependencies, key !== null)
   return key === null ? read() : state.share(key, read)
 }
 
@@ -87,7 +122,9 @@ async function readAndCommit(
   signal: GitHubRefresh,
   state: WorkspaceGitHubState,
   dependencies: GitHubReadDependencies,
+  readStack: boolean,
 ): Promise<GitHubSnapshot | null> {
+  let binding = workspace
   const authorize = async () => {
     const current =
       signal.requireWritable && signal.userId !== undefined
@@ -115,6 +152,38 @@ async function readAndCommit(
         'The workspace is not available.',
       )
     }
+    binding = current
+  }
+  const copy = async (snapshot: GitHubSnapshot) => {
+    if (snapshot.baseChange && snapshot.banner.branch === binding.branch) {
+      const moved = await moveWorkspaceBase(db, binding, snapshot.baseChange)
+      if (moved) {
+        binding = moved
+        await authorize()
+      }
+    }
+    await saveWorkspaceGitHubSummary(
+      db,
+      { ...binding, branch: snapshot.banner.branch },
+      githubSummary(snapshot.banner),
+    )
+    const { banner } = snapshot
+    if (
+      banner.state === 'merged' &&
+      banner.pullRequest !== null &&
+      banner.mergedAt !== null
+    )
+      await recordPullRequestMerge(
+        db,
+        {
+          repositoryId: binding.repositoryId,
+          number: banner.pullRequest.number,
+          orgId: binding.orgId,
+          workspaceId: binding.id,
+          mergedAt: banner.mergedAt,
+        },
+        dependencies.now(),
+      )
   }
   const schedule = async () => {
     const attempt = signal.retryAttempt ?? 0
@@ -122,7 +191,7 @@ async function readAndCommit(
     await authorize()
     await state.scheduleRefresh(
       {
-        workspace,
+        workspace: binding,
         signal: {
           retryAttempt: attempt + 1,
           ...(signal.userId === undefined ? {} : { userId: signal.userId }),
@@ -134,18 +203,18 @@ async function readAndCommit(
   }
   return state.refresh(
     async () => {
-      if (!(await needsRead(workspace, signal, state))) return null
-      const token = await dependencies.token(workspace)
+      const previous = await state.stored()
+      if (previous?.baseChange) await copy(previous)
+      if (!(await needsRead(binding, signal, state))) return null
+      const token = await dependencies.token(binding)
       await authorize()
+      const fetch = async (request: Request) => {
+        await authorize()
+        return dependencies.fetch(request)
+      }
       const reader = new GitHubReader(
-        {
-          ...dependencies,
-          fetch: async (request) => {
-            await authorize()
-            return dependencies.fetch(request)
-          },
-        },
-        workspace,
+        { ...dependencies, fetch },
+        binding,
         token,
       )
       try {
@@ -156,7 +225,26 @@ async function readAndCommit(
           signal.pushBranch !== branches.baseBranch
         )
           return null
-        const snapshot = await reader.read(branches)
+        const queued = await scopeForQueueWorkspace(db, binding)
+        const snapshot = await reader.read(branches, !queued)
+        const pull = snapshot.banner.pullRequest
+        const below = await stackBelow(
+          snapshot,
+          previous,
+          pull && readStack
+            ? () =>
+                readStackPrefix(fetch, token, branches.fullName, pull.number)
+            : undefined,
+        )
+        if (below !== undefined) snapshot.stackBelow = below
+        if (
+          !snapshot.banner.pullRequest &&
+          !snapshot.banner.baseMoved &&
+          previous?.banner.branch === binding.branch &&
+          binding.baseBranch == null &&
+          previous.banner.baseMoved
+        )
+          snapshot.banner.baseMoved = previous.banner.baseMoved
         if (signal.pushBranch === branches.baseBranch) await schedule()
         return snapshot
       } catch (error) {
@@ -169,11 +257,8 @@ async function readAndCommit(
     authorize,
     signal,
     // A receipt can replay committed state from before Continue.
-    (snapshot) =>
-      saveWorkspaceGitHubSummary(
-        db,
-        { ...workspace, branch: snapshot.banner.branch },
-        githubSummary(snapshot.banner),
-      ),
+    copy,
+    (transaction, snapshot) =>
+      saveBaseChangeJob(transaction, snapshot, binding, dependencies.now()),
   )
 }

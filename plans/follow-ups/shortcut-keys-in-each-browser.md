@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-11, from `calummoore/keyboard-shortcuts-settings`, a post-merge task of its plan and the list of claims that its key research could not confirm.
-- **Location:** `src/app/shortcuts/browser-keys.ts` (the kept keys and the keys that the app leaves to each browser), `src/app/shortcuts/text-keys.ts` (the text keys), `docs/protocol/keyboard-shortcuts-keys.md` ("Keys that a tab keeps" and "Keys that the app leaves to the browser"), and `docs/protocol/keyboard-shortcuts-fixed-keys.md` ("Text keys")
+- **Location:** `src/app/shortcuts/browser-keys.ts` (the kept keys and the keys that the app leaves to each browser), `src/app/shortcuts/text-keys.ts` (the text keys), `docs/protocol/keyboard-shortcuts-browser-keys.md` ("Keys that a tab keeps" and "Keys that the app leaves to the browser"), and `docs/protocol/keyboard-shortcuts-fixed-keys.md` ("Text keys")
 - **Reason:** The checks need the deployed app and real machines with Safari, Edge, and Windows, which the cloud machines of the branch do not have.
 
 - **Terms:**

@@ -20,11 +20,14 @@ import {
 import { orgList, type Org } from '../../fixtures/orgs'
 import { orgCommand, type CommandId } from '../../fixtures/shortcutCommands'
 import { checksPaths, paths } from '../../paths'
-import { sendFeedbackLabel, sendFeedbackWords } from '../feedback/feedbackCopy'
+import {
+  sendFeedbackLabel,
+  sendFeedbackWords,
+} from '../../../../../src/ui/components/feedback/feedbackCopy'
 import {
   mergeLatestLabel,
   mergeLatestWords,
-} from '../workspace/mergeLatestCopy'
+} from '../../../../../src/ui/components/workspace/mergeLatestCopy'
 import { orgLinks } from '../orgs/orgLinks'
 
 /** What leads a command row: an icon, the tile of an org, or GitHub. */

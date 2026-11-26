@@ -9,6 +9,7 @@ import { orgCommand } from './commands'
  * has it and it is not deleted. The palette treats a deleted org as
  * absent, so its page works as a page without an org: on the kept org of
  * the tab, as `keptOrg` says. Without such an org, there is none.
+ * `orgs` comes from `AppModel.activeOrgs`.
  */
 export function paletteOrg(
   route: Route,
@@ -16,7 +17,7 @@ export function paletteOrg(
   lastOrgId: string | null,
 ): OrgSummary | null {
   const orgId = routeOrgId(route)
-  const own = orgs.find((org) => org.id === orgId && !org.deletion)
+  const own = orgs.find((org) => org.id === orgId)
   return own ?? keptOrg(orgs, lastOrgId) ?? null
 }
 
@@ -24,13 +25,13 @@ export function paletteOrg(
  * The command of the keys of the Switch to row of an org: Switch to org 1
  * to 9 of its place among the orgs of the rail, counted from the top. The
  * palette has no Switch to row for its own org or for a deleted org, so
- * their keys run nothing.
+ * their keys run nothing. `orgs` comes from `AppModel.activeOrgs`.
  */
 export function switchCommand(
   orgs: readonly OrgSummary[],
   org: OrgSummary,
   palette: OrgSummary | null,
 ): ShortcutCommandId | null {
-  if (org.deletion || org.id === palette?.id) return null
+  if (org.id === palette?.id) return null
   return orgCommand(orgs.indexOf(org))
 }

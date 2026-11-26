@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { secretRunWords } from '../../../docs/mockups/src/components/chat/secretRunCopy'
-import dialog from '../../../docs/mockups/src/components/common/ConfirmDialog.module.css'
+import { secretRunWords } from '../../ui/components/chat/secretRunCopy'
+import dialog from '../../ui/components/common/ConfirmDialog.module.css'
 import { Sheet } from '../../shell/ui/Sheet'
 import { ActionButton } from '../ui/actions'
 import type { AnswerKind } from './secret-snapshot'

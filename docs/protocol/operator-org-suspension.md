@@ -38,10 +38,12 @@ whoever owns or started it (decision 129).
   next step.
 - Each unfinished build of the org stops and fails. The app removes its
   build sandbox.
-- When the org runs on Boat, a stopped workspace of the org gets no
-  restart near day 14 of its stop, also after an owner change
-  (decision 125). So Boat can delete its disk, with any unpushed work of
-  the members.
+- This also holds for a switch build. Its switch then waits for Lift, as
+  [When the switch build starts](switch-account.md#when-the-switch-build-starts)
+  says.
+- A stopped workspace of the org on Boat gets no restart near day 14 of
+  its stop, also after an owner change (decision 125). So Boat can delete
+  its disk, with any unpushed work of the members.
 - A signed-in member who is not suspended gets each refusal with HTTP 403
   and the code `org_suspended`. It says that the org is suspended, and it
   gives the address for abuse reports.

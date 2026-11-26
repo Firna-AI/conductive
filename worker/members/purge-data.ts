@@ -11,6 +11,8 @@ export async function purgeOrgRecords(
     'DELETE FROM settings WHERE org_id = ?',
     'DELETE FROM org_images WHERE org_id = ?',
     'DELETE FROM image_builds WHERE org_id = ?',
+    'DELETE FROM job_steps WHERE org_id = ?',
+    'DELETE FROM job_runs WHERE org_id = ?',
     'UPDATE workspaces SET created_by_workspace_id = NULL WHERE org_id = ?',
     'UPDATE workspaces SET parent_workspace_id = NULL WHERE org_id = ?',
     'DELETE FROM workspaces WHERE org_id = ?',

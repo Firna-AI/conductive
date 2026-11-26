@@ -1,9 +1,11 @@
 import type { Automation } from '../../src/shared/automations'
 import {
+  guardedBatch,
   guardedRun,
   guardedStatement,
   shellGuard,
 } from '../app-api/shell-guard'
+import { automationCapabilityStatements } from './automation-capability-statements'
 
 function referencesExist(orgBinding: number): string {
   return `EXISTS (SELECT 1 FROM repositories WHERE org_id = ?${orgBinding} AND id = ?2 AND selected = 1)
@@ -22,6 +24,7 @@ export async function saveAutomation(
   actorId: string,
   create: boolean,
   activeChanged = false,
+  capabilitiesChanged = false,
 ): Promise<boolean> {
   const access = { orgId: input.orgId, userId: actorId }
   const fields = [
@@ -84,7 +87,12 @@ export async function saveAutomation(
           actorId,
         ],
       )
-  const result = await guardedRun(statement)
+  const [result] = await guardedBatch(db, [
+    statement,
+    ...(create || capabilitiesChanged
+      ? automationCapabilityStatements(db, input, actorId)
+      : []),
+  ])
   return result.meta.changes > 0
 }
 

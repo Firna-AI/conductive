@@ -1,6 +1,6 @@
 import { FolderX, PowerOff, UserX } from 'lucide-react'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { SectionText } from '../../../docs/mockups/src/components/settings/Section'
+import { Notice } from '../../ui/components/common/Notice'
+import { SectionText } from '../../ui/components/settings/Section'
 import { personName } from '../../app/people'
 import type { Repository } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'

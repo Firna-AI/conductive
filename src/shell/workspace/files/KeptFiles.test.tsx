@@ -1,18 +1,30 @@
 // @vitest-environment happy-dom
 
+import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../../app/router'
+import { requestLines } from '../../../app/test-kit'
+import { filePaths } from '../../../shared/files'
 import { sessionPaths } from '../../../shared/sessions'
 import { byLabel, byRole } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { serveWork, workReport } from '../../../test-support/fake-bar'
-import { FAKE_IDS } from '../../../test-support/fixtures/core'
+import { FAKE_IDS, fakeUsers } from '../../../test-support/fixtures/core'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../../test-support/mount'
-import { click, settle } from '../../test-mount'
-import { bodiesOf, emit, recordingSocket } from '../kept-test-kit'
+import { click, settle, typeText } from '../../test-mount'
+import { startedApp } from '../../test-render'
+import {
+  bodiesOf,
+  draftOf,
+  emit,
+  lastEvent,
+  messageField,
+  mountTab,
+  recordingSocket,
+} from '../kept-test-kit'
 import { linksTo, openTab } from '../wiring-test-kit'
 import { filesHref } from './files-address'
 
@@ -78,4 +90,40 @@ describe('the kept files of the workspace screen', () => {
       prompts: [createPrompt],
     })
   })
+})
+
+test('reads the Files lists again after sign-out and clears the draft when the member changes', async () => {
+  holdAnimationFrames()
+  const server = new FakeApiServer()
+  const socket = recordingSocket(server)
+  const app = await startedApp(server, { events: socket.source })
+  const { view } = mountTab(app)
+  await settle()
+  typeText(messageField(view), 'A draft of the first person')
+  await act(() => app.account.signOut())
+  expect(app.boot.get().state).toBe('signed-out')
+  const signedOut = socket.opens.length
+  const before = server.requests.length
+  emit(server, { type: 'workspace.title', name: 'Saved addresses' })
+  const cutoff = lastEvent(server)
+  await act(() => app.start())
+  await settle()
+  expect(draftOf(view)).toBe('')
+  expect(
+    socket.opens.slice(signedOut).filter((after) => after === cutoff),
+  ).toHaveLength(2)
+  const lists = [filePaths.tree(org, id), filePaths.changes(org, id)].map(
+    (path) => `GET ${path}`,
+  )
+  expect(
+    requestLines(server)
+      .slice(before)
+      .filter((line) => lists.includes(line))
+      .sort(),
+  ).toEqual(lists.sort())
+  typeText(messageField(view), 'A draft before another person')
+  server.signIn(fakeUsers[1])
+  await act(() => app.start())
+  await settle()
+  expect(draftOf(view)).toBe('')
 })

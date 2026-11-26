@@ -1,5 +1,5 @@
 import { isRecord } from '../http'
-import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
+import { chatGptSignInCopy } from '../../src/ui/components/settings/chatGptSignInCopy'
 
 export const CODEX_RECONNECT_CAUSE = chatGptSignInCopy.causes.notRenewed
 

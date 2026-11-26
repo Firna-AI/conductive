@@ -56,6 +56,14 @@ pub(super) fn workspace(
     for key in ["repositoryId", "firstMessage"] {
         parsed.insert(key.into(), Value::String(text(fields, key)?));
     }
+    for key in ["startBranch", "baseBranch"] {
+        if let Some(value) = fields.get(key) {
+            if !value.is_string() {
+                return Err(Error::Input(InputError::Branch));
+            }
+            parsed.insert(key.into(), value.clone());
+        }
+    }
     for key in ["name", "firstSessionTitle"] {
         if let Some(value) = fields.get(key).filter(|value| value.is_string()) {
             parsed.insert(key.into(), value.clone());

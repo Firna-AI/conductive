@@ -1,10 +1,13 @@
+import { isSkillsRepository } from '../../../src/shared/skill-folders'
 import type { HelperOptions } from './generated/HelperOptions'
 import type { HelperRequest } from './generated/HelperRequest'
 import type { HelperCredential } from './generated/HelperCredential'
+import type { OrgSkills } from './generated/OrgSkills'
 import type { ProviderInput } from './generated/ProviderInput'
 import type { RunnerBranches } from './generated/RunnerBranches'
 import type { RunnerRepository } from './generated/RunnerRepository'
-import { array, nullable, object, oneOf, string } from './parse'
+import type { RunnerNoticeLine } from './generated/RunnerNoticeLine'
+import { array, boolean, nullable, object, oneOf, string } from './parse'
 import {
   parseChoice,
   parseCredential,
@@ -43,12 +46,31 @@ function credential(value: unknown): HelperCredential {
   throw new Error('The helper credential is invalid.')
 }
 
+function orgSkills(value: unknown): OrgSkills | null {
+  if (value === null) return null
+  const input = object(value)
+  const repository = string(input.repository)
+  if (!isSkillsRepository(repository)) return null
+  return {
+    repository,
+    ...(input.trustedRepository === undefined
+      ? {}
+      : { trustedRepository: nullable(input.trustedRepository) }),
+    ...(input.directory === undefined
+      ? {}
+      : { directory: nullable(input.directory) }),
+  }
+}
+
 function options(value: unknown): HelperOptions {
   const input = object(value)
   const tools = object(input.tools)
   return {
     cwd: string(input.cwd),
     home: string(input.home),
+    ...(input.orgSkills === undefined
+      ? {}
+      : { orgSkills: orgSkills(input.orgSkills) }),
     sessionId: string(input.sessionId),
     endpoint: string(input.endpoint),
     credential: credential(input.credential),
@@ -76,12 +98,24 @@ function options(value: unknown): HelperOptions {
   }
 }
 
+function notices(value: unknown): RunnerNoticeLine[] {
+  return array(value, (value) => {
+    const notice = object(value)
+    return { id: string(notice.id), text: string(notice.text) }
+  })
+}
+
 function providerInput(value: unknown): ProviderInput {
   const input = object(value)
-  const command = {
+  const identity = {
     commandId: string(input.commandId),
     sessionId: string(input.sessionId),
     turnId: string(input.turnId),
+  }
+  if (input.type === 'notice')
+    return { ...identity, type: 'notice', notices: notices(input.notices) }
+  const command = {
+    ...identity,
     message: parseUserMessage(input.message),
     attachments: array(input.attachments, (value) => {
       const file = object(value)
@@ -102,6 +136,9 @@ function providerInput(value: unknown): ProviderInput {
     return {
       ...command,
       type: 'turn',
+      ...(input.notices === undefined
+        ? {}
+        : { notices: notices(input.notices) }),
       credential: parseCredential(input.credential),
       commitAuthor: parseCommitAuthor(input.commitAuthor, () => {}),
     }
@@ -115,7 +152,30 @@ export function readRequest(value: unknown): HelperRequest {
     case 'start':
       return { type: 'start', requestId, options: options(input.options) }
     case 'send':
-      return { type: 'send', requestId, input: providerInput(input.input) }
+      return {
+        type: 'send',
+        requestId,
+        input: providerInput(input.input),
+        ...(input.skills === undefined
+          ? {}
+          : {
+              skills: array(input.skills, (value) => {
+                const skill = object(value)
+                return { name: string(skill.name), path: string(skill.path) }
+              }),
+            }),
+      }
+    case 'skills':
+      return {
+        type: 'skills',
+        requestId,
+        repository: string(input.repository),
+        home: string(input.home),
+        reload: boolean(input.reload),
+        ...(input.orgSkills === undefined
+          ? {}
+          : { orgSkills: orgSkills(input.orgSkills) }),
+      }
     case 'model':
       return { type: 'model', requestId, choice: parseChoice(input.choice) }
     case 'interrupt':

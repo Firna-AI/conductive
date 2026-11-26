@@ -1,31 +1,10 @@
+import type { BannerState } from '../../../../src/ui/components/workspace/barModel'
 import type { GitHubSummary } from '../../../../src/shared/generated/GitHubSummary'
 
 /**
  * The GitHub state of the open workspace branch: its pull request and the
  * checks that GitHub reports for it.
  */
-
-/**
- * The states of the pull request bar (decisions 18 and 64). `none` is a
- * branch without a pull request, and `no-commits` is one without a commit,
- * which has nothing to open a pull request with. `blocked` is a pull
- * request that GitHub blocks for a reason that no other state names.
- */
-export const bannerStates = [
-  'none',
-  'no-commits',
-  'checks-running',
-  'checks-failed',
-  'ready-to-merge',
-  'merged',
-  'conflict',
-  'changes-requested',
-  'draft',
-  'closed',
-  'blocked',
-] as const
-
-export type BannerState = (typeof bannerStates)[number]
 
 export type PullRequest = {
   number: number

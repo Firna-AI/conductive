@@ -37,10 +37,18 @@ it('keeps live item order and first times in compacted pages and old or new cach
   mergeLive(live, fixture.published)
   expect(itemRows(live)).toEqual(expected)
 
-  const pages = await historyPages(fixture)
-  expect(pages.map((page) => page.nextAfterEventNumber ?? null)).toEqual([
-    32,
-    null,
+  const pageBytes = 4_900
+  const pages = await historyPages(fixture, pageBytes)
+  expect(
+    pages.map((page) => ({
+      next: page.nextAfterEventNumber ?? null,
+      positions: page.events
+        .map(({ eventNumber }) => eventNumber)
+        .filter((number) => [2, 3, 4, 35, 38, 39].includes(number)),
+    })),
+  ).toEqual([
+    { next: 32, positions: [2, 3, 4] },
+    { next: null, positions: [35, 38, 39] },
   ])
   const replay = new SessionLog()
   for (const page of pages) mergeHistory(replay, page)
@@ -72,7 +80,8 @@ it('keeps live item order and first times in compacted pages and old or new cach
     expect(payload).not.toContain(intermediate)
   await forgetPositionIndex(fixture.storage)
   const legacy = new SessionLog()
-  for (const page of await historyPages(fixture)) mergeHistory(legacy, page)
+  for (const page of await historyPages(fixture, pageBytes))
+    mergeHistory(legacy, page)
   expect(itemRows(legacy)).toEqual(expected)
 })
 
@@ -158,6 +167,7 @@ it('keeps late first positions without changing a newer running turn', async () 
   expect(itemRows(live)).toEqual(expected)
   const replay = new SessionLog()
   const pages = await historyPages(fixture)
+  expect(pages).toHaveLength(1)
   expect(pages[0]?.events.slice(1, 3)).toEqual([
     {
       workspaceId: 'workspace',

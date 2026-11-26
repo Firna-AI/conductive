@@ -1,4 +1,5 @@
 import { expect, vi } from 'vitest'
+import type { ChangesResponse } from '../shared/generated/ChangesResponse'
 import type { WorkspaceEventEnvelope } from '../shared/events'
 import { filePaths, type FileEvent } from '../shared/files'
 import { FakeApiServer } from '../test-support/fake-api'
@@ -8,6 +9,12 @@ import { WorkspaceFiles, type FilesSubscribe } from './model/files-store'
 import type { FilesNavigation, FilesTab, FilesTarget } from './navigation'
 
 /** Test kit of the Files screens. Tests only. */
+
+export const emptyChanges: ChangesResponse = {
+  baseBranch: 'main',
+  files: [],
+  summary: { files: 0, added: 0, removed: 0 },
+}
 
 export function clientFor(fetch: FetchLike) {
   return createFilesClient({
@@ -24,6 +31,30 @@ export function filesFor(
   fetch: FetchLike = server.fetch,
 ): WorkspaceFiles {
   return new WorkspaceFiles({ client: clientFor(fetch), subscribe })
+}
+
+/** Records the real client promises so a test can wait for a specific read. */
+export function observeFileReads(subscribe: FilesSubscribe, fetch: FetchLike) {
+  const client = clientFor(fetch)
+  const tree: ReturnType<typeof client.readTree>[] = []
+  const changes: ReturnType<typeof client.readChanges>[] = []
+  const files = new WorkspaceFiles({
+    subscribe,
+    client: {
+      ...client,
+      readTree(signal) {
+        const reply = client.readTree(signal)
+        tree.push(reply)
+        return reply
+      },
+      readChanges(signal) {
+        const reply = client.readChanges(signal)
+        changes.push(reply)
+        return reply
+      },
+    },
+  })
+  return { files, tree, changes }
 }
 
 /** Starts the store and waits until both routes have answered. */
@@ -109,15 +140,31 @@ export function filesAfterHistory(
   )
 }
 
-/** A fetch of the fake API whose replies of the tree route wait. */
+/** A fetch whose replies of the tree route wait for the test. */
 export function heldTree(server: FakeApiServer) {
   const reply = deferred<void>()
   const path = filePaths.tree(FAKE_IDS.org, FAKE_IDS.workspace)
   const fetch: FetchLike = async (input, init) => {
-    if (new URL(input, 'http://app.test').pathname === path) {
-      await reply.promise
-    }
+    if (new URL(input, 'http://app.test').pathname === path) await reply.promise
     return server.fetch(input, init)
   }
   return { fetch, release: () => reply.resolve() }
+}
+
+/** A missing tree whose retry waits until the test releases it. */
+export function heldTreeRetry(server: FakeApiServer) {
+  const held = heldTree(server)
+  const path = filePaths.tree(FAKE_IDS.org, FAKE_IDS.workspace)
+  let initial = true
+  const fetch: FetchLike = async (input, init) => {
+    if (initial && new URL(input, 'http://app.test').pathname === path) {
+      initial = false
+      return Response.json(
+        { error: { code: 'file_unavailable' } },
+        { status: 503 },
+      )
+    }
+    return held.fetch(input, init)
+  }
+  return { ...held, fetch }
 }

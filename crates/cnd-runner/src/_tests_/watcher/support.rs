@@ -13,6 +13,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::error::Result;
 use crate::ports::reporter::{PortReports, PortReportsMock};
 use crate::reports::files::{FileReports, FileReportsMock};
+use crate::skills::boundary::{SkillReports, SkillReportsMock};
 use crate::watcher::boundary::{RepositoryWatch, WatchDriver, WatchDriverMock};
 use crate::watcher::service::ReportWatchService;
 
@@ -56,6 +57,7 @@ pub(super) struct Fixture {
     pub closes: Arc<AtomicUsize>,
     pub files: Arc<AtomicUsize>,
     pub ports: Arc<AtomicUsize>,
+    pub skills: Arc<AtomicUsize>,
 }
 
 impl Fixture {
@@ -131,6 +133,20 @@ impl Fixture {
         } else {
             Arc::new(Unimock::new(()))
         };
+        let skills = Arc::new(AtomicUsize::new(0));
+        let skill_count = skills.clone();
+        let skill_reports: Arc<dyn SkillReports> = if expect_reports {
+            Arc::new(Unimock::new(
+                SkillReportsMock::refresh
+                    .each_call(matching!(false, None))
+                    .answers_arc(Arc::new(move |_, _, _| {
+                        skill_count.fetch_add(1, Ordering::SeqCst);
+                        Box::pin(async { Ok(()) })
+                    })),
+            ))
+        } else {
+            Arc::new(Unimock::new(()))
+        };
         Self {
             service: ReportWatchService::new(
                 driver,
@@ -138,7 +154,8 @@ impl Fixture {
                 Some(port_reports),
                 "/repo".into(),
                 "/run/restore-ended".into(),
-            ),
+            )
+            .with_skills(skill_reports),
             events,
             marker,
             opens,
@@ -146,6 +163,7 @@ impl Fixture {
             closes,
             files,
             ports,
+            skills,
         }
     }
 }

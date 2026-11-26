@@ -15,6 +15,21 @@ import type { WorkspaceArchive } from './archive-state'
 import type { ComputerStopTask } from './computer-stop-task'
 import type { QueueTurn } from '../chat/queue-turn'
 import { StartSuperseded } from './start-guard'
+import type { StartJobRecords } from './start-job-records'
+import { restartDeadline } from './durable-restart'
+import { providerRetryPending } from './provider-retry'
+
+const START_PHASE_ORDER = {
+  records: 0,
+  machine: 1,
+  ready: 2,
+  fetch: 3,
+  branch: 4,
+  startup: 5,
+  terminal: 6,
+  'terminal-password': 7,
+  runner: 8,
+} as const
 
 export async function runWorkspaceAlarm(input: {
   turn?: QueueTurn
@@ -31,11 +46,15 @@ export async function runWorkspaceAlarm(input: {
   accessStop: WorkspaceAccessStop
   archive: WorkspaceArchive
   computerStops: ComputerStopTask
+  runs?: Pick<StartJobRecords, 'begin'>
+  restart?: () => Promise<void>
 }): Promise<void> {
   const { storage, env, dependencies, alarms, lifecycle } = input
-  const run = await alarms.begin(dependencies.now(), (source) =>
+  const startedAt = dependencies.now()
+  const run = await alarms.begin(startedAt, (source) =>
     source.startsWith('lifecycle'),
   )
+  const record = await input.runs?.begin(run.dueAt)
   const { due, recovering: recoveringRun } = run
   const requested = (source: string) =>
     !due.size || recoveringRun || due.has(source)
@@ -101,24 +120,63 @@ export async function runWorkspaceAlarm(input: {
     if (await input.starts.pending()) {
       if (terminal || startRequested) {
         try {
-          if (await input.starts.advance(input.turn)) {
+          let finished = false
+          let job = await storage.get('job', START_JOB_KEY)
+          for (
+            let advances = 0;
+            // The first advance always runs, so slow earlier owners of the
+            // run never leave a due start without progress.
+            advances === 0 ||
+            (advances < 6 && dependencies.now() - startedAt < 5_000);
+            advances++
+          ) {
+            const before = job
+            finished = await input.starts.advance(input.turn)
+            if (finished) break
+            job = await storage.get('job', START_JOB_KEY)
+            if (
+              !before ||
+              !job ||
+              before.attempt !== job.attempt ||
+              before.phase === 'records' ||
+              job.phase === 'runner' ||
+              job.cancelled ||
+              job.failure ||
+              providerRetryPending(job.providerRetry, dependencies.now()) ||
+              START_PHASE_ORDER[job.phase] <= START_PHASE_ORDER[before.phase]
+            )
+              break
+          }
+          if (finished) {
             if (!(await input.starts.pending())) {
               await input.startStorage.deleteAlarm()
               await lifecycle.schedule()
               completedStart = true
             }
           } else {
-            const job = await storage.get('job', START_JOB_KEY)
             const now = dependencies.now()
             const retryAt =
               job && !job.cancelled && !job.failure
                 ? (job.providerRetry?.retryAt ?? 0)
                 : 0
+            const polling =
+              job &&
+              !job.cancelled &&
+              !job.failure &&
+              !providerRetryPending(job.providerRetry, now) &&
+              job.waitStartedAt !== undefined &&
+              now - job.waitStartedAt < 5_000 &&
+              (job.phase === 'ready' ||
+                (job.processId !== null &&
+                  (job.phase === 'fetch' ||
+                    job.phase === 'branch' ||
+                    job.phase === 'startup' ||
+                    job.phase === 'terminal')))
             await input.startStorage.setAlarm(
               job?.phase === 'runner' && !job.cancelled && !job.failure
                 ? startAlarmDeadline(job, now)
                 : Math.min(
-                    Math.max(now + 1_000, retryAt),
+                    Math.max(now + (polling ? 250 : 1_000), retryAt),
                     startAlarmDeadline(job, now),
                   ),
             )
@@ -156,21 +214,27 @@ export async function runWorkspaceAlarm(input: {
     else if (!remainingCleanup) await input.cleanupStorage.deleteAlarm()
     if (requested('lifecycle') || state?.startStop === 'pending') {
       try {
-        await lifecycle.alarm()
+        if (await lifecycle.alarm()) await input.restart?.()
+        await input.starts.startAfterStop()
         if (!state) await alarms.set('lifecycle', null)
       } catch {
-        const deadlineAt = (await lifecycle.read())?.diskRetentionDeadlineAt
+        const current = await lifecycle.read()
         const now = dependencies.now()
+        const disk = current?.diskRetentionDeadlineAt ?? 0
+        const restart = current && restartDeadline(current)
         await alarms.set(
           'lifecycle',
-          deadlineAt !== undefined && deadlineAt > now
-            ? Math.min(now + 30_000, deadlineAt)
-            : now + 30_000,
+          Math.min(
+            now + 30_000,
+            disk > now ? disk : Infinity,
+            restart && restart > now ? restart : Infinity,
+          ),
         )
       }
     }
   } finally {
     await run.finish(dependencies.now())
+    await record?.end()
   }
 }
 

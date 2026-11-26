@@ -47,20 +47,19 @@ it('ends a newest-first session page once its events reach the UTF-8 byte limit'
 it('ends a newest-first session page at the scan limit and goes on before it', async () => {
   const read = await pagesOf([
     answer('late'),
-    ...Array.from({ length: 64 }, (_, index): WorkspaceEvent => ({
-      type: 'workspace.title',
-      name: `${index}`,
-    })),
+    ...Array.from({ length: 64 }, (_, index): WorkspaceEvent[] => [
+      { type: 'workspace.title', name: `${index}` },
+      answer(`answer-${index}`),
+    ]).flat(),
   ])
   const limits = { scan: 64, bytes: 4_194_304 }
-  expect(await read(limits, undefined, 65)).toEqual({
-    throughEventNumber: 65,
-    events: [],
-    hasMore: true,
-    nextBeforeEventNumber: 2,
-  })
-  expect(await read(limits, 2, 65)).toEqual({
-    throughEventNumber: 65,
+  const first = await read(limits, undefined, 129)
+  expect(first.events.map(({ eventNumber }) => eventNumber)).toEqual(
+    Array.from({ length: 64 }, (_, i) => i * 2 + 3),
+  )
+  expect(first).toMatchObject({ hasMore: true, nextBeforeEventNumber: 3 })
+  expect(await read(limits, 3, 129)).toEqual({
+    throughEventNumber: 129,
     events: [
       {
         workspaceId: 'workspace',

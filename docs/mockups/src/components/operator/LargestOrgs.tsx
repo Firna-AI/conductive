@@ -1,8 +1,8 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { Table, TableCell, type TableColumn } from '@firna/ui/table'
 import type { OrgCounts } from '../../fixtures/operator'
 import { paths } from '../../paths'
-import { Section } from '../settings/Section'
+import { section } from '../../entries/components/settings/Section.mockup'
 import { NameLink } from './targets'
 
 const allColumns: TableColumn[] = [
@@ -46,7 +46,10 @@ export function LargestOrgs(props: {
   viewport: Viewport
 }) {
   return (
-    <Section title="Largest orgs">
+    <section.Component
+      moklyInstance="largest-orgs-section"
+      title="Largest orgs"
+    >
       <Table
         accessibilityLabel="Largest orgs"
         cell={cell}
@@ -55,6 +58,6 @@ export function LargestOrgs(props: {
         rows={[...props.orgs]}
         size={orgTableSize[props.viewport]}
       />
-    </Section>
+    </section.Component>
   )
 }

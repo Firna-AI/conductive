@@ -3,8 +3,8 @@ import type { Agent } from '../../shared/generated/Agent'
 import type { Session } from '../../shared/generated/Session'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { SessionLogin } from '../../shared/generated/SessionLogin'
-import type { LinkedReason } from '../../../docs/mockups/src/components/chat/linkedCopy'
-import type { SessionLogin as LoginLabel } from '../../../docs/mockups/src/components/chat/SessionLogin'
+import type { LinkedReason } from '../../ui/components/chat/linkedCopy'
+import type { SessionLogin as LoginLabel } from '../../ui/components/chat/SessionLogin'
 import { AGENTS, loginUsable } from '../../app/api/read-core'
 import {
   loginModels,

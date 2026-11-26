@@ -32,7 +32,8 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
   - Instructions that the Worker builds and sends with each turn. The text
     of a session would then change with each fact. Each message carries
     only the current branches and the current repository folder, for the
-    branch line and the repository line.
+    branch line and the repository line. Each turn also carries the
+    capabilities of its session, for the instructions of a new session.
   - Text that a model gateway adds to each model request. No such gateway
     exists yet.
   - Text for Claude only. It leaves out Codex, which also takes system
@@ -41,3 +42,7 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
   instructions. Reason: the agent SDK sets the system instructions of the
   main agent only.
 - Risk: such a subagent does not know the rule that keeps the branch name.
+  It does not know the capabilities of its session either. The tool text
+  still says when to use each secret call, as
+  [The facts of a session](capabilities-agents.md#the-facts-of-a-session)
+  says.

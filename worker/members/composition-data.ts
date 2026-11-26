@@ -32,6 +32,14 @@ export async function stopOrgLifecycleRecords(
       .bind(now, orgId, orgId, generation),
     db
       .prepare(
+        `UPDATE org_provider_switches SET state = 'waiting', wait_reason = 'deleted',
+      wait_job_id = NULL, failure_cause = NULL,
+      build_completed_at = CASE WHEN state = 'building' THEN ? ELSE build_completed_at END
+      WHERE org_id = ? AND state IN ('waiting', 'building') AND ${owned}`,
+      )
+      .bind(now, orgId, orgId, generation),
+    db
+      .prepare(
         `UPDATE image_build_jobs SET phase = 'done' WHERE build_id IN
       (SELECT id FROM image_builds WHERE org_id = ? AND state = 'running') AND ${owned}`,
       )

@@ -12,7 +12,9 @@ requirements.
   saves, and its runs, and `automationModel`, the model that the org keeps for
   each automation. Its `client` sends the other requests of the automation page,
   and an `automation_not_found` from any of them reads the automation again.
-  Its `runLogin` is the login of the runs that the last answer names.
+  Its `runLogin` is the login of the runs that the last answer names, and its
+  `chosenSecrets` the chosen secrets that it names, or null for the answer of
+  a previous Worker.
   `automation-actions.ts`: create, update, Turn off, Delete, and Run now,
   which also update the Automations list.
 - `automation-runs.ts`: `AutomationRuns`, the Runs list of one automation: the
@@ -38,7 +40,11 @@ requirements.
   form on desktop, and on the Runs tab of a phone. It alone shows the
   notice of a suspended org, in every view of the page. `AutomationNote.tsx`
   is the note above an automation, which reads the saved repository from the
-  repository list of the org.
+  repository list of the org. `RunSecrets.tsx` is the line under the prompt
+  that names the chosen secrets for every member, with the pull request
+  hint. It names a saved choice from the answer, or from the secrets list of
+  the org for the answer of a previous Worker. A secret that the owner checks
+  before Save takes its name from the secrets list that the control loaded.
 - `../shell/automations/RunsPanel.tsx` and `RunList.tsx`: the Runs list, with
   the mark, the state, the trigger, the pull request, and the time of each
   run, and the link to its workspace. `run-copy.ts`: the mark of a run, the

@@ -19,6 +19,8 @@ pub enum RunnerCommand {
     RunnerTurn(RunnerTurn),
     /// RunnerMessageDuringTurn.
     RunnerMessageDuringTurn(RunnerMessageDuringTurn),
+    /// App notes for a running turn, without a member message.
+    RunnerNotice(RunnerNotice),
     /// RunnerControlCommand.
     RunnerControlCommand(RunnerControlCommand),
 }
@@ -37,7 +39,7 @@ pub enum RunnerTurn {
         /// turnId.
         turn_id: String,
         /// message.
-        message: UserMessage,
+        message: Box<UserMessage>,
         /// Current Worker branches. Older command producers can omit them.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
@@ -46,6 +48,14 @@ pub enum RunnerTurn {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         repository: Option<RunnerRepository>,
+        /// Current session capabilities. Older command producers can omit them.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        capabilities: Option<RunnerCapabilities>,
+        /// App notes the agent gets in the same prompt as the member's message.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[ts(as = "Option<ReadonlyVec<RunnerNoticeLine>>", optional)]
+        notices: Vec<RunnerNoticeLine>,
         /// attachments.
         #[ts(as = "ReadonlyVec<RunnerAttachment>")]
         attachments: Vec<RunnerAttachment>,
@@ -64,6 +74,43 @@ pub struct RunnerBranches {
     pub workspace_branch: String,
     /// targetBranch.
     pub target_branch: String,
+}
+
+/// Session capabilities by name only, without secret values.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct RunnerCapabilities {
+    /// Names of the secrets that this session can use with no request.
+    #[ts(as = "ReadonlyVec<String>")]
+    pub secrets: Vec<String>,
+}
+
+/// One line of the app, with its delivery identity.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct RunnerNoticeLine {
+    /// Identity acknowledged when the agent reads this line.
+    pub id: String,
+    /// App text, without a sender line.
+    pub text: String,
+}
+
+/// App notes that join an existing turn. This command never starts a turn.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(tag = "type", rename_all_fields = "camelCase")]
+pub enum RunnerNotice {
+    /// Deliver notes only to the named running turn.
+    #[serde(rename = "notice")]
+    Notice {
+        /// Command identity retained across transport retries.
+        command_id: String,
+        /// Session that owns the notes.
+        session_id: String,
+        /// Running turn that can take the notes.
+        turn_id: String,
+        /// App notes in change order.
+        notices: Vec<RunnerNoticeLine>,
+    },
 }
 
 /// Absolute path in the workspace repository, after the backend copies the file.
@@ -185,4 +232,7 @@ pub enum RunnerReportKind {
     /// ports.updated.
     #[serde(rename = "ports.updated")]
     PortsUpdated,
+    /// skills.updated.
+    #[serde(rename = "skills.updated")]
+    SkillsUpdated,
 }

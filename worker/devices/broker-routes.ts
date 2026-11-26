@@ -21,6 +21,7 @@ import { requestBearer } from './access'
 import { deviceBrokerName } from './paths'
 import type { DeviceOperationValue } from './internal'
 import type { DeviceSockets } from './native-sockets'
+import { settingsOperation } from './settings-operation'
 
 export function approvalAction(value: unknown): DeviceApprovalAction {
   switch (value) {
@@ -42,7 +43,8 @@ function settingsAction(value: unknown): DeviceSettingsAction {
   if (
     input.action === 'stop-workspace' ||
     input.action === 'extend-workspace' ||
-    input.action === 'keep-workspace'
+    input.action === 'keep-workspace' ||
+    input.action === 'start-workspace-until-stop'
   )
     return {
       action: input.action,
@@ -139,7 +141,8 @@ export async function brokerBrowserRoute(
       context.user.id,
       context.sessionId,
     )
-    return Response.json(await broker.relaySettings(connection, operation))
+    const relayed = await settingsOperation(env.DB, context.user.id, operation)
+    return Response.json(await broker.relaySettings(connection, relayed))
   }
   throw new HttpError(404, 'not_found', 'The page is not available.')
 }

@@ -9,9 +9,10 @@ import type { DevMac } from './dev-mac'
 
 /** The settings after one change, as the Mac app makes it. */
 function changed(
-  settings: DeviceSettings,
+  mac: DevMac,
   operation: Record<string, unknown>,
 ): DeviceSettings {
+  const settings = mac.settings
   if (operation.action === 'remove-command') {
     const command = text(operation.command)
     return {
@@ -22,6 +23,21 @@ function changed(
     }
   }
   const workspaceId = text(operation.workspaceId)
+  if (operation.action === 'start-workspace-until-stop') {
+    return {
+      ...settings,
+      workspaceWindows: [
+        ...settings.workspaceWindows.filter(
+          (item) => item.workspaceId !== workspaceId,
+        ),
+        {
+          workspaceId,
+          workspaceName: mac.workspaceNames.get(workspaceId) ?? null,
+          expiresAt: null,
+        },
+      ],
+    }
+  }
   if (operation.action === 'keep-workspace') {
     return {
       ...settings,
@@ -48,6 +64,7 @@ export function changeMacSettings(
   mac: DevMac,
   body: Record<string, unknown>,
   publish: () => void,
+  startWorkspace?: (workspaceId: string) => void,
 ): Response {
   const pairing = readDevicePairing(body)
   if (
@@ -69,14 +86,18 @@ export function changeMacSettings(
     failed: { status: 'failed', message: failedMessage },
   }
   const operation = record(body.operation)
-  // The Mac never saves a grant until Stop, so a Keep is never "not saved".
-  const keep = operation.action === 'keep-workspace'
+  // A grant until Stop stays in memory, so its result is never "not saved".
+  const keep =
+    operation.action === 'keep-workspace' ||
+    operation.action === 'start-workspace-until-stop'
   const outcome =
     keep && mac.outcome === 'done-not-saved'
       ? outcomes.done
       : outcomes[mac.outcome]
   if (outcome.status !== 'failed') {
-    mac.settings = changed(mac.settings, operation)
+    mac.settings = changed(mac, operation)
+    if (operation.action === 'start-workspace-until-stop')
+      startWorkspace?.(text(operation.workspaceId))
   }
   publish()
   return Response.json({ ...mac.pairing, settings: mac.settings, outcome })

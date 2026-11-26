@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import { productName } from '../../../docs/mockups/src/brand'
+import { productName } from '../../shared/brand'
 import { requestLines } from '../../app/test-kit'
 import { MODELS_PATH } from '../../shared/agents'
 import type { AgentModel } from '../../shared/generated/AgentModel'

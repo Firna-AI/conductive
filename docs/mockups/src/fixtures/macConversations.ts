@@ -1,3 +1,4 @@
+import { p } from './agentText'
 import type { ChatItem } from './conversations'
 import {
   safariByFile,
@@ -28,7 +29,9 @@ export function onMac(
       kind: 'agent',
       id: 'plan-safari',
       blocks: [
-        'The cloud computer has no Safari, so I asked to run it on your Mac.',
+        p(
+          'The cloud computer has no Safari, so I asked to run it on your Mac.',
+        ),
       ],
     },
     { kind: 'mac-command', id: 'mac', request: ask.request, state },
@@ -43,7 +46,9 @@ const withoutSafari: ChatItem = {
   kind: 'agent',
   id: 'without-safari',
   blocks: [
-    'I did not run it in Safari. The checkout tests pass in WebKit on the cloud computer, which is close to Safari.',
+    p(
+      'I did not run it in Safari. The checkout tests pass in WebKit on the cloud computer, which is close to Safari.',
+    ),
   ],
 }
 
@@ -63,7 +68,9 @@ function manyOnMac(history: readonly ChatItem[]): readonly ChatItem[] {
       kind: 'agent',
       id: 'plan-hang',
       blocks: [
-        'I asked to run each checkout test file in Safari on your Mac, and to read the versions for the bug report.',
+        p(
+          'I asked to run each checkout test file in Safari on your Mac, and to read the versions for the bug report.',
+        ),
       ],
     },
     ...[safariByFile, ...waitingWithScript].map((request, index): ChatItem => ({
@@ -80,7 +87,8 @@ function manyOnMac(history: readonly ChatItem[]): readonly ChatItem[] {
  * The chats of a command on the Mac of the sender (decision 62), after the
  * finished turn of `history`: it waits for approval, for the checkout test
  * or for the whole suite, it was denied, it ran, or the Mac is not there.
- * Or the workspace refused it, because Mac access is off.
+ * Or the workspace refused it, because Mac access was off, as an older
+ * chat keeps it from before Mac access decision 7.
  */
 export function macConversations(history: readonly ChatItem[]) {
   return {
@@ -95,7 +103,7 @@ export function macConversations(history: readonly ChatItem[]) {
       {
         kind: 'agent',
         id: 'safari-passed',
-        blocks: ['The checkout test passes in Safari on your Mac.'],
+        blocks: [p('The checkout test passes in Safari on your Mac.')],
       },
     ]),
     'mac-unavailable': onMac(history, 'unavailable', [withoutSafari]),
@@ -104,7 +112,9 @@ export function macConversations(history: readonly ChatItem[]) {
         kind: 'agent',
         id: 'mac-access-off',
         blocks: [
-          'Mac access is off for this workspace, so I did not run it in Safari. The checkout tests pass in WebKit on the cloud computer, which is close to Safari.',
+          p(
+            'Mac access is off for this workspace, so I did not run it in Safari. The checkout tests pass in WebKit on the cloud computer, which is close to Safari.',
+          ),
         ],
       },
     ]),

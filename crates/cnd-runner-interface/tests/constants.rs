@@ -5,7 +5,10 @@
     reason = "Missing runtime constants must stop the test."
 )]
 
-use cnd_runner_interface::{chat_events, file_tree, files, ports, runner_handshake};
+use cnd_runner_interface::services::logs;
+use cnd_runner_interface::{
+    chat_events, file_changes, file_tree, files, ports, runner_handshake, skills,
+};
 
 #[test]
 fn typescript_and_rust_share_protocol_version_and_budgets() {
@@ -13,7 +16,34 @@ fn typescript_and_rust_share_protocol_version_and_budgets() {
     let chat = include_str!("../../../src/shared/chat-events.ts");
     let file = include_str!("../../../src/shared/files.ts");
     let port = include_str!("../../../src/shared/ports.ts");
+    let skill = include_str!("../../../src/shared/skills.ts");
+    let service = include_str!("../../../src/shared/services.ts");
     let constants = [
+        (
+            service,
+            "SERVICE_APP_LOG_MAX_LINES",
+            logs::SERVICE_APP_LOG_MAX_LINES,
+        ),
+        (
+            service,
+            "SERVICE_APP_LOG_MAX_BYTES",
+            logs::SERVICE_APP_LOG_MAX_BYTES,
+        ),
+        (
+            skill,
+            "SKILL_REPORT_MAX_SKILLS",
+            skills::SKILL_REPORT_MAX_SKILLS as u64,
+        ),
+        (
+            skill,
+            "SKILL_DESCRIPTION_MAX_CHARACTERS",
+            skills::SKILL_DESCRIPTION_MAX_CHARACTERS as u64,
+        ),
+        (
+            skill,
+            "SKILL_DESCRIPTION_REPORT_MAX_CHARACTERS",
+            skills::SKILL_DESCRIPTION_REPORT_MAX_CHARACTERS as u64,
+        ),
         (
             runner,
             "RUNNER_PROTOCOL_VERSION",
@@ -48,6 +78,16 @@ fn typescript_and_rust_share_protocol_version_and_budgets() {
             file,
             "FILE_TREE_DELTA_MAX_CHANGES",
             file_tree::FILE_TREE_DELTA_MAX_CHANGES,
+        ),
+        (
+            file,
+            "FILE_TREE_REPORT_MAX_ENTRIES",
+            file_tree::FILE_TREE_REPORT_MAX_ENTRIES,
+        ),
+        (
+            file,
+            "FILE_CHANGES_REPORT_MAX_FILES",
+            file_changes::FILE_CHANGES_REPORT_MAX_FILES,
         ),
         (file, "FILE_READ_MAX_BYTES", files::FILE_READ_MAX_BYTES),
         (port, "PORT_REPORT_MAX_PORTS", ports::PORT_REPORT_MAX_PORTS),

@@ -1,11 +1,12 @@
 import type { SchemaProps } from '@mokly/mokly'
-import { signInSteps } from '../components/settings/chatGptSignInCopy'
+import { signInSteps } from '../../../../src/ui/components/settings/chatGptSignInCopy'
 import { accountLogins, loginKinds } from '../fixtures/logins'
-import { inviteStates } from '../components/settings/inviteCodeCopy'
+import { inviteStates } from '../../../../src/ui/components/settings/inviteCodeCopy'
 import { shortcutSearches } from '../components/settings/shortcutSearch'
 import { keyChanges } from '../components/settings/ShortcutsSections'
 import { deletedOrgStates } from '../components/settings/DeletedOrgsSection'
 import { browserHosts } from '../fixtures/shortcutHosts'
+import { favouriteSectionStates } from '../fixtures/favourites'
 
 export const accountSchema = {
   type: 'object',
@@ -29,6 +30,7 @@ export const accountSchema = {
     'shortcuts',
     'host',
     'modelMenu',
+    'favourites',
     'deletedOrgs',
     'stats',
   ],
@@ -67,10 +69,12 @@ export const accountSchema = {
     /** How New workspace opens on a computer: as the page, or as a dialog. */
     view: { enum: ['page', 'dialog'] },
     /**
-     * The save of the last change on Preferences: saved, or failed. A failed
-     * save shows its error, and the choice keeps its saved value.
+     * The save of the last change on Preferences: saved, a change of how
+     * New workspace opens that failed, or a change of the favourites that
+     * failed. A failed save shows its error, and the setting keeps its saved
+     * value.
      */
-    save: { enum: ['saved', 'failed'] },
+    save: { enum: ['saved', 'failed', 'favourites-failed'] },
     /**
      * The invite code of the user: invites left, sign-ups paused, every
      * invite used, or turned off by an operator.
@@ -152,6 +156,16 @@ export const accountSchema = {
      */
     modelMenu: { enum: ['closed', 'open-fast'] },
     /**
+     * The Favourites section of Preferences: the five favourites of Cal, so
+     * Add a favourite is off; the list of Add a favourite open over four
+     * favourites, from model favourites decision 4 D; the list after a pick
+     * of Opus 5.5, with Opus 5.5 Medium at its end; a pick of Fable 5.1
+     * that added nothing, because the four favourites hold Fable 5.1 at each
+     * of its efforts; or no favourite, after Cal removed each one, from
+     * decision 6.
+     */
+    favourites: { enum: favouriteSectionStates },
+    /**
      * The orgs that the user deleted and can still restore: none, so the
      * General tab has no Deleted orgs section, Acme Labs with Restore, Acme
      * Labs after the operator suspended it, or a Restore that failed.
@@ -196,6 +210,7 @@ export const accountGeneral: AccountState = {
   shortcuts: 'default',
   host: 'chrome-mac',
   modelMenu: 'closed',
+  favourites: 'saved',
   deletedOrgs: 'none',
   stats: 'ready',
 }

@@ -36,7 +36,7 @@ function required(workspace: Workspace | null): Workspace {
  * The reply of a Resume that started the sandbox. It holds the state of the
  * fake's recorded events, so each event that a test sends is newer.
  */
-function startingReply(workspace: Workspace) {
+function startingReply(workspace: Workspace, server: FakeApiServer) {
   const step = {
     id: 'restore',
     label: 'Resuming with your files as you left them',
@@ -48,7 +48,7 @@ function startingReply(workspace: Workspace) {
     workspace: { ...workspace, state: 'starting' },
     start: { kind: 'resume', startedAt: FAKE_TIME, steps: [step] },
     error: null,
-    eventNumber: 0,
+    eventNumber: server.events.last(ws),
   }
 }
 
@@ -62,7 +62,7 @@ describe('the workspace record after Resume', () => {
     early.chat.server.json(
       'POST',
       workspacePaths.resume(org, ws),
-      startingReply(stopped),
+      startingReply(stopped, early.chat.server),
     )
     const started = early.chat.controller.resume()
     early.chat.held.splice(0, 1)[0]()
@@ -74,7 +74,7 @@ describe('the workspace record after Resume', () => {
     late.chat.server.json(
       'POST',
       workspacePaths.resume(org, ws),
-      startingReply(stopped),
+      startingReply(stopped, late.chat.server),
     )
     const resuming = late.chat.controller.resume()
     late.chat.emit({

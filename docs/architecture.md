@@ -17,8 +17,9 @@ each feature.
 - **Admin** and **member:** the two roles in an org. Each person in an org
   has one of them.
 - **Operator:** the person who runs the app, as opposed to the admin of an
-  org. Only an operator can suspend a user or an org, or lift a
-  suspension. Only an operator opens the operator section.
+  org. Only an operator can suspend a user or an org, lift a suspension,
+  or switch an org to another provider account. Only an operator opens
+  the operator section.
 - **Suspension:** the block of one user or one org by an operator, until
   an operator lifts it. It stops the sandboxes of the workspaces that the
   user owns, or of every workspace of the org, and blocks new starts. A
@@ -52,8 +53,9 @@ each feature.
   under. The docs also call it the parent. A workspace has at most one
   parent workspace.
 - **Continue:** the action after a merge that moves a workspace to a new
-  branch from the latest default branch. The workspace keeps its sandbox
-  and its sessions.
+  branch. The new branch starts from the branch that the pull request
+  merged into, or from the default branch when GitHub no longer has that
+  branch. The workspace keeps its sandbox and its sessions.
 - **Repository change:** the action that moves a workspace to a new branch
   of another repository of its org, in the folder of that repository in
   its sandbox. The workspace keeps its sandbox and its sessions.
@@ -65,7 +67,9 @@ each feature.
   the login of its session, which can belong to another member or to the
   org. A turn that a late answer to a secret request starts has the sender
   of the turn that asked, as
-  [Late answers](protocol/secret-requests.md#late-answers) says.
+  [Late answers](protocol/secret-requests.md#late-answers) says. A turn
+  that the wake of a watch starts has the sender of the turn that set the
+  watch, as [Delivery](protocol/session-watches.md#delivery) says.
 - **Starter:** the member who started a session. The starter of a session
   never changes.
 - **Agent login:** the key, the token, the sign-in, or the own endpoint
@@ -81,13 +85,19 @@ each feature.
   as [The default login](protocol/org-logins.md#the-default-login) says.
 - **Provider account:** an account of the app with a sandbox provider:
   `boat` with Boat, or `e2b` with E2B. Each org runs in one provider
-  account for its whole life. The Worker holds the credentials of each
+  account at a time, the account of the org. Each workspace keeps the
+  account that it started on. The Worker holds the credentials of each
   account, and reaches it through its own client.
 - **Boat key** and **E2B key:** the one key of the app's account with Boat
   or with E2B. Each key reaches every sandbox and every org image of the
   orgs on its account. Each is a Worker secret.
 - **Weights:** the chance, in percent, that a new org gets each provider
   account. An operator sets them.
+- **Switch:** the change of the provider account of one org by an
+  operator. Its switch build builds the org image on the new account, and
+  members do not see that build. New workspaces of the org start on the
+  new account when that build succeeds, as
+  [Switch account](protocol/switch-account.md) says.
 - **Sandbox:** the cloud computer of one workspace, on Boat or on E2B. The
   product calls it a cloud computer or a sandbox.
 - **Org image:** the saved snapshot that every new sandbox of an org starts
@@ -146,6 +156,13 @@ each feature.
   org.
 - **Base branch:** the branch that the work of a workspace targets. Changes
   compares with it, and "Create PR" opens into it.
+- **Start branch:** the branch whose newest commit a new workspace branch
+  starts from. It is the default branch of the repository, unless the
+  create names another branch.
+- **Merge queue:** the ordered list of the queued workspaces of one
+  repository of an org. The app uses GitHub stacks to merge their pull
+  requests into the default branch, as
+  [Merge queue](protocol/merge-queue.md) says.
 
 ## Components
 
@@ -174,9 +191,9 @@ the app (decision 6).
 ## Flows
 
 The [flows page](architecture/flows.md) describes how the components work
-together for a new org, a new workspace, chat, a run with secrets, the
-terminal, previews, the desktop, GitHub events, a merge, Continue,
-automation runs, and stops.
+together for a new org, a switch of its account, a new workspace, chat, a
+run with secrets, the terminal, previews, the desktop, GitHub events, a
+merge, Continue, automation runs, and stops.
 
 ## Where data lives
 

@@ -1,4 +1,4 @@
-import { productDomain } from '../../docs/mockups/src/brand'
+import { productDomain } from '../../src/shared/brand'
 import { HttpError } from '../http'
 
 type OrgAlias = 'o' | 'orgs' | 'access_org' | 'workspace_org' | 'token_org'

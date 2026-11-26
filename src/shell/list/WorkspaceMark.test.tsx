@@ -1,9 +1,9 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, test } from 'vitest'
-import { WorkspaceMark } from '../../../docs/mockups/src/components/workspaces/WorkspaceMark'
-import styles from '../../../docs/mockups/src/components/workspaces/WorkspaceMark.module.css'
+import { WorkspaceMark } from '../../ui/components/workspaces/WorkspaceMark'
+import styles from '../../ui/components/workspaces/WorkspaceMark.module.css'
 import type { GitHubSummary } from '../../shared/generated/GitHubSummary'
-import type { ActivityStatus } from '../../../docs/mockups/src/fixtures/workspaces'
+import type { ActivityStatus } from '../../ui/components/workspaces/activityStatus'
 
 /** The classes of the nine cells of a mark, row by row from the top left. */
 function cellClasses(
@@ -31,6 +31,20 @@ describe('WorkspaceMark', () => {
     expect(cells[4]).not.toContain(styles.chase)
     expect(cells[4]).not.toContain(styles.litWhenStill)
   })
+
+  test.each([null, 'ready-to-merge'] as const)(
+    'runs a light around the ring while the cloud computer starts, with %s',
+    (github) => {
+      const cells = cellClasses(github, 'starting')
+      expect(count(cells, styles.chase)).toBe(8)
+      expect(cells[4]).not.toContain(styles.chase)
+      // Without motion, the start shows the ring of a working agent: the ring
+      // stays lit and the centre stays dim. So it does not match the full
+      // grid of a ready pull request or of a draft.
+      expect(count(cells, styles.lit)).toBe(8)
+      expect(cells[4]).not.toContain(styles.litWhenStill)
+    },
+  )
 
   test.each(['ready', 'unread', 'stopped'] as const)(
     'runs a light around the ring while the checks run and the agent is %s',

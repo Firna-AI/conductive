@@ -1,7 +1,7 @@
 import { Loader } from '@firna/ui/loader'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import type { StartingLog } from '../../fixtures/starting'
-import styles from './StartingCard.module.css'
+import styles from '../../../../../src/ui/components/workspace/StartingCard.module.css'
 
 /**
  * The start of a sandbox in the chat: a quiet card with a moving mark, then

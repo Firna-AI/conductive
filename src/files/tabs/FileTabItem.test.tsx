@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, it } from 'vitest'
-import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
+import styles from '../../ui/components/workspace/WorkspaceTabs.module.css'
 import { testNavigation } from '../files-test-kit'
 import type { FilesTab } from '../navigation'
 import { FileTabItem, LiftedFileTab } from './FileTabItem'

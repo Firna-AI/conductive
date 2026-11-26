@@ -1,0 +1,68 @@
+/*
+ * The handles of a selection on a phone: a bar as high as the line, with a
+ * round knob above the start and below the end. They take no room in the
+ * text.
+ */
+.start,
+.end {
+  display: inline-block;
+  position: relative;
+  width: 2px;
+  height: 1lh;
+  margin-inline: -1px;
+  background: var(--ui-primary);
+  vertical-align: top;
+}
+
+.start::before,
+.end::after {
+  position: absolute;
+  left: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ui-primary);
+  content: '';
+}
+
+.start::before {
+  top: -9px;
+}
+
+.end::after {
+  bottom: -9px;
+}
+
+/*
+ * The selection menu of the phone, above the start of the selection. It is
+ * part of the phone, so it keeps the look of the phone in both schemes.
+ */
+.menu {
+  display: flex;
+  position: absolute;
+  z-index: 6;
+  bottom: calc(100% + 16px);
+  left: -14px;
+  align-items: center;
+  height: 38px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: #2c2c2e;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.item {
+  padding: 0 12px;
+}
+
+/* A hairline between two items, as the phone draws it. */
+.divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.22);
+}

@@ -1,16 +1,20 @@
 import type { ReactNode } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import type { ChatItem } from '../../fixtures/conversations'
 import type { PersonKey } from '../../fixtures/members'
 import type { StartingLog } from '../../fixtures/starting'
-import { classes } from '../common/classes'
-import { useMacApp } from '../mac/MacApp'
-import { SandboxBar, type BarNotice } from '../workspace/SandboxNotice'
-import { replacesComposer } from '../workspace/sandboxNoticeState'
-import { StartingCard } from '../workspace/StartingCard'
-import { ChatItemView } from './ChatItemView'
+import { defined, plainData } from '../../defined'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { useMacApp } from '../../../../../src/ui/components/mac/MacApp'
+import { sandboxBar } from '../../entries/components/workspace/SandboxNotice.mockup'
+import type { BarNotice } from '../workspace/SandboxNotice'
+import { replacesComposer } from '../../../../../src/ui/components/workspace/sandboxNoticeState'
+import { startingCard } from '../../entries/components/workspace/StartingCard.mockup'
+import { chatItemView } from '../../entries/components/chat/ChatItemView.mockup'
 import { ChatPictures, type PictureRead } from './chatPictures'
-import { Composer, type ComposerState } from './Composer'
+import { composer as composerPart } from '../../entries/components/chat/Composer.mockup'
+import { composerData } from '../../entries/components/chat/capabilitiesSlot'
+import type { ComposerState } from './Composer'
 import { groupItems } from './groupItems'
 import { RequestStack } from './RequestStack'
 import {
@@ -19,9 +23,13 @@ import {
   shownPlace,
   stackEntries,
 } from './requests'
-import { ToolGroup } from './ToolGroup'
-import { WorkFold, type FoldState } from './WorkFold'
-import styles from './ChatPane.module.css'
+import { toolGroup } from '../../entries/components/chat/ToolGroup.mockup'
+import type { FoldState } from './WorkFold'
+import { workFold } from '../../entries/components/chat/WorkFold.mockup'
+import { noop } from '../../../../../src/ui/noop'
+import { instanceKey } from '../../instanceKey'
+import { ToBottomButton } from '../../../../../src/ui/components/chat/ToBottomButton'
+import styles from '../../../../../src/ui/components/chat/ChatPane.module.css'
 
 /**
  * The place of the card on top of the stack of requests, and the page of
@@ -41,10 +49,27 @@ export type StackView = { place?: number; pages?: readonly string[] }
  * The commands that this view cannot answer, as in a browser, go after the
  * requests that it can answer. Once answered, or ended with no answer, a
  * command or a run shows at its place in the transcript.
+ * A small chat, such as the popover of an explanation, is `compact`, and
+ * its `field` takes the place of the composer. While the reader reads
+ * higher up, a round button above the right end of the footer shows the
+ * bottom of the chat.
  */
 export function ChatPane(props: {
   items: readonly ChatItem[]
-  composer: ComposerState
+  composer?: ComposerState
+  /**
+   * The box under the chat in place of the composer, such as the follow-up
+   * field of a popover. `null` shows no box, as a read-only popover does.
+   */
+  field?: ReactNode
+  /** Less room around the transcript and the footer, with no column width. */
+  compact?: boolean
+  /**
+   * The ID of a message that the chat leaves out, such as the written
+   * prompt of an explanation in its popover. It still starts its turn, so
+   * the work of that turn folds.
+   */
+  hide?: string
   /**
    * The sandbox is not running: the bar takes the place of the composer. A
    * failed first start keeps the composer under its bar, so members can
@@ -71,20 +96,41 @@ export function ChatPane(props: {
   pictures?: PictureRead
   /** The card on top of the stack of requests, and the page of each place. */
   stack?: StackView
+  /** The reader reads higher up, so the button to the bottom shows. */
+  scrolledUp?: boolean
 }) {
   const mac = useMacApp()
   const empty = props.items.length === 0 && !props.starting
   const composer = !props.problem || !replacesComposer(props.problem)
-  const macApp = mac !== undefined
-  const entries = stackEntries(props.items, (item) => answersHere(item, macApp))
+  const requests = stackEntries(props.items, (item) =>
+    answersHere(item, mac !== undefined),
+  )
   const transcript = props.items.filter((item) => !isPendingRequest(item))
+  const entries = groupItems(transcript).filter(
+    (entry) => entry.kind !== 'item' || entry.item.id !== props.hide,
+  )
   const fold = props.fold ?? 'closed'
+  const box = props.composer ? composerData(props.composer) : null
+  const field =
+    props.field !== undefined ? (
+      props.field
+    ) : box ? (
+      <composerPart.Component
+        moklyInstance="composer"
+        {...box.composer}
+        {...defined({
+          capabilitiesPanel: box.capabilitiesPanel,
+          pickerPart: box.pickerPart,
+        })}
+      />
+    ) : null
   return (
     <section
       aria-label="Chat"
       className={classes(
         styles.chat,
         props.viewport === 'mobile' && styles.mobile,
+        props.compact && styles.compact,
       )}
     >
       {empty && props.empty ? (
@@ -99,20 +145,22 @@ export function ChatPane(props: {
         >
           <div className={styles.transcript}>
             <ChatPictures read={props.pictures}>
-              {groupItems(transcript).map((entry) => {
+              {entries.map((entry) => {
                 switch (entry.kind) {
                   case 'tools':
                     return (
-                      <ToolGroup
+                      <toolGroup.Component
                         calls={entry.calls}
-                        open={entry.open}
                         key={entry.id}
+                        moklyInstance={`tools-${instanceKey(entry.id)}`}
+                        open={entry.open}
                       />
                     )
                   case 'work':
                     return (
-                      <WorkFold
+                      <workFold.Component
                         key={entry.id}
+                        moklyInstance={instanceKey(entry.id)}
                         state={fold}
                         steps={entry.steps}
                         viewer={props.viewer}
@@ -120,30 +168,44 @@ export function ChatPane(props: {
                     )
                   case 'item':
                     return (
-                      <ChatItemView
+                      <chatItemView.Component
                         item={entry.item}
                         key={entry.item.id}
+                        moklyInstance={`item-${instanceKey(entry.item.id)}`}
                         viewer={props.viewer}
                       />
                     )
                 }
               })}
             </ChatPictures>
-            {props.starting ? <StartingCard log={props.starting} /> : null}
+            {props.starting ? (
+              <startingCard.Component
+                log={props.starting}
+                moklyInstance="starting-card"
+              />
+            ) : null}
           </div>
         </div>
       )}
       <div className={styles.footer}>
+        {props.scrolledUp && !(empty && props.empty) ? (
+          <ToBottomButton onPress={noop} />
+        ) : null}
         <RequestStack
           choicesOpen={mac?.choicesOpen}
-          entries={entries}
+          entries={requests}
           pages={props.stack?.pages}
-          place={shownPlace(entries.length, props.stack?.place)}
+          place={shownPlace(requests.length, props.stack?.place)}
           viewer={props.viewer}
         />
         {props.notice}
-        {props.problem ? <SandboxBar {...props.problem} /> : null}
-        {composer ? <Composer {...props.composer} /> : null}
+        {props.problem ? (
+          <sandboxBar.Component
+            moklyInstance="sandbox-bar"
+            state={plainData(props.problem)}
+          />
+        ) : null}
+        {composer ? field : null}
       </div>
     </section>
   )

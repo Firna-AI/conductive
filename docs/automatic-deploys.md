@@ -211,6 +211,19 @@ A failed run does not roll back.
   restores the version before the newest one.
 - A rollback does not undo a D1 migration. It cannot go back across a
   Durable Object migration.
+- Provider account switching ships in two releases. The compatibility
+  release includes all switch execution and sets `PROVIDER_SWITCH` to
+  `"off"` in `wrangler.jsonc`. Activation is a separate pull request that
+  changes it to `"on"`. Merge activation only after the compatibility
+  release has been live for at least one hour. This gives activation a
+  previous Worker that understands switches and waiting member builds.
+  After activation, do not roll back past that compatibility release
+  while a switch is open or a member build waits for one. Stop each open
+  switch first. Confirm that no member build still waits before crossing
+  that release. Switching the variable off prevents new switches. It
+  keeps execution, repair, Stop, and reads active for existing work.
+  [Provider switches](../worker/lifecycle/provider-switches.md) describes
+  the compatibility paths.
 - `migrations/202611092305_org_images.sql` is for the time before the
   launch only, while no real user depends on the app. It copies the six org
   image fields of `settings` to `org_images`, then drops them, with no

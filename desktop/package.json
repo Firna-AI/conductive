@@ -1,7 +1,7 @@
 {
   "name": "@conductive/desktop",
   "private": true,
-  "version": "0.27.0",
+  "version": "0.36.0",
   "description": "The Conductive Mac app",
   "homepage": "https://conductive.build",
   "author": "Conductive",
@@ -12,7 +12,7 @@
     "icon:build": "node scripts/icon.ts",
     "start": "electron .",
     "typecheck": "node ../node_modules/typescript/bin/tsc -p tsconfig.json && node ../node_modules/typescript/bin/tsc -p tsconfig.renderer.json",
-    "lint": "node ../node_modules/eslint/bin/eslint.js --config ../eslint.config.js src renderer scripts tests *.ts",
+    "lint": "node ../node_modules/eslint/bin/eslint.js src renderer scripts tests *.ts",
     "format:check": "node ../node_modules/prettier/bin/prettier.cjs --check src renderer scripts tests *.ts *.json *.yml",
     "test:logic": "node ../node_modules/vitest/vitest.mjs run --config vitest.config.ts",
     "test:electron": "node scripts/smoke.ts",

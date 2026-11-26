@@ -8,6 +8,7 @@ import {
   Server,
   Settings2,
   SlidersHorizontal,
+  Star,
   Users,
 } from 'lucide-react'
 import { orgs } from '../../fixtures/orgs'
@@ -98,8 +99,9 @@ function shortcutsSetting(mac: boolean): Command {
 
 /**
  * The sections of the Account page, which every org shares, in the order
- * of its tabs. Keyboard shortcuts follows New workspaces, and the Mac app
- * adds the This Mac tab last.
+ * of its tabs. Favourites comes before New workspaces, as the Preferences
+ * tab holds them, and "favorites" finds it too. Keyboard shortcuts follows
+ * New workspaces, and the Mac app adds the This Mac tab last.
  */
 export function accountSettings(place: { mac?: boolean }): Command[] {
   const mac = place.mac ?? false
@@ -111,6 +113,12 @@ export function accountSettings(place: { mac?: boolean }): Command[] {
       to: paths.account,
     },
     ...generalSettings,
+    {
+      label: 'Favourites',
+      lead: icon(Star),
+      words: ['favorites', 'model menu'],
+      to: paths.accountPreferences,
+    },
     {
       label: 'New workspaces',
       lead: icon(SlidersHorizontal),

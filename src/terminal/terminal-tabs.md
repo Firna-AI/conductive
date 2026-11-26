@@ -16,10 +16,11 @@ states the requirements.
   that a first visit replays cannot undo a newer change. A server that
   sends no number gives lists that the tool takes as before.
 - The row of tabs is above the screen, with the + at its end. It uses the
-  styles of the tab row of the centre column, and of `TerminalTabs` of the
-  mockups. Each tab shows its whole name, "Terminal 1" to "Terminal 10",
-  also on a phone. A row that does not fit scrolls sideways, keeps the
-  shown tab in view, and fades each end that clips tabs.
+  styles of the tab row of the centre column, and of the shared
+  `TerminalTabs.module.css`. Each tab shows its whole name, "Terminal 1"
+  to "Terminal 10", also on a phone. A row that does not fit scrolls
+  sideways, keeps the shown tab in view, and fades each end that clips
+  tabs.
 - Each tab is a link to the address of its terminal, which the route of
   the tool gives. A plain click shows the terminal. Another click, such as
   with Ctrl, opens the address in a new tab of the browser.

@@ -7,15 +7,18 @@ import {
   automationsPath,
   type Automation,
 } from '../../shared/automations'
+import { secretsPath } from '../../shared/secrets'
 import {
   byRole,
   queryAllByText,
+  queryByLabel,
   queryByRole,
   queryByText,
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { automationFixtures } from '../../test-support/fixtures/automations'
+import { secretFixtures } from '../../test-support/fixtures/secrets'
 import {
   MOUNTED_TEST_TIMEOUT,
   press,
@@ -53,6 +56,18 @@ async function addTrigger(view: HTMLElement, label: string) {
   await press(byRole('menuitem', label))
 }
 
+/** Checks a secret in the Capabilities control of the prompt, then closes it. */
+async function chooseSecret(view: HTMLElement, name: string) {
+  await press(byRole('button', 'Capabilities', view))
+  await press(
+    await waitFor(
+      () => queryByLabel(name, byRole('dialog', 'Capabilities', view)),
+      `the secret ${name} in the control`,
+    ),
+  )
+  await press(byRole('button', 'Capabilities', view))
+}
+
 /** Types a login into a list of the open author filter, and adds it. */
 async function addLogin(view: HTMLElement, list: string, login: string) {
   await typeText(byRole('textbox', `Add a login to ${list}`, view), login)
@@ -63,8 +78,9 @@ const frequent =
   'This runs more than once an hour. Set the first field to one minute, such as 0.'
 
 describe('a save of the automation page', () => {
-  test('the owner saves a new automation with each kind of trigger, and its page opens', async () => {
+  test('the owner saves a new automation with each kind of trigger and a chosen secret, and its page opens', async () => {
     const server = new FakeApiServer()
+    server.json('GET', secretsPath(org), { secrets: secretFixtures().secrets })
     const { navigation, view } = await openApp(
       server,
       routes.newAutomation(org),
@@ -102,6 +118,7 @@ describe('a save of the automation page', () => {
     await addLogin(view, 'Author is', 'dependabot[bot]')
     await press(byRole('button', 'Authors of PR merged', view))
     await addLogin(view, 'Author is not', 'calummoore')
+    await chooseSecret(view, 'VERCEL_TOKEN')
     const ready = !isOff(save())
     await press(save())
     await waitFor(
@@ -128,6 +145,7 @@ describe('a save of the automation page', () => {
             effort: 'high',
             fast: false,
           },
+          capabilities: { preapprovedSecretIds: ['vercel-token'] },
           timeZone: 'UTC',
           triggers: [
             { kind: 'hourly', minute: 15 },

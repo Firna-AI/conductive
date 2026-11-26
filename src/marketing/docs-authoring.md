@@ -102,7 +102,7 @@ order: 20
   HTML of its own. A link inside a sentence keeps the height of the text.
 - Link to another guide by its address, such as `/docs/get-started`.
 - Write the product name as text. Markdown cannot read
-  `docs/mockups/src/brand.ts`, so a rename of the product changes the
+  `src/shared/brand.ts`, so a rename of the product changes the
   guides too.
 
 A guide action can link to the overview:
@@ -218,7 +218,7 @@ pages.
 | Cloud computer | `/docs/cloud-computer` | [Org image](../../docs/protocol/org-image.md#the-org-image) |
 | Orgs and members | `/docs/orgs-and-members` | [Orgs and members](../../docs/protocol/orgs-and-members.md), [Delete org](../../docs/protocol/delete-org.md) |
 | Mac app | `/docs/mac-app` | [Mac app](../../docs/protocol/desktop-app.md), [Mac packages and updates](../../docs/protocol/desktop-packages-and-updates.md), [Mac app sign-in](../../docs/protocol/desktop-sign-in.md), [Permissions and Mac commands](../../docs/protocol/desktop-commands.md), [Releases](../../desktop/RELEASES.md) |
-| Security | `/docs/security` | [Access and security](../../docs/protocol/access-and-security.md), [Isolation of orgs and sandboxes](../../docs/protocol/isolation.md), [Tokens and secrets](../../docs/protocol/tokens-and-secrets.md), [Terminal, previews, and desktop](../../docs/protocol/terminal-previews-and-desktop.md), [HTML file preview](../../docs/protocol/html-file-preview.md#which-files-a-page-can-load), [Agent tools](../../docs/protocol/agent-tools.md) |
+| Security | `/docs/security` | [Access and security](../../docs/protocol/access-and-security.md), [Isolation of orgs and sandboxes](../../docs/protocol/isolation.md), [Tokens and secrets](../../docs/protocol/tokens-and-secrets.md), [Terminal, previews, and desktop](../../docs/protocol/terminal-previews-and-desktop.md), [HTML file preview](../../docs/protocol/html-page-files.md), [Agent tools](../../docs/protocol/agent-tools.md) |
 
 - The Mac app guide must use the release state at writing time.
 - The live sandbox desktop is currently hidden. Do not describe it as an

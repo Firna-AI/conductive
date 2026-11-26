@@ -7,9 +7,10 @@ decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
 
 - The file tree, the changes list, the start steps, the workspace name,
-  and the list of listening ports belong to no session. A later full
-  report of the same kind replaces each of them. But a report of the workspace name sets that name only while
-  the workspace has no name, as
+  the list of listening ports, and the lists of skills belong to no
+  session. A later full report of the same kind replaces each of them.
+  But a report of the workspace name sets that name only while the
+  workspace has no name, as
   [Workspace and session names](agents-and-sessions.md#workspace-and-session-names) says.
 - When the workspace refuses an update of one of these kinds, the update is
   lost. The workspace stores its marker. Then it asks the runner once for a
@@ -17,11 +18,13 @@ decision number names a dated record, as
 - The browser shows nothing for that marker. A notice shows beside the
   affected data only when the repair fails. A newer complete report of that
   kind clears the notice.
+  [Notices of a failed repair](workspace-events.md#notices-of-a-failed-repair)
+  states the time that a notice gives and when the notice ends.
 - Reason: only the latest full report matters. A notice for each lost update
   was rejected.
 - The request is a `report.refresh` command with a `commandId` and a `kind`.
   The kind is `files.snapshot`, `changes.updated`, `start.updated`,
-  `workspace.title`, or `ports.updated`.
+  `workspace.title`, `ports.updated`, or `skills.updated`.
 - The workspace asks for a full file tree after a refused tree delta. It asks
   for no report after a refused event of any other type.
 - Each kind has at most one open request. After a further refusal of that
@@ -32,7 +35,7 @@ decision number names a dated record, as
   repair of another kind. After the next refusal of that kind, the
   workspace asks for a new report, with a new command ID.
 - A replacement is a later full report of the same kind.
-  [Files and changes](workspace-tools.md#files-and-changes) says
+  [File reports](file-reports.md) says
   which file reports count as replacements.
 - The repair fails when the workspace refuses a replacement too, for any
   reason. Only the marker of such a replacement carries `repairFailed: true`.

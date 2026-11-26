@@ -70,7 +70,8 @@ The workspace keeps your conversation beside the code and tools.
 
 The pull request bar offers actions for the next step.
 It can ask the agent to prepare or fix a pull request.
-It can mark a draft ready for review and merge it with your GitHub account.
+Use it to mark a draft ready for review or merge with your GitHub account.
+You can also add a pull request to the merge queue.
 After a merge, **Continue** starts a new branch in the same workspace.
 The cloud computer and sessions stay.
 
@@ -82,7 +83,7 @@ An inactive cloud computer can stop.
 Its files and sessions stay.
 Your chat history remains available while it starts or stays stopped.
 Open a stopped workspace to start its computer again.
-If it stops while the workspace is open, select **Resume**, or open a file or a change.
+If it stops while the workspace is open, select **Resume**, open a file or a change, or select **Explain** on chat text.
 
 Archive stops the computer and keeps its files for 14 days.
 The workspace stays in **Archived** for those 14 days, with read-only chat and no tools.

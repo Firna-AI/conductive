@@ -107,11 +107,13 @@ it('answers resume and retry with durable starting state while chat and startup 
     if (first.kind !== 'reply')
       throw new Error('The early resume reply is missing.')
     expect(first.response.status).toBe(200)
-    expect(await first.response.json()).toMatchObject({
+    const resumed: unknown = await first.response.json()
+    expect(resumed).toMatchObject({
       workspace: { id: OUTER_WORKSPACE, state: 'starting' },
       start: { kind: 'resume' },
       error: null,
     })
+    expect(resumed).not.toHaveProperty('seed')
     await startup
     const chat = await active.request(
       chatHistoryPath(OUTER_ORG, OUTER_WORKSPACE, 'first-session'),
@@ -239,5 +241,44 @@ it('numbers a fresh workspace snapshot when Stop follows the first lifecycle rea
       .at(-1),
   ).toMatchObject({
     event: { type: 'workspace.updated', workspace: { state: 'stopped' } },
+  })
+})
+
+it('seeds the workspace GET with port and skill events through the reply cutoff', async () => {
+  const active = (fixture = await reviewWorkspaceFixture(bundle))
+  const sent = active.runner.emit({ type: 'ports.updated', ports: [] })
+  expect(await active.runner.inbox.next()).toMatchObject({
+    type: 'confirm',
+    throughEventNumber: 2,
+  })
+  const response = await active.request(
+    workspacePath(OUTER_ORG, OUTER_WORKSPACE),
+  )
+  expect(response.status).toBe(200)
+  const browser = await active.browser()
+  const stored = array(browser.history.events, record)
+  const skill = stored.find(
+    (item) => record(item.event).type === 'skills.updated',
+  )
+  expect(await response.json()).toMatchObject({
+    workspace: { id: OUTER_WORKSPACE },
+    eventNumber: browser.history.throughEventNumber,
+    seed: {
+      ports: {
+        eventNumber: browser.history.throughEventNumber,
+        occurredAt: sent.occurredAt,
+        event: { type: 'ports.updated', ports: [] },
+      },
+      skills: {
+        eventNumber: skill?.eventNumber,
+        occurredAt: 1_800_000_000_001,
+        event: { type: 'skills.updated', skills: null },
+      },
+      failures: {
+        'workspace.title': null,
+        'start.updated': null,
+        'ports.updated': null,
+      },
+    },
   })
 })

@@ -1,0 +1,47 @@
+/*
+ * The shared parts of a modal card over the dimmed app, such as a question,
+ * a short form, or New workspace. The card never grows past the room of
+ * its layer: the frame layer of `ConfirmDialog.module.css`, or a native
+ * dialog element in the top layer of the browser, with `topLayer`. Its head
+ * and its foot keep their size, so the title or the pickers, and the
+ * actions or the bar, stay in reach. Its body takes the rest of the room,
+ * and it scrolls when its content is taller.
+ *
+ * The card, its head, and its foot do not clip. So a control that opens
+ * beside its button, such as the Capabilities control above its icon, can
+ * reach over the body. A menu opens in the top layer, so no box clips it.
+ * Keep each menu button in the head or the foot.
+ */
+.card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+}
+
+/* The title or the pickers at the top, and the actions or the bar at the end. */
+.head,
+.foot {
+  flex-shrink: 0;
+}
+
+/* The content between them, which scrolls when the card reaches its limit. */
+.body {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/*
+ * A native dialog element that holds a card in the top layer and draws
+ * nothing itself. It keeps the room of the frame layer around it, and it
+ * lays out its card as a column, so the card shrinks to fit. A closed
+ * dialog keeps the browser's `display: none`.
+ */
+.topLayer {
+  max-height: calc(100% - 48px);
+}
+
+.topLayer[open] {
+  display: flex;
+  flex-direction: column;
+}

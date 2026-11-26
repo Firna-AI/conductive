@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { DetailList } from '../../../docs/mockups/src/components/settings/DetailList'
+import { DetailList } from '../../ui/components/settings/DetailList'
 import {
   OrgColorField,
   OrgColorValue,
-} from '../../../docs/mockups/src/components/settings/OrgColorField'
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
+} from '../../ui/components/settings/OrgColorField'
+import { Section } from '../../ui/components/settings/Section'
 import { mayChangeSettings } from '../../app/permissions'
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'
@@ -117,7 +117,8 @@ function ColorSection(props: { org: OrgSummary }) {
  * cloud computer stops and the org hides at once, and everything is
  * deleted after 7 days unless an admin restores it. The answer takes the
  * org out of the rail, and the app opens the next org that is not deleted,
- * else Get started. The Account page lists the org, with Restore.
+ * from `AppModel.activeOrgs`, else Get started. The Account page lists the
+ * org, with Restore.
  */
 function DeleteSection(props: { org: OrgSummary }) {
   const app = useApp()
@@ -130,7 +131,7 @@ function DeleteSection(props: { org: OrgSummary }) {
       now={now}
       onDeleted={(deleted) => {
         app.putOrg(deleted)
-        const next = setupOrg(app.orgs.get())
+        const next = setupOrg(app.activeOrgs.get())
         go(next ? routes.org(next.id) : routes.getStarted())
       }}
       org={props.org}

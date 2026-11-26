@@ -4,16 +4,38 @@
 
 import type { TableCells } from '../../../../src/markdown/table-rows'
 
+/**
+ * A block of a Markdown file. Its text keeps the inline Markdown that the
+ * preview reads: code in backticks, images, the marks of bold text,
+ * emphasis, and strikethrough, and line-break tags. A list item can start
+ * with a task box, such as `[x]`.
+ */
 export type MarkdownBlock =
   | { kind: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p'; text: string }
   | { kind: 'ol' | 'ul'; items: readonly string[] }
   | { kind: 'code'; text: string }
   | ({ kind: 'table' } & TableCells<string>)
+  | { kind: 'quote'; blocks: readonly MarkdownBlock[] }
+  | { kind: 'rule' }
 
-/** `README.md`, already split into blocks. Backticks mark inline code. */
+/**
+ * `README.md`, already split into blocks: a note in a quote, a table with a
+ * line break in a cell and a variable that the branch removed, emphasis, a
+ * picture at a web address, a task list with done and open tasks, and a
+ * rule before the tests.
+ */
 export const readme: readonly MarkdownBlock[] = [
   { kind: 'h1', text: 'Storefront' },
   { kind: 'p', text: 'The Acme web shop, built with Next.js and Postgres.' },
+  {
+    kind: 'quote',
+    blocks: [
+      {
+        kind: 'p',
+        text: '**Note:** the browser calls `/api/places`, *never* the places API, so `PLACES_API_KEY` stays on the server.',
+      },
+    ],
+  },
   { kind: 'h2', text: 'Getting started' },
   {
     kind: 'ol',
@@ -30,14 +52,32 @@ export const readme: readonly MarkdownBlock[] = [
     head: ['Variable', 'Used for', 'Required'],
     rows: [
       ['`DATABASE_URL`', 'Orders, carts, and sessions', 'Yes'],
-      ['`PLACES_API_KEY`', 'Address suggestions at checkout', 'No'],
+      [
+        '`PLACES_API_KEY`',
+        'Address suggestions at checkout<br>Manual entry without it',
+        'No',
+      ],
+      ['~~`POSTCODE_API_KEY`~~', 'Removed with the postcode lookup', 'No'],
     ],
   },
   { kind: 'h2', text: 'Checkout' },
   {
     kind: 'p',
-    text: 'Checkout suggests addresses as you type. Suggestions come from `/api/places`, which needs `PLACES_API_KEY`. Without the key, the form falls back to manual entry.',
+    text: 'Checkout suggests addresses as you type. Suggestions come from `/api/places`, which needs `PLACES_API_KEY`. Without the key, the form falls back to *manual entry*.',
   },
+  {
+    kind: 'p',
+    text: '![Suggestions under the address field](https://design.acme.example/forms/address/suggestions.png)',
+  },
+  {
+    kind: 'ul',
+    items: [
+      '[x] Suggestions from the places API',
+      '[x] Manual entry without the key',
+      '[ ] Saved addresses for signed-in customers',
+    ],
+  },
+  { kind: 'rule' },
   { kind: 'h2', text: 'Tests' },
   { kind: 'code', text: 'npm test' },
   { kind: 'h3', text: 'End-to-end tests' },

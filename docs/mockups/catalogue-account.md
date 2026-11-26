@@ -15,12 +15,13 @@ settings are. Its child pages:
   on 13 November 2026. Its `org-login` and `every-member` variants have the
   line of the org login of Acme under Claude, as
   [org logins](catalogue-org-logins.md) gives.
-- `app/account/preferences` shows the Preferences tab, from decision 142
-  of PR #73: the New workspaces section with Model and effort, and the
-  choice of how New workspace opens on a computer, the page or a dialog.
-  Its `not-saved` variant shows a save that failed, which keeps the saved
-  choice. Its `model-menu` variant shows the menu of the picker open, with
-  Fast on.
+- `app/account/preferences` shows the Preferences tab. It starts with the
+  Favourites section, as `app/model-favourites/preferences` gives. The New
+  workspaces section follows, from decision 142 of PR #73: Model and
+  effort, and the choice of how New workspace opens on a computer, the page
+  or a dialog. Its `not-saved` variant shows a save of that choice that
+  failed, which keeps the saved choice. Its `model-menu` variant shows the
+  menu of the picker open, with the favourites first and Fast on.
 - `app/account/setup` shows General at the first run, with nothing
   connected. Its `agents` variant shows the Agents tab at the first run,
   with neither agent connected.
@@ -77,7 +78,8 @@ owner of a login hide each model that its endpoint does not list. Both
 agents run on Cal's proxy, whose model list does not name Fable 5.1. The
 Claude row says that Fable 5.1 is hidden from Cal's model pickers, and
 why, with the model ID, the time of the last read of the list, and
-Refresh. Its other states come from Codex base decision 1 C, which Cal
+Refresh. The model menu of Cal also leaves out his favourite on Fable 5.1,
+as `app/model-favourites/endpoint` shows. Its other states come from Codex base decision 1 C, which Cal
 chose on 13 November 2026:
 
 - `v1-added` has the note under the Codex row after a save that added

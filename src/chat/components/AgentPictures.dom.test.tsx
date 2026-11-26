@@ -39,6 +39,23 @@ test('an answer shows the picture in a paragraph and a list item, and keeps the 
   ])
 })
 
+test('an answer shows the picture in a quote, as in the paragraph that the quote holds', async () => {
+  fakeNearView()
+  const { reader } = fakeReader()
+  const view = await mountPictures(
+    <AgentText
+      id="agent:turn-1:answer-1"
+      text="> Before the fix: ![Quote shot](shots/before.png)"
+    />,
+    reader,
+  )
+  const quote = view.container.querySelector('blockquote')
+  if (!quote) throw new Error('The answer has no quote')
+  expect(imagesIn(quote)).toEqual([
+    { name: 'Quote shot', shows: 'box', in: 'P', title: 'shots/before.png' },
+  ])
+})
+
 // happy-dom toggles a `<details>` for each click in its summary that no
 // listener inside the details prevents, also a click on a link, which a
 // browser leaves to the link. So the browser smoke test checks that a press

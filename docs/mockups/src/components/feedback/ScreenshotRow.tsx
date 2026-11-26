@@ -1,11 +1,13 @@
-import { ImageIcon, X } from 'lucide-react'
+import { ImageIcon } from 'lucide-react'
 import type { FeedbackScreenshot } from '../../fixtures/feedback'
-import { IconButton } from '../common/actions'
-import { classes } from '../common/classes'
-import { ChipIconCell, useNoHover } from '../chat/ChipRemove'
-import { formatSize } from '../chat/sizes'
-import styles from '../chat/AttachmentChips.module.css'
-import { screenshotsLabel } from './feedbackCopy'
+import { iconButton } from '../../entries/components/common/actions.mockup'
+import { instanceKey } from '../../instanceKey'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { useNoHover } from '../../../../../src/ui/components/chat/ChipRemove'
+import { chipIconCell } from '../../entries/components/chat/ChipRemove.mockup'
+import { formatSize } from '../../../../../src/ui/components/chat/sizes'
+import styles from '../../../../../src/ui/components/chat/AttachmentChips.module.css'
+import { screenshotsLabel } from '../../../../../src/ui/components/feedback/feedbackCopy'
 
 /**
  * One screenshot of the draft: its name and its size, as the chip of an
@@ -24,15 +26,21 @@ function ScreenshotChip(props: { screenshot: FeedbackScreenshot }) {
         noHover && styles.withEnd,
       )}
     >
-      <ChipIconCell
+      <chipIconCell.Component
         focusable
         icon={<ImageIcon aria-hidden className={styles.icon} size={13} />}
+        moklyInstance={`cell-${instanceKey(screenshot.name)}`}
         removal={{ name: screenshot.name }}
       />
       <span className={styles.name}>{screenshot.name}</span>
       <span className={styles.size}>{formatSize(screenshot.sizeBytes)}</span>
       {noHover ? (
-        <IconButton icon={X} label={`Remove ${screenshot.name}`} quiet />
+        <iconButton.Component
+          icon="x"
+          label={`Remove ${screenshot.name}`}
+          moklyInstance={`remove-${instanceKey(screenshot.name)}`}
+          quiet
+        />
       ) : null}
     </li>
   )

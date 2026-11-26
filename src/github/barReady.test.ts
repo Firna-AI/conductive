@@ -13,6 +13,7 @@ import { barViewOf, type BarInput } from './barView'
 import { createContinueActions } from './continueActions'
 import { createGitHubActions } from './githubActions'
 import type { GitHubState } from './githubStore'
+import { barWorkspaceStream } from './storeDoubles'
 import { snapshotOf } from './testing'
 
 const target = { orgId: FAKE_IDS.org, workspaceId: FAKE_IDS.workspace }
@@ -121,6 +122,7 @@ function barFor(server: FakeApiServer) {
     snapshot: snapshotOf('draft'),
   })
   const refreshGitHub = vi.fn()
+  const { stream, start } = barWorkspaceStream()
   const actions = new BarActions({
     branch: 'calummoore/checkout-autocomplete',
     github: createGitHubActions(server.fetch, target),
@@ -129,10 +131,11 @@ function barFor(server: FakeApiServer) {
     delay: new ManualDelay().delay,
     githubState: github,
     refreshGitHub,
-    streamLast: new Store(0),
-    reconnects: new Store(0),
+    streamLast: stream.last,
+    reconnects: stream.reconnects,
   })
   actions.connect()
+  start(19)
   return { actions, github, refreshGitHub }
 }
 
@@ -158,11 +161,13 @@ describe('the run of Ready for review', () => {
       body: await sent?.clone().json(),
       method: sent?.method,
       refreshes: bar.refreshGitHub.mock.calls.length,
+      accessReads: capabilityReads(server),
       outcome: bar.actions.getSnapshot().outcome,
     }).toEqual({
       body: { pullNumber: snapshotOf('draft').banner.pullRequest?.number },
       method: 'POST',
       refreshes: 1,
+      accessReads: 1,
       outcome: { kind: 'marking-ready' },
     })
     bar.github.set({ status: 'ready', snapshot: snapshotOf('ready-to-merge') })

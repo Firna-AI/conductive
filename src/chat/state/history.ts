@@ -3,7 +3,8 @@ import type { ChatContext, HistoryLoad } from './context'
 import type { StreamEnvelope } from '../api/read-workspace'
 import { chatEventsOf } from '../../shared/transcript/session-events'
 import { withSecretEvents } from '../secrets/secret-snapshot'
-import { mergeSession } from './session-records'
+import { replaySessionRecords } from './session-records'
+import type { SessionReplay } from './session-replay'
 
 /** A history page whose cursor does not move the read backwards. */
 class NoProgress extends Error {}
@@ -12,11 +13,12 @@ function merge(
   context: ChatContext,
   sessionId: string,
   envelopes: readonly StreamEnvelope[],
+  replay: SessionReplay,
 ): void {
   const own = envelopes.filter(
     (envelope) => envelope.workspaceId === context.target.workspaceId,
   )
-  const change = mergeSession(context, sessionId, chatEventsOf(sessionId, own))
+  const change = replay.merge(sessionId, chatEventsOf(sessionId, own))
   // A page also holds the secret requests, runs, and late answers of the session.
   context.store.update((snapshot) => {
     const next = change.apply(snapshot)
@@ -33,11 +35,12 @@ async function readPages(
   context: ChatContext,
   sessionId: string,
   newest: (through: number | null) => void,
+  replay: SessionReplay,
 ): Promise<number | null> {
   let page = await context.api.history(sessionId)
   if (!context.live()) return null
   const through = page.throughEventNumber
-  merge(context, sessionId, page.envelopes)
+  merge(context, sessionId, page.envelopes, replay)
   newest(through)
   let before = through + 1
   const earlier: StreamEnvelope[] = []
@@ -53,7 +56,8 @@ async function readPages(
       earlier.push(...page.envelopes)
     }
   } finally {
-    if (context.live() && earlier.length > 0) merge(context, sessionId, earlier)
+    if (context.live() && earlier.length > 0)
+      merge(context, sessionId, earlier, replay)
   }
 }
 
@@ -62,6 +66,7 @@ async function loadHistory(
   sessionId: string,
   newest: (through: number | null) => void,
 ): Promise<number | null> {
+  const replay = replaySessionRecords(context)
   const mark = (hydration: 'loading' | 'ready' | 'failed') =>
     context.store.update((snapshot) =>
       withSession(snapshot, sessionId, (current) => ({
@@ -72,7 +77,7 @@ async function loadHistory(
   try {
     if (!context.live()) return null
     mark('loading')
-    const through = await readPages(context, sessionId, newest)
+    const through = await readPages(context, sessionId, newest, replay)
     if (through === null || !context.live()) return null
     mark('ready')
     return through
@@ -81,6 +86,7 @@ async function loadHistory(
     mark('failed')
     return null
   } finally {
+    replay.finish()
     newest(null)
   }
 }

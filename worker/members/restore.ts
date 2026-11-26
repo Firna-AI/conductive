@@ -1,5 +1,7 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
+import { wakeProviderSwitch } from '../lifecycle/provider-switch-control'
+import { imageRuntime } from '../lifecycle/runtime'
 import { keepCleanupLease, withCleanupLease } from './cleanup-lease'
 import { stopDeletedOrg } from './deletion'
 import { orgWorkspaceIds } from './deletion-data'
@@ -95,6 +97,7 @@ export async function finishPendingRestore(
     ))
   )
     throw restoreExpired()
+  await wakeProviderSwitch(imageRuntime(env, dependencies), orgId)
   return true
 }
 

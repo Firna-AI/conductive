@@ -1,7 +1,7 @@
 [
   {
     "name": "list_secrets",
-    "description": "List the secrets of this org with each name, environmentVariable, description, and availability. Read each value through its environmentVariable. Needs only the workspace token. An active turn adds its session approvals to availability. Never returns values. Keep secret values out of output, files, and answers.",
+    "description": "List the secrets of this org with each name, environmentVariable, description, and availability. Call before you ask a member for an API key, a token, or another credential. Use run_with_secrets for each command that needs a secret. Read each value through its environmentVariable. Needs only the workspace token. An active turn adds its session approvals to availability. Never returns values. Keep secret values out of output, files, and answers.",
     "inputSchema": { "type": "object", "properties": {} },
     "annotations": {
       "readOnlyHint": true,
@@ -11,7 +11,7 @@
   },
   {
     "name": "run_with_secrets",
-    "description": "Run a shell command on this cloud computer with named secrets in its environment. Needs an active calling turn. Acts for the member whose message started that turn. Requests approval when needed and waits up to 90 seconds. A pending result ends without a command. After a late-answer notice, call again. Read each value through the environmentVariable from list_secrets. Two names that need one environment key fail before any request. Run those names separately. Returns filtered stdout, stderr, exitCode, and the environmentVariables name-to-variable map. Keep each value out of output, files, and answers. The filter hides only exact copies.",
+    "description": "Run a shell command on this cloud computer with named secrets in its environment. Use for each command that needs a secret. Call list_secrets before you ask a member for an API key, a token, or another credential. Needs an active calling turn. Acts for the member whose message started that turn. Uses approved secrets with no request. Requests approval when needed and waits up to 90 seconds. A pending result ends without a command. After a late-answer notice, call again. Read each value through the environmentVariable from list_secrets. Two names that need one environment key fail before any request. Run those names separately. Returns filtered stdout, stderr, exitCode, and the environmentVariables name-to-variable map. Keep each value out of output, files, and answers. The filter hides only exact copies.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -40,7 +40,7 @@
   },
   {
     "name": "run_mac_command",
-    "description": "Ask to run a command on the active turn sender's connected Mac. Approval stays on that Mac.",
+    "description": "Ask to run a command when the task needs the member's Mac. Needs an active calling turn. The request goes to the Mac of the member whose message started the turn. The Mac app asks before each command, unless a permission that its user chose there covers it.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -79,7 +79,7 @@
   },
   {
     "name": "create_workspace",
-    "description": "Create a workspace with this workspace's owner and start its first message. Needs an active calling turn. Acts for the member whose message started that turn. Omitted model and effort use the owner's defaults. Fast mode requires explicit fast: true for a marked model. The reply gives the workspace number and link, and the first session link. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it. Pass parentId to nest the new workspace. Nest work that belongs to the calling workspace's task: a part of a large task that can run in parallel, follow-up work that the task starts, work in another repository for the same task, or a change that needs its own pull request. Each separate pull request needs its own workspace. Omit parentId for unrelated work. When a member names the place, follow the member. Agents usually pass their own workspace ID from their instructions. The new workspace joins its parent's section, so sectionId has no effect with parentId. Nesting stops at depth 3. A create under a workspace at depth 3 fails with nesting_limit. Its message gives the parentId for a sibling. Start the sibling's name with a one-word group prefix, such as \"Limits: \". The workspace in the reply gives parentId. The reply can give a notice about its section.",
+    "description": "Create a workspace with this workspace's owner and start its first message. Needs an active calling turn. Acts for the member whose message started that turn. Omitted model and effort use the owner's defaults. An omitted section uses the default section. startBranch creates the workspace branch from that branch. baseBranch sets the pull request target and Changes comparison branch. If both branches are omitted, both use the repository default branch. If only one branch is given, both use that branch. Fast mode requires explicit fast: true for a marked model. The reply gives the workspace number and link, and the first session link. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it. Pass parentId to nest the new workspace. Nest work that belongs to the calling workspace's task: a part of a large task that can run in parallel, follow-up work that the task starts, work in another repository for the same task, or a change that needs its own pull request. Each separate pull request needs its own workspace. Omit parentId for unrelated work. When a member names the place, follow the member. Agents usually pass their own workspace ID from their instructions. The new workspace joins its parent's section, so sectionId has no effect with parentId. Nesting stops at depth 3. A create under a workspace at depth 3 fails with nesting_limit. Its message gives the parentId for a sibling. Start the sibling's name with a one-word group prefix, such as \"Limits: \". The workspace in the reply gives parentId. The reply can give a notice about its section.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -91,6 +91,14 @@
         "firstMessage": {
           "type": "string",
           "minLength": 1
+        },
+        "startBranch": {
+          "type": "string",
+          "description": "Create the workspace branch from this branch. Omission uses baseBranch, or the repository default when both branches are omitted."
+        },
+        "baseBranch": {
+          "type": "string",
+          "description": "Use this branch for the pull request target and Changes comparison. Omission uses startBranch, or the repository default when both branches are omitted."
         },
         "name": {
           "type": "string",
@@ -648,8 +656,38 @@
     }
   },
   {
+    "name": "watch_session",
+    "description": "Wake the calling session once when one watched turn finishes, fails, or stops. Needs an active calling turn. Acts for the member whose message started that turn. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. Use the actual session and exact turnId returned by send_message, create_session, or create_workspace when available. Without turnId, watches current queued, running, or stopping work, or returns idle. An ended exact turn returns finished, failed, or stopped without a watch or wake. Repeated calls for the same calling session, member, target turn, and valid Stop period return the same watchId. Only the exact active calling turn is refused with invalid_input. Set the watch, then end your reply when only watched work remains. After a wake, use read_session for the result. An idle or ended reply means read the session at once. A turn end does not mean the whole delegated task is complete. Explicit Stop of the calling session drops older pending wakes. Automatic idle computer stops keep watches. Delivery uses the usual current member and session login checks. A new wake turn acts for the member who set the watch. A wake that joins a running turn keeps that turn's sender.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "workspaceId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The target workspace ID from a returned reply or session link. Defaults to the calling workspace."
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The actual receiving session ID from send_message, create_session, create_workspace, list_sessions, or a session link."
+        },
+        "turnId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The exact turnId returned with the work. Omission selects the target session's current active turn. Older workspace-create replies can omit it."
+        }
+      },
+      "required": ["sessionId"]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true
+    }
+  },
+  {
     "name": "get_message",
-    "description": "Get one message's text, sender, state, turn, and time. Needs only the workspace token. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it.",
+    "description": "Get one message of a member or of the agent by its ID, such as the Message: ID of an Explain prompt. Gives its author, text, turn, and time, and the sender and state of a member message. Needs only the workspace token. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it.",
     "inputSchema": {
       "type": "object",
       "properties": {

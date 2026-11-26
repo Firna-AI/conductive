@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 import { highlightLines } from '../../../../../src/files/code/highlight'
 import { languageOf } from '../../../../../src/files/code/languages'
 import { splitPath } from '../../fixtures/files'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { highlightLine, type Token, type TokenKind } from './highlight'
 import styles from './code.module.css'
 

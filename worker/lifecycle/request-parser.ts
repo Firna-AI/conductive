@@ -40,9 +40,18 @@ export function createWorkspaceInput(value: unknown): CreateWorkspaceRequest {
     throw invalid()
   if (value.sectionId !== undefined && typeof value.sectionId !== 'string')
     throw invalid()
+  for (const key of ['startBranch', 'baseBranch'])
+    if (value[key] !== undefined && typeof value[key] !== 'string')
+      throw invalid()
   return {
     repositoryId: value.repositoryId,
     sectionId: value.sectionId,
+    ...(typeof value.startBranch === 'string' && {
+      startBranch: value.startBranch,
+    }),
+    ...(typeof value.baseBranch === 'string' && {
+      baseBranch: value.baseBranch,
+    }),
     capabilities: readCreationCapabilities(value.capabilities),
     firstMessage: {
       id: message.id,

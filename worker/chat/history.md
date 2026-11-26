@@ -9,10 +9,14 @@ streams, and the order of the runner commands.
   one at a time.
 - `ChatStore.run` gives each queue task a `QueueTurn` handle from
   [`queue-turn.ts`](queue-turn.ts). With `outside(call)` of the handle, a
-  task runs one call outside the queue. In production code, only the start
+  task runs one call outside the queue. In production code, the start
   guard of a sandbox start calls `outside`, as
   [Creates and resumes](../lifecycle/workspace-object.md#creates-and-resumes)
-  says.
+  says. A session read calls it between batches of a
+  [session index](#the-session-index) build. The workspace GET calls it
+  while it waits for [read-state recovery](#the-workspace-read-state).
+  The Files list reads also wait outside the queue through
+  `ChatStore.readQueued`.
 - `outside` first gives the committed turn ends to the
   [`turnEnded`](integration/workspace-lifecycle.md#hooks-and-events) hook.
   Then the task gives the queue up and runs the call. When the call ends,
@@ -33,6 +37,15 @@ streams, and the order of the runner commands.
   missed events from the stored history.
 - Each event gets the next workspace event number. The numbers start at 1,
   have no gaps, and span all sessions and runner streams.
+- A new full tree or a new `skills.updated` event deletes the older stored
+  event of its kind from the history. The history keeps every tree delta.
+- The first changes list that compaction visits records the current stored
+  workspace event number in `chat:v1:history-index:changes-cutover`.
+  Preparation preserves changes lists through that number.
+  `chat:v1:history-index:changes` points to the newest indexed changes list
+  after that number. A newer list deletes the prior indexed list and its
+  chunks. These deletions can leave gaps in stored event numbers. An older
+  Worker can leave extra changes lists during a rollback.
 - A tab connects with `after`, the last event number that it has. It gets
   the stored events after that number in one or more `history` pages, in
   the shape of `ChatHistoryResponse` in
@@ -40,7 +53,29 @@ streams, and the order of the runner commands.
   `event` message for each new event.
 - The history pages and the new subscription run in one queue task. So no
   event falls between them, and no event comes twice.
+- The object answers the socket upgrade once the tab is registered with a
+  valid grant, before the first `history` page. A refusal before then is
+  the HTTP reply. The pages follow the handshake. So the tab reads each
+  page while the replay goes on, and no page waits in memory for the
+  handshake.
+- `REPLAY_BUDGET` in [`browser-subscription.ts`](browser-subscription.ts)
+  limits the events of the pages of one connection to 8 MiB of UTF-8 JSON.
+  The page reads spend it, so a page ends after the event that uses it up.
+  So a connection sends at most one event past the budget, and at least
+  one event. When more events remain, the object then removes the tab and
+  closes the socket. The tab connects again after the
+  `nextAfterEventNumber` of its last page, and the replay goes on with a
+  new cutoff.
+- A replay that fails after the handshake removes the tab and closes the
+  socket once. The upgrade route then writes the `unexpected_error`
+  warning for an error that is not an `HttpError`.
 - The records use the `chat:v1:` key prefix of the Durable Object storage.
+- An event record holds its full envelope unless it uses a file stub.
+  A `files.snapshot`, `files.changed`, or `changes.updated` envelope above
+  4,096 UTF-8 JSON bytes uses a stub with `workspaceId`, `eventNumber`,
+  `occurredAt`, and `fileEventChunks`. Each chunk holds up to 65,536
+  UTF-16 code units of the event JSON. The chunk keys start with
+  `chat:v1:history-chunk:<eventNumber>:` and end with a zero-based part number.
 - Each runner stream numbers its events from 1. The Durable Object stores
   a runner event, or its refusal marker, only when its number is the stream
   cursor plus one.
@@ -132,29 +167,102 @@ cutoff. The response holds its events in ascending event order.
 `nextBeforeEventNumber` while `hasMore` is true. It has no
 `nextAfterEventNumber`.
 
-`HistoryPages.readNewest` prepares the compaction index before it reads.
-[`history-newest-pages.ts`](history-newest-pages.ts) lists stored events
-with `reverse: true`. It counts skipped workspace and other-session events
-against the scan limit. It projects session events through the fixed
-cutoff before it counts their JSON bytes. Each page takes at least one
-stored step, also when that event exceeds its byte budget. The cursor
-names the last stored step, also when the page has no shown events.
-A one-row lookahead checks for an earlier stored event before the response
-sets `hasMore`. This check avoids an extra page when compaction removed
-the oldest storage keys. It projects no event.
+`HistoryPages.readNewest` first prepares the session index and the
+compaction index through the cutoff, as
+[The session index](#the-session-index) says.
+[`history-newest-pages.ts`](history-newest-pages.ts) lists up to four
+session keys at a time with `reverse: true`. It reads the event bodies
+of each list at the same time. Each page reads only the requested session.
+It projects session events through the fixed cutoff before it counts their
+JSON bytes. Each page takes at least one key, also when its event exceeds
+the byte budget. The cursor is the event number of the last key, also when
+the page has no shown events. A one-row lookahead checks for an earlier
+key of the session before the response sets `hasMore`. This check avoids
+an extra page after the oldest event of the session. It projects no event.
 
-The route uses `BROWSER_PAGE_LIMITS`: 2,048 stored steps or 4 MiB of shown
-events. `ChatTransaction.newestHistory` takes the session ID, an optional
+The route ends the page after 2,048 session keys or 4 MiB of shown events.
+`ChatTransaction.newestHistory` takes the session ID, an optional
 `before` cursor, and an optional cutoff. It clamps that cutoff to the
 workspace's current event number.
 
 `ChatTransaction.history` and `HistoryPages.read` read forward after a
-numeric cursor. Each page reads one storage list of 32 events. The events
-socket, workspace summary, Continue, and transcript copy use that read.
-The transcript copy also uses its session filter. The browser's scan and
-byte limits apply only to the newest-first read.
+numeric cursor. Each storage list reads at most four workspace records or
+four keys of the [session index](#the-session-index). An indexed list loads
+up to four event bodies at the same time. The events socket, workspace
+summary, Continue, repository change, the first stop requester lookup,
+and transcript copy use this read. The stop lookup and transcript copy
+filter by session.
+
+A forward page ends at the cutoff, after 2,048 stored steps, after 4 MiB
+of shown events, or when it uses up the connection's remaining budget.
+It includes the event that reaches a byte limit. The 4 MiB count starts
+again on each page. The connection budget spends the same bytes across
+pages. A shown chunked event counts its stored UTF-8 JSON text and its
+envelope. When more records can remain, `nextAfterEventNumber` is the
+last stored event or session key visited, even when the page shows no events.
 
 [`readNewestStoredEvents`](../../src/chat/api/read-workspace.ts) reads the
 reverse response. `ChatHistoryResponse` and `readStoredEvents` keep the
 forward response. The forward reader refuses a partial reverse page
 because that page has no forward cursor.
+
+### The session index
+
+The session index keeps one key for each stored event of a session.
+[`history-session-keys.ts`](history-session-keys.ts) builds each key from
+`chat:v1:history-session:`, the encoded session ID, and the event number.
+The value of the key is that event number. `historySessionOf` gives the
+session of an event. An event without a session, such as a file report,
+gets no key.
+
+`ChatTransaction.emit` writes the key of an event in the transaction of
+that event. The frontier, `chat:v1:history-session-index:through`, is an
+event number. Each stored session event through that number has its key.
+An emit moves the frontier only when its event comes directly after the
+frontier. A Worker without the index, as after a rollback, stores events
+with no key and leaves the frontier. So the frontier stays before those
+events, also after newer events with keys.
+
+The browser history route and the transcript copy read through
+`ChatStore.read`. Before such a session read, `prepareSessionHistory`
+brings the session index and the compaction index up to the cutoff of the
+read. Each batch reads at most four stored records. It commits their keys
+and the new frontier in one storage transaction. When the compaction index
+covers a file stub, the batch uses its event number without loading its
+chunks. Between batches, the read gives the queue up with `outside` of its
+queue task, so other queue tasks run. The read keeps the cutoff that it
+had before the first batch. After a stop, the next session read continues
+after the last committed batch.
+
+A session read in a write transaction cannot give the queue up. The stop
+request lookup of an older turn record is one. It uses the index only when
+the index has reached its cutoff. Otherwise it reads the workspace history
+with the session filter and the forward page limits. Reads without a
+session, such as the events socket, the workspace summary, and Continue,
+list the stored events of the workspace and build no session index.
+Workspace compaction preparation also reads up to four records per list.
+
+## The workspace read state
+
+[`workspace-read-state.ts`](workspace-read-state.ts) keeps the latest port
+and skills events, the latest workspace repository ID, and the first
+failure of each open [report repair](report-repairs.md). It updates the
+state in the transaction of an event or repair removal. The versioned
+mark in `chat:v1:meta` records whether the state is complete. A write from
+an older Worker drops the mark, even when it adds no event.
+
+[`workspace-read-recovery.ts`](workspace-read-recovery.ts) shares one
+recovery across waiting reads. The recovery fixes a cutoff and saves its
+progress after each page in a separate chat queue task. Each page uses
+one reverse list of at most four stored events. It skips file descriptors
+by reading their metadata alone. The cause of each failed repair bounds
+its notice scan. A later full report ends that scan for its kind.
+
+A page commits the next position and the reports and failures found so
+far. A read resumes there after an eviction. A write that drops the mark
+starts a new recovery at the latest event number. The last task checks
+the cutoff and repair records, then joins the recovered state with the
+changes that committed after the cutoff. A full report or removal after
+the cutoff takes precedence for its notice window. A repeated refusal
+keeps the first failure of an open window. The GET then reads the detail,
+seed, and event number in one chat queue task.

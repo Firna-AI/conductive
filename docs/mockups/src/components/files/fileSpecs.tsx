@@ -1,13 +1,7 @@
 import type { ReactNode } from 'react'
+import { defined } from '../../defined'
 import type { LucideIcon } from 'lucide-react'
-import {
-  File,
-  FileBox,
-  FileCode,
-  FileDiff,
-  FileText,
-  FileX,
-} from 'lucide-react'
+import { File, FileCode, FileDiff, FileText } from 'lucide-react'
 import { answerShot } from '../../fixtures/answerFiles'
 import { screenshotCopy } from '../../fixtures/attachments'
 import {
@@ -22,15 +16,17 @@ import {
   screenshotSize,
   type CheckoutView,
 } from '../../fixtures/pictures'
-import { ActionButton } from '../common/actions'
-import { EmptyState } from '../common/EmptyState'
-import { CodeView, type LineRange } from './CodeView'
-import { DiffStat } from './DiffStat'
-import { DiffView } from './DiffView'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { emptyState } from '../../entries/components/common/EmptyState.mockup'
+import { codeView } from '../../entries/components/files/CodeView.mockup'
+import type { LineRange } from './CodeView'
+import { diffStat } from '../../entries/components/files/DiffStat.mockup'
+import { diffView } from '../../entries/components/files/DiffView.mockup'
 import type { FileTabView } from './FilesPanel'
 import { htmlSpec } from './htmlSpecs'
-import { ImageView } from './ImageView'
-import { MarkdownView } from './MarkdownView'
+import { imageView } from '../../entries/components/files/ImageView.mockup'
+import { pictureZoomBar } from '../../entries/components/files/PictureZoomBar.mockup'
+import { markdownView } from '../../entries/components/files/MarkdownView.mockup'
 
 /** What the page of a file shows: its header and its content. */
 export type FileSpec = {
@@ -55,18 +51,41 @@ export type FileSpec = {
   pageUrl?: string
 }
 
+/** The scale of a fitted screenshot in the tab of a desktop screen. */
+const fittedScale = 0.38
+
 /**
- * The picture of an image file. The tab shows a PNG, JPEG, GIF, or WebP
- * file by its name as a picture, up to the read limit of the file tab.
+ * The picture of an image file, fitted to the tab, with its zoom bar. The
+ * tab shows a PNG, JPEG, GIF, or WebP file by its name as a picture, up to
+ * the read limit of the file tab. Expand shows on desktop, which gives
+ * `expandTo`. It leads there only with `linked`, because the catalogue
+ * draws the large window of checkout-mobile.png only.
  */
-function picture(path: string, view: CheckoutView): FileSpec {
+function picture(
+  path: string,
+  view: CheckoutView,
+  expandTo: string | undefined,
+  linked = false,
+): FileSpec {
   return {
     path,
     icon: File,
     content: (
-      <ImageView size={screenshotSize}>
+      <imageView.Component
+        bar={
+          <pictureZoomBar.Component
+            {...defined({ expandTo: linked ? expandTo : undefined })}
+            expand={expandTo !== undefined}
+            fitted
+            moklyInstance="picture-zoom-bar"
+            scale={fittedScale}
+          />
+        }
+        moklyInstance="image-view"
+        size={screenshotSize}
+      >
         <CheckoutPicture label={splitPath(path).name} view={view} />
-      </ImageView>
+      </imageView.Component>
     ),
     binary: true,
   }
@@ -81,10 +100,15 @@ function notDrawn(path: string): FileSpec {
     path,
     icon: File,
     content: (
-      <EmptyState
-        action={<ActionButton>Download</ActionButton>}
+      <emptyState.Component
+        action={
+          <actionButton.Component moklyInstance="download-binary-file">
+            Download
+          </actionButton.Component>
+        }
         body="It is a binary file."
-        icon={FileBox}
+        icon="file-box"
+        moklyInstance="binary-file"
         title="Download this file to open it"
       />
     ),
@@ -98,61 +122,103 @@ function notDrawn(path: string): FileSpec {
  */
 const answerLines: LineRange = { first: 19, last: 22 }
 
-/** The page of each kind of file that the mockups open as a tab. */
-export function specFor(view: FileTabView): FileSpec {
+/**
+ * The page of each kind of file that the mockups open as a tab. `expandTo`
+ * is the screen of the page in its large window, which Expand shows on
+ * desktop.
+ */
+export function specFor(view: FileTabView, expandTo?: string): FileSpec {
   switch (view) {
     case 'code':
       return {
         path: 'src/app/checkout/useAddressAutocomplete.ts',
         icon: FileCode,
         meta: `${autocompleteHook.split('\n').length} lines`,
-        content: <CodeView code={autocompleteHook} />,
+        content: (
+          <codeView.Component
+            code={autocompleteHook}
+            moklyInstance="code-view"
+          />
+        ),
       }
     case 'code-lines':
       return {
         path: 'src/app/checkout/useAddressAutocomplete.ts',
         icon: FileCode,
         meta: `${autocompleteHook.split('\n').length} lines`,
-        content: <CodeView code={autocompleteHook} marked={answerLines} />,
+        content: (
+          <codeView.Component
+            code={autocompleteHook}
+            marked={answerLines}
+            moklyInstance="code-view"
+          />
+        ),
       }
     case 'markdown':
       return {
         path: 'README.md',
         icon: FileText,
         mode: 'preview',
-        content: <MarkdownView blocks={readme} />,
+        content: (
+          <markdownView.Component
+            blocks={readme}
+            moklyInstance="markdown-view"
+          />
+        ),
       }
     case 'diff':
       return {
         path: 'src/app/checkout/AddressForm.tsx',
         icon: FileDiff,
-        meta: <DiffStat added={38} removed={6} />,
-        content: <DiffView hunks={addressFormDiff} />,
+        meta: (
+          <diffStat.Component
+            added={38}
+            moklyInstance="diff-stat"
+            removed={6}
+          />
+        ),
+        content: (
+          <diffView.Component
+            hunks={addressFormDiff}
+            moklyInstance="diff-view"
+          />
+        ),
       }
     case 'masked-diff':
       return {
         path: maskedDiffPath,
         icon: FileDiff,
-        meta: <DiffStat added={6} removed={0} />,
-        content: <DiffView hunks={seedScriptDiff} />,
+        meta: (
+          <diffStat.Component added={6} moklyInstance="diff-stat" removed={0} />
+        ),
+        content: (
+          <diffView.Component
+            hunks={seedScriptDiff}
+            moklyInstance="diff-view"
+          />
+        ),
       }
     case 'unnamed':
       return {
         path: 'File',
         icon: FileCode,
         content: (
-          <EmptyState icon={FileX} title="This file moved or was deleted" />
+          <emptyState.Component
+            icon="file-x"
+            moklyInstance="missing-file"
+            title="This file moved or was deleted"
+          />
         ),
         closed: true,
       }
     case 'image':
-      return picture(branchPictures.picture, 'form')
+      return picture(branchPictures.picture, 'form', expandTo, true)
     case 'image-not-drawn':
       return notDrawn(branchPictures.damaged)
     case 'attachment':
-      return picture(screenshotCopy.path, 'covered')
+      return picture(screenshotCopy.path, 'covered', expandTo)
     case 'screenshot':
-      return picture(answerShot, 'fixed')
+      return picture(answerShot, 'fixed', expandTo)
     case 'html':
     case 'html-source':
     case 'html-opening':

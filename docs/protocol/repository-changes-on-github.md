@@ -19,6 +19,14 @@ folders that this doc uses. The terms are those of the
   through the same install of the GitHub App. The user chose this on
   17 November 2026.
 - So every member of an org sees the same name, the name on GitHub.
+- A new default branch also moves the cloud target of each live workspace
+  whose base follows that default, as
+  [A new default branch on GitHub](base-branches.md#a-new-default-branch-on-github)
+  says. A workspace with a stored base keeps its target.
+- A rename of the default branch keeps the merge queue of the repository,
+  and a switch to another branch empties it, as
+  [One queue for each repository](merge-queue.md#one-queue-for-each-repository)
+  says.
 - Reason: the repository list adds the names of the repositories that a
   member's own GitHub token reaches. Without the webhook, a member with
   such a token saw the new name, and every other member saw the old name.
@@ -94,14 +102,25 @@ folders that this doc uses. The terms are those of the
 
 ## The org image
 
-- A refresh copies each repository with the name and the default branch
-  that the org image holds. So only a build takes in a new value.
+- A refresh finds each repository of the org image by its ID. It copies
+  the repository with its saved name, default branch, and install. The
+  user chose this on 24 November 2026 (repository load decision 1).
+- Reason: a refresh then works after a rename or a move, also while the
+  newest build failed. The app starts no build by itself after a failed
+  build, so new workspaces would otherwise get no new commits.
+- The checks that guard each copy compare the values of the job with the
+  saved values.
+- A repository that the org no longer saves keeps the values of the org
+  image, so its copy fails as before.
 - While the org image holds a name or a default branch that differs from
   the saved value, the app starts a build. The build runs for an admin who
   is not suspended, as an automatic refresh does. The user chose this on
   17 November 2026.
-- Reason: a refresh fails while the saved values differ from the values of
-  the org image. Without the build, new workspaces start with old commits.
+- Reason: the build moves the folder to the new name at once, as
+  [Folders](#folders) says.
+- Each start of a refresh makes it a build while the org image holds such
+  a value and the newest build succeeded. This covers the daily timer, a
+  push, and an admin who refreshes.
 - The build starts at once after the change. While a job runs, it starts
   when that job ends. When it cannot start, the next automatic refresh,
   daily or after a push, starts the build in place of the refresh.
@@ -113,13 +132,19 @@ folders that this doc uses. The terms are those of the
   [A missed repository webhook](#a-missed-repository-webhook) says.
 - A start only at the webhook was rejected. Reason: a start that failed, or
   a change during a job, then needed a manual build.
-- A refresh that finds the repository by its ID, not by its name, was
-  rejected. Reason: the checks that guard each copy of a repository then
-  change, and the folder takes the new name only at a later manual build.
-- The app starts no build when the newest build failed. The change then
-  waits for Try again, which builds the saved values. Reason: the app
-  starts no build by itself after a failed build (decision 12), as
-  [The org image](org-image.md) says.
+- A refresh that copies the name and the default branch of the org image
+  was replaced. Reason: its copy fails after a rename or a move, so each
+  refresh failed until a build ran.
+- A refresh that skips its run while the org image holds old values was
+  rejected. Reason: new workspaces then get no new commits until a build
+  succeeds.
+- The app starts no build when the newest build on the account of the org
+  failed. The change then waits for Try again, which builds the saved
+  values. Reason: the app starts no build by itself after a failed build
+  (decision 12), as [The org image](org-image.md) says.
+- A failed switch build runs on another account, so it does not count.
+  Reason: members do not see it, and their image still works, as
+  [What members see](switch-account.md#what-members-see) says.
 
 ## Folders
 
@@ -131,6 +156,9 @@ folders that this doc uses. The terms are those of the
   app and on GitHub.
 - Keeping the folder name of the earlier org image was rejected. Reason:
   the folder and the repository would then have two names.
+- A refresh after a rename keeps the folder and its variable. Only the
+  next build moves them. This happens when the newest build failed, so no
+  build starts at the rename.
 - An install script or a startup script that names the old folder, or the
   old variable, fails after that build. An admin updates the script.
 - Each existing workspace keeps its folders, as

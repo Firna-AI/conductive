@@ -165,6 +165,11 @@ it('keeps boot routes available during a GitHub failure and reports the installa
         effort: 'high',
         fast: false,
       }),
+      // The starting favourites follow this model list, so the account
+      // read adds no warning of its own.
+      CONDUCTIVE_STARTING_FAVOURITES: JSON.stringify([
+        { agent: 'claude', model: 'operator-claude', effort: 'high' },
+      ]),
     },
     handleStructuredLogs: ({ level, message }) => {
       if (level === 'warn') {

@@ -1,7 +1,11 @@
 import { expect, it } from 'vitest'
+import type { BannerState } from '../shared/github'
 import { FAKE_TIME } from '../test-support/fixtures/core'
+import { ChecksActions } from './BarButtons'
+import { MASKED_BASE, MASKED_HEAD } from '../test-support/fixtures/masked-paths'
 import type { CommandKeyOf } from './barKeys'
 import type { BarInput } from './barView'
+import { readBannerResponse } from './githubParse'
 import type { GitHubFeed } from './githubStore'
 import { PullRequestBar } from './PullRequestBar'
 import {
@@ -72,6 +76,53 @@ it('offers Create PR for a branch with commits or local work, and no link to Git
       buttons: ['Create PR'],
     },
   ])
+})
+
+it('names the branch and its target by the labels that hide a secret value, in the words and the tooltips of the bar', () => {
+  const masked = (state: BannerState) => {
+    const snapshot = snapshotOf(state)
+    const banner = { ...snapshot.banner, ...MASKED_HEAD, ...MASKED_BASE }
+    return readyFeed({ ...snapshot, banner })
+  }
+  const shown = (html: string) => ({
+    text: textOf(html),
+    titles: [...html.matchAll(/title="([^"]*)"/g)].map(([, title]) =>
+      textOf(title),
+    ),
+    secret: html.includes('acme-7f3k'),
+  })
+  const noRight = {
+    outcome: { kind: 'merge-refused', reason: 'merge-no-right' },
+  } satisfies Partial<BarInput>
+  const number = 'Open pull request #482 on GitHub'
+
+  expect({
+    none: shown(renderBar(masked('none'))),
+    merged: shown(renderBar(masked('merged'))),
+    conflict: shown(renderBar(masked('conflict'))),
+    noRight: shown(renderBar(masked('ready-to-merge'), noRight)),
+  }).toEqual({
+    none: {
+      text: 'calummoore/checkout-[redacted] release/[redacted] Create PR',
+      titles: ['calummoore/checkout-[redacted]', 'release/[redacted]'],
+      secret: false,
+    },
+    merged: {
+      text: '#482 Merged into release/[redacted] just now Continue Archive',
+      titles: [number, 'Merged into release/[redacted]', 'just now'],
+      secret: false,
+    },
+    conflict: {
+      text: '#482 Merge conflict with release/[redacted] Resolve conflicts',
+      titles: [number, 'Merge conflict', 'with release/[redacted]'],
+      secret: false,
+    },
+    noRight: {
+      text: "#482 Ready to merge Approved Not merged: your GitHub access doesn't allow merges into release/[redacted].",
+      titles: [number, 'Ready to merge', 'Approved'],
+      secret: false,
+    },
+  })
 })
 
 it('links the number of the pull request to GitHub in each state, in place of a separate link, beside the main action of a member with write access', () => {
@@ -183,5 +234,38 @@ it('names the key of the command of each button and of the number in its tooltip
     continuing: [number],
     waiting: [number, archive],
     archiving: [number, continues],
+  })
+})
+
+it('says under the bar, and at the top of the Checks tab of a phone, that the base moved to the default branch, until a pull request opens', () => {
+  const moved = 'calummoore/checkout-autocomplete'
+  const line = `Now targets main, because the branch ${moved} is no longer on GitHub.`
+  /** The bar and the top of the phone Checks tab of a banner reply. */
+  const shown = (state: 'no-commits' | 'ready-to-merge') => {
+    const { banner } = snapshotOf(state)
+    const reply = readBannerResponse({
+      banner: { ...banner, branch: 'calummoore/lisbon-7k2q', baseMoved: moved },
+    })
+    if (!reply) throw new Error('The banner reply did not read.')
+    const github = readyFeed({
+      banner: reply.banner,
+      checks: snapshotOf(state).checks,
+    })
+    const controls = controlsOf(github)
+    const bar = renderBar(github)
+    const top = render(<ChecksActions controls={controls} />)
+    return {
+      bar: textOf(bar).includes(line),
+      status: new RegExp(`role="status"[^>]*>[\\s\\S]*${line}`).test(bar),
+      top: textOf(top).includes(line),
+    }
+  }
+
+  expect({
+    noPullRequest: shown('no-commits'),
+    pullRequest: shown('ready-to-merge'),
+  }).toEqual({
+    noPullRequest: { bar: true, status: true, top: true },
+    pullRequest: { bar: false, status: false, top: false },
   })
 })

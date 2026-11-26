@@ -1,13 +1,13 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { FolderGit2 } from 'lucide-react'
 import { repositories, type RepositoryKey } from '../../fixtures/repositories'
 import { repositoryWork } from '../../fixtures/repositoryMove'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog } from '../common/ConfirmDialog'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
+import { ConfirmDialog } from '../../../../../src/ui/components/common/ConfirmDialog'
 import { ScreenLink } from '../common/ScreenLink'
-import { RepositoryChangeText } from './RepositoryChangeText'
-import { repositoryQuestion } from './repositoryMoveCopy'
+import { RepositoryChangeText } from '../../../../../src/ui/components/workspace/RepositoryChangeText'
+import { repositoryQuestion } from '../../../../../src/ui/components/workspace/repositoryMoveCopy'
 
 /**
  * The question before a repository change, when the workspace has work

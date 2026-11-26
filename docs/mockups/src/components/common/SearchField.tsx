@@ -1,7 +1,7 @@
 import { InputFrame } from '@firna/ui/input'
 import { Search } from 'lucide-react'
-import { noop } from '../../noop'
-import { useControlSizes } from './touch'
+import { noop } from '../../../../../src/ui/noop'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 
 /**
  * The search field at the top of a list that it narrows, such as the

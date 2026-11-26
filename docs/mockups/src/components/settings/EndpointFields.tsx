@@ -1,16 +1,17 @@
 import { Input } from '@firna/ui/input'
-import { productName } from '../../brand'
 import { agents, type AgentKey } from '../../fixtures/agents'
 import {
   endpointApis,
-  exampleEndpointOrigin,
   pastedKey,
   refusedEndpoint,
   typedEndpoints,
 } from '../../fixtures/logins'
-import { noop } from '../../noop'
-import { useControlSizes } from '../common/touch'
-import styles from './AgentConnectForm.module.css'
+import { noop } from '../../../../../src/ui/noop'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import { agentConnectCopy } from '../../../../../src/ui/components/settings/agentConnectCopy'
+import styles from '../../../../../src/ui/components/settings/AgentConnectForm.module.css'
+
+const copy = agentConnectCopy.endpoint
 
 /**
  * What the endpoint field holds: nothing yet, an address that the shared
@@ -45,14 +46,12 @@ function addressOf(agent: AgentKey, entry: EndpointEntry): string {
  * hint first names the address that the form saves.
  */
 function addressHint(agent: AgentKey, entry: EndpointEntry): string {
-  const api = endpointApis[agent]
-  const requests = (base: string) =>
-    `Requests go through ${productName} to ${base}${api.requestPath}.`
+  const { requestPath } = endpointApis[agent]
   if (entry !== 'typed') {
-    return requests(`${exampleEndpointOrigin}${api.basePath}`)
+    return copy.addressHint(`${copy.examples[agent]}${requestPath}`)
   }
   const { saved } = typedEndpoints[agent]
-  return `Saves as ${saved}. ${requests(saved)}`
+  return copy.addressHint(`${saved}${requestPath}`, saved)
 }
 
 /**
@@ -70,15 +69,11 @@ export function EndpointFields(props: {
   keyHint: string
 }) {
   const { field } = useControlSizes()
-  const api = endpointApis[props.agent]
   const refused = props.entry === 'refused'
   const models = listOf(agents[props.agent].models.map((model) => model.name))
   return (
     <>
-      <p className={styles.text}>
-        Use a gateway or a proxy that serves {api.name}, with the models that{' '}
-        {productName} offers: {models}.
-      </p>
+      <p className={styles.text}>{copy.serves(props.agent, models)}</p>
       <Input
         autoCapitalize="none"
         autoComplete="off"
@@ -86,18 +81,18 @@ export function EndpointFields(props: {
         error={refused ? refusedEndpoint.cause : null}
         hint={refused ? undefined : addressHint(props.agent, props.entry)}
         inputMode="url"
-        label="Endpoint"
+        label={copy.addressLabel}
         onChangeText={noop}
-        placeholder={`${exampleEndpointOrigin}${api.basePath}`}
+        placeholder={copy.examples[props.agent]}
         size={field}
         value={addressOf(props.agent, props.entry)}
       />
       <Input
         autoComplete="off"
         hint={props.keyHint}
-        label="API key"
+        label={copy.keyLabel}
         onChangeText={noop}
-        placeholder="Paste the key"
+        placeholder={agentConnectCopy.key.placeholder}
         secureTextEntry
         size={field}
         value={props.entry === 'empty' ? '' : pastedKey}

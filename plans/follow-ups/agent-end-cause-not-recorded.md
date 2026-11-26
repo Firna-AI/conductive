@@ -13,6 +13,9 @@
   - **Stop diagnostics decision 4:** the decision in `docs/protocol/runner-warnings.md` that keeps the cause of a stopped turn out of the runner messages, because a new end reason is a larger change.
 - **Background:** When an agent program ends during a turn, the chat says "The agent process ended." The helper discards the error output of the agent program, with `stdio: ['pipe', 'pipe', 'ignore']`. It keeps no exit code and no signal. The runner also discards the error output of the helper, with `Stdio::null()`. On 18 November 2026, an investigation of this text in a Mokly workspace took hours. The helper itself had stopped Codex with SIGTERM, after an output line that it could not read. No log said so.
 - **Problem:** No one can tell a crash of the agent program, a kill by the system, and a stop by the helper apart.
+- **Additional evidence:** A service lifetime probe on 21 November 2026 confirmed this diagnostic limit after a real idle stop and resume. The old boot ID was `18ebf1ea-06dd-4827-9f03-a4f98dcd3485`. The new boot ID was `32d060d9-950c-4ca6-9736-4bbe1a720bd5`. The restored disk held no journal or text system-log lines from the old boot. It held about 3,000 lines from a build machine, `box-node-f844b349b5a3ea97`, instead. Those lines covered 12:05:27 to 12:12:21 UTC.
+
+  Evidence files in the checkout survived, including continuous process heartbeats until about 13:02:50 UTC. Neither heartbeat stream recorded a stop signal. The missing journal therefore prevented a firm conclusion about the guest shutdown path. The services themselves ended, and none returned after resume. This is one observed restore, not a claim about every provider or every stop.
 - **Impact if no action:** Each case needs a manual read of the cloud computer. The evidence is lost when the cloud computer stops.
 - **Root question:** How does an operator learn why an agent program ended?
 - **Options:**

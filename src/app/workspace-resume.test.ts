@@ -43,7 +43,10 @@ const completed: WorkspaceStart = {
 }
 
 async function openWorkspace() {
-  const server = new FakeApiServer({ workspaceState: 'stopped' })
+  const server = new FakeApiServer({
+    workspaceState: 'stopped',
+    legacyWorkspaceRead: true,
+  })
   const held = new HeldRequests(server)
   const events = new RecordingEvents()
   const org = new OrgModel(

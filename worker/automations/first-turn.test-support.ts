@@ -4,6 +4,7 @@ import {
   type ChatFixture,
 } from '../chat/harness.test-support'
 import { TEST_TIME } from '../test-support/harness'
+import { seedAutomation, seedAutomationRun } from '../test-support/d1-seeds'
 import { finishAutomationRun } from './run-outcome-data'
 
 export async function seedChatRun(
@@ -14,23 +15,22 @@ export async function seedChatRun(
 ) {
   const db = fixture.env.DB
   await db.batch([
-    db
-      .prepare(
-        `INSERT INTO automations
-      (id, org_id, owner_user_id, name, repository_id, section_id, prompt, agent, model, effort,
-       time_zone, triggers_json, created_at, updated_at)
-      VALUES ('chat-automation', ?, ?, 'Review', 'repo', ?, 'Review the changes.', ?, ?, ?, 'UTC', '[]', ?, ?)`,
-      )
-      .bind(
-        fixture.org.id,
-        fixture.owner.id,
-        `general-${fixture.org.id}`,
-        CLAUDE.agent,
-        CLAUDE.model,
-        CLAUDE.effort,
-        TEST_TIME,
-        TEST_TIME,
-      ),
+    seedAutomation(db, {
+      id: 'chat-automation',
+      orgId: fixture.org.id,
+      ownerUserId: fixture.owner.id,
+      name: 'Review',
+      repositoryId: 'repo',
+      sectionId: `general-${fixture.org.id}`,
+      prompt: 'Review the changes.',
+      agent: CLAUDE.agent,
+      model: CLAUDE.model,
+      effort: CLAUDE.effort,
+      timeZone: 'UTC',
+      triggersJson: '[]',
+      createdAt: TEST_TIME,
+      updatedAt: TEST_TIME,
+    }),
     db
       .prepare(
         `INSERT INTO workspace_runtime
@@ -48,41 +48,35 @@ export async function seedChatRun(
         CLAUDE.effort,
         messageId,
       ),
-    db
-      .prepare(
-        `INSERT INTO automation_runs
-      (id, automation_id, org_id, owner_user_id, run_key, message_id, trigger_json, state, workspace_id, created_at, updated_at)
-      VALUES ('first-run', 'chat-automation', ?, ?, 'manual:chat-automation:first', ?, '{"kind":"run-now"}', 'started', ?, ?, ?)`,
-      )
-      .bind(
-        fixture.org.id,
-        fixture.owner.id,
-        messageId,
-        WORKSPACE_ID,
-        TEST_TIME,
-        TEST_TIME,
-      ),
+    seedAutomationRun(db, {
+      id: 'first-run',
+      automationId: 'chat-automation',
+      orgId: fixture.org.id,
+      ownerUserId: fixture.owner.id,
+      runKey: 'manual:chat-automation:first',
+      messageId,
+      triggerJson: '{"kind":"run-now"}',
+      state: 'started',
+      workspaceId: WORKSPACE_ID,
+      createdAt: TEST_TIME,
+      updatedAt: TEST_TIME,
+    }),
   ])
 }
 
 export async function twoEarlierFailures(fixture: ChatFixture) {
   const db = fixture.env.DB
   for (const id of ['failed-before-one', 'failed-before-two']) {
-    await db
-      .prepare(
-        `INSERT INTO automation_runs
-      (id, automation_id, org_id, run_key, message_id, trigger_json, created_at, updated_at)
-      VALUES (?, 'chat-automation', ?, ?, ?, '{"kind":"run-now"}', ?, ?)`,
-      )
-      .bind(
-        id,
-        fixture.org.id,
-        `manual:chat-automation:${id}`,
-        `message-${id}`,
-        TEST_TIME - 1,
-        TEST_TIME - 1,
-      )
-      .run()
+    await seedAutomationRun(db, {
+      id,
+      automationId: 'chat-automation',
+      orgId: fixture.org.id,
+      runKey: `manual:chat-automation:${id}`,
+      messageId: `message-${id}`,
+      triggerJson: '{"kind":"run-now"}',
+      createdAt: TEST_TIME - 1,
+      updatedAt: TEST_TIME - 1,
+    }).run()
     await finishAutomationRun(
       db,
       fixture.org.id,

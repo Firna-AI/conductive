@@ -3,7 +3,7 @@ import {
   control,
   touchControl,
   type ControlSizes,
-} from '../../../docs/mockups/src/design/metrics'
+} from '../../ui/design/metrics'
 import type { FilesLayout } from '../navigation'
 import { classes } from './classes'
 import styles from './layout.module.css'

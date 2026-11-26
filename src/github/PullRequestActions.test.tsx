@@ -3,7 +3,7 @@
 import { act, type MouseEvent } from 'react'
 import { createRoot } from 'react-dom/client'
 import { expect, it, onTestFinished, vi } from 'vitest'
-import type { BarAction } from '../../docs/mockups/src/components/workspace/barModel'
+import type { BarAction } from '../ui/components/workspace/barModel'
 import { FAKE_TIME } from '../test-support/fixtures/core'
 import type { GitHubState } from './githubStore'
 import { PullRequestBar } from './PullRequestBar'

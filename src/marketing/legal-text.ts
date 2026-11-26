@@ -1,4 +1,4 @@
-import { productDomain, productName } from '../../docs/mockups/src/brand'
+import { productDomain, productName } from '../shared/brand'
 import type { sitePaths } from './links'
 
 /**

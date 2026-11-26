@@ -1,0 +1,59 @@
+# Related references are one-sided or stale
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-21, from the branch `calummoore/follow-up-the-idle-boundary-wait-has-no-ldfz`, PR #624, review round 2, finding 1. The fresh second-pass reviewer ran in session `Fsc4O_4BKSnpK8iuim8vVUYxcjaHuxIEOtJwQCy_ujs`.
+- **Location:** The **Related** lines of `plans/follow-ups/*.md`. Checked examples: `plans/follow-ups/measure-runner-ready-start.md:40` and `plans/follow-ups/workspace-waits-for-first-build.md:40`.
+- **Reason:** The links are in items that PR #624 does not change, and each pair needs a read of both items before a repair.
+
+- **Terms:**
+  - **Related line:** the `- **Related:**` field of a follow-up item, which names each linked item and says what the link means.
+  - **One-sided link:** a path in a Related line to an existing item that does not name the source item anywhere.
+  - **Stale link:** a path in a Related line to a follow-up item file that no longer exists.
+  - **History:** words that record the past, such as the **Added** line of an item. A path there is not a live link.
+- **Background:**
+  - Each follow-up item is one file under `plans/follow-ups/`. The shared `plans` skill of `futex-ai/skills` gives its layout. A follow-up item is live content until a change deletes it.
+  - The reference `references/follow-up-items.md` of that skill says: "When two linked items stay apart, give each a **Related** line. Name the other file, and say what the link means."
+  - The shared `git-commit` skill says that a change that removes a file searches `docs/`, `plans/`, and every `README.md` for its name. The change updates each stale reference in live content. It does not change the words of history.
+  - On 2026-11-21, a fresh second-pass reviewer of PR #624 checked the Related lines of `origin/main` at `878727a4294ee61406210cdf2ca1e8a2ce25eacc`. The reviewer was Claude Opus 5.5 at the max effort, for finding 1 of review round 2.
+  - Its method:
+    - It parsed each `- **Related:**` block in `plans/follow-ups/*.md`.
+    - It ignored URL and permalink references, and it counted references to repository paths.
+    - It labelled a link one-sided when the named target exists and does not name the source item anywhere.
+    - It counted references to missing targets apart.
+  - It reported 35 one-sided links and 5 stale links at that base.
+  - Limits of these counts:
+    - They are the census of the reviewer. Nobody checked each pair again.
+    - They cover only the items at that base.
+    - The census compares text only. A target can name the source in other words, and a reference can be history, not a live link. So each reported link needs a read of both items.
+  - The root session checked two examples at the base. `git cat-file -e` confirmed which target is missing.
+    - `plans/follow-ups/measure-runner-ready-start.md:40` names `plans/follow-ups/measure-workspace-create-time.md`. That target exists and does not name `measure-runner-ready-start`. So this link is one-sided.
+    - `plans/follow-ups/workspace-waits-for-first-build.md:40` names `plans/follow-ups/new-workspace-offers-unbuilt-repositories.md` and `plans/follow-ups/first-build-retry.md`. The first target does not exist at the base, and the second exists. So the first link is stale.
+- **Problem:** Some Related lines name an item that does not name them back. Some name an item file that a change deleted, and nobody updated the source.
+- **Impact if no action:** A worker who reads only the target item can miss linked work. A worker who follows a stale path finds no file.
+- **Root question:** How does each pair of linked follow-up items stay findable from both sides, through live paths only?
+- **Options:**
+  - **A.** Audit each reported link against the work of both items, and repair it by hand. Effort: Medium.
+    - Get the list again with the census method above, on the current `main`.
+    - When two items share work and stay apart, add a Related line to the target. Name the source, and say what the link means.
+    - When a reference is history, or the relation has ended, take it out of the Related line. Keep each live fact that the source needs, in the words of the source.
+    - For a stale link, find the change that deleted the target. Copy each live fact that the source still needs. Then remove the path, or replace it with a permalink at the commit before the deletion.
+    - Keep the **Added** lines and other history words as they are.
+  - **B.** Repair only the stale links, and leave the one-sided links. Effort: Small.
+    - It removes the broken paths. Linked work stays findable from one side only.
+  - **C.** Add a reverse Related line for each reported one-sided link, with no read of the work. Effort: Small.
+    - It is fast. It can add a false link where a reference is history, or where the target names the source in other words.
+- **Left out:**
+  - Change nothing. It fails the goal, because the stale paths and the one-sided links stay.
+  - Remove every one-sided Related line. It loses live facts about linked work.
+  - A script, lint, or gate that finds such links. It is a new check, which needs the user, and the skills already state the rules.
+- **Wider fix:** None. The `plans` skill already asks for a Related line in each linked item. The `git-commit` skill already asks for a search for each removed file. A check that enforces these rules would be a new lint, which needs the user.
+- **Previous examples:**
+  - `plans/follow-ups/mask-follow-up-names-closed-activation.md` records one stale path in the Related line of `plans/follow-ups/merged-masks-lose-literal-marker-boundaries.md`. When the census lists that link, that item already owns its repair.
+  - `plans/follow-ups/preview-follow-up-stale-activity-example.md` records a follow-up item that kept a stale claim after `main` deleted a related item.
+- **Recommendation:** A. It keeps each live fact, and it gives each live relation a line in both items. B leaves the one-sided links, and C can add false links.
+  - First run the census again on the current `main`. Check that the two examples above still show the problem.
+  - Read both items of each pair before a change.
+  - Commit the repairs as one docs change. List each changed Related line in the pull request description.
+  - Add no new check or rule.
+- **Action:** fix after merge, apply A, because the links are in items outside PR #624, and the audit of each pair costs the same later.

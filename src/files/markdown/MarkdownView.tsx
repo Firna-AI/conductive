@@ -1,19 +1,23 @@
 import { memo, useEffect, useMemo, useState } from 'react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import headingStyles from '../../../docs/mockups/src/components/common/MarkdownHeadings.module.css'
-import { MarkdownTable } from '../../../docs/mockups/src/components/common/MarkdownTable'
+import { classes } from '../../ui/components/common/classes'
+import headingStyles from '../../ui/components/common/MarkdownHeadings.module.css'
+import prose from '../../ui/components/common/MarkdownProse.module.css'
+import { MarkdownTable } from '../../ui/components/common/MarkdownTable'
+import { MarkdownItem } from '../../markdown/MarkdownItem'
 import type { FilesError } from '../api/files-errors'
 import { LoadingFile, ReadError } from '../ui/FileStates'
 import { inlineNodes } from './inline-render'
-import type { MdBlock, MdListItem } from './markdown-blocks'
-import type { MarkdownDocument, MarkdownParser } from './markdown-document'
-import type { MdInline } from './markdown-inline'
+import type {
+  MarkdownDocument,
+  MarkdownParser,
+  MdBlock,
+  MdInline,
+  MdListItem,
+} from './markdown-document'
 import { textChunks } from './text-chunks'
 import { useKeptScroll } from '../ui/kept-scroll'
 import { parseInWorker, type WorkerParse } from './worker-parse'
 import styles from './MarkdownView.module.css'
-
-type ParsedBlock = MdBlock<MdInline[]>
 
 /** The parse failed, so the preview offers Try again, as a failed read does. */
 const parseFailed: Extract<FilesError, { kind: 'failed' }> = {
@@ -33,21 +37,22 @@ function tableCell(nodes: readonly MdInline[]) {
   return <Inline nodes={nodes} />
 }
 
-function Item(props: { item: MdListItem<MdInline[]> }) {
-  const { item } = props
-  const [first] = item.blocks
-  const tight = item.blocks.length === 1 && first.kind === 'paragraph'
-  return (
-    <li className={item.checked === null ? undefined : styles.task}>
-      {item.checked === null ? null : (
-        <input checked={item.checked} disabled type="checkbox" />
-      )}
-      {tight ? <Inline nodes={first.text} /> : <Blocks blocks={item.blocks} />}
-    </li>
-  )
+/** The text of a paragraph of a list item, or null for another block. */
+function itemText(block: MdBlock) {
+  return block.kind === 'paragraph' ? <Inline nodes={block.text} /> : null
 }
 
-function Block(props: { block: ParsedBlock }) {
+/** The blocks of a list item after its text. */
+function itemBlocks(blocks: readonly MdBlock[]) {
+  return <Blocks blocks={blocks} />
+}
+
+/** An item of a list, with its task box, as `MarkdownItem` draws it. */
+function Item(props: { item: MdListItem }) {
+  return <MarkdownItem blocks={itemBlocks} item={props.item} text={itemText} />
+}
+
+function Block(props: { block: MdBlock }) {
   const { block } = props
   switch (block.kind) {
     case 'heading': {
@@ -99,21 +104,24 @@ function Block(props: { block: ParsedBlock }) {
   }
 }
 
-function Blocks(props: { blocks: readonly ParsedBlock[] }) {
+function Blocks(props: { blocks: readonly MdBlock[] }) {
   return props.blocks.map((block, index) => <Block block={block} key={index} />)
 }
 
 /**
  * One parsed document. A new render of the same document, as after Copy,
- * renders and splits the text of no block again. The headings take the
- * heading style that the chat shares, with the margins of the preview. A
- * file tab keeps its scroll offset.
+ * renders and splits the text of no block again. The headings, the quotes,
+ * the rules, the bold text, the emphasis, the strikethrough, and the task
+ * boxes take the styles that the chat shares, with the margins of the
+ * preview. A file tab keeps its scroll offset.
  */
 const Document = memo(function Document(props: { document: MarkdownDocument }) {
   const box = useKeptScroll('preview')
   return (
     <div className={styles.scroll} ref={box}>
-      <article className={classes(styles.doc, headingStyles.headings)}>
+      <article
+        className={classes(styles.doc, headingStyles.headings, prose.prose)}
+      >
         <Blocks blocks={props.document.blocks} />
       </article>
     </div>
@@ -162,8 +170,8 @@ function ParsedInWorker(props: { text: string }) {
 
 /**
  * A Markdown file, rendered as formatted text. It builds React elements
- * only: HTML in the file shows as text, and only http, https, and mailto
- * links work. Each link opens through the link opener of the screen: a
+ * only: HTML in the file shows as text, apart from a line-break tag, and
+ * only http, https, and mailto links work. Each link opens through the link opener of the screen: a
  * link to a page of the app opens in the app, and every other link opens a
  * new tab that gets no referrer. A module worker parses the text, so a long
  * or crafted file never blocks the page. `parser` parses on the calling

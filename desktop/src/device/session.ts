@@ -103,7 +103,10 @@ export function createDeviceSession(dependencies: SessionDependencies) {
             dependencies.invalid()
           return
         }
-        const entry: LocalRequest = { request, state: 'pending' }
+        const entry: LocalRequest = {
+          request,
+          state: 'pending',
+        }
         requests.set(requestKey(request), entry)
         if (!validCommand(request)) {
           finish(entry)
@@ -170,7 +173,24 @@ export function createDeviceSession(dependencies: SessionDependencies) {
       if (message.type === 'settings.operation') {
         if (operations.has(message.operationId)) return
         operations.add(message.operationId)
-        applyDeviceSettings(message, dependencies)
+        const outcome = applyDeviceSettings(message, dependencies)
+        if (
+          message.operation.action === 'start-workspace-until-stop' &&
+          outcome.status === 'done'
+        ) {
+          const workspaceId = message.operation.workspaceId
+          for (const entry of requests.values()) {
+            if (
+              entry.state === 'pending' &&
+              entry.request.workspaceId === workspaceId &&
+              dependencies.permissions.permits(
+                entry.request.command,
+                workspaceId,
+              )
+            )
+              execute(entry)
+          }
+        }
       }
     },
     dispose(): void {

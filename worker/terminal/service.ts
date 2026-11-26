@@ -17,7 +17,7 @@ import {
 
 export function terminalPackagesCommand(): string {
   return privilegedCommand(`set -eu
-apt-get update
+apt-get -o Acquire::AllowReleaseInfoChange::Label=true update
 apt-get install -y ttyd tmux
 # The ttyd package enables its own service on port 7681, which the
 # workspace terminal needs. Stop it and keep it from starting.

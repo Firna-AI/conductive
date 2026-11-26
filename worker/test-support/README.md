@@ -1,6 +1,8 @@
 # Backend and runner fakes
 
 `createHarness` creates one Miniflare runtime with local D1 and R2.
+It sets `PROVIDER_SWITCH=on` for switch route tests. An availability test
+can set it off to check the production default without disabling execution.
 The runtime also constructs the production workspace object with native SQLite.
 `harness.native.actor(name)` supplies HTTP, lifecycle RPC, storage controls, and real eviction.
 `native-runtime.ts` owns these objects and their fake outbound fetch path.
@@ -18,8 +20,15 @@ These peers have no physical socket. So they save no native socket state, and th
 The shared scheduled-alarm helper runs only stored due alarms.
 Reset removes the native records, aborts the real object context, and evicts its fresh idle instance.
 Restart saves clock metadata and keeps committed native SQLite records through the same context reset.
+Crash resets the object like Restart, but it does not close the connections or wait for the queued work.
+Use it to end work in progress, as an out-of-memory reset does. Hold that work outside a storage transaction, because a held transaction blocks the reset call.
 Instance identity checks prove that reconstruction creates a fresh object.
 Production request timeouts stay unchanged.
+
+Await Reset, Restart, and Crash before later calls to the object, because the context reset can interrupt them.
+An interrupted call can get a text error from the runtime instead of JSON.
+When the HTTP reply to a call through the `api` of a native actor is not JSON, the call fails.
+Its error names the native call, the HTTP status, and the reply text.
 
 The root Vitest setup builds one current Worker bundle for each run and watch rerun.
 Native fixtures read that bundle from the provided test context.
@@ -199,11 +208,16 @@ A callback counts as complete only after the `waitUntil` work that it starts end
 - `harness.ts` creates the native runtime, and owns the D1 row reset and the HTTP test app.
   Its HTTP requests provide a fake execution context for credential task ownership.
 - [native-runtime.ts](native-runtime.ts): `createNativeRuntime` creates the Miniflare runtime of `createHarness`, with local D1 and R2, the native workspace objects, and their fake outbound fetch path.
-  Its `actor(name)` gives the HTTP, lifecycle RPC, test controls, restart, and reset of one workspace object.
+  Its `actor(name)` gives the HTTP, lifecycle RPC, test controls, restart, crash, and reset of one workspace object.
+- [native-protocol.ts](native-protocol.ts) reads, checks, and writes the packets between the test process and the native runtime.
+  Its `readNativeReply` reads the HTTP replies to calls through the `api` of a native actor.
 - [native-workspace-entry.ts](native-workspace-entry.ts): `NativeWorkspace` extends the production `Workspace` with test controls.
   Its default export is the Worker entry of the native bundle.
 - [native-close.test-support.ts](native-close.test-support.ts): `NativeCloseProbe`, the close-first control of the native browser, runner, and Mac fixture entries.
 - [app-access.ts](app-access.ts) grants fixture access for users created directly in D1.
+- [d1-seeds.ts](d1-seeds.ts) has one seed helper for each of these D1 tables: `seedWorkspace` for `workspaces`, `seedMember` for `org_members`, `seedAutomation` for `automations`, and `seedAutomationRun` for `automation_runs`.
+  Each helper returns the insert statement of one row. The caller runs the statement or adds it to a D1 batch.
+  An optional field that the caller leaves out gets the column default of the schema.
 - `native-global-setup.ts` builds and provides the current native bundle, the split migrations, the migrated template, and the bundle folder before tests and watch reruns.
 - `native-chat-record-controls.ts` reads history and file projections inside the native object and calls its real chat writer.
 - `attachment-upload.ts` prepares attachment fixtures through the production multipart start and complete operations with Node-compatible R2 part writes.

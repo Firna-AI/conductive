@@ -6,6 +6,7 @@
  */
 
 import { defaultChoice } from './agents'
+import { p } from './agentText'
 import { startFailedRun, turnFailedRun } from './failedRunWorkspaces'
 import { changedFiles } from './files'
 import { people } from './members'
@@ -109,7 +110,9 @@ export const runWorkspaces: Readonly<Record<RunWorkspaceKey, RunWorkspace>> = {
         kind: 'agent',
         id: 'plan',
         blocks: [
-          `I'll read the changes of pull request #${pullRequest.number} first.`,
+          p(
+            `I'll read the changes of pull request #${pullRequest.number} first.`,
+          ),
         ],
       },
       {
@@ -143,7 +146,9 @@ export const runWorkspaces: Readonly<Record<RunWorkspaceKey, RunWorkspace>> = {
       {
         kind: 'agent',
         id: 'plan',
-        blocks: ["I'll list the pull requests merged into main since Friday."],
+        blocks: [
+          p("I'll list the pull requests merged into main since Friday."),
+        ],
       },
       {
         kind: 'tool',

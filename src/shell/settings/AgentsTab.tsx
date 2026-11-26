@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
-import { orgAgentsCopy as copy } from '../../../docs/mockups/src/components/settings/orgAgentsCopy'
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
+import { orgAgentsCopy as copy } from '../../ui/components/settings/orgAgentsCopy'
+import { Section } from '../../ui/components/settings/Section'
 import { mayChangeSettings } from '../../app/permissions'
 import { useStore } from '../../app/store'
 import type { OrgSummary } from '../../shared/orgs'

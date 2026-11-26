@@ -1,7 +1,15 @@
 import { expect, it } from 'vitest'
 
-import { readLogin } from './read-core'
+import { coreFixtures } from '../../test-support/fixtures/core'
+import { readAccount, readLogin } from './read-core'
 import { ParseError } from './parse'
+
+it('reads older account replies without favourites as an empty list', () => {
+  const read = () =>
+    readAccount({ ...coreFixtures().account, favourites: undefined })
+  expect(read).not.toThrow()
+  expect(read().favourites).toEqual([])
+})
 
 it('reads endpoint metadata for both agents without keeping a key or full address', () => {
   for (const agent of ['claude', 'codex']) {

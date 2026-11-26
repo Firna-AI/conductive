@@ -103,12 +103,7 @@ export function neighbour(
 const lastClosedFirst = (left: Session, right: Session) =>
   (right.closedAt ?? 0) - (left.closedAt ?? 0)
 
-/**
- * Puts a session record where it belongs: an open session among the tabs, a
- * closed one in the history, the last closed first. When the open session
- * closes, the next session becomes the open one.
- */
-export function placeSession(
+function withMembership(
   snapshot: ChatSnapshot,
   session: Session,
 ): ChatSnapshot {
@@ -122,13 +117,35 @@ export function placeSession(
         : snapshot.sessions.map((item) =>
             item.id === session.id ? session : item,
           )
-    const next = withView(snapshot, (view) =>
-      withSessionPlace(view, session.id),
-    )
+    return {
+      ...snapshot,
+      sessions,
+      history: others(snapshot.history),
+    }
+  }
+  return {
+    ...snapshot,
+    sessions: others(snapshot.sessions),
+    history: [...others(snapshot.history), session].sort(lastClosedFirst),
+  }
+}
+
+/**
+ * Updates stored membership before placing the tab. Local read-only tabs
+ * keep their order, selection, and view. Otherwise a closed session yields
+ * to the next tab, and the history lists the last closed first.
+ */
+export function placeSession(
+  snapshot: ChatSnapshot,
+  session: Session,
+): ChatSnapshot {
+  const placed = withMembership(snapshot, session)
+  if (snapshot.archiveTabs !== null) return placed
+  if (session.closedAt === null) {
+    const next = withView(placed, (view) => withSessionPlace(view, session.id))
     return {
       ...next,
-      sessions: orderSessions(sessions, next.view),
-      history: others(snapshot.history),
+      sessions: orderSessions(next.sessions, next.view),
       activeSessionId: snapshot.activeSessionId ?? session.id,
     }
   }
@@ -137,9 +154,7 @@ export function placeSession(
       ? neighbour(snapshot.sessions, session.id)
       : snapshot.activeSessionId
   return {
-    ...withView(snapshot, (view) => viewWithout(view, session.id, active)),
-    sessions: others(snapshot.sessions),
-    history: [...others(snapshot.history), session].sort(lastClosedFirst),
+    ...withView(placed, (view) => viewWithout(view, session.id, active)),
     activeSessionId: active,
     overlay: overlayWithout(snapshot.overlay, session.id),
   }

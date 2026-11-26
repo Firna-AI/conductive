@@ -15,6 +15,7 @@ pub(crate) fn bound(report: &mut RunnerPortsUpdated) -> Result<()> {
             port: source.port,
             name: None,
             folder: None,
+            service_id: source.service_id.clone(),
         })
         .collect();
     let mut bytes = codec::encode(&RunnerPortsUpdated::PortsUpdated {

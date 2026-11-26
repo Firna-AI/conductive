@@ -1,5 +1,6 @@
 import type {
   Automation,
+  AutomationCapabilities,
   AutomationAuthorAccount,
   AutomationAuthorFilter,
   AutomationInactiveReason,
@@ -8,6 +9,7 @@ import type {
   AutomationTrigger,
   AutomationWeekday,
 } from '../../shared/automations'
+import type { OrgSecret } from '../../shared/secrets'
 import {
   choice,
   count,
@@ -19,6 +21,7 @@ import {
   nested,
   record,
   text,
+  texts,
 } from './parse'
 import { readChoice, readSender, readSessionLogin } from './read-core'
 import { EVENTS, readRun, SCHEDULES } from './read-automation-runs'
@@ -114,6 +117,7 @@ function readAutomation(value: unknown): Automation {
     sectionId: text(automation, 'sectionId'),
     prompt: text(automation, 'prompt'),
     choice: nested(automation, 'choice', readChoice),
+    capabilities: readAutomationCapabilities(automation.capabilities),
     active: flag(automation, 'active'),
     inactiveReason: maybeNested(automation, 'inactiveReason', (reason) =>
       choice({ reason }, 'reason', INACTIVE_REASONS),
@@ -127,16 +131,39 @@ function readAutomation(value: unknown): Automation {
   }
 }
 
+export function readAutomationCapabilities(
+  value: unknown,
+): AutomationCapabilities {
+  if (value === undefined) return { preapprovedSecretIds: [] }
+  return {
+    preapprovedSecretIds: texts(
+      record(value, 'capabilities'),
+      'preapprovedSecretIds',
+    ),
+  }
+}
+
+/** A chosen secret as an automation reply names it: its ID and its name, with no value. */
+function readChosenSecret(value: unknown): Pick<OrgSecret, 'id' | 'name'> {
+  const secret = record(value, 'chosen secret')
+  return { id: text(secret, 'id'), name: text(secret, 'name') }
+}
+
 /**
  * The automation of a read, a create, or an update, with the login of its
  * runs: the default login of its owner for its agent, as the server names
  * it, or null when no login serves the owner. An older reply names none.
+ * The reply also names each chosen secret that the org has. The reply of a
+ * previous Worker leaves the names out, so the result has none.
  */
 export function readAutomationResponse(value: unknown): AutomationResponse {
   const reply = record(value, 'automation response')
   return {
     automation: nested(reply, 'automation', readAutomation),
     runLogin: maybeNested(reply, 'runLogin', readSessionLogin),
+    ...(reply.chosenSecrets === undefined
+      ? {}
+      : { chosenSecrets: items(reply, 'chosenSecrets', readChosenSecret) }),
   }
 }
 

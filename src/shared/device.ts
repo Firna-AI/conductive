@@ -88,6 +88,15 @@ export type DeviceSettingsAction =
   | { action: 'extend-workspace'; workspaceId: string }
   /** Turns the running 15 minutes of a workspace into a grant until Stop. */
   | { action: 'keep-workspace'; workspaceId: string }
+  | { action: 'start-workspace-until-stop'; workspaceId: string }
+/** The Worker supplies workspace metadata for a grant start. */
+export type DeviceSettingsOperation =
+  | Exclude<DeviceSettingsAction, { action: 'start-workspace-until-stop' }>
+  | {
+      action: 'start-workspace-until-stop'
+      workspaceId: string
+      workspaceName: string | null
+    }
 export interface DeviceSettingsRequest extends DevicePairing {
   operation: Exclude<DeviceSettingsAction, { action: 'read' }>
 }
@@ -123,7 +132,7 @@ export type WorkerToDevice =
   | {
       type: 'settings.operation'
       operationId: string
-      operation: DeviceSettingsAction
+      operation: DeviceSettingsOperation
     }
 
 export type DeviceToWorker =

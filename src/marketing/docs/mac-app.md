@@ -61,11 +61,38 @@ A turn is one period of work by an agent.
 An agent can ask to run a command on the Mac of the person who started its current turn.
 Your Mac must be awake with Conductive open and signed in.
 Its connection must show as available.
-The workspace must also have **Mac access** on in its **Capabilities**.
-It starts off in each new workspace, also in one that an agent or an automation creates.
-Any member can turn it on or off.
+Agents can ask in every workspace, from its first turn.
+This includes a new workspace and one that an agent or an automation creates.
+The Mac app asks you first, unless you already allowed the command or all commands from that workspace.
 
-The request appears above the session's message box.
+In the Mac app, **Capabilities** has a **Mac access** switch for your own Mac.
+Turn it on to allow all commands from that workspace on this Mac until you stop.
+Turn it off to stop that permission.
+Other members' Macs still ask, unless their users already allowed the commands.
+
+If permission cannot start, the switch stays off, and the control shows the cause.
+This Mac still asks before commands that you have not allowed.
+Turn the switch on again to try again.
+While this Mac is not available, the switch stays off, and you cannot turn it on.
+
+In **New workspace** in the Mac app, the **Mac access** switch is a choice in your draft.
+The permission starts after you create the workspace, if the switch is on.
+
+A browser shows no **Mac access** switch, and it cannot start this permission.
+An older Mac app shows an earlier **Mac access** switch that every member shares.
+That switch no longer stops agents from asking.
+Install an update when one is available.
+
+Use **Stop** in **This Mac** or in the workspace bar, or turn the switch off, to end a workspace's permission on that Mac at once.
+
+While workspace permission runs, every command from that workspace runs on this Mac without asking.
+This includes a command that text read by the agent steers it to request.
+An automation run acts for its owner, also while nobody watches.
+Text that steers its agent can make it ask for a command on the owner's Mac.
+A command that the owner always allowed then runs without asking.
+A merge queue turn can ask for a command on the Mac of the member who added the pull request.
+
+When a command needs approval, its request appears above the session's message box.
 It shows the exact command and time limit.
 Open **Details** to inspect the folder, reason, workspace, and sender.
 

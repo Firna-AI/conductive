@@ -2,6 +2,7 @@
 import { act } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { testNavigation } from '../../files/files-test-kit'
+import type { TemporaryTab, WorkspaceTab } from '../../shared/workspace-view'
 import {
   byRole,
   queryAllByRole,
@@ -30,9 +31,9 @@ import {
   settle,
   shownTab,
   temporaryFile,
-  viewSaves,
 } from './tab-drag-test-kit'
 import { focused, menuItems, pressOn, rightClick } from './tab-row-test-kit'
+import { keepTemporaryTab } from './tab-menu-keep-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -163,55 +164,51 @@ describe('the tab menu', () => {
     })
   })
 
-  it('leads the menu of the temporary tab with Keep open and a line, and Keep open asks the host to keep the tab in its place, says that it stays open, and gives the focus back to the tab', async () => {
-    const server = new FakeApiServer()
-    const navigation = testNavigation()
-    await mountChat({
-      server,
-      tabs: [first, file, second],
-      temporaryTab: temporaryFile,
+  it(
+    'leads the menu of the temporary tab with Keep open and a line, and Keep open asks the host to keep the tab in its place, says that it stays open, and gives the focus back to the tab',
+    keepTemporaryTab,
+  )
+
+  it('keeps Copy path focused and usable when a temporary tab turns read-only with Keep open focused', async () => {
+    const copied: string[] = []
+    const safeFile: WorkspaceTab = {
+      kind: 'file',
+      path: 'src/app.ts',
+      mode: 'source',
+    }
+    const temporary: TemporaryTab = { kind: 'file', path: safeFile.path }
+    const view = await mountChat({
+      server: new FakeApiServer(),
+      tabs: [first, safeFile, second],
+      temporaryTab: temporary,
       viewport: 'desktop',
-      renderTab: fileTabs(navigation, temporaryFile),
+      renderTab: fileTabs(testNavigation(), temporary, (path) =>
+        copied.push(path),
+      ),
     })
     const fileTab = await waitFor(
-      () => queryByText('app-[redacted].ts'),
-      'the file tab',
+      () => queryByText('app.ts'),
+      'the safe file tab',
     )
+    rightClick(fileTab)
+    expect(focused()).toBe('Keep open')
 
-    rightClick(fileTab, { clientX: 150, clientY: 12 })
-    const menu = queryByRole('menu', 'app-[redacted].ts')
-    const opened = {
-      items: menuItems('app-[redacted].ts'),
-      lines: menu?.querySelectorAll('hr').length,
-    }
-    await press(byRole('menuitem', 'Keep open'))
-    await settle()
-
-    // The host of the test keeps nothing, so the tab stays temporary.
+    await view.setReadOnly(true)
     expect({
-      opened,
-      kept: navigation.kept,
-      saves: viewSaves(server).length,
-      row: rowTitles(),
-      status: rowStatus(),
+      items: menuItems('app.ts'),
+      lines: queryByRole('menu', 'app.ts')?.querySelectorAll('hr').length,
       focus: focused(),
-      closed: menuItems('app-[redacted].ts'),
     }).toEqual({
-      opened: {
-        items: [
-          { name: 'Keep open', off: false },
-          { name: 'Move left', off: false },
-          { name: 'Move right', off: false },
-          { name: 'Close other tabs', off: false },
-          { name: 'Close tabs to the right', off: false },
-        ],
-        lines: 2,
-      },
-      kept: [file],
-      saves: 0,
-      row: ['Address autocomplete', 'app-[redacted].ts', debounce],
-      status: 'app-[redacted].ts stays open',
-      focus: 'app-[redacted].ts, temporary',
+      items: [{ name: 'Copy path', off: false }],
+      lines: 0,
+      focus: 'Copy path',
+    })
+    await pressKey('ArrowDown')
+    const copyPath = byRole('menuitem', 'Copy path')
+    expect(document.activeElement).toBe(copyPath)
+    await press(copyPath)
+    expect({ copied, closed: menuItems('app.ts') }).toEqual({
+      copied: ['src/app.ts'],
       closed: [],
     })
   })

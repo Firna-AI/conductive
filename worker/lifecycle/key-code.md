@@ -8,7 +8,7 @@ points of each part.
   git credential route, and the input activity owner, with its durable
   input time and its D1 and provider update.
 - [`workspaces.ts`](workspaces.ts): `createWorkspace`, which records a
-  workspace on its fixed org account and queues its start. `replayCreation`
+  workspace on its current org account and queues its start. `replayCreation`
   finds a saved create by its first-message ID and joins its claim, plan,
   and admission without the current defaults. The
   [agent workspace tools](../tools/workspaces.md#creation-replay-and-first-title)
@@ -23,6 +23,11 @@ points of each part.
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
   Its `imageAdmissionError` gives a waiting repository the next-build message.
   The browser create and the agent tools share that message.
+  Its `currentImageRepositoryReadiness` reads, in one query, whether the
+  current provider account of the org has a published image, and the
+  repositories of that image. The
+  [repository replies](../app-api/README.md#rules) take their `imageReady`
+  and `ready` from it.
 - [`image-leases.ts`](image-leases.ts): `leasedCreationImage` reads the reserved image's name and branch.
 - [`start-allocation.ts`](start-allocation.ts): `allocateWorkspace` writes the workspace runner version from the saved allocation's image snapshot.
   It saves the encrypted request in the start job before one outside call makes the create and its D1 writes.
@@ -117,7 +122,8 @@ points of each part.
   secret marks. It treats older plain values as secret. `environmentSecrets`
   selects marked values without a length rule.
 - [`output-secrets.ts`](output-secrets.ts): reads the actual start capture
-  for the workspace event filter and file display labels.
+  for the workspace event filter and the display labels of paths and
+  branches.
 - [`workspace-transport.ts`](workspace-transport.ts): the encrypted log
   transport, and `workspaceLifecycleEndpoint`, which masks each received log.
   It also exposes the trusted `checkTurnToken` RPC through `workspaceRuntime`.
@@ -127,6 +133,8 @@ points of each part.
   [`retry-creation-data.ts`](retry-creation-data.ts) pins the replacement image.
 - [`start-admission.ts`](start-admission.ts): `enqueueWorkspaceStart` admits
   initial starts, replacements, and resumes in the queue task of its caller.
+  [`start-after-stop.ts`](start-after-stop.ts) holds a resume or a Try again
+  that comes during a pending stop, and queues it when that stop ends.
 - [`durable.ts`](durable.ts): `DurableLifecycle`, the state and timers of a
   workspace. [`durable-types.ts`](durable-types.ts) holds the times.
 - [`durable-turns.ts`](durable-turns.ts): `applyLifecycleTurn`, the turn
@@ -190,6 +198,7 @@ points of each part.
   `WorkspaceAlarms` of [`alarms.ts`](../features/alarms.ts), as
   [The object alarm scheduler](alarm-scheduler.md) says.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
+- [Provider switches](provider-switches.md#key-code): hidden builds, member waits, atomic account publication, and lifecycle wakes.
 - [Image builds](image-builds.md#key-code): the entries of build admission,
   build jobs, failures and allocation recovery, refreshes, build logs and
   timers, the image coordinator, the image software and runtime, and the

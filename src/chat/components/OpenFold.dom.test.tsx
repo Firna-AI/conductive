@@ -129,7 +129,7 @@ describe('an open fold', () => {
     await press(work)
     // The message lines of the work, after the recorded message.
     const [, line, first] = foldOf(work).querySelectorAll<HTMLElement>(
-      ':scope > ul > li > details > summary',
+      ':scope > ul > li details > summary',
     )
     place(line, 260, 180)
     const closed = [accessibleName(line), accessibleName(first)]
@@ -178,7 +178,7 @@ describe('an open fold', () => {
     const work = byText('2 tool calls, 2 messages')
     await press(work)
     const [, line] = foldOf(work).querySelectorAll<HTMLElement>(
-      ':scope > ul > li > details > summary',
+      ':scope > ul > li details > summary',
     )
     const links = (root: Element) =>
       Array.from(root.querySelectorAll('a'), (link) =>

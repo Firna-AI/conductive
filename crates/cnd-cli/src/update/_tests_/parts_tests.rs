@@ -20,7 +20,7 @@ async fn changed_parts_download_in_isolation_and_complete_last()
         StoreMock::state.some_call(matching!()).returns(Ok(State { current: Some("0.0.2".into()), ..State::default() })),
         StoreMock::prepare.some_call(matching!("0.0.3")).returns(Ok(())),
         StoreMock::version_path.some_call(matching!("0.0.3")).returns(PathBuf::from("/root/versions/0.0.3")),
-        StoreMock::has_part.some_call(matching!((digest) if *digest == cnd_release::files::sha256(b"sdk-helper"))).returns(Ok(false)),
+        StoreMock::has_part.some_call(matching!((part) if part.name == "sdk-helper")).returns(Ok(false)),
         StoreMock::has_part.each_call(matching!(_)).answers(&|_, _| Ok(true)),
         StoreMock::unpack.next_call(matching!((part, bytes) if part.name == "sdk-helper" && *bytes == b"sdk-helper")).returns(Ok(())),
         StoreMock::complete.next_call(matching!(("0.0.3", parts) if parts.parts.len() == 3)).returns(Ok(())),

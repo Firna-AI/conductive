@@ -38,6 +38,12 @@ export const FILE_EVENT_MAX_BYTES = 262_144
 /** Bound the tree work of one delta, as well as its serialized byte size. */
 export const FILE_TREE_DELTA_MAX_CHANGES = 512
 
+/** Maximum entries in a complete file tree report from a new runner. */
+export const FILE_TREE_REPORT_MAX_ENTRIES = 50_000
+
+/** Maximum changed files in a complete changes report from a new runner. */
+export const FILE_CHANGES_REPORT_MAX_FILES = 1_000
+
 /** Maximum bytes of a file or diff read. */
 export const FILE_READ_MAX_BYTES = 5_242_880
 export interface FileTooLargeResponse {

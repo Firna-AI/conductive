@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useToast } from '@firna/ui/toast'
-import { linkResults } from '../../../docs/mockups/src/components/workspace/linkCopy'
+import { linkResults } from '../../ui/components/workspace/linkCopy'
 import { sessionLink } from '../../shared/session-link'
 import type { CopyServices } from '../transcript-copy'
 

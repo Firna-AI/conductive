@@ -1,21 +1,17 @@
 import type { ReactNode } from 'react'
 import { CircleAlert, MonitorOff } from 'lucide-react'
 import type { ApiClient } from '../../app/api/client'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
-import { TouchScreen } from '../../../docs/mockups/src/components/common/touch'
-import {
-  Section,
-  SectionText,
-} from '../../../docs/mockups/src/components/settings/Section'
+import { Notice } from '../../ui/components/common/Notice'
+import { StatusText } from '../../ui/components/common/StatusText'
+import { TouchScreen } from '../../ui/components/common/touch'
+import { Section, SectionText } from '../../ui/components/settings/Section'
+import { thisMacDescription } from '../../ui/components/settings/thisMacCopy'
 import { ActionButton } from '../ui/actions'
 import { systemClock, useNow, type Clock } from '../ui/clock'
 import local from './device.module.css'
 import { useMacSettings } from './mac-settings'
 import { ChangeResults, SavedChoices } from './SavedChoices'
-
-const DESCRIPTION =
-  'Agents can ask to run commands on this Mac while it is awake and the app is open. Each command asks you first.'
+import { shownSettings } from './settings-view'
 
 /**
  * The Mac that the Mac app registers as a device (decision 62): its name,
@@ -24,8 +20,10 @@ const DESCRIPTION =
  * or Until you stop, and Stop. The
  * Mac keeps these choices, and the section reads and changes them through
  * the Worker. The result of the last change of each control stays under
- * them until its next change, also while the Mac is away. Mount it only in
- * the Mac app, because a browser has no Mac. Give it a stable `client`.
+ * them until its next change, also while the Mac is away. After a read
+ * again that failed, the section still shows the kept settings, with
+ * Remove and Stop. Mount it only in the Mac app, because a browser has no
+ * Mac. Give it a stable `client`.
  */
 export function ThisMacSection(props: {
   /** The JSON client of the app. Keep it stable. */
@@ -34,8 +32,8 @@ export function ThisMacSection(props: {
   clock?: Clock
 }) {
   const { controller, state } = useMacSettings(props.client)
-  const ticking =
-    state.kind === 'ready' && state.settings.workspaceWindows.length > 0
+  const shown = shownSettings(state)
+  const ticking = shown !== null && shown.settings.workspaceWindows.length > 0
   const now = useNow(props.clock ?? systemClock, ticking)
   const retry = (
     <ActionButton onPress={() => void controller.load()}>
@@ -44,14 +42,14 @@ export function ThisMacSection(props: {
   )
   let status = <StatusText busy label="Loading" tone="neutral" />
   let body: ReactNode = null
-  if (state.kind === 'ready') {
+  if (shown !== null) {
     status = <StatusText label="Available" tone="success" />
     body = (
       <SavedChoices
         busy={state.busy}
         controller={controller}
         now={now}
-        settings={state.settings}
+        settings={shown.settings}
       />
     )
   } else if (state.kind === 'unavailable') {
@@ -81,7 +79,7 @@ export function ThisMacSection(props: {
           ? retry
           : undefined
       }
-      description={DESCRIPTION}
+      description={thisMacDescription}
       status={status}
       title="This Mac"
     >
@@ -91,7 +89,7 @@ export function ThisMacSection(props: {
         controller={controller}
         now={now}
         results={state.results}
-        settings={state.kind === 'ready' ? state.settings : null}
+        settings={shown?.settings ?? null}
       />
     </Section>
   )

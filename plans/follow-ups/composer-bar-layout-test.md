@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-09, from branch `calummoore/claude-login-notice-removal`, pull request #75, review round 2, finding 1.
-- **Location:** `docs/mockups/src/components/chat/ModelPicker.module.css`, `docs/mockups/src/components/chat/SessionLogin.module.css`, and the bar in `src/chat/components/Composer.tsx`. The gate is the `check` script of `package.json`.
+- **Location:** `src/ui/components/chat/ModelPicker.module.css`, `src/ui/components/chat/SessionLogin.module.css`, and the bar in `src/chat/components/Composer.tsx`. The gate is the `check` script of `package.json`.
 - **Reason:** Each test option adds a browser to the gate, and the user decides each new gate step.
 
 - **Source:** Review.

@@ -1,14 +1,21 @@
-import type { Workspace } from '../../shared/generated/Workspace'
-import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
 import type { StartStep } from '../../shared/generated/StartStep'
 import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import type { ChatEvent } from '../../shared/chat-events'
 import type { WorkspaceEvent } from '../../shared/events'
-import { readGitHubSummary } from '../../shared/github-read'
+import { createWorkspaceReader } from '../../shared/workspace-read'
 import type { SecretWorkspaceEvent } from '../../shared/secret-requests'
 import type { OrderedWorkspaceResponse } from '../../shared/workspaces'
 import { readSecretEvent } from '../secrets/read-secret-events'
-import { count, isRecord, list, nullable, oneOf, record, text } from './json'
+import {
+  count,
+  isRecord,
+  list,
+  nullable,
+  oneOf,
+  record,
+  text,
+  UnreadableResponse,
+} from './json'
 import { readChatEvent, readChoice, readSender } from './read-chat'
 
 /**
@@ -56,40 +63,16 @@ export type StreamMessage =
   | { type: 'history'; history: StoredEvents }
   | { type: 'event'; envelope: StreamEnvelope }
 
-const readState = oneOf<WorkspaceState>({
-  working: true,
-  input: true,
-  unread: true,
-  ready: true,
-  starting: true,
-  stopped: true,
-  error: true,
-  archived: true,
+const readWorkspace = createWorkspaceReader({
+  record,
+  text: (source, key) => text(source[key]),
+  count: (source, key) => count(source[key]),
+  nullableText: (source, key) => nullable(text)(source[key]),
+  nullableCount: (source, key) => nullable(count)(source[key]),
+  sender: readSender,
+  choice: readChoice,
+  invalidState: () => new UnreadableResponse('choice'),
 })
-
-function readWorkspace(value: unknown): Workspace {
-  const source = record(value, 'workspace')
-  return {
-    id: text(source.id),
-    number: count(source.number),
-    link: text(source.link),
-    orgId: text(source.orgId),
-    repositoryId: text(source.repositoryId),
-    sectionId: text(source.sectionId),
-    // A snapshot from before sub-workspaces has no parent.
-    parentId: nullable(text)(source.parentId ?? null),
-    owner: readSender(source.owner),
-    name: nullable(text)(source.name),
-    branch: text(source.branch),
-    choice: readChoice(source.choice),
-    state: readState(source.state),
-    github: readGitHubSummary(source.github),
-    createdAt: count(source.createdAt),
-    updatedAt: count(source.updatedAt),
-    archivedAt: nullable(count)(source.archivedAt),
-    restoreUntil: nullable(count)(source.restoreUntil),
-  }
-}
 
 function readStep(value: unknown): StartStep {
   const source = record(value, 'step')

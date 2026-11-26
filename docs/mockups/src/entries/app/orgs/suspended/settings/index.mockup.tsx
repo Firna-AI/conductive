@@ -1,9 +1,9 @@
 import { defineScreen } from '@mokly/mokly'
+import { OrgSettingsScreen } from '../../../../../screens/OrgSettingsScreen'
 import {
   acmeSettings,
-  OrgSettingsScreen,
   orgSettingsSchema,
-} from '../../../../../screens/OrgSettingsScreen'
+} from '../../../../../screens/orgSettingsState'
 
 export const suspendedOrgSettings = defineScreen({
   title: 'Settings of a suspended org',
@@ -29,7 +29,7 @@ export const suspendedOrgSettings = defineScreen({
       slug: 'cloud-computer',
       title: 'Cloud computer',
       description:
-        'The last build, the scripts, and the env vars of Acme, without Build computer and without edit fields. No build runs while the org is suspended.',
+        'The last build, the scripts, the env vars, and the skills repository of Acme with its trust choice and the skills that its lookup found, without Build computer, the trust switch, and edit fields. No build runs while the org is suspended.',
       props: { tab: 'computer' },
     },
     {

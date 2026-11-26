@@ -59,8 +59,8 @@ const api = createMembersApi((input, init) => fetch(input, init))
 ```
 
 The host gives the components `SharedUiThemeProvider` from `@firna/ui/theme`
-and the `--ui-*` design tokens, as `dev/main.tsx` does with `themeFor` and
-`tokensCss` of the mockups. Each component takes `viewport: 'desktop' |
+and the `--ui-*` design tokens, as `dev/main.tsx` does with the shared
+`themeFor` and `tokensCss`. Each component takes `viewport: 'desktop' |
 'mobile'`. The phone layout uses 40 px controls and opens menus and
 questions as sheets. Each component shows its own loading and error states,
 with the message of the API.
@@ -73,7 +73,7 @@ with the message of the API.
 | `DeleteOrgSection`      | The General tab of an admin, under the org name            | `api`, `org`, `viewport`, `now`, optional `timeZone`, `onDeleted(org)`. It renders nothing for a member.               |
 | `DeletedOrgPage`        | The main area of a deleted org, which it fills             | `api`, `org` (with `deletion`), `viewport`, optional `timeZone` and `suspended`, `onRestored(org)`. Only an admin gets Restore. |
 | `MemberRepositoriesTab` | The Repositories tab of a member who is not an admin       | `api`, `org`, `viewport`, optional `suspended` and `builds`, the builds of the org for the repository notice           |
-| `MemberComputerView`    | The Cloud computer tab of a member, with data from the caller | `org`, `settings`, `builds`, `log`, `viewport`, `now`, optional `timeZone` and `suspended`. It loads nothing and holds no state. |
+| `MemberComputerView`    | The Cloud computer tab of a member, with data from the caller | `org`, `settings`, `builds`, `log`, `skills`, `onRetrySkills`, `viewport`, `now`, optional `timeZone` and `suspended`. It loads nothing and holds no state. |
 | `MemberComputerTab`     | The same tab, with its data loaded once from the API       | `api`, `org`, `viewport`, `now`, optional `timeZone`                                                                   |
 
 - `now` is the time in Unix milliseconds. It sets the age of each invite, the
@@ -152,12 +152,41 @@ notice of a changed install script shows only while
 through `changedScriptNotice` in `../app/first-build.ts`, as the tab of an
 admin does. The view shows no Build computer.
 
+The Skills section ends the view. It shows the saved skills repository
+of `settings` as text, without a field or Save, as
+[The Skills section](../../docs/protocol/org-skills.md#the-skills-section)
+says. Under it, `skills` gives what the lookup of that repository found:
+`loading`, `failed` with the message of the API, or `ready` with the
+lookup answer. The section lists the skills, or it shows the notice in
+place of the list, with the words of the shared `skillsCopy`. A
+member reads that an admin can act, and a suspended org names no action.
+A failed request, such as an expired GitHub sign-in, and a lookup that
+GitHub did not answer show "The list of skills did not load" with Try
+again, which calls `onRetrySkills`. The shell gives the lookup of
+`ComputerModel`. `MemberComputerTab` loads the lookup on its own, so a
+failed lookup never keeps the tab from showing.
+
+When the saved text names a repository as owner/name, a Trust row
+follows it, with Trusted or Not trusted. Under the rows comes the
+hint of that value: what the choice does, that a running cloud computer
+keeps its trust until its next start or resume, and How trust works,
+which opens the Cloud computer guide in a new tab. The section has no
+switch, as
+[Who changes the choice](../../docs/protocol/org-skills-trust.md#who-changes-the-choice)
+says. The row reads Trusted only while `settings.trustedSkillsRepository`
+names the saved repository, without regard to letter case. A reply
+without it, such as one of an older Worker, reads Not trusted. Saved text
+that names no repository has no Trust row and no hint. The words come
+from the shared `skillsTrustCopy.ts`, and the rule from
+`savedSkillsTrust` in `../app/skills-trust.ts`, whose saved choice the
+tab of an admin also uses.
+
 The repository notice shows under the intro of the view, and above the
 list of `MemberRepositoriesTab` when its caller gives `builds`. It names
 the repositories that the org image lacks or still holds, from
-`repositoryChangesOf` in `../app/repository-changes.ts`, with the words of
-the mockups, as
-[The repository notice](../../docs/protocol/org-image.md#the-repository-notice)
+`repositoryChangesOf` in `../app/repository-changes.ts`, with the shared
+words of `repositoryChangeCopy.ts`, as
+[The repository notice](../../docs/protocol/org-image-repositories.md#the-repository-notice)
 says. It has no button. A member of an org in use reads who can act, and
 in a suspended org it names no admin. The history of the card stays closed
 while a change of the install script or of the repositories waits for a
@@ -260,7 +289,13 @@ callbacks and `FakeApiServer`. The other test files run in Node.
 - `api/client.ts`: `createMembersApi`, the calls, and `ApiRequestError`.
 - `api/parseCore.ts` and `api/parseSettings.ts`: the parsers of the replies.
   The settings parser keeps only the names and the Secret marks of the env
-  vars.
+  vars. `parseSkillsLookup` reads the lookup of the skills repository.
+- `ComputerSections.tsx`: the read-only sections of the Cloud computer tab:
+  the scripts, the env vars, and the Skills section with its Trust row,
+  its list, and its notices. It takes the words of the Skills section from
+  the shared `skillsCopy.ts` and `skillsTrustCopy.ts`, and the choice
+  of a notice from `shownSkills` in `../app/skills-lookup.ts`, as the tab
+  of an admin does.
 - `membersStore.ts`: the state of the Members tab and each change.
 - `actionOwners.ts`: the owner of each action, and `keepExistingOwners`,
   the owner rule that the store applies after each state change.
@@ -274,9 +309,24 @@ callbacks and `FakeApiServer`. The other test files run in Node.
 - `useMounted.ts`: the ref that drops the answers of an old scope.
 - `ui/`: the local dense controls of the design, such as `ChoiceMenu`,
   `ConfirmDialog`, and `Sheet`, where `@firna/ui` has none. They copy the
-  local parts of the mockups, because the app has no shared UI folder yet.
+  look of shared parts, such as `ConfirmDialog` and `Sheet` in
+  `src/ui/components/common/`. They add the behaviour that the app needs.
+  `ConfirmDialog` copies the look of its card, but it imports the shared
+  card parts of
+  [ModalCard.module.css](../ui/components/common/ModalCard.module.css).
+  So a desktop question taller than the window keeps its title and its
+  actions, and only its content scrolls. While that content is text
+  without a control, Tab stops on it too, in each browser, through
+  `tabWithScrollingBody` of `../shell/ui/tab-stops.ts`. So a keyboard can
+  scroll it.
   [Shared UI lacks parts](../../plans/follow-ups/firna-ui-missing-parts.md)
   records the gap in `@firna/ui`.
+- `ui/modal.ts`: `useModalDialog` owns the focus of the native `ConfirmDialog`
+  and `Sheet`. After a refused close, the element that had the focus gets it
+  back, also the content, while it is in the dialog. Else the focus follows
+  `data-autofocus` or the browser's pick. It moves to the first control only
+  when the browser picks a part with `data-skip-first-focus`. So the first
+  focus of `ConfirmDialog` is on a control, not on its marked content.
 - `dev/`: the dev page and its fake server.
 
 Related docs: [Orgs and members](../../docs/protocol/orgs-and-members.md),

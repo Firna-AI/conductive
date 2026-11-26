@@ -16,7 +16,10 @@ export type OrgRow = {
   workspaces: number
   running: number
   status: TargetStatus
-  /** The provider account of the org, which it keeps for its whole life. */
+  /**
+   * The provider account of the org, where its new workspaces start. An
+   * operator can switch it on the page of the org.
+   */
   account: AccountId
   /** Why a search that is not a name found the org. */
   match?: string

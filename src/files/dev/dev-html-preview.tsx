@@ -67,6 +67,8 @@ export function useDevHtmlPreview(
       ) : null,
     reload: () =>
       preview === 'page' ? setReloads(reloads + 1) : onPreview('page'),
+    // The development page keeps no frames, so its page has no window.
+    expand: null,
     show: showNothing,
   }
 }

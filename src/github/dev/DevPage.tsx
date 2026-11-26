@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { domBackendCss } from '@firna/ui'
 import { SharedUiThemeProvider } from '@firna/ui/theme'
 import type { MessageSender } from '../../shared/generated/MessageSender'
-import { themeFor, tokensCss } from '../../../docs/mockups/src/theme'
+import { themeFor, tokensCss } from '../../ui/theme'
 import { mayArchive } from '../../app/permissions'
 import type { OrgRole } from '../../shared/api'
 import {

@@ -2,9 +2,9 @@ import type { DeviceCommandRecord } from '../../shared/generated/DeviceCommandRe
 import { ChevronDown } from 'lucide-react'
 
 import { nameLabel } from '../../shared/name-label'
-import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
-import card from '../../../docs/mockups/src/components/chat/MacCommand.module.css'
-import styles from '../../../docs/mockups/src/components/chat/PendingCommand.module.css'
+import { StatusText } from '../../ui/components/common/StatusText'
+import card from '../../ui/components/chat/MacCommand.module.css'
+import styles from '../../ui/components/chat/PendingCommand.module.css'
 import {
   commandCopy,
   limitLabel,

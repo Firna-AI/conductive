@@ -12,6 +12,7 @@ import { transcriptWorkspaceName } from './queries'
 import { sessionFor } from './session-record'
 import type { ChatStore } from './store'
 import type { ChatStorage } from './types'
+import { prepareWorkspaceEventLabels } from './workspace-labels'
 
 export async function sessionTranscript(
   request: Request,
@@ -97,11 +98,17 @@ export async function buildSessionTranscript(
     }),
   )
   const builder = new SessionMarkdown(document)
+  const labels = prepareWorkspaceEventLabels(env, {
+    id: workspaceId,
+    orgId: access.orgId,
+  })
   let after = 0
   for (;;) {
     const page = await store.run(() =>
-      store.read(workspaceId, (view) =>
-        view.history(after, document.eventNumber, { sessionId }),
+      store.read(workspaceId, async (view) =>
+        labels.history(
+          await view.history(after, document.eventNumber, { sessionId }),
+        ),
       ),
     )
     builder.merge(page.events)

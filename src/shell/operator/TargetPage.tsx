@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Ban, LockOpen } from 'lucide-react'
-import { suspendedTitle } from '../../../docs/mockups/src/components/operator/operatorCopy'
+import { suspendedTitle } from '../../ui/components/operator/operatorCopy'
 import type { OperatorTarget } from '../../app/operator-target'
 import { useStore, type Loadable } from '../../app/store'
 import type { OperatorSuspension } from '../../shared/operator'
@@ -8,10 +8,12 @@ import { ActionButton } from '../ui/actions'
 import { formatMoment } from './format'
 
 /**
- * The question over a page: before a suspension or a lift, and on the page
- * of a user, before an approval or the disable of the referral code.
+ * The question over a page: before a suspension or a lift, on the page of a
+ * user, before an approval or the disable of the referral code, and on the
+ * page of an org, before Switch account or Stop switch.
  */
-export type Question = 'suspend' | 'lift' | 'approve' | 'disable-code'
+export type Question =
+  'suspend' | 'lift' | 'approve' | 'disable-code' | 'switch' | 'stop-switch'
 
 /**
  * The action of a page: Suspend, or Lift for a suspended target. Desktop

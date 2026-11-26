@@ -31,15 +31,15 @@ function githubEnvelope(
  * event goes to the store as a live message. The stream also replays its
  * stored history when it opens, which can hold many old GitHub states. Only
  * the newest of them goes to the store, as one history message at the end
- * of the replay. So the bar never steps through the old states, and they
- * never cancel the store's read of the current state. The stream drops
- * repeated events and the events of other workspaces, and opens again
- * after a gap.
+ * of the replay. A subscription to a seeded stream gets an empty history
+ * at its current complete number. The store has its own reads for that
+ * state.
  */
 export function githubSubscribe(stream: WorkspaceStream): SubscribeToWorkspace {
   return (_afterEventNumber, listener) => {
     let newest: WorkspaceEventEnvelope | null = null
-    return stream.subscribe(
+    let seededThrough = stream.seeded.get() ? stream.last.get() : null
+    const stop = stream.subscribe(
       (envelope, replayed) => {
         const github = githubEnvelope(envelope)
         if (!github) return
@@ -49,11 +49,21 @@ export function githubSubscribe(stream: WorkspaceStream): SubscribeToWorkspace {
       (through) => {
         const events = newest ? [newest] : []
         newest = null
+        const alreadySent = seededThrough === through && events.length === 0
+        seededThrough = null
+        if (alreadySent) return
         listener({
           type: 'history',
           history: { events, throughEventNumber: through },
         })
       },
     )
+    if (seededThrough !== null) {
+      listener({
+        type: 'history',
+        history: { events: [], throughEventNumber: seededThrough },
+      })
+    }
+    return stop
   }
 }

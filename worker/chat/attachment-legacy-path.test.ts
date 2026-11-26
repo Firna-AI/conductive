@@ -8,7 +8,7 @@ import { selectAttachmentComputer } from './attachment-owner.test-support'
 import { WORKSPACE_ID } from './harness.test-support'
 import { chatKey } from './storage-keys'
 import { messageCommands } from './turn-lifecycle.test-support'
-import type { PendingCommand } from './types'
+import type { PendingCommand } from './pending-command'
 
 let harness: TestHarness
 beforeAll(async () => {

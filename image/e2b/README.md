@@ -26,7 +26,8 @@ node image/e2b/build-template.mjs --prepare
 makes no E2B request. A prepared context is not a built template.
 
 For a real build, supply `E2B_API_KEY` and `E2B_DOMAIN` through the process
-environment. Use the key and routing domain of the selected EU project.
+environment. Use the key and routing domain of the app's E2B project,
+such as `e2b.app` for E2B's default cluster.
 Put no key in a command, a source file, `.env`, or `.dev.vars`.
 
 ```sh
@@ -231,7 +232,7 @@ npx tsc -p image/tsconfig.json
 The tests use the real Python relay and local TCP peers in private scratch
 directories. They need no provider key or running E2B sandbox.
 
-A real template build and boot still need the EU project and credentials.
+A real template build and boot still need the E2B project and its credentials.
 The live checks must prove systemd boot, `/run` tmpfs, filesystem-only
 resume, the requested disk capacity, and the shared image installers.
 The project also needs filesystem-only support and the operating

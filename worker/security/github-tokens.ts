@@ -24,7 +24,7 @@ export interface GitHubTokenDependencies extends Pick<
   wait?: (milliseconds: number) => Promise<void>
 }
 
-function reconnectRequired(): HttpError {
+export function reconnectRequired(): HttpError {
   return new HttpError(
     401,
     'github_reconnect_required',

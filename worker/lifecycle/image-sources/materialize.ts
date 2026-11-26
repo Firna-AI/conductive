@@ -1,3 +1,4 @@
+import { buildBootedStatement } from '../build-step-data'
 import type { AppDependencies, AppEnv } from '../../env'
 import { HttpError } from '../../http'
 import type { PrepareImageSources } from '../image-builds'
@@ -5,21 +6,45 @@ import { writeBuildLog } from '../build-data'
 import { transientProviderError } from '../provider-retry'
 import { authorizeImageBuilder } from './data'
 import { cleanupBuildImageSources } from './cleanup'
+import {
+  ImageSourceStepError,
+  sourceCommandFailure,
+  type ImageSourceFailureDetails,
+} from './failure'
 import { advanceSourceLayout } from './layout'
 import { advanceLegacySources } from './legacy'
 import { prepareSourceMetadata } from './metadata'
-import { insertSourceRun, readSourceRun } from './run-data'
+import {
+  insertSourceRun,
+  readSourceRun,
+  saveSourceRunFailure,
+  sourceRunFailure,
+} from './run-data'
 import { scheduleSources } from './schedule'
 import { buildSourceJobs } from './source-data'
 
-export function imageSourceFailure(missingKey = false): HttpError {
-  return new HttpError(
-    missingKey ? 503 : 502,
-    'image_sources_unavailable',
-    missingKey
-      ? 'The repositories could not load. Ask the app operator to set the GitHub App private key.'
-      : 'The repositories could not load. Check the GitHub App access and try again.',
-  )
+export class ImageSourceFailure extends HttpError {
+  readonly sourceStep: ImageSourceFailureDetails['sourceStep']
+  readonly githubStatus: number | null
+
+  constructor(missingKey: boolean, details?: ImageSourceFailureDetails) {
+    super(
+      missingKey ? 503 : 502,
+      'image_sources_unavailable',
+      missingKey
+        ? 'The repositories could not load. Ask the app operator to set the GitHub App private key.'
+        : 'The repositories could not load. Check the GitHub App access and try again.',
+    )
+    this.sourceStep = details?.sourceStep ?? 'unknown'
+    this.githubStatus = details?.githubStatus ?? null
+  }
+}
+
+export function imageSourceFailure(
+  missingKey = false,
+  details?: ImageSourceFailureDetails,
+): ImageSourceFailure {
+  return new ImageSourceFailure(missingKey, details)
 }
 
 /** Each call polls active copies and fills the saved memory budget. */
@@ -28,7 +53,6 @@ export function createGitHubImageSourceMaterializer(
   dependencies: Pick<AppDependencies, 'fetch' | 'now'>,
 ): PrepareImageSources {
   return async (input) => {
-    let missingKey = false
     let ownsBuild = false
     try {
       const repositories = await authorizeImageBuilder(
@@ -37,9 +61,11 @@ export function createGitHubImageSourceMaterializer(
         input.buildId,
         input.sandboxId,
         input.providerAccount,
-      )
+      ).catch(() => {
+        throw new ImageSourceStepError('builder')
+      })
       if (JSON.stringify(repositories) !== JSON.stringify(input.repositories))
-        throw new Error('Captured repositories changed')
+        throw new ImageSourceStepError('builder')
       let run = await readSourceRun(env.DB, input.buildId)
       const jobs = await buildSourceJobs(env.DB, input.buildId)
       for (const owner of [...jobs, ...(run ? [run] : [])]) {
@@ -48,7 +74,7 @@ export function createGitHubImageSourceMaterializer(
           owner.sandboxId !== input.sandboxId ||
           owner.providerAccount !== input.providerAccount
         )
-          throw new Error('Source ownership changed')
+          throw new ImageSourceStepError('builder')
       }
       ownsBuild = true
       if (
@@ -57,10 +83,8 @@ export function createGitHubImageSourceMaterializer(
         (!run ||
           run.phase === 'metadata-ready' ||
           (run.phase === 'copy' && jobs.some((job) => job.phase === 'ready')))
-      ) {
-        missingKey = true
-        throw new Error('Missing App private key')
-      }
+      )
+        throw new ImageSourceStepError('app_key')
       if (!run) {
         run = await insertSourceRun(
           env.DB,
@@ -68,21 +92,32 @@ export function createGitHubImageSourceMaterializer(
           repositories,
           jobs.length > 0,
         )
+        const now = dependencies.now()
         await writeBuildLog(
           env.DB,
           input.buildId,
           'Updating the repositories.\n',
-          dependencies.now(),
+          now,
+          [buildBootedStatement(env.DB, input.buildId, now)],
         )
       }
-      if (
-        run.failed ||
-        run.phase === 'abort' ||
-        run.phase === 'layout-starting'
-      )
-        throw new Error('A source command start was interrupted')
-      if (run.phase === 'legacy')
-        return await advanceLegacySources(env, dependencies, input, run)
+      if (run.failed || run.phase === 'abort')
+        throw imageSourceFailure(false, sourceRunFailure(run))
+      if (run.phase === 'layout-starting')
+        throw new ImageSourceStepError('interrupted')
+      if (run.phase === 'legacy') {
+        const phase = jobs[0]?.phase
+        return await advanceLegacySources(env, dependencies, input, run).catch(
+          (error: unknown) => {
+            if (phase?.endsWith('-starting'))
+              throw new ImageSourceStepError('interrupted')
+            if (phase === 'layout') throw sourceCommandFailure(error, 'layout')
+            if (phase === 'fetch' || phase === 'finalize')
+              throw sourceCommandFailure(error, 'copy')
+            throw error
+          },
+        )
+      }
       if (run.phase === 'done') {
         if (jobs.some((job) => job.tokenCiphertext || job.grantHash))
           throw new Error('Source access remains active')
@@ -106,16 +141,23 @@ export function createGitHubImageSourceMaterializer(
       return await scheduleSources(env, dependencies, input, run)
     } catch (error) {
       if (transientProviderError(error)) throw error
-      if (
-        ownsBuild &&
-        !(await cleanupBuildImageSources(
-          env,
-          dependencies.fetch,
-          input.buildId,
-        ))
-      )
-        return false
-      throw imageSourceFailure(missingKey)
+      const details = error instanceof ImageSourceStepError ? error : undefined
+      const failure =
+        error instanceof ImageSourceFailure
+          ? error
+          : imageSourceFailure(details?.sourceStep === 'app_key', details)
+      if (ownsBuild) {
+        await saveSourceRunFailure(env.DB, input.buildId, failure)
+        if (
+          !(await cleanupBuildImageSources(
+            env,
+            dependencies.fetch,
+            input.buildId,
+          ))
+        )
+          return false
+      }
+      throw failure
     }
   }
 }

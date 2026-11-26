@@ -1,8 +1,4 @@
-import {
-  appDomain,
-  productDomain,
-  productName,
-} from '../../docs/mockups/src/brand'
+import { appDomain, productDomain, productName } from '../shared/brand'
 import {
   abuseAddress,
   legalAddress,
@@ -15,6 +11,7 @@ import {
   type LegalDocument,
 } from './legal-text'
 import { termsOrgSection } from './terms-org'
+import { termsServiceSection } from './terms-service'
 import { termsWorkSection } from './terms-work'
 
 /**
@@ -31,7 +28,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 18 November 2026.`,
+  accepted it. Effective date: 24 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -45,17 +42,7 @@ export const termsDocument: LegalDocument = {
           ${mailLink(legalAddress)}.`,
       ],
     },
-    {
-      title: 'The service',
-      blocks: [
-        paragraph`${productName} is a coding tool in the browser and in the
-          Mac app. Each workspace has its own cloud computer, where agents
-          powered by Claude and Codex work. A workspace can hold one task
-          after another, with one branch at a time.`,
-        paragraph`${productName} is free until billing starts. Nobody pays
-          until they choose a plan.`,
-      ],
-    },
+    termsServiceSection,
     {
       title: 'Your accounts',
       blocks: [
@@ -66,10 +53,18 @@ export const termsDocument: LegalDocument = {
             rights and merge method from GitHub. It shows Merge only when
             your GitHub rights let you merge. It shows Ready for review on a
             draft pull request only when you have write access or more.`,
-          text`${productName} runs each org's cloud computers in one of its
-            own accounts with a cloud computer provider. The org keeps
-            that account for its life. You need no account or key of your
-            own for them.`,
+          text`When an admin saves a skills repository, and when a member
+            opens Skills, ${productName} reads its repository details and
+            file tree on GitHub. The lookup uses that member's GitHub
+            sign-in. The cloud computer copies and updates the public
+            repository without a GitHub token.`,
+          text`${productName} runs each workspace's cloud computer in one of
+            its own accounts with a cloud computer provider. The operator
+            can switch an org to another account by building its cloud
+            computer setup again there. New workspaces use the new account
+            when that build succeeds, and the old account until then.
+            Existing workspaces keep their accounts. You need no account or
+            key of your own for them.`,
           text`Each session keeps one agent login: its starter's personal
             login or the org login. Your usable personal login comes first
             for a new session. If you have none, the session uses the org
@@ -144,15 +139,41 @@ export const termsDocument: LegalDocument = {
       title: 'Commands on your Mac',
       blocks: [
         paragraph`In the Mac app, an agent can ask to run a command on
-          your Mac. The command runs only after you allow it.`,
-        paragraph`Each workspace has a Mac access switch, which starts off.
-          Any member of the org can turn it on or off again. While it is
-          off, the agents of that workspace cannot ask for a command.`,
+          your Mac. The Mac app asks first unless you already allowed the
+          command or all commands from that workspace.`,
+        paragraph`Agents can ask in every workspace, from its first turn.
+          This includes a new workspace, an automation run, and a workspace
+          that an agent creates. When the Mac app asks, you can deny the
+          request.`,
+        paragraph`In the Mac app, Capabilities has a Mac access switch for
+          your own Mac. When you turn it on, the Mac app allows every
+          command from that workspace on your Mac until you stop. Turning
+          it off stops this permission. Other members' Macs still ask,
+          unless their users already allowed the commands.`,
+        paragraph`If this permission cannot start, the switch stays off and
+          the Mac app shows the cause. In New workspace in the Mac app, the
+          permission starts when you create the workspace with the switch
+          on.`,
+        paragraph`A browser shows no Mac access switch, and it cannot start
+          this permission. An older Mac app shows an earlier Mac access
+          switch that every member shares. That switch no longer stops
+          agents from asking.`,
+        paragraph`Use Stop in This Mac or in the workspace bar, or turn the
+          switch off, to end a workspace's permission on that Mac at once.`,
         paragraph`You decide which commands run. You can allow a command
           once. You can always allow the exact same command text on that
           Mac. You can allow every command of one workspace on that Mac
           for 15 minutes, or until you stop it. Permission until you stop
           it also ends when the Mac app quits or signs out.`,
+        paragraph`While workspace permission runs, each command from that
+          workspace runs on your Mac without asking. This includes a command
+          that text read by the agent steers it to request.`,
+        paragraph`An automation run acts for its owner, also while nobody
+          watches. Text that steers its agent can make it ask for a command
+          on the owner's Mac. A command that the owner always allowed then
+          runs without asking.`,
+        paragraph`A merge queue turn can ask for a command on the Mac of
+          the member who added the pull request.`,
         paragraph`An allowed command runs with your own permissions on the
           Mac, in the folder that the request names. An always-allowed
           command runs in any folder that a later request names.`,
@@ -181,7 +202,8 @@ export const termsDocument: LegalDocument = {
           closes its previews and terminals, and blocks each start, build,
           and automation run. Its members keep their accounts and their other
           orgs. They can still open the org and read its chat history.
-          Nothing in the org can change, except that a member can leave it.
+          The suspension empties its merge queues.
+          Leaving is the only change a member can make in the org.
           An admin can leave only while another admin whose account is not
           suspended remains.`,
         paragraph`A stopped cloud computer gets no restart to keep its disk
@@ -235,6 +257,8 @@ export const termsDocument: LegalDocument = {
     {
       title: 'Changes to these terms',
       blocks: [
+        paragraph`When you accept these terms, you agree that the operator
+          can change them. Each change gives these terms a new version.`,
         paragraph`A changed version of these terms applies from your next sign-in.
           A sign-in session lasts at most 7 days, so a change applies within 7 days
           while you keep using ${productName}. You accept the changed version

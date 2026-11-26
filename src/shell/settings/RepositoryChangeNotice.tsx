@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { RepositoryNotice } from '../../../docs/mockups/src/components/settings/RepositoryNotice'
-import type { RepositoryWait } from '../../../docs/mockups/src/components/settings/repositoryChangeCopy'
+import { RepositoryNotice } from '../../ui/components/settings/RepositoryNotice'
+import type { RepositoryWait } from '../../ui/components/settings/repositoryChangeCopy'
 import { latestBuild } from '../../app/org-model'
 import { repositoryChangesOf } from '../../app/repository-changes'
 import type { BuildsResponse } from '../../shared/org-settings'
@@ -28,8 +28,8 @@ function noticeAction(
 }
 
 /**
- * The repository notice of an admin, from the builds of the org, as
- * `RepositoryNotice` of the mockups draws it. It shows nothing while the
+ * The repository notice of an admin, from the builds of the org, as the
+ * shared `RepositoryNotice` draws it. It shows nothing while the
  * builds load, or while the org image holds every saved change of the
  * repositories. `build` gives it its action, on the Repositories tab only:
  * on the Cloud computer tab the build card under the notice has the same

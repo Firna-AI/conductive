@@ -35,7 +35,8 @@ Conductive keeps its chat history until the org is deleted.
 ## Send a message
 
 1. Open the session's tab.
-2. Choose a model and effort in the message box.
+2. Choose a favourite or another model in the message box.
+   Adjust the effort and **Fast** if needed.
 3. Write your message.
 4. Use **Attach files** if the agent needs a file or picture.
 5. Select **Send**.
@@ -45,6 +46,8 @@ Use **Shift+Enter** to add a line.
 On a phone, **Enter** adds a line.
 Your message appears in the chat at once.
 The chat scrolls down to it, also when you read an earlier part of the chat.
+When you read an earlier part of the chat, a round arrow button shows above the right end of the message box.
+Select it to go to the newest messages.
 If it cannot send, it goes back to the message box, and the chat shows the cause.
 If the message arrives later, the chat removes the cause and clears the message box, unless you changed the text.
 
@@ -57,7 +60,7 @@ That first build is separate from the start of an existing workspace's computer.
 
 ## Mention a repository file
 
-Use a mention for a file or folder already in the workspace.
+Use a mention for a file or folder that **All files** lists.
 
 1. Type `@` at the start of your message, or after a space or line break.
 2. Type part of the file or folder name.
@@ -67,8 +70,12 @@ The entry becomes a chip, a small box with its name, in the message field.
 Your message gives the agent its path, such as `@src/app.ts` or `@src/lib/`.
 Use **Attach files** for a file from your own computer.
 
-You can also select **Add to chat** from a row's menu in **All files** or **Changes**.
+When **All files** has a notice about files or folders left out, `@` says some files are outside the list if it finds no match.
+Type the path in your message or ask the agent to find it.
 
+A row's menu in **All files** or **Changes** offers **Add to chat** only if you can mention its path.
+
+- [Find files outside the lists](/docs/files-and-changes#find-files-outside-the-lists)
 - [Copy a path or add a file to chat](/docs/files-and-changes#copy-a-path-or-add-a-file-to-chat)
 
 ## Attach files
@@ -103,7 +110,7 @@ If the browser cannot read the folder, use **Attach files** in the notice to pic
 
 Each chip keeps its place in the sent message.
 When the message reaches the agent, select its file chip to open the copy.
-The copy opens in the workspace's file view.
+The copy opens in the workspace's file view even if **All files** leaves out its path.
 This can start a stopped cloud computer.
 Restore an archived workspace within 14 days before opening its attached files.
 After removal, the cloud computer and the attached files in it are deleted.
@@ -121,9 +128,9 @@ Attach that file again in a new message.
 
 With current cloud computer software, workspaces also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
 Git ignores the folder's files unless your repository already tracks them.
-**All files** lists them, so you can open them there.
+Look for the files in **All files**.
 **Changes** does not list them.
-An older workspace gets this folder and its file list with an [automatic software update](/docs/cloud-computer#apply-setup-changes) at a later start or when it is idle.
+An older workspace gets this folder with an [automatic software update](/docs/cloud-computer#apply-setup-changes) at a later start or when it is idle.
 
 - [Read files and pictures](/docs/files-and-changes#read-a-file)
 
@@ -141,17 +148,39 @@ If it cannot send while you stay in the workspace on the same branch, the chat o
 If you leave or change the branch before the failure arrives, your chosen page stays open.
 The cause waits in that session's message box, also if you return before the failure arrives.
 
+If the merge queue needs an agent to rebase a branch, it waits for all running turns in the workspace to end.
+When no turn runs, it sends one message to the newest open session.
+The member who added the pull request is the sender.
+The session's login rules apply.
+
 - [Choose a pull request action](/docs/pull-requests#read-the-pull-request-state)
+- [Use the merge queue](/docs/pull-requests#merge-queue)
 
 ## Delegate work to another session
 
-Ask an agent to create or list sessions, send a message, or read a transcript.
+Ask an agent to create or list sessions, send a message, watch a turn, or read a transcript.
 It can also inspect one session or message.
 Its workspace tools reach every workspace of the same org.
 Agents can also rename, stop, and close sessions there.
 Closing a running session through the tools can stop its turn.
 Use a separate workspace when the delegated task needs separate files and a branch.
 The agent usually makes that workspace a [sub-workspace of the current one](/docs/workspaces#let-an-agent-manage-workspaces).
+
+A watch tells the session that set it once when the watched turn finishes, fails, or stops.
+The agent can name an exact turn ID, or watch the session's current active turn.
+If the session is idle or the exact turn already ended, the call sets no watch.
+The agent then reads that session at once.
+
+When only the watched work remains, the agent ends its reply.
+Its turn can end, and its computer can stop while the watch waits.
+A wake appears as an app line with a link to the watched session.
+The agent reads that session after the wake, then chooses its next step.
+The line reports one turn's end.
+The delegated task can still have work left.
+
+**Stop** in the session that set a watch drops its earlier pending wakes.
+Wakes already in the chat history stay there.
+An automatic idle stop of the cloud computer keeps the watches.
 
 Messages from agent tools end with a `---` line and **Sent by:** with a link to the sending session.
 This also applies to the first message when an agent creates a workspace or session.
@@ -178,7 +207,23 @@ Use **Stop** in each affected session if agents keep replying to each other with
 
 ## Choose a model
 
-Each session has its own model and effort picker.
+Each session has its own model menu.
+The menu lists your favourites first.
+A favourite sets a model, its effort, and **Fast** together.
+Each row names those choices, such as **Opus 5.5 Max Fast**.
+
+1. Open the model menu in the message box.
+2. Choose a favourite, or open **All models** and choose another model.
+3. Open **Effort** to change the effort if needed.
+   The **Effort** row shows the current effort.
+4. Turn **Fast** on or off if needed.
+
+On a phone, **All models** and **Effort** replace the menu.
+Select **Back** to return.
+With no favourites to show, the menu starts with **All models**.
+A favourite gets a mark only while all three settings match your current choice.
+Changing the effort or **Fast** does not change your saved favourite.
+
 A different model of the same agent keeps the conversation in that session.
 
 A model of the other agent opens a new session when the session has messages.
@@ -213,8 +258,32 @@ They show all app models for the agent before the first successful read, or when
 The session keeps its current model.
 Other members' pickers in sessions on your personal endpoint still show all app models.
 On an org endpoint, every member's pickers follow the org endpoint's model list in the same way.
+This also hides favourites for those models and leaves them out of **All models**.
+Hidden favourites stay saved in your account.
 
 - [Refresh an endpoint's model list](/docs/agent-logins#keep-the-model-list-current)
+
+## Set your favourites
+
+Your account keeps up to five favourites, in the order you choose.
+Until you change the list, Conductive supplies five starting favourites.
+You add, order, and remove favourites only in the **Favourites** section of **Preferences**.
+
+1. Open **Account**.
+2. Open **Preferences**.
+3. In **Favourites**, select **Add a favourite** and choose a model, or move or remove a favourite.
+
+Use a row's model menu to change its model, effort, and **Fast** setting.
+Drag its handle to move it.
+Select **×** to remove it.
+The model menu follows this order.
+If you remove all favourites, the list stays empty, and you choose models in **All models**.
+
+A favourite with an unavailable model appears greyed in **Favourites**, with a reason.
+The same applies when your personal endpoint's model list omits it.
+Its row still lets you change, move, or remove it.
+If a change cannot save, the list keeps its saved values.
+Try the change again.
 
 ## Guide or stop a running agent
 
@@ -236,7 +305,15 @@ At that limit, the turn ends with **Background work stopped at the time limit** 
 The cloud computer keeps running while the turn waits.
 Ask the agent to stop background work that it does not need, such as a dev server.
 
+For a server that you need after the reply, ask the agent to start a service.
+Services run outside the turn and never keep the cloud computer running.
+Agents stop temporary check servers before replying.
+Builds, tests, and waits for checks that must finish stay in the agent's work.
+
+- [Run a server as a service](/docs/terminal-and-previews#run-a-server-as-a-service)
+
 Select **Stop** to interrupt the turn, including a wait for background work.
+Services keep running after this Stop.
 The chat records the stop.
 You can send another message to continue the conversation.
 
@@ -250,26 +327,67 @@ The answer stays visible beside it.
 
 ## Read replies and tables
 
-Agent replies can contain headings, paragraphs, lists, code, tables, file chips, and pictures.
+Agent replies can contain headings, paragraphs, lists, quotes, code, tables, file chips, and pictures.
 A wide table scrolls sideways inside the message.
 The text around it keeps the width of the chat.
 
 Agents name the files of your repository as `@` and a path, such as `@src/app.ts`.
-Each one shows as a file chip.
-Code that holds only the path of a file of the workspace also shows as a file chip.
+An `@` mention shows as a file chip when **All files** lists its path.
+Code that holds only a listed file's path also shows as a file chip.
 Select a chip to open its file.
-A Markdown link or image to a file of the workspace shows as a link with its label.
+A Markdown link or image to a listed file shows as a link with its label.
 Select the link to open the file.
-While the cloud computer runs, an image of a PNG, JPEG, GIF, or WebP file, such as a screenshot that the agent took, shows as a small picture instead.
+While the cloud computer runs, an image of a listed PNG, JPEG, GIF, or WebP file, such as a screenshot that the agent took, shows as a small picture instead.
 Select the picture to open the file.
 A path can end with a line or a range of lines, such as `@src/app.ts:42` or `src/app.ts:42-50`.
 Its chip opens the file as text, with those lines in view and marked.
+
+For paths that **All files** leaves out, `@` mentions and Markdown links show as typed text, and paths in code stay as code.
+A Markdown image that points to one of these paths shows only its label.
+If the label is blank, chat shows nothing for the image.
+
 To copy a code block, select **Copy code** in its top corner.
 With a mouse, the button shows when you point at the block.
 **Code copied** confirms the copy.
 
 While a reply arrives, the chat shows its headings, text, and table rows as they arrive.
 In the folded work of a turn, open a message line to read its table or see its pictures.
+
+## Explain chat text
+
+Select text inside one agent answer or member message, then select **Explain**.
+On a computer, **Explain** shows above the selection.
+On a phone, it shows above the message box.
+You can also press **⌥⌘E** on a Mac or **Alt+Shift+E** on another computer.
+Tool lines, notices, and text that the agent still writes offer no **Explain**.
+
+**Explain** starts a new session.
+You write no message.
+Its first message gives the agent the text, the text around it, and a link to the session that holds the text.
+The agent can read the rest of that session when it needs more.
+The message asks for a short answer and no file changes.
+The agent still has the tools of any session, so it can change files.
+The new session uses your personal or org login, and the **Model and effort** of your **Preferences**.
+Its tab opens at the end of the tab row.
+The tab that you read stays shown.
+
+The answer shows in a small panel by the text.
+On a phone, the panel is a sheet over half the screen.
+Drag its handle up to see more.
+Ask a follow-up at the foot of the panel.
+A follow-up during a turn guides that turn.
+**Stop** ends the turn.
+Select **Expand** to open the session in its tab.
+On a computer, click outside the panel to close it.
+Closing the panel leaves the agent working.
+
+The text keeps a mark that every member sees.
+The mark shows whether the agent still works, needs input, or failed.
+Select the mark to show the panel again, also after its session closes.
+A follow-up or **Expand** reopens a closed session.
+Where marks overlap, select the overlap to choose one of them.
+If Conductive cannot find the text again, the mark covers the whole message.
+An archived or other read-only workspace shows the marks and the panel, to read only.
 
 ## Manage session tabs
 
@@ -373,6 +491,10 @@ Mac command requests go to that same person's connected Mac.
 The session can use another member's personal login or the org login.
 The agent can identify the member who sent each message.
 Another member's message during a turn does not change its GitHub account, commit author, or receiving Mac.
+
+When a watch wake starts a new turn, its GitHub operations and Mac requests follow the person whose turn set the watch.
+Its commits name that person.
+A wake that joins a running turn keeps that turn's GitHub account, commit author, and receiving Mac.
 
 An agent tool creates a session or sends a message as the sender of its calling turn.
 That sender must still belong to the org.

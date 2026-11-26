@@ -10,9 +10,9 @@ import {
   modelLabel,
   sameChoice,
 } from '../../shared/agents'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import { pickerButtonStyle } from '../../../docs/mockups/src/components/chat/pickerButton'
-import styles from '../../../docs/mockups/src/components/chat/ModelPicker.module.css'
+import { useControlSizes } from '../../ui/components/common/touch'
+import { pickerButtonStyle } from '../../ui/components/chat/pickerButton'
+import styles from '../../ui/components/chat/ModelPicker.module.css'
 import { stepShortcutItem } from '../../app/shortcuts/navigation'
 import { useShortcutOffer } from '../../shell/shortcuts/shortcut-context'
 import {
@@ -23,13 +23,17 @@ import {
 import { fastFor } from '../state/format'
 import { useDismiss } from '../ui/dismiss'
 import { Menu } from '../ui/Menu'
-import { effortsOf, modelMenu } from './model-menu'
+import { modelMenu } from './model-menu'
+import { effortsOf, modelMenuRows } from './model-rows'
 
 /**
  * One picker for the model and the effort of the session, such as
  * "Opus 5.5 High", with the effort in a muted colour, and "Fast" after it
- * while fast mode is on. `sessionAgent` is the agent of a session with
- * messages, whose other agent's models open a new session. The key of Model
+ * while fast mode is on. Its menu lists the favourites first, then All
+ * models, then Effort with its submenu and the Fast switch, as `modelMenuRows` says.
+ * A pick of a favourite sets its model, its effort, and its fast mode.
+ * `sessionAgent` is the agent of a session with messages, whose other
+ * agent's models and favourites open a new session. The key of Model
  * picker opens the menu, and the key of Next effort level chooses the next
  * effort of the menu, with a wrap at its end. For a model with fast mode,
  * the key of Fast mode turns it on or off, as the Fast row of the menu does,
@@ -38,7 +42,13 @@ import { effortsOf, modelMenu } from './model-menu'
  */
 export function ModelPicker(props: {
   choice: AgentChoice
+  /** The models that the picker offers, as `composerModels` gives them. */
   models: readonly AgentModel[]
+  /**
+   * The favourites of the account, in the order of the menu. Without
+   * them, the menu starts with All models.
+   */
+  favourites?: readonly AgentChoice[]
   sessionAgent?: Agent
   disabled?: boolean
   onChoose: (choice: AgentChoice) => void
@@ -112,10 +122,14 @@ export function ModelPicker(props: {
       {open ? (
         <Menu
           anchor={anchor}
-          entries={modelMenu(props.models, choice, props.sessionAgent, choose, {
-            toggle: toggleFast,
-            hint: fastHint,
-          })}
+          entries={modelMenu(
+            modelMenuRows(props.models, choice, {
+              favourites: props.favourites ?? [],
+              sessionAgent: props.sessionAgent,
+            }),
+            choose,
+            { toggle: toggleFast, hint: fastHint },
+          )}
           label="Model and effort"
           onClose={close}
           placement="above-start"

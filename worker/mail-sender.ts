@@ -1,4 +1,4 @@
-import { productDomain, productName } from '../docs/mockups/src/brand'
+import { productDomain, productName } from '../src/shared/brand'
 import type { CheckedImage, ImageKind } from '../src/shared/images'
 import type { AppEnv, HttpFetch } from './env'
 import { outboundRequest } from './http/outbound-request'

@@ -1,4 +1,4 @@
-import '../../../docs/mockups/src/render.css'
+import '../../ui/render.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ToolsDevPage } from './ToolsDevPage'

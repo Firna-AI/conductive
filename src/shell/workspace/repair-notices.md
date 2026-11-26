@@ -17,13 +17,15 @@ gives the rules. The Files panel shows the notices of the file lists, as
 - `HeaderNotices` keeps these failed repairs. It is a store of its own,
   apart from `WorkspaceModel`. The tab keeps one for each workspace that it
   showed, as [The kept workspace](README.md#the-kept-workspace) says.
+- The seed of the first workspace read gives each open failed repair
+  with its first time. A reply without a seed uses the stored markers.
 - Only a marker with `repairFailed: true` and no session adds a failed
   repair. A first loss adds nothing. The chat owns the markers of a session.
 - Only a later full report of the same kind in the stream clears a failed
   repair: `workspace.title` for the name, and `start.updated` for the start
   steps. A report of another kind and `workspace.updated` clear nothing.
-- A reply of a route clears nothing, such as the reply of Resume. Only the
-  order of the stream shows that a report is newer than the failure.
+- On an open view, a Resume reply keeps the notice. The stream orders the
+  next full report after the failure.
 - The notice of the start steps stays after the start ends, until a full
   report of the start steps.
 - A further failure of a failed kind keeps the time of the first one.
@@ -36,7 +38,6 @@ Dismiss hides a bar in the mounted view only:
 - It sends nothing to the Worker, and the failed repair stays.
 - A further failure of the same kind stays hidden.
 - Each mount of the screen starts a new view with `newView`, so a return
-  shows the bar again. A new tab reads the stored history, so it shows the
-  bar too.
+  shows the bar again. A new tab shows each open failure from its read.
 - A full report of that kind clears the failed repair. A failure after
   that report shows again, also in the view where Dismiss hid the bar.

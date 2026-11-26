@@ -1,0 +1,46 @@
+/*
+ * The Explain button, which floats just above a selection, over the other
+ * parts of the chat.
+ */
+.above {
+  position: absolute;
+  z-index: 5;
+  bottom: calc(100% + 6px);
+}
+
+/* The button stands over the middle of the selection. */
+.middle {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* In a bubble at the right of the chat, it lines up with the end. */
+.end {
+  right: -10px;
+}
+
+/* A raised button, with the shadow of a menu, so it reads over the text. */
+.float {
+  display: flex;
+  border-radius: var(--ui-radius-md);
+  box-shadow: 0 6px 18px var(--ui-shadow);
+  white-space: nowrap;
+}
+
+/*
+ * On a phone the button stands above the composer, in the middle. The row
+ * takes no room, and it gives back the gap of the footer, so the composer
+ * keeps its place.
+ */
+.phoneRow {
+  position: relative;
+  height: 0;
+  margin-bottom: -10px;
+}
+
+.phoneFloat {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+}

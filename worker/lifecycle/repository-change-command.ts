@@ -17,6 +17,7 @@ import type {
   RepositoryChangeJob,
   RepositoryChangeOptions,
 } from './repository-change-types'
+import { workspaceAutoStopSeconds } from './idle-stop'
 
 /**
  * The fetch and the move run detached, as in Continue. Once a command
@@ -85,7 +86,10 @@ async function step(
     const recoverOnly = job.commandStarted
     if (!recoverOnly) {
       await options.run(() => authorizeRepositoryChange(options, job))
-      await provider.setAutoStop(job.sandboxId, 1_800)
+      await provider.setAutoStop(
+        job.sandboxId,
+        await workspaceAutoStopSeconds(options.env.DB),
+      )
       await options.run(() => authorizeRepositoryChange(options, job))
       job.commandStarted = true
       await progress.save(job)

@@ -9,6 +9,8 @@ import {
 } from '../../src/shared/account'
 
 import { agentLoginKind } from '../chat/login-kind'
+import { warnWorker } from '../warnings'
+import { choice } from '../chat/inputs'
 import { endpointModelList } from './account-models'
 
 interface LoginRow {
@@ -82,6 +84,45 @@ export async function accountDefault(
     .bind(userId)
     .first<Omit<AgentChoice, 'fast'> & { fast: number }>()
   return row ? { ...row, fast: row.fast === 1 } : null
+}
+
+export async function accountFavourites(
+  db: D1Database,
+  userId: string,
+): Promise<AgentChoice[] | null> {
+  const row = await db
+    .prepare(
+      'SELECT model_favourites AS favourites FROM user_preferences WHERE user_id = ?',
+    )
+    .bind(userId)
+    .first<{ favourites: string | null }>()
+  if (row?.favourites === null || row === null) return null
+  // A stored list that cannot be read gives the starting favourites, so the
+  // account still reads, and the next save writes a good list.
+  try {
+    const value: unknown = JSON.parse(row.favourites)
+    if (!Array.isArray(value)) throw new TypeError('not a list')
+    return value.map((entry: unknown) => choice(entry))
+  } catch {
+    warnWorker({ kind: 'saved_favourites_unreadable' })
+    return null
+  }
+}
+
+export async function saveAccountFavourites(
+  db: D1Database,
+  userId: string,
+  favourites: readonly AgentChoice[],
+  now: number,
+): Promise<void> {
+  await db
+    .prepare(
+      `INSERT INTO user_preferences (user_id, model_favourites, updated_at)
+       VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET
+       model_favourites = excluded.model_favourites, updated_at = excluded.updated_at`,
+    )
+    .bind(userId, JSON.stringify(favourites), now)
+    .run()
 }
 
 /** The saved New workspace view. A new account has none and gets the dialog. */

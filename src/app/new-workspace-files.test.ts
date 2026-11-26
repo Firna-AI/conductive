@@ -183,7 +183,7 @@ describe('the files of a New workspace draft', () => {
       completes: 2,
       sent: {
         repositoryId: 'storefront',
-        capabilities: { preapprovedSecretIds: [], macAccess: false },
+        capabilities: { preapprovedSecretIds: [] },
         firstMessage: {
           id: messageId,
           text: `Fix the flaky cart test. ${mentionText(path, false)} `,

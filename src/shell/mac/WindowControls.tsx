@@ -1,6 +1,6 @@
 import { ArrowLeft, ArrowRight, PanelLeft } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import styles from '../../../docs/mockups/src/components/mac/WindowControls.module.css'
+import { classes } from '../../ui/components/common/classes'
+import styles from '../../ui/components/mac/WindowControls.module.css'
 import { useStore } from '../../app/store'
 import { usePanelLayout } from '../layout/panels'
 import type { SidebarToggle } from '../layout/sidebar-toggle'

@@ -8,7 +8,7 @@ import {
 export const newWorkspaceDialogCapabilities = defineScreen({
   title: 'Capabilities',
   description:
-    'The Capabilities icon sits after the attach button at the bottom left of the dialog, and it shows its label on hover. A press opens the control above it, with the same parts as on the page: the secrets of Acme with FIGMA_TOKEN pre-approved, and Mac access off. The phone view is the New workspace page with the control as a sheet, because a phone always opens the page.',
+    'The Capabilities icon sits after the attach button at the bottom left of the dialog, and it shows its label on hover. A press opens the control above it, with the same part as on the page: the secrets of Acme with FIGMA_TOKEN pre-approved. A browser shows no Mac access part. The phone view is the New workspace page with the control as a sheet, because a phone always opens the page.',
   rationale:
     'Secrets decision 6 puts the same icon on the page and in the dialog, so a choice belongs to the draft wherever it opens. The control opens above the icon and covers the message while it is open, so the dialog keeps its size.',
   relatedDocs: [],

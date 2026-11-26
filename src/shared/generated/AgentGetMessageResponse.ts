@@ -20,7 +20,8 @@ export type AgentGetMessageResponse = {
    */
   message: AgentMessageSummary
   /**
-   * turn id.
+   * The turn that took a member message, or the turn that wrote an agent
+   * message.
    */
   turnId: string | null
 }

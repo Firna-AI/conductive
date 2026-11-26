@@ -2,8 +2,10 @@
 
 This doc holds the requirements and the decisions in force for the calls
 of the workspace tools that create, list, and change the workspaces of the
-org. It belongs to [Agent tools](agent-tools.md). A linked page covers
-[the lists that a create call takes](create-call-lists.md).
+org. It belongs to [Agent tools](agent-tools.md). Linked pages cover
+[the lists that a create call takes](create-call-lists.md), and
+[the rename, the move, and the archive](workspace-management.md) of one
+workspace.
 [Sub-workspaces](sub-workspaces.md) states the rules of the parent of a
 workspace. [Agent tool access](agent-tool-access.md) states what each
 call reaches, which calls need an active turn, and the rights of the
@@ -11,9 +13,7 @@ sender. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A secrets decision number names a decision of the change that adds
-[secrets](secrets.md), as that doc says. A parent-move decision number
-names a decision of the change that adds
-[parent changes](parent-changes.md), as that doc says.
+[secrets](secrets.md), as that doc says.
 
 ## The calls
 
@@ -76,12 +76,12 @@ names a decision of the change that adds
   [The `Sent by:` line](session-calls.md#the-sent-by-line) says
   (decision 259).
 - The new workspace starts with no pre-approved secret, as
-  [Grants](secrets.md#grants) says. Its Mac access is off, also when the
-  calling workspace has Mac access on (secrets decision 18 A), as
-  [Mac access](secrets.md#mac-access) says.
+  [Grants](secrets.md#grants) says. It starts with no grant on any Mac,
+  also when a Mac holds a grant of the calling workspace, as
+  [Mac access](mac-access.md) says.
 - A create call takes no pre-approval and no choice of Mac access.
   Reason: the task gives the pre-approval to a person who creates a
-  workspace, and only a member turns Mac access on.
+  workspace, and only a member starts a grant, in the Mac app.
 - A create call can also give the new workspace a name, and the title of
   its first session. The Worker cleans both with the rule of
   [Names from the workspace tools](tool-names.md).
@@ -94,15 +94,35 @@ names a decision of the change that adds
   a repeat. The workspace state describes the current request.
 - Without a request ID, the tool makes one. Reason: a retry after a lost
   reply then makes no second workspace.
-- A create call names no base branch. The new workspace gets the default
-  branch of its repository as its base branch, as
-  [The base branch of a workspace](base-branches.md#the-base-branch-of-a-workspace)
-  says.
-- A base branch for a create call was left to the later change that lets
-  a create start from another branch (decision 281). So one rule gives the
-  target branch of each such create.
+- A create call can also name a start branch and a base branch
+  (decision 302). The new workspace branch starts from the start branch,
+  and its work targets the base branch, as
+  [Start from a branch](start-from-a-branch.md) says.
+- The defaults apply to the branches that the call names:
+  - With neither branch, both are the default branch of the repository.
+  - With only a start branch, the base branch is that start branch.
+  - With only a base branch, the start branch is that base branch.
+- Reason: New workspace also targets the picked branch first, and the user
+  asked for both branches.
+- A call can name any pair of branches, also a pair that New workspace does
+  not offer. Each named branch that is not the default branch gets the
+  branch check of [The branch check](start-from-a-branch.md#the-branch-check).
+- These ways were not offered, because each gives agents less than the
+  user asked for (decision 302):
+  - A start branch only.
+  - A base branch only.
+  - A start branch, with a target of that branch or of the default branch.
+- The help of the CLI and the description of `create_workspace` say what
+  each branch does, and its default.
+- A repeat with the same request ID keeps the branches of the first create,
+  whatever branches it names. It gets no branch check, as
+  [The branch check](start-from-a-branch.md#the-branch-check) says.
 - The reply to a create call gives the new workspace with its number and
-  its link, and the first session with its link.
+  its link, and the first session with its link. It also gives the ID of
+  the first turn, so that a
+  [watch](session-watches.md#the-watched-turn) can name that turn.
+- That turn ID is optional in the reply. So the tools also accept the
+  reply of an earlier Worker without it.
 - The new workspace in the reply gives its `parentId`, as an entry of the
   workspace list does. The reply can also give a `notice`, as
   [The section of a new sub-workspace](sub-workspaces.md#the-section-of-a-new-sub-workspace)
@@ -203,78 +223,18 @@ names a decision of the change that adds
 
 ## Rename a workspace
 
-- `rename_workspace` takes a workspace and a name.
-- The Worker cleans the name, and treats a blank name, as
-  [Names from the workspace tools](tool-names.md) says.
-- No automatic name replaces the stored name, as after Rename in the
-  [menu of a workspace row](workspace-menu.md#rename).
-- The rename changes the branch only before the start creates the branch
-  in the sandbox, as
-  [The branch and the name](create-a-workspace.md#the-branch-and-the-name)
-  says. After that, the rename keeps the branch.
-- An archived workspace refuses the rename with HTTP 409 and the error
-  code `workspace_archived`, as the app does.
-- The reply gives the workspace with its stored name.
+[Rename a workspace](workspace-management.md#rename-a-workspace) states
+the rename call.
 
 ## Move a workspace
 
-- `move_workspace` takes a workspace, and a section of the org, a target,
-  or both. A target is a new parent or the top level, as
-  [Parent changes](parent-changes.md) says (parent-move decision 1 A).
-- The MCP tool takes a new parent as `parentId`, and the top level as
-  `topLevel: true`. The CLI takes `--parent ID` and `--top-level`.
-- Reason for the names: a create call and the list take a parent with
-  the same names. "Top-level" is the term of the docs.
-- The section is optional only when the call names a target. A call with
-  no section and no target gets HTTP 400 with the error code
-  `invalid_input`. Reason: older tools always send a section, so each
-  request that they send keeps its result.
-- A call with both `parentId` and `topLevel: true` gets HTTP 400 with the
-  error code `invalid_input` (parent-move decision 3 A).
-- Without a target, the call moves the workspace to the top of that
-  section, as [Move to section](workspace-menu.md#move-to-section) does.
-  A move to the section of the workspace changes nothing.
-- A move of a workspace that the list shows as a top-level row also moves
-  each workspace nested under it. Without a target, a workspace that the
-  list shows as a nested row moves nothing, and the reply gives a
-  `notice`. [Moves](sub-workspaces.md#moves) gives these rules.
-- With a target, the call changes the parent of the workspace, and moves
-  each workspace nested under it too.
-  [Parent changes](parent-changes.md) gives the section and the place of
-  the moved tree, and its `notice`. It also gives the errors of a target:
-  `nesting_cycle` and `nesting_limit` with HTTP 409, and
-  `workspace_not_found` with HTTP 404.
-- An unknown section gets HTTP 404 with the error code
-  `section_not_found`.
-- An archived workspace refuses the move with HTTP 409 and the error code
-  `workspace_archived`, as the app does.
-- The reply gives the workspace with its section, its `parent`, and its
-  `depth` after the move. It can also give a `notice`.
-- The reply to a move with a target has the same form as the reply to a
-  section move. Reason: older tools then accept the reply.
-- The help of the CLI and the description of `move_workspace` say how to
-  nest a workspace under a parent, and how to take it out of its tree.
-  Reason: the notice of a nested row names no target, as
-  [Moves](sub-workspaces.md#moves) says.
+[Move a workspace](workspace-management.md#move-a-workspace) states the
+move call, with its section and its target.
 
 ## Archive a workspace
 
-- `archive_workspace` takes a workspace. It makes the same write as
-  Archive in the app, with no question and no check, as
-  [Archive](workspace-life.md#archive) says.
-- Only the workspace owner or an admin can archive it (decision 42).
-  Otherwise the call gets HTTP 403 with the error code
-  `archive_forbidden`, and nothing changes.
-- An agent can archive the calling workspace. That archive ends the
-  calling turn, because Archive stops the cloud computer and revokes the
-  workspace token. So the agent can miss the reply.
-- Reason: Conductor's archive command takes the current workspace by
-  default.
-- A member can restore the workspace for 14 days, as
-  [Restore](workspace-life.md#restore) says.
-- An archive of an archived workspace changes nothing.
-- The reply gives the workspace with the time of the archive and the end
-  of Restore.
+[Archive a workspace](workspace-management.md#archive-a-workspace) states
+the archive call.
 
 ## Repository, section, and model lists
 

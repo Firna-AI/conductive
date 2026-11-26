@@ -1,11 +1,41 @@
-import { parseBlocks, type MdBlock } from './markdown-blocks'
-import { parseInline, type MdInline } from './markdown-inline'
+import type { TableCells } from '../../markdown/table-rows'
 
-type Definitions = ReadonlyMap<string, string>
+/** The six heading levels of Markdown. */
+export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
 
-/** A parsed Markdown file. Each block holds its parsed inline content. */
+/** Inline content of a block. A link holds a checked, safe address. */
+export type MdInline =
+  | { kind: 'text'; text: string }
+  | { kind: 'code'; text: string }
+  | { kind: 'strong' | 'emphasis' | 'strike'; children: MdInline[] }
+  | { kind: 'link'; href: string; children: MdInline[] }
+  | { kind: 'break' }
+
+/** One block of a Markdown file, with its parsed inline content. */
+export type MdBlock =
+  | { kind: 'heading'; level: HeadingLevel; text: MdInline[] }
+  | { kind: 'paragraph'; text: MdInline[] }
+  | { kind: 'code'; text: string }
+  | { kind: 'quote'; blocks: MdBlock[] }
+  | { kind: 'list'; ordered: boolean; start: number; items: MdListItem[] }
+  | { kind: 'rule' }
+  | ({ kind: 'table' } & TableCells<MdInline[]>)
+  /** The rest of the file as typed, after a row passed the table budget. */
+  | { kind: 'literal'; text: string }
+
+/** An item of a list: its task box, and its blocks. */
+export interface MdListItem {
+  /** A task item is done or not done. Null for other items. */
+  checked: boolean | null
+  blocks: MdBlock[]
+}
+
+/**
+ * A parsed Markdown file. Each block holds its parsed inline content. The
+ * worker posts it to the page, so it holds plain data only.
+ */
 export interface MarkdownDocument {
-  blocks: MdBlock<MdInline[]>[]
+  blocks: MdBlock[]
 }
 
 /**
@@ -13,56 +43,3 @@ export interface MarkdownDocument {
  * the worker, such as a static render.
  */
 export type MarkdownParser = (source: string) => MarkdownDocument
-
-function inlineBlocks(
-  blocks: readonly MdBlock[],
-  definitions: Definitions,
-): MdBlock<MdInline[]>[] {
-  return blocks.map((block) => inlineBlock(block, definitions))
-}
-
-function inlineBlock(
-  block: MdBlock,
-  definitions: Definitions,
-): MdBlock<MdInline[]> {
-  const inline = (text: string) => parseInline(text, definitions)
-  switch (block.kind) {
-    case 'heading':
-      return { kind: 'heading', level: block.level, text: inline(block.text) }
-    case 'paragraph':
-      return { kind: 'paragraph', text: inline(block.text) }
-    case 'code':
-    case 'literal':
-    case 'rule':
-      return block
-    case 'quote':
-      return { kind: 'quote', blocks: inlineBlocks(block.blocks, definitions) }
-    case 'list':
-      return {
-        kind: 'list',
-        ordered: block.ordered,
-        start: block.start,
-        items: block.items.map((item) => ({
-          checked: item.checked,
-          blocks: inlineBlocks(item.blocks, definitions),
-        })),
-      }
-    case 'table':
-      return {
-        kind: 'table',
-        align: block.align,
-        head: block.head.map(inline),
-        rows: block.rows.map((row) => row.map(inline)),
-      }
-  }
-}
-
-/**
- * Parses a Markdown file: its blocks, then the inline content of each
- * block, with the link reference definitions of the whole file. The
- * Markdown worker runs this parse. The parser never runs or keeps HTML.
- */
-export function parseMarkdown(source: string): MarkdownDocument {
-  const { blocks, definitions } = parseBlocks(source)
-  return { blocks: inlineBlocks(blocks, definitions) }
-}

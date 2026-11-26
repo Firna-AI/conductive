@@ -1,11 +1,13 @@
-import type { Viewport } from '@mokly/mokly'
-import { LogOut } from 'lucide-react'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import type { PersonKey } from '../../fixtures/members'
 import { orgs, suspendedOrg } from '../../fixtures/orgs'
 import { workspaceList } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import {
+  confirmDialog,
+  dialogText,
+} from '../../entries/components/common/ConfirmDialog.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 
 /**
@@ -27,14 +29,23 @@ export function LeaveOrgDialog(props: {
     (item) => item.owner === props.viewer,
   ).length
   const owned = `${total} ${total === 1 ? 'workspace' : 'workspaces'}`
-  const cancel = <ActionButton disabled={props.busy}>Cancel</ActionButton>
+  const cancel = (
+    <actionButton.Component disabled={props.busy} moklyInstance="dialog-cancel">
+      Cancel
+    </actionButton.Component>
+  )
   const leave = (
-    <ActionButton busy={props.busy} icon={LogOut} tone="danger">
+    <actionButton.Component
+      busy={props.busy}
+      icon="log-out"
+      moklyInstance="dialog-leave-org"
+      tone="danger"
+    >
       Leave org
-    </ActionButton>
+    </actionButton.Component>
   )
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         props.busy ? (
           <>
@@ -52,13 +63,14 @@ export function LeaveOrgDialog(props: {
           </>
         )
       }
+      moklyInstance="leave-org-dialog"
       title={`Leave ${org.name}?`}
       viewport={props.viewport}
     >
-      <DialogText>
+      <dialogText.Component>
         You can no longer open {org.name} or read its chats. Your {owned} stay
         in {org.name}.
-      </DialogText>
-    </ConfirmDialog>
+      </dialogText.Component>
+    </confirmDialog.Component>
   )
 }

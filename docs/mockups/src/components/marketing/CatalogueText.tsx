@@ -2,7 +2,10 @@ import type { ReactNode } from 'react'
 import type { SitePage, Text } from '../../../../../src/marketing/legal-text'
 import { paths } from '../../paths'
 import { ScreenLink, useOutsideHref } from '../common/ScreenLink'
-import { RunningText, type TextLinkRenderer } from './RunningText'
+import {
+  RunningText,
+  type TextLinkRenderer,
+} from '../../../../../src/ui/components/marketing/RunningText'
 
 /** The catalogue page of each page of the site. */
 const sitePages: Readonly<Record<SitePage, string>> = {

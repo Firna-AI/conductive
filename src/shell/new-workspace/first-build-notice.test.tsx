@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import noticeStyles from '../../../docs/mockups/src/components/common/Notice.module.css'
+import noticeStyles from '../../ui/components/common/Notice.module.css'
 import { memoryNavigation } from '../../app/navigation'
 import { routes } from '../../app/router'
 import type { OrgRole } from '../../shared/api'

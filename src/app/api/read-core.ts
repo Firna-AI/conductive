@@ -34,7 +34,7 @@ import {
 import { readShortcuts } from './read-shortcuts'
 
 export const AGENTS = ['claude', 'codex'] as const satisfies readonly Agent[]
-export const EFFORTS = [
+const EFFORTS = [
   'none',
   'low',
   'medium',
@@ -238,6 +238,10 @@ export function readAccount(value: unknown): AccountResponse {
   return {
     user: nested(account, 'user', readUser),
     defaultChoice: nested(account, 'defaultChoice', readChoice),
+    favourites:
+      account.favourites === undefined
+        ? []
+        : items(account, 'favourites', readChoice),
     newWorkspaceView: choice(account, 'newWorkspaceView', NEW_WORKSPACE_VIEWS),
     shortcuts: nested(account, 'shortcuts', readShortcuts),
     agentLogins: items(account, 'agentLogins', readLogin),

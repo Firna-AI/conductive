@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-13, from the mockup milestone of the temporary file tabs change on branch `calummoore/oslo-k1ce`.
-- **Location:** `docs/mockups/src/components/workspace/WorkspaceTabs.tsx`, the `endInView` rule near line 118, and `docs/mockups/src/components/workspace/TabScroll.module.css`, the `scrolledToEnd` class.
+- **Location:** `docs/mockups/src/components/workspace/WorkspaceTabs.tsx`, the `endInView` rule near line 118, and `src/ui/components/workspace/TabScroll.module.css`, the `scrolledToEnd` class.
 - **Reason:** The fix changes the shared mockup tab row, so it changes the narrow view of many pages that the temporary tab change does not touch.
 
 - **Source:** Implementation.

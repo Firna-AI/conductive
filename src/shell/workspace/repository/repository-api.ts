@@ -10,7 +10,7 @@ import {
 } from '../../../app/api/parse'
 import { readWorkspace } from '../../../app/api/read-workspaces'
 import type { WorkspaceIdentity } from '../../../app/workspace-store'
-import { readLocalWork } from '../../../github/continueActions'
+import { fileLabels, readLocalWork } from '../../../github/continueActions'
 import {
   workspacePaths,
   type ChangeRepositoryRequest,
@@ -23,14 +23,21 @@ function readPullRequest(value: unknown): { number: number; url: string } {
   return { number: count(body, 'number'), url: text(body, 'url') }
 }
 
-/** Checks the work that the question of a repository change lists. */
+/**
+ * Checks the work that the question of a repository change lists. Each path
+ * stays the real path, and the optional labels of the changed files, which
+ * hide each secret value, never make it unreadable.
+ */
 function readWork(value: unknown): RepositoryChangeWork {
   const body = record(value, 'repository change work')
+  const carriedFiles = texts(body, 'carriedFiles')
+  const displayCarriedFiles = fileLabels(body.displayCarriedFiles, carriedFiles)
   return {
     localWork: nested(body, 'localWork', readLocalWork),
     pullRequest: maybeNested(body, 'pullRequest', readPullRequest),
     pushedCommits: count(body, 'pushedCommits'),
-    carriedFiles: texts(body, 'carriedFiles'),
+    carriedFiles,
+    ...(displayCarriedFiles === undefined ? {} : { displayCarriedFiles }),
   }
 }
 

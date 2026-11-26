@@ -3,32 +3,43 @@ import { effortLabels } from '../../../../../src/shared/agents'
 import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
 import { type AgentChoice, type AgentKey } from '../../fixtures/agents'
-import { noop } from '../../noop'
-import { Menu, type MenuPlacement } from '../common/Menu'
+import { favourites as savedFavourites } from '../../fixtures/favourites'
+import { noop } from '../../../../../src/ui/noop'
 import { useShortcutHint } from '../common/ShortcutTip'
-import { useControlSizes } from '../common/touch'
-import { pickerButtonStyle } from './pickerButton'
-import { pickerMenu } from './pickers'
-import styles from './ModelPicker.module.css'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import { FavouritesMenu, type PickerPlacement } from './FavouritesMenu'
+import { pickerButtonStyle } from '../../../../../src/ui/components/chat/pickerButton'
+import styles from '../../../../../src/ui/components/chat/ModelPicker.module.css'
 
 /**
  * One picker for the model and the effort of the next message, such as
  * "Opus 5.5 High". The effort shows in a muted colour, and so does "Fast"
- * after it while fast mode is on. `open` draws its menu open.
- * `sessionAgent` is the agent of a session with messages, whose other
- * agent's models open a new session. `hiddenModels` holds the models that
- * its menu leaves out. `fastKey` marks the picker of a session tab, where
- * the key of Fast mode runs, so its Fast row shows that key on desktop.
- * `menu` is an open menu in place of the model menu, such as the menu of
- * the favourites.
+ * after it while fast mode is on. `open` draws its menu open: the
+ * favourites first, then All models, then Effort and the Fast switch, as
+ * `FavouritesMenu` says.
+ *
+ * `favourites` holds the favourites of the menu, by default those of the
+ * viewer. With none, the menu starts with All models, as the picker of a
+ * Favourites row does, because the row sets one favourite.
+ * `allModels` opens the submenu of every model, and `effort` opens the
+ * submenu of the efforts. `sessionAgent` is the
+ * agent of a session with messages, whose other agent's models and
+ * favourites open a new session. `hiddenModels` holds the models that its
+ * menu leaves out, with each favourite on one of them. `fastKey` marks the
+ * picker of a session tab, where the key of Fast mode runs, so its Fast row
+ * shows that key on desktop. `menu` takes the place of the open menu, such
+ * as nothing where the screen draws the menu above the page.
  */
 export function ModelPicker(props: {
   choice: AgentChoice
   open?: boolean
-  placement?: MenuPlacement
+  placement?: PickerPlacement
   sessionAgent?: AgentKey
   hiddenModels?: readonly string[]
   fastKey?: boolean
+  favourites?: readonly AgentChoice[]
+  allModels?: boolean
+  effort?: boolean
   menu?: ReactNode
 }) {
   const control = useControlSizes()
@@ -60,15 +71,15 @@ export function ModelPicker(props: {
       />
       {props.open
         ? (props.menu ?? (
-            <Menu
-              entries={pickerMenu(
-                choice,
-                props.sessionAgent,
-                props.hiddenModels,
-                props.fastKey ? fastHint : undefined,
-              )}
-              label="Model and effort"
+            <FavouritesMenu
+              allModels={props.allModels}
+              choice={choice}
+              effort={props.effort}
+              fastKey={props.fastKey ? fastHint : undefined}
+              favourites={props.favourites ?? savedFavourites}
+              hiddenModels={props.hiddenModels}
               placement={props.placement ?? 'above-start'}
+              sessionAgent={props.sessionAgent}
             />
           ))
         : null}

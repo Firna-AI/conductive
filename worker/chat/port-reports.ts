@@ -25,6 +25,9 @@ export function parsePortReport(value: unknown): RunnerPortsUpdated {
       port,
       name: label(input.name),
       folder: label(input.folder),
+      ...(typeof input.serviceId === 'string'
+        ? { serviceId: input.serviceId }
+        : {}),
     }
   })
   return { type: 'ports.updated', ports }

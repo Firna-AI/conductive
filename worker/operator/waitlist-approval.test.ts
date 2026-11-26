@@ -51,7 +51,7 @@ it('approves during the pause once, saves the source and sends one plain text em
     from: 'Conductive <invites@mail.conductive.build>',
     to: ['member@example.com'],
     subject: 'Your Conductive account is ready',
-    text: 'You can now use Conductive. Sign in with GitHub to get started:\nhttps://app.conductive.build/',
+    text: 'You can now use Conductive. Sign in with GitHub to get started:\nhttps://app.conductive.test/',
   })
   const user = await client.request(operatorUserPath(11))
   expect(await user.json()).toMatchObject({

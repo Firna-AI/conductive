@@ -29,9 +29,15 @@ impl DiskStore {
         Ok(())
     }
 
+    /// Unpack one part into a private folder, then publish it with one rename.
+    ///
+    /// A check and a repair can fetch the same part at once. Each unpacks
+    /// with no lock. The store-wide publish lock covers only the last check
+    /// and the rename, so a part that is present stays, and only a missing
+    /// or damaged part is replaced.
     pub(super) fn unpack_part(&self, part: &Part, bytes: &[u8]) -> Result<()> {
         let target = self.part_path(&part.sha256);
-        let temporary = target.with_extension("partial");
+        let temporary = target.with_extension(format!("partial-{}", std::process::id()));
         if temporary.try_exists().internal()? {
             fs::remove_dir_all(&temporary).internal()?;
         }
@@ -74,6 +80,11 @@ impl DiskStore {
             fs::remove_dir(nested).internal()?;
         }
         fs::write(temporary.join("complete"), []).internal()?;
+        let publish = self.lock_file("part-publish.lock")?;
+        publish.lock().internal()?;
+        if self.part_present(part)? {
+            return fs::remove_dir_all(&temporary).internal();
+        }
         if target.try_exists().internal()? {
             fs::remove_dir_all(&target).internal()?;
         }

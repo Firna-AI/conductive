@@ -102,6 +102,7 @@ export async function chatLifecycleRoute(
             orgId,
             response.workspace.id,
             env.APP_ORIGIN,
+            read === true,
           )
         return {
           ...ordered.response,

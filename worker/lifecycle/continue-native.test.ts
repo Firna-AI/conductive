@@ -76,7 +76,10 @@ it('keeps the old branch, index, and changed files when the new base clashes', a
     const head = await f.git('rev-parse', 'HEAD')
     const index = await f.git('write-tree')
     expect((await f.fetch()).exitCode).toBe(0)
-    expect((await f.move()).exitCode).not.toBe(0)
+    const moved = await f.move()
+    expect(moved.exitCode).toBe(80)
+    expect(moved.stdout).toBe('')
+    expect(moved.stderr).toBe('')
     expect(await f.git('symbolic-ref', '--short', 'HEAD')).toBe('owner/old\n')
     expect(await f.git('rev-parse', 'HEAD')).toBe(head)
     expect(await f.git('write-tree')).toBe(index)
@@ -86,6 +89,52 @@ it('keeps the old branch, index, and changed files when the new base clashes', a
       await f.git('for-each-ref', '--format=%(refname)', 'refs/heads/'),
     ).toBe('refs/heads/owner/old\n')
   }
+})
+
+it('keeps the branch, index, work, and existing lock when checkout finds an index lock', async () => {
+  const f = await continueNativeFixture()
+  await f.write('carry.txt', 'kept local content\n')
+  await f.write('staged.txt', 'kept staged content\n')
+  await f.git('add', 'staged.txt')
+  const refs = await f.git(
+    'for-each-ref',
+    '--format=%(refname) %(objectname)',
+    'refs/heads/',
+  )
+  const index = await readFile(join(f.directory, '.git/index'))
+  expect((await f.fetch()).exitCode).toBe(0)
+  await f.write('.git/index.lock', 'held by another command\n')
+  const moved = await f.move()
+  expect(moved.exitCode).toBe(81)
+  expect(moved.stdout).toBe('')
+  expect(moved.stderr).toBe('')
+  expect(await f.git('symbolic-ref', '--short', 'HEAD')).toBe('owner/old\n')
+  expect(
+    await f.git(
+      'for-each-ref',
+      '--format=%(refname) %(objectname)',
+      'refs/heads/',
+    ),
+  ).toBe(refs)
+  expect(await readFile(join(f.directory, '.git/index'))).toEqual(index)
+  expect(await f.read('carry.txt')).toBe('kept local content\n')
+  expect(await f.read('staged.txt')).toBe('kept staged content\n')
+  expect(await f.read('.git/index.lock')).toBe('held by another command\n')
+})
+
+it('does not classify an existing target branch as a checkout clash', async () => {
+  const f = await continueNativeFixture()
+  await f.git('branch', 'owner/new')
+  await f.write('carry.txt', 'kept local content\n')
+  const index = await readFile(join(f.directory, '.git/index'))
+  expect((await f.fetch()).exitCode).toBe(0)
+  const moved = await f.move()
+  expect(moved.exitCode).toBe(1)
+  expect(moved.stdout).toBe('')
+  expect(moved.stderr).toBe('')
+  expect(await f.git('symbolic-ref', '--short', 'HEAD')).toBe('owner/old\n')
+  expect(await readFile(join(f.directory, '.git/index'))).toEqual(index)
+  expect(await f.read('carry.txt')).toBe('kept local content\n')
 })
 
 it('counts distinct unpushed commits across all local branches after Continue', async () => {

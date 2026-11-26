@@ -1,7 +1,10 @@
 import type { LucideIcon } from 'lucide-react'
 import { Archive, CircleAlert, CirclePause } from 'lucide-react'
-import { refusedIcon } from '../../../docs/mockups/src/components/orgs/suspension'
-import type { SandboxNoticeState } from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
+import { refusedIcon } from '../../ui/components/orgs/suspension'
+import {
+  archiveStage,
+  type SandboxNoticeState,
+} from '../../ui/components/workspace/sandboxNoticeState'
 
 type ArchivedNotice = Extract<SandboxNoticeState, { problem: 'archived' }>
 
@@ -50,36 +53,24 @@ export function keptBody(notice: SandboxNoticeState, body: string): string {
 /** The files and the tools of a cloud computer that the app deleted. */
 const wentWith = 'The files and the tools went with the cloud computer.'
 
-/**
- * How far an archived workspace is. In its 14 days: Restore until its last
- * day, no Restore in a suspended org, which promises no files, or no cloud
- * computer to bring back. After them it is removed: while a failed delete
- * of the cloud computer still tries again, or after the delete. Restore
- * ends with the 14 days, so a removed workspace has none.
- */
-type ArchiveStage = 'available' | 'refused' | 'none' | 'deleting' | 'removed'
-
-function stageOf(notice: ArchivedNotice): ArchiveStage {
-  if (notice.restore === 'ended') return 'deleting'
-  if (notice.removed === true) return 'removed'
-  return notice.restore ?? 'none'
-}
-
-/** Whether an archived workspace left the list, as `stageOf` says. */
+/** Whether an archived workspace left the list, as `archiveStage` says. */
 export function leftTheList(notice: SandboxNoticeState): boolean {
   if (notice.problem !== 'archived') return false
-  const stage = stageOf(notice)
+  const stage = archiveStage(notice)
   return stage === 'deleting' || stage === 'removed'
 }
 
 /**
- * The words of an archived workspace, as the mockups give them. Until its
- * 14 days end, the title gives the day of the Archive, and the body the
- * day when the workspace leaves the list, also without Restore. After
- * them, the title gives the day of the removal, and the body says that the
- * workspace left the list, what happens to its cloud computer, and that
- * the chat is read-only. The words say "removed" for the workspace,
- * because the app keeps its data. Only the cloud computer is deleted.
+ * The words of an archived workspace, as the mockups give them for each
+ * stage of `archiveStage`. Until its 14 days end, the title gives the day
+ * of the Archive, and the body the day when the workspace leaves the list,
+ * also without Restore. A cloud computer that can still exist without
+ * Restore gets the words of a refused start, which promise only the chat
+ * history. After the 14 days, the title gives the day of the removal, and
+ * the body says that the workspace left the list, what happens to its
+ * cloud computer, and that the chat is read-only. The words say "removed"
+ * for the workspace, because the app keeps its data. Only the cloud
+ * computer is deleted.
  */
 function archivedProblem(notice: ArchivedNotice, days: ArchiveDays): Problem {
   const { archivedOn, removedOn } = days
@@ -88,7 +79,7 @@ function archivedProblem(notice: ArchivedNotice, days: ArchiveDays): Problem {
   const listed = { icon: Archive, title: `Archived on ${archivedOn}` }
   const removed = { icon: Archive, title: `Removed on ${removedOn}` }
   const tone = 'neutral'
-  switch (stageOf(notice)) {
+  switch (archiveStage(notice)) {
     case 'available':
       return {
         ...listed,
@@ -97,14 +88,14 @@ function archivedProblem(notice: ArchivedNotice, days: ArchiveDays): Problem {
         action: 'Restore',
         tone,
       }
-    case 'refused':
+    case 'history':
       return {
         ...listed,
         body: `${history} ${leaves}`,
         panelBody: history,
         tone,
       }
-    case 'none':
+    case 'deleted':
       return {
         ...listed,
         body: `Its cloud computer is deleted, and the chat is read-only. ${leaves}`,

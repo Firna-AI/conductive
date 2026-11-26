@@ -1,11 +1,14 @@
 import { repositories, type RepositoryKey } from '../../fixtures/repositories'
 import { movedRepository } from '../../fixtures/repositoryMove'
 import { paths } from '../../paths'
-import { Menu, type MenuEntry } from '../common/Menu'
+import {
+  Menu,
+  type MenuEntry,
+} from '../../../../../src/ui/components/common/Menu'
 import { ScreenLink } from '../common/ScreenLink'
-import { RepositoryButton } from './RepositoryButton'
-import { repositoryMenu } from './repositoryMoveCopy'
-import styles from './RepositoryPicker.module.css'
+import { RepositoryButton } from '../../../../../src/ui/components/workspace/RepositoryButton'
+import { repositoryMenu } from '../../../../../src/ui/components/workspace/repositoryMoveCopy'
+import styles from '../../../../../src/ui/components/workspace/RepositoryPicker.module.css'
 
 /**
  * The repositories that the org chose, with the current one marked. A pick

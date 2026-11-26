@@ -118,6 +118,12 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   one note at its place, with the member who changed the repository, the
   new repository, and the new branch. To that member it says "You". The
   note reaches no agent.
+- A change of the capabilities shows a change note in the sessions whose
+  facts it changes, as [In the chat](capabilities-agents.md#in-the-chat) says.
+- A wake of a watch shows as one line of the app at its place. It gives
+  the end of the watched turn and the session chip of the watched session,
+  as [The wake line](session-watches.md#the-wake-line) says. It shows no
+  message of a member.
 - The chat hides the messages that the SDK adds on its own, such as
   "[Request interrupted by user]".
 - Each result of the agent shows with the messages that it answers. One
@@ -125,35 +131,8 @@ holds how an agent action of the pull request bar sends its fixed prompt.
 
 ### The scroll of the chat
 
-- At the bottom, the chat keeps the newest message in view.
-- While the user reads higher up, the row that they read keeps its place.
-  A message of another member, the output of an agent, and a fold that
-  closes do not move it.
-- A message that the user sends from the chat goes to the bottom of the
-  chat, also while the user reads higher up. This applies to the composer
-  and to the fixed prompts of the pull request bar, such as Create PR.
-- A message that the same member sends from another tab or device does
-  not move this chat.
-- Reason: the user who sends a message wants to see it and its answer. A
-  scroll for each message of the workspace was rejected, because it takes
-  the place of a reader who reads an earlier part of the chat.
-- Each session tab keeps the reader's place while another tab, another
-  workspace, or another page of the app shows. When the tab shows again, the
-  row that the user read is at the same place. A chat that was at the bottom
-  shows the bottom again, with the output that came in the meantime. When
-  the read row is gone, the chat shows the bottom.
-- The places stay while the browser tab keeps the workspace. A reload
-  forgets them, and each chat then opens at the bottom.
-- Reason: the user who looks at another tab comes back to read on. A saved
-  scroll offset was rejected, because output that comes in the meantime
-  moves the read row. A place that stays after a reload was rejected,
-  because it needs browser storage that each sign-out must clear. The user
-  chose both on 13 November 2026.
-- A session tab that closes forgets its place, also when another member
-  closes its session. When the session opens again, such as from the
-  session history, it shows the bottom.
-- Reason: a reopened tab is a new tab to the user. The user chose this on
-  13 November 2026.
+[The scroll of the chat](chat-scroll.md) states the row that stays in
+view, the scroll after a send, and the place that each tab keeps.
 
 ### The work of a turn
 
@@ -185,6 +164,8 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   [Late requests](secret-requests.md#late-requests) says.
 - A message that a member sends during a turn stays in view. It starts a
   new part of the turn, with its own answer and its own fold.
+- A wake line stays in view too, and it never folds. It starts a new part
+  of its turn, as such a message does.
 - The answer of a part is its last agent message, with the agent messages
   directly before it. A part with no agent message has no fold.
 - The answer and the work after it stay in view, such as the tool calls
@@ -206,6 +187,15 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   tools, is the name of that tool without its server, such as
   `get_window_state`. Its detail is the subject of the call, such as a
   query, a path, or an address.
+- A call to a tool of no known kind has the verb "Used". Its target is
+  the name of the tool, such as `WebFetch`. Its detail is the subject of
+  the call, or else its description, such as "Used `WebFetch`
+  https://example.com". The user chose this rule on 2026-11-23, over a
+  list of such tools in the runner.
+- The target of a call to the Claude `Skill` tool is `Skill`. Its detail
+  is the name of the skill, such as "Used `Skill` brainstorming". A call
+  that names no skill has no detail. Its other arguments never replace
+  the target or the detail.
 - Reason: a subject alone, such as `menu`, does not say which tool ran,
   and a full name, such as `mcp__computer__get_window_state`, is hard to
   read. Words of the app for each computer tool were rejected, because
@@ -219,31 +209,7 @@ holds how an agent action of the pull request bar sends its fixed prompt.
 
 ## Events
 
-- The browser gets chat events only in the app's own event type. No SDK
-  event type and no provider event type reaches the browser.
-- Reason: one event type serves both agents, and the web app needs no
-  change when an SDK changes its events.
-- Every open tab of a workspace gets the same events in the same order.
-- A tab that shows a session gets the newest part of its stored history
-  first. The live events start after that part, and the earlier history
-  loads above it (decision 280).
-- Reason: the newest messages and the work of a running turn show after
-  one read, also in a long session. Live events after the full history
-  were rejected, because a long session then showed nothing new until its
-  whole history had loaded.
-- The chat shows each event of a session once and in event order, also
-  when earlier history arrives after newer events.
-- While the earlier history loads, the chat says so above the messages
-  that it shows.
-- The Durable Object of the workspace stores every event, so the chat
-  survives a stop of the sandbox.
-- A tab keeps the chat of each workspace that it showed in memory. A
-  return to that workspace shows the chat at once, then gets only the new
-  events (decision 87).
-- A reload or a new tab starts empty. No chat stays on the disk of the
-  device.
-- A cache on the disk was rejected, because the chat, with its code and
-  any secret that an agent printed, would stay on the device.
+[Workspace events](workspace-events.md) states the events that reach each tab, the reads that give a new tab the state of a workspace, and what a tab keeps.
 
 ## The agent runner
 

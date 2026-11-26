@@ -20,6 +20,7 @@ import type { PromptResult } from './barPorts'
 import { createContinueActions } from './continueActions'
 import { createGitHubActions } from './githubActions'
 import type { GitHubState } from './githubStore'
+import { barWorkspaceStream, githubEvent } from './storeDoubles'
 import { snapshotOf } from './testing'
 
 const target = { orgId: FAKE_IDS.org, workspaceId: FAKE_IDS.workspace }
@@ -36,8 +37,8 @@ function barFor(
     status: 'ready',
     snapshot: snapshotOf('ready-to-merge'),
   })
-  const streamLast = new Store(0)
-  const reconnects = new Store(0)
+  const { events, stream, start } = barWorkspaceStream()
+  const { last: streamLast, reconnects } = stream
   const refreshGitHub = vi.fn()
   const actions = new BarActions({
     branch,
@@ -51,11 +52,13 @@ function barFor(
     reconnects,
   })
   const stop = actions.connect()
+  start(19)
   const reads = (path: string) =>
     requestLines(server).filter((line) => line === path).length
   return {
     actions,
     delay,
+    events,
     github,
     streamLast,
     reconnects,
@@ -201,7 +204,7 @@ describe('the action state of the bar', () => {
     })
   })
 
-  it('asks about local work, sends nothing on Cancel, and ends Continue anyway when the stream shows the new branch', async () => {
+  it('asks about local work, sends nothing on Cancel, and ends Continue anyway at the first event after the seed', async () => {
     const server = new FakeApiServer()
     serveContinue(server, 'question')
     const bar = barFor(server)
@@ -235,7 +238,11 @@ describe('the action state of the bar', () => {
     // The reply names event 20, so the run follows the stream until then.
     await vi.waitFor(() => expect(follows).toHaveBeenCalledOnce(), shortly)
     const waiting = outcomeOf(bar.actions)
-    bar.streamLast.set(20)
+    expect(bar.streamLast.get()).toBe(19)
+    bar.events.send({
+      type: 'event',
+      envelope: githubEvent(20, 'ready-to-merge'),
+    })
 
     expect({
       checking,

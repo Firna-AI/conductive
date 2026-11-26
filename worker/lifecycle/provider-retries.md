@@ -23,7 +23,9 @@ transient. Other errors keep their existing handling.
   an image job, that cleanup also revokes any source token, as the
   [source loader](repository-layout.md#the-source-loader) says.
 - When a step runs without an error but does not finish, it clears only
-  the pending wait. The next alarm then comes after 1 second. So a healthy
+  the pending wait. The next alarm then comes after 1 second, or after
+  250 milliseconds for a start that polls, as
+  [The start loop](start-loop.md) says. So a healthy
   command can run past the age of the window. A later fault in the same
   step still uses the first window.
 - The window does not limit a whole job or a healthy command.

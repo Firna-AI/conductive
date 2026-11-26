@@ -8,6 +8,7 @@ import {
 } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
+import { emptyWorkspaceSeed } from '../test-support/fixtures/workspace-seed'
 import { workspaceFixtures } from '../test-support/fixtures/workspaces'
 import { OrgModel } from './org-model'
 import { valueOf } from './store'
@@ -36,7 +37,10 @@ const output: WorkspaceEvent = {
 
 /** An open workspace on the fake API, whose Resume answer waits for the test. */
 async function opened(initial: WorkspaceState) {
-  const server = new FakeApiServer({ workspaceState: initial })
+  const server = new FakeApiServer({
+    workspaceState: initial,
+    legacyWorkspaceRead: true,
+  })
   const held = new HeldRequests(server)
   const events = new RecordingEvents()
   const org = new OrgModel(
@@ -203,6 +207,11 @@ describe('the order of the open workspace', () => {
     await org.reload('list')
     const workspace = new WorkspaceModel(org, workspaceId)
     const path = workspacePath(orgId, workspaceId)
+    server.json('GET', path, {
+      ...workspaceFixtures('stopped').detail,
+      eventNumber: 9,
+      seed: emptyWorkspaceSeed,
+    })
     held.holdAnswer('GET', path)
     const opening = workspace.open()
     await flushMicrotasks()
@@ -214,6 +223,7 @@ describe('the order of the open workspace', () => {
     expect(workspace.detail.get()).toEqual(expected)
     held.release('GET', path)
     await opening
+    expect(workspace.stream.last.get()).toBe(9)
     expect(workspace.detail.get()).toEqual(expected)
     expect(org.workspace(workspaceId)?.state).toBe('archived')
     expect(
@@ -267,6 +277,7 @@ describe('the order of the open workspace', () => {
     server.json('GET', workspacePath(orgId, workspaceId), {
       ...workspaceFixtures('unread').detail,
       eventNumber: 2,
+      seed: emptyWorkspaceSeed,
     })
     await workspace.open()
     await flushMicrotasks()

@@ -1,5 +1,5 @@
 import type { Attachment } from '../../shared/generated/Attachment'
-import { tooLargeBody } from '../../../docs/mockups/src/components/chat/attachmentCopy'
+import { tooLargeBody } from '../../ui/components/chat/attachmentCopy'
 import {
   ATTACHMENT_MAX_BYTES,
   ATTACHMENT_PART_BYTES,

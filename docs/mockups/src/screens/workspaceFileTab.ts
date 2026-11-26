@@ -36,6 +36,7 @@ export function openFile(state: WorkspaceState): FileTabView | undefined {
     case 'started-session':
     case 'preview':
     case 'preview-behind':
+    case 'explanation':
       return undefined
   }
 }

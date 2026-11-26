@@ -1,6 +1,6 @@
 import { beforeAll, expect, it } from 'vitest'
 
-import { productName } from '../../docs/mockups/src/brand'
+import { productName } from '../../src/shared/brand'
 import { docsPath, sitePaths } from '../../src/marketing/links'
 import { GITHUB_SETUP_PATH } from '../../src/shared/github-setup'
 import { SITE_FOLDER, SITE_ICONS } from '../../src/shared/site-build'

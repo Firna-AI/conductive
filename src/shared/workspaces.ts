@@ -1,4 +1,5 @@
 import type { Workspace } from './generated/Workspace'
+import type { WorkspaceListRepository } from './generated/WorkspaceListRepository'
 
 import type { UserMessage } from './generated/UserMessage'
 import type { WorkspaceStart } from './generated/WorkspaceStart'
@@ -6,6 +7,7 @@ import { orgPath } from './api'
 
 import type { SendMessageRequest } from './messages'
 import type { WorkspaceCapabilities } from './secrets'
+import type { WorkspaceSeed } from './workspace-state-read'
 
 export const WORKSPACE_RESTORE_MS = 14 * 24 * 60 * 60 * 1_000
 
@@ -59,14 +61,24 @@ export interface WorkspaceResponse {
 export interface OrderedWorkspaceResponse extends WorkspaceResponse {
   /** The workspace event sequence when this read or resume reply was made. */
   eventNumber: number
+  seed?: WorkspaceSeed
 }
 export interface WorkspacesResponse {
   workspaces: readonly Workspace[]
+  repositories?: readonly WorkspaceListRepository[]
 }
 export interface CreateWorkspaceRequest {
   repositoryId: string
   sectionId?: string
-  capabilities?: WorkspaceCapabilities
+  startBranch?: string
+  baseBranch?: string
+  /**
+   * The capabilities of the new workspace. Each field that is not there
+   * takes its value from `NEW_WORKSPACE_CAPABILITIES`. The page sends only
+   * the pre-approved secrets. The Worker still takes `macAccess`, such as
+   * from an older page, and it gates nothing (Mac access decision 7).
+   */
+  capabilities?: Partial<WorkspaceCapabilities>
   firstMessage: SendMessageRequest
 }
 export interface CreateWorkspaceResponse extends WorkspaceResponse {
@@ -75,6 +87,7 @@ export interface CreateWorkspaceResponse extends WorkspaceResponse {
 }
 export interface LocalWork {
   uncommittedFiles: readonly string[]
+  displayUncommittedFiles?: readonly string[]
   unpushedCommits: number
 }
 
@@ -89,6 +102,7 @@ export type ContinueWorkspaceResponse =
       state: 'confirmation-required'
       branch: string
       baseBranch: string
+      displayBaseBranch?: string
       localWork: LocalWork
     }
   | { state: 'continued'; workspace: Workspace; eventNumber: number }
@@ -114,6 +128,7 @@ export interface RepositoryChangeWork {
   pushedCommits: number
   /** The changed files of the new folder, which move to the new branch. */
   carriedFiles: readonly string[]
+  displayCarriedFiles?: readonly string[]
 }
 
 export type ChangeRepositoryResponse =

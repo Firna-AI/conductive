@@ -14,8 +14,8 @@
   - After a repository save or an install script save, the app reads the builds again, so that the notices show at once.
   - When a builds read is already running, the new read joins it, so it gets the answer of a request that started before the save.
   - The app polls the builds every 5 seconds while a build runs, and every 30 seconds otherwise.
-- **Problem:** When a builds read runs at the moment of a save, the notices can show the state from before the save for up to 30 seconds. After an add, the Repositories tab can then show that the repository waits for the next build, with Build computer, while its build already runs.
-- **Impact if no action:** In a rare window, an admin sees an old state for up to 30 seconds. A press of Build computer then returns the running build and does no harm.
+- **Problem:** When a builds read runs at the moment of a save, the notices can show the state from before the save for up to 30 seconds. After an add, the Repositories tab can then show no notice for the added repository, until the next read shows that it waits for a build.
+- **Impact if no action:** In a rare window, an admin sees an old state for up to 30 seconds. The old state hides no action, because Done starts the build of the added repositories.
 - **Root question:** How does a read after a save always reflect that save?
 - **Options:**
   - **A.** A read after a save starts a new request when a read is already running, after that read ends, and keeps the newer answer. Effort: Small.

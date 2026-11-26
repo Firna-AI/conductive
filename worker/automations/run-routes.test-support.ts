@@ -6,6 +6,7 @@ import {
 import type { OuterRuntime } from '../chat/integration/outer-runtime.test-support'
 import { saveGitHubTokens } from '../security/github-tokens'
 import { isRecord } from '../http'
+import { seedAutomation, seedAutomationRun } from '../test-support/d1-seeds'
 
 export async function readRunPage(response: { json(): Promise<unknown> }) {
   const body = await response.json()
@@ -25,15 +26,23 @@ export async function readRunPage(response: { json(): Promise<unknown> }) {
 
 export async function seedOuterAutomation(fixture: OuterRuntime) {
   const now = Date.now()
-  await fixture.env.DB.prepare(
-    `INSERT INTO automations
-    (id, org_id, owner_user_id, name, repository_id, section_id, prompt, agent, model, effort,
-     active, time_zone, triggers_json, created_at, updated_at)
-    VALUES ('outer-automation', ?, 'owner', 'Morning summary', ?, ?, 'Summarize the work.',
-      'claude', 'test-claude', 'high', 0, 'UTC', '[]', ?, ?)`,
-  )
-    .bind(OUTER_ORG, OUTER_REPOSITORY, OUTER_SECTION, now, now)
-    .run()
+  await seedAutomation(fixture.env.DB, {
+    id: 'outer-automation',
+    orgId: OUTER_ORG,
+    ownerUserId: 'owner',
+    name: 'Morning summary',
+    repositoryId: OUTER_REPOSITORY,
+    sectionId: OUTER_SECTION,
+    prompt: 'Summarize the work.',
+    agent: 'claude',
+    model: 'test-claude',
+    effort: 'high',
+    active: 0,
+    timeZone: 'UTC',
+    triggersJson: '[]',
+    createdAt: now,
+    updatedAt: now,
+  }).run()
   await saveGitHubTokens(
     fixture.env,
     'owner',
@@ -58,23 +67,19 @@ export async function seedOuterRun(
     at?: number
   } = {},
 ) {
-  await fixture.env.DB.prepare(
-    `INSERT INTO automation_runs
-    (id, automation_id, org_id, owner_user_id, run_key, message_id, trigger_json, state, workspace_id,
-     error_code, error_message, created_at, updated_at)
-    VALUES (?, 'outer-automation', ?, 'owner', ?, ?, '{"kind":"run-now"}', ?, ?, ?, ?, ?, ?)`,
-  )
-    .bind(
-      id,
-      OUTER_ORG,
-      `manual:outer-automation:${id}`,
-      `message-${id}`,
-      options.state ?? 'queued',
-      options.workspaceId ?? null,
-      options.code ?? null,
-      options.message ?? null,
-      options.at ?? 1,
-      options.at ?? 1,
-    )
-    .run()
+  await seedAutomationRun(fixture.env.DB, {
+    id,
+    automationId: 'outer-automation',
+    orgId: OUTER_ORG,
+    ownerUserId: 'owner',
+    runKey: `manual:outer-automation:${id}`,
+    messageId: `message-${id}`,
+    triggerJson: '{"kind":"run-now"}',
+    state: options.state ?? 'queued',
+    workspaceId: options.workspaceId ?? null,
+    errorCode: options.code ?? null,
+    errorMessage: options.message ?? null,
+    createdAt: options.at ?? 1,
+    updatedAt: options.at ?? 1,
+  }).run()
 }

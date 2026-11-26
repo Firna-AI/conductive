@@ -2,7 +2,7 @@
 
 This doc holds the requirements and the decisions in force for the
 temporary tab of a workspace. It covers what opens the temporary tab, how
-it shows, what keeps it, and its mark in the saved view. It belongs to
+it shows, what keeps it, what closes it, and its mark in the saved view. It belongs to
 [Files and changes](workspace-tools.md#files-and-changes).
 [The tab row](agents-and-sessions.md#the-tab-row) states its place in the
 row, its tab menu, and its moves. The terms are those of the
@@ -127,6 +127,33 @@ draws the temporary tab at `app/files/temporary`.
   suspended org, uses the same rules for a press and a double-click. Its
   tab menu has no Keep open, as
   [The tab row](agents-and-sessions.md#the-tab-row) says.
+
+## Close the tab
+
+- Escape closes the temporary tab while it is the shown tab, as its Close
+  does. The user asked for this on 20 November 2026.
+- Reason: a glance at a file then ends with one key, and the row keeps no
+  tab of it.
+- Escape is a [fixed key](keyboard-shortcuts-fixed-keys.md#fixed-keys), so
+  no person can change it. A command with its own key in the Keyboard
+  shortcuts tab was not chosen.
+- The Keyboard shortcuts tab shows Escape as the fixed row Close the
+  temporary tab, in the Navigation group. Reason: the tab lists each use
+  of a fixed key in its own row, so a search there finds the key.
+- Escape closes the tab only when nothing else on the page takes the key:
+  - The focus is not in a text field, such as the message field, or in a
+    terminal.
+  - No menu, dialog, sheet, or popover of the sidebar is open. The first
+    Escape closes that layer, and the tab stays.
+  - No drag of a tab or a row is in progress. Escape ends the drag, and
+    the tab stays.
+  - The recorder of the Keyboard shortcuts tab does not wait for a key.
+- Reason: Escape already closes these layers and ends a drag. One press
+  then does one thing.
+- Escape closes no kept tab, and no temporary tab that does not show.
+  Reason: a kept tab is a tab that the user chose, and a tab that does not
+  show is not the tab that the user looks at.
+- A phone row shows no file tabs, so Escape closes no tab on a phone.
 
 ## The saved view
 

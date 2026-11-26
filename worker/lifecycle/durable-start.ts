@@ -1,5 +1,6 @@
 import type { StartStep } from '../../src/shared/generated/StartStep'
 import type { WorkspaceStart } from '../../src/shared/generated/WorkspaceStart'
+import { expiredRestartLifecycle } from './durable-restart'
 import { RESTORE_POLL_MS, type DurableLifecycleState } from './durable-types'
 
 export function withPreparedStart(
@@ -62,12 +63,18 @@ export function beginningLifecycleStart(
     startStop: undefined,
     diskRetentionCommand: undefined,
     softwareRestartAt: undefined,
+    automaticRestartSubmitted: undefined,
   }
 }
 
 export function readyLifecycle(
   state: DurableLifecycleState,
+  now: number,
 ): DurableLifecycleState {
+  if (state.automaticRestartAt !== undefined) {
+    const expired = expiredRestartLifecycle(state, now)
+    if (expired !== state) return expired
+  }
   if (
     ['stopped', 'archived', 'error'].includes(state.state) ||
     state.startStop !== undefined
@@ -84,10 +91,25 @@ export function readyLifecycle(
             ? state.state
             : 'ready',
     runnerConnected: true,
+    runnerDisconnectedAt: undefined,
+    automaticRestartAt: undefined,
+    automaticRestartSubmitted: undefined,
     softwareRestartAt: undefined,
     error: null,
     stoppedAt: null,
     nextDiskKeepaliveAt: null,
+  }
+}
+
+export function disconnectedLifecycle(
+  state: DurableLifecycleState,
+  at: number,
+): DurableLifecycleState {
+  return {
+    ...state,
+    runnerConnected: false,
+    runnerDisconnectedAt: at,
+    automaticRestartAt: undefined,
   }
 }
 

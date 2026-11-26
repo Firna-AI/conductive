@@ -17,6 +17,15 @@ Their foreign keys enforce the org of both the secret and workspace.
 Deleting a secret deletes both kinds of grant. Sessions live in Durable
 Object storage, so their approval rows carry the workspace and session IDs.
 
+`automation_secret_preapprovals` holds the chosen secrets of each
+automation by secret ID. Its foreign keys enforce the org of both the
+secret and the automation. Deleting a secret or an automation deletes its
+rows. A row grants nothing by itself. Each automation run copies the rows
+of its automation into the `workspace_secret_preapprovals` of its new run
+workspace, with the automation owner as the approver. The
+[automations README](../automations/README.md) gives the routes and the
+run start.
+
 The settings API uses the existing member and admin permission helpers.
 Each SQL write repeats its membership, suspension, and role checks.
 List, create, Replace, and all-agents replies return metadata only.
@@ -34,6 +43,14 @@ secret or account keeps the records. No reveal record holds a value.
 The last reveal in metadata joins the secret's current value version.
 Replace increments that version only when it replaces the value.
 Description and all-agents changes keep the version and last reveal.
+
+## Workspace capabilities
+
+`capabilities-writes.ts` saves the workspace Mac access field with the member
+and org checks. The capabilities API and workspace create keep this field
+for older pages. The field does not gate Mac commands or grant starts.
+The [device broker](../devices/README.md#permission-policy-and-limits)
+relays requests to the Mac, which applies its local permissions.
 
 ## Workspace tool routes
 
@@ -176,8 +193,9 @@ set after the change. While the control is on, an answer in the earlier
 format becomes symbolic. Each whole copy of a value from either set, or
 from its old lists, then becomes a mask.
 [Answer text secrets](../../docs/protocol/answer-text-secrets.md#rollout)
-states the rollout of the control. No automation-specific rule changes
-these grants.
+states the rollout of the control. An automation run uses the workspace
+grant rules. Its copied pre-approvals report the `workspace` grant, so
+older tools read them.
 
 ## Key code
 

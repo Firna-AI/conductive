@@ -15,6 +15,7 @@ import {
 } from '../test-support/harness'
 import { membersGate } from './gate'
 import { seedAppAccess } from '../test-support/app-access'
+import { seedWorkspace as seedWorkspaceRecord } from '../test-support/d1-seeds'
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { membersSeed } from './fixture-data.test-support'
 import { maintainDisksForTests } from './maintenance-test-support'
@@ -170,23 +171,20 @@ export async function seedWorkspace(
        VALUES (?, ?, 1, 'example/repository', 'main')`,
       )
       .bind(repositoryId, org.id),
-    db
-      .prepare(
-        `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id,
-       name, branch, sandbox_id, provider_account, state, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 'Lisbon', 'member/lisbon-ab12', ?, ?, 'working', ?, ?)`,
-      )
-      .bind(
-        id,
-        org.id,
-        repositoryId,
-        creator.id,
-        `general-${org.id}`,
-        sandboxId,
-        DEFAULT_PROVIDER_ACCOUNT,
-        TEST_TIME,
-        TEST_TIME,
-      ),
+    seedWorkspaceRecord(db, {
+      id,
+      orgId: org.id,
+      repositoryId,
+      ownerUserId: creator.id,
+      sectionId: `general-${org.id}`,
+      name: 'Lisbon',
+      branch: 'member/lisbon-ab12',
+      sandboxId,
+      providerAccount: DEFAULT_PROVIDER_ACCOUNT,
+      state: 'working',
+      createdAt: TEST_TIME,
+      updatedAt: TEST_TIME,
+    }),
   ])
   return id
 }

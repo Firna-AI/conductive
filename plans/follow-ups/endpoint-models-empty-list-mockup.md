@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-17, from Milestone 2b of the org agent login work on branch `calummoore/delft-zjk2`.
-- **Location:** `docs/mockups/src/components/settings/EndpointModels.tsx:21-26` and `src/shell/account/EndpointModels.tsx:15-26`.
+- **Location:** `src/ui/components/settings/EndpointModels.tsx:21-26` and `src/shell/account/EndpointModels.tsx:15-26`.
 - **Reason:** the account pages that miss the state belong to `main`, and the org login branch only records the words of the org line.
 
 - **Source:** Implementation. **Category:** Mockup.

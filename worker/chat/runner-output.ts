@@ -7,6 +7,7 @@ import { runningOutputSecrets } from '../lifecycle/output-secrets'
 import type { ChatTransaction } from './store'
 import type { RunnerWorkspaceRecord } from './types'
 import { displayPortReport } from './port-reports'
+import { displaySkillReport } from './skill-reports'
 import { agentOutputSecrets } from '../secrets/output-values'
 import { filterToolDetail } from './tool-detail-filter'
 import { prepareOutputState } from './output-filter-state'
@@ -60,7 +61,9 @@ export async function filterRunnerOutput(
     event:
       event.type === 'ports.updated'
         ? displayPortReport(event)
-        : boundChatEvent(event),
+        : event.type === 'skills.updated'
+          ? displaySkillReport(event)
+          : boundChatEvent(event),
   }))
   return {
     events,

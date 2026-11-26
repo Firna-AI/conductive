@@ -21,6 +21,7 @@ test('keeps the list GitHub summary through title events, older records, and rea
   const server = new FakeApiServer({
     workspaceState: 'unread',
     github: 'checks-running',
+    legacyWorkspaceRead: true,
   })
   const orgId = FAKE_IDS.org
   const id = FAKE_IDS.workspace
@@ -141,6 +142,7 @@ test('an old read-mark reply keeps the polled Continue branch and null summary b
   const server = new FakeApiServer({
     workspaceState: 'unread',
     github: 'merged',
+    legacyWorkspaceRead: true,
   })
   const orgId = FAKE_IDS.org
   const id = FAKE_IDS.workspace

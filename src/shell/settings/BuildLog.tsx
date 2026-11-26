@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from 'react'
-import terminal from '../../../docs/mockups/src/components/tools/TerminalView.module.css'
-import styles from '../../../docs/mockups/src/components/settings/BuildSection.module.css'
+import terminal from '../../ui/components/tools/TerminalView.module.css'
+import styles from '../../ui/components/settings/BuildSection.module.css'
 import type { BuildLogEvent } from '../../shared/org-settings'
 
 /** The lines of a log. The events hold text that can end inside a line. */

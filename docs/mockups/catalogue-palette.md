@@ -23,7 +23,8 @@ list of Acme. Send feedback comes last among its actions. Its child pages:
 - `app/command-palette/settings` has the Settings tab. The group of the
   settings of Acme lists its six tabs, with Agents and Secrets after Cloud
   computer.
-  Its Account group ends with Keyboard shortcuts, which opens
+  Its Account group has Favourites before New workspaces, as the
+  Preferences tab has them, and ends with Keyboard shortcuts, which opens
   `app/account/shortcuts`.
 - `app/command-palette/search` has a search that finds a workspace and an
   archived one. Its states are child pages, which kept the paths of its
@@ -94,8 +95,10 @@ keeps this row, while each composer of a chat puts its files into the
 text. A notice under the box names a file that the dialog did not add, or
 a send that failed. `FeedbackReply.tsx` beside it draws the reply line from the read of
 the reply address, and the `LoadFailure` notice of a read that failed.
-`feedbackCopy.ts` holds the words of the row, the dialog, and the toast, so
-the app can share them. Its `sendLimitBody` gives the words of a send over
+`feedbackCopy.ts` in
+[`src/ui/components/feedback/`](../../src/ui/components/feedback/) holds
+the words of the row, the dialog, and the toast. The app and the mockups
+both import it. Its `sendLimitBody` gives the words of a send over
 the limit from the time that the server gives, in the time zone of the
 browser. `SuccessToast` in `src/components/common/` draws
 the toast after a send, where `FailureToast` draws its own.

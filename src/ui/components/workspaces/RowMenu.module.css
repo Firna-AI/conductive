@@ -1,0 +1,45 @@
+/*
+ * The field of Rename of a workspace row. A right click or the menu keys
+ * open the menu of the row: a row has no button of its own for it.
+ * `PointMenu.module.css` in `../../../../docs/mockups/src/components/common/` styles the menu at the pointer.
+ */
+
+/*
+ * The field of Rename, in place of the name and the time of the row. A
+ * view runs no script, so a span stands for the field, which opens
+ * focused, and it draws the selected name in the colours of a selection.
+ */
+.field {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  overflow: hidden;
+  min-width: 0;
+  height: 20px;
+  padding: 0 4px;
+  border: 1px solid var(--ui-primary);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font: inherit;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+/*
+ * The border of the field shows that it has the focus, so the app draws no
+ * focus ring of the browser around it.
+ */
+.field:focus {
+  outline: none;
+}
+
+/* A row of the list page is taller, and so is its field. */
+.fieldPage {
+  height: 28px;
+}
+
+.selection {
+  background: Highlight;
+  color: HighlightText;
+}

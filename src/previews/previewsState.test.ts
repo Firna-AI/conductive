@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest'
+import { WorkspaceStream } from '../app/events'
+import { flushMicrotasks, ManualDelay, RecordingEvents } from '../app/test-kit'
 import type { WorkspaceEvent } from '../shared/events'
 import { previewsPath } from '../shared/previews'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
+import { emptyWorkspaceSeed } from '../test-support/fixtures/workspace-seed'
+import { deferred } from '../test-support/mount'
 import {
   fullReport,
   nextEnvelope,
@@ -10,6 +14,7 @@ import {
 } from '../test-support/recorded-repairs'
 import { devSubscribe, emitDevEvent } from '../terminal/dev/devServer'
 import { ToolStore } from '../terminal/tool-parts/toolStore'
+import { ToolEvents } from '../shell/workspace/tools/tool-events'
 import { listPreviews } from './previewsApi'
 import { createPreviewsStore } from './previewsStore'
 import {
@@ -58,6 +63,51 @@ function reduce(...actions: (PreviewsAction | WorkspaceEvent)[]) {
 }
 
 describe('preview list', () => {
+  it('discards a list read before the seed and keeps a newer revoke over the replacement list', async () => {
+    const target = { orgId: FAKE_IDS.org, workspaceId: FAKE_IDS.workspace }
+    const events = new RecordingEvents()
+    const stream = new WorkspaceStream(events, target, new ManualDelay().delay)
+    const tools = new ToolEvents()
+    const stopEvents = tools.follow(stream)
+    const store = createPreviewsStore(target)
+    const old = deferred<Response>()
+    const fresh = deferred<Response>()
+    let reads = 0
+    const connection = {
+      fetch: () => (++reads === 1 ? old.promise : fresh.promise),
+      subscribe: tools.subscribe,
+      seeded: stream.seeded,
+    }
+    const stop = store.connect(connection)
+    await flushMicrotasks()
+    expect(reads).toBe(1)
+
+    stream.applyBaseline(10, emptyWorkspaceSeed)
+    stream.start()
+    events.send({
+      type: 'event',
+      envelope: {
+        workspaceId: target.workspaceId,
+        eventNumber: 11,
+        occurredAt: FAKE_TIME,
+        event: { type: 'preview.revoked', previewId: second.id },
+      },
+    })
+    old.resolve(Response.json({ previews: [first, second] }))
+    await flushMicrotasks()
+    expect(visiblePreviews(store.getSnapshot())).toEqual([])
+    expect(reads).toBe(2)
+
+    fresh.resolve(Response.json({ previews: [second] }))
+    await flushMicrotasks()
+    expect(store.getSnapshot().load).toBeNull()
+    expect(visiblePreviews(store.getSnapshot())).toEqual([])
+    expect(store.getSnapshot().revoked).toEqual(new Set([second.id]))
+    stop()
+    stopEvents()
+    stream.stop()
+  })
+
   it('keeps a revoked preview hidden after an event of another workspace, a later list, and a new subscription', async () => {
     const server = serverWithBoth()
     const store = new ToolStore(

@@ -22,6 +22,16 @@ export function readCount(object: JsonObject, key: string): number | null {
   return value !== null && Number.isInteger(value) && value >= 0 ? value : null
 }
 
+/**
+ * A count within the safe integer range of JavaScript, as the wire gives
+ * each count, or null. A reader of an optional count drops any other value,
+ * so it refuses nothing because of the field.
+ */
+export function readSafeCount(object: JsonObject, key: string): number | null {
+  const value = readCount(object, key)
+  return value !== null && Number.isSafeInteger(value) ? value : null
+}
+
 export function readArray(
   object: JsonObject,
   key: string,

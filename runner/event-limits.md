@@ -5,7 +5,7 @@ that the runner keeps for each event, and the file reports.
 
 The runner keeps each event within the limits that
 [Agent runner](../docs/protocol/agent-runner.md) and
-[Files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
+[File reports](../docs/protocol/file-reports.md)
 state. The [shared contracts](../src/shared/README.md) hold the constants.
 No variable changes them.
 Runner byte budgets apply after its known-credential filter. Displayed
@@ -21,11 +21,16 @@ complete tool details.
   of a long source fits the envelope limit of the outbox check below. Otherwise the runner
   keeps the prefix, as an older runner does. A turn summary keeps the first whole
   files within `TURN_COMPLETED_MAX_FILES` and `TURN_COMPLETED_FILES_MAX_BYTES`.
-  `omittedFileCount` counts the rest, and the Changes report lists every file.
+  `omittedFileCount` counts the rest. The Changes report has its own limit,
+  as [Report limits](../docs/protocol/file-reports.md#report-limits) says.
 - Each file event fits [`FILE_EVENT_MAX_BYTES`](../src/shared/files.ts). A
   full tree or changes report goes as numbered parts of one revision. A
   large tree update goes as deltas of at most `FILE_TREE_DELTA_MAX_CHANGES`
   changes, with consecutive revisions.
+- A full tree keeps at most 50,000 entries, and a full changes report at
+  most 1,000 changed files. Every part repeats the omitted totals of its
+  report. [Updates and refreshes](../docs/protocol/file-reports.md#updates-and-refreshes)
+  gives the tree updates that go as one delta or as a full tree.
 - Tree and changes reports have separate revision counters, which survive
   a reconnect or a restart. The refresh after each connect sends a full tree
   and a full changes report with newer revisions.
@@ -52,3 +57,7 @@ complete tool details.
   These final excerpts never split a Unicode character.
   [Listening ports](../docs/protocol/agent-runner.md#listening-ports)
   gives the limits of that report: its ports, its names, and its folders.
+- `skills.updated` sends at most 200 skills for each agent. The runner
+  never cuts a name or a description. It sends a description over 4096
+  characters as an empty string, and fits whole descriptions in a 512 KiB
+  budget, as [Skills](reports.md#skills) says.

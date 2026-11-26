@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
-import { classes } from '../common/classes'
-import { useControlSizes } from '../common/touch'
-import styles from './ChipTextField.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import styles from '../../../../../src/ui/components/chat/ChipTextField.module.css'
 
 /**
  * The text field of a message box that holds chips inside its text: plain

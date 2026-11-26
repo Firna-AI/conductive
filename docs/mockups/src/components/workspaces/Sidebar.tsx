@@ -1,4 +1,4 @@
-import { PanelLeft } from 'lucide-react'
+import { defined } from '../../defined'
 import type { Org } from '../../fixtures/orgs'
 import type { Membership } from '../../fixtures/members'
 import {
@@ -6,10 +6,11 @@ import {
   type ShortcutChanges,
 } from '../../fixtures/shortcutChanges'
 import { paths } from '../../paths'
-import { classes } from '../common/classes'
-import { LoadFailure } from '../common/LoadFailure'
-import { IconButton } from '../common/actions'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { loadFailure } from '../../entries/components/common/LoadFailure.mockup'
+import { iconButton } from '../../entries/components/common/actions.mockup'
 import { useSidebarToggle } from '../layout/sidebarPlace'
+import type { ListQueue } from './queueList'
 import type { RowFocus } from './rowControls'
 import type {
   ListDrag,
@@ -17,14 +18,14 @@ import type {
   SidebarSection,
   WorkspaceRow,
 } from './sections'
-import { SectionList } from './SectionList'
+import { sectionList } from '../../entries/components/workspaces/SectionList.mockup'
 import {
-  NewWorkspaceLink,
-  AutomationsLink,
-  SearchLink,
-  SettingsLink,
-} from './SidebarLinks'
-import styles from './Sidebar.module.css'
+  newWorkspaceLink,
+  automationsLink,
+  searchLink,
+  settingsLink,
+} from '../../entries/components/workspaces/SidebarLinks.mockup'
+import styles from '../../../../../src/ui/components/workspaces/Sidebar.module.css'
 
 /**
  * The desktop sidebar beside the org rail: the org name with its Settings
@@ -33,33 +34,36 @@ import styles from './Sidebar.module.css'
  * A list that did not load shows its failure in place of the sections.
  * In the browser the sidebar toggle sits beside the cog. It hides the
  * sidebar, or it shows it again from the popover of the hidden sidebar.
- * An open menu of a row may pass the edge of the sidebar.
+ * An open menu of a row may pass the edge of the sidebar. The props of
+ * `ListQueue` add the Merge queue group above the sections.
  */
-export function Sidebar(props: {
-  org: Org
-  sections: readonly SidebarSection[]
-  /** The page that the main area shows, when the sidebar links to it. */
-  current?: 'settings' | 'new-workspace' | 'automations'
-  /** A build of the org's cloud computer failed. */
-  settingsAlert?: boolean
-  /** The New workspace page of the org, such as that of a new org. */
-  newWorkspaceTo?: string
-  menu?: ListMenu
-  drag?: ListDrag
-  /** The archived workspaces, which show in an open Archived group. */
-  archived?: readonly WorkspaceRow[]
-  /** The Archived group shows collapsed, with its count. */
-  archivedCollapsed?: boolean
-  /** The row whose menu, field, or hover the view draws. */
-  focus?: RowFocus
-  /** The operator suspended the org. */
-  suspended?: boolean
-  /** The workspace list of the org did not load. */
-  failed?: boolean
-  viewer: Membership
-  /** The person's changes to the shortcuts, such as another palette key. */
-  shortcuts?: ShortcutChanges
-}) {
+export function Sidebar(
+  props: {
+    org: Org
+    sections: readonly SidebarSection[]
+    /** The page that the main area shows, when the sidebar links to it. */
+    current?: 'settings' | 'new-workspace' | 'automations'
+    /** A build of the org's cloud computer failed. */
+    settingsAlert?: boolean
+    /** The New workspace page of the org, such as that of a new org. */
+    newWorkspaceTo?: string
+    menu?: ListMenu
+    drag?: ListDrag
+    /** The archived workspaces, which show in an open Archived group. */
+    archived?: readonly WorkspaceRow[]
+    /** The Archived group shows collapsed, with its count. */
+    archivedCollapsed?: boolean
+    /** The row whose menu, field, or hover the view draws. */
+    focus?: RowFocus
+    /** The operator suspended the org. */
+    suspended?: boolean
+    /** The workspace list of the org did not load. */
+    failed?: boolean
+    viewer: Membership
+    /** The person's changes to the shortcuts, such as another palette key. */
+    shortcuts?: ShortcutChanges
+  } & ListQueue,
+) {
   const suspended = props.suspended ?? false
   const drawing = props.focus?.drawing.kind
   const toggle = useSidebarToggle()
@@ -67,15 +71,18 @@ export function Sidebar(props: {
     <>
       <div className={styles.top}>
         <h2 className={styles.org}>{props.org.name}</h2>
-        <SettingsLink
-          alert={props.settingsAlert}
+        <settingsLink.Component
           current={props.current === 'settings'}
-          to={suspended ? paths.suspendedSettings : undefined}
+          {...defined({
+            alert: props.settingsAlert,
+            to: suspended ? paths.suspendedSettings : undefined,
+          })}
         />
         {toggle ? (
-          <IconButton
-            icon={PanelLeft}
+          <iconButton.Component
+            icon="panel-left"
             label={toggle === 'show' ? 'Show the sidebar' : 'Hide the sidebar'}
+            moklyInstance="sidebar-toggle"
           />
         ) : null}
       </div>
@@ -88,35 +95,42 @@ export function Sidebar(props: {
       >
         <div className={styles.links}>
           {suspended ? null : (
-            <NewWorkspaceLink
+            <newWorkspaceLink.Component
               current={props.current === 'new-workspace'}
-              to={props.newWorkspaceTo}
               variant="sidebar"
+              {...defined({ to: props.newWorkspaceTo })}
             />
           )}
-          <AutomationsLink
+          <automationsLink.Component
             current={props.current === 'automations'}
-            to={suspended ? paths.suspendedAutomations : undefined}
             variant="sidebar"
+            {...defined({
+              to: suspended ? paths.suspendedAutomations : undefined,
+            })}
           />
-          <SearchLink
-            shortcut={paletteShortcut(props.shortcuts)}
+          <searchLink.Component
             variant="sidebar"
+            {...defined({ shortcut: paletteShortcut(props.shortcuts) })}
           />
         </div>
         {props.failed ? (
-          <LoadFailure title="The workspaces didn't load" />
+          <loadFailure.Component title="The workspaces didn't load" />
         ) : (
-          <SectionList
-            archived={props.archived}
-            archivedCollapsed={props.archivedCollapsed}
-            drag={props.drag}
-            menu={props.menu}
-            focus={props.focus}
+          <sectionList.Component
             readOnly={suspended}
             sections={props.sections}
             variant="sidebar"
             viewer={props.viewer}
+            {...defined({
+              archived: props.archived,
+              archivedCollapsed: props.archivedCollapsed,
+              drag: props.drag,
+              menu: props.menu,
+              focus: props.focus,
+              queue: props.queue,
+              queueDrag: props.queueDrag,
+              queueable: props.queueable,
+            })}
           />
         )}
       </div>

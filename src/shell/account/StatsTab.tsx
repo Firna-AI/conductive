@@ -4,7 +4,7 @@ import {
   StatsFailed,
   StatsLoading,
   StatsNumbers,
-} from '../../../docs/mockups/src/components/settings/StatsSections'
+} from '../../ui/components/settings/StatsSections'
 import { readAccountStats } from '../../app/api/read-account-stats'
 import { PageRead } from '../../app/page-read'
 import { useStore } from '../../app/store'

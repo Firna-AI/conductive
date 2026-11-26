@@ -1,25 +1,27 @@
-import { CircleAlert, MessageSquarePlus, Paperclip } from 'lucide-react'
+import { StartFailedNotice } from '../components/capabilities/StartFailedNotice'
 import {
   attachFilesLabel,
   folderBody,
   notAttachedTitle,
   smallerFileLabel,
   tooLargeBody,
-} from '../components/chat/attachmentCopy'
-import { ConnectAgentNotice } from '../components/chat/ConnectAgentNotice'
+} from '../../../../src/ui/components/chat/attachmentCopy'
+import { connectAgentNotice } from '../entries/components/chat/ConnectAgentNotice.mockup'
 import {
   linkedReasonText,
   linkedTitle,
   type LinkedReason,
-} from '../components/chat/linkedCopy'
-import { ActionButton } from '../components/common/actions'
-import { Notice } from '../components/common/Notice'
+} from '../../../../src/ui/components/chat/linkedCopy'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import { notice } from '../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { agents } from '../fixtures/agents'
 import { droppedFolder, largeRecording } from '../fixtures/attachments'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { plainData } from '../defined'
 import { loginOwnerOf } from './sessionStarter'
+import { explainNotice } from './explainMarks'
 import type { WorkspaceState } from './workspaceState'
 
 /**
@@ -43,15 +45,21 @@ function linkedReason(state: WorkspaceState): LinkedReason | undefined {
  */
 function tooLargeNotice() {
   return (
-    <Notice
+    <notice.Component
       action={
         // The mockups draw one upload, which the chosen file leads to.
         <ScreenLink asChild to={paths.attachments}>
-          <ActionButton icon={Paperclip}>{smallerFileLabel}</ActionButton>
+          <actionButton.Component
+            icon="paperclip"
+            moklyInstance="attach-smaller-file"
+          >
+            {smallerFileLabel}
+          </actionButton.Component>
         </ScreenLink>
       }
       body={tooLargeBody}
-      icon={CircleAlert}
+      icon="circle-alert"
+      moklyInstance="composer-notice"
       title={notAttachedTitle(largeRecording.name)}
       tone="danger"
     />
@@ -66,15 +74,21 @@ function tooLargeNotice() {
  */
 function folderNotice() {
   return (
-    <Notice
+    <notice.Component
       action={
         // The mockups draw one upload, which the chosen files lead to.
         <ScreenLink asChild to={paths.attachments}>
-          <ActionButton icon={Paperclip}>{attachFilesLabel}</ActionButton>
+          <actionButton.Component
+            icon="paperclip"
+            moklyInstance="attach-folder-files"
+          >
+            {attachFilesLabel}
+          </actionButton.Component>
         </ScreenLink>
       }
       body={folderBody}
-      icon={CircleAlert}
+      icon="circle-alert"
+      moklyInstance="composer-notice"
       title={notAttachedTitle(droppedFolder)}
       tone="danger"
     />
@@ -84,8 +98,8 @@ function folderNotice() {
 /**
  * The notice over the composer when the agent of the chosen model is not
  * connected. Its action opens the Connect form of that agent in the account.
- * A file over the size limit and an unreadable folder have their own
- * notices.
+ * A file over the size limit, an unreadable folder, and a grant of a new
+ * workspace that did not start on this Mac have their own notices.
  *
  * A message in a session on the login of another member, or on the org
  * login, runs on that login, so the own login of the viewer does not
@@ -95,14 +109,23 @@ function folderNotice() {
  * an admin removed the org login. The starter whose own login is not
  * available sees the notice that asks to connect. A viewer whose default
  * login is the org login sees no such notice (decision 4 of the org logins
- * plan).
+ * plan). While text of the chat is selected, a phone shows Explain there
+ * instead, as `explainNotice` says.
  */
 export function composerNotice(state: WorkspaceState, workspace: Workspace) {
+  const explain = explainNotice(state)
+  if (explain) return explain
   if (state.composer === 'too-large' && state.tab !== 'new-session') {
     return tooLargeNotice()
   }
   if (state.composer === 'unreadable-folder' && state.tab !== 'new-session') {
     return folderNotice()
+  }
+  if (state.composer === 'grant-not-started') {
+    return <StartFailedNotice failure="not-started" />
+  }
+  if (state.composer === 'grant-not-reached') {
+    return <StartFailedNotice failure="not-reached" />
   }
   const { choice } = workspace
   const agent = agents[choice.agent].name
@@ -112,9 +135,10 @@ export function composerNotice(state: WorkspaceState, workspace: Workspace) {
   const fresh = state.tab === 'new-session'
   if (owner !== undefined && reason !== undefined && !fresh) {
     return (
-      <Notice
+      <notice.Component
         body={linkedReasonText(reason, owner, agent)}
-        icon={MessageSquarePlus}
+        icon="message-square-plus"
+        moklyInstance="composer-notice"
         title={linkedTitle}
       />
     )
@@ -122,5 +146,10 @@ export function composerNotice(state: WorkspaceState, workspace: Workspace) {
   const noLogin =
     state.composer === 'no-agent' || state.composer === 'no-starter-login'
   if (!noLogin || owner !== undefined) return undefined
-  return <ConnectAgentNotice choice={choice} />
+  return (
+    <connectAgentNotice.Component
+      choice={plainData(choice)}
+      moklyInstance="connect-agent-notice"
+    />
+  )
 }

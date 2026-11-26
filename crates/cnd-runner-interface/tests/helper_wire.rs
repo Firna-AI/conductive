@@ -1,6 +1,7 @@
 //! Helper JSON snapshots cover each request, output, and agent event form.
 
 use cnd_runner_interface::sdk_helper::{HelperOutput, HelperRequest};
+use serde_json::json;
 
 #[test]
 fn requests_keep_the_helper_wire_forms() -> Result<(), serde_json::Error> {
@@ -28,6 +29,17 @@ fn requests_keep_the_helper_wire_forms() -> Result<(), serde_json::Error> {
     );
     let request: HelperRequest = serde_json::from_str(&native)?;
     insta::assert_json_snapshot!("start_native", request);
+    for skills in [
+        json!({"repository":"Owner/Skills"}),
+        json!({"repository":"Owner/Skills","trustedRepository":"owner/skills","directory":"/copies/skills"}),
+    ] {
+        let with_skills = start.replace(r#""cwd":"#, &format!(r#""orgSkills":{skills},"cwd":"#));
+        let request: HelperRequest = serde_json::from_str(&with_skills)?;
+        assert_eq!(
+            serde_json::to_value(request)?["options"]["orgSkills"],
+            skills
+        );
+    }
     Ok(())
 }
 

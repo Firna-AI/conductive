@@ -1,7 +1,7 @@
 import { MessageSquare } from 'lucide-react'
-import { classes } from '../common/classes'
-import tabRename from './TabRename.module.css'
-import styles from './WorkspaceTabs.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import tabRename from '../../../../../src/ui/components/workspace/TabRename.module.css'
+import styles from '../../../../../src/ui/components/workspace/WorkspaceTabs.module.css'
 
 /**
  * The title of a session as a field, in place of its tab label. The field

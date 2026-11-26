@@ -1,0 +1,46 @@
+# Agent tool text skips the secret mask
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-21, from the review of the branch `calummoore/follow-up-continue-shows-raw-branch-t76h`, outside the scope of that branch.
+- **Location:** `worker/tools/message-text.ts:3-8`, `worker/chat/tool-session-write.ts:104` and `:154`, `worker/tools/create.ts:79` and `:104`, `worker/chat/first-message.ts:152`, `worker/tools/workspace-routes.ts:79-92`, and `worker/tools/session-routes.ts:179`.
+- **Reason:** Each option changes the protocol or the Privacy page, and only the user can choose such a change.
+
+- **Source:** Review. **Category:** Security.
+- **Terms:**
+  - **Agent tools:** the calls that an agent makes from its sandbox with the workspace token, such as `rename_workspace` or `send_message`. `docs/protocol/agent-tools.md` lists them.
+  - **Tool message:** a message that `send_message` sends, or the first message of a `create_session` call or of a `create_workspace` call. The Worker stores it as a message of the sender of the calling turn.
+  - **Tool name:** a workspace name or a session title that `create_workspace`, `create_session`, `rename_workspace`, or `rename_session` gives.
+  - **Runner output filter:** `filterRunnerOutput` in `worker/chat/runner-output.ts`. It hides each exact copy of a secret value in the text of each runner event, before the workspace object stores or sends the event.
+  - **Capture:** the env var values and secret marks of the latest start of the sandbox. `runningOutputSecrets` in `worker/lifecycle/output-secrets.ts` reads its secret values.
+- **Background:**
+  - `docs/protocol/tokens-and-secrets.md` gives the mask rule under "Secrets that users enter". The workspace object hides each exact copy of a secret value in the text that screens show from each runner event. The runner output filter does it.
+  - The same section requires a masked label of each path and branch name on screens. No requirement names the tool messages or the tool names.
+  - `docs/protocol/session-calls.md`, under "The `Sent by:` line", says that the text of a tool message before its footer "stays exactly the text of the call". The agent that gets the message, the chat, a copy, and a read all show the stored text.
+  - `docs/protocol/tool-names.md` cleans each tool name with a rule of four steps. It keeps the first line with text and makes each run of white space one space. It removes one final full stop and cuts the name at 60 code points. No step hides a secret value.
+  - The Privacy page makes a promise at `src/marketing/privacy.ts:177-185`. The app hides each exact copy of a secret value in the text of agent output. It does this before it puts that text in the chat history or on a screen.
+  - A tool message is text that an agent writes into the chat history. A tool name is text that an agent puts on screens. So the Privacy page can be read to cover both.
+  - `agentToolMessage` in `worker/tools/message-text.ts:3-8` only adds the footer. `worker/chat/tool-session-write.ts:104` and `worker/tools/create.ts:104` store that text.
+  - Each tool name passes only the name rule, `sessionTitleFrom`, at `worker/tools/workspace-routes.ts:82`, `worker/tools/session-routes.ts:179`, `worker/tools/create.ts:79`, `worker/chat/tool-session-write.ts:154`, and `worker/chat/first-message.ts:152`.
+  - None of these paths calls a secret filter. So the same text is masked in an agent answer, and shown exactly in a tool message or a tool name.
+  - A workspace name shows in the workspace list, in the header, and in the first line of each transcript copy. The new branch of Continue takes a slug of the workspace name, which keeps lowercase letters, digits, and hyphens.
+  - The automatic title from the runner is a runner event, so the runner output filter masks it at receipt.
+  - Sandbox code can make these calls during a turn of its workspace, as "The workspace token" in `docs/protocol/tokens-and-secrets.md` says.
+  - The agents and each member with a terminal can read each env var value, as `src/marketing/privacy.ts:195-196` says. So the actor already knows the value, and sandbox code can also send it out over the network.
+  - The harm is the display: a screenshot, a screen share, or copied text that leaves the org. An agent can also show a value by mistake.
+  - Members type their own messages and names. The app masks neither.
+- **Problem:** Text that sandbox code writes through the agent tools reaches the chat, the workspace list, and the transcript copies without the secret filter. The same text in an agent answer is masked. The protocol requires the exact text of a tool message, while the Privacy page promises a mask for agent output.
+- **Impact if no action:** An agent can put a secret value on the screen of each member through a tool message or a tool name. The Privacy page and the protocol stay in tension about such text.
+- **Root question:** Must the text that sandbox code writes through the agent tools hide each secret value before screens show it?
+- **Options:**
+  - **A.** Keep the exact text of tool messages and tool names. Write in `docs/protocol/session-calls.md` and `docs/protocol/tool-names.md` that the agent tools hide no secret value. Make the Privacy page name that exception. A secret value then stays on screens. Effort: Small.
+  - **B.** Hide each secret value of the capture in each tool message, before the Worker stores it. Tool names stay exact. This changes the exact-text rule of `session-calls.md`. The receiving agent, the chat, and the copies then get the masked text. Effort: Medium.
+  - **C.** Hide each secret value of the capture in each tool name, as a fifth step of the name rule. Tool messages stay exact. This changes `tool-names.md`. It matches the automatic title, which the runner output filter already masks. Effort: Medium.
+  - **D.** Hide each secret value of the capture in tool messages and in tool names. Each tool write of a name or a message passes one shared step before the Worker stores the text. This changes both rules. It treats tool names and tool messages as the runner output filter treats an answer. Each tool write reads the capture. Effort: Medium.
+  - **E.** Keep the exact text in storage and for the agents, and add a masked label for screens, as for branch names. Each place that shows a message or a name then needs a label field and a reader. The stored chat history still holds the value. Effort: Large.
+- **Left out:** Masking in the browser, because the browser then needs the secret values.
+- **Wider fix:** D, when one shared step masks each tool write of a name or a message. A later tool that writes text outside that step can still skip the mask.
+- **Previous examples:** The runner output filter already masks the automatic title and each agent answer, in `worker/chat/runner-output.ts`. No earlier item about the masking of agent-tool text was found.
+- **Related:** `plans/follow-ups/workspace-title-from-sandbox-unchecked.md` asks which names the Worker accepts from a `workspace.title` runner event, which the runner output filter already masks. This item covers the agent-tool paths, which skip that filter. The two items ask different questions, so they stay apart.
+- **Recommendation:** D. It masks each name and message that an agent writes through the agent tools, as the runner output filter masks its answers. It keeps the Privacy promise. Its cost is two changed rules, masked text for the receiving agent, and one capture read for each tool write. A is the smallest change if the exact text of the call matters more.
+- **Action:** ask the user, because the recommended option changes the exact-text rule and the name rule of the agent tools, and no user decision covers it.

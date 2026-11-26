@@ -58,6 +58,34 @@ const edited = [
 ] as const
 
 describe('the Keyboard shortcuts tab', () => {
+  test('shows and speaks a saved Windows Plus shortcut in its chips and edit controls', async () => {
+    await openShortcutsTab([{ command: 'command-palette', keys: ['Ctrl++'] }], {
+      keyboard: 'other',
+      system: 'windows',
+    })
+    const row = rowOf('General', 'Command palette')
+    const shortcut = row.querySelector('kbd')?.parentElement ?? row
+    const shown = {
+      chips: Array.from(
+        row.querySelectorAll('kbd kbd'),
+        (chip) => chip.textContent,
+      ),
+      spoken: accessibleName(shortcut),
+      controls: controlsOf(row),
+    }
+    click(shortcut.closest('button') ?? row)
+    expect({ ...shown, recording: controlsOf(row) }).toEqual({
+      chips: ['Ctrl', '+'],
+      spoken: 'Control Plus',
+      controls: [
+        'Reset Command palette',
+        'Change Control Plus for Command palette',
+        'Add shortcut for Command palette',
+      ],
+      recording: ['Remove Control Plus from Command palette', 'Cancel'],
+    })
+  })
+
   test('Reset gives a command its default keys, and asks first when another command holds one of them', async () => {
     const { server } = await openShortcutsTab(edited)
     replyWith(server, edited.slice(1))
@@ -162,6 +190,7 @@ describe('the Keyboard shortcuts tab', () => {
             'Next tab',
             'Close tab',
             'Reopen closed session',
+            'Close the temporary tab',
             'Open the menu of a focused tab',
           ],
         ],

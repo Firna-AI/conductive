@@ -39,10 +39,11 @@ as that doc says.
   `e2b`.
 - The app's E2B account is an E2B project of its own. It holds no other
   E2B work of the operator.
-- The account runs in E2B's EU cluster. Reason: the workspace objects run
-  in Western Europe, so each runner message stays in one region.
-  [Regions](provider-accounts.md#regions) says that the EU is not a
-  requirement.
+- The account runs in E2B's default cluster, in the United States, not in
+  E2B's EU cluster. Reason: the EU is not a requirement, as
+  [Regions](provider-accounts.md#regions) says, and the app's E2B project
+  already runs in the default cluster. Regions gives the steps before a
+  real org runs on the account.
 - Every E2B sandbox has private traffic. A request to any of its ports
   needs the traffic token of that sandbox, as
   [Port previews](terminal-previews-and-desktop.md#port-previews) says.

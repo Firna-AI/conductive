@@ -40,7 +40,8 @@ async fn refuses_new_requests_after_eof_without_writing_private_input()
         Some(HelperOutput::Event {
             event: ProviderEvent::Failed {
                 code: "agent_exited".into(),
-                message: "The SDK helper process ended.".into()
+                message: "The SDK helper process ended.".into(),
+                notice_ids: vec![],
             }
         })
     );

@@ -108,6 +108,18 @@ tools.
   because no event announces a preview that opens meanwhile, so the next
   connection reads it again before a Preview tab opens a preview. An open
   or a close that ends after its page left still reaches the store.
+- The tab keeps one services store for each shown workspace, which the
+  Preview tool of a phone and the list of the desktop read.
+  `KeptConnections` connects it while the sandbox runs. A connection is
+  one running period: its end forgets the list, so a later start never
+  shows the list of an earlier one. While Preview shows, the list reads
+  again after `activeWait` and at each return to the page. On a phone,
+  Preview shows while it is the shown tool. On desktop, it shows while it
+  is the shown tool and the right column shows, as `useRightShown` of
+  `layout/panels.tsx` says. A hidden column stops the reads, and a column
+  that shows again reads the list at once. A Stop or a Restart that ends
+  after its page left still reaches the store. Its result can still show
+  a toast, as [the previews](../../previews/README.md#services) say.
 
 ## Preview tabs
 
@@ -126,7 +138,11 @@ tabs, the page in place of the chat, and the kept pages.
   the list loads, and while an open runs. After a failed open, it asks
   again only at the next show of the tab, or at Reload or Try again. A
   port with two open previews shows the oldest one.
-- The bar of the shown tab holds Reload and Open. Reload loads the page
+- The bar of the shown tab holds Reload, Expand, and Open. Expand shows
+  while the page of the tab is in its frame. It shows that kept frame in
+  a large window over the whole app, through `ExpandableFrames`, with no
+  new load. The window closes at Close, at Escape, at a press on the dim
+  layer, and when another tab shows or the page goes. Reload loads the page
   again, or asks again after a failure: it reads the list again after a
   failed read, and else asks for a new open. A failed read of the list
   shows in the tab, with Try again. While the sandbox does

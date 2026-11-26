@@ -5,6 +5,7 @@
  * puts them together.
  */
 
+import { code, p, type Inline } from './agentText'
 import type { ChatItem, ToolCallItem } from './conversations'
 import {
   cliCall,
@@ -12,8 +13,8 @@ import {
   type MemberGrant,
   type SecretRequest,
   type SecretRunItem,
-  type ValueLifetime,
 } from './secretRequests'
+import { type ValueLifetime } from '../../../../src/ui/components/chat/secretGrant'
 
 /** A run of one request in a state, at the place of its first run. */
 export function run(
@@ -37,8 +38,9 @@ export function call(
   return { kind: 'tool', id, tool: 'run', target: cliCall(request), status }
 }
 
-export function agent(id: string, text: string): ChatItem {
-  return { kind: 'agent', id, blocks: [text] }
+/** A message of the agent of one paragraph. */
+export function agent(id: string, ...text: Inline[]): ChatItem {
+  return { kind: 'agent', id, blocks: [p(...text)] }
 }
 
 export function working(elapsed: string): ChatItem {
@@ -116,22 +118,28 @@ const lateEnd: ChatItem = {
 export function outlived(
   ask: readonly ChatItem[],
   widget: SecretRunItem,
-  waits: string,
+  waits: readonly Inline[],
 ): ChatItem[] {
   return [
     ...ask,
     call(widget.request, 'done'),
     widget,
-    agent('waits', waits),
+    agent('waits', ...waits),
     lateEnd,
   ]
 }
 
-export const waitsForReplica =
-  'I asked for `PROD_DATABASE_URL`, and no one has answered yet. I will count the addresses when a member allows it.'
+export const waitsForReplica: readonly Inline[] = [
+  'I asked for ',
+  code('PROD_DATABASE_URL'),
+  ', and no one has answered yet. I will count the addresses when a member allows it.',
+]
 
-export const waitsForMapbox =
-  'I asked for `MAPBOX_TOKEN`, and no one has answered yet. I will run the comparison when a member gives a value.'
+export const waitsForMapbox: readonly Inline[] = [
+  'I asked for ',
+  code('MAPBOX_TOKEN'),
+  ', and no one has answered yet. I will run the comparison when a member gives a value.',
+]
 
 /**
  * The line of a late Allow, which starts a turn for the sender of the

@@ -4,6 +4,7 @@ import { completeDelivery, isProcessed, recordDelivery } from './data'
 import type { GitHubRepositoryValues } from './repository-read'
 import { reachesSavedRepository } from './repository-reach'
 import { syncRepositoryValues } from './repository-sync'
+import type { GitHubWorkspace } from './contracts'
 
 /**
  * A `repository` webhook that changes the name, the owner, or the default
@@ -16,6 +17,12 @@ export interface RepositoryChange {
 }
 
 export interface RepositoryChangeDependencies {
+  prepareDefaultBranchChange?: (
+    workspace: GitHubWorkspace,
+    values: GitHubRepositoryValues,
+    installationId: number,
+    deliveryId: string,
+  ) => Promise<void>
   /** Reads the current values of the repository from GitHub. */
   read: (change: RepositoryChange) => Promise<GitHubRepositoryValues>
   /** Wakes the image coordinator of each org whose image holds old values. */
@@ -80,7 +87,13 @@ export async function handleRepositoryChange(
   if (await isProcessed(db, deliveryId)) return
   await recordDelivery(db, deliveryId, now())
   if (dependencies && (await reachesSavedRepository(db, change))) {
-    await syncRepositoryValues(db, change, () => dependencies.read(change))
+    await syncRepositoryValues(
+      db,
+      change,
+      () => dependencies.read(change),
+      dependencies.prepareDefaultBranchChange,
+      now,
+    )
     try {
       await dependencies.changed(change)
     } catch {

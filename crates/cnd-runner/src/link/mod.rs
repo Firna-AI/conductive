@@ -3,6 +3,7 @@
 pub mod connection;
 pub mod ports;
 mod receive;
+mod services;
 mod tool_detail;
 
 #[cfg(test)]

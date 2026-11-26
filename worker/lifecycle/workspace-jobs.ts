@@ -36,7 +36,11 @@ export class WorkspaceJobs {
     integration: Integration
     github: Pick<
       WorkspaceGitHub,
-      'refresh' | 'defaultBranch' | 'scheduleFresh' | 'branchWork'
+      | 'refresh'
+      | 'defaultBranch'
+      | 'memberDefaultBranch'
+      | 'scheduleFresh'
+      | 'branchWork'
     >
     matches(workspaceId: string): boolean
     run: RepositoryChangeOptions['run']
@@ -100,8 +104,11 @@ function repositoryChangeOptions(
       (await integration.controller.readLifecycle()) ?? null,
     runner: async () => {
       const active = integration.chat.runner.connections.current
-      return active && active.protocolVersion !== null
-        ? { state: 'hello', canMove: active.repositoryFolder !== undefined }
+      return active && active.state.protocolVersion !== null
+        ? {
+            state: 'hello',
+            canMove: active.state.repositoryFolder !== undefined,
+          }
         : { state: 'none' }
     },
     moveRunner: () => integration.chat.runner.checkRepository(),

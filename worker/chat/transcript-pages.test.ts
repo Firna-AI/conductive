@@ -7,7 +7,9 @@ import {
 import { heldOperation } from '../test-support/held-operation'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { WORKSPACE_ID } from './harness.test-support'
-import { CHAT_EVENT_PREFIX, chatEventKey, chatKey } from './storage-keys'
+import { seedHistory } from './history-memory.test-support'
+import { historySessionKey, historySessionPrefix } from './history-session-keys'
+import { chatKey } from './storage-keys'
 import { transcriptFixture } from './transcript.test-support'
 
 let harness: TestHarness
@@ -26,33 +28,37 @@ it('lets queued writes proceed between pages while keeping the captured session 
   const session = await fixture.createSession()
   await fixture.changeWorkspace(WORKSPACE_ID, async (view) => {
     await view.saveSession({ ...session, title: 'Snapshot title' })
-    for (let n = 0; n < 70; n++) {
-      await view.emit({
-        type: 'assistant.completed',
-        sessionId: session.id,
-        turnId: 'turn',
-        messageId: `answer-${n}`,
-        text: `Original ${n}`,
-        userMessageIds: [],
-      })
-    }
   })
+  const body = 'x'.repeat(100_000)
+  await seedHistory(
+    fixture.storage,
+    WORKSPACE_ID,
+    fixture.clock.now(),
+    Array.from({ length: 86 }, (_, n) => ({
+      type: 'assistant.completed',
+      sessionId: session.id,
+      turnId: 'turn',
+      messageId: `answer-${n}`,
+      text: `Original ${n}\n${body}`,
+      userMessageIds: [],
+    })),
+  )
   const held = heldOperation()
   let first = true
   let sawLaterTitle = false
   let changed: Promise<void> | undefined
   await fixture.setStorageHooks({
     afterList: async (options) => {
-      if (options.prefix !== CHAT_EVENT_PREFIX) return
-      if (!first) {
+      if (options.prefix !== historySessionPrefix(session.id)) return
+      if (options.startAfter === historySessionKey(session.id, 43)) {
         const current = await fixture.storage.get<Session>(
           chatKey('session', session.id),
         )
         sawLaterTitle ||= current?.title === 'Later title'
-        return
       }
+      if (!first) return
       first = false
-      expect(options.startAfter).toBe(chatEventKey(0))
+      expect(options.startAfter).toBe(historySessionKey(session.id, 0))
       await held.wait()
     },
   })
@@ -84,6 +90,7 @@ it('lets queued writes proceed between pages while keeping the captured session 
     expect(body.markdown).toContain('# Snapshot title\n')
     expect(body.markdown).toContain('Original 0\n')
     expect(body.markdown).toContain('Original 69\n')
+    expect(body.markdown).toContain('Original 85\n')
     expect(body.markdown).not.toContain('New answer after the cutoff')
   } finally {
     held.release()

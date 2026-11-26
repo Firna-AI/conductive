@@ -10,6 +10,10 @@ export class FakeAppServer implements ProcessPort {
   private line: (line: string) => void = () => {}
   turns = 0
   closed = false
+  /** Answers by method, in place of the default answer. */
+  readonly results = new Map<string, unknown>()
+  /** Methods that get no answer. */
+  readonly unanswered = new Set<string>()
   closeWait: Promise<void> | null = null
   onClosing: () => void = () => {}
 
@@ -19,7 +23,8 @@ export class FakeAppServer implements ProcessPort {
     this.writes.push(request)
     if (request.id === undefined) return
     const method = string(request.method)
-    let result: unknown = {}
+    if (this.unanswered.has(method)) return
+    let result: unknown = this.results.get(method) ?? {}
     if (method === 'thread/start' || method === 'thread/resume')
       result = { thread: { id: 'codex-conversation' } }
     if (method === 'turn/start')
@@ -48,9 +53,12 @@ export class FakeAppServer implements ProcessPort {
 export class FakeAppServers {
   readonly requests: ProcessRequest[] = []
   readonly processes: FakeAppServer[] = []
+  /** Prepares each new server before the client writes to it. */
+  prepare: (server: FakeAppServer) => void = () => {}
   readonly start: StartProcess = (request) => {
     this.requests.push(request)
     const server = new FakeAppServer()
+    this.prepare(server)
     this.processes.push(server)
     return server
   }

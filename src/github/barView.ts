@@ -1,21 +1,24 @@
 import type { ChangesResponse } from '../shared/generated/ChangesResponse'
-import type { ButtonTint } from '../../docs/mockups/src/components/common/tint'
-import {
-  barLabels,
-  barMessageText,
-  type MergeMethod,
-} from '../../docs/mockups/src/components/workspace/barCopy'
+import type { ButtonTint } from '../ui/components/common/tint'
+import { barLabels, type MergeMethod } from '../ui/components/workspace/barCopy'
 import {
   barModel,
   type BarAction,
   type BarFacts,
   type BarModel,
   type LocalWorkKind,
-} from '../../docs/mockups/src/components/workspace/barModel'
+} from '../ui/components/workspace/barModel'
 import type { GitHubBanner, GitHubCapabilities } from '../shared/github'
-import { bannerStatus } from './bannerStatus'
+import { bannerStatus, baseBranchLabel, branchLabel } from './bannerStatus'
+import { messageOf } from './barMessage'
 import { failingChecks } from './barPrompts'
 import type { GitHubSnapshot } from './githubClient'
+import {
+  queueFactsOf,
+  queueViewOf,
+  type QueueInput,
+  type QueueView,
+} from './queueView'
 
 /** The member's own GitHub access: still read, read, or a read that failed. */
 export type CapabilityState =
@@ -31,6 +34,7 @@ type ReadyRefusal = 'ready-no-right' | 'ready-pull-changed' | 'ready-refused'
 
 /** An action of the app that the bar shows: a run, or how it ended. */
 export type BarOutcome =
+  | { kind: 'prompt-read-failed' }
   | { kind: 'merging' }
   | { kind: 'merge-refused'; reason: MergeRefusal }
   /** A merge that ended without a refusal of GitHub, with the app's words. */
@@ -57,12 +61,18 @@ export interface BarInput {
   archivable: boolean
   /** The Archive of the workspace runs. */
   archiving: boolean
+  /** What the list of the org knows of the merge queue, when it shows. */
+  queue?: QueueInput
 }
 
 export interface BarMessage {
   text: string
-  /** A wait shows as a status, and a refusal or a failure as an alert. */
-  tone: 'status' | 'danger'
+  /**
+   * A wait shows as a status with a clock, and a fact, such as a base that
+   * moved to the default branch, as a status with an info mark. A refusal
+   * or a failure shows as an alert.
+   */
+  tone: 'status' | 'info' | 'danger'
   /** The pull request on GitHub, where GitHub names the reason. */
   href: string | null
 }
@@ -70,6 +80,12 @@ export interface BarMessage {
 interface BarLink {
   label: string
   href: string
+}
+
+/** The branch of the workspace and its base, the target of Create PR. */
+export interface BarBranches {
+  branch: string
+  base: string
 }
 
 /** What the bar, the phone row, and the top of the phone Checks tab show. */
@@ -80,10 +96,22 @@ export interface BarView {
   /** The words of a branch without a pull request, with no action or link. */
   note: string | null
   /**
+   * The branch and its base while the branch has no pull request, also
+   * without an action and in a suspended org. The top of the phone Checks
+   * tab names them (decision 306). Null with a pull request.
+   */
+  branches: BarBranches | null
+  /**
    * The tint of the main action: the tone of a tinted bar, so the button
    * matches the bar. Null on a bar without a tint.
    */
   tint: ButtonTint | null
+  /**
+   * The merge queue: Add to merge queue on a pull request that can join,
+   * or the line of a queued workspace. Without it, or with null, the bar
+   * shows no part of the queue.
+   */
+  queue?: QueueView | null
 }
 
 /**
@@ -94,6 +122,11 @@ export interface BarView {
 export interface BarControls {
   view: BarView
   onAction: (action: BarAction) => void
+  /**
+   * Add to merge queue, or Remove from queue, which asks first. A view
+   * without a part of the queue needs none.
+   */
+  onQueue?: (action: 'add' | 'remove') => void
 }
 
 /** The report sends this count, and the count is above zero. */
@@ -162,6 +195,7 @@ function appActionOf(outcome: BarOutcome | null): BarFacts['appAction'] {
     case 'merge-failed':
     case 'ready-failed':
     case 'continue-waits':
+    case 'prompt-read-failed':
     case undefined:
       return 'none'
   }
@@ -170,57 +204,6 @@ function appActionOf(outcome: BarOutcome | null): BarFacts['appAction'] {
 function linkOf(model: BarModel, banner: GitHubBanner): BarLink | null {
   if (model.link === 'open' && banner.pullRequest !== null) {
     return { label: barLabels.openOnGitHub, href: banner.pullRequest.url }
-  }
-  return null
-}
-
-function messageOf(
-  model: BarModel,
-  outcome: BarOutcome | null,
-  banner: GitHubBanner,
-): BarMessage | null {
-  const url = banner.pullRequest?.url ?? null
-  const branches = { branch: banner.branch, base: banner.baseBranch }
-  const waits: BarMessage = {
-    text: barMessageText('continue-waits', branches),
-    tone: 'status',
-    href: null,
-  }
-  switch (model.message) {
-    case 'continue-waits':
-      return waits
-    case 'continue-failed':
-      // The Worker names the cause, also a clash of the changed files.
-      return outcome?.kind === 'continue-failed'
-        ? { text: outcome.message, tone: 'danger', href: null }
-        : null
-    case 'merge-refused':
-    case 'ready-refused':
-      return {
-        text: barMessageText(model.message, branches),
-        tone: 'danger',
-        href: url,
-      }
-    case 'merge-moved-head':
-    case 'merge-no-right':
-    case 'ready-no-right':
-    case 'ready-pull-changed':
-      return {
-        text: barMessageText(model.message, branches),
-        tone: 'danger',
-        href: null,
-      }
-    case undefined:
-      break
-  }
-  if (banner.state === 'merged' && outcome?.kind === 'continue-waits') {
-    return waits
-  }
-  if (banner.state === 'ready-to-merge' && outcome?.kind === 'merge-failed') {
-    return { text: outcome.message, tone: 'danger', href: url }
-  }
-  if (banner.state === 'draft' && outcome?.kind === 'ready-failed') {
-    return { text: outcome.message, tone: 'danger', href: url }
   }
   return null
 }
@@ -235,16 +218,23 @@ export function barViewOf(input: BarInput): BarView {
   const { snapshot, outcome } = input
   const { banner } = snapshot
   const { access, method } = accessOf(input.capabilities)
+  const stack = snapshot.queue ? undefined : snapshot.mergeStack
   const model = barModel({
     banner: banner.state,
     localWork: input.localWork === 'unknown' ? 'none' : input.localWork,
     access,
-    method: input.localWork === 'unknown' ? null : method,
+    method:
+      !snapshot.queue && (input.localWork === 'unknown' || input.queue?.listed)
+        ? null
+        : method,
     appAction: appActionOf(outcome),
     turnRuns: input.turnRuns,
     readOnly: input.readOnly,
     archivable: input.archivable,
     archiving: input.archiving,
+    baseMoved: banner.baseMoved !== undefined,
+    queue: queueFactsOf(snapshot.queue, input.queue),
+    stack: stack && { count: stack.count, held: stack.queue === 'other-org' },
   })
   const named = failingChecks(snapshot).length > 0
   const actions = model.actions.filter(
@@ -252,7 +242,8 @@ export function barViewOf(input: BarInput): BarView {
       named || action.kind !== 'agent' || action.action !== 'fix-checks',
   )
   const link = linkOf(model, banner)
-  const empty = actions.length === 0 && link === null
+  const queue = queueViewOf(model.queue, snapshot, input.queue)
+  const empty = actions.length === 0 && link === null && !queue?.add
   const tone =
     banner.pullRequest === null
       ? 'neutral'
@@ -269,5 +260,12 @@ export function barViewOf(input: BarInput): BarView {
         : banner.state === 'no-commits'
           ? barLabels.noCommits
           : null,
+    // The top of the phone Checks tab shows the labels, which hide each
+    // secret value.
+    branches:
+      banner.pullRequest === null
+        ? { branch: branchLabel(banner), base: baseBranchLabel(banner) }
+        : null,
+    queue,
   }
 }

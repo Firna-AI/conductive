@@ -1,7 +1,7 @@
 import { orgs } from '../../fixtures/orgs'
 import type { RepositoryKey } from '../../fixtures/repositories'
 import type { ShortcutChanges } from '../../fixtures/shortcutChanges'
-import { helpGroupLabel } from '../feedback/feedbackCopy'
+import { helpGroupLabel } from '../../../../../src/ui/components/feedback/feedbackCopy'
 import {
   archivedRows,
   workspaceSections,

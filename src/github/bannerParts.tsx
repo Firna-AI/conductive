@@ -1,10 +1,10 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { ArrowRight, ArrowUpRight, GitBranch } from 'lucide-react'
-import { GitHubMark } from '../../docs/mockups/src/components/common/GitHubMark'
-import { touchControl } from '../../docs/mockups/src/design/metrics'
+import { GitHubMark } from '../ui/components/common/GitHubMark'
+import { touchControl } from '../ui/design/metrics'
 import type { GitHubBanner } from '../shared/github'
-import type { BannerStatus } from './bannerStatus'
+import { baseBranchLabel, branchLabel, type BannerStatus } from './bannerStatus'
 import type { CommandKeyOf } from './barKeys'
 import styles from './PullRequestBar.module.css'
 
@@ -88,17 +88,22 @@ export function PullRequestNumber(props: {
   )
 }
 
-/** The branch and the branch that it merges into. */
+/**
+ * The branch and the branch that it merges into, by the labels that hide
+ * each secret value, also in their tooltips.
+ */
 export function Branches(props: { banner: GitHubBanner }) {
+  const branch = branchLabel(props.banner)
+  const target = baseBranchLabel(props.banner)
   return (
     <span className={styles.branches}>
       <GitBranch aria-hidden className={styles.muted} size={13} />
-      <span className={styles.branch} title={props.banner.branch}>
-        {props.banner.branch}
+      <span className={styles.branch} title={branch}>
+        {branch}
       </span>
       <ArrowRight aria-hidden className={styles.muted} size={12} />
-      <span className={styles.target} title={props.banner.baseBranch}>
-        {props.banner.baseBranch}
+      <span className={styles.target} title={target}>
+        {target}
       </span>
     </span>
   )

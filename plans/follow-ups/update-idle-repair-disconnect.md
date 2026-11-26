@@ -1,0 +1,32 @@
+# Idle repair keeps the runner offline
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-20, from branch `calummoore/sandbox-start-issue-secrets-q3is`, review round 2, finding 9.
+- **Location:** `crates/cnd-cli/src/runner_update/swap.rs` (the idle install runs `update apply` after the runner closes its connection), `crates/cnd-cli/src/runner_update/releases.rs` (the idle readiness check), `complete_versions` in `crates/cnd-cli/src/update/state.rs`, the early return in `crates/cnd-cli/src/update/download.rs`, and Installs at idle in `docs/protocol/sandbox-software.md`.
+- **Reason:** the options change when a staged release that lost a part may activate, which the open item `plans/follow-ups/update-staged-release-missing-part.md` also asks.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Idle install:** the update that the runner starts after its workspace has no running or queued work for 2 minutes. The runner closes its Worker connection, runs `sudo -n <program> update apply`, and runs the new release in the same process.
+  - **Staged release:** a newer release that the background check downloaded and that waits for activation.
+  - **Repair:** the step of `update apply` that downloads again each missing part of the release that it starts, within 60 seconds.
+- **Background:**
+  - The protocol says that the runner is away for a few seconds during an idle install.
+  - The idle readiness check and apply select a staged release by its own `complete` marker. A staged release that lost a part therefore still qualifies.
+  - Since this branch, apply then repairs that part while the runner is disconnected.
+- **Problem:** A part download that takes 40 seconds keeps the runner away for at least 40 seconds. A failed repair still switches to the damaged release.
+- **Impact if no action:** Commands for the runner wait through the repair. When the damaged release lost its installer, the runner exits, and the service restart stops the processes that agents started.
+- **Root question:** Which step restores a lost part of a staged release, and when does that release become eligible for an idle install, so that the runner is away only for the switch?
+- **Options:**
+  - **A.** Keep the repair in the disconnected time, and record the longer gap in Installs at idle. Effort: Small.
+  - **B.** Require the parts on the disk before an idle disconnect, and check again in apply. Defer an incomplete staged release to a later service start. Effort: Medium.
+  - **C.** Let the background check repair missing parts while the runner stays connected, and allow an idle install only when the selected release is ready from the disk. Effort: Medium.
+  - **D.** One readiness rule: a version is complete only when each part in its `parts.json` is present. The start skips it, the idle check sees no newer release, and the background check stages it again while the runner stays connected. Collection keeps it by its version marker. This is option D of `plans/follow-ups/update-staged-release-missing-part.md`. Effort: Medium.
+  - **E.** Repair before the disconnect with a new root step, such as `update repair`, while the runner stays connected. Effort: Medium.
+- **Left out:** A shorter limit after the disconnect, because a network wait stays and a cut repair switches to a release that lacks a part. The whole apply before the disconnect, because no turn may start while `current` and the system files change.
+- **Wider fix:** D, because one rule covers the start, the idle install, and the background check.
+- **Previous examples:** Commit `6ba984926` introduced the short idle disconnect. Commit `93ae7fc22` keeps the download ahead of Restart.
+- **Related:** `plans/follow-ups/update-staged-release-missing-part.md`, the same cause and a shared wider fix, and this item waits for its answer.
+- **Recommendation:** C with every answer to the staged-release item. If the user chooses D there, apply D here too, because it is the same change.
+- **Action:** ask the user, because the options change when an incomplete staged release may activate.

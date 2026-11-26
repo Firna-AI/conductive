@@ -55,7 +55,7 @@ test('the palette lists the command of each row but Switch to org, which the rai
       'keyboard-shortcuts',
     ],
     futex: ['org-1', 'org-3'],
-    deleted: ['org-3'],
+    deleted: ['org-2'],
     suspended: [
       'create-org',
       'send-feedback',

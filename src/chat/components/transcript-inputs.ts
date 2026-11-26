@@ -9,21 +9,25 @@ import type { ChatController } from '../state/controller'
 import { sourceInsert } from './SourceLine'
 
 /**
- * The parts of the chat of the open session that come from the snapshot:
+ * The parts of the chat of the session `id` that come from the snapshot:
  * the Mac commands and the secret requests, with the ones that wait above
  * the composer, and the inputs of the transcript: its inserts, its readers,
  * and Try again. Each stays the same value while its data stays the same,
  * so a tick of the clock draws no row of the transcript again. The line of
  * a linked session to its source also stays while the session records stay.
+ * A press on that line calls `onOpenSession`, when the chat gives it. Else
+ * it shows the named session in its tab, and reopens it first when it is
+ * closed.
  */
 export function useTranscriptInputs(
   snapshot: ChatSnapshot,
   controller: ChatController,
+  id: string | null,
   session: Session | null,
   state: SessionState,
   readOnly: boolean,
+  onOpenSession?: (sessionId: string) => void,
 ) {
-  const id = snapshot.activeSessionId
   const commands = useMemo(
     () => sessionCommands(snapshot, id, state),
     [snapshot, id, state],
@@ -41,13 +45,18 @@ export function useTranscriptInputs(
   const { sessions, history } = snapshot
   const source = useMemo(
     () =>
-      sourceInsert({ sessions, history }, session, (sessionId) => {
-        const open = sessions.some((item) => item.id === sessionId)
-        void (open
-          ? controller.select(sessionId)
-          : controller.reopen(sessionId))
-      }),
-    [sessions, history, session, controller],
+      sourceInsert(
+        { sessions, history },
+        session,
+        onOpenSession ??
+          ((sessionId) => {
+            const open = sessions.some((item) => item.id === sessionId)
+            void (open
+              ? controller.select(sessionId)
+              : controller.reopen(sessionId))
+          }),
+      ),
+    [sessions, history, session, controller, onOpenSession],
   )
   const inserts = useMemo(
     () => [

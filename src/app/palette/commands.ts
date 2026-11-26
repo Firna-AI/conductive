@@ -1,11 +1,12 @@
 import {
   sendFeedbackLabel,
   sendFeedbackWords,
-} from '../../../docs/mockups/src/components/feedback/feedbackCopy'
+} from '../../ui/components/feedback/feedbackCopy'
 import {
   mergeLatestCommandLabel,
   mergeLatestWords,
-} from '../../../docs/mockups/src/components/workspace/mergeLatestCopy'
+} from '../../ui/components/workspace/mergeLatestCopy'
+import { queueLabels } from '../../ui/components/workspace/queueCopy'
 import {
   shortcutDigits,
   type ShortcutCommandId,
@@ -35,6 +36,8 @@ export const offeredActionIds = [
   'go-to-desktop',
   'new-terminal',
   'merge-latest',
+  'add-to-merge-queue',
+  'remove-from-merge-queue',
   'archive-workspace',
   'restore-workspace',
   'new-section',
@@ -65,6 +68,14 @@ export const actionTexts: Readonly<
   'new-terminal': { label: 'New terminal', words: ['shell', 'tab'] },
   // The row names the target branch, as `mergeLatestLabel` gives it.
   'merge-latest': { label: mergeLatestCommandLabel, words: mergeLatestWords },
+  'add-to-merge-queue': {
+    label: queueLabels.add,
+    words: ['merge queue', 'stack', 'pull request', 'land'],
+  },
+  'remove-from-merge-queue': {
+    label: queueLabels.remove,
+    words: ['merge queue', 'leave', 'pull request'],
+  },
   'archive-workspace': { label: 'Archive workspace', words: [] },
   'restore-workspace': { label: 'Restore workspace', words: ['unarchive'] },
   'new-workspace': { label: 'New workspace', words: ['create', 'task'] },
@@ -99,6 +110,8 @@ export const actionCommands: Readonly<
   'go-to-desktop': null,
   'new-terminal': 'new-terminal',
   'merge-latest': 'merge-latest',
+  'add-to-merge-queue': 'add-to-merge-queue',
+  'remove-from-merge-queue': 'remove-from-merge-queue',
   'archive-workspace': 'archive-workspace',
   'restore-workspace': 'restore-workspace',
   'new-section': 'new-section',
@@ -129,7 +142,7 @@ export const orgSettings: readonly (CommandText & { tab: SettingsTab })[] = [
   {
     tab: 'cloud-computer',
     label: 'Cloud computer',
-    words: ['install', 'startup script', 'env', 'build', 'sandbox'],
+    words: ['install', 'startup script', 'env', 'build', 'sandbox', 'skills'],
   },
   {
     tab: 'agents',
@@ -147,14 +160,16 @@ export const orgSettings: readonly (CommandText & { tab: SettingsTab })[] = [
 /**
  * The rows of the Account group of the Settings tab, in the order of the
  * Account page: tab by tab, and in each tab in the order of its sections.
- * So the Keyboard shortcuts tab follows New workspaces, and the This Mac
- * tab, which only the Mac app shows, ends the list. A section that the page
- * adds or moves takes the same place here.
+ * So Favourites comes before New workspaces, as on the Preferences tab, the
+ * Keyboard shortcuts tab follows New workspaces, and the This Mac tab,
+ * which only the Mac app shows, ends the list. A section that the page adds
+ * or moves takes the same place here.
  */
 export const accountSettingIds = [
   'sign-in',
   'github',
   'agents',
+  'favourites',
   'new-workspaces',
   'keyboard-shortcuts',
   'this-mac',
@@ -171,6 +186,7 @@ export const accountSettings: Readonly<Record<AccountSettingId, CommandText>> =
       label: 'Agents',
       words: ['claude', 'codex', 'login', 'api key', 'token'],
     },
+    favourites: { label: 'Favourites', words: ['favorites', 'model menu'] },
     'new-workspaces': {
       label: 'New workspaces',
       words: ['model', 'effort', 'default'],

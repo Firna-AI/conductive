@@ -1,18 +1,17 @@
 import type { Viewport } from '@mokly/mokly'
 import { Button } from '@firna/ui/button'
-import { Ticket } from 'lucide-react'
 import { termsAgreement } from '../../../../src/marketing/legal-text'
-import { GitHubMark } from '../components/common/GitHubMark'
-import { Notice } from '../components/common/Notice'
+import { githubMark } from '../entries/components/common/GitHubMark.mockup'
+import { notice } from '../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { CatalogueText } from '../components/marketing/CatalogueText'
-import { noop } from '../noop'
+import { noop } from '../../../../src/ui/noop'
 import { paths } from '../paths'
-import { SignInFrame } from './signInFrame'
-import { signInCopy } from './signInCopy'
-import { waitlistCopy } from './waitlistCopy'
-import frame from './signInFrame.module.css'
-import styles from './SignInScreen.module.css'
+import { signInFrame } from '../entries/components/screens/signInFrame.mockup'
+import { signInCopy } from '../../../../src/ui/screens/signInCopy'
+import { waitlistCopy } from '../../../../src/ui/screens/waitlistCopy'
+import frame from '../../../../src/ui/screens/signInFrame.module.css'
+import styles from '../../../../src/ui/screens/SignInScreen.module.css'
 
 /**
  * The invite code that a join link carries. The page names no owner of
@@ -20,9 +19,10 @@ import styles from './SignInScreen.module.css'
  */
 function LinkCode(props: { code: string }) {
   return (
-    <Notice
+    <notice.Component
       body={<span className={frame.inviteCode}>{props.code}</span>}
-      icon={Ticket}
+      icon="ticket"
+      moklyInstance="link-code"
       title={waitlistCopy.linkCode}
     />
   )
@@ -37,7 +37,11 @@ function LinkCode(props: { code: string }) {
  */
 export function SignInScreen(props: { viewport: Viewport; code?: string }) {
   return (
-    <SignInFrame label={signInCopy.title} viewport={props.viewport}>
+    <signInFrame.Component
+      label={signInCopy.title}
+      moklyInstance="sign-in-frame"
+      viewport={props.viewport}
+    >
       <h1 className={styles.title}>{signInCopy.title}</h1>
       <p className={styles.text}>{signInCopy.text}</p>
       {props.code ? <LinkCode code={props.code} /> : null}
@@ -47,7 +51,13 @@ export function SignInScreen(props: { viewport: Viewport; code?: string }) {
       <ScreenLink asChild to={props.code ? paths.getStarted : paths.waitlist}>
         <Button
           block
-          iconNode={<GitHubMark className={styles.mark} size={17} />}
+          iconNode={
+            <githubMark.Component
+              className={styles.mark}
+              moklyInstance="sign-in-github"
+              size={17}
+            />
+          }
           onPress={noop}
           size="lg"
           tone="primary"
@@ -55,6 +65,6 @@ export function SignInScreen(props: { viewport: Viewport; code?: string }) {
           {signInCopy.action}
         </Button>
       </ScreenLink>
-    </SignInFrame>
+    </signInFrame.Component>
   )
 }

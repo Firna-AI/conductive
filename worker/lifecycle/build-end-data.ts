@@ -1,14 +1,27 @@
 import { activeOrgIdPredicate } from '../data/org-access'
 import type { BuildJob } from './build-data'
 import { buildLogStatements } from './build-log-statements'
+import {
+  buildStarterActive,
+  switchMayPublish,
+  switchDidPublish,
+  switchFailureStatements,
+  switchPublicationStatements,
+  type SwitchBuildFailure,
+} from './provider-switch-end'
+import {
+  failedBuildStepsStatement,
+  publishedBuildStepsStatement,
+} from './build-step-data'
 
 type BuildEnd =
-  | { state: 'failed'; buildId: string; message: string }
+  | ({ state: 'failed'; buildId: string; message: string } & SwitchBuildFailure)
   | { state: 'succeeded'; job: BuildJob }
 
 const publishingBuild = `EXISTS (SELECT 1 FROM image_builds
   WHERE id = ? AND state = 'running'
-    AND ${activeOrgIdPredicate('image_builds.org_id')})`
+    AND ${activeOrgIdPredicate('image_builds.org_id')}
+    AND ${buildStarterActive} AND ${switchMayPublish})`
 
 export async function writeBuildEnd(
   db: D1Database,
@@ -18,12 +31,15 @@ export async function writeBuildEnd(
   const buildId = end.state === 'failed' ? end.buildId : end.job.buildId
   const activeOrg =
     end.state === 'succeeded'
-      ? `AND ${activeOrgIdPredicate('image_builds.org_id')}`
+      ? `AND ${activeOrgIdPredicate('image_builds.org_id')} AND ${buildStarterActive} AND ${switchDidPublish}`
       : ''
   // Side effects check running before the final update in the same atomic batch.
   await db.batch([
     ...(end.state === 'failed'
-      ? buildLogStatements(db, buildId, end.message, now, true)
+      ? [
+          ...buildLogStatements(db, buildId, end.message, now, true),
+          ...switchFailureStatements(db, buildId, now, end),
+        ]
       : publicationStatements(db, end.job, now)),
     db
       .prepare(
@@ -36,6 +52,10 @@ export async function writeBuildEnd(
         end.state === 'failed' ? end.message : null,
         buildId,
       ),
+    // After the final update, so that the publish closes the steps only of a success.
+    end.state === 'failed'
+      ? failedBuildStepsStatement(db, buildId, now)
+      : publishedBuildStepsStatement(db, buildId, now),
   ])
 }
 
@@ -67,6 +87,7 @@ function publicationStatements(
     db
       .prepare(
         `UPDATE image_build_jobs SET phase = CASE WHEN
+          (SELECT operator_switch_id FROM image_builds WHERE id = ?) IS NULL AND (
           (? IS NULL AND ? = 'build'
             AND EXISTS (SELECT 1 FROM settings WHERE org_id = ? AND revision > ?))
           OR (EXISTS (SELECT 1 FROM repositories r WHERE r.org_id = ? AND r.selected = 1
@@ -75,10 +96,11 @@ function publicationStatements(
             AND (SELECT CASE WHEN id = ? THEN 'succeeded' ELSE state END
               FROM image_builds WHERE org_id = ? AND provider_account = ? AND kind = 'build'
               ORDER BY started_at DESC, id DESC LIMIT 1) = 'succeeded')
-          THEN 'cleanup-build' ELSE 'cleanup' END,
+          ) THEN 'cleanup-build' ELSE 'cleanup' END,
           process_id = NULL WHERE build_id = ? AND ${publishingBuild}`,
       )
       .bind(
+        job.buildId,
         job.previousImageName,
         job.kind,
         job.orgId,
@@ -90,5 +112,6 @@ function publicationStatements(
         job.buildId,
         job.buildId,
       ),
+    ...switchPublicationStatements(db, job.buildId, now, publishingBuild),
   ]
 }

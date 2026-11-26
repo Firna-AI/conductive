@@ -8,6 +8,7 @@ import {
   initialLifecycle,
   beginningLifecycleStart,
   readyLifecycle,
+  disconnectedLifecycle,
   withPreparedStart,
 } from './durable-start'
 import type { SendMessageRequest } from '../../src/shared/messages'
@@ -99,14 +100,14 @@ export class DurableLifecycle {
   }
 
   runnerReady(publish?: LifecyclePublisher): Promise<void> {
-    return this.update(readyLifecycle, publish)
+    return this.update((state) => readyLifecycle(state, this.now()), publish)
   }
 
-  runnerDisconnected(publish?: LifecyclePublisher): Promise<void> {
+  runnerDisconnected(publish?: LifecyclePublisher, at = this.now()) {
     return this.serial(async () => {
       const state = await this.read()
       if (state?.runnerConnected)
-        await this.write({ ...state, runnerConnected: false }, publish)
+        await this.write(disconnectedLifecycle(state, at), publish)
     })
   }
 
@@ -240,18 +241,18 @@ export class DurableLifecycle {
     )
   }
 
-  alarm(): Promise<void> {
+  alarm(): Promise<boolean> {
     return this.serial(async () => {
       const state = await this.read()
-      if (state)
-        await advanceLifecycleAlarm(
-          this.storage,
-          this.hooks,
-          state,
-          this.now,
-          (next) => this.write(next),
-          (next) => this.keepalive(next),
-        )
+      if (!state) return false
+      return advanceLifecycleAlarm(
+        this.storage,
+        this.hooks,
+        state,
+        this.now,
+        (next) => this.write(next),
+        (next) => this.keepalive(next),
+      )
     })
   }
 

@@ -3,7 +3,9 @@
 `Workspace.credentialSender` maps the turn ID of a git credential request
 to a sender, in the chat queue. `credentialSender` in
 [`credential-sender.ts`](credential-sender.ts) holds the rules below for a
-create and a chat turn. The [machine route](routes.md#machine-route)
+create and a chat turn. It asks `preparingCredentialSender` in
+[`preparing-credential-sender.ts`](preparing-credential-sender.ts) first,
+for a create that prepares its repository and for a saved base-move fetch. The [machine route](routes.md#machine-route)
 gives the handler, which reads that turn ID from a request header. The
 [Workspace Durable Object](workspace-object.md) guide gives the other
 methods of the object.
@@ -14,6 +16,9 @@ methods of the object.
   first message.
 - A Continue fetch has its own grant too, as [Continue](#continue) says.
   So has the fetch of a repository change.
+- A saved base-move fetch grants the workspace owner, as
+  [Moved bases](README.md#moved-bases) says. Its trusted ID cannot name an
+  agent turn. The grant ends when the fetch request ends.
 - Otherwise the turn must be the running stored chat turn: the active
   turn of an open session. `activeStoredTurn` in
   [`access.ts`](../devices/access.ts) reads it. So access ends with the

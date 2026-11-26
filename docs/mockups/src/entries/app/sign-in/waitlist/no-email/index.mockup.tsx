@@ -1,5 +1,8 @@
 import { defineScreen } from '@mokly/mokly'
-import { appDomain, productName } from '../../../../../brand'
+import {
+  appDomain,
+  productName,
+} from '../../../../../../../../src/shared/brand'
 import {
   WaitlistScreen,
   waitlistSchema,

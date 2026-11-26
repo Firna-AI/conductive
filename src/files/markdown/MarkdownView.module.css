@@ -14,10 +14,9 @@
 }
 
 /*
- * The look of the headings comes from MarkdownHeadings.module.css of the
- * mockups. A level-1 or level-2 heading has a little more space above it
- * than a smaller heading. The first block of the file has no space above
- * it.
+ * The look of the headings comes from the shared MarkdownHeadings.module.css.
+ * A level-1 or level-2 heading has a little more space above it than a
+ * smaller heading. The first block of the file has no space above it.
  */
 .doc h1 {
   margin: 24px 0 10px;
@@ -57,30 +56,13 @@
   margin: 3px 0 0;
 }
 
-.doc blockquote {
-  padding: 0 0 0 12px;
-  border-left: 2px solid var(--ui-border2);
-  color: var(--ui-muted);
-}
-
+/*
+ * The look of quotes, rules, bold text, emphasis, strikethrough, and task
+ * boxes comes from the shared MarkdownProse.module.css, which the chat also
+ * uses. A rule has 16px above and below it.
+ */
 .doc hr {
   margin: 16px 0;
-  border: 0;
-  border-top: 1px solid var(--ui-border);
-}
-
-.doc strong {
-  color: var(--ui-ink);
-  font-weight: var(--ui-weight-strong);
-}
-
-.task {
-  list-style: none;
-}
-
-.task input {
-  margin: 0 6px 0 -18px;
-  vertical-align: -1px;
 }
 
 .block {

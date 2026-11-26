@@ -1,4 +1,4 @@
-import { productName } from '../../docs/mockups/src/brand'
+import { productName } from '../shared/brand'
 import { list, text, type LegalDocument } from './legal-text'
 
 /**
@@ -11,7 +11,8 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
   title: 'Working in an org',
   blocks: [
     list(
-      text`Every member of an org sees all of its workspaces and automations.
+      text`Every member of an org sees all of its workspaces, automations,
+        and merge queues.
         A removed workspace opens by direct link or chat link, with
         read-only chat.
         In an active org, members can send messages in workspaces that are
@@ -33,12 +34,20 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         and the org remains active.`,
       text`During a running turn in the calling workspace, the tools can
         also create, rename, move, and archive workspaces across the org.
-        They can create, rename, stop, and close sessions, and send
-        messages. They can create and delete sections, and open and close
-        private previews. These actions use that turn's sender, who must
+        They can create, rename, stop, and close sessions, send messages,
+        and watch one turn of a session. They can create and delete
+        sections, and open and close private previews.
+        These actions use that turn's sender, who must
         still belong to the org. Each action follows that member's rights
         in the app. The tools can also run a command with each secret that
         the session of that turn may use, and ask members for the others.`,
+      text`A watch tells the session that set it once when the watched turn
+        finishes, fails, or stops. Its wake can start a new turn after the
+        turn that set the watch ended. That new turn acts for the member
+        whose turn set the watch, with that member's GitHub token and Mac.
+        A wake that joins a running turn keeps that turn's sender.
+        Current membership and session login rules apply at delivery.
+        An automatic idle stop keeps the watch.`,
       text`Only the workspace owner or an org admin can archive it.
         An agent can archive the workspace where it runs, which ends its
         turn. The actions ask no separate approval. Previews that agents
@@ -60,9 +69,10 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         cannot be used. If no usable login serves the sender, the message
         cannot run. Each turn's git calls use a GitHub token of the
         member whose message started the turn.
-        Pushes and pull requests show as that member. A merge from the app
-        uses the GitHub token of the member who clicks. GitHub shows that
-        member as the merger and checks their rights and the branch rules.
+        Pushes and pull requests show as that member. Selecting a merge
+        action uses the GitHub token of the member who selects it, including
+        in the queue. GitHub shows that member as the merger and checks
+        their rights and the branch rules.
         Ready for review of a draft pull request also uses the GitHub token
         of the member who clicks, and GitHub checks their rights.
         Outside an agent turn, the GitHub CLI uses the workspace owner's
@@ -71,6 +81,17 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
       text`That GitHub token reaches every repository where that person
         installed the GitHub App and has access, not only the
         repositories of the org.`,
+      text`Adding a pull request to the merge queue lets ${productName}
+        change its target, rebase its branch, and merge it when ready.
+        An automatic merge uses the stored GitHub token of the member who
+        added the last pull request that the queue asks GitHub to merge.
+        If the creator of the queue's GitHub stack cannot remove it,
+        ${productName} can use the token of the member whose action caused
+        a queue entry to leave, or the workspace owner's token. The member
+        must still belong to the org and have GitHub write access to the
+        repository.
+        The queue sends agent turns as the member who added the pull
+        request. The turn uses the session's agent login.`,
       text`Each personal login has a setting that lets other members use
         it in the sessions that you start on it. For a Claude
         subscription or a ChatGPT sign-in, the setting starts off. For an API key or an own
@@ -108,6 +129,13 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         then, also a member to whom the settings never show the value. A
         program that can use the workspace token during a turn can also get
         the value of each secret that the session of that turn may use.`,
+      text`A service is a named program that runs outside an agent turn.
+        Its environment uses the org values installed at this computer
+        start, plus values supplied for the service. It does not inherit
+        the agent's credentials, turn context, or secrets added to an
+        approved command. Services run as the same computer user as other
+        programs. Their code can still read available files and credentials,
+        including those of later turns.`,
       text`Each turn gets a temporary credential for model requests in
         place of the agent login. A member with a terminal or a program in
         the workspace's cloud computer can read it while that turn runs.
@@ -140,29 +168,47 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         automation moves to the member who gets their workspaces. It stays
         off until that member turns it on. Later runs follow the same
         agent login rule and use that member's GitHub token.`,
+      text`The owner can choose org secrets in Capabilities on the automation
+        page. Every member sees the chosen secret names. Only the owner changes
+        the choice. Each run workspace starts with these secrets pre-approved
+        by the owner. Its agents can use them without a new request.`,
+      text`These pre-approvals stay in a kept run workspace until a member
+        removes them or the secret is deleted. Changing the automation's
+        choice affects only later run workspaces. The member who added a
+        chosen secret, or an admin, can replace its value. Later runs then
+        use the new value. A request for another
+        secret still waits for a member unless another approval allows it.
+        Agents in a run workspace can also ask for commands on the owner's
+        Mac.`,
       text`The run of an automation for a pull request reads that pull request,
         also the comments, reviews, and descriptions of other GitHub
         accounts. Such text can steer the agent while the run uses the
         session's agent login, the owner's GitHub token, and the org's
         env vars.
         It can also steer the agent to use the secrets that need no new
-        approval, such as a secret for all agents.
+        approval, such as a secret for all agents or one chosen for the
+        automation. The automation page warns every member about this risk
+        when the automation has a pull request trigger and a chosen secret.
         Such text can also steer the agent to read and change work across
         the org, with that member's workspace tool rights.
         Messages follow the same session login rules.`,
-      text`A tool message or an accepted late answer to a secret request
-        can start a stopped workspace's cloud computer.
+      text`A tool message, an accepted late answer to a secret request,
+        or an accepted watch wake can start a stopped workspace's cloud
+        computer.
+        The merge queue can also start the computer for an agent turn.
         The start follows the same checks as opening the workspace. ${productName}
         sets no limit on how many sessions or messages agents create.
         Repeated replies can spend agent logins and keep computers running.
-        Use Stop in each affected session to end its turn.`,
+        Use Stop in each affected session to end its turn.
+        Stop also drops earlier watch wakes that the session has not
+        accepted yet.`,
       text`Admins manage the members, repositories, scripts, env vars, and
         agent logins of the org.`,
       text`Every member can add secrets, and replace or delete the secrets
         that they added. In an active org, admins can replace and delete each secret, mark a
         secret for all agents, and reveal one value at a time. Every member
         can change what each workspace allows, such as its pre-approved
-        secrets and its Mac access.`,
+        secrets. The Mac access switch acts only on your own Mac.`,
     ),
   ],
 }

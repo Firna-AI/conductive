@@ -13,6 +13,7 @@ import {
   type OperatorUsersResponse,
 } from '../../src/shared/operator'
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
+import { seedMember } from '../test-support/d1-seeds'
 import { seedUser } from './overview.test-support'
 
 export async function orgList(
@@ -78,10 +79,10 @@ export async function addMember(
   githubId: number,
   role: OrgRole = 'member',
 ): Promise<void> {
-  await harness.env.DB.prepare(
-    `INSERT INTO org_members (org_id, user_id, role, joined_at)
-     SELECT ?, id, ?, ? FROM users WHERE github_id = ?`,
-  )
-    .bind(orgId, role, TEST_TIME, githubId)
-    .run()
+  await seedMember(harness.env.DB, {
+    orgId,
+    userId: { githubId },
+    role,
+    joinedAt: TEST_TIME,
+  }).run()
 }

@@ -1,10 +1,10 @@
-import { ArrowRight, CircleAlert, Hammer } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
-import { Notice } from '../components/common/Notice'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import { notice } from '../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { type FirstBuildState, runningBuild } from '../fixtures/computer'
 import { paths } from '../paths'
-import { firstBuildCopy as copy } from './firstBuildCopy'
+import { firstBuildCopy as copy } from '../../../../src/ui/screens/firstBuildCopy'
+import { defined } from '../defined'
 
 /** The time of the build that runs, which a narrow phone keeps on one line. */
 const elapsed = runningBuild.elapsed.replaceAll(' ', '\u00a0')
@@ -13,7 +13,9 @@ const elapsed = runningBuild.elapsed.replaceAll(' ', '\u00a0')
 function ComputerLink(props: { to: string }) {
   return (
     <ScreenLink asChild to={props.to}>
-      <ActionButton icon={ArrowRight}>{copy.settings}</ActionButton>
+      <actionButton.Component icon="arrow-right" moklyInstance="open-computer">
+        {copy.settings}
+      </actionButton.Component>
     </ScreenLink>
   )
 }
@@ -33,41 +35,46 @@ export function FirstBuildNotice(props: {
   switch (props.build) {
     case 'running':
       return (
-        <Notice
-          action={
-            admin ? <ComputerLink to={paths.firstBuildComputer} /> : undefined
-          }
+        <notice.Component
           body={copy.running.body}
           busy
-          icon={Hammer}
+          icon="hammer"
+          moklyInstance="first-build"
           title={copy.running.title(elapsed)}
+          {...defined({
+            action: admin ? (
+              <ComputerLink to={paths.firstBuildComputer} />
+            ) : undefined,
+          })}
         />
       )
     case 'failed':
       return (
-        <Notice
-          action={
-            admin ? (
-              <ComputerLink to={paths.firstBuildComputerFailed} />
-            ) : undefined
-          }
+        <notice.Component
           body={admin ? copy.failed.admin : copy.failed.member}
-          icon={CircleAlert}
+          icon="circle-alert"
+          moklyInstance="first-build"
           title={copy.failed.title}
           tone="danger"
+          {...defined({
+            action: admin ? (
+              <ComputerLink to={paths.firstBuildComputerFailed} />
+            ) : undefined,
+          })}
         />
       )
     case 'none':
       return (
-        <Notice
-          action={
-            admin ? (
-              <ComputerLink to={paths.firstBuildComputerNoBuild} />
-            ) : undefined
-          }
+        <notice.Component
           body={admin ? copy.none.admin : copy.none.member}
-          icon={Hammer}
+          icon="hammer"
+          moklyInstance="first-build"
           title={copy.none.title}
+          {...defined({
+            action: admin ? (
+              <ComputerLink to={paths.firstBuildComputerNoBuild} />
+            ) : undefined,
+          })}
         />
       )
   }

@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-09, from branch `calummoore/session-transcript-copy`, a new problem of the options check of the plan `plans/copy-session-transcripts.md`.
-- **Location:** `runner/sdk-helper/src/providers/tool.ts:27`, `src/shared/chat-events.ts:10`, `docs/protocol/chat-and-events.md:102`, and `docs/mockups/src/components/chat/lostCopy.ts:67` and `:72`.
+- **Location:** `runner/sdk-helper/src/providers/tool.ts:27`, `src/shared/chat-events.ts:10`, `docs/protocol/chat-and-events.md:102`, and `src/ui/components/chat/lostCopy.ts:67` and `:72`.
 - **Reason:** The mismatch is already on `main`, and the transcript change does not change these lines.
 
 - **Source:** Review.
@@ -15,7 +15,7 @@
   - `mapTool` puts the `description` argument of the call into `detail`, such as "Run the tests". It sends no output of the tool. A tool result changes only the state of the call, in `runner/sdk-helper/src/providers/claude-events.ts`.
   - The comment of `TOOL_DETAIL_MAX_BYTES` says that "A 64 KiB excerpt keeps tool output below the event budget".
   - `docs/protocol/chat-and-events.md` says that the line of a fold shows "the total size of the output that the runner left out".
-  - The chat says "1.2 MB left out" for one call and "1.2 MB of output left out" for a run, from `leftOutOfCall` and `leftOutOfRun` in `docs/mockups/src/components/chat/lostCopy.ts`.
+  - The chat says "1.2 MB left out" for one call and "1.2 MB of output left out" for a run, from `leftOutOfCall` and `leftOutOfRun` in `src/ui/components/chat/lostCopy.ts`.
   - The runner has sent the description since its first version, in commit `91518996` of 6 November 2026.
 - **Problem:** The protocol, a comment, and the words of the chat call the tool detail "output", but it holds the description of the call. No tool output reaches the chat.
 - **Impact if no action:** A reader of the protocol expects tool output in the chat and in a copied transcript. A description longer than 64 KiB, which is rare, shows "of output left out", which is wrong.

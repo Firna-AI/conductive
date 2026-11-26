@@ -1,16 +1,27 @@
 import { Input } from '@firna/ui/input'
-import { Pencil, Plus, Trash2, X } from 'lucide-react'
-import { productName } from '../../brand'
+import { productName } from '../../../../../src/shared/brand'
 import { envVars, newEnvVar, type EnvVar } from '../../fixtures/computer'
-import { noop } from '../../noop'
-import { ActionButton, IconButton } from '../common/actions'
-import { classes } from '../common/classes'
-import { useControlSizes } from '../common/touch'
-import { SecretMark, SecretSwitch, ValueDots } from './EnvVarParts'
-import { secretNote } from './envVarCopy'
-import { Section, SectionText } from './Section'
-import styles from './EnvironmentSections.module.css'
-import sections from './Section.module.css'
+import { noop } from '../../../../../src/ui/noop'
+import {
+  actionButton,
+  iconButton,
+} from '../../entries/components/common/actions.mockup'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import {
+  secretMark,
+  secretSwitch,
+  valueDots,
+} from '../../entries/components/settings/EnvVarParts.mockup'
+import { secretNote } from '../../../../../src/ui/components/settings/envVarCopy'
+import {
+  section,
+  sectionText,
+} from '../../entries/components/settings/Section.mockup'
+import { instanceKey } from '../../instanceKey'
+import { defined } from '../../defined'
+import styles from '../../../../../src/ui/components/settings/EnvironmentSections.module.css'
+import sections from '../../../../../src/ui/components/settings/Section.module.css'
 
 /**
  * The form of the env vars that is open: none, Add variable, or the new
@@ -21,9 +32,9 @@ export type EnvVarForm = 'none' | 'add' | 'change'
 /** The Secret switch of a variable, which saves the mark at once. */
 function RowSwitch(props: { item: EnvVar }) {
   return (
-    <SecretSwitch
+    <secretSwitch.Component
       label={`Secret value of ${props.item.name}`}
-      onValueChange={noop}
+      moklyInstance={`secret-${instanceKey(props.item.name)}`}
       value={props.item.secret}
     />
   )
@@ -36,10 +47,18 @@ function EditableRow(props: { item: EnvVar }) {
     <li className={classes(styles.row, styles.editable)}>
       <span className={styles.name}>{item.name}</span>
       <RowSwitch item={item} />
-      <ValueDots />
+      <valueDots.Component moklyInstance={`value-${instanceKey(item.name)}`} />
       <span className={styles.actions}>
-        <IconButton icon={Pencil} label={`Change the value of ${item.name}`} />
-        <IconButton icon={Trash2} label={`Delete ${item.name}`} />
+        <iconButton.Component
+          icon="pencil"
+          label={`Change the value of ${item.name}`}
+          moklyInstance={`change-${instanceKey(item.name)}`}
+        />
+        <iconButton.Component
+          icon="trash-2"
+          label={`Delete ${item.name}`}
+          moklyInstance={`delete-${instanceKey(item.name)}`}
+        />
       </span>
     </li>
   )
@@ -66,8 +85,17 @@ function ChangingRow(props: { item: EnvVar }) {
           size={field}
           value=""
         />
-        <ActionButton tone="primary">Save</ActionButton>
-        <IconButton icon={X} label="Cancel" />
+        <actionButton.Component
+          moklyInstance={`save-${instanceKey(item.name)}`}
+          tone="primary"
+        >
+          Save
+        </actionButton.Component>
+        <iconButton.Component
+          icon="x"
+          label="Cancel"
+          moklyInstance={`cancel-${instanceKey(item.name)}`}
+        />
       </span>
     </li>
   )
@@ -75,11 +103,15 @@ function ChangingRow(props: { item: EnvVar }) {
 
 /** A member's row: the name, the mark, and the value, without actions. */
 function ReadOnlyRow(props: { item: EnvVar }) {
+  const key = instanceKey(props.item.name)
   return (
     <li className={styles.row}>
       <span className={styles.name}>{props.item.name}</span>
-      <SecretMark secret={props.item.secret} />
-      <ValueDots />
+      <secretMark.Component
+        moklyInstance={`mark-${key}`}
+        secret={props.item.secret}
+      />
+      <valueDots.Component moklyInstance={`value-${key}`} />
     </li>
   )
 }
@@ -108,12 +140,18 @@ function AddVariableForm() {
         size={field}
         value={newEnvVar.value}
       />
-      <SecretSwitch label="Secret" onValueChange={noop} value />
+      <secretSwitch.Component label="Secret" moklyInstance="new-secret" value />
       <div className={sections.actions}>
-        <ActionButton>Cancel</ActionButton>
-        <ActionButton icon={Plus} tone="primary">
+        <actionButton.Component moklyInstance="cancel-variable">
+          Cancel
+        </actionButton.Component>
+        <actionButton.Component
+          icon="plus"
+          moklyInstance="save-variable"
+          tone="primary"
+        >
           Save variable
-        </ActionButton>
+        </actionButton.Component>
       </div>
     </>
   )
@@ -143,26 +181,34 @@ export function EnvVarsSection(props: {
     return <EditableRow item={item} key={item.name} />
   }
   return (
-    <Section
-      actions={
-        props.readOnly || form === 'add' ? undefined : (
-          <ActionButton icon={Plus}>Add variable</ActionButton>
-        )
-      }
+    <section.Component
       description={`Workspaces of ${props.org} get these each time their cloud computer starts. Builds run without them.`}
+      moklyInstance="env-vars"
       title="Environment variables"
+      {...defined({
+        actions:
+          props.readOnly || form === 'add' ? undefined : (
+            <actionButton.Component icon="plus" moklyInstance="add-variable">
+              Add variable
+            </actionButton.Component>
+          ),
+      })}
     >
       {vars.length === 0 ? (
-        <SectionText muted>No variables yet.</SectionText>
+        <sectionText.Component moklyInstance="no-variables" muted>
+          No variables yet.
+        </sectionText.Component>
       ) : (
         <>
           <ul aria-label="Environment variables" className={styles.list}>
             {vars.map(row)}
           </ul>
-          <SectionText muted>{secretNote}</SectionText>
+          <sectionText.Component moklyInstance="secret-note" muted>
+            {secretNote}
+          </sectionText.Component>
         </>
       )}
       {form === 'add' ? <AddVariableForm /> : null}
-    </Section>
+    </section.Component>
   )
 }

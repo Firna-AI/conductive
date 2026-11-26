@@ -1,20 +1,17 @@
 import { Input } from '@firna/ui/input'
 import type { Agent } from '../../shared/generated/Agent'
-import { productName } from '../../../docs/mockups/src/brand'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import styles from '../../../docs/mockups/src/components/settings/AgentConnectForm.module.css'
+import { productName } from '../../shared/brand'
+import { useControlSizes } from '../../ui/components/common/touch'
+import { agentConnectCopy } from '../../ui/components/settings/agentConnectCopy'
+import styles from '../../ui/components/settings/AgentConnectForm.module.css'
 import type { ApiError } from '../../app/api/client'
 import type { SecretForm } from '../../app/secret-form'
 import { useStore } from '../../app/store'
 import { ENDPOINT_ADDRESS_ERROR } from '../../shared/endpoint-address'
 import { ExternalLink } from '../ui/links'
-import { loginLabels, type LoginKind } from './labels'
+import type { LoginKind } from './labels'
 
-/** The pages where a user makes an API key for Claude and for Codex. */
-const keyPages = {
-  anthropic: 'https://console.anthropic.com/settings/keys',
-  openAi: 'https://platform.openai.com/api-keys',
-} as const
+const { endpoint, key, token } = agentConnectCopy
 
 /** The agent login API stores the secret without a test of it. */
 const keepHint = `${productName} keeps it encrypted, and never shows it again.`
@@ -30,15 +27,12 @@ export function refusesAddress(error: ApiError | null): boolean {
 /** The field of the secret, by the agent and the kind of its login. */
 function fieldOf(agent: Agent, kind: LoginKind) {
   if (kind === 'endpoint') {
-    return { label: 'API key', placeholder: 'Paste the key' }
+    return { label: endpoint.keyLabel, placeholder: key.placeholder }
   }
-  if (agent === 'codex') {
-    return { label: 'OpenAI API key', placeholder: 'Paste the key' }
+  if (agent === 'codex' || kind === 'api-key') {
+    return { label: key.label(agent), placeholder: key.placeholder }
   }
-  if (kind === 'api-key') {
-    return { label: 'Anthropic API key', placeholder: 'Paste the key' }
-  }
-  return { label: loginLabels.claude.token, placeholder: 'Paste the token' }
+  return { label: token.label, placeholder: token.placeholder }
 }
 
 /**
@@ -50,29 +44,22 @@ export function SecretText(props: {
   kind: LoginKind
   org?: string
 }) {
-  const whose = props.org === undefined ? 'your' : `${props.org}'s`
-  if (props.agent === 'codex') {
+  const whose =
+    props.org === undefined ? key.whose.own : key.whose.org(props.org)
+  if (props.agent === 'codex' || props.kind === 'api-key') {
     return (
       <p className={styles.text}>
-        {`Paste an API key of ${whose} OpenAI account. `}
-        <ExternalLink href={keyPages.openAi}>Make one on OpenAI</ExternalLink>
-      </p>
-    )
-  }
-  if (props.kind === 'api-key') {
-    return (
-      <p className={styles.text}>
-        {`Paste an API key of ${whose} Anthropic account. `}
-        <ExternalLink href={keyPages.anthropic}>
-          Make one on Anthropic
+        {key.text(props.agent, whose)}{' '}
+        <ExternalLink href={key.pages[props.agent]}>
+          {key.link(props.agent)}
         </ExternalLink>
       </p>
     )
   }
   return (
     <p className={styles.text}>
-      Run <code className={styles.code}>claude setup-token</code> on your
-      computer, then paste the token that it prints.
+      {token.before} <code className={styles.code}>{token.command}</code>{' '}
+      {token.after}
     </p>
   )
 }

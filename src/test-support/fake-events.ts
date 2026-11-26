@@ -1,7 +1,13 @@
+import type { WorkspaceEventSource } from '../app/events'
 import type {
   WorkspaceEventEnvelope,
   WorkspaceSocketMessage,
 } from '../shared/events'
+import { seedOf } from './fake-workspace-seed'
+
+function lastNumber(events: readonly WorkspaceEventEnvelope[]): number {
+  return events.reduce((last, event) => Math.max(last, event.eventNumber), 0)
+}
 
 /** A screen injects this subscription in place of its native WebSocket adapter. */
 export class FakeWorkspaceEvents {
@@ -14,22 +20,74 @@ export class FakeWorkspaceEvents {
     this.events = structuredClone([...events])
   }
 
-  history(afterEventNumber = 0) {
+  private forWorkspace(
+    workspaceId?: string,
+  ): readonly WorkspaceEventEnvelope[] {
+    return workspaceId === undefined
+      ? this.events
+      : this.events.filter((event) => event.workspaceId === workspaceId)
+  }
+
+  last(workspaceId?: string): number {
+    return lastNumber(this.forWorkspace(workspaceId))
+  }
+
+  previewRevoked(workspaceId: string, previewId: string): boolean {
+    return this.events.some(
+      (envelope) =>
+        envelope.workspaceId === workspaceId &&
+        envelope.event.type === 'preview.revoked' &&
+        envelope.event.previewId === previewId,
+    )
+  }
+
+  stateRead(workspaceId: string) {
+    const events = [...this.forWorkspace(workspaceId)].sort(
+      (a, b) => a.eventNumber - b.eventNumber,
+    )
     return {
-      events: structuredClone(
-        this.events.filter((event) => event.eventNumber > afterEventNumber),
-      ),
-      throughEventNumber: this.events.at(-1)?.eventNumber ?? 0,
+      eventNumber: events.at(-1)?.eventNumber ?? 0,
+      seed: seedOf(events),
     }
   }
+
+  history(afterEventNumber = 0, workspaceId?: string) {
+    const events = this.forWorkspace(workspaceId)
+    return {
+      events: structuredClone(
+        events.filter((event) => event.eventNumber > afterEventNumber),
+      ),
+      throughEventNumber: lastNumber(events),
+    }
+  }
+
+  /** The app's socket returns only the history and live events of its target. */
+  readonly open: WorkspaceEventSource['open'] = (target, handlers) =>
+    this.subscribe(
+      target.afterEventNumber,
+      handlers.message,
+      target.workspaceId,
+    )
 
   subscribe(
     afterEventNumber: number,
     listener: (message: WorkspaceSocketMessage) => void,
+    workspaceId?: string,
   ): () => void {
-    this.listeners.add(listener)
-    listener({ type: 'history', history: this.history(afterEventNumber) })
-    return () => this.listeners.delete(listener)
+    const receive = (message: WorkspaceSocketMessage) => {
+      if (
+        message.type === 'history' ||
+        workspaceId === undefined ||
+        message.envelope.workspaceId === workspaceId
+      )
+        listener(message)
+    }
+    this.listeners.add(receive)
+    receive({
+      type: 'history',
+      history: this.history(afterEventNumber, workspaceId),
+    })
+    return () => this.listeners.delete(receive)
   }
 
   /** Tests can emit a duplicate or gap to exercise the screen's own reader. */

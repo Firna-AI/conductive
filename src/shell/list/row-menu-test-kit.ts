@@ -2,7 +2,8 @@ import type { Workspace } from '../../shared/generated/Workspace'
 import { act } from 'react'
 import { routes } from '../../app/router'
 import { requestLines } from '../../app/test-kit'
-import { workspacePath } from '../../shared/workspaces'
+import { rightClick } from '../../chat/components/tab-row-test-kit'
+import { workspacePath, workspacesPath } from '../../shared/workspaces'
 import {
   accessibleName,
   byRole,
@@ -10,9 +11,9 @@ import {
   queryByRole,
 } from '../../test-support/dom-queries'
 import type { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
-import { press } from '../test-mount'
+import { click, press } from '../test-mount'
 
 // The helpers of the tests of the menu of a workspace row in the whole app.
 
@@ -149,4 +150,35 @@ export function applePayReply(change: Partial<Workspace>) {
   const applePay = workspaces.workspaces.find((item) => item.id === 'apple-pay')
   if (!applePay) throw new Error('The fixture has no Apple Pay button.')
   return { ...detail, workspace: { ...applePay, ...change } }
+}
+
+/** Serves the list of Acme with the workspaces that `change` gives. */
+export function serveList(
+  server: FakeApiServer,
+  change: (workspace: Workspace) => Workspace,
+) {
+  const { workspaces } = workspaceFixtures().workspaces
+  server.json('GET', workspacesPath(org), {
+    workspaces: workspaces.map(change),
+  })
+}
+
+/** The workspace, archived. */
+export function archived(item: Workspace): Workspace {
+  return { ...item, state: 'archived', archivedAt: FAKE_TIME }
+}
+
+/** Opens the menu of a row at a point, reads its items, and closes it. */
+export function itemsOf(workspaceId: string, name: string): string[] {
+  rightClick(rowLink(workspaceId), { clientX: 120, clientY: 300 })
+  const items = menuOf(name)
+  press(document.activeElement ?? document.body, 'Escape')
+  return items
+}
+
+/** Opens the Archived group, which starts collapsed. */
+export function openArchived(): void {
+  const toggle = byRole('region', 'Archived').querySelector('button')
+  if (!toggle) throw new Error('The Archived group has no toggle.')
+  click(toggle)
 }

@@ -8,6 +8,7 @@ import {
 } from '../../shared/transcript/session-events'
 import { withSecretEvents } from '../secrets/secret-snapshot'
 import { mergeSession } from './session-records'
+import type { SessionReplay } from './session-replay'
 import { afterRepositoryMove, withWorkspaceChange } from './workspace-records'
 
 /**
@@ -25,6 +26,7 @@ import { afterRepositoryMove, withWorkspaceChange } from './workspace-records'
 export function applyEnvelopes(
   context: ChatContext,
   envelopes: readonly StreamEnvelope[],
+  replay?: SessionReplay | null,
 ): void {
   const bySession = new Map<string, ChatEnvelope[]>()
   for (const { eventNumber, occurredAt, event, late } of envelopes) {
@@ -35,7 +37,7 @@ export function applyEnvelopes(
     bySession.set(sessionOf(chat), events)
   }
   const changes = [...bySession].map(([id, events]) =>
-    mergeSession(context, id, events),
+    replay ? replay.merge(id, events) : mergeSession(context, id, events),
   )
   // The newest records show in order, after changes of only a transcript.
   changes.sort(

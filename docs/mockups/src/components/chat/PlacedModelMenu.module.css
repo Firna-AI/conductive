@@ -1,0 +1,32 @@
+/*
+ * A view runs no script, so it cannot open a menu in the top layer of the
+ * browser, as the app does. The screen draws the open model menu above the
+ * page, outside every box, and CSS places it at its picker, from the start
+ * of the picker. The menu opens on the side of its placement, or on the
+ * other side when the window has no room there. It keeps its own width and
+ * its own height limit.
+ */
+.placed {
+  position: absolute;
+  z-index: 20;
+  margin: 0;
+  position-anchor: --placed-model-menu;
+  position-try-fallbacks: flip-block;
+}
+
+.above {
+  margin-bottom: 6px;
+  position-area: block-start span-inline-end;
+}
+
+.below {
+  margin-top: 4px;
+  position-area: block-end span-inline-end;
+}
+
+/* The model picker names itself as the anchor of its menu. */
+.anchor {
+  display: flex;
+  min-width: 0;
+  anchor-name: --placed-model-menu;
+}

@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import { _electron, expect, test } from '@playwright/test'
 import type { ElectronApplication } from '@playwright/test'
 
-import { productName } from '../../docs/mockups/src/brand.js'
+import { productName } from '../../src/shared/brand.js'
 import { DESKTOP_ORIGIN } from '../../worker/security/desktop-contract.js'
 import { readConfiguration } from '../src/config.js'
 import { expectFrameIsolation } from './frame-navigation.js'

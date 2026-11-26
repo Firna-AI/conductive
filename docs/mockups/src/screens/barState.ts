@@ -2,7 +2,8 @@ import {
   appActions,
   gitHubAccesses,
   localWorkKinds,
-} from '../components/workspace/barModel'
+} from '../../../../src/ui/components/workspace/barModel'
+import { workspaceQueueStates } from './queueBarStates'
 
 /**
  * The parts of the workspace state that choose the actions of the pull
@@ -35,10 +36,23 @@ export const barStateProperties = {
    */
   branch: { enum: ['first', 'continued'] },
   /**
+   * The base branch of the workspace: its own, the picked branch after a
+   * start that stacks on it (decision 301), or the default branch after
+   * GitHub deleted that picked branch (decision 304). Then a line under
+   * the bar says that the base moved.
+   */
+  base: { enum: ['own', 'stacked', 'moved'] },
+  /**
    * The repository change of the workspace: none, a change that runs, or
    * the workspace after the change, on a new branch of acme/billing-service.
    */
   repositoryMove: { enum: ['none', 'changing', 'changed'] },
+  /**
+   * The merge queue of the open workspace, as `workspaceQueueStates` says:
+   * the bar, the header menu, and the Merge queue group of the sidebar.
+   * It is optional, so a state without it draws no part of the queue.
+   */
+  queue: { enum: workspaceQueueStates },
 } as const
 
 export const barStateKeys = [
@@ -46,14 +60,16 @@ export const barStateKeys = [
   'access',
   'appAction',
   'branch',
+  'base',
   'repositoryMove',
 ] as const
 
-/** No local work, write access, and no action of the app. */
+/** No local work, write access, no action of the app, and its own base. */
 export const barStateDefaults = {
   localWork: 'none',
   access: 'write',
   appAction: 'none',
   branch: 'first',
+  base: 'own',
   repositoryMove: 'none',
 } as const

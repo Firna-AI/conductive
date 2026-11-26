@@ -1,9 +1,10 @@
 import { useMemo, type CSSProperties } from 'react'
 import type { LineRange } from '../../shared/line-target'
-import { splitLines } from '../model/file-text'
 import { highlightLines, type Token, type TokenKind } from './highlight'
 import { languageOf } from './languages'
 import { useKeptScroll, type ScrollAim } from '../ui/kept-scroll'
+import { CodeBox } from './CodeBox'
+import { copySource } from './code-selection'
 import styles from './code.module.css'
 
 const tokenClass: Readonly<Record<TokenKind, string | undefined>> = {
@@ -29,6 +30,15 @@ export function TokenSpans(props: { tokens: readonly Token[] }) {
       {token.text}
     </span>
   ))
+}
+
+/** The cell of the coloured tokens of one line. */
+export function LineText(props: { tokens: readonly Token[] }) {
+  return (
+    <span className={styles.text} data-copy-text="">
+      <TokenSpans tokens={props.tokens} />
+    </span>
+  )
 }
 
 /**
@@ -89,9 +99,10 @@ export function CodeView(props: {
   marked?: MarkedLines | null
 }) {
   const box = useKeptScroll('code', lineAim(props.marked))
+  const source = useMemo(() => copySource(props.text), [props.text])
   const lines = useMemo(
-    () => highlightLines(splitLines(props.text), languageOf(props.name)),
-    [props.text, props.name],
+    () => highlightLines(source.lines, languageOf(props.name)),
+    [source, props.name],
   )
   const marked = shownLines(props.marked?.range, lines.length)
   const start = marked?.start ?? null
@@ -99,7 +110,7 @@ export function CodeView(props: {
   const isMarked = (number: number) =>
     start !== null && end !== null && number >= start && number <= end
   return (
-    <div className={styles.scroll} ref={box}>
+    <CodeBox label="Code" ref={box} source={source}>
       <pre className={styles.code} style={digitStyle(lines.length)}>
         {lines.map((tokens, index) => (
           <div
@@ -110,14 +121,13 @@ export function CodeView(props: {
             }
             data-marked={isMarked(index + 1) ? '' : undefined}
             key={index}
+            data-copy-line={index}
           >
             <span className={styles.number}>{index + 1}</span>
-            <span className={styles.text}>
-              <TokenSpans tokens={tokens} />
-            </span>
+            <LineText tokens={tokens} />
           </div>
         ))}
       </pre>
-    </div>
+    </CodeBox>
   )
 }

@@ -9,6 +9,10 @@ export class WorkspaceAlarmTasks {
     this.context = context
   }
 
+  has(source: string): boolean {
+    return this.tasks.has(source)
+  }
+
   start(source: string, work: () => Promise<void>): void {
     if (this.tasks.has(source)) return
     const pending = work().finally(() => this.tasks.delete(source))
@@ -21,6 +25,6 @@ export class WorkspaceAlarmTasks {
   }
 
   async settled(): Promise<void> {
-    await Promise.all(this.tasks.values())
+    while (this.tasks.size) await Promise.all(this.tasks.values())
   }
 }

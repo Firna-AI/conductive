@@ -1,10 +1,11 @@
 import { defineScreen } from '@mokly/mokly'
-import { MacAppScreen, macAppSchema } from '../../../../screens/MacAppScreen'
+import { MacAppScreen } from '../../../../screens/MacAppScreen'
+import { macAppSchema } from '../../../../screens/macAppState'
 
 export const macShortcutsSearch = defineScreen({
   title: 'Search',
   description:
-    'A search for “tab” keeps each row whose label or words hold the word, in its group: Previous tab, Next tab, Close tab, Reopen closed session, and the fixed Open the menu of a focused tab in Navigation, New session in Chat, and the fixed Switch the palette tab in Menus and palette. Reopen closed session and New session match by their words, which the rows do not show. The other groups hide. Each row keeps its shortcuts and its controls, so a press on a shortcut still records new keys.',
+    'A search for “tab” keeps each row whose label or words hold the word, in its group: Previous tab, Next tab, Close tab, Reopen closed session, and the fixed Close the temporary tab and Open the menu of a focused tab in Navigation, New session in Chat, and the fixed Switch the palette tab in Menus and palette. Reopen closed session and New session match by their words, which the rows do not show. The other groups hide. Each row keeps its shortcuts and its controls, so a press on a shortcut still records new keys.',
   rationale:
     'The user chose option E of decision 195 on 10 November 2026: a search field at the top of the tab finds a row by its label and its words, with the matcher of the palette, so the two searches of the app agree. Each word of the query must be in a text of the row, in any case. The search does not take keys, because a text field cannot type ⌘ or ⌥, and the conflict line already names the command that has a recorded shortcut.',
   relatedDocs: [],

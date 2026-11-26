@@ -1,20 +1,23 @@
-import type { RepositoryWait } from '../../docs/mockups/src/components/settings/repositoryChangeCopy'
-import type { BuildsResponse } from '../shared/org-settings'
-import { latestBuild } from './org-model'
+import type { RepositoryWait } from '../ui/components/settings/repositoryChangeCopy'
+import type { BuildsResponse, Repository } from '../shared/org-settings'
+import { latestBuild } from './latest-build'
 
 /**
  * How the saved repository changes wait for the org image, from the builds
- * of the org. The first state that applies wins: the newest build failed,
- * so no build runs; a build runs while an added repository waits; else the
- * changes wait for a build, such as after a removal, during a refresh, or
- * after a start that failed. The newest build is the newest run of the
- * install script, so a refresh never counts as a build that runs.
+ * of the org. `waits` says that a repository waits. The first state that
+ * applies wins: the newest build failed, so no build runs; a build runs
+ * while a repository waits; else the changes wait for a build, such as
+ * after a removal, during a refresh, or after a start that failed. The
+ * newest build is the newest run of the install script, so a refresh never
+ * counts as a build that runs.
  */
-function repositoryWaitOf(builds: BuildsResponse): RepositoryWait {
+function repositoryWaitOf(
+  builds: BuildsResponse,
+  waits: boolean,
+): RepositoryWait {
   const newest = latestBuild(builds)
   if (newest?.state === 'failed') return 'failed'
-  const added = builds.changes.addedRepositories.length > 0
-  return newest?.state === 'running' && added ? 'building' : 'waiting'
+  return newest?.state === 'running' && waits ? 'building' : 'waiting'
 }
 
 /**
@@ -44,7 +47,7 @@ export function repositoryChangesOf(
     return null
   }
   return {
-    wait: repositoryWaitOf(builds),
+    wait: repositoryWaitOf(builds, addedRepositories.length > 0),
     added: addedRepositories.map((item) => item.fullName),
     removed: removedRepositories.map((item) => item.fullName),
   }
@@ -63,6 +66,41 @@ export function changeWaits(builds: BuildsResponse): boolean {
   )
 }
 
+/**
+ * Whether a repository waits for a build before a workspace can start in
+ * it. The readiness of the repositories reply wins, because the Worker
+ * takes it from the same org image as the create. A reply of an older
+ * Worker has no readiness. Then the repository waits while the builds list
+ * it as added, and while the builds load, it does not wait.
+ */
+export function waitsForBuild(
+  repository: Repository,
+  builds: BuildsResponse | undefined,
+): boolean {
+  if (repository.ready !== undefined) return !repository.ready
+  const added = builds?.changes.addedRepositories ?? []
+  return added.some(({ id }) => id === repository.id)
+}
+
+/**
+ * Whether the repositories reply shows that the org has a good image that
+ * a workspace can start from, as the Worker reads it for the create:
+ * `true` when the reply says so, or when the image holds one of its
+ * repositories, also one that the org no longer chose. `false` when the
+ * reply says that the org has no image yet. `undefined` when the reply says
+ * nothing, as a reply of an older Worker. Builds that disagree are older
+ * than the reply.
+ */
+export function imageReadyOf(
+  repositories: readonly Repository[] | undefined,
+): boolean | undefined {
+  const list = repositories ?? []
+  const ready = (item: Repository) => item.ready || item.imageReady
+  if (list.some(ready)) return true
+  if (list.some((item) => item.imageReady === false)) return false
+  return undefined
+}
+
 /** The chosen repositories that wait for a build, as New workspace shows them. */
 export interface WaitingRepositories {
   /** The IDs of the chosen repositories that the org image does not hold yet. */
@@ -72,15 +110,23 @@ export interface WaitingRepositories {
 }
 
 /**
- * The waiting repositories, from the builds of the org. While the builds
- * load, no repository waits.
+ * The waiting repositories of New workspace among the `chosen` ones, as
+ * `waitsForBuild` says. Before the first good build (`noImage`), no
+ * repository that says its readiness counts as waiting, because the first
+ * build covers that time. A repository of an older reply waits only when
+ * the builds list it, as before. How they wait comes from the builds, and
+ * while they load, the waiting repositories wait for the next build.
  */
 export function waitingRepositoriesOf(
+  chosen: readonly Repository[],
   builds: BuildsResponse | undefined,
+  noImage: boolean,
 ): WaitingRepositories {
-  if (!builds) return { ids: new Set(), wait: 'waiting' }
+  const waits = (item: Repository) =>
+    noImage && item.ready !== undefined ? false : waitsForBuild(item, builds)
+  const ids = new Set(chosen.filter(waits).map((item) => item.id))
   return {
-    ids: new Set(builds.changes.addedRepositories.map((item) => item.id)),
-    wait: repositoryWaitOf(builds),
+    ids,
+    wait: builds ? repositoryWaitOf(builds, ids.size > 0) : 'waiting',
   }
 }

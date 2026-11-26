@@ -1,14 +1,16 @@
-import type { Viewport } from '@mokly/mokly'
-import { GitBranchPlus } from 'lucide-react'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { unpushedWork } from '../../fixtures/barActions'
 import { repositories } from '../../fixtures/repositories'
 import type { Workspace } from '../../fixtures/workspaces'
 import { barPaths, checksPaths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import {
+  confirmDialog,
+  dialogText,
+} from '../../entries/components/common/ConfirmDialog.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { continueQuestion } from './barCopy'
-import { LocalWorkList } from './LocalWorkList'
+import { continueQuestion } from '../../../../../src/ui/components/workspace/barCopy'
+import { localWorkList } from '../../entries/components/workspace/LocalWorkList.mockup'
 
 /**
  * The question of Continue, after its check found local work. The changed
@@ -23,25 +25,36 @@ export function ContinueDialog(props: {
   const { files, commits } = unpushedWork
   const base = repositories[props.workspace.repository].defaultBranch
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           <ScreenLink asChild to={checksPaths.merged}>
-            <ActionButton>{continueQuestion.cancel}</ActionButton>
+            <actionButton.Component moklyInstance="dialog-cancel">
+              {continueQuestion.cancel}
+            </actionButton.Component>
           </ScreenLink>
           <ScreenLink asChild to={barPaths.continuing}>
-            <ActionButton icon={GitBranchPlus} tone="primary">
+            <actionButton.Component
+              icon="git-branch-plus"
+              moklyInstance="dialog-continue"
+              tone="primary"
+            >
               {continueQuestion.confirm}
-            </ActionButton>
+            </actionButton.Component>
           </ScreenLink>
         </>
       }
+      moklyInstance="continue-dialog"
       title={continueQuestion.title}
       viewport={props.viewport}
     >
-      <DialogText>{continueQuestion.intro(base)}</DialogText>
-      <LocalWorkList commits={commits} files={files} />
-      <DialogText>{continueQuestion.outcome(commits)}</DialogText>
-    </ConfirmDialog>
+      <dialogText.Component moklyInstance="intro">
+        {continueQuestion.intro(base)}
+      </dialogText.Component>
+      <localWorkList.Component commits={commits} files={files} />
+      <dialogText.Component moklyInstance="outcome">
+        {continueQuestion.outcome(commits)}
+      </dialogText.Component>
+    </confirmDialog.Component>
   )
 }

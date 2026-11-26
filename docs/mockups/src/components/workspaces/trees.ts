@@ -53,17 +53,22 @@ function indentOf(depth: number): RowIndent {
  * its sub-workspaces, oldest first, each followed by its own
  * sub-workspaces. Each row gets the guide lines of its tree from
  * `treeLines`, which the app uses too.
+ *
+ * `queued` names the workspaces that the Merge queue group shows. The list
+ * leaves them out of their sections with the rule of an archived parent
+ * (decision 318), so the rule reads them as archived.
  */
 export function withTrees(
   sections: readonly SidebarSection[],
   parents: ParentLinks,
+  queued: ReadonlySet<string> = new Set(),
 ): SidebarSection[] {
   const workspaces = sections.flatMap(({ section, rows }) =>
     rows.map((row): TreeRow => ({
       id: row.workspace.key,
       parentId: parents.get(row.workspace.key) ?? null,
       sectionId: section.key,
-      state: row.status,
+      state: queued.has(row.workspace.key) ? 'archived' : row.status,
       // The number of a workspace counts up in the order of creation.
       createdAt: row.workspace.number,
       row,

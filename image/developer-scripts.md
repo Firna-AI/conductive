@@ -166,7 +166,7 @@ More facts:
 Run `node image/e2b/build-template.mjs --help` for its inputs.
 Run it with `--prepare` to stage only the public image files, without a
 provider request or a CLI install. A real build reads `E2B_API_KEY` and the
-selected EU `E2B_DOMAIN` from the process environment. It uses the pinned
+`E2B_DOMAIN` of the project from the process environment. It uses the pinned
 official CLI through `npm exec` and prints the actual template ID.
 [E2B base template](e2b/README.md) gives its software, output, private
 loopback relay, and required live checks.

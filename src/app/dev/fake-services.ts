@@ -1,10 +1,10 @@
 import { copyText } from '../clipboard'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { devOrgOrderRoute } from '../../test-support/dev-org-order-route'
-import { FAKE_TIME } from '../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { API_PATHS } from '../../shared/api'
 import { createApiClient } from '../api/client'
-import { browserDelay, type WorkspaceEventSource } from '../events'
+import { browserDelay } from '../events'
 import {
   windowFocus,
   windowHost,
@@ -21,7 +21,9 @@ import { attachmentRoutes } from './attachment-routes'
 import { attachmentFileRoutes } from './attachment-files'
 import { attachmentMessageFetch } from './attachment-message-routes'
 import { createBackend, guardScope } from './backend'
+import { branchRoutes } from './branch-routes'
 import { buildRoutes } from './build-routes'
+import { seedCapabilityNotes } from './capability-note-seed'
 import { createRoutes } from './create-routes'
 import { feedbackRoutes } from './feedback-routes'
 import { APP_VERSION } from '../version'
@@ -29,6 +31,7 @@ import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
 import { orgLoginRoutes } from './org-login-routes'
 import { orgRoutes } from './org-routes'
+import { queueRoutes, seedMergeQueue } from './queue-routes'
 import { automationRoutes } from './automation-routes'
 import { devFileTransport } from './progress-fixture'
 import { routeFetch, RouteError, type Route } from './router'
@@ -40,6 +43,7 @@ import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
 import { sessionLoginRoutes } from './session-login-routes'
 import { settingsRoutes } from './settings-routes'
+import { seedSkills, skillsRoutes } from './skills-routes'
 import { admitOpenSignup, waitlistRoutes } from './waitlist-routes'
 import { workspaceRoutes } from './workspace-routes'
 
@@ -65,8 +69,12 @@ export function createFakeServices(search: string): AppServices {
   const offset = FAKE_TIME - Date.now()
   const now = () => Date.now() + offset
   const newId = () => crypto.randomUUID()
+  seedSkills(state, options.skills, options.skillsTrusted)
+  const acme = state.orgs.find((org) => org.org.id === FAKE_IDS.org)
+  if (acme) seedMergeQueue(acme, options.mergeQueue)
   const backend = createBackend(state, server.events, now, newId)
   seedSecretRequests(backend, server.events, options.secrets)
+  seedCapabilityNotes(server.events, options.capabilities)
   const signedOut: Route[] = options.signedOut
     ? [
         {
@@ -88,10 +96,13 @@ export function createFakeServices(search: string): AppServices {
     ...orgRoutes(backend),
     ...sectionRoutes(backend),
     ...workspaceRoutes(backend),
-    ...createRoutes(backend),
+    ...queueRoutes(backend, server.fetch),
+    ...createRoutes(backend, options.branchCheck),
+    ...branchRoutes(backend, options.branches),
     ...attachmentRoutes(backend, options.upload),
     ...attachmentFileRoutes(backend),
     ...settingsRoutes(backend),
+    ...skillsRoutes(backend, options.skills),
     ...orgLoginRoutes(backend),
     ...secretRoutes(backend),
     ...secretRequestRoutes(backend),
@@ -108,13 +119,9 @@ export function createFakeServices(search: string): AppServices {
     },
     attachmentMessageFetch(backend, server.fetch),
   )
-  const events: WorkspaceEventSource = {
-    open: (target, handlers) =>
-      server.events.subscribe(target.afterEventNumber, handlers.message),
-  }
   return {
     api: createApiClient(fetch, devFileTransport(fetch, search)),
-    events,
+    events: server.events,
     now,
     delay: browserDelay,
     onFocus: windowFocus(window),

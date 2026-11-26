@@ -88,6 +88,9 @@ decision number names a decision of the change that adds
   to keep each value out of its output, its files, and its answers.
 - They also tell the agent to read each value through its variable name,
   and they say what a conflict does.
+- They also say when to use each call. The agent calls `list_secrets`
+  before it asks a member for a credential, and it runs each command that
+  needs a secret with `run_with_secrets`.
 
 ## The request
 
@@ -111,6 +114,15 @@ decision number names a decision of the change that adds
 - While a request waits, its workspace shows needs input (decision 68).
   The workspace keeps needs input while any of its requests waits, also a
   late request.
+- Starting shows over needs input. So the workspace shows Starting during
+  a start or a [Restart](restart-the-software.md#restart), also while a
+  request waits. When Starting ends and the agent runner is ready, the
+  workspace shows needs input again while any request still waits. Cal
+  chose this on 20 November 2026.
+- Reason: each member and the app then see when the cloud computer is
+  ready again. A new field or event for that was rejected, because the
+  state already shows Starting. An end of the open requests at a Restart
+  was rejected, because a member can still answer a late request.
 - The composer keeps Stop while a request waits, because the turn runs.
 - A request for secrets of the org offers Deny and Allow for this session.
   Allow gives the session an approval of each secret that the request

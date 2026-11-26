@@ -5,15 +5,17 @@ layouts, the design tokens, and the shared parts. This page gives the
 tabs, the tables, the long runs, the Waitlist tab, the codes, and the
 approval email of the operator section. It also gives Suspend, Lift, and
 Approve, the daily chart, the notice of a pause, the waitlist switch, the
-Providers tab, the account of each org, and the account choice of an
-operator on Create org.
+Providers tab, the account of each org, the switch of that account, and
+the account choice of an operator on Create org.
 
 - The operator section has the tabs Overview, Orgs, Users, Waitlist,
-  Invite codes, and Providers, from `OperatorPage` in
-  `src/components/operator/`. On a phone the six tabs keep one line while
+  Invite codes, Providers, and Settings, from `OperatorPage` in
+  `src/components/operator/`. On a phone the seven tabs keep one line while
   they fit, with the `flow` mode of `LinkTabs`. When they do not fit, the
   last tabs move to a second line, so that every tab shows. A phone of
-  390 px puts Providers on the second line. The overview uses
+  390 px puts Providers and Settings on the second line. The Stop time
+  box of the Settings tab uses the segmented control of `@firna/ui`,
+  which wraps its five choices on a phone. The overview uses
   the stat tiles, the line chart, the table, and the skeletons of
   `@firna/ui`. A view runs no script, so the chart keeps the width that the
   page column gives it. The workspaces by state reuse `StatusGlyph`, the mark of the header.
@@ -47,8 +49,9 @@ operator on Create org.
   the lengths of the chat do. A run under an hour gives its minutes, and
   a run under a minute its seconds. The last activity uses the words of
   the app for a past time: 3 minutes ago, Yesterday, or 5 Nov. The words
-  and the format live in `longRunsCopy.ts`, which imports no fixture, so
-  the app uses it too.
+  and the format live in
+  [`src/ui/components/operator/longRunsCopy.ts`](../../src/ui/components/operator/longRunsCopy.ts),
+  which the app and the mockups both import.
 - The Waitlist tab shows no picture. Each login opens the GitHub profile in
   a new tab, with a small mark for it. After Approve, the row keeps its
   place with Approved and the state of its email, in plain words.
@@ -65,12 +68,12 @@ operator on Create org.
   asks first, with `ConfirmDialog`. The words of the questions and the
   notices live in `operatorCopy.ts`, and those of the waitlist, the app
   access, the codes, the pause, and the waitlist switch in `accessCopy.ts`
-  and `codeCopy.ts`.
-  These modules import no fixture, so the app uses them too. So do
-  `WorkspaceStates` and `DailyChart`. Each text of an
-  org takes its deletion, so the questions and the notices of a deleted
-  org promise nothing that its members cannot open, and nothing that a
-  lift does not give back. The Suspend question of a user offers to
+  and `codeCopy.ts`. The app and the mockups both import these modules
+  from [`src/ui/components/operator/`](../../src/ui/components/operator/).
+  They also import `WorkspaceStates` and `DailyChart` from there. Each
+  text of an org takes its deletion, so the questions and the notices of
+  a deleted org promise nothing that its members cannot open, and nothing
+  that a lift does not give back. The Suspend question of a user offers to
   disable their referral code with `CheckOption` from
   `src/components/common/`, the checkbox of the browser in the accent
   colour, because `@firna/ui` has no checkbox.
@@ -116,17 +119,46 @@ operator on Create org.
   `AccountCounts`.
 - The Orgs tab gives the account of each org by its ID, in an Account
   column on desktop. A phone leaves out the column, so a second line under
-  the name says "Runs on" and the ID. The Details of the page of an org
-  give it as Account. `AccountId` in `directory.tsx` draws an ID in the
-  monospace font.
+  the name says "Runs on" and the ID. The Provider account box of the page
+  of an org gives it as Account. `AccountId` in `directory.tsx` draws an
+  ID in the monospace font.
+- The Provider account box sits between Details and Workspaces on the page
+  of an org, from `AccountSection` in `src/components/operator/`. Its rows
+  give the account, then, for the newest switch that did not change it,
+  Switch to with the new account and the start of the switch, and Switch
+  build with the state of that build and a muted line that says why. A
+  waiting build shows an hourglass, a build that runs a spinner, and a
+  failed build the alert mark in red, as `StatusText` draws them. After a
+  switch, Last switch gives the old account, the time when the account
+  changed, and the operator. While the org has workspaces on more than one
+  account, Workspaces by account lists each account with its count, in the
+  rows of Orgs by account. The box shows the state of a switch build and
+  never its log, because the section shows no file or chat.
+- Switch account sits at the bottom of the box. It asks first, with
+  `SwitchDialog` in `SwitchDialogs.tsx`. With one other configured account,
+  the question names it. With more, a segmented control offers each
+  account other than the current one by its ID, as `AccountChoice` does,
+  and the title and the words follow the choice. When the switch build must
+  wait for a build of the org, for Lift, or for an admin who is not
+  suspended, the question says so. A build of the org that runs gets the
+  offer to end it, a `CheckOption` that is off by default. After a failed
+  switch build, Switch account takes the primary colour. While a switch
+  waits or builds, Stop switch takes its place, and asks first with
+  `StopSwitchDialog`. While a switch waits for Lift, the question of Lift
+  adds that Lift starts the switch build. The words live in
+  [`src/ui/components/operator/switchCopy.ts`](../../src/ui/components/operator/switchCopy.ts),
+  which the app and the mockups both import. A sentence names an account
+  by its ID in plain text, as the questions of Suspend and Lift do.
 - Create org of an operator has Provider account under the repositories:
   a segmented control of By weights, the default, and each configured
   account by its ID, from `AccountChoice`. Its hint says that only
-  operators see it, and that the org keeps its account for its whole life.
+  operators see it, and that an operator can switch the account later, on
+  the page of the org.
   Create org in the rail and in the org switcher of an operator opens this
   form. Nobody else sees the choice.
 - Operator screens name an account only by its ID, such as `boat`, from
   e2b decision 221. An e2b decision is a decision of the change that adds E2B as the second sandbox provider. The words of the tab, the account of an org, and the
-  choice live in `providerCopy.ts`. It imports no fixture, so the app uses
-  it too, as it can use `WeightSlider`, `WeightFields`, `AccountCounts`,
-  and `AccountChoice`.
+  choice live in
+  [`src/ui/components/operator/providerCopy.ts`](../../src/ui/components/operator/providerCopy.ts).
+  The app and the mockups both import it, as they import `WeightSlider`,
+  `WeightFields`, `AccountCounts`, and `AccountChoice` beside it.

@@ -134,6 +134,7 @@ it('moves and removes a folder with the entries inside it', () => {
     'guide/a.md',
     'keep.md',
   ])
+  expect(removed.touched).toEqual(new Set(['guide/old', 'guide/old/b.md']))
 })
 
 it('keeps the label that the server gave each entry inside a moved folder until an update of the entry gives a new one, and names a missing folder from a label', () => {

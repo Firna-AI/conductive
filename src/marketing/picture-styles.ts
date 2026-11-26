@@ -4,7 +4,7 @@ import {
   type MarketingPictureKey,
   type PictureFrame,
   type PictureLayout,
-} from '../../docs/mockups/src/screens/marketingPictureList'
+} from '../ui/screens/marketingPictureList'
 
 /** The phone layout of the site. The stylesheets use the same width. */
 export const phoneMedia = '(max-width: 759.98px)'

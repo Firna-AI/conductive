@@ -1,5 +1,5 @@
 import { defineScreen } from '@mokly/mokly'
-import { appDomain } from '../../../brand'
+import { appDomain } from '../../../../../../src/shared/brand'
 import { SignInScreen } from '../../../screens/SignInScreen'
 
 export const signIn = defineScreen({

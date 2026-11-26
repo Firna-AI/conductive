@@ -133,11 +133,30 @@ test('runs the first press once, consumes each repeat of a command key without a
       context({ press: press({ key: 'x', code: 'KeyX', repeat: true }) }),
     ),
     blockedMenu: decideShortcut(context({ press: held, menu: 'blocked' })),
+    typed: decideShortcut(
+      context({
+        focus: 'text',
+        press: press({ metaKey: false, repeat: true }),
+      }),
+    ),
+    terminalArrow: decideShortcut(
+      context({
+        focus: 'terminal',
+        press: press({
+          key: 'ArrowLeft',
+          code: 'ArrowLeft',
+          metaKey: false,
+          repeat: true,
+        }),
+      }),
+    ),
   }).toEqual({
     held: { kind: 'repeat', command: 'command-palette' },
     overMenu: { kind: 'repeat', command: 'command-palette' },
     otherKey: { kind: 'pass' },
     blockedMenu: { kind: 'pass' },
+    typed: { kind: 'pass' },
+    terminalArrow: { kind: 'pass' },
   })
   expect(
     decideShortcut(context({ press: press({ isComposing: true }) })),

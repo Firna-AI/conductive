@@ -1,4 +1,7 @@
-import type { Shortcut } from '../components/common/KeyChips'
+import {
+  sameShortcut,
+  type Shortcut,
+} from '../../../../src/ui/components/common/KeyChips'
 import type { FixedRow, FixedSpec } from './fixedShortcuts'
 import {
   shortcutSpecs,
@@ -111,7 +114,9 @@ export function fixedLabel(
   const holders = shortcutSpecs
     .flatMap((group) => group.rows)
     .filter(
-      (spec) => spec.kind === 'fixed' && spec[keyboard].includes(shortcut),
+      (spec) =>
+        spec.kind === 'fixed' &&
+        spec[keyboard].some((key) => sameShortcut(key, shortcut)),
     )
   return holders.length === 1 ? holders[0]?.label : undefined
 }

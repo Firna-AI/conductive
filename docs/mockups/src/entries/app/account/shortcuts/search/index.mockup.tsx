@@ -8,7 +8,7 @@ import {
 export const browserShortcutsSearch = defineScreen({
   title: 'Search',
   description:
-    'A search for “tab” in a normal Chrome tab on a Mac. Previous tab, Next tab, Close tab, and Reopen closed session show their dimmed keys beside their second keys, and the fixed Open the menu of a focused tab follows them. New session matches by its words, and Switch the palette tab by its label. On a phone, each row puts its shortcuts on a line under its label.',
+    'A search for “tab” in a normal Chrome tab on a Mac. Previous tab, Next tab, Close tab, and Reopen closed session show their dimmed keys beside their second keys, and the fixed Close the temporary tab and Open the menu of a focused tab follow them. New session matches by its words, and Switch the palette tab by its label. On a phone, each row puts its shortcuts on a line under its label.',
   rationale:
     'The user chose option E of decision 195 on 10 November 2026: in every host, a search field finds a row by its label and its words, with the matcher of the palette. A dimmed key keeps its look in a search, so the rows that a person finds show where each key works.',
   relatedDocs: [],

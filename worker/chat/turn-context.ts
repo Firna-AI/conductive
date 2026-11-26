@@ -1,9 +1,10 @@
 import type { RunnerEventIdentity } from './runner-event-identity'
 import type { ChatTransaction } from './store'
 import type { StoredTurn } from './types'
+import type { ChatRecords } from './chat-records'
 
-async function startedEvidence(
-  transaction: ChatTransaction,
+export async function startedEvidence(
+  transaction: Pick<ChatRecords, 'message'>,
   turn: StoredTurn,
 ): Promise<boolean | undefined> {
   if (turn.started !== undefined) return turn.started

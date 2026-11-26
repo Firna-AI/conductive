@@ -1,12 +1,4 @@
-import {
-  ArrowDown,
-  ArrowUp,
-  FolderPlus,
-  Pencil,
-  Plus,
-  Trash2,
-} from 'lucide-react'
-import type { MenuEntry } from '../common/Menu'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 
 /** Where a section is in the list, which decides its move items. */
 export type SectionPlace = { first: boolean; last: boolean }
@@ -18,24 +10,26 @@ export type SectionPlace = { first: boolean; last: boolean }
  * and the last has no Move section down. Deleting a section moves its
  * workspaces to the default section.
  */
-export function sectionMenu(place: SectionPlace): readonly MenuEntry[] {
+export function sectionMenu(place: SectionPlace): readonly MenuEntryData[] {
   return [
-    { kind: 'item', label: 'New workspace', icon: Plus },
-    { kind: 'item', label: 'Rename section', icon: Pencil },
+    { kind: 'item', label: 'New workspace', icon: 'plus' },
+    { kind: 'item', label: 'Rename section', icon: 'pencil' },
     ...(place.first
       ? []
-      : [{ kind: 'item', label: 'Move section up', icon: ArrowUp } as const]),
+      : [
+          { kind: 'item', label: 'Move section up', icon: 'arrow-up' } as const,
+        ]),
     ...(place.last
       ? []
       : [
           {
             kind: 'item',
             label: 'Move section down',
-            icon: ArrowDown,
+            icon: 'arrow-down',
           } as const,
         ]),
-    { kind: 'item', label: 'New section', icon: FolderPlus },
+    { kind: 'item', label: 'New section', icon: 'folder-plus' },
     { kind: 'divider' },
-    { kind: 'item', label: 'Delete section', icon: Trash2, tone: 'danger' },
+    { kind: 'item', label: 'Delete section', icon: 'trash-2', tone: 'danger' },
   ]
 }

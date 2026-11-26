@@ -74,10 +74,10 @@ it('starts and caches the terminal after startup at create and resume while rete
   await coordinator.advance()
   expect(await coordinator.job()).toMatchObject({
     phase: 'terminal',
-    processId: null,
+    processId: expect.any(Number),
   })
-  expect(terminalStarts).toBe(0)
-  await coordinator.advance()
+  expect(terminalStarts).toBe(1)
+  boat.commandRunning = true
   await reportReadyDuringTerminal()
   expect(await coordinator.job()).toMatchObject({
     phase: 'terminal',
@@ -86,8 +86,9 @@ it('starts and caches the terminal after startup at create and resume while rete
   expect(terminalStarts).toBe(1)
   expect(boat.fileReads).toEqual([])
   await coordinator.advance()
-  expect(await coordinator.job()).toMatchObject({ phase: 'terminal-password' })
+  expect(await coordinator.job()).toMatchObject({ phase: 'terminal' })
   expect(boat.fileReads).toEqual([])
+  boat.commandRunning = false
   await coordinator.advance()
   expect((await creation).workspace.state).toBe('starting')
   expect((await endpoint.readLifecycle())?.state).toBe('ready')

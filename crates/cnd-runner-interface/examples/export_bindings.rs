@@ -7,7 +7,8 @@ use ts_rs::{Config, TS};
 use cnd_runner_interface::{
     agents, api, chat_events, commit_author, file_changes, file_tree, files, messages, ports,
     preview_ingress, provider_events, runner, runner_commands, runner_credentials, runner_files,
-    runner_handshake, runner_repository, sdk_helper, sdk_helper_options, tools, workspaces,
+    runner_handshake, runner_repository, sdk_helper, sdk_helper_options, services, skills, tools,
+    workspaces,
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -49,10 +50,25 @@ fn main() -> Result<(), Box<dyn Error>> {
     messages::UserMessage::export_all(&cfg)?;
     ports::ListeningPort::export_all(&cfg)?;
     ports::RunnerPortsUpdated::export_all(&cfg)?;
+    services::app::ServiceCatalogue::export_all(&cfg)?;
+    services::app::ServiceLogResponse::export_all(&cfg)?;
+    services::control::ServiceControlResult::export_all(&cfg)?;
+    services::local::ServiceLocalRequest::export_all(&cfg)?;
+    services::local::ServiceLocalResponse::export_all(&cfg)?;
+    services::process::ServiceIdentity::export_all(&cfg)?;
+    services::process::ServiceSummary::export_all(&cfg)?;
+    services::reports::ServiceReport::export_all(&cfg)?;
+    services::transport::RunnerServiceMessage::export_all(&cfg)?;
+    services::transport::RunnerServiceCommand::export_all(&cfg)?;
+    skills::AgentSkill::export_all(&cfg)?;
+    skills::RunnerSkillsUpdated::export_all(&cfg)?;
+    skills::SkillLists::export_all(&cfg)?;
+    skills::SkillsUpdated::export_all(&cfg)?;
     preview_ingress::PreviewIngressIdentity::export_all(&cfg)?;
     runner::RunnerEvent::export_all(&cfg)?;
     runner_commands::RunnerAttachment::export_all(&cfg)?;
     runner_commands::RunnerBranches::export_all(&cfg)?;
+    runner_commands::RunnerCapabilities::export_all(&cfg)?;
     runner_commands::RunnerChangeModel::export_all(&cfg)?;
     runner_commands::RunnerCommand::export_all(&cfg)?;
     runner_commands::RunnerControlCommand::export_all(&cfg)?;
@@ -104,6 +120,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     tools::resources::AgentCreateSectionResponse::export_all(&cfg)?;
     tools::resources::AgentDeleteSectionResponse::export_all(&cfg)?;
     tools::session_types::DefaultAgentLogin::export_all(&cfg)?;
+    tools::session_watches::AgentWatchSessionRequest::export_all(&cfg)?;
+    tools::session_watches::AgentWatchSessionResponse::export_all(&cfg)?;
+    tools::session_watches::SessionWatchNotice::export_all(&cfg)?;
     tools::sessions::AgentCreateSessionRequest::export_all(&cfg)?;
     tools::sessions::AgentSendMessageRequest::export_all(&cfg)?;
     tools::sessions::AgentSessionAccepted::export_all(&cfg)?;
@@ -114,6 +133,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     tools::session_actions::AgentRenameSessionRequest::export_all(&cfg)?;
     tools::session_actions::AgentCloseSessionRequest::export_all(&cfg)?;
     tools::session_actions::AgentStopSessionResponse::export_all(&cfg)?;
+    tools::session_actions::AgentGetMessageRequest::export_all(&cfg)?;
     tools::session_actions::AgentGetMessageResponse::export_all(&cfg)?;
     tools::session_reads::AgentListSessionsRequest::export_all(&cfg)?;
     tools::session_reads::AgentListSessionsResponse::export_all(&cfg)?;
@@ -121,6 +141,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     tools::session_reads::AgentReadSessionResponse::export_all(&cfg)?;
     tools::session_reads::AgentTranscriptWindow::export_all(&cfg)?;
     tools::workspaces::AgentCreateWorkspaceRequest::export_all(&cfg)?;
+    tools::github_merge::GitHubMergeRequest::export_all(&cfg)?;
+    tools::github_merge::GitHubMergeStack::export_all(&cfg)?;
+    tools::github_merge::RequestQueueStackMerge::export_all(&cfg)?;
+    tools::merge_queue::MergeQueueBarState::export_all(&cfg)?;
+    tools::merge_queue::MergeQueueLeaveNotice::export_all(&cfg)?;
+    tools::merge_queue::RequestQueueMerge::export_all(&cfg)?;
+    tools::merge_queue::ReorderMergeQueue::export_all(&cfg)?;
+    tools::merge_queue::WorkspaceListRepository::export_all(&cfg)?;
     tools::workspaces::AgentCreateWorkspaceResponse::export_all(&cfg)?;
     tools::workspaces::AgentListWorkspacesRequest::export_all(&cfg)?;
     tools::workspaces::AgentListWorkspacesResponse::export_all(&cfg)?;

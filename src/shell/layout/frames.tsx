@@ -1,6 +1,6 @@
 import { useRef, type ReactNode } from 'react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import frame from '../../../docs/mockups/src/components/layout/AppFrame.module.css'
+import { classes } from '../../ui/components/common/classes'
+import frame from '../../ui/components/layout/AppFrame.module.css'
 import { useStore } from '../../app/store'
 import { useMacApp, type MacChrome } from '../mac/mac-app'
 import mac from '../mac/mac.module.css'

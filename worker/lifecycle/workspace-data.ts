@@ -3,6 +3,10 @@ import type { Workspace } from '../../src/shared/generated/Workspace'
 import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
 import type { WorkspaceStart } from '../../src/shared/generated/WorkspaceStart'
 import { activeOrgIdPredicate } from '../data/org-access'
+import {
+  archivedComputerColumn,
+  archivedComputerFields,
+} from '../data/archived-computer'
 import { workspaceNameColumn } from '../data/workspace-name'
 import { presentWorkspace } from '../data/workspace-link'
 import { requireActiveOrg } from '../data/user-access'
@@ -33,6 +37,7 @@ const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositor
   w.sandbox_id AS sandboxId,
   w.provider_account AS providerAccount, w.state, w.github_summary AS github,
   w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
+  ${archivedComputerColumn('w')},
   w.stopped_at AS stoppedAt, w.next_disk_keepalive_at AS nextDiskKeepaliveAt,
   w.task_number AS taskNumber, r.agent, r.model, r.effort, r.fast, r.session_id AS sessionId, r.first_turn_id AS firstTurnId`
 
@@ -96,6 +101,7 @@ export function workspaceRecord(row: WorkspaceRow): Omit<Workspace, 'link'> {
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,
     restoreUntil: workspaceRestoreUntil(row.archivedAt, row.sandboxId),
+    ...archivedComputerFields(row),
   }
 }
 
@@ -214,6 +220,7 @@ export async function deleteProvisionalWorkspace(
   ])
 }
 
+/** Timing `records` of starts go to D1 in the same batch as the state. */
 export async function persistLifecycleState(
   db: D1Database,
   input: {
@@ -227,8 +234,9 @@ export async function persistLifecycleState(
     error: { code: string; message: string } | null
   },
   now: number,
+  records: readonly D1PreparedStatement[] = [],
 ): Promise<void> {
-  await db
+  const update = db
     .prepare(
       `UPDATE workspaces SET state = ?, running_since = ?, last_activity_at = ?, stopped_at = ?,
      next_disk_keepalive_at = ?, last_error_code = ?, last_error_message = ?, updated_at = MAX(updated_at, ?)
@@ -249,7 +257,8 @@ export async function persistLifecycleState(
       input.workspaceId,
       input.orgId,
     )
-    .run()
+  if (records.length) await db.batch([update, ...records])
+  else await update.run()
 }
 
 export async function revokeWorkspacePreviews(

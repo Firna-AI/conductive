@@ -1,29 +1,26 @@
 import type { ReactNode } from 'react'
 import { Input } from '@firna/ui/input'
 import { SegmentedControl } from '@firna/ui/segmented'
-import { TriangleAlert } from 'lucide-react'
-import { productName } from '../../brand'
+import { productName } from '../../../../../src/shared/brand'
 import { agents, type AgentKey } from '../../fixtures/agents'
+import { pastedKey, type LoginKind } from '../../fixtures/logins'
+import { noop } from '../../../../../src/ui/noop'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
+import { ScreenLink } from '../common/ScreenLink'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 import {
-  anthropicKeyPage,
-  claudeTokenCommand,
+  agentConnectCopy as copy,
   connectKinds,
   loginLabels,
-  openAiKeyPage,
-  pastedKey,
-  type LoginKind,
-} from '../../fixtures/logins'
-import { orgConnectKinds } from '../../fixtures/orgLogins'
-import { noop } from '../../noop'
-import { ActionButton } from '../common/actions'
-import { ExternalLink } from '../common/ExternalLink'
-import { Notice } from '../common/Notice'
-import { ScreenLink } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
-import { ChatGptSignIn } from './ChatGptSignIn'
-import { EndpointFields, type EndpointEntry } from './EndpointFields'
-import type { SignInStep } from './chatGptSignInCopy'
-import styles from './AgentConnectForm.module.css'
+  orgConnectKinds,
+} from '../../../../../src/ui/components/settings/agentConnectCopy'
+import { chatGptSignIn } from '../../entries/components/settings/ChatGptSignIn.mockup'
+import { endpointFields } from '../../entries/components/settings/EndpointFields.mockup'
+import type { EndpointEntry } from './EndpointFields'
+import type { SignInStep } from '../../../../../src/ui/components/settings/chatGptSignInCopy'
+import styles from '../../../../../src/ui/components/settings/AgentConnectForm.module.css'
 
 /** The app stores a secret without a test of it, as the app says too. */
 const keepHint = `${productName} keeps it encrypted, and never shows it again.`
@@ -42,32 +39,28 @@ type SecretAsk = {
 /** What a form asks for: a secret, or the ChatGPT sign-in, with no field. */
 type Ask = SecretAsk | { type: 'chatgpt-sign-in' } | { type: 'endpoint' }
 
-/** The account of each agent that an API key belongs to, and its key page. */
-const keyAccounts: Readonly<Record<AgentKey, { name: string; page: string }>> =
-  {
-    claude: { name: 'Anthropic', page: anthropicKeyPage },
-    codex: { name: 'OpenAI', page: openAiKeyPage },
-  }
-
 /**
  * An API key: a key of the own account of the user, or of the account of
  * the org, such as "Acme's", for an org login.
  */
 function keyAsk(agent: AgentKey, org: string | undefined): SecretAsk {
-  const account = keyAccounts[agent]
-  const whose = org ? `${org}'s` : 'your'
+  const { key } = copy
+  const whose = org ? key.whose.org(org) : key.whose.own
   return {
     type: 'secret',
     text: (
       <>
-        Paste an API key of {whose} {account.name} account.{' '}
-        <ExternalLink href={account.page}>
-          Make one on {account.name}
-        </ExternalLink>
+        {key.text(agent, whose)}{' '}
+        <externalLink.Component
+          href={key.pages[agent]}
+          moklyInstance={`${agent}-keys`}
+        >
+          {key.link(agent)}
+        </externalLink.Component>
       </>
     ),
-    label: `${account.name} API key`,
-    placeholder: 'Paste the key',
+    label: key.label(agent),
+    placeholder: key.placeholder,
   }
 }
 
@@ -76,12 +69,13 @@ const tokenAsk: SecretAsk = {
   type: 'secret',
   text: (
     <>
-      Run <code className={styles.code}>{claudeTokenCommand}</code> on your
-      computer, then paste the token that it prints.
+      {copy.token.before}{' '}
+      <code className={styles.code}>{copy.token.command}</code>{' '}
+      {copy.token.after}
     </>
   ),
-  label: 'Subscription token',
-  placeholder: 'Paste the token',
+  label: copy.token.label,
+  placeholder: copy.token.placeholder,
 }
 
 /** What each agent asks for, by the kind that the switch selects. */
@@ -114,19 +108,24 @@ function FormEnd(props: FormEndProps) {
   return (
     <>
       {props.failed ? (
-        <Notice
+        <notice.Component
           body={props.failed}
-          icon={TriangleAlert}
+          icon="triangle-alert"
+          moklyInstance="connect-failed"
           title={title}
           tone="danger"
         />
       ) : null}
       <div className={styles.actions}>
-        {props.cancel ? <ActionButton>Cancel</ActionButton> : null}
+        {props.cancel ? (
+          <actionButton.Component moklyInstance="cancel-connect">
+            Cancel
+          </actionButton.Component>
+        ) : null}
         <ScreenLink asChild to={props.connectTo}>
-          <ActionButton tone="primary">
+          <actionButton.Component moklyInstance="connect-login" tone="primary">
             {props.replace ? 'Replace' : 'Connect'}
-          </ActionButton>
+          </actionButton.Component>
         </ScreenLink>
       </div>
     </>
@@ -200,7 +199,7 @@ export function AgentConnectForm(props: {
   return (
     <div className={styles.form}>
       <SegmentedControl
-        accessibilityLabel="Connect with"
+        accessibilityLabel={copy.switchLabel}
         onChange={noop}
         options={kinds.map((item) => ({
           label: loginLabels[props.agent][item],
@@ -212,19 +211,21 @@ export function AgentConnectForm(props: {
       />
       {ask.type === 'endpoint' ? (
         <>
-          <EndpointFields
+          <endpointFields.Component
             agent={props.agent}
             entry={props.endpoint ?? 'empty'}
             keyHint={keepHint}
+            moklyInstance="endpoint-fields"
           />
           <FormEnd {...end} />
         </>
       ) : ask.type === 'secret' ? (
         <SecretFields ask={ask} end={end} />
       ) : (
-        <ChatGptSignIn
+        <chatGptSignIn.Component
           cancel={props.cancel}
           codeTo={props.connectTo}
+          moklyInstance="chatgpt-sign-in"
           step={props.signIn ?? 'start'}
         />
       )}

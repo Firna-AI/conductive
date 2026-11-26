@@ -1,12 +1,9 @@
 import { useCallback } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '@firna/ui/button'
-import {
-  TintedTheme,
-  type ButtonTint,
-} from '../../docs/mockups/src/components/common/tint'
-import { actionStyle } from '../../docs/mockups/src/components/common/outlineTone'
-import { control, touchControl } from '../../docs/mockups/src/design/metrics'
+import { TintedTheme, type ButtonTint } from '../ui/components/common/tint'
+import { actionStyle } from '../ui/components/common/outlineTone'
+import { control, touchControl } from '../ui/design/metrics'
 import styles from './ActionButton.module.css'
 
 /**
@@ -39,6 +36,7 @@ export function ActionButton(props: {
   tint?: ButtonTint | null
   busy?: boolean
   commandKey?: CommandKey
+  tooltip?: string
   disabled?: boolean
 }) {
   const size = props.touch ? touchControl : control
@@ -74,9 +72,10 @@ export function ActionButton(props: {
       </Button>
     </TintedTheme>
   )
-  if (!props.commandKey) return button
+  const title = props.commandKey?.title ?? props.tooltip
+  if (title === undefined) return button
   return (
-    <span className={styles.contents} title={props.commandKey.title}>
+    <span className={styles.contents} title={title}>
       {button}
     </span>
   )

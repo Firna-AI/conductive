@@ -64,9 +64,19 @@ it('repairs default metadata after a switched move loses its result without anot
   expect((await f.fetch()).exitCode).toBe(0)
   await f.write('.git/refs/remotes/origin/HEAD.lock', 'held metadata lock\n')
   await f.write('.git/config.lock', 'held target metadata lock\n')
-  expect((await f.move()).exitCode).not.toBe(0)
+  expect(await f.move()).toEqual({
+    exitCode: 82,
+    stdout: '',
+    stderr: '',
+    timedOut: false,
+  })
   expect(await f.git('branch', '--show-current')).toBe('owner/new\n')
-  expect((await f.branch()).exitCode).not.toBe(0)
+  expect(await f.branch()).toEqual({
+    exitCode: 82,
+    stdout: '',
+    stderr: '',
+    timedOut: false,
+  })
   expect(await f.git('symbolic-ref', 'refs/remotes/origin/HEAD')).toBe(
     'refs/remotes/origin/main\n',
   )
@@ -76,7 +86,12 @@ it('repairs default metadata after a switched move loses its result without anot
     'refs/heads/',
   )
   await rm(join(f.directory, '.git/refs/remotes/origin/HEAD.lock'))
-  expect((await f.branch()).exitCode).not.toBe(0)
+  expect(await f.branch()).toEqual({
+    exitCode: 82,
+    stdout: '',
+    stderr: '',
+    timedOut: false,
+  })
   await rm(join(f.directory, '.git/config.lock'))
   expect(await f.branch()).toEqual({
     exitCode: 0,

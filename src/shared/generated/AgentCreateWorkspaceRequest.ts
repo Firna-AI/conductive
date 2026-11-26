@@ -15,6 +15,14 @@ export type AgentCreateWorkspaceRequest = {
    */
   firstMessage: string
   /**
+   * Create the workspace branch from this branch. Omission uses the base or repository default.
+   */
+  startBranch?: string
+  /**
+   * Pull request target and Changes comparison branch. Omission uses the start or repository default.
+   */
+  baseBranch?: string
+  /**
    * model.
    */
   model?: AgentRequestModel

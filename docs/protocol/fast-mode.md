@@ -23,7 +23,8 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
   higher price. Claude calls it fast mode. Codex calls it the Fast service
   tier.
 - **Choice:** the agent, the model, the effort, and the fast mode of a
-  message. A session, a saved default, and an automation each keep a choice.
+  message. A session, a saved default, a favourite, and an automation each
+  keep a choice.
 - **Fast turn:** a turn that runs with fast mode on.
 - **Fast fields:** the parts of a model request that ask the provider for
   fast mode.
@@ -32,8 +33,10 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
 ## The Fast switch
 
 - Each choice holds fast mode, on or off (fast mode decision 255).
-- The model menu shows a Fast row after the effort rows, under a line. The
-  row holds only the word "Fast" and a switch.
+- The model menu shows a Fast row after the Effort row.
+  [The model menu](model-favourites.md#the-model-menu) gives the order of
+  all its rows.
+- The row holds only the word "Fast" and a switch.
 - A click or Space on the row turns fast mode on or off. The menu stays
   open, so the switch shows its new state in place. A screen reader hears
   the row as a menu item that is on or off.
@@ -78,9 +81,11 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
 
 ## Changes of fast mode
 
-- A change to a model without fast mode turns fast mode off. A change to a
-  model with fast mode keeps the switch, as a change of the model keeps an
-  effort that the new model has.
+- A change to a model without fast mode turns fast mode off. A change of
+  the model alone, such as a pick in All models, keeps the switch for a
+  model with fast mode, as it keeps an effort that the new model has.
+- A pick of a favourite takes the fast mode of the favourite, as
+  [The model menu](model-favourites.md#the-model-menu) says.
 - Fast mode stays on until a member turns it off. Reason: the model and the
   effort stay too.
 - A change of fast mode stays in the session, as a change to another model

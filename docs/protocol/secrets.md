@@ -5,7 +5,8 @@ of an org. A secret is a named value that agents use in one command at a
 time, after a member allows it. This doc covers the secrets and their
 storage, the Secrets tab, the rights of each role, Reveal, the mark for all
 agents, the grants, automation runs, and the risks that stay.
-[Capabilities](capabilities.md) covers the control with Mac access.
+[Capabilities](capabilities.md) covers the control, and
+[Mac access](mac-access.md) covers its Mac access part.
 [Secret variables](secret-variables.md) covers the names of new secrets
 and the environment of the command. [Secret requests](secret-requests.md)
 covers the two calls of the workspace tools, the requests and their time
@@ -18,7 +19,10 @@ A decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A secrets
 decision number, such as secrets decision 3, names the dated record of one
 decision of the change that adds secrets. Its plan keeps these records
-while the change is open. Its pull request keeps them after the merge.
+while the change is open. Its pull request keeps them after the merge. An
+automation capabilities decision number names a decision of the change
+that adds Capabilities to automations, as [Automations](automations.md)
+says.
 
 ## Terms
 
@@ -189,39 +193,54 @@ while the change is open. Its pull request keeps them after the merge.
   and run another.
 - The person who creates a workspace in New workspace can pre-approve each
   secret of the org, as [Capabilities](capabilities.md) says.
+- The owner of an automation chooses the secrets that each of its run
+  workspaces starts with as pre-approvals, as
+  [The secrets of a run](automation-runs.md#the-secrets-of-a-run) says
+  (automation capabilities decision 1 A).
 - A workspace that an agent creates with the workspace tools starts with
-  no pre-approval. So does the run workspace of an automation. Reason: the
-  task gives the pre-approval to a person who creates a workspace.
+  no pre-approval, also when the agent of an automation run creates it.
+  Reason: each pre-approval comes from a person. The person who creates a
+  workspace chooses its pre-approvals, and the owner of an automation
+  chooses them for its run workspaces.
 - Every member can remove each pre-approval, each session approval, and
   each value for this workspace in the Capabilities of the workspace
-  (secrets decision 8 B).
+  (secrets decision 8 B). A session approval shows in the Capabilities of
+  its session, as [Capabilities](capabilities.md#the-control) says.
 
 ## Capabilities
 
-[Capabilities](capabilities.md) states the control of New workspace and of
-each workspace, with its secrets part.
+[Capabilities](capabilities.md) states the control of New workspace, of
+each workspace, and of an automation, with its secrets part.
 
 ### Mac access
 
-[Mac access](capabilities.md#mac-access) states the switch of each
-workspace and its risks.
+[Mac access](mac-access.md) states the requests that agents can always
+send to a Mac, the Mac access switch of the Mac app, the stored value that
+older pages show, and the risks. Secrets decisions 18 A and 19 B set only
+that stored value, as
+[The stored value](mac-access.md#the-stored-value) says.
 
 ## Turns that no person started
 
 - A request in an automation run, or in a turn that an agent started, waits
-  for a member as each other request does (secrets decision 5 C).
+  for a member as each other request does (secrets decision 5 C). The
+  chosen secrets of an automation need no request in its runs, as
+  [Grants](#grants) says.
 - Reason: the time limit of a request ends the wait of its tool call. So
   an unanswered request keeps no cloud computer awake, and the late
   request stays in the chat.
-- A run that gets only the secrets for all agents, a picker of secrets on
-  the automation form, and a record of whether a person started each turn
-  were rejected.
+- A run that gets only the secrets for all agents was rejected, because
+  that mark serves each session of the org, and only admins set it.
+- A record of whether a person started each turn was rejected, because it
+  is a breaking change of the grants of such turns.
 - Risk: text from outside the org can steer such an agent, as
-  [Risks that stay open](automations.md#risks-that-stay-open) says. The agent
-  then uses the grants of its workspace and its session with no request.
+  [Risks that stay open](automation-risks.md#risks-that-stay-open) says.
+  The agent then uses the grants of its workspace and its session with no
+  request.
 - Risk: through the session calls, such an agent can also start turns in
   the other workspaces and sessions of the org. Those turns use the grants
-  of their workspaces and their sessions with no request.
+  of their workspaces and their sessions with no request, also the chosen
+  secrets in each kept run workspace.
 
 ## Risks that stay
 

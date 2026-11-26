@@ -11,9 +11,9 @@ the calls of the workspace tools:
   list, and the calls of one workspace.
 - [Repository, section, and model lists](create-call-lists.md): the lists
   that a create call takes.
-- [Session calls](session-calls.md) and
-  [Session management](session-management.md): the calls of sessions and
-  messages.
+- [Session calls](session-calls.md),
+  [Session management](session-management.md), and
+  [Session watches](session-watches.md): the calls of sessions and messages.
 - [Section and preview calls](section-and-preview-calls.md): the calls of
   the sections and of the port previews.
 - [Secret requests](secret-requests.md): the calls that list the secrets
@@ -28,24 +28,29 @@ decision number names a decision of the change that adds
 [secrets](secrets.md), as that doc says. An e2b decision number names a
 decision of the change that adds E2B as the second
 [sandbox provider](workspaces-and-sandboxes.md#the-provider), as that doc
-says.
+says. A Mac access decision names a decision of the change that makes
+[Mac access](mac-access.md) allow all commands, as that doc says.
 
 ## Workspace tools
 
 - Every sandbox has two workspace tools: an MCP server and a CLI.
 - Both tools give each call. Reason: the two tools stay equal.
-- The tools have 26 calls:
+- The tools have 27 calls of the Worker:
   - 9 workspace calls: create, list, get, rename, move, and archive a
     workspace, and list the repositories, the sections, and the models
     that a create call takes
-  - 9 session calls: list, read, get, start, rename, close, and stop a
-    session, send a message, and get a message
+  - 10 session calls: list, read, get, start, rename, close, stop, and
+    watch a session, send a message, and get a message
   - 5 section and preview calls: create and delete a section, and list,
     open, and close the previews of a workspace
   - 2 secret calls: list the secrets of the org, and run a command with
     secrets, as [Secret requests](secret-requests.md) says
   - 1 call that asks to run a command on a Mac, as
     [Mac commands](#mac-commands) says
+- The tools also have 5 service calls: start, list, stop, and restart a
+  service, and read its log. They act only on the cloud computer of the
+  tools, and they call no Worker route, as
+  [Service calls](service-calls.md) says.
 - The calls cover each command of Conductor's CLI whose feature Conductive
   has (decision 277). Reason: an agent can then manage the work that it
   hands out.
@@ -106,10 +111,16 @@ says.
   - that a write acts with the rights of the sender in the app, so only the
     workspace owner or an admin can archive a workspace
   - which links each reply gives
+  - when to use the secret calls and the Mac command call, whose Mac gets
+    a Mac command, and when the Mac app asks first, as
+    [The facts of a session](capabilities-agents.md#the-facts-of-a-session)
+    says
 - [Tool descriptions](session-calls.md#tool-descriptions) states the
   other text of the session calls.
   [Run a command with secrets](secret-requests.md#run-a-command-with-secrets)
   states the text of the secret calls.
+  [Agent guidance](services.md#agent-guidance) states the text of the
+  service calls.
 
 ## Create and list calls
 
@@ -125,7 +136,8 @@ three lists that a create call takes.
 ## Mac commands
 
 An agent can ask to run a command on the Mac of the person who sent its
-turn (decision 62). The Mac app on that Mac asks that person first, as
+turn (decision 62). The Mac app on that Mac asks that person first, unless
+a choice of that person covers the command, as
 [Mac commands in the Mac app](desktop-commands.md#mac-commands) says.
 
 ### Who gets a request
@@ -148,14 +160,16 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
   how the Worker finds the sender.
 - When the sender has no available Mac, the agent gets the answer that the
   Mac is not available.
-- A workspace with [Mac access](secrets.md#mac-access) off sends no
-  request to a Mac (secrets decision 6 G). The Worker refuses each request
-  of that workspace at once. The reason says that Mac access is off in the
-  Capabilities of the workspace.
+- The agents of each workspace can ask, also in a new workspace and in an
+  automation run (Mac access decision 7). The Worker refuses no request
+  because of Mac access, as
+  [Agents can always ask](mac-access.md#agents-can-always-ask) says.
 - Risk: every process in the sandbox can ask in the name of a turn that
   runs now. So a member with a terminal in the same sandbox can ask for a
-  command on the Mac of that sender. The Mac still asks first, unless a
-  saved choice covers the command.
+  command on the Mac of that sender. The Mac still asks first, unless
+  Always allow or a grant covers the command. In the Mac app, the Mac
+  access switch starts such a grant (Mac access decision 1 C).
+  [Risks](mac-access.md#risks) states what such a grant allows.
 
 ### The request
 
@@ -179,11 +193,9 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
 ### Results
 
 - Each request ends with one result for the agent: the command ran, the
-  user denied it, the Mac is not available, or Mac access is off.
-- When a member turns Mac access off, each request of the workspace that
-  waits ends with that result. A command that runs goes on to its end.
-  Reason: the Mac app owns a running command, and a stop there is a
-  separate choice.
+  user denied it, or the Mac is not available.
+- A request that the Worker refused while the Mac access of its workspace
+  was off keeps that result, with its reason. No new request gets it.
 - After a run, the agent gets the output of the command and how it ended:
   its exit code, the end of its time limit, or a failure to start.
 - The command stops at its time limit.
@@ -204,7 +216,7 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
   request without choices.
 - The Worker never allows a command by itself. The Mac app on that Mac
   decides, from the answer of its user or from a choice that its user
-  saved there.
+  made there, as [The choices](desktop-commands.md#the-choices) says.
 
 ### What the chat shows
 
@@ -219,10 +231,12 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
 - While a request waits, its workspace shows needs input, as
   [Workspace states](workspace-life.md#workspace-states) says
   (decision 68). The workspace keeps needs input while any of its
-  requests waits.
+  requests waits. Starting shows over needs input. When Starting ends and
+  the agent runner is ready, needs input shows again while a request
+  waits, as [Secret requests](secret-requests.md#the-request) says.
 - After its result, the command shows at its place in the chat: denied,
-  done with its output, Mac not available, or Mac access off with its
-  reason.
+  done with its output, or Mac not available. A request that kept the
+  result Mac access off shows it with its reason.
 - The [requests of secrets](secret-requests.md#the-request) wait in the
   same place above the composer.
 - When its turn ends, the result folds with the work of the turn, at its

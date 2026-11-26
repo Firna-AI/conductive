@@ -1,8 +1,5 @@
-import { filePaths } from '../../shared/files'
 import type { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { nextEnvelope } from '../../test-support/recorded-repairs'
-import { devTree } from './dev-fixtures'
 import type { DevTree } from './dev-view'
 
 /**
@@ -17,9 +14,6 @@ export function storeUnreadTree(
   at: number,
 ): void {
   if (tree === 'latest') return
-  const path = filePaths.tree(FAKE_IDS.org, FAKE_IDS.workspace)
-  const saved = tree === 'saved' ? devTree() : { revision: 0, entries: [] }
-  server.json('GET', path, { ...saved, unavailable: true })
   const event = { type: 'files.unavailable' } as const
   server.events.emit(nextEnvelope(server.events, event, at))
 }

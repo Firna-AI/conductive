@@ -146,6 +146,33 @@ describe('web addresses', () => {
     ])
   })
 
+  test('keeps an escaped angle start in the decoded destination and preserves its source', () => {
+    const source = String.raw`[x](<https://example.com/a\<b>)`
+    const href = 'https://example.com/a<b'
+    expect(webAddressParts(source)).toEqual([
+      { kind: 'link', href, source, label: 'x' },
+    ])
+    expect(webAddressParts(source, false)).toEqual([
+      { kind: 'text', text: '[x](<' },
+      { kind: 'link', href, source: String.raw`https://example.com/a\<b` },
+      { kind: 'text', text: '>)' },
+    ])
+  })
+
+  test.each(['HTTPS', 'hTtPs', 'HTTP', 'hTtP'])(
+    'reads %s bare addresses and angle addresses without changing their text',
+    (scheme) => {
+      const href = `${scheme}://example.com/Api_(Test)[1]?q=MiXeD#Part`
+      expect(webAddressParts(`Read ${href}, <${href}>.`)).toEqual([
+        { kind: 'text', text: 'Read ' },
+        { kind: 'link', href, source: href },
+        { kind: 'text', text: ', <' },
+        { kind: 'link', href, source: href },
+        { kind: 'text', text: '>.' },
+      ])
+    },
+  )
+
   test('tests labels as shown without code, bold, invisible characters, or edge spaces', () => {
     for (const label of [
       '`https://github.com`',

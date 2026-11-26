@@ -1,12 +1,12 @@
 import { useId, useState } from 'react'
 import { CircleAlert, Plus } from 'lucide-react'
-import form from '../../../docs/mockups/src/components/automations/form.module.css'
-import styles from '../../../docs/mockups/src/components/automations/TriggerList.module.css'
+import form from '../../ui/components/automations/form.module.css'
+import styles from '../../ui/components/automations/TriggerList.module.css'
 import {
   eventLabels,
   hasSchedule,
   scheduleLabels,
-} from '../../../docs/mockups/src/components/automations/triggerCopy'
+} from '../../ui/components/automations/triggerCopy'
 import {
   EVENT_CHOICES,
   newTrigger,

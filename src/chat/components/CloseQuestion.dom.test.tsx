@@ -1,10 +1,12 @@
 // @vitest-environment happy-dom
+import { act } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { byRole } from '../../test-support/dom-queries'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { mount, MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { ChatOverlays } from './ChatOverlays'
 import { debounce } from './tab-drag-test-kit'
+import { pressOn } from './tab-row-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -39,5 +41,22 @@ describe('the question before a close', () => {
     expect(await question(ids, 'Stop the turns and close the tabs?')).toBe(
       `The agents are working in Address autocomplete and ${debounce}. The sessions move to the session history, where you can reopen them.`,
     )
+  })
+
+  it('keeps Shift+Tab inside after the short text body takes focus', async () => {
+    const title = 'Stop the turn and close the tab?'
+    await question([sessions[0].id], title)
+    const dialog = byRole('dialog', title)
+    const body = dialog.querySelector<HTMLElement>('[tabindex="-1"]')
+    if (!body) throw new Error('The question has no focusable text body')
+    act(() => body.focus())
+    expect(document.activeElement).toBe(body)
+
+    const keyReachesBrowser = pressOn(body, 'Tab', { shiftKey: true })
+
+    expect(document.activeElement).toBe(
+      byRole('button', 'Stop and close', dialog),
+    )
+    expect(keyReachesBrowser).toBe(false)
   })
 })

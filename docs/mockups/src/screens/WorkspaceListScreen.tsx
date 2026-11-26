@@ -1,38 +1,43 @@
 import type { ReactNode } from 'react'
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
+import { appFrame } from '../entries/components/layout/AppFrame.mockup'
 import { paletteViews } from '../components/palette/paletteViews'
-import type { RailState } from '../components/layout/OrgRail'
-import responsive from '../components/layout/responsive.module.css'
-import { newOrgSections } from '../components/workspaces/sections'
-import { Sidebar } from '../components/workspaces/Sidebar'
+import { acmeRail, type RailState } from '../components/layout/OrgRail'
+import { defined, plainData } from '../defined'
+import responsive from '../../../../src/ui/components/layout/responsive.module.css'
+import {
+  newOrgSections,
+  suspendedSections,
+} from '../components/workspaces/sections'
+import { sidebar } from '../entries/components/workspaces/Sidebar.mockup'
 import { deletedOrg, orgList, orgs, suspendedOrg } from '../fixtures/orgs'
 import {
-  ChooseWorkspace,
-  DeletedOrg,
-  HomeList,
-  ListHeader,
-  NewOrgEmpty,
-  SuspendedList,
-} from './listParts'
+  chooseWorkspace,
+  deletedOrgPart,
+  homeList,
+  newOrgEmpty,
+  newOrgOf,
+  suspendedList,
+} from '../entries/components/screens/listParts.mockup'
 import {
   listDrag,
   listMenu,
   listPalette,
   listRail,
-  listSheet,
   newOrgs,
 } from './listStates'
+import { orderRail, orgOrderStates } from './orgOrderStates'
+import { mergeQueueStates } from './queueStates'
+import { subWorkspaceStates } from './subWorkspaceStates'
+import { workspaceMenuStates } from './workspaceMenuStates'
+import { MobileList } from './workspaceListMobile'
 import {
   archivedGroupView,
-  listViewer as viewer,
+  listViewer,
   sectionsOf,
   stateView,
 } from './listViews'
-import { orderRail, orgOrderStates } from './orgOrderStates'
-import { subWorkspaceStates } from './subWorkspaceStates'
-import { workspaceMenuStates } from './workspaceMenuStates'
-import styles from './WorkspaceListScreen.module.css'
+import styles from '../../../../src/ui/screens/WorkspaceListScreen.module.css'
 
 export const workspaceListSchema = {
   type: 'object',
@@ -89,65 +94,15 @@ export const workspaceListSchema = {
      * `subWorkspaceStates` says. Without it, every row is top-level.
      */
     subWorkspaces: { enum: subWorkspaceStates },
+    /**
+     * The merge queues of Acme in the Merge queue group, as
+     * `mergeQueueStates` says. Without it, the list has no group.
+     */
+    mergeQueue: { enum: mergeQueueStates },
   },
 } as const
 
 export type WorkspaceListState = SchemaProps<typeof workspaceListSchema>
-
-function MobileList(props: { state: WorkspaceListState; overlay?: ReactNode }) {
-  const { list, menu, palette } = props.state
-  // On a phone the palette is a page in place of the list.
-  if (palette !== 'closed') {
-    return <MobileFrame>{listPalette(palette, 'mobile')}</MobileFrame>
-  }
-  if (list === 'deleted' || list === 'deleted-suspended') {
-    return (
-      <MobileFrame>
-        <ListHeader org={orgs[deletedOrg.org]} settings={false} />
-        <DeletedOrg suspended={list === 'deleted-suspended'} />
-      </MobileFrame>
-    )
-  }
-  const view = stateView(props.state, 'mobile')
-  const sections = view?.sections ?? sectionsOf(list)
-  if (list === 'suspended') {
-    // A suspended org has no section menus, so only the org switcher opens.
-    return (
-      <MobileFrame>
-        <HomeList
-          focus={view?.focus}
-          menuStyle="sheet"
-          org={orgs[suspendedOrg]}
-          sections={sections}
-          suspended
-          viewer={view?.viewer ?? viewer}
-        />
-        {menu === 'orgs' ? listSheet(menu, props.state.orgOrder) : null}
-      </MobileFrame>
-    )
-  }
-  const fresh = newOrgs[list]
-  const group = list === 'archived' ? archivedGroupView() : undefined
-  return (
-    <MobileFrame>
-      <HomeList
-        archived={view?.archived ?? group?.archived}
-        archivedCollapsed={view?.archivedCollapsed}
-        drag={view?.drag ?? listDrag(menu)}
-        failed={list === 'failed'}
-        focus={view?.focus ?? group?.focus}
-        menu={listMenu(menu)}
-        menuStyle="sheet"
-        newWorkspaceTo={fresh?.newWorkspaceTo}
-        org={fresh ? fresh.org : orgs.acme}
-        sections={sections}
-        viewer={view?.viewer ?? viewer}
-      />
-      {props.overlay ??
-        (view ? view.over : listSheet(menu, props.state.orgOrder))}
-    </MobileFrame>
-  )
-}
 
 /**
  * The workspace list of an org, grouped in the sections that the user made.
@@ -168,13 +123,28 @@ export function WorkspaceListScreen(props: {
   }
   const view = stateView(props.state, props.viewport)
   if (list === 'suspended') {
+    const suspendedView = plainData({
+      focus: view?.focus,
+      sections: view?.sections ?? suspendedSections(),
+      viewer: view?.viewer ?? listViewer,
+    })
     return (
-      <SuspendedList
-        focus={view?.focus}
-        rail={orderRail(orgOrder)}
-        sections={view?.sections}
-        viewer={view?.viewer ?? viewer}
-      />
+      <appFrame.Component
+        rail={{ ...(orderRail(orgOrder) ?? acmeRail), suspended: suspendedOrg }}
+        sidebar={
+          <sidebar.Component
+            moklyInstance="sidebar"
+            org={orgs[suspendedOrg]}
+            suspended
+            {...suspendedView}
+          />
+        }
+      >
+        <suspendedList.Component
+          moklyInstance="suspended-list"
+          {...suspendedView}
+        />
+      </appFrame.Component>
     )
   }
   if (list === 'deleted' || list === 'deleted-suspended') {
@@ -183,32 +153,40 @@ export function WorkspaceListScreen(props: {
       orgs: orgList.filter((org) => org.key !== deletedOrg.org),
     }
     return (
-      <AppFrame rail={rail}>
-        <DeletedOrg suspended={list === 'deleted-suspended'} />
-      </AppFrame>
+      <appFrame.Component rail={rail}>
+        <deletedOrgPart.Component
+          moklyInstance="deleted-org"
+          suspended={list === 'deleted-suspended'}
+        />
+      </appFrame.Component>
     )
   }
   const fresh = newOrgs[list]
   if (fresh) {
     const rail: RailState = { orgs: fresh.rail, current: fresh.org.key }
     return (
-      <AppFrame
+      <appFrame.Component
         rail={rail}
         sidebar={
-          <Sidebar
+          <sidebar.Component
+            moklyInstance="sidebar"
             newWorkspaceTo={fresh.newWorkspaceTo}
             org={fresh.org}
             sections={newOrgSections()}
-            viewer={viewer}
+            viewer={listViewer}
           />
         }
       >
-        <NewOrgEmpty newWorkspaceTo={fresh.newWorkspaceTo} org={fresh.form} />
-      </AppFrame>
+        <newOrgEmpty.Component
+          moklyInstance="new-org-empty"
+          newWorkspaceTo={fresh.newWorkspaceTo}
+          org={newOrgOf(fresh.form)}
+        />
+      </appFrame.Component>
     )
   }
   const group = list === 'archived' ? archivedGroupView() : undefined
-  const listed = {
+  const listed = plainData({
     archived: view?.archived ?? group?.archived,
     archivedCollapsed: view?.archivedCollapsed,
     drag: view?.drag ?? listDrag(menu),
@@ -216,23 +194,35 @@ export function WorkspaceListScreen(props: {
     menu: listMenu(menu),
     focus: view?.focus ?? group?.focus,
     org: orgs.acme,
+    queue: view?.queue,
+    queueDrag: view?.queueDrag,
+    queueable: view?.queueable,
     sections: view?.sections ?? sectionsOf(list),
-    viewer: view?.viewer ?? viewer,
-  }
+    viewer: view?.viewer ?? listViewer,
+  })
   return (
-    <AppFrame
-      overlay={
-        props.overlay ?? listPalette(palette, props.viewport) ?? view?.over
-      }
+    <appFrame.Component
       rail={view?.rail ?? listRail(menu, orgOrder)}
-      sidebar={<Sidebar {...listed} />}
+      {...defined({
+        overlay:
+          props.overlay ??
+          listPalette(palette, props.viewport) ??
+          view?.over ??
+          undefined,
+      })}
+      sidebar={<sidebar.Component moklyInstance="sidebar" {...listed} />}
     >
       <div className={`${responsive.wideOnly} ${styles.choose}`}>
-        <ChooseWorkspace />
+        <chooseWorkspace.Component moklyInstance="choose-workspace" />
       </div>
       <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
-        <HomeList {...listed} keys menuStyle="anchored" />
+        <homeList.Component
+          keys
+          menuStyle="anchored"
+          moklyInstance="home-list"
+          {...listed}
+        />
       </div>
-    </AppFrame>
+    </appFrame.Component>
   )
 }

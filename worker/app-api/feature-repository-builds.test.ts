@@ -5,6 +5,10 @@ import { readUser } from '../../src/app/api/read-core'
 import { readRepositories } from '../../src/app/api/read-settings'
 import { API_PATHS } from '../../src/shared/api'
 import {
+  repositoryPath,
+  type RepositoryChangeRequest,
+} from '../../src/shared/org-settings'
+import {
   createOuterRuntime,
   outerWorkerBundle,
   type OuterRuntime,
@@ -64,7 +68,7 @@ async function setup() {
       OUTER_ORG,
       user.id,
       repositoryId,
-      selected,
+      { selected, build: true },
       dependencies,
     )
   const start = () =>
@@ -117,6 +121,28 @@ it('starts a build for the admin on an add, but not on a repeated save or a remo
   expect((await readBuildHistory(env.DB, OUTER_ORG)).builds).toHaveLength(
     before + 1,
   )
+})
+
+it('starts no build on an add that defers its build to Done, and still builds an add of an older app', async () => {
+  const { env, repositoryId } = await setup()
+  const active = fixture
+  if (!active) throw new Error('Missing runtime')
+  const path = repositoryPath(OUTER_ORG, repositoryId)
+  const put = (body: RepositoryChangeRequest) =>
+    active.request(path, { method: 'PUT', body: JSON.stringify(body) })
+  const before = (await readBuildHistory(env.DB, OUTER_ORG)).builds.length
+  const deferred = await put({ build: false })
+  expect(deferred.status).toBe(200)
+  expect(readRepositories(await deferred.json())).toContainEqual(
+    expect.objectContaining({ id: repositoryId, selected: true }),
+  )
+  expect(await runningBuild(env.DB, OUTER_ORG)).toBe(null)
+  expect((await readBuildHistory(env.DB, OUTER_ORG)).builds).toHaveLength(
+    before,
+  )
+  await active.request(path, { method: 'DELETE', body: '{}' })
+  expect((await put({})).status).toBe(200)
+  expect(await runningBuild(env.DB, OUTER_ORG)).not.toBe(null)
 })
 
 it('starts an added repository build after a failed build', async () => {

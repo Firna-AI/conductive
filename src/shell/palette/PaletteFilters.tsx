@@ -1,5 +1,5 @@
 import { Archive, ChevronDown, FolderGit2 } from 'lucide-react'
-import styles from '../../../docs/mockups/src/components/palette/CommandPalette.module.css'
+import styles from '../../ui/components/palette/CommandPalette.module.css'
 import type { RepositoryChoice } from '../../app/palette/palette-source'
 import { ActionButton } from '../ui/actions'
 import { MenuButton, type MenuEntry } from '../ui/Menu'

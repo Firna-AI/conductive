@@ -7,7 +7,7 @@
 - **Reason:** the lines predate the update change, and its diff does not touch them.
 
 - **Terms:**
-  - **`brand.ts`:** `docs/mockups/src/brand.ts`, the one file that holds the product name `Conductive`.
+  - **`brand.ts`:** `src/shared/brand.ts`, the one file that holds the product name `Conductive`.
   - **`artifactName`:** the electron-builder setting that names each package file.
 - **Background:**
   - `AGENTS.md` says that code reads the product name from `brand.ts`, so that one change renames the product.

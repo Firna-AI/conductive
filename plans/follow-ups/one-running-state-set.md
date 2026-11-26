@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-16, from branch `calummoore/clickable-dropdown-restart-server-6gn7`, review item 6.
-- **Location:** `worker/terminal/handler.ts:67`, `worker/lifecycle/runner-lifecycle.ts:56`, `worker/chat/workspace-integration.ts:154`, `worker/data/sandbox-access.ts:12`, `src/app/dev/attachment-message-routes.ts:58`, `src/chat/dev/dev-routes.ts:68`, `docs/mockups/src/components/workspace/restartCopy.ts:8`.
+- **Location:** `worker/terminal/handler.ts:67`, `worker/lifecycle/runner-lifecycle.ts:56`, `worker/chat/workspace-integration.ts:154`, `worker/data/sandbox-access.ts:12`, `src/app/dev/attachment-message-routes.ts:58`, `src/chat/dev/dev-routes.ts:68`, `src/ui/components/workspace/restartCopy.ts:8`.
 - **Reason:** The change reaches files outside the purpose of the Restart branch.
 
 - **Terms:**

@@ -1,4 +1,7 @@
-import type { Shortcut } from '../components/common/KeyChips'
+import {
+  sameShortcut,
+  type Shortcut,
+} from '../../../../src/ui/components/common/KeyChips'
 import { tabKeys } from './browserTabKeys'
 
 /**
@@ -42,7 +45,7 @@ export type BrowserTab = {
    * The keys that the browser keeps, with those that decisions 192 B and
    * 196 leave to it.
    */
-  kept: ReadonlySet<Shortcut>
+  kept: readonly Shortcut[]
   /**
    * Chrome and Edge install the app. Firefox installs no app that gives the
    * page every key.
@@ -106,5 +109,5 @@ export function browserTabOf(host: ShortcutHost): BrowserTab | undefined {
 
 /** Whether a key works where the page runs. */
 export function worksIn(host: ShortcutHost, shortcut: Shortcut): boolean {
-  return !hosts[host].tab?.kept.has(shortcut)
+  return !hosts[host].tab?.kept.some((key) => sameShortcut(key, shortcut))
 }

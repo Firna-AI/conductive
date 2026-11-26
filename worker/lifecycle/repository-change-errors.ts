@@ -1,4 +1,4 @@
-import { repositoryFailure } from '../../docs/mockups/src/components/workspace/repositoryMoveCopy'
+import { repositoryFailure } from '../../src/ui/components/workspace/repositoryMoveCopy'
 import { HttpError } from '../http'
 import type { RepositoryChangeJob } from './repository-change-types'
 

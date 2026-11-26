@@ -17,6 +17,7 @@ import {
   texts,
 } from './parse'
 import { ROLES } from './read-core'
+import { readOrgSwitchDetail } from './read-operator-switch'
 import {
   readOperatorUserAccess,
   readRunning,
@@ -37,12 +38,16 @@ function readSuspension(value: unknown): OperatorSuspension {
   }
 }
 
-/** The page of one org: its details, workspaces, members, and state. */
+/**
+ * The page of one org: its details, its provider account with its switch,
+ * its workspaces, its members, and its state.
+ */
 export function readOperatorOrg(value: unknown): OperatorOrgDetail {
   const org = record(value, 'org')
   return {
     id: text(org, 'id'),
     providerAccount: text(org, 'providerAccount'),
+    ...readOrgSwitchDetail(org),
     name: text(org, 'name'),
     initials: maybeText(org, 'initials'),
     createdAt: count(org, 'createdAt'),

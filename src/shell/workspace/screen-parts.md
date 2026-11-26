@@ -19,10 +19,19 @@ says.
   capabilities of the workspace when the workspace first shows, and the
   app keeps them while it is open. So the control shows them at once. Each
   open reads them again behind the shown values. Every member
-  changes the pre-approved secrets and Mac access there, and removes each
+  changes the pre-approved secrets there, and removes each
   approval of a session, which names its session by the title that the
   chat holds, and each value that a member gave for the workspace. The control shows only where the composer shows.
-- An open reads the workspace, shows it, and starts the stream. Only then
+- In the Mac app, that control ends with the switch of Mac access of this
+  Mac, from `../capabilities/mac-switch.ts`. It starts or stops the grant
+  until Stop of the workspace on this Mac, and saves nothing in the
+  workspace. A browser shows no Mac access part. The shell gives the chat
+  `host.notice`, from `../capabilities/StartFailedNotice.tsx`: the notice
+  over the composer of a new workspace whose grant of this Mac did not
+  start after the create, with Try again. A read-only workspace shows no
+  such notice.
+- An open reads and shows the workspace. A new model applies the seed
+  before it starts the stream after the read's cutoff. Only then
   does a stopped or failed workspace resume. A Resume answers when the
   server queued the start, with the state `starting`. The stored chat
   shows during the start, and the stream brings the start steps and the
@@ -65,7 +74,9 @@ says.
   restores nothing again.
 - Close on a file tab takes it out of the view. When it shows, the next
   file tab shows, else the one before, else the chat. Close on the
-  temporary tab also clears its mark.
+  temporary tab also clears its mark. While the temporary tab shows,
+  Escape closes it in the same way, through `usePageEscape` of the
+  [shortcut layer](../shortcuts/README.md#escape-on-the-page).
 - A file of a finished turn opens its diff tab. A phone shows it in the
   Files tab.
 - The chat gets the kept files of the workspace as `mentions`, for the
@@ -245,7 +256,9 @@ row and the Checks tab of the Files part. It reads with the `fetch` of
 the org, waits with the timer of the app, and takes the GitHub events of
 the ordered stream of the workspace. Of the old GitHub states that a replay
 of the stream holds, it takes only the newest, so the bar does not flicker
-through them while the workspace loads.
+through them while the workspace loads. On a seeded stream, a new GitHub
+subscription gets one empty history at the stream's current number. Its
+own reads give the current state.
 
 - The screen keeps one action state for the bar on desktop and the top of
   the Checks tab on a phone, as
@@ -282,12 +295,14 @@ through them while the workspace loads.
   branch changed, keeps the view and selects no session, as
   [Agent actions](../../github/actions.md#agent-actions) says.
 - `ContinueDialog` asks the question of Continue, after its check found
-  local work. `LocalWorkList` of the mockups lists that work, as in the
+  local work. The shared `LocalWorkList` lists that work, as in the
   mockup of the question.
 - On a phone, the row sits under the header on every tab. It is one link to
   the Checks tab, whose top holds the actions, the line under the bar, and
-  the links to GitHub. A branch without a pull request opens that tab when
-  the bar has an action or a link.
+  the links to GitHub. While the branch has no pull request, that top also
+  names the branch and its base above the actions, also when the bar has
+  none. A branch without a pull request opens that tab when the bar has an
+  action or a link.
 - An archived workspace keeps the bar on desktop, with its links only. On a
   phone it shows only its chat, so the screen reads no GitHub state there.
 
@@ -300,8 +315,12 @@ through them while the workspace loads.
 - In the Mac app, `WorkspaceMacBar` tops the main area above the whole
   workspace, also while a file shows in place of the chat. It mounts
   `AllowAllBar`, the bar of the 15 minutes, of the
-  [Mac commands](../../chat/device/README.md). A browser draws nothing
-  there.
+  [Mac commands](../../chat/device/README.md). It reads the settings of
+  this Mac that the window shares, from `../mac/this-mac.ts`, with the
+  switch of Mac access of the Capabilities control. A browser draws
+  nothing there.
 - Each part sends through the services of the org, from `useOrgServices`
   of `../context.ts`. Their client and fetch mark the org on
   `org_suspended`, so a page with an old org list turns read-only at once.
+  The settings of this Mac are the one exception: they belong to the
+  window, not to an org, so they send through the client of the app.

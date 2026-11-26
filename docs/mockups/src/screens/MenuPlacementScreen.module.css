@@ -4,6 +4,7 @@
  * outside every box, and CSS places it at its button. The menu opens on the
  * side of its placement, or on the other side when the window has no room
  * there. It keeps its own width and its own height limit.
+ * `PlacedModelMenu.module.css` places the model menu in the same way.
  */
 .above {
   position: absolute;
@@ -12,25 +13,11 @@
   position-try-fallbacks: flip-block;
 }
 
-/* The model menu opens above its picker, from the start of the picker. */
-.model {
-  margin-bottom: 6px;
-  position-anchor: --placed-model-menu;
-  position-area: block-start span-inline-end;
-}
-
 /* The session history opens below its clock, to the end of the clock. */
 .history {
   margin-top: 4px;
   position-anchor: --placed-session-history;
   position-area: block-end span-inline-start;
-}
-
-/* The model picker names itself as the anchor of its menu. */
-.modelAnchor {
-  display: flex;
-  min-width: 0;
-  anchor-name: --placed-model-menu;
 }
 
 /* The clock of the session history names itself as the anchor of its menu. */

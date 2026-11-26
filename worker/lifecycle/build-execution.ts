@@ -79,7 +79,12 @@ export async function advanceBuildCommand(
     )
   const next: BuildPhase =
     job.phase === 'software' && job.kind !== 'refresh' ? 'install' : 'snapshot'
-  await completeBuildPhase(runtime.env.DB, job.buildId, next)
+  await completeBuildPhase(
+    runtime.env.DB,
+    job.buildId,
+    next,
+    runtime.dependencies.now(),
+  )
   return false
 }
 
@@ -183,8 +188,8 @@ export async function cleanupBuild(
     }
   }
   await updateBuildJob(runtime.env.DB, job.buildId, 'done')
-  await startAddedImageBuild(runtime, job)
   await scheduleIdleImage(runtime, job.orgId, jobSoftware(job))
+  await startAddedImageBuild(runtime, job)
   return true
 }
 

@@ -23,6 +23,7 @@ import {
 import { plainText } from './markdown-code'
 import { chatEventsOf, type SessionEnvelopeInput } from './session-events'
 import { SessionLog } from './session-log'
+import { transcriptLookups } from './transcript-lookups'
 import { groupEntries, workSummary } from './transcript-entries'
 import { turnCopy, type ChatReaders } from './turn-words'
 
@@ -89,11 +90,10 @@ export class SessionMarkdown {
   private agentHeading(turnId: string | null): string {
     const { session, models } = this.document
     const transcript = this.log.transcript
-    const ids =
-      transcript.turns.find((turn) => turn.id === turnId)?.messageIds ?? []
-    const first = transcript.items.find(
-      (item) => item.kind === 'user' && ids.includes(item.message.id),
-    )
+    const first =
+      turnId === null
+        ? undefined
+        : transcriptLookups(transcript).firstMessages.get(turnId)
     const choice =
       (turnId === null ? undefined : this.choices.get(turnId)?.choice) ??
       (first?.kind === 'user' ? first.message.choice : session.choice)
@@ -162,7 +162,11 @@ export class SessionMarkdown {
         // The note of a Continue or of a repository change belongs to no
         // turn, so it has no heading.
         const { kind } = entry.item
-        if (kind !== 'continued' && kind !== 'repository-changed') {
+        if (
+          kind !== 'continued' &&
+          kind !== 'repository-changed' &&
+          kind !== 'capabilities-changed'
+        ) {
           heading(turnOf(transcript, entry.item))
         }
         blocks.push(
@@ -177,7 +181,7 @@ export class SessionMarkdown {
         heading(entry.insert.content.turnId)
         blocks.push(insertMarkdown(entry.insert.content))
       } else if (entry.kind === 'tools') {
-        const first = transcript.items.find((item) => item.id === entry.id)
+        const first = transcriptLookups(transcript).items.get(entry.id)
         heading(first ? turnOf(transcript, first) : null)
         blocks.push(
           detail === 'concise' && !entry.open

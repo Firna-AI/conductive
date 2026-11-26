@@ -1,6 +1,7 @@
 import type { SendMessageResponse } from '../../shared/messages'
 import { sessionState, withSession, type Draft } from './chat-snapshot'
 import type { ChatContext } from './context'
+import { moveDraft } from './drafts'
 import { hydrate } from './history'
 import { applyMoves, saveMovedView, type DraftMove } from './model-moves'
 import { selectSession } from './session-actions'
@@ -47,9 +48,22 @@ function holdsWork(draft: Draft): boolean {
 }
 
 /**
+ * A view other than the shown tab that shows a session and sends from it,
+ * such as the popover of an explanation. It moves no tab.
+ */
+export interface SendingView {
+  /** The view shows this session now. */
+  shows: (sessionId: string) => boolean
+  /** Shows this session in the view, in place of the one that it shows. */
+  show: (sessionId: string) => void
+}
+
+/**
  * Shows the session that took a message, when it is not the session of the
- * request. Only the tab that sent moves, and only while it still shows the
- * session of the request, so a user who opened another tab keeps that tab.
+ * request. Only the view that sent follows: the shown tab, or `view`, such
+ * as the popover of an explanation. It follows only while it still shows
+ * the session of the request, so a user who opened another tab or another
+ * popover keeps it.
  *
  * The draft of the request moves with the view in the same snapshot, with
  * its identity, its text, its files, and its uploads, so the user types on
@@ -66,27 +80,46 @@ export async function showTarget(
   from: string,
   target: string | null,
   draftId: string | null,
+  view?: SendingView,
 ): Promise<void> {
   if (!context.live() || target === null || target === from) return
   const snapshot = context.store.get()
   const open = snapshot.sessions.some((item) => item.id === target)
-  if (!open || snapshot.activeSessionId !== from) return
+  const shown = view ? view.shows(from) : snapshot.activeSessionId === from
+  if (!open || !shown) return
   const source = sessionState(snapshot, from).draft
   const movable =
     draftId !== null &&
     source.id === draftId &&
     !source.sending &&
     !holdsWork(sessionState(snapshot, target).draft)
-  if (!movable) {
-    if (!holdsWork(source) && showsSession(snapshot, from)) {
-      await selectSession(context, target)
-    }
+  if (!movable && holdsWork(source)) return
+  if (!view) {
+    if (movable) await moveWithTab(context, from, target)
+    else if (showsSession(snapshot, from)) await selectSession(context, target)
     return
   }
+  if (movable) {
+    const move = { from, to: target, freshId: context.newDraftId() }
+    context.store.update((current) => moveDraft(current, move))
+  }
+  view.show(target)
+  await hydrate(context, target)
+}
+
+/**
+ * Moves the draft of the request to the target with the focus of the shown
+ * tab, in one snapshot, and saves the view.
+ */
+async function moveWithTab(
+  context: ChatContext,
+  from: string,
+  to: string,
+): Promise<void> {
   const moves: DraftMove[] = [
-    { from, to: target, open: true, freshId: context.newDraftId() },
+    { from, to, open: true, freshId: context.newDraftId() },
   ]
   context.store.update((current) => applyMoves(current, moves))
   saveMovedView(context, moves)
-  await hydrate(context, target)
+  await hydrate(context, to)
 }

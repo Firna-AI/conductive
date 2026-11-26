@@ -2,6 +2,7 @@ import type { Session } from '../../src/shared/generated/Session'
 
 type OptionalSessionFields =
   | 'login'
+  | 'anchor'
   | 'startedBy'
   | 'sourceSessionId'
   | 'loginAvailable'

@@ -7,7 +7,7 @@
  * in two groups of five.
  */
 
-import { appDomain } from '../brand'
+import { appDomain } from '../../../../src/shared/brand'
 import type { PendingInvite } from './members'
 
 /** A person who waits for app access, as the waitlist screen shows them. */

@@ -1,29 +1,21 @@
-import { pictureType } from '../../files/page/file-view'
-import { labelHidesAddress, type WebLink } from '../../markdown/web-links'
 import { attachmentForMention } from '../../shared/attachment-mentions'
+import type { AgentSkill } from '../../shared/generated/AgentSkill'
 import type { FileEntry } from '../../shared/generated/FileEntry'
 import type { Attachment } from '../../shared/generated/Attachment'
 import type { LineRange } from '../../shared/line-target'
-import {
-  codeTarget,
-  fileLinkTarget,
-  mentionTarget,
-  type EntryLookup,
-} from './file-targets'
+import { mentionTarget, type EntryLookup } from './file-targets'
 import type { Mention } from '../../shared/mention-text'
 import {
   tokens,
   type LinkToken,
   type MarkdownLink,
+  type SkillLookup,
   type Token,
 } from './chat-tokens'
 import {
-  addressWords,
   codePart,
-  labelWords,
   type CodePart,
   type LinkPart,
-  type LinkWord,
   type WebLinkOf,
 } from './link-parts'
 import {
@@ -32,37 +24,15 @@ import {
   type WorkspaceLinks,
 } from './workspace-links'
 
-/** A part of a sent message or of an answer, as the chat shows it. */
+/** A part of a sent message, as the chat shows it. */
 export type ChatPart =
-  | { kind: 'text'; text: string; strong: boolean }
+  | { kind: 'text'; text: string }
   | CodePart
-  | { kind: 'chip'; source: string; target: LinkTarget; strong: boolean }
+  | { kind: 'chip'; source: string; target: LinkTarget }
   | LinkPart
   | FilePart
-  | FileLinkPart
+  | { kind: 'skill'; source: string; skill: AgentSkill }
   | AttachmentPart
-
-/** A part of the label of a link: text or code. */
-type LabelPart = LinkWord
-
-/**
- * A Markdown link or image of an answer whose target is an entry of the
- * file tree, such as `[the form](src/app.ts#L42)`. It shows as a link with
- * its label, which opens the file. An image with no label shows the name
- * of the file. `picture` marks the image of a PNG, JPEG, GIF, or WebP file,
- * such as `![Phone view](shots/after.png)`, which can show as its picture
- * (screenshot decision 2). The file tab shows the same files as pictures,
- * so an SVG file and a link without `!` stay links.
- */
-export type FileLinkPart = {
-  kind: 'file-link'
-  source: string
-  entry: FileEntry
-  lines: LineRange | null
-  label: LabelPart[]
-  picture: boolean
-  strong: boolean
-}
 
 /**
  * An entry of the file tree that the text names: a `@` mention, or inline
@@ -73,7 +43,6 @@ export type FilePart = {
   source: string
   entry: FileEntry
   lines: LineRange | null
-  strong: boolean
 }
 
 /**
@@ -85,45 +54,37 @@ export type AttachmentPart = {
   source: string
   path: string
   attachment: Attachment
-  strong: boolean
 }
 
 export type { EntryLookup }
 
 /**
- * Splits a sent message or an answer into text, code, chips, and links,
- * with one reading for both. Code comes first, so a link in code is no
- * chip: code that holds only one web address that is a link shows it as a
- * link, and other code stays code. A Markdown link whose brackets stand
- * outside code is one unit, also when its label holds code or bold: it
- * shows as its chip alone when it names a workspace of the list.
+ * Splits a sent message into text, code, chips, and links. Code comes
+ * first, so a link in code is no chip: code that holds only one web
+ * address that is a link shows it as a link, and other code stays code. A
+ * Markdown link whose brackets stand outside code is one unit, also when
+ * its label holds code: it shows as its chip alone when it names a
+ * workspace of the list. Otherwise it shows as typed, and its address is a
+ * link as a bare address is. So does the Markdown of an image, such as
+ * `![alt](address)`. `web` says where each address leads. A bare address
+ * shows as the text has it.
  *
- * `web` says where each other address leads. A bare address shows as the
- * text has it. With `strong`, as in an answer, a Markdown link shows as its
- * label, with its code and bold, or as its address when the label reads as
- * one or shows nothing. Its link title does not show. In a message of a
- * member, a Markdown link shows as typed, and its address is a link as a
- * bare address is. So does the Markdown of an image, such as
- * `![alt](address)`. A Markdown link whose address is no link shows as
- * typed, with its code and bold. With `code` and a tree, a file target
- * instead shows its label as a link that opens the file.
- *
- * With `strong`, `**` marks bold around text, chips, and links. Bold ends
- * at code, as it did before. With `mentions`, as in a message of a member,
- * each mention of an entry of the file tree is a file chip, and each other
- * mention stays text. `attachments` are the files of a sent message: each
- * mention of the copy path of one of them is the chip of that file, before
- * an entry of the tree, also in a chat without a tree. With `code`, inline
- * paths of entries also show as file chips, with their line targets.
+ * With `mentions`, each mention of an entry of the file tree is a file
+ * chip, and each other mention stays text. With `skills`, each skill text
+ * that names a skill of either agent is a skill chip, as `skillTextAt`
+ * reads it. Each other skill text stays text, and a skill text in code
+ * stays code. `attachments` are the files of the message: each mention of
+ * the copy path of one of them is the chip of that file, before an entry
+ * of the tree, also in a chat without a tree.
+ * The text of an agent message reads through `answerParts` instead.
  */
 export function chatParts(
   text: string,
   links: WorkspaceLinks,
   options: {
-    strong: boolean
     web: WebLinkOf
     mentions?: EntryLookup
-    code?: { root: string | null }
+    skills?: SkillLookup
     attachments?: readonly Attachment[]
   },
 ): ChatPart[] {
@@ -135,121 +96,65 @@ export function chatParts(
   const counts = (mention: Mention) =>
     options.mentions !== undefined ||
     attachmentForMention(mention, files) !== undefined
-  let strong = false
   const addText = (value: string) => {
     const last = parts.at(-1)
-    if (last?.kind === 'text' && last.strong === strong) last.text += value
-    else parts.push({ kind: 'text', text: value, strong })
+    if (last?.kind === 'text') last.text += value
+    else parts.push({ kind: 'text', text: value })
   }
   const addMention = (mention: Mention) => {
     const { source, path } = mention
     const attachment = attachmentForMention(mention, files)
     if (attachment) {
-      parts.push({ kind: 'attachment', source, path, attachment, strong })
+      parts.push({ kind: 'attachment', source, path, attachment })
       return
     }
     const found = options.mentions && mentionTarget(mention, options.mentions)
     if (!found) addText(source)
     else {
-      parts.push({
-        kind: 'file',
-        source: found.source,
-        ...found.target,
-        strong,
-      })
+      parts.push({ kind: 'file', source: found.source, ...found.target })
       if (found.rest !== '') addText(found.rest)
     }
   }
-  const addLink = (link: WebLink, words: readonly LinkWord[]) => {
-    parts.push({ kind: 'link', link, words, strong })
-  }
-  /** A bare address: a chip, a link, or text. */
-  const addAddress = (href: string) => {
+  /** An address: a chip, a link, or text. */
+  const addAddress = (href: string, source = href) => {
     const target = linkTarget(href, links)
     const link = target ? undefined : options.web(href)
-    if (target) parts.push({ kind: 'chip', source: href, target, strong })
-    else if (link) addLink(link, addressWords(href))
-    else addText(href)
+    if (target) parts.push({ kind: 'chip', source, target })
+    else if (link) parts.push({ kind: 'link', link, text: source })
+    else addText(source)
   }
-  /** Text that shows as typed, with its code and bold but no link. */
+  /** Text that shows as typed, with its code but no link. */
   const typed = (value: string) =>
-    take(
-      tokens(value, {
-        marks: options.strong,
-        links: false,
-        mentions: () => false,
-      }),
-      false,
-    )
+    take(tokens(value, { links: false, mentions: () => false }), false)
   const addMarkdown = (token: LinkToken, markdown: MarkdownLink) => {
     const { href, source } = token
-    const { mentions, code } = options
-    const file = mentions && code && fileLinkTarget(href, mentions, code.root)
-    if (file) {
-      const { entry } = file
-      const label = markdown.label.trim() === '' ? entry.name : markdown.label
-      const picture =
-        markdown.image &&
-        entry.kind === 'file' &&
-        pictureType(entry.path) !== undefined
-      parts.push({
-        kind: 'file-link',
-        source,
-        ...file,
-        label: labelWords(label),
-        picture,
-        strong,
-      })
+    const target = markdown.image ? undefined : linkTarget(href, links)
+    if (target) {
+      parts.push({ kind: 'chip', source, target })
       return
     }
-    if (!markdown.image) {
-      const target = linkTarget(href, links)
-      if (target) {
-        parts.push({ kind: 'chip', source, target, strong })
-        return
-      }
-      const link = options.strong ? options.web(href) : undefined
-      if (link) {
-        const { label } = markdown
-        const words = labelHidesAddress(label)
-          ? addressWords(href)
-          : labelWords(label)
-        addLink(link, words)
-        return
-      }
-    }
     typed(markdown.before)
-    addAddress(href)
+    addAddress(href, markdown.address)
     typed(markdown.after)
   }
   // Only code of the text itself links its address. Code in a label that
   // shows as typed stays code.
   const take = (list: readonly Token[], linked: boolean) => {
     for (const token of list) {
-      if (token.kind === 'mark') strong = !strong
-      else if (token.kind === 'text') addText(token.text)
+      if (token.kind === 'text') addText(token.text)
       else if (token.kind === 'code') {
-        strong = false
-        const { mentions, code } = options
-        const file =
-          linked &&
-          mentions &&
-          code &&
-          codeTarget(token.text, mentions, code.root)
-        if (file)
-          parts.push({ kind: 'file', source: token.text, ...file, strong })
-        else parts.push(linked ? codePart(token.text, options.web) : token)
+        parts.push(linked ? codePart(token.text, options.web) : token)
       } else if (token.kind === 'mention') addMention(token.mention)
+      else if (token.kind === 'skill') parts.push(token)
       else if (token.markdown) addMarkdown(token, token.markdown)
       else addAddress(token.href)
     }
   }
   take(
     tokens(text, {
-      marks: options.strong,
       links: true,
       mentions: counts,
-      paths: options.code !== undefined && options.mentions !== undefined,
+      skills: options.skills,
     }),
     true,
   )

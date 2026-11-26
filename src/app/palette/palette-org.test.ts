@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest'
 import { coreFixtures, FAKE_TIME } from '../../test-support/fixtures/core'
+import { activeOrgSource } from '../active-orgs'
 import { parseRoute, routes } from '../router'
+import { Store } from '../store'
 import { paletteOrg } from './palette-org'
 
 const orgs = coreFixtures().orgs.orgs
@@ -16,7 +18,8 @@ function orgOn(
   list: typeof orgs,
   lastOrgId: string | null,
 ): string | null {
-  return paletteOrg(parseRoute(path, ''), list, lastOrgId)?.id ?? null
+  const orgs = activeOrgSource(new Store(list)).get()
+  return paletteOrg(parseRoute(path, ''), orgs, lastOrgId)?.id ?? null
 }
 
 describe('the org of the palette', () => {

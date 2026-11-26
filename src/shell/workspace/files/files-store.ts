@@ -7,7 +7,8 @@ import { WorkspaceFiles } from '../../../files/model/files-store'
 /**
  * The files of one workspace over the transport of the app: its fetch for
  * the file routes, and its event source, after an event number, for the
- * stream. It starts nothing.
+ * stream. The store takes its first cursor from the list reads and keeps
+ * its own replay cursor across visits. Creating the store starts no request.
  */
 export function createWorkspaceFiles(
   services: AppServices,

@@ -13,7 +13,8 @@ the workspace screen draws, as
 - `PreviewPanel` shows the port form at all times, with no "+" (decision
   290). It lists each server of the report, then each port with a Preview
   tab or an open preview that the report does not name, as `Port 8080`.
-  `panelPortList` gives that list.
+  `panelPortList` gives that list. The [services](#services) stand above
+  it, and the list leaves out each port that a shown service row lists.
 - A click on a port, or a typed port, calls `onShow`. The shell then shows
   the Preview tab of the port, or opens one. The row of `current`, the port
   of the shown tab, is the current one, with `aria-current`.
@@ -23,9 +24,14 @@ the workspace screen draws, as
 
 ## The phone page
 
-- The tool lists the open previews from the API. It keeps the latest
-  `ports.updated` report of the workspace events, with the servers that
-  listen in the cloud computer. A null report means no report.
+- The tool lists the open previews from the API. It takes the latest
+  port report and its failed repair from the workspace seed. Later
+  `ports.updated` events give the servers that listen in the cloud computer.
+  A null list clears the report.
+- A new list read starts after the workspace seed applies. If a read
+  already started, the store discards its result and reads again. The API
+  leaves revoked and expired previews out of this list. The store keeps
+  revokes that arrive after the cutoff, including on a kept return.
 - With no preview, the tool shows the port form. "+" shows the same form
   beside the tabs of the open previews.
 - The form lists each reported server that has no tab, as a button with its
@@ -33,6 +39,9 @@ the workspace screen draws, as
   typed port. The buttons wait while an open runs. The field stays below
   them as the smaller Other port row. Each state of the form keeps the same
   field, so a new report keeps a typed port, its focus, and its selection.
+- The [services](#services) stand above the servers of the form, also
+  each service whose port has an open preview. The servers leave out each
+  port that a shown service row lists.
 - An empty report asks the user to start a server. Without a report, and
   when each reported server has a tab, the form shows the field alone.
 - Open preview sends the port as JSON. A port that is open already shows its
@@ -57,9 +66,9 @@ the workspace screen draws, as
 - After a failed repair of the list, a notice under the form gives the age
   of the failure, and the last list stays. A newer report, also a null one,
   ends it. The notice never shows over a preview in its frame.
-- The words, the tab label, and the row styles are those of the mockups:
+- The words, the tab label, and the row styles are shared with the mockups:
   `previewCopy.ts`, `PreviewTabs.module.css`, and `PortForm.module.css` in
-  `docs/mockups/src/components/tools/`, and `LostUpdateRow` for the notice.
+  `src/ui/components/tools/`, and `LostUpdateRow` for the notice.
 - Each preview has a tab. Tabs are links, so each preview has an address in
   the browser history. A plain click goes to the address in the page. Ctrl,
   Shift, and middle clicks keep the browser's own action.
@@ -88,6 +97,52 @@ the workspace screen draws, as
   page, such as the browser's JSON view in dark mode, shows dark.
 - A failed request shows its message and leaves the tool usable.
 
+## Services
+
+[Services in the app](../../docs/protocol/services-in-the-app.md) states
+the services of the Preview tool: the list above the servers, Stop,
+Restart, their results, and the log view. The shell gives the tool its
+`services`, a `PreviewServices` of `services/servicesPart.ts`: the store
+of the workspace, and the Services part for a state of that store. The
+shell draws the part in `src/shell/workspace/previews/services/`, as
+[the tools part](../shell/workspace/tools-part.md) says.
+
+- `ServicesStore` of `services/servicesStore.ts` holds the services of one
+  workspace. Its `connect` is one running period of the cloud computer: it
+  reads the list at once and at each report of the ports. Its end forgets
+  the list, so a later period never shows the list of an earlier one.
+  `watch` reads the list again after `activeWait` and at each return to the
+  page while a part shows it. A hidden page reads at its return. No read
+  adds activity.
+- `services/servicesApi.ts` reads the list with no answer from the cache,
+  sends Stop and Restart, and reads a log. A `not_found` refusal of the
+  list reads as software without services, because an older Worker
+  answers its unknown route so. Each other refusal stays an error.
+- `services/servicesState.ts` keeps the latest answer of the period, the
+  error of a read that failed before the first answer, and the controls
+  that run, by the run that each names. A later read that fails keeps the
+  list, with no notice. `servicesView` gives what the part shows, and
+  `ownedPorts` the ports that the shown rows list.
+- `control` of the store sends one Stop or Restart of the observed boot,
+  service, and generation, with a new request ID. It takes no signal, so
+  it reaches the server also after its view closed. Its row shows
+  Stopping… or Restarting… until the answer, and a newer run of the
+  service takes no control of an older one. The answer reads the list
+  again. Nothing sends a control again by itself. `services/serviceAnswer.ts`
+  maps the answer: a refusal of the API fails with its message, and a lost,
+  unreadable, or mismatched reply is unconfirmed.
+- The form takes the part in a fixed slot above the servers, so a part
+  that shows or goes keeps the port field, its text, its focus, and its
+  selection.
+- The part takes the words, the rows, and the log view that it shares
+  with the mockups: `serviceCopy.ts`, `ServiceState.tsx`,
+  `ServiceList.module.css`, and `ServiceLog.module.css` in
+  `src/ui/components/tools/`. It never imports the mockups'
+  `ServiceList.tsx`, which draws registered Mokly parts. Each name,
+  label, title, and log line shows as plain text.
+- The close of a preview stops no service, and no control of a service
+  ends a preview.
+
 ## The files preview
 
 The files preview shows the files of the workspace's repository folder,
@@ -103,15 +158,23 @@ port preview: no list and no tab of the Preview tool holds it.
   announced no file server gets the error `file_server_unavailable`.
 - `filesPreview.ts` holds the store of the files preview of one workspace:
   the files preview that lives, the previews that ended, whether an open
-  runs, and the count of the ends of the connection of the screen. A
+  runs, whether it is in a running period, and the count of its periods. A
   `preview.revoked` event of its ID ends it, and so does the action
   `ended`, which the shell sends at its expiry and when the cloud computer
   stops. An open that answers with a preview that ended changes nothing.
+- A running period lasts while the workspace is ready and the open of the
+  visit of the screen has ended, as `WorkspaceModel.opened` says. Before
+  that open ends, the screen can show a saved state. The shell sends the
+  action `running` at each start and each end of a running period. The
+  action ends the open that runs, but keeps the files preview, so a
+  Restart keeps the page that a tab shows.
 - The action `disconnected`, at the end of the connection of the screen,
-  forgets the files preview and the open that runs. An open answers with
-  the count of its connection, and an answer of an earlier connection
-  changes nothing. A failed open forgets the files preview too, but ends
-  no ID, so the next open can answer it again.
+  forgets the files preview and the open that runs. The count of the
+  periods grows at each start and each end of a running period, and at
+  each end of the connection. An open answers with the count of the period
+  in which it started, and an answer of an earlier period changes nothing.
+  A failed open forgets the files preview too, but ends no ID, so the next
+  open can answer it again.
 - `PreviewFrame` takes an optional `file`: the real path, which the launch
   address names through `previewLaunchUrl`, and the file name of its
   label, which names the frame, such as "Preview of report.html".
@@ -130,6 +193,7 @@ port preview: no list and no tab of the Preview tool holds it.
     navigate: goToPreview,
     replace: replaceAddress,
   }}
+  services={previewServices}
   store={keptPreviews}
   touch={phone}
   workspace={{ orgId, workspaceId, fetch, subscribe }}
@@ -140,6 +204,7 @@ port preview: no list and no tab of the Preview tool holds it.
   dispatch={keptPreviews.dispatch}
   now={now}
   onShow={showPort}
+  services={previewServices}
   state={snapshot}
   tabPorts={tabPorts}
 />
@@ -164,6 +229,9 @@ port preview: no list and no tab of the Preview tool holds it.
 - `PreviewPanel` reads the snapshot of that store. `tabPorts` are the ports
   of the Preview tabs of the saved view, and `onShow` shows the tab of a
   port.
+- `services` is optional on both. The shell gives the `PreviewServices`
+  of `usePreviewServices`. Without it, the tool shows no services, as for
+  older software.
 
 ## Key code
 
@@ -189,7 +257,17 @@ port preview: no list and no tab of the Preview tool holds it.
 - `previewsStore.ts`: the tool store, and the action of a failed repair.
 - `previewsApi.ts`: list, open, and close requests, and the open of the
   files preview.
+- `services/servicesStore.ts`: `ServicesStore`, the services of one
+  workspace in one running period, its reads, `watch`, `control`, and
+  `readLog`. `services/servicesState.ts`: its state, `servicesView`, and
+  `ownedPorts`.
+- `services/servicesApi.ts`: the list, control, and log requests.
+  `services/serviceReplies.ts` reads their replies into the generated
+  types, and `services/serviceAnswer.ts` maps the answer of a control.
+- `services/servicesPart.ts`: `PreviewServices`, which the shell gives,
+  and `useServicesState`.
 
 See [Port previews](../../docs/protocol/port-previews.md),
+[Services in the app](../../docs/protocol/services-in-the-app.md),
 [Listening ports](../../docs/protocol/agent-runner.md#listening-ports),
 and [Access and security](../../docs/protocol/terminal-previews-and-desktop.md#port-previews).

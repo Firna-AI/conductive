@@ -2,7 +2,7 @@ import type { MessageSender } from '../../shared/generated/MessageSender'
 import {
   eventLabels,
   scheduleLabels,
-} from '../../../docs/mockups/src/components/automations/triggerCopy'
+} from '../../ui/components/automations/triggerCopy'
 import { personName } from '../../app/people'
 import { routes } from '../../app/router'
 import { API_PATHS } from '../../shared/api'

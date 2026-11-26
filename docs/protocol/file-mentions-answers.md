@@ -4,7 +4,9 @@ This page belongs to [File mentions](file-mentions.md), which states the
 list of `@`, the chips of files and folders, and the text of a mention.
 It states the file chips, the file links, and the pictures in the answers
 of the agents, and their line targets. The tree is the file tree of the
-workspace, as [The list](file-mentions.md#the-list) says.
+workspace, as [The list](file-mentions.md#the-list) says. It holds only
+the entries that its report lists. So a path that the report omits names
+no entry, and it shows as the rules below give for such a path.
 [Chat Markdown](chat-markdown.md) states the other Markdown of agent
 messages. The terms are those of the
 [architecture doc](../architecture.md#terms). The
@@ -55,7 +57,9 @@ that shows the screenshots of agents as pictures in their answers.
   and one word counts too. A `%` escape in the target, such as `%20`, reads
   as its character. A target in angle brackets can hold a space.
 - A Markdown link whose target names no entry stays the text that the
-  agent wrote. A Markdown image of a web address stays text too.
+  agent wrote. A Markdown image whose target names no entry shows its alt
+  text, as [Chat links](chat-links.md#bare-addresses-and-markdown-links)
+  says.
 - Reason: agents write screenshots as Markdown images, and the label reads
   better as a link than as a chip. The user asked for normal links on
   13 November 2026.
@@ -77,7 +81,7 @@ that shows the screenshots of agents as pictures in their answers.
 
 - A picture file is a PNG, JPEG, GIF, or WebP file. The file tab knows
   such a file by the extension of its name, and shows it as a picture, as
-  [Files and changes](workspace-tools.md#files-and-changes) says.
+  [Pictures in file tabs](file-pictures.md) says.
 - A Markdown image of an answer whose target is a picture file of the tree
   shows as a small picture (screenshot decision 2 B).
 - Reason: the agent knows which images show its result, and this is the
@@ -132,12 +136,13 @@ that shows the screenshots of agents as pictures in their answers.
 - Reason: the link still opens the file tab, which gives the reason when
   the file does not show.
 - A picture shows in the paragraphs and the list items of each agent
-  message. In a heading or a table cell, the image shows as the link.
-  Reason: a picture breaks the layout of the heading or of the row.
+  message, also inside a quote. In a heading or a table cell, the image
+  shows as the link. Reason: a picture breaks the layout of the heading or
+  of the row.
 - A closed message line in the work of a turn shows the image as the link.
   An open message line shows the picture. Reason: a closed line stays one
   line, as
-  [Tables and headings in the work of a turn](chat-markdown.md#tables-and-headings-in-the-work-of-a-turn)
+  [Chat message lines](chat-message-lines.md#in-the-work-of-a-turn)
   says.
 - A copy of chat text with a picture gives the Markdown image as the agent
   wrote it, as a copy of a chip gives its text. A copy of the loading box

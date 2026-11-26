@@ -36,7 +36,7 @@ async function openPinecrest(suspended: boolean) {
 }
 
 /** The tabs of the section, which come before the notices of a page. */
-const tabs = 'Overview Orgs Users Waitlist Invite codes Providers'
+const tabs = 'Overview Orgs Users Waitlist Invite codes Providers Settings'
 
 /** The text of the notices at the top of the page, before its details. */
 function notices(text: string): string {

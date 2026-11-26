@@ -13,6 +13,7 @@ use cnd_runner_interface::sdk_helper_options::{HelperOptions, ProviderInput};
 use tokio::sync::{Mutex, oneshot};
 
 use crate::error::{Error, Result};
+use crate::skills::boundary::SkillInputs;
 
 use super::boundary::{Helper, HelperEvents, HelperPort};
 
@@ -31,6 +32,7 @@ pub struct HelperConnection {
     pending: Arc<Mutex<Pending>>,
     closing: Arc<AtomicBool>,
     close_lock: Mutex<bool>,
+    skills: Option<Arc<dyn SkillInputs>>,
 }
 
 impl HelperConnection {
@@ -42,6 +44,7 @@ impl HelperConnection {
             pending: Arc::new(Mutex::new(Pending::default())),
             closing: Arc::new(AtomicBool::new(false)),
             close_lock: Mutex::new(false),
+            skills: None,
         };
         let pending = connection.pending.clone();
         let closing = connection.closing.clone();
@@ -80,12 +83,19 @@ impl HelperConnection {
                     event: ProviderEvent::Failed {
                         code: "agent_exited".into(),
                         message: "The SDK helper process ended.".into(),
+                        notice_ids: vec![],
                     },
                 });
             }
             let _ = port.terminate().await;
         });
         connection
+    }
+
+    /// Supply current private paths without changing provider input text.
+    pub fn with_skills(mut self, skills: Arc<dyn SkillInputs>) -> Self {
+        self.skills = Some(skills);
+        self
     }
 
     async fn request(
@@ -107,13 +117,6 @@ impl HelperConnection {
         }
         receiver.await.or(Err(Error::HelperExited))?
     }
-
-    /// Warm-up request exits without creating any agent.
-    pub async fn warm(&self) -> Result<()> {
-        self.request(|request_id| HelperRequest::Warm { request_id })
-            .await?;
-        self.port.exited().await
-    }
 }
 
 #[async_trait]
@@ -127,9 +130,15 @@ impl Helper for HelperConnection {
         Ok(())
     }
     async fn send(&self, input: ProviderInput) -> Result<()> {
+        let skills = self
+            .skills
+            .as_ref()
+            .map(|source| source.current())
+            .transpose()?;
         self.request(|request_id| HelperRequest::Send {
             request_id,
             input: Box::new(input),
+            skills,
         })
         .await?;
         Ok(())

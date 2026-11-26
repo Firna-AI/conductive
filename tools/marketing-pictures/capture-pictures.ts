@@ -6,11 +6,11 @@ import {
   pictureFileName,
   pictureSchemes,
   type PictureCapture,
-} from '../../docs/mockups/src/screens/marketingPictureCaptures.ts'
+} from '../../src/ui/screens/marketingPictureCaptures.ts'
 import {
   marketingPictures,
   screenSizes,
-} from '../../docs/mockups/src/screens/marketingPictureList.ts'
+} from '../../src/ui/screens/marketingPictureList.ts'
 import type { Page, Viewport } from './page.ts'
 
 type CaptureOptions = {

@@ -8,6 +8,9 @@ import type { ImageSoftwareArtifact } from './image-software'
 import { readOrgImage } from './org-image-data'
 import { imageHoldsOldValues } from './org-image-refresh-data'
 import { imageRetryAt } from './image-retry-data'
+import { progressProviderSwitch } from './provider-switch-builds'
+import { promoteWaitingImageBuild } from './waiting-image-data'
+import { readOpenProviderSwitch } from './provider-switch-data'
 
 export const IMAGE_DAY_MS = 86_400_000
 export const IMAGE_POLL_MS = 1_000
@@ -21,8 +24,6 @@ type ImageSchedule =
       dailyAt: number
       pendingAt: number
       imageName: string | null
-      /** The image holds an old name or default branch, so a build is due. */
-      oldValues: boolean
     }
 
 /** Every idle caller uses the persisted daily and pending push deadlines. */
@@ -55,14 +56,21 @@ export async function readImageSchedule(
           image.pendingPushRefreshAt,
           (image.lastPushRefreshAt ?? -Infinity) + IMAGE_PUSH_MS,
         )
+  // Old values make a job due at once, and admission makes it a build.
   const oldValues = await imageHoldsOldValues(db, orgId, providerAccount)
+  const providerSwitch = await readOpenProviderSwitch(db, orgId)
   return {
     buildId: null,
-    nextAt: oldValues ? now : Math.min(dailyAt, pendingAt),
+    nextAt: oldValues
+      ? now
+      : Math.min(
+          dailyAt,
+          pendingAt,
+          providerSwitch ? now + IMAGE_POLL_MS : Infinity,
+        ),
     dailyAt,
     pendingAt,
     imageName: image?.imageName ?? null,
-    oldValues,
   }
 }
 
@@ -72,6 +80,12 @@ export async function scheduleIdleImage(
   orgId: string,
   software: ImageSoftwareArtifact,
 ): Promise<void> {
+  await promoteWaitingImageBuild(
+    runtime.env.DB,
+    orgId,
+    runtime.dependencies.now(),
+  )
+  await progressProviderSwitch(runtime, orgId)
   const providerAccount = await readOrgProviderAccount(runtime.env.DB, orgId)
   const now = runtime.dependencies.now()
   const next = await readImageSchedule(

@@ -1,15 +1,22 @@
 import { Hammer } from 'lucide-react'
 import { changedScriptNotice } from '../app/first-build'
+import { savedSkillsTrust } from '../app/skills-trust'
 import type { Org } from '../shared/api'
 import type {
   BuildLogEvent,
   BuildsResponse,
   OrgSettings,
+  SkillsRepositoryLookupResponse,
 } from '../shared/org-settings'
 import { BuildCard } from './BuildCard'
-import { EnvVarsSection, ScriptSection } from './ComputerSections'
+import {
+  EnvVarsSection,
+  ScriptSection,
+  SkillsSection,
+} from './ComputerSections'
 import { RepositoryNotice } from './RepositoryNotice'
 import { softwareSentence } from './software'
+import type { Resource } from './useResource'
 import { ViewportScope, type Viewport } from './ui/controls'
 import { Notice } from './ui/Notice'
 import { TabIntro } from './ui/Section'
@@ -26,6 +33,13 @@ export type MemberComputerViewProps = {
    * build succeeded.
    */
   log: readonly BuildLogEvent[] | null
+  /**
+   * What the lookup of the saved skills repository found on GitHub, while
+   * it loads, or the message of a request that failed.
+   */
+  skills: Resource<SkillsRepositoryLookupResponse>
+  /** Try again of a lookup of the skills that did not load. */
+  onRetrySkills: () => void
   viewport: Viewport
   /** The time now, in Unix milliseconds, for the times of the builds. */
   now: number
@@ -67,12 +81,14 @@ export function MemberComputerIntro(props: {
 /**
  * The Cloud computer tab of a member who is not an admin, from data that
  * the caller gives: the repository notice, the builds with the log of the
- * newest build, both scripts as text, and the names of the env vars. It has
- * no Build computer, no Save script, and no Add variable, because only
- * admins change the cloud computer. The notice of the install script shows
- * only for a change of the script. It holds no state and loads nothing, so
- * each new value of its props shows at once, such as a new log event. Mount
- * it in the page column of the org settings.
+ * newest build, both scripts as text, the names of the env vars, and the
+ * skills repository with its saved trust choice and the skills that its
+ * lookup found. It has no Build computer, no Save script, no Add variable,
+ * no trust switch, and no Save repository, because only admins change the
+ * cloud computer. The notice of the install
+ * script shows only for a change of the script. It holds no state and
+ * loads nothing, so each new value of its props shows at once, such as a
+ * new log event. Mount it in the page column of the org settings.
  */
 export function MemberComputerView(props: MemberComputerViewProps) {
   const { settings, builds } = props
@@ -114,6 +130,13 @@ export function MemberComputerView(props: MemberComputerViewProps) {
         title="Startup script"
       />
       <EnvVarsSection envVars={settings.envVars} orgName={props.org.name} />
+      <SkillsSection
+        lookup={props.skills}
+        onRetry={props.onRetrySkills}
+        repository={settings.skillsRepository ?? ''}
+        suspended={props.suspended === true}
+        trusted={savedSkillsTrust(settings)}
+      />
     </ViewportScope>
   )
 }

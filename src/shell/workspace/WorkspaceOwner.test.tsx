@@ -67,7 +67,12 @@ describe('the owner in the header of a workspace', () => {
       () => queryByRole('button', 'Owner: Priya Raman', view),
       'the new owner in the header',
     )
-    const put = server.requests.find((request) => request.method === 'PUT')
+    const writes = server.requests.filter(
+      (request) =>
+        request.method === 'PUT' && new URL(request.url).pathname === path,
+    )
+    expect(writes).toHaveLength(1)
+    const [put] = writes
     expect({
       request: put && {
         path: new URL(put.url).pathname,

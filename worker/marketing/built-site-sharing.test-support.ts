@@ -1,7 +1,7 @@
 import sharp from 'sharp'
 import { expect } from 'vitest'
 
-import { productDomain } from '../../docs/mockups/src/brand'
+import { productDomain } from '../../src/shared/brand'
 import { termsConsentResponse } from './consent'
 import { decodeHtml } from './html.test-support'
 import type { SiteAssets } from './files'

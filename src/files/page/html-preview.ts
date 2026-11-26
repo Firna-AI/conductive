@@ -46,6 +46,12 @@ export interface HtmlPreview {
    */
   reload: () => void
   /**
+   * Expand: shows the page in a large window over the whole app, or null
+   * when the page has no window, as before the files preview exists and
+   * on a phone.
+   */
+  expand: (() => void) | null
+  /**
    * Runs while the page shows the Preview of the file, from a layout effect,
    * and its result runs when the page stops showing it: at Source, at
    * another tab, or at a state that takes its place. Keep it stable. The

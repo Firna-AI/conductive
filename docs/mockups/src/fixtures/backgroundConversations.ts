@@ -3,9 +3,9 @@ import {
   autocompleteStart,
   autocompleteTests,
 } from './autocompleteTurn'
+import { bullets, code, item, p } from './agentText'
 import type { ChatItem } from './conversations'
 import { changedFiles } from './files'
-import { bullets } from './listConversations'
 
 /** The request of the canonical turn, with the merge after the checks. */
 const mergeAsk: ChatItem = {
@@ -35,13 +35,19 @@ const waitingWork: readonly ChatItem[] = [
     kind: 'agent',
     id: 'done',
     blocks: [
-      'Done. Checkout now suggests addresses as you type.',
+      p('Done. Checkout now suggests addresses as you type.'),
       bullets(
-        'Choosing a suggestion fills the street, city, and postcode.',
-        'Manual entry still works when there is no match.',
-        'Unit tests cover `useAddressAutocomplete`, and the checkout end-to-end tests pass.',
+        item('Choosing a suggestion fills the street, city, and postcode.'),
+        item('Manual entry still works when there is no match.'),
+        item(
+          'Unit tests cover ',
+          code('useAddressAutocomplete'),
+          ', and the checkout end-to-end tests pass.',
+        ),
       ),
-      "Opened pull request #482. I'm watching its checks, and I'll merge it when they pass.",
+      p(
+        "Opened pull request #482. I'm watching its checks, and I'll merge it when they pass.",
+      ),
     ],
   },
 ]

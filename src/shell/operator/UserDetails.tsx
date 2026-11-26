@@ -1,23 +1,19 @@
 import { Ban, Hourglass } from 'lucide-react'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+import { formatCount } from '../../ui/components/common/counts'
+import { Notice } from '../../ui/components/common/Notice'
 import {
   noVerifiedEmail,
   waitingNotice,
-} from '../../../docs/mockups/src/components/operator/accessCopy'
-import { suspendedUserBody } from '../../../docs/mockups/src/components/operator/operatorCopy'
-import { DetailList } from '../../../docs/mockups/src/components/settings/DetailList'
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
+} from '../../ui/components/operator/accessCopy'
+import { suspendedUserBody } from '../../ui/components/operator/operatorCopy'
+import { DetailList } from '../../ui/components/settings/DetailList'
+import { Section } from '../../ui/components/settings/Section'
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'
 import { roleLabels } from '../../members/people'
 import type { OperatorUserDetail } from '../../shared/operator'
 import { AppAccessSection, ReferralSection } from './AccessSections'
-import {
-  formatAge,
-  formatCount,
-  formatLongDay,
-  formatLongMoment,
-} from './format'
+import { formatAge, formatLongDay, formatLongMoment } from './format'
 import { suspensionTitle } from './TargetPage'
 import { EmptyRows, TargetList, TargetRow } from './TargetParts'
 

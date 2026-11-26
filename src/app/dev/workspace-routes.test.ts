@@ -9,6 +9,7 @@ import {
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FakeWorkspaceEvents } from '../../test-support/fake-events'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { emptyWorkspaceSeed } from '../../test-support/fixtures/workspace-seed'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { createApiClient } from '../api/client'
 import {
@@ -60,7 +61,7 @@ function setup(state: WorkspaceState, now: () => number = () => FAKE_TIME) {
   return { api, backend }
 }
 
-test('development detail reads include the current event number for the ordered reader', async () => {
+test('development detail reads give the seed at the cutoff of their own workspace', async () => {
   const { api, backend } = setup('ready')
   const { detail } = workspaceFixtures()
   const workspace = { ...detail.workspace, owner }
@@ -68,15 +69,19 @@ test('development detail reads include the current event number for the ordered 
     ...detail,
     workspace,
     eventNumber: 7,
+    seed: emptyWorkspaceSeed,
   })
-  backend.emit(workspaceId, {
-    type: 'workspace.title',
-    name: 'Recorded workspace name',
-  })
+  const report = { type: 'ports.updated', ports: null } as const
+  backend.emit(workspaceId, report)
+  backend.emit(workspaceFixtures().created.workspace.id, report)
   await expect(api.get(path, readOrderedWorkspaceResponse)).resolves.toEqual({
     ...detail,
     workspace,
     eventNumber: 8,
+    seed: {
+      ...emptyWorkspaceSeed,
+      ports: { eventNumber: 8, occurredAt: FAKE_TIME, event: report },
+    },
   })
 })
 

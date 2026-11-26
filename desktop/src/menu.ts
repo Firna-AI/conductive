@@ -1,6 +1,6 @@
 import { Menu } from 'electron'
 import type { MenuItemConstructorOptions } from 'electron'
-import { productName } from '../../docs/mockups/src/brand.js'
+import { productName } from '../../src/shared/brand.js'
 
 export function installMenu(
   signIn: () => void,

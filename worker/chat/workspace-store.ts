@@ -8,6 +8,7 @@ import { reportTurnEnd } from './turn-end-reports'
 import type { ChatDependencies, ChatStorage } from './types'
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import type { RunnerDiagnosticIdentity } from './runner-diagnostics'
+import { storedWorkspaceEventLabels } from './workspace-labels'
 
 export function createWorkspaceChatStore(
   storage: ChatStorage,
@@ -19,7 +20,16 @@ export function createWorkspaceChatStore(
   const store: ChatStore = new ChatStore(
     storage,
     dependencies.now,
-    (report) => reportTurnEnd(store, dependencies, publish, report),
+    async (report) => {
+      if (dependencies.sessionWatchAlarm)
+        await store.read(report.workspaceId, async (view) => {
+          if (await view.watches.active())
+            await dependencies.sessionWatchAlarm?.(
+              await view.watches.due(dependencies.now()),
+            )
+        })
+      await reportTurnEnd(store, dependencies, publish, report)
+    },
     (workspaceId) =>
       reportAfterChatChange(
         () =>
@@ -34,6 +44,7 @@ export function createWorkspaceChatStore(
         dependencies.automationReportAlarm,
       ),
     runner,
+    (workspaceId) => storedWorkspaceEventLabels(env, workspaceId),
   )
   return store
 }

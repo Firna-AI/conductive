@@ -1,0 +1,37 @@
+# A lost part can reject a staged release
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-20, from branch `calummoore/sandbox-start-issue-secrets-q3is`, review round 1, finding 4. Checked again on 2026-11-20 after review round 2, which added options F and G and the Node case.
+- **Location:** `apply` and `rollback` in `crates/cnd-cli/src/update/engine.rs`, `restore_parts` in `crates/cnd-cli/src/update/repair.rs`, `complete_versions` in `crates/cnd-cli/src/update/state.rs`, the Updates section of `docs/protocol/sandbox-software.md`, and the update paragraph of `src/marketing/docs/cloud-computer.md`.
+- **Reason:** the user must choose how a staged release that lost a part is treated, because the options change which release starts.
+
+- **Source:** Review. **Category:** Docs or spec.
+- **Terms:**
+  - **Release part:** one archive of the sandbox software (`node`, `system`, or `sdk-helper`), unpacked under `/opt/conductive/parts/<sha256>/`. It counts as present when its folder has the `complete` marker and the entry files of its role.
+  - **Staged release:** a newer release that the background check downloaded and that waits for activation at the next start or idle install.
+  - **Pending marker:** the record that `update apply` writes when it switches to a new release. `update started` clears it after the runner's first Worker welcome.
+  - **Rejection:** the file `rejected/<version>` that a fallback writes, so that a release that failed to start never downloads or applies again.
+- **Background:**
+  - Since the user decision of 2026-11-20 (option B), `update apply` downloads again each missing part of the release that it starts, and warns and goes on when that fails. The protocol says that the next start tries again.
+  - Apply selects the newest complete version. A complete version has its own `complete` marker. The markers of its parts do not count.
+  - When the staged release lost its `system` part and the repair fails, apply still writes the pending marker and runs the missing system installer. That fails, so the start fails.
+  - At the next start, apply sees the pending marker, falls back to the previous release, and rejects the staged release for good.
+  - The protocol says: "The next start of the agent runner applies the newest complete download", and "A start never waits for a download of a newer release".
+- **Problem:** A short download failure can reject a good staged release forever, although the protocol promises another try. The repair of a staged release also makes a start wait for a download of a newer release, which the protocol forbids. A staged release that lost its own Node or SDK helper part, and whose repair fails, still activates and confirms at its first Worker welcome. Its agent turns then fail until the next start, although the current release can have intact parts. The repair downloads all parts of one apply within 60 seconds, so a stalled `system` download now also ends in a rejection.
+- **Impact if no action:** A sandbox can stay on an older release until a later release comes out. After an idle install, the failed start restarts the runner service, which stops the processes that agents started.
+- **Root question:** How should the updater treat a staged release that lost a part it cannot restore at once: as a release that failed to start, or as an unfinished download that a later attempt completes?
+- **Options:**
+  - **A.** Keep the rejection. Limit the retry promise in the protocol and the guide to the release that the next start selects. Effort: Small.
+  - **B.** When the repair of a staged release fails and the current release can start, repair and start the current release, and try the staged release at the next start. Effort: Medium.
+  - **C.** Give a failed repair and a failed launch two separate saved states. Keep the rejection only for a failed launch. Effort: Large.
+  - **D.** Treat a version with a missing part as not complete. A start then skips the staged release and repairs and starts the current release. The background check, which runs after each start, every 10 minutes, and inside Restart, downloads the staged release again under its own lock, reusing the parts it has. The next idle install or start applies it. Record the rule in the protocol, the guide, the crate README, and `image/install.md`. Cost: the staged release applies some minutes later. Effort: Medium.
+  - **E.** At a fallback, check the parts of the failed release before the rejection. When a part is missing, remove the `complete` marker of that version instead of rejecting it, so that a later check stages it again. Cost: the failed start still happens. Effort: Medium.
+  - **F.** When the installer of the new release fails, restore the previous links and remove the pending marker with no rejection, reinstall the system files of the restored release, warn, and go on. The candidate stays staged. Cost: the start still waits for a download of a newer release, and an installer that always fails is tried at each start. Effort: Medium.
+  - **G.** Put the small system archive inside each release program, and restore a missing system part from it with no network. Cost: a build and deploy change, and no copy in older releases. Effort: Large.
+- **Left out:** Ending permanent rejection for all failed starts, because a broken release must never install again. More download attempts inside one start, because a longer outage still rejects the release and the start limit is 90 seconds.
+- **Wider fix:** C, because separate states keep any failure before the launch from rejecting a release.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/update-repair-selected-release.md` covers one selection of the release that repair checks and that apply starts. Options B and D change that selection. `plans/follow-ups/update-idle-repair-disconnect.md` has the same cause and the same wider fix: D here and its option D are one readiness rule. `plans/follow-ups/update-fallback-older-updater.md` changes the same `rollback` code as E and F.
+- **Recommendation:** D. A start needs only the parts of the release that it runs, so D keeps every download of a newer release out of the start, and it follows "applies the newest complete download". Build D as one readiness rule in the store's version list, so that the start, the idle check, and the early return of the background check all follow it. Keep a staged release with a lost part in the collection's keep set, or the check downloads its other parts again. Base the rule on the presence check of each part.
+- **Action:** ask the user, because the options give different outcomes for which release starts, and B and D change that rule.

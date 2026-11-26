@@ -26,7 +26,7 @@ import {
   startSend,
 } from './drafts'
 import { resumeFiles } from './attachment-actions'
-import { showTarget, takeReply } from './linked-replies'
+import { showTarget, takeReply, type SendingView } from './linked-replies'
 import { postMessage, showSendFailed } from './message-send'
 import { confirmWorkspace } from './workspace-records'
 
@@ -81,12 +81,14 @@ export function setDraftText(
  * When the server no longer has a file, that file turns failed. Try again
  * uploads its kept File. The send finishes on its draft, also after a move
  * to another session. A linked-session reply shows its message in that
- * session, and the sending tab shows that session, as `linked-replies.ts`
- * says.
+ * session, and the view that sent shows that session, as `showTarget`
+ * says: the shown tab, or `view`, such as the popover of an explanation,
+ * which keeps the shown tab.
  */
 export async function sendDraft(
   context: ChatContext,
   sessionId: string,
+  view?: SendingView,
 ): Promise<void> {
   const snapshot = context.store.get()
   const session = snapshot.sessions.find((item) => item.id === sessionId)
@@ -131,7 +133,7 @@ export async function sendDraft(
   if (context.live() && owner && (owner === sessionId || owner === holder)) {
     context.store.update((current) => ({ ...current, notice: null }))
   }
-  await showTarget(context, sessionId, posted.target, draftId)
+  await showTarget(context, sessionId, posted.target, draftId, view)
 }
 
 /** The attachments of the ready files, which show with a message. */
@@ -144,12 +146,14 @@ function readyAttachments(files: readonly DraftFile[]): Attachment[] {
 /**
  * Try again sends the message of a failed turn again. The stream shows a
  * retry in the same session. A reply that names a linked session shows its
- * message there, as a send does.
+ * message there, and the view of Try again follows it, as a send does: the
+ * shown tab, or `view`, such as the popover of an explanation.
  */
 export async function retryTurn(
   context: ChatContext,
   sessionId: string,
   messageId: string,
+  view?: SendingView,
 ): Promise<void> {
   const draftId = draftIdOf(context, sessionId)
   change(context, sessionId, (state) => ({ ...state, retrying: true }))
@@ -163,7 +167,7 @@ export async function retryTurn(
     showNotice(context, sessionId, "The turn didn't restart", error)
   }
   change(context, sessionId, (state) => ({ ...state, retrying: false }))
-  await showTarget(context, sessionId, target, draftId)
+  await showTarget(context, sessionId, target, draftId, view)
 }
 
 /**

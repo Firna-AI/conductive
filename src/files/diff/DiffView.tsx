@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
-import { digitStyle, TokenSpans } from '../code/CodeView'
+import { digitStyle, LineText } from '../code/CodeView'
 import { languageOf } from '../code/languages'
 import { classes } from '../ui/classes'
 import { useKeptScroll } from '../ui/kept-scroll'
+import { CodeBox } from '../code/CodeBox'
 import styles from '../code/code.module.css'
 import { highlightDiff } from './highlight-diff'
 import type { DiffRow } from './parse-patch'
@@ -44,7 +45,7 @@ export function DiffView(props: {
     [rows, name, oldContent, newContent],
   )
   return (
-    <div className={styles.scroll} ref={box}>
+    <CodeBox ref={box} label="Diff">
       <pre className={styles.code} style={style}>
         {rows.map((row, index) => {
           if (row.kind === 'hunk' || row.kind === 'note') {
@@ -63,17 +64,13 @@ export function DiffView(props: {
               <span className={styles.number}>{row.oldLine ?? ''}</span>
               <span className={styles.number}>{row.newLine ?? ''}</span>
               <span className={styles.sign}>{signs[row.kind]}</span>
-              <span className={styles.text}>
-                {tokens?.[index] ? (
-                  <TokenSpans tokens={tokens[index]} />
-                ) : (
-                  row.text
-                )}
-              </span>
+              <LineText
+                tokens={tokens?.[index] ?? [{ kind: 'plain', text: row.text }]}
+              />
             </div>
           )
         })}
       </pre>
-    </div>
+    </CodeBox>
   )
 }

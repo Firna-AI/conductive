@@ -1,7 +1,7 @@
 import { useImperativeHandle, useRef, useState, type Ref } from 'react'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import caretStyles from '../../../../docs/mockups/src/components/chat/DraftText.module.css'
-import { classes } from '../../../../docs/mockups/src/components/common/classes'
+import caretStyles from '../../../ui/components/chat/DraftText.module.css'
+import { classes } from '../../../ui/components/common/classes'
 import local from './chip-field.module.css'
 import { caretBoxAt, type CaretBox, type FieldPoint } from './point-caret'
 

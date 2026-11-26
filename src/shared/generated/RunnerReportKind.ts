@@ -9,3 +9,4 @@ export type RunnerReportKind =
   | 'start.updated'
   | 'workspace.title'
   | 'ports.updated'
+  | 'skills.updated'

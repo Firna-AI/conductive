@@ -1,5 +1,5 @@
 import { CircleAlert, Hammer } from 'lucide-react'
-import { repositoryNoticeText } from '../../docs/mockups/src/components/settings/repositoryChangeCopy'
+import { repositoryNoticeText } from '../ui/components/settings/repositoryChangeCopy'
 import { repositoryChangesOf } from '../app/repository-changes'
 import type { Org } from '../shared/api'
 import type { BuildsResponse } from '../shared/org-settings'
@@ -7,7 +7,7 @@ import { Notice } from './ui/Notice'
 
 /**
  * The repository notice of the read-only Repositories and Cloud computer
- * tabs, from the builds of the org, with the words of the mockups. It shows
+ * tabs, from the builds of the org, with the shared words. It shows
  * while the org image lacks a chosen repository or still holds a removed
  * one: a spinner while a build runs for an added repository, the danger
  * tone after a failed build, and else the hammer. It has no button, because

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { CommandPalette } from '../components/palette/CommandPalette'
+import { defined } from '../defined'
+import { commandPalette } from '../entries/components/palette/CommandPalette.mockup'
 import type { PaletteView } from '../components/palette/paletteViews'
 import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import type { ListDrag, ListMenu } from '../components/workspaces/sections'
@@ -10,7 +11,10 @@ import { menuSection, sectionDrag } from '../fixtures/sections'
 import { workspaceDrag } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { NewOrg } from './listParts'
-import { OrgSwitcherSheet, SectionSheet } from './listSheets'
+import {
+  orgSwitcherSheet,
+  sectionSheet,
+} from '../entries/components/screens/listSheets.mockup'
 import { orderRail, orgOrderView, type OrgOrderState } from './orgOrderStates'
 import type { WorkspaceListState } from './WorkspaceListScreen'
 
@@ -33,8 +37,9 @@ export function listDrag(menu: Open): ListDrag | undefined {
 export function listPalette(view: PaletteView, viewport: Viewport): ReactNode {
   if (view === 'closed') return null
   return (
-    <CommandPalette
+    <commandPalette.Component
       context={{ archivable: false, sidebar: viewport !== 'mobile' }}
+      moklyInstance="command-palette"
       view={view}
       viewport={viewport}
     />
@@ -52,12 +57,16 @@ export function listSheet(menu: Open, order?: OrgOrderState): ReactNode {
   const drag = ordered?.drag
   switch (menu) {
     case 'section':
-      return <SectionSheet />
+      return <sectionSheet.Component moklyInstance="section-sheet" />
     case 'orgs':
-      return <OrgSwitcherSheet current="acme" drag={drag} orgs={orgs} />
     case 'operator':
       return (
-        <OrgSwitcherSheet current="acme" drag={drag} operator orgs={orgs} />
+        <orgSwitcherSheet.Component
+          current="acme"
+          moklyInstance="org-switcher-sheet"
+          operator={menu === 'operator'}
+          {...defined({ drag, orgs })}
+        />
       )
     default:
       return null

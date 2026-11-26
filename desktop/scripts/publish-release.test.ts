@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
 
-import { sourceRepository } from '../../docs/mockups/src/brand.ts'
+import { sourceRepository } from '../../src/shared/brand.ts'
 import { publishRelease } from './publish-release.ts'
 import { publishHarness, releaseNames } from './publish.test-support.ts'
 

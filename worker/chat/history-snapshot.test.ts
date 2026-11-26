@@ -27,7 +27,10 @@ it('keeps a history snapshot cutoff when newer answers and final tool states arr
         tool: { ...tool, state: 'running' },
       })
       for (let number = 3; number <= 32; number++)
-        await transaction.emit({ type: 'workspace.title', name: `${number}` })
+        await transaction.emit({
+          type: 'workspace.title',
+          name: number === 32 ? 'x'.repeat(4_096) : `${number}`,
+        })
       await transaction.emit({
         ...context,
         type: 'assistant.completed',
@@ -44,7 +47,11 @@ it('keeps a history snapshot cutoff when newer answers and final tool states arr
     },
     () => undefined,
   )
-  const first = await store.read('workspace', (view) => view.history(0))
+  const firstPage = (through?: number) =>
+    store.read('workspace', (view) =>
+      view.history(0, through, { budget: { bytes: 4_096 } }),
+    )
+  const first = await firstPage()
   expect(first).toMatchObject({
     throughEventNumber: 35,
     hasMore: true,
@@ -71,9 +78,7 @@ it('keeps a history snapshot cutoff when newer answers and final tool states arr
     },
     () => undefined,
   )
-  expect(await store.read('workspace', (view) => view.history(0, 35))).toEqual(
-    first,
-  )
+  expect(await firstPage(35)).toEqual(first)
   const second = await store.read('workspace', (view) => view.history(32, 35))
   expect(second).toEqual({
     throughEventNumber: 35,

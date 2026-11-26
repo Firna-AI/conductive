@@ -1,21 +1,9 @@
+import type {
+  ModelListCheck,
+  UnlistedModel,
+} from '../../../../src/ui/components/settings/modelListCheck'
 import type { AgentChoice } from './agents'
 import type { ChatItem } from './conversations'
-
-/**
- * A model of the app that the model list of an own endpoint does not name:
- * its label in the picker, and the ID that the agent sends.
- */
-type UnlistedModel = { label: string; id: string }
-
-/**
- * The last read of the model list of an own endpoint that lacks models of
- * the app: those models, and when the read ran. A read that fails keeps the
- * last list and its time.
- */
-export type ModelListCheck = {
-  unlisted: readonly UnlistedModel[]
-  checked: string
-}
 
 /** The Claude model that the list of Cal's proxy does not name. */
 const fable: UnlistedModel = { label: 'Fable 5.1', id: 'claude-fable-5-1' }

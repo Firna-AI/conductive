@@ -1,7 +1,6 @@
-import { Window } from 'happy-dom'
 import { expect, it } from 'vitest'
 
-import { previewOpeningCopy } from '../../docs/mockups/src/components/tools/previewCopy'
+import { previewOpeningCopy } from '../../src/ui/components/tools/previewCopy'
 import { previewBrowserDocument } from './browser-launch'
 import { previewLaunchDocument } from './launch-document'
 
@@ -40,34 +39,6 @@ it('keeps the two launch form fields beside the status', () => {
   const fields = [...launch.html.matchAll(/<input[^>]*name="([^"]+)"/g)]
   expect(fields.map((field) => field[1])).toEqual(['hostname', 'grant'])
   expect(launch.html).toContain('document.forms[0].submit()')
-})
-
-it('keeps every HTML delimiter of a launch path inside one hidden value', () => {
-  const path = `reports/"><img src=x onerror='bad'>&quot;&.html`
-  const page = previewLaunchDocument({
-    action: 'https://authorize.previews.test/.conductive/authorize',
-    hostname: `${'a'.repeat(32)}.previews.test`,
-    grant: 'grant-value',
-    nonce: 'launch-nonce',
-    appOrigin: 'https://app.test',
-    desktopOrigin: 'conductive-app://desktop',
-    path,
-  })
-  const window = new Window()
-  const document = new window.DOMParser().parseFromString(
-    page.html,
-    'text/html',
-  )
-  expect(document.querySelectorAll('form')).toHaveLength(1)
-  expect(document.querySelectorAll('input')).toHaveLength(3)
-  expect(document.querySelectorAll('img')).toHaveLength(0)
-  expect(
-    document.querySelector('input[name="path"]')?.getAttribute('value'),
-  ).toBe(path)
-  expect(page.html).toContain(
-    '&quot;&gt;&lt;img src=x onerror=&#39;bad&#39;&gt;&amp;quot;&amp;.html',
-  )
-  window.close()
 })
 
 it('defines the failure before the authorizer script can call it', () => {

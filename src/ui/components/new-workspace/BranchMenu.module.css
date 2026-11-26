@@ -1,0 +1,49 @@
+/*
+ * The open dropdown of the branch control: the Start from part, then the
+ * Target part of a picked branch. When the room runs out, the list of
+ * branches gives way and scrolls, and the labels and the Target part keep
+ * their height, so they stay in view.
+ */
+.menu {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/*
+ * In a phone sheet the room is the body of the sheet: 88% of the screen,
+ * less the handle, the title, and the padding of the sheet.
+ */
+.sheet {
+  max-height: calc(var(--ui-screen-height) * 0.88 - 80px);
+}
+
+/* A label of a part keeps its height. */
+.label {
+  flex-shrink: 0;
+}
+
+/* The Target part keeps its height. */
+.targets {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* The line about the pull request wraps in the width of the dropdown. */
+.targets > p {
+  max-width: none;
+}
+
+/* A row that leads to another screen of the mockups. */
+.link {
+  text-decoration: none;
+}

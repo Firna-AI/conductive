@@ -1,7 +1,7 @@
 {
   "name": "remote-code",
   "private": true,
-  "version": "0.27.0",
+  "version": "0.36.0",
   "type": "module",
   "scripts": {
     "dev": "npm run site:build && vite",
@@ -42,6 +42,7 @@
     "fflate": "^0.8.3",
     "lexical": "0.53.0",
     "lucide-react": "^0.577.0",
+    "markdown-it": "^15.0.3",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
@@ -51,7 +52,7 @@
     "@cloudflare/vite-plugin": "^1.67.0",
     "@emnapi/runtime": "^1.11.3",
     "@eslint/js": "^10.0.1",
-    "@mokly/mokly": "0.19.0",
+    "@mokly/mokly": "0.21.0",
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

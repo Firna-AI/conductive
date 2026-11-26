@@ -1,4 +1,4 @@
-import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
+import { StatusText } from '../../ui/components/common/StatusText'
 import { useApp } from '../context'
 import { useAction } from '../ui/useAction'
 

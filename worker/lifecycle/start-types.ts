@@ -1,4 +1,5 @@
 import type { User } from '../../src/shared/api'
+import type { CreateWorkspaceRequest } from '../../src/shared/workspaces'
 import type { SendMessageRequest } from '../../src/shared/messages'
 import type { WorkspaceCapabilities } from '../../src/shared/secrets'
 import type { MaskedStartLog } from './masked-start-log'
@@ -7,6 +8,7 @@ import type { RepositoryLocation } from './repository-locations'
 import type { SavedScript } from './saved-script'
 import type { ProviderRetryState } from './provider-retry'
 import type { FirstWorkspaceMessage } from './workspace-runtime'
+import type { StartAfterStop } from './start-after-stop'
 
 interface WorkspaceStartData {
   workspaceId: string
@@ -17,6 +19,7 @@ interface WorkspaceStartData {
   environmentCiphertext: string | null
   defaultBranch: string
   baseBranch?: string
+  startBranch?: string
   startSha?: string
   repositoryLocations?: readonly RepositoryLocation[]
   turnId: string
@@ -41,6 +44,8 @@ interface WorkspaceStartData {
   requestedByUserId?: string
   providerRetry?: ProviderRetryState | null
   deadlineAt?: number
+  waitStartedAt?: number
+  autoStopSetAt?: number
 }
 
 /** Admission intent is transient. Saved starts always continue their progress. */
@@ -87,6 +92,7 @@ interface WorkspaceCreation {
   city: string
   name?: string
   firstSessionTitle?: string
+  branches?: Pick<CreateWorkspaceRequest, 'startBranch' | 'baseBranch'>
   branch: string
   sessionId: string
   request: SendMessageRequest
@@ -120,6 +126,14 @@ export interface StartJobStorage {
     intent?: WorkspaceStartIntent,
   ): Promise<boolean>
   stop(): Promise<boolean>
+  /** Keeps a start that a pending stop refused, for the end of that stop. */
+  holdAfterStop(
+    job: WorkspaceStartJob,
+    intent: WorkspaceStartIntent,
+    epoch: number,
+  ): Promise<void>
+  heldAfterStop(): Promise<StartAfterStop | undefined>
+  clearAfterStop(): Promise<void>
   update(job: WorkspaceStartJob): Promise<void>
   retry(
     attempt: string,

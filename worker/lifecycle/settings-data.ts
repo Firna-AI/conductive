@@ -10,6 +10,8 @@ export interface ImageSettings {
   orgId: string
   installScript: SavedScript
   startupScript: SavedScript
+  skillsRepository: string
+  trustedSkillsRepository: string
   envVarsCiphertext: string | null
   revision: number
 }
@@ -48,7 +50,9 @@ export async function readImageSettings(
   const row = await db
     .prepare(
       `SELECT org_id AS orgId, install_script AS installScript,
-       startup_script AS startupScript, env_vars_ciphertext AS envVarsCiphertext, revision
+       startup_script AS startupScript, skills_repository AS skillsRepository,
+       trusted_skills_repository AS trustedSkillsRepository,
+       env_vars_ciphertext AS envVarsCiphertext, revision
      FROM settings WHERE org_id = ?`,
     )
     .bind(orgId)
@@ -79,6 +83,34 @@ export async function selectedRepositories(
     .bind(orgId)
     .all<SelectedRepository>()
   return results
+}
+
+export async function repositoriesWithSavedValues(
+  db: D1Database,
+  orgId: string,
+  repositories: readonly SelectedRepository[],
+): Promise<SelectedRepository[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT id, full_name AS fullName, default_branch AS defaultBranch
+       FROM repositories WHERE org_id = ? AND id IN (SELECT value FROM json_each(?))`,
+    )
+    .bind(
+      orgId,
+      JSON.stringify(repositories.map((repository) => repository.id)),
+    )
+    .all<Pick<SelectedRepository, 'id' | 'fullName' | 'defaultBranch'>>()
+  const savedById = new Map(results.map((row) => [row.id, row]))
+  return repositories.map((repository) => {
+    const saved = savedById.get(repository.id)
+    return saved
+      ? {
+          ...repository,
+          fullName: saved.fullName,
+          defaultBranch: saved.defaultBranch,
+        }
+      : repository
+  })
 }
 
 /** Settings writers use this context to keep encrypted values bound to their org. */

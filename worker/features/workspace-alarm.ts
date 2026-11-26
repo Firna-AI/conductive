@@ -1,4 +1,6 @@
 import type { RunnerConnections } from '../chat/runner-connections'
+import type { ChatStore } from '../chat/store'
+import { retryAutomationReport } from '../chat/automation-run'
 import type { BrowserTabs } from '../chat/browser-tabs'
 import type { DeviceRuntime } from '../devices/runtime'
 import type { SecretRuntime } from '../secrets/runtime'
@@ -11,7 +13,9 @@ import { WorkspaceAlarmTasks } from './alarm-tasks'
 import type { WorkspaceGitHub } from './github'
 import type { WorkspaceFeatures } from './workspace'
 import type { WorkspaceJobs } from '../lifecycle/workspace-jobs'
+import type { DispatchAutomaticRestart } from '../lifecycle/automatic-restart'
 import { pendingContinue } from '../lifecycle/continue-types'
+import { reportQueueFixes } from '../merge-queue/fix-report'
 import {
   pendingRepositoryChange,
   pendingWorkspaceChange,
@@ -35,8 +39,9 @@ interface WorkspaceAlarmInput {
   github: WorkspaceGitHub
   features: WorkspaceFeatures
   jobs: Pick<WorkspaceJobs, 'continuation' | 'repositoryChange'>
-  lifecycle: () => Promise<void>
-  automationReport: () => Promise<void>
+  lifecycle: (dispatchRestart?: DispatchAutomaticRestart) => Promise<void>
+  chatStore: ChatStore
+  sessionWatches: () => Promise<void>
 }
 
 export class WorkspaceAlarmRunner {
@@ -113,7 +118,12 @@ export class WorkspaceAlarmRunner {
           lifecycleAllowed: async () =>
             !(await pendingWorkspaceChange(storage)) ||
             Boolean(await storage.get('lifecycle:start-job')),
-          lifecycle,
+          lifecycle: () =>
+            lifecycle(
+              this.tasks.has('restart')
+                ? undefined
+                : (work) => this.tasks.start('restart', work),
+            ),
           github: () => github.alarm(),
           previews: () =>
             expireWorkspacePreviews(storage, alarms, features.previews),
@@ -122,7 +132,10 @@ export class WorkspaceAlarmRunner {
             const id = await storage.get<string>('previews:workspace-id')
             if (id) await features.publishRevocations(id)
           },
-          automationReport: this.input.automationReport,
+          automationReport: () =>
+            retryAutomationReport(env.DB, this.input.chatStore, now),
+          queueFixReport: () => reportQueueFixes(env, storage),
+          sessionWatches: this.input.sessionWatches,
         },
         { securityHandled: true, fallbackLifecycle: security.size === 0 },
       )

@@ -1,8 +1,10 @@
 import type { UserSuspensionResponse } from '../../src/shared/operator'
 import type { WorkspaceRuntime } from '../lifecycle/workspace-runtime'
 import { jobSoftware, readBuildJob } from '../lifecycle/build-data'
+import { pauseSwitchBuilds } from '../lifecycle/provider-switch-control'
 import { imageRuntime } from '../lifecycle/runtime'
 import { ownedBuilds, ownedWorkspaces, recordUserSuspension } from './data'
+import { wakeUserProviderSwitches } from './lift'
 import { stopRecordedComputers } from './stop-computers'
 
 export async function suspendUser(
@@ -17,6 +19,8 @@ export async function suspendUser(
     operatorId,
     dependencies.now(),
   )
+  const images = imageRuntime(env, dependencies)
+  await pauseSwitchBuilds(images, { userId: user.userId })
   const pendingWorkspaceIds: string[] = []
   for (const workspace of await ownedWorkspaces(env.DB, user.userId)) {
     try {
@@ -36,7 +40,7 @@ export async function suspendUser(
     pendingBuildIds.push(build.id)
     try {
       const job = await readBuildJob(env.DB, build.orgId, build.id)
-      await imageRuntime(env, dependencies).scheduler.schedule(
+      await images.scheduler.schedule(
         build.orgId,
         jobSoftware(job),
         dependencies.now(),
@@ -53,6 +57,7 @@ export async function suspendUser(
     pendingWorkspaceIds,
     pendingBuildIds,
   )
+  await wakeUserProviderSwitches(runtime, user.userId)
   return {
     ...user,
     pendingWorkspaceIds,

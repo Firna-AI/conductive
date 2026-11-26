@@ -1,0 +1,31 @@
+# A fallback can hand repair to an older updater
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-20, from branch `calummoore/sandbox-start-issue-secrets-q3is`, review round 2, the wider fix of finding 7 and a new problem of its check.
+- **Location:** `rollback` and `apply` in `crates/cnd-cli/src/update/engine.rs`, `restore_parts` in `crates/cnd-cli/src/update/repair.rs`, `image/release/conductive-runner.service` (its `ExecStartPre=` runs `/opt/conductive/current/conductive update apply`), and the Updates section of `docs/protocol/sandbox-software.md`.
+- **Reason:** the branch fixes the installer error, and the wider fix changes the rule that a start goes on after a failed repair, which the user decides.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Fallback:** a start that restores the previous release, because a new release has no confirmation from its runner.
+  - **Updater:** the `update` commands of the program in `/opt/conductive/current/conductive`. The runner unit runs the updater of `current` at each start.
+- **Background:**
+  - A fallback first repairs the parts of the previous release, then sets `current` to it and runs its installer.
+  - On this branch, a failed fallback installer sets `current` back to the failed release and keeps its pending marker, so the next start runs the newer updater again.
+  - Releases before this branch have no repair. So when `current` names such a release, no start repairs a part.
+  - The runner does not check Node at launch. It confirms its release at its first Worker welcome.
+- **Problem:** When the repair of the previous release fails for its Node or SDK helper part, its installer still succeeds. The fallback then completes, the pending marker goes, and each later start runs the older updater, which never repairs that part. Agent turns fail until a newer release is staged. A process exit between the link change and the undo has the same effect.
+- **Impact if no action:** A workspace can stay without working agent turns until the next release reaches it.
+- **Root question:** How does a fallback keep each later start on an updater that repairs, until the older release has all its parts and its installer has run?
+- **Options:**
+  - **A.** Change nothing beyond the installer undo of this branch. Effort: Small.
+  - **C.** Keep the updater that can finish a fallback reachable apart from `current`, and make the runner unit use it until the fallback ends. Cost: a change to the unit and to the release store, with a compatible rollout. When both releases share the lost system part, the newer unit may never install. Effort: Large.
+  - **D.** When a start fails, let Try again run `update apply` once with the verified bootstrap program of the newest release. Cost: a Worker, script, and protocol change, and a full program download. Effort: Large.
+  - **E.** Switch to the previous release only when every part of it is present after the repair. Otherwise keep `current` on the newer release, keep the fallback pending, and fail apply. Cost: a fallback start fails while only Node or the SDK helper is missing, which changes the rule that the start goes on. Effort: Medium.
+- **Left out:** More retries inside one apply, because they fail after a long outage. Starting the unconfirmed release again, because a release without confirmation never installs again. A local copy of each part archive, because the same disk loss can remove it.
+- **Wider fix:** E, because it holds for any missing part and for an exit after the switch.
+- **Previous examples:** Commit `a20746b99` introduced the `current` link and the pending fallback.
+- **Related:** `plans/follow-ups/update-staged-release-missing-part.md`, the same code: its options E and F change `rollback` too. `plans/follow-ups/runner-pre-start-time-limit.md`: its option B must not start the runner while a fallback is pending.
+- **Recommendation:** E. It keeps every later start on an updater that repairs, at Medium cost.
+- **Action:** ask the user, because E changes the rule that a start goes on after a failed repair.

@@ -1,11 +1,16 @@
 /**
- * Chat transcripts. Text in backticks renders as inline code.
+ * Chat transcripts. In the text of a member's message, text in backticks
+ * renders as inline code. An agent message holds the blocks of the app, as
+ * the builders of `agentText.ts` write them.
  */
 
+import type { TextBlock } from '../../../../src/chat/markdown/agent-blocks'
 import type { TurnEndReason } from '../../../../src/shared/generated/TurnEndReason'
-import type { TableCells } from '../../../../src/markdown/table-rows'
-import type { LostReason, LostWhat } from '../components/chat/lostCopy'
-import type { StandardSpeedCause } from '../components/chat/speedCopy'
+import type {
+  LostReason,
+  LostWhat,
+} from '../../../../src/ui/components/chat/lostCopy'
+import type { StandardSpeedCause } from '../../../../src/ui/components/chat/speedCopy'
 import { agentStopConversations } from './agentStopConversations'
 import { attachmentConversations } from './attachmentConversations'
 import type { Attachment } from './attachments'
@@ -23,14 +28,16 @@ import {
   type ContinuedItem,
   type RepositoryChangedItem,
 } from './barConversations'
+import {
+  capabilityConversations,
+  type CapabilitiesChangedItem,
+} from './capabilityConversations'
 import { chatLinkConversations } from './chatLinkConversations'
 import type { ChangedFile } from './files'
-import {
-  headingConversations,
-  type MessageHeading,
-} from './headingConversations'
+import { formattingConversations } from './formattingConversations'
+import { headingConversations } from './headingConversations'
 import { linkedConversations } from './linkedConversations'
-import { listConversations, type MessageList } from './listConversations'
+import { listConversations } from './listConversations'
 import { lostConversations } from './lostConversations'
 import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
@@ -42,32 +49,23 @@ import { secretConversations } from './secretConversations'
 import type { LateAnswerItem, SecretRunItem } from './secretRequests'
 import { secretStackConversations } from './secretStackConversations'
 import { secretValueConversations } from './secretValueConversations'
+import { explanationConversations } from './explanationChats'
 import { speedConversations } from './speedConversations'
 import { tableConversations } from './tableConversations'
+import { taskListConversations } from './taskListConversations'
 import { unavailableConversations } from './unavailableConversations'
+import { wakeConversations, type WakeItem } from './wakeConversations'
 import { workConversations } from './workConversations'
 import { conversationKeys } from './conversationKeys'
 import { answerFileConversations } from './answerFiles'
 import { fileMentionConversations } from './fileMentions'
 import { sessionLinkConversations } from './sessionLinkConversations'
+import { skillConversations } from './skills'
 import { workspaceLinkConversations } from './workspaceLinkConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
 
 type ToolCallStatus = 'done' | 'running' | 'stopped'
-
-/** A table in a message of the agent. A short row keeps only its own cells. */
-export type MessageTable = { kind: 'table' } & TableCells<string>
-
-/** A code block in a message of the agent, with its text as written. */
-type MessageCodeBlock = { kind: 'code'; text: string }
-
-/**
- * A block of a message of the agent: a paragraph, a heading, a table, a
- * list, or a code block.
- */
-export type AgentBlock =
-  string | MessageHeading | MessageTable | MessageList | MessageCodeBlock
 
 export type ChatItem =
   | {
@@ -84,8 +82,11 @@ export type ChatItem =
   | {
       kind: 'agent'
       id: string
-      /** The blocks of the message, in order. */
-      blocks: readonly AgentBlock[]
+      /**
+       * The blocks of the message, in order, as the app reads them from the
+       * Markdown of the agent. `agentText.ts` gives their builders.
+       */
+      blocks: readonly TextBlock[]
     }
   | {
       kind: 'tool'
@@ -176,8 +177,10 @@ export type ChatItem =
     }
   | ContinuedItem
   | RepositoryChangedItem
+  | CapabilitiesChangedItem
   | SecretRunItem
   | LateAnswerItem
+  | WakeItem
 
 /** One tool call of an agent turn. */
 export type ToolCallItem = Extract<ChatItem, { kind: 'tool' }>
@@ -228,16 +231,19 @@ export const conversations: Readonly<
   ...secretConversations(history),
   ...secretValueConversations(history),
   ...secretStackConversations(history),
+  ...capabilityConversations(history),
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...speedConversations({ history, cutOff: cutOffTurn }),
   ...agentStopConversations(cutOffTurn),
+  ...wakeConversations(history),
   ...backgroundConversations,
   ...linkedConversations,
   ...attachmentConversations(history),
   ...workspaceLinkConversations(history),
   ...sessionLinkConversations(history),
   ...fileMentionConversations(history),
+  ...skillConversations(history),
   ...answerFileConversations(history),
   ...workConversations({
     start: autocompleteStart,
@@ -247,8 +253,11 @@ export const conversations: Readonly<
   ...tableConversations,
   ...barConversations({ history, cutOff: cutOffTurn }),
   ...listConversations,
+  ...taskListConversations,
   ...headingConversations,
+  ...formattingConversations,
   /** The chat of the removed workspace that a chip opens. */
   'postcode-history': postcodeHistory,
   ...chatLinkConversations(history),
+  ...explanationConversations,
 }

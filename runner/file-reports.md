@@ -3,8 +3,9 @@
 This guide gives how the runner compares the repository with its base, what
 each changes report counts, and the limits of file reads and diffs.
 [Files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
-states the requirements. [Event limits](event-limits.md) gives the parts of
-each report, and the [runner README](README.md) gives the rest of the runner.
+and [File reports](../docs/protocol/file-reports.md) state the
+requirements. [Event limits](event-limits.md) gives the parts of each
+report, and the [runner README](README.md) gives the rest of the runner.
 
 ## The comparison base
 
@@ -52,6 +53,37 @@ branch.
   the move and its recovery in
   [Continue](../worker/lifecycle/continue.md#the-move).
 
+## Repository scans
+
+The scan collects tracked paths, untracked paths, and paths from the base
+commit. Each scan stays complete. Only the reports keep at most 50,000
+tree entries and 1,000 changed files, as
+[Report limits](../docs/protocol/file-reports.md#report-limits) says.
+Ignored context files join the tree and its readable content
+identities. They do not join the Git changes or checkpoint identities.
+Symlinks keep their Git link text and their readable target identities.
+Submodule directories keep their separate Git checkpoint identities.
+
+The private index rebuild discards stat data from the real index. At the start
+of the comparison step, the runner runs
+`git update-index -q --unmerged --refresh` on the private index.
+For snapshots, this step follows the parallel content reads.
+The refresh skips unmerged entries without failing the scan. It checks file
+contents and records fresh times and sizes for unchanged files.
+A restored file with changed content still shows as changed when its size
+and modification time match the real index. Later comparisons can use the
+fresh stat data to skip unchanged files. Checkpoints, including submodule
+checkpoints, do not refresh. Their `update-index --add --remove --info-only`
+step already reads each file and stores fresh stat data. The real index and
+object store stay unchanged.
+
+Each snapshot reads SHA-256 content identities with at most 16 concurrent
+reads before its Git comparisons. This warms the disk cache for those
+comparisons. Each read checks cancellation before it starts. A started read
+runs to its end. The result maps stay in path order when reads finish in a
+different order. `runner.ready` still waits for the first scan. A failed first
+scan still sends `files.unavailable` before `runner.ready`.
+
 ## The counts of a changes report
 
 - `unpushedCommits` counts the commits of the current branch that no
@@ -65,7 +97,10 @@ branch.
   but Changes has no row for it. The count is therefore not the number of
   rows, and not `summary.files`.
 - A change of only a count sends a new changes report, because the check
-  for a new report compares the whole report.
+  for a new report compares the complete scan before the report cuts its
+  list. So an edit of only omitted files also sends a new report.
+- Both counts use the complete scan, also when the report omits changed
+  files.
 - Each numbered part of a report repeats both counts, and the saved events
   keep them.
 - A sandbox can keep an older runner until its next release update. A
@@ -87,6 +122,10 @@ branch.
 
 - [base_tests.rs](../crates/cnd-runner/tests/repository/base_tests.rs) checks merge bases, fetched refs, branch settings, and count-only changes.
 - [checkpoint_tests.rs](../crates/cnd-runner/tests/repository/checkpoint_tests.rs) checks readable content, Git representations, and turn baselines.
+- [snapshot_tests.rs](../crates/cnd-runner/tests/repository/snapshot_tests.rs) checks complete snapshots across mixed Git states.
+- [stat_tests.rs](../crates/cnd-runner/tests/repository/stat_tests.rs) checks changed content with restored file sizes and times.
+- [index_states_tests.rs](../crates/cnd-runner/tests/repository/index_states_tests.rs) checks conflicts and other supported index states.
+- [scan_reads_tests.rs](../crates/cnd-runner/tests/repository/scan_reads_tests.rs) holds reads to check concurrency, comparison order, and cancellation.
 - [content_tests.rs](../crates/cnd-runner/tests/repository/content_tests.rs),
   [paths_tests.rs](../crates/cnd-runner/tests/repository/paths_tests.rs), and
   [limits_tests.rs](../crates/cnd-runner/tests/repository/limits_tests.rs) check bytes, namespace safety, limits, and cancellation.

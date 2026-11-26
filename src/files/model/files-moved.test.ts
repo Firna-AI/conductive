@@ -1,12 +1,21 @@
-import { expect, it } from 'vitest'
+import { expect, it, onTestFinished } from 'vitest'
 import type { WorkspaceEvent } from '../../shared/events'
 import { filePaths } from '../../shared/files'
 import { FakeApiServer } from '../../test-support/fake-api'
+import { FakeWorkspaceEvents } from '../../test-support/fake-events'
 import { movedWorkspace } from '../../test-support/fake-repository-change'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { toolFixtures } from '../../test-support/fixtures/tools'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { fullReport, nextEnvelope } from '../../test-support/recorded-repairs'
-import { filesFor, slow, startFiles, waitUntil } from '../files-test-kit'
+import {
+  emptyChanges,
+  filesFor,
+  observeFileReads,
+  slow,
+  startFiles,
+  waitUntil,
+} from '../files-test-kit'
 
 const changesPath = filePaths.changes(FAKE_IDS.org, FAKE_IDS.workspace)
 
@@ -74,5 +83,69 @@ it(
       after: { treeUnavailable: false },
     })
     expect(files.getSnapshot().changes).not.toBeNull()
+  },
+)
+
+it.each(['tree', 'changes'] as const)(
+  'marks only the old %s when the repository moves between the reads',
+  async (older) => {
+    const { org, workspace: id } = FAKE_IDS
+    const { workspace: old } = workspaceFixtures().detail
+    const moved = movedWorkspace(old)
+    const events = new FakeWorkspaceEvents([
+      {
+        workspaceId: id,
+        eventNumber: 11,
+        occurredAt: FAKE_TIME,
+        event: { type: 'workspace.updated', workspace: moved },
+      },
+      {
+        workspaceId: id,
+        eventNumber: 13,
+        occurredAt: FAKE_TIME,
+        event: { type: 'ports.updated', ports: null },
+      },
+    ])
+    const data = toolFixtures()
+    const stateRead = (list: 'tree' | 'changes') => ({
+      eventNumber: list === older ? 10 : 13,
+      repositoryId: list === older ? old.repositoryId : moved.repositoryId,
+      failure: null,
+    })
+    const after: number[] = []
+    const reads = observeFileReads(
+      (cursor, listener) => {
+        after.push(cursor)
+        return events.subscribe(cursor, listener, id)
+      },
+      async (input) => {
+        if (input === filePaths.tree(org, id)) {
+          return Response.json({ ...data.files, stateRead: stateRead('tree') })
+        }
+        return Response.json({
+          ...emptyChanges,
+          stateRead: stateRead('changes'),
+        })
+      },
+    )
+    const { files } = reads
+    onTestFinished(() => files.stop())
+    files.start()
+    await Promise.all([reads.tree[0], reads.changes[0]])
+    const { tree, treeUnavailable, changes } = files.getSnapshot()
+
+    expect({
+      after,
+      tree: tree?.revision,
+      treeUnavailable,
+      changes,
+      reread: reads.changes.length,
+    }).toEqual({
+      after: [10],
+      tree: 1,
+      treeUnavailable: older === 'tree',
+      changes: older === 'changes' ? null : emptyChanges,
+      reread: older === 'changes' ? 2 : 1,
+    })
   },
 )

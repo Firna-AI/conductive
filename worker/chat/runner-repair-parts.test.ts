@@ -1,10 +1,16 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
+import {
+  reportPartUpdates,
+  storedPart,
+  storedReportKeys,
+} from '../files/report-storage'
+import { storedReportPartKeys } from '../files/report-storage.test-support'
 import { FakeRunner } from '../test-support/fake-runner'
 import { FilesState } from '../files/state'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import { chatFilesStorage } from './files-storage'
-import { snapshot } from './runner-fixtures.test-support'
+import { file, snapshot } from './runner-fixtures.test-support'
 import {
   fullReport,
   oversizedReport,
@@ -21,6 +27,118 @@ beforeEach(async () => {
 })
 afterAll(async () => {
   await harness.dispose()
+})
+it('refuses different tree counts and keeps the saved count through a failed repair', async () => {
+  const fixture = await createChatFixture(harness)
+  const runner = await fixture.connect()
+  const files = new FilesState(chatFilesStorage(fixture.storage))
+  function counted(revision: number, partNumber: number, count: number) {
+    const part = snapshot(revision, partNumber, 2, [`part-${partNumber}`])
+    return { ...part, tree: { ...part.tree, omittedEntryCount: count } }
+  }
+  runner.emit(counted(1, 1, 18))
+  runner.emit(counted(1, 2, 18))
+  runner.emit(counted(2, 1, 9))
+  const refused = runner.emit(counted(2, 2, 10))
+  await fixture.drain()
+  expect(refreshCommands(runner)).toEqual([
+    {
+      type: 'report.refresh',
+      kind: 'files.snapshot',
+      commandId: expect.any(String),
+    },
+  ])
+  runner.emit(counted(3, 1, 0))
+  const legacyTail = runner.emit(snapshot(3, 2, 2, ['part-2']))
+  await fixture.drain()
+  expect(await refusedEvents(fixture)).toEqual([
+    {
+      type: 'runner.event-refused',
+      streamId: refused.streamId,
+      runnerEventNumber: refused.eventNumber,
+      runnerEventType: 'files.snapshot',
+      sessionId: null,
+      turnId: null,
+      reason: 'invalid',
+    },
+    {
+      type: 'runner.event-refused',
+      streamId: legacyTail.streamId,
+      runnerEventNumber: legacyTail.eventNumber,
+      runnerEventType: 'files.snapshot',
+      sessionId: null,
+      turnId: null,
+      reason: 'invalid',
+      repairFailed: true,
+    },
+  ])
+  expect(refreshCommands(runner)).toHaveLength(1)
+  await expect(files.tree()).resolves.toStrictEqual({
+    revision: 1,
+    omittedEntryCount: 18,
+    entries: [file('part-1'), file('part-2')],
+  })
+})
+
+it('stores a repeated tree path until the last part refuses the report and requests a repair', async () => {
+  const fixture = await createChatFixture(harness)
+  const runner = await fixture.connect()
+  const storage = chatFilesStorage(fixture.storage)
+  runner.emit(snapshot(1, 1, 1, ['old']))
+  const first = snapshot(2, 1, 3, ['same'])
+  runner.emit(first)
+  const middle = snapshot(2, 2, 3, ['same'])
+  runner.emit(middle)
+  await fixture.drain()
+  expect(await refusedEvents(fixture)).toEqual([])
+  expect(refreshCommands(runner)).toEqual([])
+  expect(await storedPart(storage, 'tree', 2)).toEqual(middle)
+  expect(await storedReportPartKeys(fixture.storage)).toEqual(
+    [
+      ...Object.keys(reportPartUpdates('tree', 1, first)),
+      ...Object.keys(reportPartUpdates('tree', 2, middle)),
+    ].sort(),
+  )
+  const pendingKeys = await storedReportKeys(storage, 'tree', {
+    revision: 2,
+    partCount: 3,
+    through: 2,
+  })
+
+  const last = snapshot(2, 3, 3, ['tail'])
+  const { eventNumber, streamId } = runner.emit(last)
+  await fixture.drain()
+  expect(await refusedEvents(fixture)).toEqual([
+    {
+      type: 'runner.event-refused',
+      runnerEventNumber: eventNumber,
+      streamId,
+      runnerEventType: 'files.snapshot',
+      reason: 'invalid',
+      sessionId: null,
+      turnId: null,
+    },
+  ])
+  const keys = [
+    ...pendingKeys,
+    ...Object.keys(reportPartUpdates('tree', 3, last)),
+  ]
+  const remaining = await storage.getMany(keys)
+  expect(keys.map((key) => remaining.get(key))).toEqual(
+    keys.map(() => undefined),
+  )
+  expect(await storedReportPartKeys(fixture.storage)).toEqual([])
+  expect(await new FilesState(storage).tree()).toEqual({
+    revision: 1,
+    entries: [file('old')],
+  })
+  expect(refreshCommands(runner)).toEqual([
+    {
+      type: 'report.refresh',
+      kind: 'files.snapshot',
+      commandId: expect.any(String),
+    },
+  ])
 })
 it.each([
   { count: 'valid', partCount: 2 },

@@ -1,14 +1,16 @@
 import { ChevronLeft, ChevronRight, type LucideIcon } from 'lucide-react'
+import { pendingCommand } from '../../entries/components/chat/PendingCommand.mockup'
 import type { PersonKey } from '../../fixtures/members'
-import { IconButton } from '../common/actions'
-import { classes } from '../common/classes'
+import { instanceKey } from '../../instanceKey'
+import { IconButton } from '../../../../../src/ui/components/common/actions'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import { DrawnChoices } from '../mac/CommandActions'
-import { isPendingCommand, PendingCommand } from './PendingCommand'
+import { isPendingCommand } from './PendingCommand'
 import { requestStackWords, stackPlace } from './requestStackCopy'
 import type { StackEntry } from './requests'
 import { SecretRequest } from './SecretRequest'
-import { secretRunWords } from './secretRunCopy'
+import { secretRunWords } from '../../../../../src/ui/components/chat/secretRunCopy'
 import styles from './RequestStack.module.css'
 
 /**
@@ -84,7 +86,13 @@ function StackCard(props: {
   }
   if (!isPendingCommand(item)) return null
   return (
-    <PendingCommand inStack open={props.choicesOpen} request={item.request} />
+    <pendingCommand.Component
+      id={item.id}
+      inStack
+      moklyInstance={`pending-${instanceKey(item.id)}`}
+      open={props.choicesOpen}
+      request={item.request}
+    />
   )
 }
 

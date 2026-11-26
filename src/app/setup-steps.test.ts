@@ -3,6 +3,7 @@ import type { AccountResponse } from '../shared/account'
 import type { GetStartedResponse } from '../shared/onboarding'
 import type { OrgSummary } from '../shared/orgs'
 import { coreFixtures, FAKE_TIME } from '../test-support/fixtures/core'
+import { activeOrgSource } from './active-orgs'
 import { accountWithDefaults } from './default-logins.test-support'
 import { setupSteps } from './setup-steps'
 import { Store } from './store'
@@ -62,7 +63,7 @@ function shown(
 ) {
   return setupSteps({
     server: new Store(server),
-    orgs: new Store(orgs),
+    orgs: activeOrgSource(new Store(orgs)),
     account: new Store(account),
   }).get()
 }
@@ -124,7 +125,7 @@ describe('setupSteps', () => {
       server: new Store<GetStartedResponse | null>(
         reply('acme', true, true, true),
       ),
-      orgs,
+      orgs: activeOrgSource(orgs),
       account: new Store<AccountResponse | null>(connected),
     })
     const first = shownSteps.get()

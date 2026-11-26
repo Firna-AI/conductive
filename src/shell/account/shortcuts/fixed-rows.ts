@@ -1,4 +1,4 @@
-import { productName } from '../../../../docs/mockups/src/brand'
+import { productName } from '../../../shared/brand'
 import type { ShortcutCommand } from '../../../app/shortcuts/commands'
 import {
   readShortcutKeyText,
@@ -59,7 +59,8 @@ const dividerWords = [
 
 /**
  * The fixed rows that follow the commands of a group: Escape and the keys
- * that press a focused button, the menu of a focused tab, the keys of a
+ * that press a focused button, Escape that closes the shown temporary tab,
+ * the menu of a focused tab, the keys of a
  * focused workspace row and of a focused divider, and the keys of the
  * message field. Enter is fixed with every modifier, but only the rows of
  * the message field list Enter with one: Send with ⌘Enter or Ctrl+Enter,
@@ -79,6 +80,7 @@ export const commandGroupRows: Readonly<
     ]),
   ],
   Navigation: [
+    fixed('Close the temporary tab', ['Escape'], undefined, ['italic', 'file']),
     fixed(
       'Open the menu of a focused tab',
       ['Shift+F10', 'ContextMenu'],

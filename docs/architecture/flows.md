@@ -8,20 +8,45 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 
 1. A person creates an org with its repositories. An operator can also
    choose its provider account.
-2. The Worker sets the account of the org once: the choice of the
-   operator, or a draw from the weights. The org keeps that account for
-   its whole life.
+2. The Worker sets the first account of the org: the choice of the
+   operator, or a draw from the weights.
 3. The Worker starts the first build of the org image in that account.
+
+## Switch the account of an org
+
+1. An operator presses Switch account on the page of the org in the
+   operator section, and picks another configured account.
+2. The Worker records the switch. It starts the switch build in the new
+   account, with the inputs of the newest good org image. The switch build
+   waits while a job of the org runs, while the org is suspended or
+   deleted, and while it has no active admin.
+3. Members do not see the switch build. Until it succeeds, new workspaces
+   of the org start in the old account.
+4. When the switch build succeeds, the Worker makes its image the org
+   image and changes the account of the org in the same step. New
+   workspaces then start in the new account. Each existing workspace keeps
+   its sandbox in the old account.
+
+[Switch account](../protocol/switch-account.md) states the rules.
 
 ## Create a workspace
 
-1. The user sends the first message of a new workspace. The Worker records
-   the workspace, and its Durable Object keeps the message.
-2. With the key of the account of the org, the Worker asks its provider
+1. The branch control of New workspace asks the Worker for the branches of
+   the repository. The Worker reads them from GitHub with the GitHub token
+   of the user, and it stores no list.
+2. The user sends the first message of a new workspace, with its start
+   branch and its base branch. The Worker asks GitHub for each such branch
+   that is not the default branch, with the GitHub token of the user.
+3. The Worker records the workspace, and its Durable Object keeps the
+   message.
+4. With the key of the account of the org, the Worker asks its provider
    for a sandbox from the newest good org image of the org. The sandbox
    gets the workspace token and the org's env vars, but no agent login.
-3. The Durable Object pushes each start step to the open tabs.
-4. The agent runner starts and connects to the Durable Object. The Durable
+5. The Durable Object runs the fetch of the create in the sandbox. It
+   fetches the start branch and the base branch, and creates the workspace
+   branch from the start branch. It pushes each start step to the open
+   tabs.
+6. The agent runner starts and connects to the Durable Object. The Durable
    Object sends it the waiting message.
 
 ## Chat
@@ -94,12 +119,24 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
   refresh of the org image, in the account of the org.
 - A pull request event can also start the runs of automations, as
   [Automation runs](#automation-runs) says.
+- When GitHub no longer has the base branch of a workspace, the Worker
+  moves it to the default branch in D1, as
+  [A base branch that GitHub deleted](../protocol/base-branches.md#a-base-branch-that-github-deleted)
+  says. The Durable Object keeps one saved retry for the rest of the move.
+- That retry and each resume run a trusted fetch of the default branch in
+  the sandbox. The fetch gets the GitHub token of the workspace owner
+  through the credential helper, only while it runs. Only then does the
+  sandbox compare with the default branch, as
+  [The move in the cloud computer](../protocol/base-branches.md#the-move-in-the-cloud-computer)
+  says.
 
 ## Merge
 
 1. A member presses Merge in the pull request bar. The Worker starts the
    merge on GitHub with the GitHub token of that member, and with the head
-   commit that the bar showed.
+   commit that the bar showed. On a workspace in the merge queue, the
+   click goes to the queue, which merges as its next step, as
+   [The merge](../protocol/merge-queue.md#the-merge) says.
 2. The bar asks the Worker for the result until GitHub reports it.
 3. GitHub sends the event of the merge. The Worker routes it to the
    workspace, and the Durable Object pushes the merged state to every open
@@ -107,14 +144,16 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 
 ## Continue
 
-1. A member presses Continue after the merge. The Durable Object starts the
-   sandbox when it is stopped.
-2. The Durable Object runs a trusted Continue job in the sandbox. Its fetch
-   of the default branch gets the GitHub token of that member through the
-   credential helper, only while the fetch runs.
-3. The job creates the new branch with the changed files. The default
-   branch becomes the base branch of the workspace. The Worker stores the
-   new branch and its base branch in D1 and in the Durable Object, and
+1. A member presses Continue after the merge. The Worker reads the merged
+   pull request from GitHub with the GitHub token of that member. The
+   branch that it merged into is the new base branch, or the default branch
+   when GitHub no longer has that branch.
+2. The Durable Object starts the sandbox when it is stopped. It runs a
+   trusted Continue job in the sandbox. Its fetch of the new base branch
+   gets the GitHub token of that member through the credential helper, only
+   while the fetch runs.
+3. The job creates the new branch with the changed files. The Worker stores
+   the new branch and its base branch in D1 and in the Durable Object, and
    reads the GitHub state of the new branch.
 4. The Durable Object pushes the new state and the note of Continue to
    every open tab. Each later message carries the new branch to the agent.

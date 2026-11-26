@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Hammer } from 'lucide-react'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { TabIntro } from '../../../docs/mockups/src/components/settings/TabIntro'
+import { Notice } from '../../ui/components/common/Notice'
+import { TabIntro } from '../../ui/components/settings/TabIntro'
 import { ComputerModel } from '../../app/computer-model'
 import { changedScriptNotice } from '../../app/first-build'
 import { latestBuild } from '../../app/org-model'
 import { mayChangeSettings } from '../../app/permissions'
+import { savedSkillsChoice } from '../../app/skills-trust'
 import { useStore, valueOf } from '../../app/store'
 import { softwareSentence } from '../../members/software'
 import type { BuildsResponse } from '../../shared/org-settings'
@@ -19,6 +20,7 @@ import { Loaded } from './LoadState'
 import { MemberComputer } from './MemberComputer'
 import { AdminRepositoryNotice } from './RepositoryChangeNotice'
 import { ScriptSection } from './ScriptSection'
+import { SkillsSection } from './SkillsSection'
 
 /**
  * The notice under an install script that differs from the script that the
@@ -45,12 +47,13 @@ function ChangedScript(props: { builds: BuildsResponse; build: Action<[]> }) {
 
 /**
  * The Cloud computer tab of an admin, as the model holds it: the builds,
- * the scripts, and the env vars, which only an admin builds and changes
- * (decision 57), and nobody in a suspended org. Build computer in the head
- * of the builds and in the notice of a changed install script is one
- * action, so one press starts one build. The repository notice under the
- * intro has no action, because the build card under it has the same one.
- * The notice of the install script shows only for a change of the script.
+ * the scripts, the env vars, and the skills repository, which only an
+ * admin builds and changes (decision 57, skills decision 2 A), and nobody
+ * in a suspended org. Build computer in the head of the builds and in the
+ * notice of a changed install script is one action, so one press starts
+ * one build. The repository notice under the intro has no action, because
+ * the build card under it has the same one. The notice of the install
+ * script shows only for a change of the script.
  */
 export function ComputerSettings(props: {
   org: OrgSummary
@@ -114,6 +117,10 @@ export function ComputerSettings(props: {
               computer={computer}
               org={org}
               vars={value.envVars}
+            />
+            <SkillsSection
+              computer={computer}
+              saved={savedSkillsChoice(value)}
             />
           </>
         )}

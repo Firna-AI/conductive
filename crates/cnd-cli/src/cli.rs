@@ -7,6 +7,7 @@ use crate::error::{Error, Result};
 use crate::release;
 use crate::runner_command;
 use crate::sandbox_command;
+use crate::service_command;
 use crate::update_command;
 
 /// Arguments for the Conductive program.
@@ -31,6 +32,9 @@ impl Cli {
         }
         if let Command::Runner = self.command {
             return runner_command::execute().await;
+        }
+        if let Command::ServiceExec { record } = self.command {
+            return service_command::execute(record).await;
         }
         if let Command::Relay = self.command {
             return sandbox_command::relay().await;

@@ -2,7 +2,7 @@ import type {
   PollCodexDeviceResponse,
   StartCodexDeviceResponse,
 } from '../../src/shared/account'
-import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
+import { chatGptSignInCopy } from '../../src/ui/components/settings/chatGptSignInCopy'
 import { accountLogins } from '../app-api/account-data'
 import { configuredModels } from '../app-api/models'
 import { agentLoginContext } from '../chat/queries'

@@ -1,12 +1,20 @@
+import { defined } from '../../defined'
 import type { Membership } from '../../fixtures/members'
 import { sections, type SectionKey } from '../../fixtures/sections'
-import type { MenuEntry } from '../common/Menu'
+import { iconKeyOf } from '../../entries/components/common/icons'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import type { OpenSubmenu } from '../common/PointMenu'
 import { reassignMenu } from '../workspace/OwnerPicker'
+import { queueLabels } from '../../../../../src/ui/components/workspace/queueCopy'
 import type { RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
 import { isNested } from './trees'
-import { renames, workspaceMenuOf, type Submenu } from './workspaceMenu'
+import {
+  renames,
+  workspaceMenuItems,
+  type RowAccess,
+  type Submenu,
+} from '../../../../../src/ui/components/workspaces/workspaceMenu'
 
 /**
  * What a view draws on one row: the menu that a right click or the menu
@@ -30,6 +38,35 @@ export type RowContext = {
   readOnly: boolean
   /** The list opens a menu as a sheet, as on a phone, and has no hover. */
   sheet: boolean
+  /**
+   * The merge queue action of each row whose menu offers one, by the key
+   * of its workspace. A list without it offers none.
+   */
+  queue?: ReadonlyMap<string, QueueMenuAction>
+}
+
+/**
+ * The merge queue action of a workspace menu: Add to merge queue for a pull
+ * request that can join, or Remove from queue for a queued workspace.
+ */
+export type QueueMenuAction = 'add' | 'remove'
+
+/**
+ * The menu with the item of the merge queue in the group of Archive, after
+ * the line, or after a new line when the person may not archive. It needs
+ * write access to the repository, as Merge does (decision 317).
+ */
+function withQueueItem(
+  entries: readonly MenuEntryData[],
+  action: QueueMenuAction,
+): MenuEntryData[] {
+  const item: MenuEntryData =
+    action === 'add'
+      ? { kind: 'item', label: queueLabels.add, icon: 'list-plus' }
+      : { kind: 'item', label: queueLabels.remove, icon: 'list-x' }
+  const line = entries.findIndex((entry) => entry.kind === 'divider')
+  if (line < 0) return [...entries, { kind: 'divider' }, item]
+  return entries.toSpliced(line + 1, 0, item)
 }
 
 /**
@@ -39,10 +76,10 @@ export type RowContext = {
 function sectionChoices(
   current: SectionKey,
   keys: readonly SectionKey[],
-): MenuEntry[] {
+): MenuEntryData[] {
   return [
     { kind: 'label', label: 'Section' },
-    ...keys.map((key): MenuEntry => ({
+    ...keys.map((key): MenuEntryData => ({
       kind: 'item',
       label: sections[key].name,
       checked: key === current,
@@ -58,7 +95,7 @@ function submenuOf(
   kind: Submenu,
   row: WorkspaceRow,
   context: RowContext,
-  entries: readonly MenuEntry[],
+  entries: readonly MenuEntryData[],
 ): OpenSubmenu {
   const { workspace } = row
   const at = entries.findIndex(
@@ -78,6 +115,35 @@ function submenuOf(
     item,
     wide: true,
   }
+}
+
+/**
+ * The menu of a workspace as the registered menu takes it, on its row and
+ * from the name in its header: the actions of `workspaceMenuItems`, with
+ * the key of each icon. `open` is the submenu that shows its choices.
+ * `queue` adds the item of the merge queue. A queued workspace shows only
+ * in the Merge queue group, so its menu has no Move to section.
+ */
+export function workspaceMenuOf(
+  access: RowAccess,
+  open?: Submenu,
+  queue?: QueueMenuAction,
+): MenuEntryData[] {
+  const queued = queue === 'remove'
+  const items = workspaceMenuItems(
+    queued ? { ...access, otherSection: false } : access,
+  )
+  const entries = items.map((item): MenuEntryData => {
+    if (item.kind === 'divider') return item
+    const entry = {
+      kind: 'item',
+      label: item.label,
+      icon: iconKeyOf(item.icon),
+    } as const
+    if (!item.submenu) return entry
+    return { ...entry, submenu: open === item.action ? 'open' : 'closed' }
+  })
+  return queue ? withQueueItem(entries, queue) : entries
 }
 
 /**
@@ -107,7 +173,8 @@ export function rowControls(
     readOnly: context.readOnly,
     nested: isNested(row),
   }
-  const entries = workspaceMenuOf(access, submenu)
+  const queue = context.readOnly ? undefined : context.queue?.get(workspace.key)
+  const entries = workspaceMenuOf(access, submenu, queue)
   if (drawing.kind === 'rename') {
     // A row whose person may not rename it draws no field.
     if (!renames(access)) return undefined
@@ -118,7 +185,9 @@ export function rowControls(
       at: context.sheet ? 'sheet' : 'pointer',
       label: workspace.name,
       entries,
-      submenu: submenu && submenuOf(submenu, row, context, entries),
+      ...defined({
+        submenu: submenu && submenuOf(submenu, row, context, entries),
+      }),
     },
   }
 }

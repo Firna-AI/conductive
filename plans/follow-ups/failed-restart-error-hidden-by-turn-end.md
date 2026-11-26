@@ -1,0 +1,36 @@
+# A turn end hides a failed Restart
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-21, from branch `calummoore/no-response-issue-l1pn`, a problem outside the scope of its review, which the check of review finding 5 found.
+- **Location:** `worker/lifecycle/durable-turns.ts:5-32` (`applyLifecycleTurn`, with the early return at `:14-15`), `worker/lifecycle/create-workspace-lifecycle.ts:53-57` (the stop hook at an error), `worker/lifecycle/durable-restart.ts:52-69` (`isFailedRestart` and `failedRestartLifecycle`), `worker/lifecycle/software-restart.ts:138-147` (the manual Restart), `src/shell/workspace/HeaderState.tsx:94` (the Restart action of the app).
+- **Reason:** The same path is on `origin/main`, and the branch changed only the path of the automatic restart.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Restart:** the action in the workspace header that restarts the agent runner, the preview relay, and the terminal service of a running cloud computer (`docs/protocol/restart-the-software.md`).
+  - **Failed restart:** the error state with the code `restart_failed` and the text "The software didn't restart. Try again.", whose Try again resumes the workspace.
+  - **Stop hook:** the step that ends the running turns in chat when the lifecycle state becomes stopped or error (`ctx.stopped`, then `stopDispatchedTurns` in `worker/chat/workspace-stop.ts`).
+  - **Automatic restart:** the restart that the Worker starts by itself when the runner stays away while a message waits ("Automatic restart" in `docs/protocol/restart-the-software.md`).
+- **Background:**
+  - `docs/protocol/restart-the-software.md` gives the rule. A Restart that fails, or whose runner is not ready 3 minutes after the press, shows the error state with "The software didn't restart. Try again."
+  - While an agent works, the app asks "Stop the agent and restart?" and then sends Restart. It does not stop the turn first (`src/shell/workspace/HeaderState.tsx:94`). So the turn still runs in chat while Restart shows Starting.
+  - When the Restart fails, `failedRestartLifecycle` sets the error state and clears `softwareRestartAt`. The stop hook then ends each running turn in chat. Each turn end reaches `applyLifecycleTurn` in `worker/lifecycle/durable-turns.ts`.
+  - `applyLifecycleTurn` sets the state to Starting while `softwareRestartAt` is set, else to Working while sessions still run, else to Ready. It keeps the stored error object, but the header shows the state.
+  - The branch that found this added an early return to `applyLifecycleTurn` for a failed automatic restart (`durable-turns.ts:14-15`). It does not cover a failed manual Restart.
+- **Problem:** A manual Restart that fails while an agent works shows its error state only for a moment. The turn end that the failure causes changes the state to Ready or Working. So the error and its Try again disappear.
+- **Impact if no action:** The workspace shows Ready, although the restart failed and its runner may not be back. A message then waits with no notice. The automatic restart can recover it only after the runner has been away for 3 minutes and the message has waited for 1 minute.
+- **Root question:** How does a failed Restart keep its error state until a member acts, when a turn ends after the failure?
+- **Options:**
+  - **A.** Extend the early return of `applyLifecycleTurn` to each failed Restart, not only the automatic one. It skips the turn-end bookkeeping, so it needs option D of `plans/follow-ups/failed-restart-keeps-running-sessions.md` first. Else the failed manual Restart keeps stale running sessions, and the computer never stops when idle. Effort: Small.
+  - **B.** In a failed Restart, apply the turn-end bookkeeping and keep the error state. Remove the session from the running sessions, count the turn end as activity, and keep the state and the error. It covers the manual Restart and the automatic restart. Effort: Small.
+  - **C.** End the running turns in chat before the restart command, as the automatic restart does with `stopTurnsForRestart`. No turn end then follows the failure. The turn ends then lose the file result of the runner, and the manual Restart gets the race of `plans/follow-ups/restart-hold-delivery-after-submission.md`. Effort: Small.
+  - **D.** Use one rule for each error state whose cloud computer can run: a turn end never changes the state of such an error. Only a new start, such as Try again, leaves it. It joins the helper of option B of `plans/follow-ups/sandbox-may-run-idle-stop.md`. Effort: Medium.
+- **Left out:** A stop of the turn by the app before it sends Restart. A stuck runner never ends the turn, so the Restart would wait with no end.
+- **Wider fix:** D. Each error state whose computer runs then keeps its error at a turn end, also for an error path that a later change adds.
+- **Previous examples:** The branch that found this added the same early return for a failed automatic restart. The review of the manual Restart recorded the idle-stop risk of a failed restart, in `plans/follow-ups/sandbox-may-run-idle-stop.md`.
+- **Related:**
+  - `plans/follow-ups/failed-restart-keeps-running-sessions.md`: the same code. Its option D clears the running sessions at the failure. Option A here needs that fix first. Option B here works with it or without it. Keep the order of the turn-end steps.
+  - `plans/follow-ups/sandbox-may-run-idle-stop.md`: option D here joins its option B.
+- **Recommendation:** B. It keeps the error of each failed Restart and keeps the running sessions correct, with no dependency on another item. D best protects the codebase.
+- **Action:** fix after merge, apply B, because the path is on `origin/main`, outside the purpose of the branch. B restores a requirement of `docs/protocol/restart-the-software.md` and adds no rule.

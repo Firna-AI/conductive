@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import { _electron, expect } from '@playwright/test'
 import type { ElectronApplication, Page } from '@playwright/test'
 
-import { productName } from '../../docs/mockups/src/brand.js'
+import { productName } from '../../src/shared/brand.js'
 import { routes } from '../../src/app/router.ts'
 import { API_PATHS } from '../../src/shared/api.ts'
 import { workspaceEventsPath } from '../../src/shared/events.ts'

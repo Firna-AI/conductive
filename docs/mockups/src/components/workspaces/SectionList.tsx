@@ -1,15 +1,27 @@
 import { Fragment } from 'react'
-import { ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
+import { defined } from '../../defined'
 import type { Membership } from '../../fixtures/members'
-import { IconButton } from '../common/actions'
-import { classes } from '../common/classes'
-import { Menu } from '../common/Menu'
-import { ArchivedGroup } from './ArchivedGroup'
+import { iconButton } from '../../entries/components/common/actions.mockup'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { menu } from '../../entries/components/common/Menu.mockup'
+import { instanceKey } from '../../instanceKey'
+import { archivedGroup } from '../../entries/components/workspaces/ArchivedGroup.mockup'
+import { mergeQueueGroup } from '../../entries/components/workspaces/MergeQueueGroup.mockup'
+import type { DrawnRow } from './ArchivedGroup'
 import { sectionMenu, type SectionPlace } from './menus'
 import { mayArchiveWorkspace } from './permissions'
+import { queueEntries } from './queue'
+import {
+  archivableEntries,
+  groupDropOf,
+  queueActionsOf,
+  type ListQueue,
+} from './queueList'
 import { RowDrop } from './RowDrop'
 import { rowControls, type RowContext, type RowFocus } from './rowControls'
-import { SectionDrop } from './SectionDrop'
+import type { RowControls } from './RowMenu'
+import { sectionDrop } from '../../entries/components/workspaces/SectionDrop.mockup'
 import type {
   ListDrag,
   ListMenu,
@@ -17,8 +29,8 @@ import type {
   WorkspaceRow,
 } from './sections'
 import { isNested, treeOf } from './trees'
-import { WorkspaceRowView } from './WorkspaceRow'
-import styles from './SectionList.module.css'
+import { workspaceRow } from '../../entries/components/workspaces/WorkspaceRow.mockup'
+import styles from '../../../../../src/ui/components/workspaces/SectionList.module.css'
 
 type Variant = 'sidebar' | 'page'
 
@@ -61,19 +73,21 @@ function SectionHeader(props: {
       </h3>
       {props.readOnly ? null : (
         <span className={classes(styles.more, props.open && styles.moreOpen)}>
-          <IconButton
+          <iconButton.Component
             expanded={props.open}
-            icon={MoreHorizontal}
+            icon="more-horizontal"
             label={`More for ${section.name}`}
             menu
+            moklyInstance={`more-${section.key}`}
             quiet
           />
         </span>
       )}
       {props.open && props.menuStyle === 'anchored' ? (
-        <Menu
+        <menu.Component
           entries={sectionMenu(props.place)}
           label={section.name}
+          moklyInstance="section-menu"
           placement="below-end"
         />
       ) : null}
@@ -81,11 +95,24 @@ function SectionHeader(props: {
   )
 }
 
+/** The archived row that the view draws, if any, with what it draws. */
+function drawnOf(
+  rows: readonly WorkspaceRow[],
+  controlsOf: (row: WorkspaceRow) => RowControls | undefined,
+): DrawnRow | undefined {
+  for (const row of rows) {
+    const controls = controlsOf(row)
+    if (controls) return { workspace: row.workspace.key, controls }
+  }
+  return undefined
+}
+
 /**
  * The sections of the org, each a group of workspaces that the user made.
- * A collapsed section shows only its header and its count. A workspace
- * moves to another section by drag and drop, and a section moves to
- * another place by a drag of its header. A dragged section stays faint in
+ * A collapsed section shows its header and its count, and only the row of
+ * the open workspace when it holds that workspace. A workspace moves to
+ * another section by drag and drop, and a section moves to another place
+ * by a drag of its header. A dragged section stays faint in
  * its place, and a line between two sections shows where it lands. The sidebar uses compact
  * rows; the list page uses taller rows for touch. A sub-workspace shows
  * nested under the row of its parent. Only a top-level row drags, and its
@@ -95,21 +122,25 @@ function SectionHeader(props: {
  * drops the menus of the sections and of the rows, for a suspended org.
  * `viewer` is the person who looks at the list, whose role decides Archive
  * and the menu of each row. `focus` names the row whose menu, field, or
- * hover the view draws.
+ * hover the view draws. The props of `ListQueue` add the Merge queue group
+ * at the top, as `queueList.ts` says.
  */
-export function SectionList(props: {
-  sections: readonly SidebarSection[]
-  variant: Variant
-  menu?: ListMenu
-  menuStyle?: MenuStyle
-  drag?: ListDrag
-  archived?: readonly WorkspaceRow[]
-  archivedCollapsed?: boolean
-  readOnly?: boolean
-  viewer: Membership
-  focus?: RowFocus
-}) {
+export function SectionList(
+  props: {
+    sections: readonly SidebarSection[]
+    variant: Variant
+    menu?: ListMenu
+    menuStyle?: MenuStyle
+    drag?: ListDrag
+    archived?: readonly WorkspaceRow[]
+    archivedCollapsed?: boolean
+    readOnly?: boolean
+    viewer: Membership
+    focus?: RowFocus
+  } & ListQueue,
+) {
   const { viewer } = props
+  const groupDrop = groupDropOf(props)
   const drag = props.drag?.kind === 'workspace' ? props.drag : undefined
   const sectionDrag = props.drag?.kind === 'section' ? props.drag : undefined
   /** The dragged tree: its top-level row, then the rows under it. */
@@ -120,6 +151,10 @@ export function SectionList(props: {
     : []
   const dragged = tree.at(0)
   const moving = new Set(tree.map((row) => row.workspace.key))
+  // A row of a section over the group stays faint in its place.
+  if (groupDrop?.kind === 'add' || groupDrop?.kind === 'refused') {
+    moving.add(groupDrop.row.workspace.key)
+  }
   const liftedSection = props.sections.find(
     (item) => item.section.key === sectionDrag?.section,
   )
@@ -127,21 +162,50 @@ export function SectionList(props: {
   const rest = props.sections.filter((item) => item !== liftedSection)
   const sectionLine = (index: number) =>
     liftedSection && sectionDrag?.index === index ? (
-      <SectionDrop item={liftedSection} place={index + 1} />
+      <sectionDrop.Component item={liftedSection} place={index + 1} />
     ) : null
   const context: RowContext = {
     viewer,
     sections: props.sections.map((item) => item.section.key),
     readOnly: props.readOnly ?? false,
     sheet: props.menuStyle === 'sheet',
+    ...defined({ queue: queueActionsOf(props) }),
   }
   const controlsOf = (row: WorkspaceRow) =>
     rowControls(row, props.focus, context)
+  const { queue } = props
   return (
     <div className={styles.sections}>
+      {queue && (queue.blocks.length > 0 || groupDrop) ? (
+        <mergeQueueGroup.Component
+          archivable={archivableEntries(queue, viewer, context.readOnly)}
+          moklyInstance="merge-queue"
+          queue={queue}
+          variant={props.variant}
+          {...defined({
+            drawn: drawnOf(
+              queueEntries(queue).map((entry) => entry.row),
+              controlsOf,
+            ),
+            drop: groupDrop,
+          })}
+        />
+      ) : null}
       {props.sections.map((item, position) => {
         const { section } = item
-        const target = drag?.section === section.key ? drag : undefined
+        // A collapsed section hides its rows, but the open row stays in
+        // sight, flat, as no other row of its tree shows.
+        const shown = section.collapsed
+          ? item.rows
+              .filter((row) => row.selected)
+              .map((row) => ({
+                ...row,
+                indent: 0 as const,
+                lines: { last: false, through: [], hasNested: false },
+              }))
+          : item.rows
+        const target =
+          !section.collapsed && drag?.section === section.key ? drag : undefined
         const lifted = item === liftedSection
         // A drop lands between two trees: before the top-level row at the
         // index of the drag, counted without the dragged tree, or after the
@@ -177,25 +241,26 @@ export function SectionList(props: {
                 readOnly={props.readOnly ?? false}
                 variant={props.variant}
               />
-              {section.collapsed ? null : (
+              {shown.length === 0 && section.collapsed ? null : (
                 <ul className={styles.rows}>
-                  {item.rows.map((row) => (
+                  {shown.map((row) => (
                     <Fragment key={row.workspace.key}>
                       {row === before ? drop : null}
                       <li>
-                        <WorkspaceRowView
+                        <workspaceRow.Component
                           archivable={
                             !props.readOnly &&
                             mayArchiveWorkspace(viewer, row.workspace.owner)
                           }
-                          controls={controlsOf(row)}
-                          drag={
-                            moving.has(row.workspace.key)
-                              ? 'placeholder'
-                              : undefined
-                          }
+                          moklyInstance={instanceKey(row.workspace.key)}
                           row={row}
                           variant={props.variant}
+                          {...defined({
+                            controls: controlsOf(row),
+                            drag: moving.has(row.workspace.key)
+                              ? 'placeholder'
+                              : undefined,
+                          })}
                         />
                       </li>
                     </Fragment>
@@ -214,12 +279,12 @@ export function SectionList(props: {
       })}
       {sectionLine(rest.length)}
       {props.archived ? (
-        <ArchivedGroup
-          controlsOf={controlsOf}
+        <archivedGroup.Component
           open={!props.archivedCollapsed}
           readOnly={props.readOnly ?? false}
           rows={props.archived}
           variant={props.variant}
+          {...defined({ drawn: drawnOf(props.archived, controlsOf) })}
         />
       ) : null}
     </div>

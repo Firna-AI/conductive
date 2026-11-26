@@ -8,6 +8,7 @@ import { ARCHIVE_STATE_KEY, type WorkspaceArchiveState } from './archive-types'
 import { computerRecords } from './computer-ledger.test-support'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { readWorkspace } from './workspace-data'
+import { workspaceResponse } from './workspace-response'
 import { createWorkspace } from './workspaces'
 
 const fixtureForTest = setupBackendTests()
@@ -32,7 +33,14 @@ async function unresolvedArchive(fixture: ArchiveFixture) {
   await fixture.setTime(archivedAt)
   const actions = archiveActions(fixture, id, actor)
   const archived = await actions.archive()
-  expect(archived.workspace.archivedAt).toBe(archivedAt)
+  expect(archived.workspace).toMatchObject({
+    archivedAt,
+    restoreUntil: null,
+    archivedComputer: {
+      state: 'may-exist',
+      restoreUntil: archivedAt + 1_209_600_000,
+    },
+  })
   const saved =
     await actor.storage.get<WorkspaceArchiveState>(ARCHIVE_STATE_KEY)
   const ciphertext = saved?.allocation?.createPayloadCiphertext
@@ -76,6 +84,14 @@ it('keeps an unresolved Archive request through its actual expiry and later dele
   expect(await saved.leases()).toBe(1)
   expect(fixture.boat.states.has('bx_1')).toBe(true)
   expect(fixture.boat.deletedIds).toEqual([])
+  expect(
+    await workspaceResponse(fixture.runtime, fixture.org.id, saved.id),
+  ).toMatchObject({
+    workspace: {
+      restoreUntil: null,
+      archivedComputer: { state: 'may-exist', restoreUntil: saved.expiresAt },
+    },
+  })
   expect(await saved.restore()).toMatchObject({
     ok: false,
     error: { status: 409, code: 'workspace_restore_unavailable' },
@@ -101,6 +117,13 @@ it('keeps an unresolved Archive request through its actual expiry and later dele
     },
   ])
   expect(await saved.leases()).toBe(0)
+  expect(saved.actor.events.at(-1)?.event).toMatchObject({
+    type: 'workspace.updated',
+    workspace: {
+      restoreUntil: null,
+      archivedComputer: { state: 'deleted', restoreUntil: saved.expiresAt },
+    },
+  })
   expect((await saved.state())?.allocation).toBeUndefined()
   expect(
     await saved.actor.storage.get('alarm:lifecycle:archive'),
@@ -134,6 +157,14 @@ it('keeps the recovered Archive ID and request across interruption before its D1
     (await readWorkspace(fixture.runtime.env.DB, fixture.org.id, saved.id))
       .sandboxId,
   ).toBeNull()
+  expect(
+    await workspaceResponse(fixture.runtime, fixture.org.id, saved.id),
+  ).toMatchObject({
+    workspace: {
+      restoreUntil: null,
+      archivedComputer: { state: 'may-exist', restoreUntil: saved.expiresAt },
+    },
+  })
   expect(await saved.state()).toMatchObject({
     sandboxId: 'bx_1',
     allocation: { createPayloadCiphertext: saved.ciphertext },

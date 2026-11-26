@@ -1,16 +1,19 @@
-import type { Viewport } from '@mokly/mokly'
-import { Ban, TriangleAlert } from 'lucide-react'
-import { ActionButton } from '../common/actions'
-import { CheckOption } from '../common/CheckOption'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
-import { Notice } from '../common/Notice'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { checkOption } from '../../entries/components/common/CheckOption.mockup'
+import {
+  confirmDialog,
+  dialogText,
+} from '../../entries/components/common/ConfirmDialog.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { disableCodeOffer } from './accessCopy'
+import { disableCodeOffer } from '../../../../../src/ui/components/operator/accessCopy'
 import {
   selfSuspendWarning,
   suspendQuestion,
   type QuestionTarget,
-} from './operatorCopy'
+} from '../../../../../src/ui/components/operator/operatorCopy'
+import { instanceKey } from '../../instanceKey'
 
 /**
  * The operator confirms a suspension. The dialog says what stops, what
@@ -33,35 +36,50 @@ export function SuspendDialog(props: {
 }) {
   const label = props.target.kind === 'user' ? 'Suspend user' : 'Suspend org'
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           <ScreenLink asChild to={props.cancel}>
-            <ActionButton>Cancel</ActionButton>
+            <actionButton.Component moklyInstance="dialog-cancel">
+              Cancel
+            </actionButton.Component>
           </ScreenLink>
           <ScreenLink asChild to={props.done}>
-            <ActionButton icon={Ban} tone="danger">
+            <actionButton.Component
+              icon="ban"
+              moklyInstance="dialog-suspend"
+              tone="danger"
+            >
               {label}
-            </ActionButton>
+            </actionButton.Component>
           </ScreenLink>
         </>
       }
+      moklyInstance="suspend-dialog"
       title={`Suspend ${props.target.name}?`}
       viewport={props.viewport}
     >
       {props.self ? (
-        <Notice icon={TriangleAlert} title={selfSuspendWarning} tone="danger" />
+        <notice.Component
+          icon="triangle-alert"
+          moklyInstance="self-suspend-warning"
+          title={selfSuspendWarning}
+          tone="danger"
+        />
       ) : null}
       {suspendQuestion(props.target).map((text) => (
-        <DialogText key={text}>{text}</DialogText>
+        <dialogText.Component key={text} moklyInstance={instanceKey(text)}>
+          {text}
+        </dialogText.Component>
       ))}
       {props.referral ? (
-        <CheckOption
+        <checkOption.Component
           checked
+          moklyInstance="disable-code-option"
           hint={disableCodeOffer.hint(props.referral)}
           label={disableCodeOffer.label}
         />
       ) : null}
-    </ConfirmDialog>
+    </confirmDialog.Component>
   )
 }

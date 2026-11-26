@@ -1,13 +1,13 @@
 # cnd-tools
 
 This crate implements the workspace CLI and stdio MCP server of Conductive.
-Use it from the `conductive` executable to call the Worker's machine routes.
+Use it from `conductive` for Worker calls and local service operations.
 Use `cnd-runner-interface` for the shared wire types.
 
 ## Responsibilities
 
 Parse tool options. Preserve valid Unicode message text. Authenticate fixed-route HTTP
-requests. Validate replies. Serve the same 26 calls through CLI and MCP.
+requests. Validate replies. Serve 27 Worker calls and five local service calls through CLI and MCP.
 Run commands with approved secrets under their variable names, and filter their output.
 
 ## What This Crate Does
@@ -50,6 +50,14 @@ The value-bearing Worker reply stays separate from the printable list and run re
 Pending, denied, and not-answered results start no child and keep the Worker's message.
 The CLI prints that message and exits 1. MCP returns the status with `isError: true`.
 
+The [service calls](../../docs/protocol/service-calls.md) start, list,
+stop, and restart the services of the same cloud computer, and read their
+logs. They reach the local runner, not the Worker, and they need no
+workspace token or active turn. Their descriptors, help, and adapters live
+in a separate services section. Start keeps literal argv and the caller's
+folder. Restart uses its saved definition. Printable results contain no
+environment map. [Local service tools](../../tools/services.md) gives the flags and fields.
+
 The server negotiates MCP `2025-11-25`. It requires initialization before
 tool calls, ignores notifications, answers ping while HTTP calls wait,
 and finishes outstanding replies before it exits at EOF.
@@ -66,6 +74,52 @@ The shared JSON decoder replaces lone UTF-16 surrogate escapes with U+FFFD
 in Worker replies and MCP tool text. Valid surrogate pairs remain unchanged.
 Every MCP reply preserves its request ID exactly, including error replies.
 
+Workspace create accepts `--start-branch` and `--base-branch` in the CLI,
+or `startBranch` and `baseBranch` in MCP. The first supplies the starting
+commit. The second sets the pull request target and Changes comparison.
+With neither field, both use the repository default branch.
+With one field, both use that branch. The adapters preserve each branch
+string, including blank strings. The Worker validates branch names after
+creation replay, so a retry keeps the first create's branches.
+
+### Session watches
+
+`sessions watch` and `watch_session` ask the Worker for one wake of the
+calling session when one turn of a session ends. They take the session, an
+optional workspace, and an optional turn ID. The reply comes at once, with
+`watching`, `idle`, or the end of a turn that already ended.
+[Session watches](../../docs/protocol/session-watches.md) states the rules.
+Use the reply's actual session and exact `turnId` after sending or creating work, when available.
+The typed reply keeps the workspace, linked session, and flattened state.
+Repeats for the same valid watch return the same `watchId`.
+An idle or ended reply sets no watch, so read the session at once.
+
+```sh
+cargo run -p cnd-cli -- sessions watch --session session-id --workspace workspace-id --turn-id turn-id
+```
+
+### Messages
+
+`messages get` and `get_message` read one message by its ID. The ID can
+name a member message or a finished message of the agent, such as the
+`Message:` ID of an Explain prompt. The typed reply names the `author`,
+`member` or `agent`. Each request sends `agentMessages=true`, so the
+Worker knows that this runner reads agent messages. An older runner sends
+no flag and gets HTTP 404 for an agent message. A reply with no `author`,
+from a Worker before agent messages, reads as a member message.
+[Get a message](../../docs/protocol/session-management.md#get-a-message)
+states the rules.
+
+```sh
+cargo run -p cnd-cli -- messages get --session session-id --message-id message-id
+```
+
+Set the watch, then end the reply when only that watched work remains.
+After a wake, use `read_session` for the result.
+A turn end does not mean the whole delegated task is complete.
+Explicit Stop drops older pending wakes of the calling session.
+Automatic idle computer stops keep watches.
+
 ## Quick Start
 
 Run from the repository root:
@@ -77,6 +131,7 @@ cargo run -p cnd-cli -- workspaces move --workspace workspace-id --parent parent
 cargo run -p cnd-cli -- workspaces move --workspace workspace-id --top-level
 cargo run -p cnd-cli -- sessions send --session session-id --message-file task.md
 cargo run -p cnd-cli -- secrets list
+cargo run -p cnd-cli -- services start --name web -- npm run dev
 cargo run -p cnd-cli -- secrets run --secret API_TOKEN --reason 'Deploy the service' -- ./deploy
 cargo run -p cnd-cli -- mcp
 ```
@@ -100,8 +155,13 @@ isolation and filtered output. Worker route tests need no Rust build.
 
 - [cli.rs](src/cli.rs) exposes the `Program` boundary and composes both adapters.
 - [client.rs](src/client.rs) authenticates requests and validates typed replies.
+- [lazy_client.rs](src/lazy_client.rs) resolves remote credentials only for a remote MCP call.
+- [Local services](src/services/tools.rs) supplies the CLI/MCP boundary and caller context.
+- [Service dispatch](src/services/dispatch.rs) targets the observed generation and keeps lost replies Unconfirmed.
+- [mcp-services.json](src/mcp-services.json) holds only local service descriptors and schemas.
 - [input](src/input/mod.rs) validates untrusted fields without changing text.
 - [request.rs](src/request.rs) maps typed calls to fixed HTTP routes.
+- [watches.rs](src/input/watches.rs) parses optional exact-turn selection for session watches.
 - [mcp](src/mcp/mod.rs) runs concurrent protocol requests and drains them at EOF.
 - [mcp-tools.json](src/mcp-tools.json) holds the MCP descriptors and input schemas.
 - [ports.rs](src/ports.rs) defines replaceable runtime and transport effects.
@@ -115,6 +175,8 @@ isolation and filtered output. Worker route tests need no Rust build.
 
 - [Architecture](../../docs/architecture.md)
 - [Agent tools](../../docs/protocol/agent-tools.md)
+- [Service calls](../../docs/protocol/service-calls.md)
+- [Session watches](../../docs/protocol/session-watches.md)
 - [Secret requests](../../docs/protocol/secret-requests.md)
 - [Secret variables](../../docs/protocol/secret-variables.md)
 - [Workspace commands](../../tools/README.md)

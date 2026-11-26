@@ -1,10 +1,10 @@
 import { Check, CircleAlert } from 'lucide-react'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+import { Notice } from '../../ui/components/common/Notice'
 import {
   approveQuestion,
   approveTitle,
   type ApproveTarget,
-} from '../../../docs/mockups/src/components/operator/accessCopy'
+} from '../../ui/components/operator/accessCopy'
 import { ActionButton } from '../ui/actions'
 import { Dialog, DialogText } from '../ui/Dialog'
 import { useQuestion } from './useQuestion'

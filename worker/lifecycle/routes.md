@@ -35,10 +35,13 @@ from [`runtime.ts`](runtime.ts). The caller gives these options:
 
 For a read or a resume, the `projectWorkspace` of `chatLifecycleRoute`
 takes the reply from `readChatWorkspaceResponse` of the workspace object.
-That read runs in one task of the chat queue. That reply has the event
-number of its state. Its name comes from the latest committed agent title,
-when there is one. The state for the reader uses the chat summary of the
-same read.
+That read takes the workspace, start, error, and event number in one chat
+queue view. Its name comes from the latest committed agent title when
+there is one. The state for the reader uses the chat summary of the same
+read. Only GET asks for `seed`. It waits for any recovery outside the
+queue, then takes the seed in the same view as its event number.
+[The workspace read state](../chat/history.md#the-workspace-read-state)
+describes the recovery.
 
 [Creates and resumes](workspace-object.md#creates-and-resumes) says how the
 workspace object runs the start of each create and resume. It gives the
@@ -155,13 +158,14 @@ The preview proxy reports no input (decision 293).
   fenced by the member generation. The shared deadline hook checks the org
   before this queued local write. The write publishes no shown state and
   waits for no provider call.
-- The idle stop still comes 30 minutes after `lastActivityAt`.
+- The idle stop still comes the stop time after `lastActivityAt`.
 - The owner updates D1 and the provider at most once a minute. The first
   input after a quiet minute starts an update. One more update follows for
   the newest input of that minute.
 - An update moves `last_activity_at` forward only, while the workspace, its
   sandbox, and the org generation stay active. It then sets the provider's
-  auto-stop to 1,860 seconds, which covers the minute of collection.
+  auto-stop to the stop time plus 60 seconds, which covers the minute of
+  collection.
 - When the provider reports a stopped or failed sandbox, the update
   reconciles the durable lifecycle state.
 - A failed update keeps its input time for the next minute, also without

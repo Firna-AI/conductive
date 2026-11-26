@@ -1,28 +1,32 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { ArrowRight } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
+import { actionButton } from '../entries/components/common/actions.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
+import {
+  appFrame,
+  mobileFrame,
+} from '../entries/components/layout/AppFrame.mockup'
 import type { RailState } from '../components/layout/OrgRail'
-import { Page } from '../components/layout/Page'
-import { DeletedOrgsSection } from '../components/settings/DeletedOrgsSection'
+import { page as pagePart } from '../entries/components/layout/Page.mockup'
+import { deletedOrgsSection } from '../entries/components/settings/DeletedOrgsSection.mockup'
 import { people } from '../fixtures/members'
 import { orgs } from '../fixtures/orgs'
 import { type FirstBuildState, firstBuildStates } from '../fixtures/computer'
 import { paths } from '../paths'
-import { getStartedCopy as copy } from './getStartedCopy'
+import { getStartedCopy as copy } from '../../../../src/ui/screens/getStartedCopy'
 import {
-  AgentStep,
   agentStates,
   getStartedPeople,
   getStartedSteps,
-  InstallStep,
   isPast,
-  OrgStep,
   setupOrgOf,
   type GetStartedPerson,
 } from './getStartedSteps'
-import styles from './GetStartedScreen.module.css'
+import {
+  agentStep,
+  installStep,
+  orgStep,
+} from '../entries/components/screens/getStartedSteps.mockup'
+import styles from '../../../../src/ui/screens/GetStartedScreen.module.css'
 
 export const getStartedSchema = {
   type: 'object',
@@ -92,9 +96,13 @@ function Finish(props: { build: FirstBuildState; person: GetStartedPerson }) {
     <div className={styles.finish}>
       <p className={styles.finishText}>{finishes[props.build](org.name)}</p>
       <ScreenLink asChild to={org.list}>
-        <ActionButton icon={ArrowRight} tone={fix ? 'secondary' : 'primary'}>
+        <actionButton.Component
+          icon="arrow-right"
+          moklyInstance="open-org"
+          tone={fix ? 'secondary' : 'primary'}
+        >
           {copy.open(org.name)}
-        </ActionButton>
+        </actionButton.Component>
       </ScreenLink>
     </div>
   )
@@ -115,27 +123,38 @@ export function GetStartedScreen(props: {
   const { step, agent, firstBuild } = props.state
   const person = people[props.state.person]
   const page = (
-    <Page
+    <pagePart.Component
       subtitle={`@${person.login}`}
       title={copy.title}
       viewport={props.viewport}
     >
       <p className={styles.intro}>{copy.intro(person.name)}</p>
-      <DeletedOrgsSection
+      <deletedOrgsSection.Component
+        moklyInstance="deleted-orgs"
         restoredTo={paths.shell}
         state={props.state.deletedOrgs}
       />
       <ol className={styles.steps}>
         <li>
-          <InstallStep person={props.state.person} step={step} />
+          <installStep.Component
+            moklyInstance="install-step"
+            person={props.state.person}
+            step={step}
+          />
         </li>
         <li>
-          <OrgStep build={firstBuild} person={props.state.person} step={step} />
+          <orgStep.Component
+            build={firstBuild}
+            moklyInstance="org-step"
+            person={props.state.person}
+            step={step}
+          />
         </li>
         <li>
-          <AgentStep
+          <agentStep.Component
             agent={agent}
             build={firstBuild}
+            moklyInstance="agent-step"
             person={props.state.person}
             step={step}
           />
@@ -144,15 +163,15 @@ export function GetStartedScreen(props: {
       {step === 'done' && agent !== 'none' ? (
         <Finish build={firstBuild} person={props.state.person} />
       ) : null}
-    </Page>
+    </pagePart.Component>
   )
-  if (props.viewport === 'mobile') return <MobileFrame>{page}</MobileFrame>
+  if (props.viewport === 'mobile')
+    return <mobileFrame.Component>{page}</mobileFrame.Component>
   const setupOrg = orgs[setupOrgOf[props.state.person].key]
   const rail: RailState = {
     orgs: isPast(step, 'org') ? [setupOrg] : [],
-    current: undefined,
     firstRun: step === 'install',
     person,
   }
-  return <AppFrame rail={rail}>{page}</AppFrame>
+  return <appFrame.Component rail={rail}>{page}</appFrame.Component>
 }

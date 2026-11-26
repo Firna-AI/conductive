@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { expect, it, vi } from 'vitest'
 
-import { sourceRepository } from '../../docs/mockups/src/brand.js'
+import { sourceRepository } from '../../src/shared/brand.js'
 import { startUpdates } from './updates.js'
 import { deferred, updateHarness } from './updates.test-support.js'
 

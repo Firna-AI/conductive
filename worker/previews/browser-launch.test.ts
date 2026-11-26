@@ -1,9 +1,7 @@
-import { runInNewContext } from 'node:vm'
-
-import { Window } from 'happy-dom'
-import { expect, it, vi } from 'vitest'
+import { expect, it } from 'vitest'
 
 import { previewBrowserDocument } from './browser-launch'
+import { runBrowserLaunch } from './browser-launch-test-support'
 
 const hostname = `${'a'.repeat(32)}.previews.test`
 const encodedPath = '/reports/%5C%252F%20caf%C3%A9/%E4%BD%A0%E5%A5%BD.html'
@@ -15,47 +13,15 @@ async function runBrowser(paths: readonly string[], destination: string) {
   const fields = new URLSearchParams({ hostname, grant: 'grant-value' })
   for (const path of paths) fields.append('path', path)
   authorizer.hash = fields.toString()
-  const replace = vi.fn<(url: string) => void>()
-  const location = {
-    href: authorizer.href,
-    hash: authorizer.hash,
-    pathname: authorizer.pathname,
-    port: authorizer.port,
-    replace,
-  }
-  const history = {
-    replaceState: vi.fn((_state: unknown, _title: string, path: string) => {
-      const clean = new URL(path, location.href)
-      location.href = clean.href
-      location.hash = clean.hash
-    }),
-  }
-  const fetch = vi.fn<(url: URL, init: RequestInit) => Promise<Response>>(
-    async () => {
-      expect(location.hash).toBe('')
-      return Response.json({ url: destination })
-    },
-  )
-  const window = new Window()
-  window.document.body.innerHTML =
-    '<span id="title"></span><span id="detail"></span>'
   const { html } = previewBrowserDocument('browser-nonce')
-  const script = /<script nonce="[^"]+">([\s\S]*)<\/script>/.exec(html)?.[1]
-  if (!script) throw new Error('Missing authorizer script')
-  await runInNewContext(script, {
-    URL,
-    URLSearchParams,
-    location,
-    history,
-    fetch,
-    document: window.document,
-  })
-  const failed = window.document.body.classList.contains('failed')
-  window.close()
-  return { fetch, replace, history, failed }
+  const result = await runBrowserLaunch(html, authorizer, async () =>
+    Response.json({ url: destination }),
+  )
+  expect(result.fragments).toEqual(paths.length > 1 ? [] : [''])
+  return result
 }
 
-it('posts the fragment path and follows only its encoded address, or the root without a path', async () => {
+it('posts the fragment path for rollout compatibility and follows only its encoded address, or the root without a path', async () => {
   for (const { paths, pathname } of [
     { paths: [], pathname: '/' },
     { paths: ['reports/\\%2F café/你好.html'], pathname: encodedPath },

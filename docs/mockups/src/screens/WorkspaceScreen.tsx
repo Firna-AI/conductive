@@ -1,53 +1,49 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
+import { WorkspaceChat } from './workspaceChat'
 import { ChatWorkspaces } from '../components/chat/chatWorkspaces'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
-import { acmeRail } from '../components/layout/OrgRail'
-import { useMacApp } from '../components/mac/MacApp'
-import { ChecksActions } from '../components/workspace/BarActions'
-import { MobileTabBar } from '../components/workspace/MobileTabBar'
 import {
-  PullRequestBar,
-  PullRequestRow,
-} from '../components/workspace/PullRequestBar'
-import { ToolsPanel } from '../components/workspace/ToolsPanel'
-import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
-import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
-import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
-import { mayArchiveWorkspace } from '../components/workspaces/permissions'
+  appFrame,
+  mobileFrame,
+} from '../entries/components/layout/AppFrame.mockup'
+import { acmeRail } from '../components/layout/OrgRail'
+import { useMacApp } from '../../../../src/ui/components/mac/MacApp'
+import { ChatMarks } from '../components/explain/chatMarks'
+import { checksActions } from '../entries/components/workspace/BarActions.mockup'
+import { WorkspaceMobile } from './workspaceMobile'
+import { pullRequestBar } from '../entries/components/workspace/PullRequestBar.mockup'
+import { toolsPanel } from '../entries/components/workspace/ToolsPanel.mockup'
+import { workspaceBody } from '../entries/components/workspace/WorkspaceBody.mockup'
+import { workspaceHeader } from '../entries/components/workspace/WorkspaceHeader.mockup'
+import { workspaceTabs } from '../entries/components/workspace/WorkspaceTabs.mockup'
+import { defined, plainData } from '../defined'
 import { memberViewer, people } from '../fixtures/members'
 import { suspendedOrg } from '../fixtures/orgs'
-import { bannerSummary } from '../fixtures/pullRequests'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
-import { suspendedOwner } from '../fixtures/startRefusals'
 import { paths } from '../paths'
 import { isRunning } from './composerFor'
 import { centreOf } from './workspaceCentre'
 import { placeLostUpdate } from './lostUpdates'
-import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
-import { viewerOf } from './sessionStarter'
-import { barOf, headerMenusOf, placeOf } from './workspaceBar'
+import { resizedColumns } from './layoutState'
+import { chatWorkspacesOf } from './orgWorkspaces'
+import { chatMarksOf } from './explainMarks'
+import { headerMenusOf } from './workspaceBar'
 import { headerMenuOf } from './workspaceHeaderMenu'
-import { FilesContent, ToolContent, workspaceSidebar } from './workspaceParts'
+import { workspaceOpen } from './workspaceOpen'
 import {
-  copyToast,
-  workspaceOverlay,
-  workspacePalette,
-  workspaceToast,
-} from './workspaceOverlays'
-import { WorkspaceChat } from './workspaceChat'
-import { openWorkspace } from './workspaceRun'
-import { activityOf, archiveRestore, drawnState } from './workspaceSandbox'
+  filesContent,
+  toolContent,
+} from '../entries/components/screens/workspaceParts.mockup'
+import { workspaceSidebar } from './workspaceSidebar'
+// The toasts lay first in the old module of the overlays, so their styles
+// keep their place before the styles of the dialogs.
+import { copyToast, workspaceToast } from './workspaceToasts'
+import { workspaceOverlay, workspacePalette } from './workspaceOverlays'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
-import { historyFor, tabsFor, workspaceName } from './workspaceTabs'
-import styles from './WorkspaceScreen.module.css'
-
-/** The right column in the middle of a drag that widens it, in px. */
-const widenedRight = 560
-
-/** The share of the file lists in the middle of a drag that raises the split. */
-const raisedSplit = 35
+import { historyFor, tabsFor } from './workspaceTabs'
+import { WorkspaceLinks } from './workspaceLinks'
+import styles from '../../../../src/ui/screens/WorkspaceScreen.module.css'
 
 /**
  * An open workspace: its header, its tabs of sessions and files, the pull
@@ -57,7 +53,8 @@ const raisedSplit = 35
  * no new session, no rename, no owner change, no Archive, and no Restore.
  * `overlay` lies over the workspace in place of the overlay of its state,
  * such as a dialog that another screen opens over it. The chat and the
- * overlay find the workspaces of their chips in the list of the screen.
+ * overlay find the workspaces of their chips in the list of the screen,
+ * and the chat draws the marks of explanations over its messages.
  * The toast of the state lies over everything. `shortcuts` holds the
  * person's changes to the shortcuts. With them, the palette rows show their
  * keys, and the Search row shows the person's key of the palette.
@@ -70,69 +67,59 @@ export function WorkspaceScreen(props: {
   shortcuts?: ShortcutChanges
   picker?: ReactNode
 }) {
-  const { viewport, picker: pickerPart } = props
+  const { viewport } = props
   const mac = useMacApp()
-  const state = drawnState(props.state)
-  const suspended = state.org === 'suspended'
-  const open = openWorkspace(state)
-  const record = open.record
-  // An owner's refused start belongs to a suspended member, whom an active
-  // admin sees. A suspended org refuses the start of every owner.
-  const ownerRefused = state.sandbox === 'refused' && !suspended
-  const owner = ownerRefused ? suspendedOwner : record.owner
-  // Its row in the list shows the GitHub state of its pull request bar.
-  const workspace = {
-    ...record,
-    owner,
-    name: workspaceName(state, record),
-    ...placeOf(state, record),
-    github: bannerSummary(state.banner),
-  }
-  const status = activityOf(state)
-  const archived = state.sandbox === 'archived'
-  const readOnly = archived || suspended
+  const {
+    state,
+    open,
+    workspace,
+    status,
+    suspended,
+    archived,
+    readOnly,
+    viewer,
+    membership,
+    archivable,
+    restorable,
+    bar,
+  } = workspaceOpen(props.state)
   const admin = state.viewer === 'admin'
-  const viewer = viewerOf(state)
-  const membership = { person: viewer, role: state.viewer }
-  // Decision 42: the workspace's owner and the org's admins archive it.
-  const archivable =
-    !readOnly && mayArchiveWorkspace(membership, workspace.owner)
-  // Every member restores it while the app keeps its cloud computer.
-  const restorable = archiveRestore(state) === 'available'
-  const bar = barOf(state, { archivable, readOnly })
   const rightHidden = state.rightColumn === 'hidden'
   const rows = chatWorkspacesOf(state, { workspace, status })
   const chat = (
-    <ChatWorkspaces rows={rows}>
+    <ChatMarks marks={chatMarksOf(state)}>
       <WorkspaceChat
         items={open.items}
-        picker={pickerPart}
+        picker={props.picker}
+        rows={rows}
         state={state}
         viewer={viewer}
         viewport={viewport}
         workspace={workspace}
       />
-    </ChatWorkspaces>
+    </ChatMarks>
   )
-  const workspaceHeader = (
-    <WorkspaceHeader
-      back={suspended ? paths.suspendedOrg : undefined}
+  const headerBar = (
+    <workspaceHeader.Component
       canReassign={admin && !readOnly}
       canRestart={!readOnly}
-      copy={state.copyLink === 'none' ? undefined : state.copyLink}
+      moklyInstance="workspace-header"
       name={workspace.name}
-      {...headerMenusOf(state)}
-      menu={
-        state.overlay === 'workspace-menu' && viewport === 'desktop'
-          ? headerMenuOf(state, workspace.owner)
-          : undefined
-      }
       renaming={state.overlay === 'header-rename'}
-      run={open.run}
       rightHidden={rightHidden}
       status={status}
       viewport={viewport}
       workspace={workspace}
+      {...defined({
+        ...headerMenusOf(state),
+        back: suspended ? paths.suspendedOrg : undefined,
+        copy: state.copyLink === 'none' ? undefined : state.copyLink,
+        menu:
+          state.overlay === 'workspace-menu' && viewport === 'desktop'
+            ? headerMenuOf(state, workspace.owner)
+            : undefined,
+        run: open.run,
+      })}
     />
   )
   // A phone and an archived workspace show only the session tabs.
@@ -152,30 +139,48 @@ export function WorkspaceScreen(props: {
     </ChatWorkspaces>
   )
   const tabRow = (
-    <WorkspaceTabs
-      drag={row.drag}
-      full={row.full}
+    <workspaceTabs.Component
       historyEntries={historyFor(state)}
       historyOpen={state.overlay === 'history'}
-      menuTab={row.menuTab}
+      moklyInstance="workspace-tabs"
       readOnly={readOnly}
-      renaming={row.renaming}
-      tabs={tabs}
+      tabs={plainData(tabs)}
       viewport={viewport}
+      {...defined({
+        drag: row.drag,
+        full: row.full,
+        menuTab: row.menuTab,
+        renaming: row.renaming,
+      })}
     />
   )
   // A phone shows the actions of the bar at the top of the Checks tab.
   const checksTop =
     viewport === 'mobile' ? (
-      <ChecksActions bar={bar} workspace={workspace} />
+      <checksActions.Component
+        bar={plainData(bar)}
+        moklyInstance="checks-actions"
+        workspace={workspace}
+      />
     ) : undefined
   const { header, files } = placeLostUpdate(state, {
-    header: workspaceHeader,
+    header: headerBar,
     files: (
-      <FilesContent checksTop={checksTop} state={state} viewport={viewport} />
+      <filesContent.Component
+        moklyInstance="files-content"
+        state={state}
+        viewport={viewport}
+        {...defined({ checksTop })}
+      />
     ),
   })
-  const tool = <ToolContent state={state} viewport={viewport} />
+  const tool = (
+    <toolContent.Component
+      moklyInstance="tool-content"
+      state={state}
+      viewport={viewport}
+    />
+  )
   const toast = workspaceToast(state, workspace, viewport)
   const palette = workspacePalette(state, viewport, {
     open: { workspace, status },
@@ -188,9 +193,9 @@ export function WorkspaceScreen(props: {
   })
   if (viewport === 'mobile') {
     if (state.palette !== 'closed') {
-      return <MobileFrame>{palette}</MobileFrame>
+      return <mobileFrame.Component>{palette}</mobileFrame.Component>
     }
-    const body = {
+    const views = {
       chat: (
         <>
           {tabRow}
@@ -201,65 +206,73 @@ export function WorkspaceScreen(props: {
       tool,
     }
     return (
-      <MobileFrame>
-        {header}
-        {archived ? null : <PullRequestRow bar={bar} />}
-        <div className={styles.mobileBody}>
-          {archived ? body.chat : body[state.focus]}
-        </div>
-        {archived ? null : (
-          <MobileTabBar
-            selected={state.focus === 'tool' ? state.tool : state.focus}
-          />
-        )}
-        {overlay}
-        {toast}
-      </MobileFrame>
+      <WorkspaceLinks lists={state.lists}>
+        <WorkspaceMobile
+          archived={archived}
+          bar={bar}
+          header={header}
+          overlay={overlay}
+          selected={state.focus === 'tool' ? state.tool : state.focus}
+          toast={toast}
+          body={
+            <div className={styles.mobileBody}>
+              {archived ? views.chat : views[state.focus]}
+            </div>
+          }
+        />
+      </WorkspaceLinks>
     )
   }
   return (
-    <AppFrame
-      overlay={
-        <>
-          {palette ?? overlay}
-          {toast}
-        </>
-      }
-      rail={{
-        ...acmeRail,
-        suspended: suspended ? suspendedOrg : undefined,
-        person: admin ? undefined : people[memberViewer],
-      }}
-      sidebarView={state.sidebar}
-      sidebar={workspaceSidebar({
-        // The toast of an Archive shows at once, so the row shows that Archive.
-        workspace:
-          state.toast === 'archived'
-            ? { ...workspace, updated: 'now' }
-            : workspace,
-        status,
-        suspended,
-        viewer: membership,
-        changed: changedWorkspaces(state),
-        archive: state.archive,
-        shortcuts: props.shortcuts,
-      })}
-    >
-      <WorkspaceBody
-        center={centreOf(state, chat)}
-        files={files}
-        filesShare={state.resize === 'split' ? raisedSplit : undefined}
-        header={header}
-        pullRequest={<PullRequestBar bar={bar} workspace={workspace} />}
-        rightHidden={rightHidden}
-        rightWidth={state.resize === 'right' ? widenedRight : undefined}
-        tabs={tabRow}
-        tools={
-          archived ? undefined : (
-            <ToolsPanel tool={state.tool}>{tool}</ToolsPanel>
-          )
+    <WorkspaceLinks lists={state.lists}>
+      <appFrame.Component
+        overlay={
+          <>
+            {palette ?? overlay}
+            {toast}
+          </>
         }
-      />
-    </AppFrame>
+        rail={{
+          ...acmeRail,
+          ...(suspended ? { suspended: suspendedOrg } : {}),
+          ...(admin ? {} : { person: people[memberViewer] }),
+        }}
+        sidebarView={state.sidebar}
+        sidebar={workspaceSidebar({
+          state,
+          workspace,
+          status,
+          viewer: membership,
+          shortcuts: props.shortcuts,
+        })}
+      >
+        <workspaceBody.Component
+          center={centreOf(state, chat)}
+          files={files}
+          header={header}
+          moklyInstance="workspace-body"
+          pullRequest={
+            <pullRequestBar.Component
+              bar={plainData(bar)}
+              moklyInstance="pull-request-bar"
+              workspace={workspace}
+            />
+          }
+          rightHidden={rightHidden}
+          tabs={tabRow}
+          {...defined({
+            ...resizedColumns(state.resize),
+            tools: archived ? undefined : (
+              <toolsPanel.Component
+                moklyInstance="tools-panel"
+                tool={state.tool}
+              >
+                {tool}
+              </toolsPanel.Component>
+            ),
+          })}
+        />
+      </appFrame.Component>
+    </WorkspaceLinks>
   )
 }

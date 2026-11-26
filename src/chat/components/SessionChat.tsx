@@ -1,9 +1,12 @@
-import { useMemo, type ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
 import { modelLabel } from '../../shared/agents'
 
-import { pendingCommandItems } from '../device/PendingCommands'
 import { DeviceLoadNotice } from '../device/session-commands'
+import { ExplainContext } from '../explain/explain-context'
+import { PhoneExplain } from '../explain/ExplainButton'
+import { ExplainLayer } from '../explain/ExplainLayer'
+import { useExplain } from '../explain/useExplain'
 import { tabSessions } from '../state/archive-view'
 import { sendBlock } from '../state/blockers'
 import {
@@ -12,7 +15,6 @@ import {
   type ChatSnapshot,
 } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
-import { failedFirstStart } from '../../app/first-start'
 import {
   composerModels,
   loginLabelOf,
@@ -23,9 +25,8 @@ import { ChatPane } from './ChatPane'
 import { placeMemory } from './chat-place'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
 import { Composer } from './Composer'
-import type { ComposerTool } from './ComposerTools'
 import type { ComposerFocus } from './composer-requests'
-import { workspaceProblemOf, SandboxBar, StartingCard } from './SandboxState'
+import { sandboxParts, useSessionParts, type ChatHost } from './session-parts'
 import {
   EarlierLoading,
   emptyView,
@@ -33,34 +34,12 @@ import {
   HistoryFailure,
   showsContent,
 } from './SessionStatus'
-import { useTranscriptInputs } from './transcript-inputs'
 import { TranscriptView } from './TranscriptView'
-import { WaitingRequests } from './WaitingRequests'
-
-/**
- * The parts of the chat that the app draws from its own record of the
- * workspace: the start steps at the end of the history while the sandbox
- * starts, and the bar under the chat while the sandbox is down. Null leaves
- * the place empty. Without a host, the chat draws both from its own record.
- * The app also gives the tools of the composer, such as Capabilities.
- */
-export interface ChatHost {
-  starting: ReactNode | null
-  sandboxBar: ReactNode | null
-  /**
-   * The composer stays under the bar, as after a failed first start, so that
-   * members can still queue messages. Otherwise the bar takes its place.
-   */
-  keepsComposer: boolean
-  /** The tools of the composer, as `ComposerTool` says. */
-  tools?: readonly ComposerTool[]
-}
 
 export interface SessionChatProps {
   snapshot: ChatSnapshot
   controller: ChatController
   mobile: boolean
-  now: number
   onOpenDiff?: (path: string) => void
   onConnectAgent?: (agent: Agent) => void
   host?: ChatHost
@@ -71,41 +50,6 @@ export interface SessionChatProps {
   readOnly?: boolean
   /** The composer takes the focus when it shows, as `ComposerFocus` says. */
   composerFocus?: ComposerFocus | null
-}
-
-/**
- * The start steps and the sandbox bar: the host's, or the chat's own. A
- * read-only chat without a host shows only the bar of an archived
- * workspace, because it offers no Resume. The chat's own bar shows the
- * message that the workspace saved for a failed start, and after a failed
- * first start the composer stays under it.
- */
-function sandboxParts(props: SessionChatProps): ChatHost {
-  if (props.host) return props.host
-  const { snapshot, controller, now } = props
-  const { workspace } = snapshot
-  const problem = workspaceProblemOf(workspace?.state)
-  const readOnly = props.readOnly ?? false
-  const firstStart = failedFirstStart(workspace, snapshot.start)
-  return {
-    starting:
-      workspace?.state === 'starting' && !readOnly ? (
-        <StartingCard now={now} start={snapshot.start} />
-      ) : null,
-    sandboxBar:
-      problem && workspace && (problem === 'archived' || !readOnly) ? (
-        <SandboxBar
-          archivedAt={workspace.archivedAt}
-          busy={snapshot.resuming}
-          firstStart={firstStart}
-          message={snapshot.savedError}
-          now={now}
-          onResume={() => void controller.resume()}
-          problem={problem}
-        />
-      ) : null,
-    keepsComposer: firstStart && !readOnly,
-  }
 }
 
 /**
@@ -129,15 +73,19 @@ function useDraftFiles(controller: ChatController, draftId: string) {
  * session that it started from. The shown record comes from the tabs, so a
  * closed session that an archived workspace shows keeps its link too. A
  * read-only workspace, archived or of a suspended org, shows no composer
- * and no control that writes.
+ * and no control that writes. The messages show the marks of their
+ * explanations, and a finished selection in one of them shows Explain, as
+ * `useExplain` says: by the selection on a computer, and above the composer
+ * on a phone.
  */
 export function SessionChat(props: SessionChatProps) {
-  const { snapshot, controller, now } = props
+  const { snapshot, controller } = props
   const { workspace } = snapshot
   const id = snapshot.activeSessionId
   const session = tabSessions(snapshot).find((item) => item.id === id) ?? null
   const state = sessionState(snapshot, id ?? '')
   const files = useDraftFiles(controller, state.draft.id)
+  const [frame, setFrame] = useState<HTMLElement | null>(null)
   const { starting, sandboxBar, keepsComposer } = sandboxParts(props)
   const readOnly = (props.readOnly ?? false) || workspace?.state === 'archived'
   // A bar or a read-only workspace takes the place of the composer. The bar
@@ -161,18 +109,32 @@ export function SessionChat(props: SessionChatProps) {
   )
   const status = historyStatus(state)
   const content = showsContent(state, starting !== null)
-  const viewerId = snapshot.account?.user.id ?? null
-  const { commands, secrets, inserts, readers, onRetry } = useTranscriptInputs(
+  const parts = useSessionParts({
     snapshot,
     controller,
+    sessionId: id,
     session,
     state,
     readOnly,
-  )
+  })
   const reader = loginReader(snapshot)
   const login = session ? sessionLoginOf(session, reader) : null
   const linked =
     login?.kind === 'linked' || (login?.kind === 'missing' && login.linked)
+  const explain = useExplain({
+    snapshot,
+    controller,
+    sessionId: session?.id ?? null,
+    readOnly,
+    mobile: props.mobile,
+  })
+  const phoneExplain =
+    props.mobile && explain.view?.selection && !readOnly ? (
+      <PhoneExplain
+        busy={explain.view.starting}
+        onPress={explain.view.explain}
+      />
+    ) : null
   const footer = (
     <>
       {id && content && status === 'failed' ? (
@@ -205,25 +167,16 @@ export function SessionChat(props: SessionChatProps) {
       {snapshot.devices.load === 'failed' ? (
         <DeviceLoadNotice onRetry={() => void controller.loadDevices()} />
       ) : null}
-      <WaitingRequests
-        items={[
-          ...pendingCommandItems({
-            devices: snapshot.devices,
-            onAnswer: (requestId, action) =>
-              void controller.answerCommand(requestId, action),
-            readOnly,
-            readers: { viewerId, orgName: snapshot.org?.name ?? null },
-            requests: commands.waiting,
-          }),
-          ...secrets.waiting,
-        ]}
-      />
+      {readOnly ? null : props.host?.notice}
+      {parts.waiting}
       {sandboxBar}
+      {phoneExplain}
       {!down && session && snapshot.load.state === 'ready' ? (
         <Composer
           blocked={block !== null}
           choice={session.choice}
           draft={state.draft}
+          favourites={snapshot.account?.favourites}
           files={files}
           focus={props.composerFocus}
           login={loginLabelOf(login)}
@@ -255,32 +208,50 @@ export function SessionChat(props: SessionChatProps) {
     </>
   )
   return (
-    <ChatPane
-      empty={emptyView({
-        snapshot,
-        controller,
-        starting: starting !== null,
-        readOnly,
-      })}
-      footer={footer}
-      mobile={props.mobile}
-      place={place}
-      sent={sent}
-    >
-      {content && status === 'loading' ? <EarlierLoading /> : null}
-      <TranscriptView
-        inserts={inserts}
-        now={now}
-        onOpenDiff={props.onOpenDiff}
-        onRetry={onRetry}
-        pending={state.pending}
-        readers={readers}
-        readOnly={readOnly}
-        retrying={state.retrying}
-        transcript={state.transcript}
+    <>
+      <ChatPane
+        empty={emptyView({
+          snapshot,
+          controller,
+          starting: starting !== null,
+          readOnly,
+          github: props.host?.github,
+        })}
+        footer={footer}
+        ref={setFrame}
+        mobile={props.mobile}
+        place={place}
+        sent={sent}
       >
-        {starting}
-      </TranscriptView>
-    </ChatPane>
+        {content && status === 'loading' ? <EarlierLoading /> : null}
+        <ExplainContext.Provider value={explain.view}>
+          <TranscriptView
+            inserts={parts.inserts}
+            onOpenDiff={props.onOpenDiff}
+            onRetry={parts.onRetry}
+            pending={state.pending}
+            readers={parts.readers}
+            readOnly={readOnly}
+            retrying={state.retrying}
+            transcript={state.transcript}
+          >
+            {starting}
+          </TranscriptView>
+        </ExplainContext.Provider>
+      </ChatPane>
+      <ExplainLayer
+        chat={{
+          snapshot,
+          controller,
+          readOnly,
+          mobile: props.mobile,
+          host: props.host,
+          onOpenDiff: props.onOpenDiff,
+          onConnectAgent: props.onConnectAgent,
+        }}
+        state={explain}
+        stopAt={frame}
+      />
+    </>
   )
 }

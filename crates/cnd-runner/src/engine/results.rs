@@ -2,11 +2,12 @@
 
 use cnd_runner_interface::chat_events::{ToolCallState, TurnEndReason, TurnSpeed};
 use cnd_runner_interface::provider_events::{ProviderEvent, ProviderResultState};
-use cnd_runner_interface::sdk_helper::{HelperModelResult, HelperOutput};
+use cnd_runner_interface::sdk_helper::HelperOutput;
 
 use crate::error::{Error, Result};
 
 use super::background::Disposition;
+use super::provider::DeliveryOutcome;
 use super::types::{End, Session, identity};
 
 impl Session {
@@ -89,7 +90,18 @@ impl Session {
             }
             _ => {}
         }
-        let events = turn.output.accept(&event);
+        if let ProviderEvent::Answer { notice_ids, .. }
+        | ProviderEvent::Result { notice_ids, .. }
+        | ProviderEvent::Failed { notice_ids, .. } = &event
+        {
+            turn.read_notice_ids.extend(
+                notice_ids
+                    .iter()
+                    .filter(|id| turn.notice_ids.contains(id))
+                    .cloned(),
+            );
+        }
+        let events = turn.output.accept(&event, &turn.notice_ids);
         self.emit(events).await?;
         let Some(turn) = &self.active else {
             return Ok(());
@@ -106,7 +118,7 @@ impl Session {
                 }
                 Ok(())
             }
-            ProviderEvent::Failed { code, message } => {
+            ProviderEvent::Failed { code, message, .. } => {
                 self.finish(End::Failed(Error::Agent { code, message }))
                     .await
             }
@@ -114,8 +126,10 @@ impl Session {
                 state,
                 user_message_ids,
                 end_reason,
+                notice_ids,
             } => {
-                self.result(state, user_message_ids, end_reason, false)
+                let notice_only = user_message_ids.is_empty() && !notice_ids.is_empty();
+                self.result(state, user_message_ids, end_reason, notice_only)
                     .await
             }
             ProviderEvent::WakeUp { state } => self.result(state, vec![], None, true).await,
@@ -186,9 +200,10 @@ impl Session {
             turn.control.run(helper.close()).await?;
         }
         turn.helper = None;
-        let (_, _, message) = identity(&next);
-        turn.message_ids.push(message.id.clone());
-        turn.retry_message_id = message.id.clone();
+        if let Some((_, _, message)) = identity(&next) {
+            turn.message_ids.push(message.id.clone());
+            turn.retry_message_id = message.id.clone();
+        }
         self.start(next).await?;
         loop {
             let next = self
@@ -198,7 +213,7 @@ impl Session {
             let Some(next) = next else {
                 break;
             };
-            if self.deliver(next.clone()).await? == HelperModelResult::Deferred {
+            if self.deliver(next.clone()).await? == DeliveryOutcome::Deferred {
                 if let Some(turn) = &mut self.active {
                     turn.waiting.push_front(next);
                 }

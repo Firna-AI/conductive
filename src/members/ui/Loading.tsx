@@ -1,4 +1,4 @@
-import { CircleAlert, RotateCw } from 'lucide-react'
+import { RotateCw, TriangleAlert } from 'lucide-react'
 import { ActionButton } from './actions'
 import { Notice } from './Notice'
 import { StatusText } from './StatusText'
@@ -22,7 +22,7 @@ export function LoadFailure(props: {
         </ActionButton>
       }
       body={props.message}
-      icon={CircleAlert}
+      icon={TriangleAlert}
       title={props.title}
       tone="danger"
     />

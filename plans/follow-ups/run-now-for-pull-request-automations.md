@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-09, from branch `calummoore/routines-feature-brainstorm`, decision 510 of `plans/routines.md`. The user chose C now and B as a later follow-up.
-- **Location:** `src/shell/automations/RunNow.tsx`, the automation page that shows it (`src/shell/automations/AutomationEditor.tsx`), the rule `offersRunNow` in `docs/mockups/src/components/automations/triggerCopy.ts`, the Run now route in `worker/automations/run-route.ts`, the run record in `worker/automations/run-record-data.ts`, and `docs/protocol/automations.md`.
+- **Location:** `src/shell/automations/RunNow.tsx`, the automation page that shows it (`src/shell/automations/AutomationEditor.tsx`), the rule `offersRunNow` in `src/ui/components/automations/triggerCopy.ts`, the Run now route in `worker/automations/run-route.ts`, the run record in `worker/automations/run-record-data.ts`, and `docs/protocol/automations.md`.
 - **Reason:** The user chose to hide Run now on pull request automations first, and to add this test later.
 
 - **Terms:**

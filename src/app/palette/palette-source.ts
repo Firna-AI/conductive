@@ -35,7 +35,7 @@ export type PaletteRead = (typeof paletteReads)[number]
  * keys of their commands read it too, while the palette is closed.
  */
 export interface PaletteBase {
-  /** The orgs of the person, in the order of the org rail. */
+  /** The active orgs from `AppModel.activeOrgs`, in the order of the org rail. */
   orgs: readonly OrgSummary[]
   /** The org of the palette, as `paletteOrg` says, or `null`. */
   org: OrgSummary | null

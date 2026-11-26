@@ -108,6 +108,7 @@ export function DevControls(props: {
       {answer('ready', 'Ready for review')}
       {answer('work', 'Local work')}
       {answer('continue', 'Continue')}
+      {answer('branches', 'Branches')}
       <Choice
         label="Live event"
         onChange={setLive}

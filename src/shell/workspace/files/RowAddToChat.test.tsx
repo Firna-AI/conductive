@@ -6,6 +6,7 @@ import type { Session } from '../../../shared/generated/Session'
 import { HeldRequests } from '../../../app/test-kit'
 import { selectText } from '../../../chat/components/chip-field/attached-field-events'
 import {
+  focused,
   menuItems,
   rightClick,
 } from '../../../chat/components/tab-row-test-kit'
@@ -195,45 +196,70 @@ describe('Add to chat in the row menu of the Files panel', () => {
     })
   })
 
-  test('leaves out Add to chat until the chat loads, and while the bar of a stopped cloud computer takes the place of the field, also in a menu that is open', async () => {
-    // The chat shows a spinner while it loads, which would keep `act` busy.
-    holdAnimationFrames()
-    const server = new FakeApiServer()
-    const held = new HeldRequests(server)
-    held.holdAnswer('GET', sessionsPath(org, id))
-    const { view } = await openPaletteTab(allFiles, {
-      server,
-      fetch: held.fetch,
-    })
-    const loading = openMenu(rowTo(view, 'All files', form), 'AddressForm.tsx')
-    await act(async () => held.release('GET', sessionsPath(org, id)))
-    await settle()
-    const loaded = shownMenu('AddressForm.tsx')
-    const { workspace } = workspaceFixtures().detail
-    emit(server, {
-      type: 'workspace.updated',
-      workspace: { ...workspace, state: 'stopped' },
-    })
-    await settle()
-    expect({
-      loading,
-      loaded,
-      stopped: shownMenu('AddressForm.tsx'),
-      field: queryByLabel('Message', view),
-    }).toEqual({
-      loading: { items: ['Copy path'], lines: 0 },
-      loaded: { items: ['Add to chat', 'Copy path'], lines: 1 },
-      stopped: { items: ['Copy path'], lines: 0 },
-      field: null,
-    })
-  })
+  test.each(['desktop', 'phone'] as const)(
+    'on %s, leaves out Add to chat until the chat loads, and while the bar of a stopped cloud computer takes the place of the field, also in a menu that is open, and keeps Copy path focused and usable',
+    async (viewport) => {
+      // The chat shows a spinner while it loads, which would keep `act` busy.
+      holdAnimationFrames()
+      const server = new FakeApiServer()
+      const held = new HeldRequests(server)
+      held.holdAnswer('GET', sessionsPath(org, id))
+      const copied: string[] = []
+      const { view } = await openPaletteTab(allFiles, {
+        server,
+        fetch: held.fetch,
+        viewport,
+        copy: async (text) => {
+          copied.push(await text)
+        },
+      })
+      const loading = openMenu(
+        rowTo(view, 'All files', form),
+        'AddressForm.tsx',
+      )
+      await act(async () => held.release('GET', sessionsPath(org, id)))
+      await settle()
+      const loaded = shownMenu('AddressForm.tsx')
+      act(() => byRole('menuitem', 'Add to chat').focus())
+      expect(focused()).toBe('Add to chat')
+      const { workspace } = workspaceFixtures().detail
+      emit(server, {
+        type: 'workspace.updated',
+        workspace: { ...workspace, state: 'stopped' },
+      })
+      await settle()
+      expect({
+        loading,
+        loaded,
+        stopped: shownMenu('AddressForm.tsx'),
+        field: queryByLabel('Message', view),
+      }).toEqual({
+        loading: { items: ['Copy path'], lines: 0 },
+        loaded: { items: ['Add to chat', 'Copy path'], lines: 1 },
+        stopped: { items: ['Copy path'], lines: 0 },
+        field: null,
+      })
+      expect(focused()).toBe('Copy path')
+      await pressKey('ArrowDown')
+      const copyPath = byRole('menuitem', 'Copy path')
+      expect(document.activeElement).toBe(copyPath)
+      await press(copyPath)
+      await settle()
+      expect({ copied, menu: menuItems('AddressForm.tsx') }).toEqual({
+        copied: [FAKE_FILE_PATH],
+        menu: [],
+      })
+    },
+  )
 
-  test('leaves out Add to chat on a path that the list of @ does not offer, and on a deleted file of Changes that the tree still holds', async () => {
+  test('leaves out Add to chat on a path that the list of @ does not offer, on a deleted file of Changes that the tree still holds, and on a changed file that the limited tree leaves out', async () => {
     const { server, view, navigation } = await openPaletteTab(allFiles)
     const quoted = '"draft".md'
     const deleted = 'src/app/checkout/postcodeLookup.ts'
+    const omitted = 'src/app/checkout/useAddressAutocomplete.ts'
     // The tree and Changes come from their own reports, so the tree can
-    // still hold a file that Changes lists as deleted.
+    // still hold a file that Changes lists as deleted. A limited tree can
+    // leave out a file that Changes lists.
     const upsert = (path: string, name: string) => ({
       operation: 'upsert' as const,
       entry: { path, name, kind: 'file' as const, change: null },
@@ -242,7 +268,12 @@ describe('Add to chat in the row menu of the Files panel', () => {
       type: 'files.changed',
       delta: {
         revision: 3,
-        changes: [upsert(quoted, quoted), upsert(deleted, 'postcodeLookup.ts')],
+        omittedEntryCount: 1,
+        changes: [
+          upsert(quoted, quoted),
+          upsert(deleted, 'postcodeLookup.ts'),
+          { operation: 'remove', path: omitted },
+        ],
       },
     })
     await settle()
@@ -253,12 +284,17 @@ describe('Add to chat in the row menu of the Files panel', () => {
     act(() => navigation.push(changes))
     await settle()
     const row = rowTo(view, 'Changed files', { kind: 'diff', path: deleted })
+    const deletedMenu = openMenu(row, 'postcodeLookup.ts')
+    await pressKey('Escape')
+    const left = rowTo(view, 'Changed files', { kind: 'diff', path: omitted })
     expect({
       unoffered,
-      deleted: openMenu(row, 'postcodeLookup.ts'),
+      deleted: deletedMenu,
+      omitted: openMenu(left, 'useAddressAutocomplete.ts'),
     }).toEqual({
       unoffered: { items: ['Copy path'], lines: 0 },
       deleted: { items: ['Copy path'], lines: 0 },
+      omitted: { items: ['Copy path'], lines: 0 },
     })
   })
 })

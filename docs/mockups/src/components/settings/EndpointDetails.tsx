@@ -1,11 +1,16 @@
-import { RefreshCw } from 'lucide-react'
 import { agents, type AgentKey } from '../../fixtures/agents'
-import { loginLabels, type EndpointLogin } from '../../fixtures/logins'
-import { ActionButton } from '../common/actions'
-import { EndpointModels, type LoginOwner } from './EndpointModels'
-import { EndpointAddressNote, EndpointReadFailed } from './EndpointRead'
-import { endpointReadCopy as copy } from './endpointReadCopy'
-import { LoginEndpoint } from './LoginEndpoint'
+import type { EndpointLogin } from '../../fixtures/logins'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { loginLabels } from '../../../../../src/ui/components/settings/agentConnectCopy'
+import type { LoginOwner } from '../../../../../src/ui/components/settings/EndpointModels'
+import { endpointModels } from '../../entries/components/settings/EndpointModels.mockup'
+import {
+  endpointAddressNote,
+  endpointReadFailed,
+} from '../../entries/components/settings/EndpointRead.mockup'
+import { endpointReadCopy as copy } from '../../../../../src/ui/components/settings/endpointReadCopy'
+import { loginEndpoint } from '../../entries/components/settings/LoginEndpoint.mockup'
+import { defined } from '../../defined'
 
 /**
  * The lines under the row of an own endpoint login: its kind with the host
@@ -31,27 +36,42 @@ export function EndpointDetails(props: {
 }) {
   const { login } = props
   const endpoint = (
-    <LoginEndpoint host={login.host} kind={loginLabels[props.agent].endpoint} />
+    <loginEndpoint.Component
+      host={login.host}
+      kind={loginLabels[props.agent].endpoint}
+      moklyInstance="endpoint"
+    />
   )
   if (props.readOnly) return endpoint
   const refresh = (
-    <ActionButton
+    <actionButton.Component
       accessibilityLabel={copy.refreshLabel(agents[props.agent].name)}
-      icon={RefreshCw}
+      icon="refresh-cw"
+      moklyInstance={`refresh-${props.agent}`}
     >
       {copy.refresh}
-    </ActionButton>
+    </actionButton.Component>
   )
   return (
     <>
       {endpoint}
-      {login.addedV1 ? <EndpointAddressNote /> : null}
-      {login.readFailed ? <EndpointReadFailed refresh={refresh} /> : null}
+      {login.addedV1 ? (
+        <endpointAddressNote.Component moklyInstance="address-note" />
+      ) : null}
+      {login.readFailed ? (
+        <endpointReadFailed.Component
+          moklyInstance="read-failed"
+          refresh={refresh}
+        />
+      ) : null}
       {login.models ? (
-        <EndpointModels
+        <endpointModels.Component
           check={login.models}
-          owner={props.owner}
-          refresh={login.readFailed ? null : refresh}
+          moklyInstance="models"
+          {...defined({
+            owner: props.owner,
+            refresh: login.readFailed ? undefined : refresh,
+          })}
         />
       ) : null}
     </>

@@ -9,13 +9,13 @@ use cnd_cli::update::disk::DiskStore;
 use cnd_cli::update::engine::Engine;
 use cnd_cli::update::http::release_client;
 use cnd_cli::update::ports::UpdateEngine;
+use cnd_cli::update::presence::SDK_HELPER_PART;
 use cnd_cli::update::process::{SYSTEM_PART, SystemProcesses};
 use cnd_cli::update::staging::NODE_PART;
 use cnd_release::version::{BASE_URL, DEVELOPMENT_VERSION};
 
 use crate::error::{ErrorResultExt, Result};
 use crate::release;
-use crate::runner_command::SDK_HELPER_PART;
 
 /// Options shared by the software update operations.
 #[derive(Debug, Args)]
@@ -38,7 +38,7 @@ enum Operation {
         #[arg(long)]
         bootstrap: bool,
     },
-    /// Apply a complete download before services start. Requires root.
+    /// Apply a complete download before services start, and restore its missing parts. Requires root.
     Apply,
     /// Confirm that the runner has started. Requires root.
     Started,
@@ -77,7 +77,7 @@ pub(crate) async fn execute(args: UpdateArgs) -> Result<()> {
                 engine.check(version).await.internal()
             }
         }
-        Operation::Apply => engine.apply().internal(),
+        Operation::Apply => engine.apply().await.internal(),
         Operation::Started => engine.started(release::VERSION).internal(),
         Operation::Parts => Ok(()),
     }

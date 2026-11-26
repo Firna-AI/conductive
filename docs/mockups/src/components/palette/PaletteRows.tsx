@@ -1,27 +1,33 @@
 import type { ReactNode } from 'react'
+import { workspaceMark } from '../../entries/components/workspaces/WorkspaceMark.mockup'
 import { repositories } from '../../fixtures/repositories'
 import {
   shownShortcut,
   type ShortcutChanges,
 } from '../../fixtures/shortcutChanges'
 import type { ShortcutHost } from '../../fixtures/shortcutHosts'
-import { GitHubMark } from '../common/GitHubMark'
-import { KeyChips, type Shortcut } from '../common/KeyChips'
+import { githubMark } from '../../entries/components/common/GitHubMark.mockup'
+import type { Shortcut } from '../../../../../src/ui/components/common/KeyChips'
+import { keyChips } from '../../entries/components/common/KeyChips.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import a11y from '../common/a11y.module.css'
-import { classes } from '../common/classes'
-import { OrgTile } from '../orgs/OrgTile'
-import { listMarkLabel } from '../workspaces/status'
-import { WorkspaceMark } from '../workspaces/WorkspaceMark'
+import { instanceKey } from '../../instanceKey'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { orgTile } from '../../entries/components/orgs/OrgTile.mockup'
+import { listMarkLabel } from '../../../../../src/ui/components/workspaces/status'
 import {
   WorkspaceName,
   type EmphasisClasses,
-} from '../workspaces/WorkspaceName'
+} from '../../../../../src/ui/components/workspaces/WorkspaceName'
 import type { CommandLead } from './paletteCommands'
 import type { PaletteContent, PaletteRow } from './paletteContent'
-import { EmptyTab, NoResults } from './PaletteEmpty'
-import { PaletteStatusPart } from './PaletteStatus'
-import styles from './CommandPalette.module.css'
+import {
+  emptyTab,
+  noResults,
+} from '../../entries/components/palette/PaletteEmpty.mockup'
+import { paletteStatusPart } from '../../entries/components/palette/PaletteStatus.mockup'
+import { defined } from '../../defined'
+import styles from '../../../../../src/ui/components/palette/CommandPalette.module.css'
 
 /**
  * The look of the name of a workspace in each state, as in the list: the
@@ -33,7 +39,11 @@ const nameEmphasis: EmphasisClasses = {
   dim: styles.dim,
 }
 
-function Lead(props: { lead: CommandLead }) {
+function Lead(props: {
+  lead: CommandLead
+  /** The key of the row, which names its mark for Mokly. */
+  name: string
+}) {
   const { lead } = props
   switch (lead.kind) {
     case 'icon': {
@@ -41,9 +51,21 @@ function Lead(props: { lead: CommandLead }) {
       return <Icon aria-hidden className={styles.icon} size={14} />
     }
     case 'org':
-      return <OrgTile org={lead.org} size={16} />
+      return (
+        <orgTile.Component
+          moklyInstance={`org-${props.name}`}
+          org={lead.org}
+          size={16}
+        />
+      )
     case 'github':
-      return <GitHubMark className={styles.icon} size={14} />
+      return (
+        <githubMark.Component
+          className={styles.icon}
+          moklyInstance={`github-${props.name}`}
+          size={14}
+        />
+      )
   }
 }
 
@@ -100,7 +122,12 @@ function Row(props: {
         to={to}
       >
         <span className={styles.lead}>
-          <WorkspaceMark github={github} status={status} />
+          {/* Each workspace shows once in a tab, so its key names its mark. */}
+          <workspaceMark.Component
+            github={github}
+            moklyInstance={`palette-${workspace.key}`}
+            status={status}
+          />
         </span>
         {row.number ? (
           <span className={styles.number}>{row.number}</span>
@@ -121,19 +148,23 @@ function Row(props: {
     )
   }
   const { command, detail } = row
+  const name = instanceKey(command.label)
   return (
     <RowLink
       className={classes(styles.row, highlighted && styles.highlighted)}
       to={command.to}
     >
       <span className={styles.lead}>
-        <Lead lead={command.lead} />
+        <Lead lead={command.lead} name={name} />
       </span>
       <span className={styles.label}>{command.label}</span>
       {detail ? <span className={styles.detail}>{detail}</span> : null}
       {props.shortcut ? (
         <span className={styles.keys}>
-          <KeyChips shortcut={props.shortcut} />
+          <keyChips.Component
+            moklyInstance={`keys-${name}`}
+            shortcut={props.shortcut}
+          />
         </span>
       ) : null}
     </RowLink>
@@ -152,12 +183,12 @@ export function PaletteResults(props: {
   content: PaletteContent
   keys?: PaletteKeys
 }) {
-  const { groups, query, empty, status } = props.content
+  const { groups, query, empty, status, tab } = props.content
   if (groups.length === 0 && !status) {
     return empty ? (
-      <EmptyTab line={empty} />
+      <emptyTab.Component line={empty} />
     ) : (
-      <NoResults
+      <noResults.Component
         hint="Try a workspace name, a branch, or a repository."
         query={query}
       />
@@ -166,7 +197,11 @@ export function PaletteResults(props: {
   const first = groups[0]?.rows[0]
   return (
     <div className={styles.results} data-mokly-scroll="palette-results">
-      <PaletteStatusPart content={props.content} />
+      <paletteStatusPart.Component
+        query={query}
+        tab={tab}
+        {...defined({ status })}
+      />
       {groups.map((group) => (
         <section
           aria-label={group.label}

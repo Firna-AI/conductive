@@ -1,5 +1,5 @@
 import type { TurnEndReason } from '../../shared/generated/TurnEndReason'
-import type { StandardSpeedCause } from '../../../docs/mockups/src/components/chat/speedCopy'
+import type { StandardSpeedCause } from '../../ui/components/chat/speedCopy'
 import type { Transcript } from '../../shared/transcript/transcript'
 import type { SingleItem } from '../../shared/transcript/transcript-entries'
 import {

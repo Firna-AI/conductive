@@ -137,6 +137,10 @@ export class WorkspaceModel {
     }
     if (run !== this.generation) return
     this.order.confirm(read)
+    if (run !== this.generation) return
+    const { eventNumber, seed } = read.reply
+    if (seed) this.stream.applyBaseline(eventNumber, seed)
+    if (run !== this.generation) return
     this.follow()
     if (run !== this.generation || this.suspended) return
     if (this.changedInVisit(visit)) return

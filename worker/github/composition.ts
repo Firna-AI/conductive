@@ -11,6 +11,7 @@ import { requireFeatureResult } from '../features/result'
 import { dispatchPullRequestRuns } from '../automations/pull-request-dispatch'
 import { automationRunRuntime } from '../automations/run-runtime'
 import { warnWorker } from '../warnings'
+import { wakeQueueWebhook, wakeRepositoryQueues } from '../merge-queue/wake'
 
 export async function productionGitHubWebhook(
   request: Request,
@@ -28,6 +29,7 @@ export async function productionGitHubWebhook(
     },
     {
       now: dependencies.now,
+      queue: (route) => wakeQueueWebhook(env, route),
       pullRequest: (event, deliveryId) =>
         dispatchPullRequestRuns(
           automationRunRuntime(env, dependencies),
@@ -52,6 +54,20 @@ export async function productionGitHubWebhook(
         })
       },
       repositoryChange: {
+        prepareDefaultBranchChange: async (
+          workspace,
+          values,
+          installationId,
+          deliveryId,
+        ) => {
+          requireFeatureResult(
+            await workspaceBinding(env)
+              .getByName(workspace.id)
+              .refreshGitHub(workspace, {
+                repositoryDefault: { ...values, installationId, deliveryId },
+              }),
+          )
+        },
         read: (change) =>
           readGitHubRepository(
             dependencies,
@@ -62,11 +78,22 @@ export async function productionGitHubWebhook(
             change,
           ),
         changed: async (change) => {
-          await wakeImagesForRepositoryChange(imageRuntime(env, dependencies), {
-            githubRepositoryId: change.repositoryId,
-            installationId: change.installationId,
-            software: () => latestSoftwareRelease(env, dependencies.fetch),
-          })
+          try {
+            await wakeImagesForRepositoryChange(
+              imageRuntime(env, dependencies),
+              {
+                githubRepositoryId: change.repositoryId,
+                installationId: change.installationId,
+                software: () => latestSoftwareRelease(env, dependencies.fetch),
+              },
+            )
+          } finally {
+            await wakeRepositoryQueues(
+              env,
+              change.repositoryId,
+              change.installationId,
+            )
+          }
         },
       },
     },

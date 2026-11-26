@@ -1,14 +1,15 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { Reply } from 'lucide-react'
-import { LoadFailure } from '../common/LoadFailure'
+import { defined } from '../../defined'
+import { loadFailure } from '../../entries/components/common/LoadFailure.mockup'
 import {
   noReplyLine,
   replyLine,
   replyLoadingLine,
   replyNotLoadedTitle,
-} from './feedbackCopy'
-import styles from './FeedbackDialog.module.css'
+} from '../../../../../src/ui/components/feedback/feedbackCopy'
+import styles from '../../../../../src/ui/components/feedback/FeedbackDialog.module.css'
 
 /**
  * The read of the reply address, which Send waits for: it runs, it failed,
@@ -64,5 +65,11 @@ export function ReplyFailure(props: {
   retryTo?: string
 }) {
   if (props.reply.state !== 'failed') return null
-  return <LoadFailure title={replyNotLoadedTitle} to={props.retryTo} />
+  return (
+    <loadFailure.Component
+      moklyInstance="reply-load-failure"
+      title={replyNotLoadedTitle}
+      {...defined({ to: props.retryTo })}
+    />
+  )
 }

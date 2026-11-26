@@ -49,7 +49,7 @@ it.each(['mint', 'revoke'] as const)(
       expect(held.request().signal.aborted).toBe(true)
       expect(await outcome).toEqual({
         state: 'failed',
-        error: kind === 'mint' ? accessFailure : revokeFailure,
+        error: kind === 'mint' ? accessFailure() : revokeFailure,
       })
     } finally {
       held.reply(Response.json({ token: 'cleanup' }))

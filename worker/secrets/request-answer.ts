@@ -20,6 +20,10 @@ import {
 } from './request-covered'
 import type { SecretRuntime } from './runtime'
 import { insertSecret } from './writes'
+import {
+  captureSecretCapabilities,
+  secretCapabilitiesChanged,
+} from './capability-changes'
 
 /**
  * Answers one request. An Allow also allows each other open request that
@@ -57,6 +61,16 @@ export async function answerSecretRequest(
       throw secretInputError()
   }
   await requireSecretWriter(runtime.env.DB, record.orgId, member.id)
+  const beforeCapabilities =
+    answer.kind === 'values' &&
+    answer.lifetime === 'workspace' &&
+    missing.length > 0
+      ? await captureSecretCapabilities(
+          runtime,
+          record.request.workspaceId,
+          new Set([record.request.sessionId]),
+        )
+      : undefined
   if (answer.kind === 'values' && answer.lifetime === 'save')
     for (const secret of missing) requireSecretName(secret.name)
   const lateAnswer = record.request.state === 'late'
@@ -171,5 +185,26 @@ export async function answerSecretRequest(
     covered,
     new Set([...withCall, record.request.sessionId]),
   )
+  if (beforeCapabilities && temporary.some((value) => value.sessionId === null))
+    await secretCapabilitiesChanged(
+      runtime,
+      operation,
+      beforeCapabilities,
+      [
+        {
+          change: {
+            kind: 'value-given',
+            names: temporary
+              .filter((value) => value.sessionId === null)
+              .map((value) => value.name),
+          },
+        },
+      ],
+      member,
+      new Set([
+        record.request.sessionId,
+        ...covered.map((other) => other.request.sessionId),
+      ]),
+    )
   return { request: record.request, notices }
 }

@@ -1,16 +1,16 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { classes } from '../components/common/classes'
+import { classes } from '../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { MobileFrame } from '../components/layout/AppFrame'
-import { useMacApp } from '../components/mac/MacApp'
+import { mobileFrame } from '../entries/components/layout/AppFrame.mockup'
+import { useMacApp } from '../../../../src/ui/components/mac/MacApp'
 import { LegalLinks } from '../components/marketing/LegalLinks'
 import { Wordmark } from '../components/marketing/Wordmark'
 import { paths } from '../paths'
-import { signInCopy } from './signInCopy'
-import forms from './forms.module.css'
-import styles from './SignInScreen.module.css'
-import frame from './signInFrame.module.css'
+import { signInCopy } from '../../../../src/ui/screens/signInCopy'
+import forms from '../../../../src/ui/screens/forms.module.css'
+import styles from '../../../../src/ui/screens/SignInScreen.module.css'
+import frame from '../../../../src/ui/screens/signInFrame.module.css'
 
 /** The height of the lockup in the top bar of the Mac app, in px. */
 const macLockup = 22
@@ -31,7 +31,11 @@ function Header() {
         mac?.mode === 'window' && frame.windowButtons,
       )}
     >
-      <Wordmark height={mac ? macLockup : undefined} to={paths.marketing} />
+      <Wordmark
+        height={mac ? macLockup : undefined}
+        place="sign-in"
+        to={paths.marketing}
+      />
     </header>
   )
 }
@@ -71,6 +75,6 @@ export function SignInFrame(props: {
       </footer>
     </div>
   )
-  if (mobile) return <MobileFrame>{page}</MobileFrame>
+  if (mobile) return <mobileFrame.Component>{page}</mobileFrame.Component>
   return <div className={forms.standalone}>{page}</div>
 }

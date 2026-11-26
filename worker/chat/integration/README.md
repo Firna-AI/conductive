@@ -69,6 +69,38 @@ The first-start attachment fixture fakes detached download commands.
 Its injected download calls the production machine route with native D1 and R2.
 The [outer Worker tests](outer-worker-tests.md) describe its failed-start and retry checks.
 
+### Branch and path labels
+
+The chat backend adds masked labels to `github.updated`,
+`workspace.continued`, and `workspace.repository-changed` events, beside
+their real names, as
+[Secrets that users enter](../../../docs/protocol/tokens-and-secrets.md#secrets-that-users-enter)
+requires. The labels hide each secret value of the last start of the
+sandbox. `eventLabeler` in
+[`workspace-event-labels.ts`](../workspace-event-labels.ts) has one case
+for each of these three event types. This step labels no other event type.
+
+- Emit and publish each of these events with its real names. Do not read
+  labels in a feature.
+- A new event type gets these labels when it adds one case to
+  `eventLabeler`.
+- `ChatTransaction.emit` labels each such event before it stores it.
+- `authorizedWorkspaceOperation` reads the secret values once after
+  `authorize`, before `work`, also when its work has no such event. Its
+  `change` and its `publish` use these values. So `publish` stays
+  synchronous.
+- Each other change, such as a change of `changeWorkspace`, reads the
+  values only at its first such event. It reads nothing when it has no
+  such event.
+- A failed read fails only the write, the send, or the read of such an
+  event. Other events and operations go on as before.
+- A tab reads the values once when it opens, in the queue task of its
+  history, and once at each restore. A page of the session history and a
+  transcript read them only when they hold such an event.
+- Each of these readers labels the events that it sends. So an event
+  without stored labels, such as an event of an older Worker, gets labels
+  too. A label can only add a mask to a stored label.
+
 ## The outer Worker
 
 - `createApp` in `worker/application.ts` forwards the Mac device routes to
@@ -149,6 +181,9 @@ also gives the kept chat and queued messages of a failed admitted create.
 
 - The Durable Object joins file parts with `RunnerFileReports` on
   `ChatTransaction.files`. It stores each complete report before the confirm.
+- `chatFilesStorage` runs file writes in the current chat transaction.
+  A read of the projection uses `get` and `getMany` in the current queue
+  task. [files-storage.ts](../files-storage.ts)
 - `runnerEventStored` gets each complete file report and tree delta, never a
   part. It must not apply them to the files projection again.
 - Send each `file.read` and `file.diff` request with `sendFileCommand`. A

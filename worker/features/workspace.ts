@@ -1,6 +1,7 @@
 import { FILE_READ_MAX_BYTES } from '../../src/shared/files'
 import type { AppDependencies, AppEnv } from '../env'
 import { createFilesHandler } from '../files/handlers'
+import { workspaceFileLists } from '../files/list-reads'
 import type { WorkspaceFiles } from '../files/workspace'
 import { createDesktopHandler } from '../desktop/handler'
 import { createTerminalHandler } from '../terminal/handler'
@@ -18,6 +19,7 @@ import { toolFailure, workspaceTarget } from '../previews/access'
 import { HttpError } from '../http'
 import { featureWorkspaceId } from './paths'
 import { revokedWorkspacePreviews } from './preview-data'
+import { createServicesHandler } from '../services/handler'
 
 export class WorkspaceFeatures {
   readonly previews: ReturnType<typeof createPreviewHandler>
@@ -27,6 +29,7 @@ export class WorkspaceFeatures {
   private readonly desktop: ReturnType<typeof createDesktopHandler>
   private readonly files: ReturnType<typeof createFilesHandler>
   private readonly env: AppEnv
+  private readonly services: ReturnType<typeof createServicesHandler>
   private readonly matches: (id: string) => boolean
   private readonly schedulePreview: (
     workspaceId: string,
@@ -52,6 +55,11 @@ export class WorkspaceFeatures {
     chat: WorkspaceChat,
   ) {
     this.env = env
+    this.services = createServicesHandler(
+      env,
+      chat.runner.services,
+      dependencies.now,
+    )
     this.dependencies = dependencies
     this.matches = matches
     this.schedulePreview = schedulePreview
@@ -61,7 +69,8 @@ export class WorkspaceFeatures {
       fileServerAvailable: (workspaceId: string) => {
         const runner = chat.runner.connections.current
         return (
-          runner?.workspace.id === workspaceId && runner.fileServer === true
+          runner?.state.workspace.id === workspaceId &&
+          runner.state.fileServer === true
         )
       },
     }
@@ -72,6 +81,7 @@ export class WorkspaceFeatures {
     this.files = createFilesHandler({
       ...dependencies,
       maxFileBytes: FILE_READ_MAX_BYTES,
+      fileLists: workspaceFileLists(chat),
       workspaceFiles: () => files,
       repositoryRoot: async (workspace) =>
         repositoryLocation(
@@ -106,6 +116,7 @@ export class WorkspaceFeatures {
         'workspace_not_found',
         'The workspace is not available.',
       )
+    if (/\/services(?:\/.*)?$/.test(path)) return this.services(request)
     if (/\/terminal(?:\/.*)?$/.test(path)) return this.terminal.fetch(request)
     if (path.endsWith('/desktop')) return this.desktop.fetch(request)
     if (/\/previews(?:\/[^/]+)?$/.test(path)) {

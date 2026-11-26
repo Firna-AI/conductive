@@ -1,3 +1,4 @@
+import { code, p } from './agentText'
 import type { ChatItem } from './conversations'
 import { iconFiles } from './iconFiles'
 
@@ -44,7 +45,7 @@ function suiteTurn(history: readonly ChatItem[]): readonly ChatItem[] {
     {
       kind: 'agent',
       id: 'suite-done',
-      blocks: ['All 312 unit tests and 18 end-to-end tests pass.'],
+      blocks: [p('All 312 unit tests and 18 end-to-end tests pass.')],
     },
     { kind: 'turn-end', id: 'suite-end', duration: '3m 06s', files: [] },
   ]
@@ -70,7 +71,7 @@ const iconTurn: readonly ChatItem[] = [
   {
     kind: 'agent',
     id: 'plan',
-    blocks: ["I'll run the icon codemod on the app, then build and test."],
+    blocks: [p("I'll run the icon codemod on the app, then build and test.")],
   },
   {
     kind: 'tool',
@@ -92,7 +93,11 @@ const iconTurn: readonly ChatItem[] = [
     kind: 'agent',
     id: 'done',
     blocks: [
-      'Done. Every component imports its icons from `@acme/icons`, and the build passes.',
+      p(
+        'Done. Every component imports its icons from ',
+        code('@acme/icons'),
+        ', and the build passes.',
+      ),
     ],
   },
   {
@@ -117,7 +122,7 @@ const lostLines: readonly ChatItem[] = [
   {
     kind: 'agent',
     id: 'plan',
-    blocks: ["I'll record a profile of the checkout page first."],
+    blocks: [p("I'll record a profile of the checkout page first.")],
   },
   {
     kind: 'lost',
@@ -129,7 +134,11 @@ const lostLines: readonly ChatItem[] = [
     kind: 'agent',
     id: 'debounce',
     blocks: [
-      'The profile shows a lookup on each key press, so I debounced the lookups in `useAddressAutocomplete`.',
+      p(
+        'The profile shows a lookup on each key press, so I debounced the lookups in ',
+        code('useAddressAutocomplete'),
+        '.',
+      ),
     ],
   },
   {

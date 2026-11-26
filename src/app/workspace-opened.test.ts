@@ -27,7 +27,7 @@ test('the open of a stopped workspace ends after its Resume, so the screen shows
   const workspace = new WorkspaceModel(org, workspaceId)
   server.json('POST', resumePath, {
     ...workspaceFixtures('starting').detail,
-    eventNumber: 0,
+    eventNumber: server.events.last(workspaceId),
   })
   held.holdAnswer('POST', resumePath)
   const state = () => valueOf(workspace.detail.get())?.workspace.state

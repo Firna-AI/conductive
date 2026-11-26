@@ -21,7 +21,7 @@ async function changeFixture() {
   await writeFile(join(old, '.context', 'notes.md'), 'old notes\n')
   await writeFile(join(old, '.context', 'kept.md'), 'old copy\n')
   await writeFile(join(old, '.context', 'attachments', 'a.txt'), 'attached\n')
-  const run = join(f.root, 'run')
+  const run = join(f.root, 'runtime')
   const job = {
     id: f.job.id,
     fetchId: f.job.fetchId,

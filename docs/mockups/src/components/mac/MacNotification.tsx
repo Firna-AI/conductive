@@ -1,7 +1,7 @@
 import type { MacCommandRequest } from '../../fixtures/mac'
 import { checkoutAutocomplete } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
-import { MacAppIcon } from '../brand/Logo'
+import { macAppIcon } from '../../entries/components/brand/Logo.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import styles from './MacNotification.module.css'
 
@@ -12,7 +12,7 @@ import styles from './MacNotification.module.css'
 export function MacNotification(props: { request: MacCommandRequest }) {
   return (
     <ScreenLink className={styles.notification} to={paths.macPrompt}>
-      <MacAppIcon size={40} />
+      <macAppIcon.Component size={40} />
       <span className={styles.text}>
         <span className={styles.top}>
           <span className={styles.title}>Run a command on this Mac?</span>

@@ -1,12 +1,13 @@
 import { defineScreen } from '@mokly/mokly'
-import { MacAppScreen, macAppSchema } from '../../../screens/MacAppScreen'
+import { MacAppScreen } from '../../../screens/MacAppScreen'
+import { macAppSchema } from '../../../screens/macAppState'
 
 export const macStop = defineScreen({
   title: 'Stop the 15 minutes',
   description:
-    'The user pressed Stop in the bar of the 15 minutes. The Mac stopped them and saved the change, so the bar says Stopped, and each command from this workspace asks first again. The bar names the result until the next Stop of the workspace. Stop of a grant until Stop shows the same results.',
+    'The user pressed Stop in the bar of the 15 minutes. The Mac stopped them and saved the change, so the bar says Stopped, and each command from this workspace asks first again. The bar shows Stopped for 5 seconds, then goes, because no grant runs. A Stop that the Mac did not save or did not make stays until the next Stop of the workspace. Stop of a grant until Stop shows the same results.',
   rationale:
-    'The user asked for an explicit result of each change: done, done but not saved, or failed (7 November 2026). The result stays in the bar after the 15 minutes end, because their bar would otherwise go with the result.',
+    'The user asked for an explicit result of each change: done, done but not saved, or failed (7 November 2026). The result shows in the bar after the 15 minutes end, because their bar would otherwise go with the result. The user asked on 23 November 2026 that the Stopped notice go away after some time, so a Stop that the Mac made and saved goes after 5 seconds. A failure stays, because it needs the user.',
   relatedDocs: [],
   propSchema: macAppSchema,
   props: {

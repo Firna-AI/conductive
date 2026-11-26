@@ -26,18 +26,21 @@ pull request bar, and the owner picker. A host can give its own parts, as
   message its own text and files. In a workspace that runs, the sent chips
   of those files open copies of their bytes in the file tab, as
   [The development fake](dev-fake.md) says.
-- One counter numbers the events of all workspaces of the dev fake, and its
-  event source ignores the workspace. So an event of another workspace
-  leaves a gap in the event numbers of the chat. At the next event of the
-  open workspace, the chat opens its stream again, and the history fills
-  the gap. Each such event costs one more connection, and the chat still
-  applies the later events. Use `npm run dev` for the chat load and the
-  kept chat. The
+- The dev fake numbers the events of each workspace separately. The
+  workspace read gives the seed and cutoff for that workspace. Each socket
+  takes its history from the same log and starts after the caller's cursor.
+  Use `npm run dev` for the chat load and the kept chat. The
   [chat development page](../chat/dev/README.md) has a fake with state for
   live events and writes.
-- The production build uses `live-services.ts`: the Worker on the origin of
-  the page, its event socket, and an `XMLHttpRequest` for each raw part of
-  an upload, which measures the bytes that the browser sent.
+- The production build uses `createLiveServices` of `live-services.ts`.
+  It requires an app origin and a credential mode. A browser gives
+  the origin of its page and `same-origin`, the default credential mode of
+  `fetch`. The Mac app gives its configured Worker origin and `include`,
+  as the [Mac app README](../../desktop/README.md) says. The API requests,
+  the event and terminal sockets, the paths that `leave` opens, and
+  `AppServices.appOrigin` use that origin. Each raw part of an upload is
+  an `XMLHttpRequest` to the same origin, which measures the bytes that
+  the browser sent.
 
 ## Composition
 
@@ -55,6 +58,24 @@ outside each message box and the chat around it does nothing, as
 hears each drag last, on the window. It leaves each drag that a part took,
 such as a message box or the Feedback dialog, and it never stops an event.
 A drag of text or of a link keeps the action of the browser.
+
+`App` also mounts `useKeyboardViewport` of `keyboard-viewport.ts`. Safari
+on iOS keeps the page at its full height under an on-screen keyboard, and
+scrolls the page up to show the focused field. While the keyboard shows,
+the hook sets `--ui-screen-height` to the height of the visible part and
+keeps the page at its top. So the header stays in view, and the app ends
+at the keyboard. While the page is zoomed, the hook changes nothing, so a
+pinch zoom keeps the behaviour of the browser. On
+Android, the viewport tag of `index.html` asks Chrome to resize the page
+for the keyboard, with `interactive-widget=resizes-content`.
+
+On iOS 26 and later, a Home Screen web app gets a blur over the top edge
+of the page, and the blur reaches the header. WebKit skips the blur when
+a fixed box with a solid background covers the top edge. So `index.html`
+holds the band `.top-edge`, only in a Home Screen app on iOS. The band is
+12px tall, full width, and in the colour of `--ui-bar`. It paints nothing,
+because `background-clip: text` clips its background to its text, and it
+has no text. It takes no taps.
 
 The workspace screen draws the frame, the header, the start steps, and the
 states of the sandbox, with Restore on the bar of an archived workspace
@@ -91,7 +112,7 @@ The org settings mount the members UI of `../members/`: `MembersSettings`
 for the Members tab, Delete org in the General tab of an admin, the restore
 page at the address of a deleted org, and the read-only Repositories and Cloud computer
 tabs of a member. The Cloud computer tab of a member gets the live builds,
-log, and settings of `ComputerModel`. The Repositories tab of a member gets
+log, settings, and skills lookup of `ComputerModel`. The Repositories tab of a member gets
 the live builds of `OrgModel`, for its repository notice.
 `useMembersApi(orgId)` in
 `../shell/settings/members-api.ts` gives one members client for each org,
@@ -115,12 +136,12 @@ fresh list read through `Refresher.reread`, after any current read finishes.
 
 ## Screens
 
-[Screens](screens.md) gives the rules of the screens of the app shell:
-the account and Get started, sign-in, invitations, orgs, panels and
-layers, the trees of the workspace list, the focus, saved drafts, New
-workspace as a page or a dialog,
-with its attached files and the send key that every composer shares, and
-the waitlist.
+[Screens](screens.md) gives the rules of the screens of the app shell: the
+account and Get started, sign-in, invitations, orgs, panels and layers, the
+trees of the workspace list, the focus, saved drafts, New workspace as a
+page or a dialog, with its attached files and the send key that every
+composer shares, and the waitlist.
+[Start from a branch](start-branch.md) covers the branch of New workspace.
 [Command palette and keys](palette-and-keys.md) gives the rules of the
 command palette and of the keyboard shortcuts.
 [Feedback](palette-screens.md) gives the rules of the Feedback dialog that
@@ -130,10 +151,10 @@ the Help row of the palette opens.
 
 - A screen reads data only through a model and `useStore`. A model sends the
   request, parses the answer with the readers in `api/`, and keeps the
-  result. An answer of an unknown shape is an `ApiError`, not a guess.
-  One field is the exception. A missing or unknown `github` summary of a
-  workspace reads as null, so an older reply still reads. The
-  [shared contracts](../shared/README.md) give that reader.
+  result. An answer of an unknown shape is an `ApiError`. A missing or
+  unknown `github` summary reads as null, as the
+  [shared contracts](../shared/README.md) say. An absent or unreadable seed
+  keeps the workspace detail and uses the stream's replay.
 - A screen never sets a value of an org. The stores of `OrgModel` are
   read-only for screens, and writes go through the actions and models.
 - A secret goes out once, through `SecretForm`, and the field is empty after
@@ -204,9 +225,14 @@ the Help row of the palette opens.
   field or terminal after a shortcut consumes the press.
   `KeyPress.layoutModifiers` carries the modifiers taken by held layout
   switch keys. `onKey.layoutModifiers()` gives a recorder the same state
-  for its own event. `windowKeys` shares this state per window and resets
-  it on key-up or blur. `windowLayoutModifiers(window)` reads the same
-  snapshot for callers with a window.
+  for its own event. `KeyPress.firstPressConsumed` is true on a repeat
+  when a listener called `preventDefault` on the first press of the same
+  physical key. A first press always has false. The
+  [shortcut model](shortcuts/README.md) stops each repeat of such a key.
+  `windowKeys` shares both states per window and keeps them between
+  listener subscriptions. It resets a key on its key-up, and every key on
+  blur. `windowLayoutModifiers(window)` reads the same layout modifiers
+  for callers with a window.
 - `AppServices.appVersion` is the version of the build: the version of the
   root `package.json` and the short commit, as `<version> (<commit>)`.
   `build-version.ts` at the repository root makes it for the web and Mac
@@ -215,11 +241,19 @@ the Help row of the palette opens.
   feedback message carries it.
 - An address that people share, such as the invite link, starts with
   `AppServices.appOrigin`: the origin of the page in a browser. The Mac
-  app loads the page from its own origin, so it names the app host of the
-  brand.
-- The shell reuses the design tokens, the pure parts, and the CSS modules of
-  the [mockups](../../docs/mockups/README.md). It never imports a mockup
-  screen, a fixture, `paths.ts`, `ScreenLink`, or Mokly.
+  app loads the page from its own origin, so it gives the Worker origin of
+  its build. `CONDUCTIVE_APP_ORIGIN` selects that origin, as
+  [Development](../../desktop/README.md#development) in the Mac app README
+  says. So a join link names the deployment that owns its code. Links in
+  chat text and the file preview to a page of the app at this origin are
+  [links of the app](../../docs/protocol/chat-links.md#links).
+  Each opens its page in the same window.
+- The shell reuses the design tokens, the parts, and the CSS Modules of
+  the [shared UI](../ui/README.md) in `src/ui/`. The
+  [mockups](../../docs/mockups/README.md) draw the same parts. The shell
+  imports nothing from `docs/mockups/`: no mockup screen, no fixture, no
+  `paths.ts`, and no `ScreenLink`. A lint rule rejects such an import
+  outside development code and tests. The shell never imports Mokly.
 - Components give refs and callbacks to their owners. Product code does
   not find an element that another component owns by a selector. The focus
   helpers of a menu, a sheet, and a dialog look only inside their own layer.
@@ -239,6 +273,8 @@ the drag, and the operator section.
 [Key code: the workspace list and the workspace models](key-code-workspaces.md)
 covers the workspace list with its menus, Archive and Restore, and the
 models of an open workspace and of New workspace.
+The list's merge queue controls use the saved GitHub facts and filtered
+branch labels from the workspace list response.
 [Key code: drafts and attached files](key-code-drafts.md) covers the draft
 text, the attached files, and their uploads, which the chat and New
 workspace share.

@@ -30,7 +30,10 @@ function setup(server: FakeApiServer) {
 }
 
 test('a live failed start keeps its saved cause and steps over an older Resume reply', async () => {
-  const server = new FakeApiServer({ workspaceState: 'starting' })
+  const server = new FakeApiServer({
+    workspaceState: 'starting',
+    legacyWorkspaceRead: true,
+  })
   const { held, events, workspace } = setup(server)
   await workspace.open()
   const before = valueOf(workspace.detail.get())

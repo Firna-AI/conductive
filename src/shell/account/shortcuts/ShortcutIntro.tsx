@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { RotateCcw } from 'lucide-react'
-import { productName } from '../../../../docs/mockups/src/brand'
-import { KeyChips } from '../../../../docs/mockups/src/components/common/KeyChips'
-import styles from '../../../../docs/mockups/src/components/settings/ShortcutsSections.module.css'
+import { productName } from '../../../shared/brand'
+import { KeyChips } from '../../../ui/components/common/KeyChips'
+import styles from '../../../ui/components/settings/ShortcutsSections.module.css'
 import type { ShortcutHost } from '../../../app/shortcuts/host'
 import type { ShortcutKeyboard } from '../../../shared/shortcut-key'
 import { ActionButton } from '../../ui/actions'
@@ -19,8 +19,8 @@ function TerminalLine(props: { keyboard: ShortcutKeyboard }) {
   if (props.keyboard === 'mac') {
     return (
       <p className={styles.introLine}>
-        Keys without <KeyChips shortcut="⌘" /> go to the terminal while it has
-        the focus.
+        Keys without <KeyChips shortcut={['⌘']} /> go to the terminal while it
+        has the focus.
       </p>
     )
   }

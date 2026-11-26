@@ -1,7 +1,7 @@
 import { CircleAlert } from 'lucide-react'
-import { ActionButton } from '../common/actions'
-import { EmptyState } from '../common/EmptyState'
-import { previewOpenFailedCopy } from './previewCopy'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
+import { EmptyState } from '../../../../../src/ui/components/common/EmptyState'
+import { previewOpenFailedCopy } from '../../../../../src/ui/components/tools/previewCopy'
 
 /**
  * A preview that the app could not open, in place of its page: the title,

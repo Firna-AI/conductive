@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-import { productName } from '../../docs/mockups/src/brand.ts'
+import { productName } from '../../src/shared/brand.ts'
 
 if (process.platform !== 'darwin') {
   throw new Error('Build the Mac DMG and ZIP packages on macOS')

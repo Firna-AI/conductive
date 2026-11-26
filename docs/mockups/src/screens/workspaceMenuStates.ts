@@ -1,5 +1,5 @@
 import type { RowDrawing } from '../components/workspaces/rowControls'
-import type { Submenu } from '../components/workspaces/workspaceMenu'
+import type { Submenu } from '../../../../src/ui/components/workspaces/workspaceMenu'
 import { workspaceList } from '../fixtures/workspaces'
 import {
   archivedTarget,

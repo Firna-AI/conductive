@@ -13,11 +13,22 @@ import noticeStyles from './ui/Notice.module.css'
 
 const now = Date.UTC(2026, 10, 10, 12)
 
+/**
+ * Acme saved a skills repository, whose lookup lists one skill, so the
+ * Skills section names no admin, and only a notice of the builds can.
+ */
 const settings: OrgSettings = {
   installScript: 'npm ci',
   startupScript: '',
+  skillsRepository: 'acme/agent-skills',
   envVars: [],
   updatedAt: 0,
+}
+const skills = {
+  repository: 'acme/agent-skills',
+  skills: ['testing'],
+  notice: null,
+  clashes: [],
 }
 
 function build(
@@ -68,8 +79,10 @@ function computer(shown: BuildsResponse, suspended = false) {
       builds={shown}
       log={[]}
       now={now}
+      onRetrySkills={() => undefined}
       org={org}
       settings={settings}
+      skills={{ status: 'ready', value: skills }}
       suspended={suspended}
       timeZone="UTC"
       viewport="desktop"
@@ -87,7 +100,7 @@ describe('the repository notice of a member', () => {
         name: 'failed build',
         element: computer(failed),
         present: [
-          `${intro} acme/admin-dashboard is ready after a build succeeds The last build failed. An admin can try it again.`,
+          `${intro} The last build failed acme/admin-dashboard is ready after a build succeeds. An admin can try it again.`,
         ],
         absent: ['Try again', 'Build computer', noticeStyles.busy, 'open=""'],
       },
@@ -116,7 +129,7 @@ describe('the repository notice of a member', () => {
         name: 'suspended org',
         element: computer(failed, true),
         present: [
-          'acme/admin-dashboard is ready after a build succeeds The last build failed.',
+          'The last build failed acme/admin-dashboard is ready after a build succeeds.',
         ],
         absent: ['An admin can'],
       },

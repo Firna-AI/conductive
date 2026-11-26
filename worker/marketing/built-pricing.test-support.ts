@@ -1,7 +1,7 @@
 import { Window } from 'happy-dom'
 import { expect } from 'vitest'
 
-import { productName } from '../../docs/mockups/src/brand'
+import { productName } from '../../src/shared/brand'
 import { sitePaths } from '../../src/marketing/links'
 import { links } from './html.test-support'
 

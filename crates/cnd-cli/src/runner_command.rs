@@ -3,7 +3,6 @@
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::time::Duration;
 
 use cnd_cli::runner_update::idle::IdleUpdates;
 use cnd_cli::runner_update::ports::RunnerSwap;
@@ -11,46 +10,30 @@ use cnd_cli::runner_update::process::SystemSwap;
 use cnd_cli::runner_update::releases::RunnerReleases;
 use cnd_cli::runner_update::swap::UpdateRunner;
 use cnd_cli::update::disk::DiskStore;
+use cnd_cli::update::presence::SDK_HELPER_PART;
 use cnd_cli::update::staging::NODE_PART;
-use cnd_runner::clock::SystemClock;
 use cnd_runner::config::Configuration;
-use cnd_runner::disk::AtomicDisk;
-use cnd_runner::emitter::{EventEmitter, SavingEmitter};
-use cnd_runner::engine::dependencies::{EngineDependencies, GitTurnRepositories, TurnRepositories};
-use cnd_runner::engine::handler::AgentEngine;
 use cnd_runner::file_server::files::RepositoryFiles;
+use cnd_runner::file_server::font_files::{PreviewFiles, SYSTEM_FONT_FOLDERS};
 use cnd_runner::file_server::listener::LoopbackListener;
 use cnd_runner::file_server::policy::FilePolicy;
 use cnd_runner::file_server::server::{FileServer, HttpFileServer};
-use cnd_runner::filter::service::{CredentialFilter, Credentials, FilteredEmitter};
-use cnd_runner::helper::process::NodeHelpers;
-use cnd_runner::helper::startup::RunnerStartup;
-use cnd_runner::ports::proc::{DiskProcReader, ProcPortScanner};
-use cnd_runner::ports::reporter::{PortReporter, PortReports};
-use cnd_runner::relocation::RepositoryFolders;
-use cnd_runner::reports::files::FileReporter;
-use cnd_runner::reports::handler::{ReportCommandHandler, ReportDependencies};
-use cnd_runner::repository::git::{Cancellation, ChildGit};
-use cnd_runner::repository::io::LocalRepositoryIo;
-use cnd_runner::runtime::{RunExit, Runner, RunnerCore};
-use cnd_runner::socket::WebSocketConnector;
-use cnd_runner::state::store::{DurableStore, EventStore};
+use cnd_runner::runtime::RunExit;
+use cnd_runner::startup_log::{ProcessStartupLog, StartupLog};
 use cnd_runner::update::ReleaseReadiness;
-use cnd_runner::watcher::linux::LinuxWatchDriver;
-use cnd_runner::watcher::service::ReportWatchService;
 use cnd_runner_interface::file_server::FILE_SERVER_PORT;
 use tokio::signal::unix::{SignalKind, signal};
 use tokio::sync::watch;
-use uuid::Uuid;
+use tokio::time::Instant;
 
 use crate::error::{ErrorResultExt, Result};
 use crate::release::VERSION;
+use crate::runner_round::{RoundResources, run_once};
+use crate::runner_services;
 use crate::runner_start::RunnerStart;
 
-/// Role containing the SDK helper and its runtime packages.
-pub(crate) const SDK_HELPER_PART: &str = "sdk-helper";
-
 pub(crate) async fn execute() -> Result<()> {
+    let startup_log: Arc<dyn StartupLog> = Arc::new(ProcessStartupLog::new(Instant::now()));
     let environment: BTreeMap<String, String> = std::env::vars().collect();
     let cwd = std::env::current_dir().internal()?;
     let home = environment
@@ -86,7 +69,12 @@ pub(crate) async fn execute() -> Result<()> {
                 release.join(SDK_HELPER_PART).join("sdk-helper.mjs")
             }
         });
-    let helper = HelperPaths { node, program };
+    let services = runner_services::manager(&configuration, executable.clone(), development);
+    let helper = RoundResources {
+        node,
+        program,
+        services: services.clone(),
+    };
     let install_root = PathBuf::from("/opt/conductive");
     let release_store = Arc::new(DiskStore::new(install_root.clone()));
     let releases: Arc<dyn ReleaseReadiness> = Arc::new(RunnerReleases {
@@ -114,7 +102,10 @@ pub(crate) async fn execute() -> Result<()> {
             let server: Arc<dyn FileServer> = Arc::new(HttpFileServer {
                 listener: Arc::new(listener),
                 requests: Arc::new(FilePolicy {
-                    files: Arc::new(RepositoryFiles { root: served_root }),
+                    files: Arc::new(PreviewFiles::new(
+                        Arc::new(RepositoryFiles { root: served_root }),
+                        SYSTEM_FONT_FOLDERS.map(PathBuf::from),
+                    )),
                 }),
             });
             let stopped = shutdown.clone();
@@ -125,6 +116,16 @@ pub(crate) async fn execute() -> Result<()> {
             None
         }
     };
+    if services.reconcile().await.is_err() {
+        tracing::warn!("The local service state could not be restored.");
+    }
+    let server = runner_services::server(services);
+    let stopped = shutdown.clone();
+    let service_socket = tokio::spawn(async move {
+        if server.serve(stopped).await.is_err() {
+            tracing::warn!("The local service controls could not start.");
+        }
+    });
     let start = RunnerStart::new(file_server.is_some());
     let result = async {
         while !*shutdown.borrow() && shutdown.has_changed().is_ok() {
@@ -134,6 +135,7 @@ pub(crate) async fn execute() -> Result<()> {
                 &helper,
                 executable.clone(),
                 updates.clone(),
+                startup_log.clone(),
                 shutdown.clone(),
             )
             .await?;
@@ -157,118 +159,7 @@ pub(crate) async fn execute() -> Result<()> {
         task.abort();
         let _ = task.await;
     }
+    service_socket.abort();
+    let _ = service_socket.await;
     result
-}
-
-/// The pinned Node and helper bundle of the running release.
-struct HelperPaths {
-    node: PathBuf,
-    program: PathBuf,
-}
-
-async fn run_once(
-    start: &RunnerStart,
-    configuration: Configuration,
-    helper: &HelperPaths,
-    executable: PathBuf,
-    releases: Arc<dyn ReleaseReadiness>,
-    shutdown: watch::Receiver<bool>,
-) -> Result<RunExit> {
-    let helpers = Arc::new(NodeHelpers {
-        node: helper.node.clone(),
-        program: helper.program.clone(),
-        environment: NodeHelpers::workspace_environment(&configuration),
-    });
-    let clock = Arc::new(SystemClock);
-    let store: Arc<dyn EventStore> = Arc::new(DurableStore::new(
-        Arc::new(AtomicDisk::new(configuration.state_path.clone())),
-        Uuid::new_v4().to_string(),
-    ));
-    store.load().await.internal()?;
-    let loaded = store.snapshot().await;
-    let link = Arc::new(
-        start
-            .link(
-                configuration.workspace_id.clone(),
-                configuration.request.clone(),
-                Arc::new(WebSocketConnector),
-                clock.clone(),
-                store.clone(),
-            )
-            .with_repository_folder(&configuration.cwd),
-    );
-    let io = Arc::new(LocalRepositoryIo);
-    let folders = RepositoryFolders::new(&configuration, io.clone());
-    let filter = Arc::new(CredentialFilter::default());
-    filter
-        .add(configuration.request.workspace_token.clone())
-        .internal()?;
-    let saving: Arc<dyn EventEmitter> = Arc::new(SavingEmitter::new(link.clone()));
-    let chat: Arc<dyn EventEmitter> =
-        Arc::new(FilteredEmitter::new(filter.clone(), saving.clone()));
-    let repositories = Arc::new(GitTurnRepositories {
-        root: configuration.cwd.clone(),
-        git: Arc::new(ChildGit),
-        io,
-    });
-    let files = Arc::new(FileReporter::new(
-        repositories.open(Cancellation::default()),
-        configuration.default_branch.clone(),
-        saving.clone(),
-        filter.clone(),
-        loaded.file_revisions.clone(),
-    ));
-    let ports: Arc<dyn PortReports> = Arc::new(PortReporter::new(
-        Arc::new(ProcPortScanner::new(
-            Arc::new(DiskProcReader),
-            rustix::process::getuid().as_raw(),
-            configuration.home.clone(),
-            configuration.cwd.clone(),
-        )),
-        saving.clone(),
-        filter.clone(),
-    ));
-    let watches = Arc::new(ReportWatchService::new(
-        Arc::new(LinuxWatchDriver),
-        files.clone(),
-        Some(ports.clone()),
-        configuration.cwd.clone(),
-        PathBuf::from("/run/conductive-terminal/restore-ended"),
-    ));
-    let startup = Arc::new(RunnerStartup {
-        home: configuration.home.clone(),
-        helpers: helpers.clone(),
-        executable,
-    });
-    let engine = Arc::new(AgentEngine::new(
-        EngineDependencies {
-            configuration,
-            store: store.clone(),
-            emitter: chat,
-            credentials: filter.clone(),
-            helpers,
-            repositories,
-            clock: clock.clone(),
-            startup,
-            background_limit: Duration::from_secs(30 * 24 * 60 * 60),
-        },
-        loaded.clone(),
-    ));
-    let handler = Arc::new(ReportCommandHandler::new(
-        ReportDependencies {
-            files,
-            ports: Some(ports),
-            emitter: saving,
-            link: link.clone(),
-            store: store.clone(),
-            clock: clock.clone(),
-            filter,
-            watches: Some(watches),
-            next: engine,
-        },
-        loaded.reports.commands,
-    ));
-    let runner: Arc<dyn Runner> =
-        Arc::new(RunnerCore::new(link, store, clock, handler, releases).with_folders(folders));
-    runner.run(shutdown).await.internal()
 }

@@ -4,11 +4,11 @@ import {
   pictureSchemes,
   type PictureCapture,
   type PictureScheme,
-} from '../../docs/mockups/src/screens/marketingPictureCaptures'
+} from '../ui/screens/marketingPictureCaptures'
 import type {
   MarketingPictureKey,
   PictureLayout,
-} from '../../docs/mockups/src/screens/marketingPictureList'
+} from '../ui/screens/marketingPictureList'
 
 /**
  * The address of each picture file of `pictures/`, by its path from this

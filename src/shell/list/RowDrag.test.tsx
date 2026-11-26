@@ -24,7 +24,7 @@ import {
 import { SectionList } from './SectionList'
 
 describe('the drag of a workspace row', () => {
-  test('moves the workspace to the place under the pointer, keeps that place outside every section, and moves nothing when it ends at the own place of the row or starts on Archive', async () => {
+  test('moves to the section under the pointer and cancels outside the list, at its own place, or on Archive', async () => {
     const app = await startedApp(new FakeApiServer())
     const groups = groupWorkspaces(
       coreFixtures().sectionList.sections,
@@ -84,11 +84,16 @@ describe('the drag of a workspace row', () => {
     mouse(window, 'pointermove', { clientY: 240 })
     const outside = status()
     mouse(window, 'pointerup', { clientY: 240, buttons: 0 })
+    expect(moves).toEqual([])
+    // A release over Checkout moves the same row into that section.
+    mouse(rowLink(view, 'pricing-copy'), 'pointerdown', { clientY: 70 })
+    mouse(window, 'pointermove', { clientY: 165 })
+    mouse(window, 'pointerup', { clientY: 165, buttons: 0 })
 
     expect({ fromArchive, inCheckout, outside, moves }).toEqual({
       fromArchive: undefined,
       inCheckout: 'Moving Pricing page copy to Checkout',
-      outside: 'Moving Pricing page copy to Checkout',
+      outside: 'Moving Pricing page copy to General',
       moves: [
         {
           workspaceId: 'pricing-copy',

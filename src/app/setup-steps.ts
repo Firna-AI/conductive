@@ -5,7 +5,7 @@ import { anyLoginServes, inOrgs } from './default-logins'
 import { stepComplete } from './get-started'
 import type { Readable } from './store'
 
-/** The sources of the steps: the reply of the API, the org list, the account. */
+/** The sources of the steps: the API reply, the active orgs, and the account. */
 export interface SetupSources {
   readonly server: Readable<GetStartedResponse | null>
   readonly orgs: Readable<readonly OrgSummary[]>
@@ -14,11 +14,11 @@ export interface SetupSources {
 
 /**
  * The org of Get started and of the address `/`: the first org that is not
- * deleted. Null without one, so a person whose orgs are all deleted gets
- * Create org again. The Account page lists the deleted orgs, with Restore.
+ * deleted. `orgs` comes from the active source. Null without one, so a
+ * person whose orgs are all deleted gets Create org again.
  */
 export function setupOrg(orgs: readonly OrgSummary[]): OrgSummary | null {
-  return orgs.find((org) => !org.deletion) ?? null
+  return orgs[0] ?? null
 }
 
 /** The steps from the reply of the API, the org list, and the account. */

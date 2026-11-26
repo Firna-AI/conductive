@@ -1,4 +1,4 @@
-import styles from '../../../docs/mockups/src/components/palette/CommandPalette.module.css'
+import styles from '../../ui/components/palette/CommandPalette.module.css'
 import type { PaletteEmpty as PaletteEmptyState } from '../../app/palette/palette-results'
 
 /** What shows in place of the list when the tab has no row and no status part. */

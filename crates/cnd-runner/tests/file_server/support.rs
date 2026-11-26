@@ -119,21 +119,47 @@ impl Fixture {
             .unwrap()
             .parse()
             .unwrap();
-        let headers = lines
+        let headers: BTreeMap<String, String> = lines
             .map(|line| {
                 let (key, value) = line.split_once(':').unwrap();
                 (key.to_ascii_lowercase(), value.trim().to_owned())
             })
             .collect();
+        let wire = &bytes[split + 4..];
+        let body = if headers
+            .get("transfer-encoding")
+            .is_some_and(|value| value == "chunked")
+            && !wire.is_empty()
+        {
+            chunked_body(wire)
+        } else {
+            wire.to_vec()
+        };
         Reply {
             status,
             headers,
-            body: bytes[split + 4..].to_vec(),
+            body,
         }
     }
 
     pub(super) async fn finish(self) {
         self.stop.send_replace(true);
         self.task.await.unwrap();
+    }
+}
+
+/// Decode data frames from the server's HTTP/1.1 chunked body.
+fn chunked_body(mut wire: &[u8]) -> Vec<u8> {
+    let mut body = Vec::new();
+    loop {
+        let end = wire.windows(2).position(|part| part == b"\r\n").unwrap();
+        let size = std::str::from_utf8(&wire[..end]).unwrap();
+        let size = usize::from_str_radix(size, 16).unwrap();
+        if size == 0 {
+            return body;
+        }
+        let (data, tail) = wire[end + 2..].split_at(size);
+        body.extend_from_slice(data);
+        wire = tail.strip_prefix(b"\r\n").unwrap();
     }
 }

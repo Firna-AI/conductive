@@ -1,9 +1,10 @@
+import type { WorkspaceSeed } from '../shared/workspace-state-read'
 import {
   readStreamMessage,
   type StreamEnvelope,
   type StreamMessage,
 } from './api/read-events'
-import { Store } from './store'
+import { Store, type Readable } from './store'
 import type { OpenTerminalSocket } from './terminal-transport'
 
 export interface StreamTarget {
@@ -58,6 +59,8 @@ type StreamListener = (envelope: StreamEnvelope, replayed: boolean) => void
  */
 type ReplayEnded = (through: number) => void
 
+type StreamBaseline = (seed: WorkspaceSeed, workspaceId: string) => void
+
 /**
  * The ordered events of one open workspace. Every subscriber gets each
  * event once, in the order of its number. A resent event is dropped. A gap
@@ -82,14 +85,20 @@ export class WorkspaceStream {
    * again after a reconnect. A start after a stop counts nothing.
    */
   readonly reconnects = new Store(0)
+  private readonly baselineApplied = new Store(false)
+  /** True after the first read sets the stream's starting state. */
+  readonly seeded: Readable<boolean> = this.baselineApplied
   private readonly listeners = new Set<{
     listener: StreamListener
     replayEnded?: ReplayEnded
+    baseline?: StreamBaseline
   }>()
   private closeSource: (() => void) | null = null
   private cancelRetry: (() => void) | null = null
   private failures = 0
   private running = false
+  /** Only the first start can replace history with a read. */
+  private initial = true
   /** The connection takes the place of a lost one. */
   private reopened = false
   /**
@@ -116,8 +125,20 @@ export class WorkspaceStream {
     this.delay = delay
   }
 
+  /** Gives a new stream the complete state through its read cutoff. */
+  applyBaseline(cutoff: number, seed: WorkspaceSeed): void {
+    if (!this.initial) return
+    this.initial = false
+    for (const entry of [...this.listeners])
+      entry.baseline?.(seed, this.target.workspaceId)
+    this.progress = cutoff
+    this.last.set(cutoff)
+    this.baselineApplied.set(true)
+  }
+
   start(): void {
     if (this.running) return
+    this.initial = false
     this.running = true
     this.reopened = false
     this.connect()
@@ -133,10 +154,15 @@ export class WorkspaceStream {
 
   /**
    * Gives each event of the workspace once, in order, from the replays and
-   * live. `replayEnded` tells a part where each replay ends.
+   * live. `replayEnded` tells a part where each replay ends. `baseline`
+   * gives a part the state read before the first connection.
    */
-  subscribe(listener: StreamListener, replayEnded?: ReplayEnded): () => void {
-    const entry = { listener, replayEnded }
+  subscribe(
+    listener: StreamListener,
+    replayEnded?: ReplayEnded,
+    baseline?: StreamBaseline,
+  ): () => void {
+    const entry = { listener, replayEnded, baseline }
     this.listeners.add(entry)
     return () => this.listeners.delete(entry)
   }

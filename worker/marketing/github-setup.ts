@@ -1,4 +1,4 @@
-import type { GitHubSetupOutcome } from '../../docs/mockups/src/screens/githubSetupCopy'
+import type { GitHubSetupOutcome } from '../../src/ui/screens/githubSetupCopy'
 import { GITHUB_SETUP_PAGES } from '../../src/shared/site-build'
 import { readSiteFiles, type SiteAssets } from './files'
 import { pageResponse, siteUnavailable } from './page'

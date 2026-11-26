@@ -88,6 +88,7 @@ impl GitRepository {
             args.push("--cached");
         }
         args.extend([
+            "--no-color",
             "--no-ext-diff",
             "--no-textconv",
             "--binary",

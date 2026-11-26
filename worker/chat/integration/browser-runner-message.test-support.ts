@@ -1,4 +1,5 @@
 import type { WorkspaceToRunner } from '../../../src/shared/generated/WorkspaceToRunner'
+import type { RunnerServiceCommand } from '../../../src/shared/generated/RunnerServiceCommand'
 import { readRequest } from '../../../runner/sdk-helper/src/read-request'
 import { parseChoice } from '../../../runner/sdk-helper/src/read-input'
 import {
@@ -12,7 +13,7 @@ import { RUNNER_PROTOCOL_VERSION } from '../../../src/shared/runner'
 export function readBrowserRunnerMessage(
   value: unknown,
   warn: (message: string) => void,
-): WorkspaceToRunner {
+): Exclude<WorkspaceToRunner, RunnerServiceCommand> {
   const input = object(value)
   switch (input.type) {
     case 'welcome':

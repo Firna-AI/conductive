@@ -26,13 +26,13 @@ Its SVG path matches
 Files:
 
 - Marketing site: `src/marketing/components/GitHubMark.astro`.
-- Shared app and mockups: `docs/mockups/src/components/common/GitHubMark.tsx`.
+- Shared app and mockups: `src/ui/components/common/GitHubMark.tsx`.
 
 The [complete upstream MIT notice](licenses/octicons-v19.21.0-LICENSE.txt)
 includes the copyright notice for GitHub Inc.
 
 ## Inter font
 
-The bundled font is `docs/mockups/src/fonts/InterVariable.woff2`.
-Its existing [SIL Open Font License 1.1 notice](docs/mockups/src/fonts/Inter-OFL.txt)
+The bundled font is `src/ui/fonts/InterVariable.woff2`.
+Its existing [SIL Open Font License 1.1 notice](src/ui/fonts/Inter-OFL.txt)
 applies to that font.

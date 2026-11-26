@@ -1,7 +1,7 @@
 import {
   restartableStates,
   restartCopy,
-} from '../../docs/mockups/src/components/workspace/restartCopy'
+} from '../../src/ui/components/workspace/restartCopy'
 import { HttpError } from '../http'
 import type { DurableLifecycleState } from './durable-types'
 
@@ -14,6 +14,10 @@ export function workspaceNotRunning(): HttpError {
     'workspace_not_running',
     'The cloud computer is not running. Open the workspace and try again.',
   )
+}
+
+export function canRestartLifecycle(state: DurableLifecycleState): boolean {
+  return restartableStates.has(state.state) && state.startStop === undefined
 }
 
 /**
@@ -31,8 +35,7 @@ export function restartingLifecycle(
       'workspace_not_found',
       'The workspace is not available.',
     )
-  if (!restartableStates.has(state.state) || state.startStop !== undefined)
-    throw workspaceNotRunning()
+  if (!canRestartLifecycle(state)) throw workspaceNotRunning()
   return {
     ...state,
     state: 'starting',
@@ -60,8 +63,20 @@ export function failedRestartLifecycle(
     ...state,
     state: 'error',
     softwareRestartAt: undefined,
+    automaticRestartSubmitted: undefined,
     error: { code: 'restart_failed', message: restartCopy.failed, log: null },
   }
+}
+
+export function requiresFreshRunnerReady(
+  state: DurableLifecycleState | undefined,
+): boolean {
+  return (
+    state?.state === 'starting' &&
+    state.automaticRestartSubmitted === true &&
+    state.softwareRestartAt !== undefined &&
+    state.automaticRestartAt === state.softwareRestartAt
+  )
 }
 
 /** The time when the alarm ends a restart whose runner is not back. */

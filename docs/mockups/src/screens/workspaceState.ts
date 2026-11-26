@@ -7,7 +7,7 @@ import { previewStates } from '../components/tools/PortPreview'
 import { toolKeys } from '../components/workspace/tools'
 import { conversationKeys } from '../fixtures/conversationKeys'
 import { pathStates } from '../fixtures/maskedFiles'
-import { bannerStates } from '../fixtures/pullRequests'
+import { bannerStates } from '../../../../src/ui/components/workspace/barModel'
 import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
 import { startErrorKeys } from '../fixtures/starting'
 import { terminalStates } from '../fixtures/terminals'
@@ -30,12 +30,28 @@ import {
   layoutStateKeys,
   layoutStateProperties,
 } from './layoutState'
+import { listsStateProperties } from './listsState'
 import { overlayStates } from './overlayStates'
+import {
+  requestStateDefaults,
+  requestStateKeys,
+  requestStateProperties,
+} from './requestState'
 import {
   rowMenuStateDefaults,
   rowMenuStateKeys,
   rowMenuStateProperties,
 } from './rowMenuState'
+import {
+  explainStateDefaults,
+  explainStateKeys,
+  explainStateProperties,
+} from './explainState'
+import {
+  serviceStateDefaults,
+  serviceStateKeys,
+  serviceStateProperties,
+} from './serviceState'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -50,8 +66,7 @@ export const workspaceStateSchema = {
     'sandbox',
     'startError',
     'conversation',
-    'otherRequest',
-    'shownRequest',
+    ...requestStateKeys,
     'fold',
     'pictures',
     'banner',
@@ -59,6 +74,7 @@ export const workspaceStateSchema = {
     'tool',
     'terminals',
     'ports',
+    ...serviceStateKeys,
     'focus',
     'tab',
     'tabRow',
@@ -76,6 +92,7 @@ export const workspaceStateSchema = {
     ...feedbackStateKeys,
     ...rowMenuStateKeys,
     ...barStateKeys,
+    ...explainStateKeys,
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -101,19 +118,7 @@ export const workspaceStateSchema = {
      */
     startError: { enum: startErrorKeys },
     conversation: { enum: conversationKeys },
-    /**
-     * An open request of a session that does not show: none, or the late
-     * request for PROD_DATABASE_URL of the first session, Address
-     * autocomplete. Its tab then shows the needs-input mark, and the
-     * workspace needs input (needs-input decision 2 B).
-     */
-    otherRequest: { enum: ['none', 'first-session'] },
-    /**
-     * The place of the card on top of the stack of requests above the
-     * composer, from 1, in the order of the stack. Previous and Next of the
-     * stack move it. A place past the end shows the last card.
-     */
-    shownRequest: { type: 'integer', minimum: 1, maximum: 4 },
+    ...requestStateProperties,
     /**
      * The fold of the work of each ended turn: closed, as it starts, open,
      * or open with its last message line open too. A view runs no script,
@@ -151,6 +156,7 @@ export const workspaceStateSchema = {
      * a notice.
      */
     ports: { enum: previewStates },
+    ...serviceStateProperties,
     /** What a phone shows: the chat, the files, or the tool. */
     focus: { enum: ['chat', 'files', 'tool'] },
     /** The tab of the centre column, as `tabStates` says. */
@@ -183,9 +189,9 @@ export const workspaceStateSchema = {
      * update the workspace asks for a fresh full report, and nothing shows.
      * `failed-repair` draws the notices that show when that report is lost
      * too: a file list's under the file lists, and the workspace name's
-     * under the header.
+     * under the header. `changes-repair` draws only the notice of Changes.
      */
-    lostUpdate: { enum: ['none', 'failed-repair'] },
+    lostUpdate: { enum: ['none', 'failed-repair', 'changes-repair'] },
     /**
      * The list of All files: the latest one, or the cloud computer could not
      * read the files. Then All files keeps the list that it saved before,
@@ -193,6 +199,7 @@ export const workspaceStateSchema = {
      * none. The next complete list returns to `latest`.
      */
     tree: { enum: treeStates },
+    ...listsStateProperties,
     /**
      * The paths of the files: plain, or two paths that hold the secret value
      * of an org env var. Each list, tab, and page then shows "[redacted]" in
@@ -226,6 +233,7 @@ export const workspaceStateSchema = {
     ...feedbackStateProperties,
     ...rowMenuStateProperties,
     ...barStateProperties,
+    ...explainStateProperties,
   },
 } as const
 
@@ -238,8 +246,7 @@ export const readyWorkspace: WorkspaceState = {
   sandbox: 'ready',
   startError: 'failed',
   conversation: 'history',
-  otherRequest: 'none',
-  shownRequest: 1,
+  ...requestStateDefaults,
   fold: 'closed',
   pictures: 'shown',
   banner: 'ready-to-merge',
@@ -247,6 +254,7 @@ export const readyWorkspace: WorkspaceState = {
   tool: 'terminal',
   terminals: 'one',
   ports: 'open',
+  ...serviceStateDefaults,
   focus: 'chat',
   tab: 'session',
   tabRow: 'opened',
@@ -264,6 +272,7 @@ export const readyWorkspace: WorkspaceState = {
   ...feedbackStateDefaults,
   ...rowMenuStateDefaults,
   ...barStateDefaults,
+  ...explainStateDefaults,
 }
 
 /**
@@ -276,3 +285,14 @@ export const checksWorkspace: WorkspaceState = {
   tool: 'preview',
   focus: 'files',
 }
+
+/**
+ * The part of the state that each page of the large branch shares: its
+ * limited lists, and the checks of its pull request. So its linked pages
+ * show the same lists and the same checks. No other page sets limited
+ * lists.
+ */
+export const largeBranchState = {
+  lists: 'limited',
+  banner: 'checks-failed',
+} as const satisfies Partial<WorkspaceState>

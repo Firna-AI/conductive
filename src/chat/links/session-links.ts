@@ -1,8 +1,8 @@
 import type { Session } from '../../shared/generated/Session'
 import type { Workspace } from '../../shared/generated/Workspace'
 import { useEffect } from 'react'
-import type { ChipSession } from '../../../docs/mockups/src/components/chat/SessionChip'
-import { workspaceLabel } from '../../../docs/mockups/src/components/workspaces/label'
+import type { ChipSession } from '../../ui/components/chat/SessionChip'
+import { workspaceLabel } from '../../ui/components/workspaces/label'
 import { nameLabel } from '../../shared/name-label'
 
 import { useChatLinks } from './LinksContext'

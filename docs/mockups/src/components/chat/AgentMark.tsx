@@ -1,5 +1,5 @@
 import { agents, type AgentKey } from '../../fixtures/agents'
-import styles from './AgentMark.module.css'
+import styles from '../../../../../src/ui/components/chat/AgentMark.module.css'
 
 /** Two letters for each agent, in place of a brand logo. */
 const letters: Readonly<Record<AgentKey, string>> = {

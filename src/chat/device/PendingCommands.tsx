@@ -2,7 +2,7 @@ import type { DeviceCommandRecord } from '../../shared/generated/DeviceCommandRe
 import { useRef } from 'react'
 import { Laptop } from 'lucide-react'
 import type { DeviceApprovalAction } from '../../shared/device'
-import styles from '../../../docs/mockups/src/components/chat/PendingCommand.module.css'
+import styles from '../../ui/components/chat/PendingCommand.module.css'
 import { macLabel } from '../../shared/transcript/command-words'
 import type { WaitingItem } from '../secrets/session-secrets'
 import { CommandChoices } from './CommandChoices'

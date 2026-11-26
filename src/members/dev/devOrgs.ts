@@ -78,6 +78,7 @@ export function addFutexRoutes(
   server.json('GET', workspacesPath(org), { workspaces: [devWorkspace(org)] })
   server.json('GET', orgSettingsPaths.repositories(org), data.repositories)
   server.json('GET', orgSettingsPaths.settings(org), data.settings)
+  server.json('GET', orgSettingsPaths.skills(org), data.skills)
   for (const reply of computerReplies(scene, org)) {
     server.json('GET', reply.path, reply.body)
   }

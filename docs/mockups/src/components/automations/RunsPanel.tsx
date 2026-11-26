@@ -1,12 +1,11 @@
-import type { Viewport } from '@mokly/mokly'
-import { History } from 'lucide-react'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import type { PersonKey } from '../../fixtures/members'
 import type { Run } from '../../fixtures/automationRuns'
 import type { Automation } from '../../fixtures/automations'
-import { ActionButton } from '../common/actions'
-import { EmptyState } from '../common/EmptyState'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { RunList } from './RunList'
-import styles from './RunsPanel.module.css'
+import styles from '../../../../../src/ui/components/automations/RunsPanel.module.css'
 
 /** The runs that the panel shows, and what the list needs to draw them. */
 export type RunsPanelProps = {
@@ -27,9 +26,10 @@ export type RunsPanelProps = {
 /** An automation without runs: each run will show here with its workspace. */
 function NoRuns() {
   return (
-    <EmptyState
+    <emptyState.Component
       body="Each run opens a new workspace and shows here."
-      icon={History}
+      icon="history"
+      moklyInstance="runs-empty"
       title="No runs yet"
     />
   )
@@ -49,7 +49,9 @@ function Runs(props: RunsPanelProps) {
       />
       {props.older ? (
         <div className={mobile ? styles.olderPhone : styles.older}>
-          <ActionButton>Show older runs</ActionButton>
+          <actionButton.Component moklyInstance="show-older-runs">
+            Show older runs
+          </actionButton.Component>
         </div>
       ) : null}
     </>

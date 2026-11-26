@@ -4,6 +4,7 @@ import {
   type Automation,
   type AutomationResponse,
 } from '../shared/automations'
+import type { OrgSecret } from '../shared/secrets'
 import { ApiError, type ApiClient } from './api/client'
 import { readAutomationResponse } from './api/read-automations'
 import type { OrgModel } from './org-model'
@@ -51,7 +52,8 @@ function noteMissingAutomation(api: ApiClient, recheck: () => void): ApiClient {
  * out one at a time, and each answer shows the whole automation. A read that
  * the API refuses with `automation_not_found` shows that the automation is not
  * available, also in place of the automation. Any other failed read keeps the
- * automation that shows. Each answer also names the login of the runs.
+ * automation that shows. Each answer also names the login of the runs and
+ * the chosen secrets.
  */
 export class AutomationModel {
   readonly automationId: string
@@ -63,6 +65,14 @@ export class AutomationModel {
    * serves the owner.
    */
   readonly runLogin: Readable<Loadable<SessionLogin | null>>
+  /**
+   * The ID and the name of each chosen secret that the org has, as the last
+   * answer names them, or null when the answer of a previous Worker names
+   * none. They come from the same answer as the automation.
+   */
+  readonly chosenSecrets: Readable<
+    Loadable<readonly Pick<OrgSecret, 'id' | 'name'>[] | null>
+  >
   /**
    * The client of each request of the page beside the read of the automation:
    * the reads of the runs, Show older runs, Save, Turn off, Run now, and
@@ -84,6 +94,10 @@ export class AutomationModel {
     )
     this.automation = partOf(this.resource.store, (reply) => reply.automation)
     this.runLogin = partOf(this.resource.store, (reply) => reply.runLogin)
+    this.chosenSecrets = partOf(
+      this.resource.store,
+      (reply) => reply.chosenSecrets ?? null,
+    )
     this.reads = new Refresher(this.resource, () => null, org.services)
     this.client = noteMissingAutomation(
       org.services.api,

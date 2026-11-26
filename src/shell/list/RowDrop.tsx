@@ -1,7 +1,8 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import { createPortal } from 'react-dom'
-import styles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
+import type { PointerDrag } from '../../app/pointer-drag'
+import styles from '../../ui/components/workspaces/SectionList.module.css'
 import ui from '../ui/ui.module.css'
-import type { RowDragState } from './useRowDrag'
 import { WorkspaceRow, type RowVariant } from './WorkspaceRow'
 import list from './list.module.css'
 
@@ -38,12 +39,13 @@ export function DropLine(props: {
 }
 
 /**
- * The lifted row under the pointer. It stands for its whole tree, with the
- * count of the nested rows that move with it, `carried`. It takes no
- * pointer input.
+ * The lifted row under the pointer. It stands for its whole tree, or its
+ * whole unit of the merge queue, with the count of the rows that move
+ * with it, `carried`. It takes no pointer input.
  */
 export function LiftedRow(props: {
-  drag: RowDragState
+  drag: PointerDrag<unknown, unknown>
+  workspace: Workspace
   carried: number
   variant: RowVariant
   now: number
@@ -64,7 +66,7 @@ export function LiftedRow(props: {
         now={props.now}
         selected={false}
         variant={props.variant}
-        workspace={drag.item}
+        workspace={props.workspace}
       />
     </div>,
     document.body,

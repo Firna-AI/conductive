@@ -1,12 +1,120 @@
 import type { ChangesResponse } from '../../src/shared/generated/ChangesResponse'
 import type { FileTreeResponse } from '../../src/shared/generated/FileTreeResponse'
-import { parseFileEvent } from './parsers'
 import {
-  loadFiles,
-  saveFiles,
+  convertFilesProjection,
+  readLegacyTreeRevision,
+} from './bucket-convert'
+import { writeTreeDelta } from './bucket-delta'
+import { BUCKET_LAYOUT, FILES_KEY } from './bucket-layout'
+import { emptyBucketManifest, writeBucketList } from './bucket-write'
+import { invalidFileResponse } from './errors'
+import { natural, parseFileEvent } from './parsers'
+import {
+  readFileList,
+  readFilesManifest,
+  type FilesManifest,
+  type FilesReader,
   type FilesStorage,
-  type StoredFiles,
+  type FilesTransaction,
 } from './storage'
+import { treeFieldsForRevision } from './tree-omission'
+
+export async function beginFilesConnection(
+  transaction: FilesTransaction,
+  connectionId: string,
+): Promise<void> {
+  const previous = await readFilesManifest(transaction)
+  const manifest =
+    previous.layout !== BUCKET_LAYOUT &&
+    previous.treeChunks === 0 &&
+    previous.changesChunks === 0
+      ? emptyBucketManifest(previous)
+      : previous
+  await transaction.put(FILES_KEY, {
+    ...manifest,
+    connectionId,
+    hasSnapshot: false,
+  })
+}
+
+async function treeRevision(
+  storage: FilesReader,
+  manifest: FilesManifest,
+): Promise<number | null> {
+  if (manifest.layout === BUCKET_LAYOUT) {
+    if (!manifest.tree) return null
+    const revision = manifest.tree.fields.revision
+    if (!natural(revision)) throw invalidFileResponse()
+    return revision
+  }
+  return manifest.treeChunks > 0
+    ? readLegacyTreeRevision(storage, manifest.treeChunks)
+    : null
+}
+
+export async function applyFilesEvent(
+  transaction: FilesTransaction,
+  connectionId: string,
+  value: unknown,
+): Promise<boolean> {
+  const previous = await readFilesManifest(transaction)
+  if (previous.connectionId !== connectionId) return false
+  const event = parseFileEvent(value)
+  if (event.type === 'files.changed' || event.type === 'files.snapshot') {
+    const revision = previous.hasSnapshot
+      ? await treeRevision(transaction, previous)
+      : null
+    if (event.type === 'files.changed') {
+      if (revision === null || event.delta.revision <= revision) return false
+    } else if (revision !== null && event.tree.revision <= revision)
+      return false
+  }
+
+  const manifest = await convertFilesProjection(transaction, previous)
+  if (event.type === 'files.unavailable') {
+    if (manifest.tree)
+      manifest.tree = {
+        ...manifest.tree,
+        fields: { ...manifest.tree.fields, unavailable: true },
+      }
+    else
+      manifest.tree = await writeBucketList(
+        transaction,
+        'tree',
+        { revision: 0, unavailable: true },
+        [],
+        null,
+      )
+  } else if (event.type === 'changes.updated') {
+    const { files, ...fields } = event.changes
+    manifest.changes = await writeBucketList(
+      transaction,
+      'changes',
+      fields,
+      files,
+      manifest.changes,
+    )
+  } else if (event.type === 'files.snapshot') {
+    const { entries, ...fields } = event.tree
+    manifest.tree = await writeBucketList(
+      transaction,
+      'tree',
+      treeFieldsForRevision(fields, fields.revision, fields.omittedEntryCount),
+      entries,
+      manifest.tree,
+    )
+    manifest.hasSnapshot = true
+  } else {
+    if (!manifest.tree) throw invalidFileResponse()
+    manifest.tree = await writeTreeDelta(
+      transaction,
+      manifest.tree,
+      event.delta,
+    )
+  }
+  await transaction.put(FILES_KEY, manifest)
+  return true
+}
 
 export class FilesState {
   private readonly storage: FilesStorage
@@ -18,85 +126,41 @@ export class FilesState {
 
   /** The owner supplies a fresh ID for each accepted physical connection. */
   beginConnection(connectionId: string): Promise<void> {
-    return this.serialize(async () => {
-      const state = await this.load()
-      await saveFiles(this.storage, {
-        ...state,
-        connectionId,
-        hasSnapshot: false,
-      })
-    })
+    return this.serialize(() =>
+      this.storage.transaction((transaction) =>
+        beginFilesConnection(transaction, connectionId),
+      ),
+    )
   }
 
   /** Call only after the owner accepts the envelope in contiguous event order. */
   apply(connectionId: string, value: unknown): Promise<boolean> {
-    return this.serialize(async () => {
-      const state = await this.load()
-      if (state.connectionId !== connectionId) return false
-      const event = parseFileEvent(value)
-      if (event.type === 'files.unavailable') {
-        state.tree = {
-          ...(state.tree ?? { revision: 0, entries: [] }),
-          unavailable: true,
-        }
-      } else if (event.type === 'changes.updated') {
-        state.changes = event.changes
-      } else if (event.type === 'files.snapshot') {
-        if (
-          state.hasSnapshot &&
-          state.tree &&
-          event.tree.revision <= state.tree.revision
-        )
-          return false
-        state.tree = event.tree
-        state.hasSnapshot = true
-      } else {
-        if (
-          !state.hasSnapshot ||
-          !state.tree ||
-          event.delta.revision <= state.tree.revision
-        )
-          return false
-        const entries = new Map(
-          state.tree.entries.map((entry) => [entry.path, entry]),
-        )
-        for (const change of event.delta.changes) {
-          if (change.operation === 'remove') {
-            for (const path of entries.keys()) {
-              if (path === change.path || path.startsWith(`${change.path}/`))
-                entries.delete(path)
-            }
-          } else {
-            if (change.operation === 'move') entries.delete(change.previousPath)
-            entries.set(change.entry.path, change.entry)
-          }
-        }
-        state.tree = {
-          revision: event.delta.revision,
-          entries: [...entries.values()],
-          ...(state.tree.unavailable ? { unavailable: true } : {}),
-        }
-      }
-      await saveFiles(this.storage, state)
-      return true
-    })
+    return this.serialize(() =>
+      this.storage.transaction((transaction) =>
+        applyFilesEvent(transaction, connectionId, value),
+      ),
+    )
   }
 
   tree(): Promise<FileTreeResponse | null> {
-    return this.serialize(async () => (await this.load()).tree)
+    return this.serialize(async () =>
+      readFileList(this.storage, await readFilesManifest(this.storage), 'tree'),
+    )
   }
 
   changes(): Promise<ChangesResponse | null> {
-    return this.serialize(async () => (await this.load()).changes)
+    return this.serialize(async () =>
+      readFileList(
+        this.storage,
+        await readFilesManifest(this.storage),
+        'changes',
+      ),
+    )
   }
 
   private serialize<T>(operation: () => Promise<T>): Promise<T> {
     const result = this.queue.then(operation)
     this.queue = result.catch(() => undefined)
     return result
-  }
-
-  private async load(): Promise<StoredFiles> {
-    return loadFiles(this.storage)
   }
 }

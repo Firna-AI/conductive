@@ -3,7 +3,7 @@
 This area owns the provider accounts, the lookup of the client of each
 account, and the Boat and E2B adapters. Both implement lifecycle, snapshots,
 commands, bounded file transfers, and private ports. E2B leaves desktop and fork unsupported.
-The app keeps one provider account for the life of each org.
+Each org runs on one provider account at a time.
 Each account uses the app's own provider project. A key does not keep orgs apart, so each caller
 authorizes its org and its resource before it asks for a provider, as
 [Provider accounts](#provider-accounts) says.
@@ -70,6 +70,13 @@ On E2B, this mode recovers identity without create, connect, or guest setup.
 Only `ProviderAllocationAbsent` proves that no allocation can still appear.
 Boat construction and its existing create replay behavior stay the same.
 
+When `observeProviders` marks the D1 binding of the env, every provider
+comes through the observer of that binding. The provider itself gets the
+untimed binding, so that the D1 calls of an E2B client count once. A workspace object uses it to time
+the provider calls of its starts, as
+[Start step records](../lifecycle/workspace-object.md#start-step-records)
+says.
+
 The `boat` account, `DEFAULT_PROVIDER_ACCOUNT` in
 [account-identity.ts](account-identity.ts), always uses `BOAT_API_KEY` and
 `BOAT_ORG_ID`. The optional `SANDBOX_PROVIDER_ACCOUNTS` Worker secret is JSON text.
@@ -122,14 +129,14 @@ stay there.
 
 Put each E2B entry in the JSON `SANDBOX_PROVIDER_ACCOUNTS` Worker secret.
 Use the same JSON text in `.dev.vars` for local development.
-The `domain` is the trusted EU suffix supplied by E2B support.
+The `domain` is the domain of the project's E2B cluster: `e2b.app` for E2B's default cluster.
 It gives the API host `api.<domain>` and the sandbox port hosts.
 The `templateId` names the app's prepared template.
 The API key stays inside the Worker.
 The E2B client also needs D1 and `BOAT_KEY_ENCRYPTION_KEY` for durable state and traffic-token encryption.
 
-Ask E2B for EU access, filesystem-only pause and snapshots, and the required disk size.
-Use E2B Pro before real org use. Get E2B's written consent before real org use.
+Ask E2B for filesystem-only pause and snapshots, and the required disk size.
+Use E2B Pro before real org use.
 The [deployment guide](../../docs/deployment.md) gives the deployment inputs and requirements.
 The [E2B README](e2b/README.md) gives its fixed control routes and recovery rules.
 

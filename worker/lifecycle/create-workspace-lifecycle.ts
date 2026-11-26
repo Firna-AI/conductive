@@ -6,6 +6,7 @@ import type { TurnScopes } from './turns'
 import type { WorkspaceEventJournal } from './durable-journal'
 import { readWorkspace } from './workspace-data'
 import { WorkspaceStateProjection } from './workspace-state-projection'
+import { isFailedRestart } from './durable-restart'
 import { hasRetentionAttempt, isConfirmedStopped } from './confirmed-stop'
 import { clearRetention } from './retention-data'
 import {
@@ -16,6 +17,8 @@ import {
   workspaceActionContext,
 } from './workspace-actions'
 import { keepWorkspaceDisk } from './disk-retention'
+import { IdleStopTime } from './idle-stop'
+import { startHeldAfterStop } from './start-after-stop'
 import {
   taskWorkspaceStorage,
   workspaceTaskAlarms,
@@ -30,6 +33,7 @@ export function createWorkspaceLifecycle(
 ) {
   const storage = taskWorkspaceStorage(ctx.storage, 'lifecycle')
   const alarms = workspaceTaskAlarms(ctx.storage)
+  const idleStop = new IdleStopTime(env.DB, dependencies.now)
   const lifecycle: DurableLifecycle = new DurableLifecycle(
     {
       get: (key) => ctx.storage.get('lifecycle', key),
@@ -42,12 +46,19 @@ export function createWorkspaceLifecycle(
     },
     dependencies.now,
     {
+      idleMs: () => idleStop.ms(),
       changed: async (state, publish) => {
         if (isConfirmedStopped(state) && !hasRetentionAttempt(state))
           await clearRetention(env.DB, state.workspaceId)
         const projected = await projection.changed(publish)
-        if (state.state === 'stopped' || state.state === 'error')
-          await ctx.stopped?.(state.workspaceId)
+        if (state.state === 'stopped' || state.state === 'error') {
+          const restartFailed = isFailedRestart(state)
+          await ctx.stopped?.(
+            state.workspaceId,
+            state.automaticRestartAt !== undefined && restartFailed,
+            restartFailed,
+          )
+        }
         return projected
       },
       stop: async () => {
@@ -113,6 +124,7 @@ export function createWorkspaceLifecycle(
       },
       startPending: async () =>
         Boolean(await ctx.storage.get('job', 'lifecycle:start-job')),
+      startHeld: () => startHeldAfterStop(ctx.storage, dependencies.now()),
       lastTurnEndedAt: async (id) =>
         (await ctx.readChatRecovery?.(id))?.lastTurnEndedAt ?? null,
       recoverTurns: async (id) => {
@@ -134,6 +146,7 @@ export function createWorkspaceLifecycle(
     env,
     dependencies,
     journal,
+    records: ctx.startRecords,
     readLifecycle: () => lifecycle.read(),
     deviceWaiting: async (id) => (await ctx.deviceWaiting?.(id)) ?? false,
     latestTitle: async (id) =>

@@ -53,6 +53,10 @@ pub enum ProviderEvent {
         /// Exact input messages answered.
         #[ts(as = "ReadonlyVec<String>")]
         user_message_ids: Vec<String>,
+        /// Exact app notes read for this answer.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[ts(as = "Option<ReadonlyVec<String>>", optional)]
+        notice_ids: Vec<String>,
     },
     /// Tool activity.
     #[serde(rename = "tool")]
@@ -88,6 +92,10 @@ pub enum ProviderEvent {
         /// Exact input messages answered.
         #[ts(as = "ReadonlyVec<String>")]
         user_message_ids: Vec<String>,
+        /// Exact app notes read for this reply.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[ts(as = "Option<ReadonlyVec<String>>", optional)]
+        notice_ids: Vec<String>,
         /// Optional turn end reason.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
@@ -100,5 +108,9 @@ pub enum ProviderEvent {
         code: String,
         /// Displayable failure cause.
         message: String,
+        /// Exact app notes read before this failure.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[ts(as = "Option<ReadonlyVec<String>>", optional)]
+        notice_ids: Vec<String>,
     },
 }

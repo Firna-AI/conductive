@@ -139,7 +139,7 @@ describe('the New workspace dialog', () => {
         file: true,
       },
       pressedOutside: { dialog: null, pressKept: true, rowFocused: true },
-      generalMenu: { place: 'Acme · General', text: withFile },
+      generalMenu: { place: 'General', text: withFile },
       address: here,
     })
   })
@@ -152,7 +152,7 @@ describe('the New workspace dialog', () => {
     click(byRole('button', 'Model and effort: Opus 5.5, High', dialog))
     const menu = () => queryByRole('menu', 'Model and effort', dialog)
     const opened = menu() !== null
-    press(byRole('menuitemradio', 'Opus 5.5', dialog), 'Escape')
+    press(byRole('menuitemradio', 'Opus 5.5 High', dialog), 'Escape')
     await settle()
     const first = { menu: menu(), dialog: dialogIn(tab.view) !== null }
     press(document.activeElement ?? document.body, 'Escape')

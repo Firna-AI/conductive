@@ -14,6 +14,10 @@ An Extend decision names a decision of the change that adds [Extend](#extend).
 Its plan keeps the dated record while the change is open. Its pull request
 keeps it after the merge.
 
+A Mac access decision names a decision of the change that makes
+[Mac access](mac-access.md) allow all commands. Its plan keeps the dated
+record while the change is open. Its pull request keeps it after the merge.
+
 ## Permissions
 
 - The page runs in a sandbox, with context isolation and without Node. It
@@ -24,14 +28,23 @@ keeps it after the merge.
   no direct access to the commands of the Mac.
 - The page can only answer a request that waits, remove an always-allowed
   command, and stop a [grant](#the-choices) that runs. It can extend the
-  running 15 minutes, or keep them until Stop. The answer goes through the
-  Worker to the Mac app on the Mac that got the
+  running 15 minutes, or keep them until Stop. It can also start a grant
+  until Stop of one workspace with the Mac access switch of the
+  Capabilities control, as [The switch](mac-access.md#the-switch) says. The
+  answer goes through the Worker to the Mac app on the Mac that got the
   request. Each change goes through the Worker to the Mac app that shows
   the page.
-- Only the answers Allow all commands for 15 minutes and Allow all
-  commands until I stop start a grant. The Mac app decides each change,
-  and the Worker stores no grant, as
+- A grant starts only from a choice of the user in the page of the Mac app
+  on that Mac. These choices start one: the answers Allow all commands for
+  15 minutes and Allow all commands until I stop, and the Mac access switch
+  when it turns on. A browser never starts a grant (Mac access decision
+  5 A). [In a browser](mac-access.md#in-a-browser) gives the reason.
+- The Mac app decides each change, and the Worker stores no grant, as
   [Saved choices](#saved-choices) says.
+- The Worker never sends a start of a grant to a Mac by itself. Reason: a
+  Mac app older than the start ends its device connection at a message
+  that it does not know, and that stops its running commands. The page of
+  such a Mac app never sends a start.
 - Only the main frame on the desktop origin can use a sanitized clipboard
   write. Reason: the copy actions of the web app need it.
 - The Mac app denies every other permission to the page and its frames.
@@ -42,8 +55,9 @@ keeps it after the merge.
 
 This section states the side of the Mac app.
 [Agent tools](agent-tools.md#mac-commands) states the requests, their
-limits, their results, and what the chat shows. A workspace with
-[Mac access](secrets.md#mac-access) off sends no request to a Mac.
+limits, their results, and what the chat shows. The agents of each
+workspace can ask, as
+[Agents can always ask](mac-access.md#agents-can-always-ask) says.
 
 ### The device
 
@@ -71,7 +85,8 @@ limits, their results, and what the chat shows. A workspace with
   message in the chat, with the command and its actions.
 - While a request waits, the row of its workspace shows needs input on
   every page of the Mac app. A click on that row opens the request
-  (decision 68).
+  (decision 68). Starting shows over needs input, as
+  [Secret requests](secret-requests.md#the-request) says.
 - When the Mac app is in the background, a notification of macOS tells of
   the request. The notification opens the workspace of the request.
 - The notification comes from the Mac app. The page still gets no
@@ -92,11 +107,18 @@ limits, their results, and what the chat shows. A workspace with
 - Reason: the user asked that each command needs permission, with these
   choices. The user later asked for the choice until Stop, for work that
   needs more than 15 minutes.
+- In the Mac app, the Mac access switch of the Capabilities control starts
+  the same grant until Stop with no request (Mac access decisions 1 C and
+  7). A switch-off stops the grant, as Stop does.
+- Such a start also runs each request of that workspace that waits on
+  that Mac, as Allow all commands until I stop does. Reason: the user chose
+  all commands of the workspace.
 - A grant is the permission of the 15 minutes or until Stop. It covers
   every command from one workspace on one Mac.
 - Only Stop, a quit of the Mac app, or a sign-out of its account ends a
-  grant until Stop (Mac until-stop decision 1). A sleep of the Mac and a
-  new device connection keep it.
+  grant until Stop (Mac until-stop decision 1). A switch-off on that Mac is
+  a Stop. A sleep of the Mac and a new device connection keep the grant.
+  So does a switch-off on another Mac.
 - Reason: a grant without an end must not outlive the run of the Mac app,
   so a forgotten grant ends at the next restart.
 - A grant that ends with its turn, a long fixed limit, a saved grant that
@@ -129,7 +151,8 @@ limits, their results, and what the chat shows. A workspace with
 - Extend acts only on 15 minutes that still run, by the clock of the Mac. It
   never starts a grant. When the grant ended before the Mac app applies
   Extend, Extend fails. It leaves a grant until Stop unchanged.
-- Reason: a grant then starts only when the user answers a request.
+- Reason: a grant then starts only from the choices that
+  [Permissions](#permissions) names.
 - Extend takes effect only when the Mac app saves the new end. When the
   save fails, the grant stays as it was and Extend fails. So Extend
   reports done or failed, never done but not saved.
@@ -185,11 +208,18 @@ limits, their results, and what the chat shows. A workspace with
 - Failed means the change did not take effect. Both failure outcomes
   explain the failure.
 - A successful settings read reports done.
-- Keep until I stop reports done or failed, never done but not saved.
-  Reason: the Mac app never saves a grant until Stop.
+- Keep until I stop and a start from the Capabilities control report done
+  or failed, never done but not saved. Reason: the Mac app never saves a
+  grant until Stop.
 - This Mac shows the result of each control. The bar shows the result of
   Stop even when the grant no longer runs. It shows the result of a Keep
   that failed while the grant runs.
+- The bar shows a Stop that the Mac made and saved for 5 seconds. Then
+  that result goes, and the bar goes when no grant runs. A new Stop shows
+  its result again.
+- Reason: the user asked on 23 November 2026 that this notice go away
+  after some time. A done Stop needs no action, and the grant is gone. A
+  failure stays, as the next rules say, because it needs the user.
 - Stop and Extend are separate controls of the bar. While a change of one
   waits, the user can still press the other.
 - Reason: a waiting Extend must not keep the user from Stop.

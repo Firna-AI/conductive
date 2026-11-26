@@ -23,7 +23,8 @@ stats decision" names a decision of the change that added the tab. The
 ## What the tab shows
 
 - The tab shows only counts that the app already records for other needs
-  (account stats decision 2). The app records nothing new for the tab.
+  (account stats decision 2). The app records nothing new for the tab,
+  except the [merge record](#the-merge-record) (merge stats decision 1).
 - Reason: the counts are then correct for all past work. A new record of
   each session and each turn was rejected, because its counts start only
   on the day it ships. A count from each workspace at read time was
@@ -89,6 +90,31 @@ stats decision" names a decision of the change that added the tab. The
   them from the Overview of the operator section was rejected
   (decision 521). Reason: a change of the Overview for the operator then
   changes the tab of each person without a decision.
+
+## The merge record
+
+- The app records each merged pull request of a workspace branch, for the
+  Stats tab (merge stats decision 1). The user chose this on
+  17 November 2026.
+- Reason: the app keeps no other record of past merges with their times.
+  A count from GitHub at each read was rejected, because it counts work
+  outside the app and waits for GitHub. A count from the records that
+  exist was rejected, because it misses most past merges and gives no
+  merge days.
+- A record holds the pull request, its org and workspace, the workspace
+  owner at the time of the record, and the merge time from GitHub.
+- A pull request counts once, also when two workspaces have its branch.
+  The first record keeps it.
+- A merge in the app and a merge on GitHub both count. A pull request
+  that closed without a merge does not count. A later revert removes no
+  merge.
+- The app recovers no merge from before the release of the record (merge
+  stats decision 2). The user chose this on 17 November 2026. Reason: a
+  recovery wakes each workspace once and adds work.
+- Deleting an org removes its records. Archive and the removal of a
+  workspace keep them.
+- [The merge record](github-banner.md#the-merge-record) of the GitHub
+  banner says when the app records a merge.
 
 ## Reads
 

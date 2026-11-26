@@ -9,6 +9,7 @@ import {
   WORKSPACE_ID,
   type ChatFixture,
 } from './harness.test-support'
+import { seedHistory } from './history-memory.test-support'
 import { CHAT_EVENT_PREFIX } from './storage-keys'
 describe('workspace chat event delivery', () => {
   let harness: TestHarness
@@ -172,10 +173,15 @@ describe('workspace chat event delivery', () => {
   it('sends every history page before a concurrent live event and reads a session through its cutoff in one page', async () => {
     const fixture = await createChatFixture(harness)
     const session = await fixture.createSession()
-    await fixture.changeWorkspace(WORKSPACE_ID, async (transaction) => {
-      for (let number = 1; number <= 70; number++)
-        await transaction.emit({ type: 'workspace.title', name: `${number}` })
-    })
+    await seedHistory(
+      fixture.storage,
+      WORKSPACE_ID,
+      fixture.clock.now(),
+      Array.from({ length: 4_100 }, (_, index) => ({
+        type: 'workspace.title',
+        name: String(index + 1),
+      })),
+    )
     const tab = await openDuringHistory(fixture, () =>
       fixture.appendWorkspaceEvent(WORKSPACE_ID, {
         type: 'workspace.title',
@@ -189,19 +195,19 @@ describe('workspace chat event delivery', () => {
         message.history.nextAfterEventNumber ?? null,
       ]),
     ).toEqual([
-      [71, 32],
-      [71, 64],
-      [71, null],
+      [4_101, 2_048],
+      [4_101, 4_096],
+      [4_101, null],
     ])
     expect(
       pages.flatMap((message) =>
         message.history.events.map((entry) => entry.eventNumber),
       ),
-    ).toEqual(Array.from({ length: 71 }, (_, index) => index + 1))
+    ).toEqual(Array.from({ length: 4_101 }, (_, index) => index + 1))
     expect(tab.messages.at(-1)).toMatchObject({
       type: 'event',
       envelope: {
-        eventNumber: 72,
+        eventNumber: 4_102,
         event: { type: 'workspace.title', name: 'Live' },
       },
     })
@@ -210,7 +216,7 @@ describe('workspace chat event delivery', () => {
     )
     const page: unknown = await first.json()
     expect(page).toEqual({
-      throughEventNumber: 72,
+      throughEventNumber: 4_102,
       events: [expect.objectContaining({ eventNumber: 1 })],
     })
     await fixture.appendWorkspaceEvent(WORKSPACE_ID, {
@@ -218,7 +224,13 @@ describe('workspace chat event delivery', () => {
       name: 'After the snapshot',
     })
     const again = await fixture.fetch(
-      chatHistoryPath(fixture.org.id, WORKSPACE_ID, session.id, undefined, 72),
+      chatHistoryPath(
+        fixture.org.id,
+        WORKSPACE_ID,
+        session.id,
+        undefined,
+        4_102,
+      ),
     )
     expect(await again.json()).toEqual(page)
     await tab.close()

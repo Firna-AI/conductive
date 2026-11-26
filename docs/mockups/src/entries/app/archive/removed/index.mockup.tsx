@@ -20,7 +20,7 @@ export const archiveRemoved = defineScreen({
       slug: 'deleting',
       title: 'Cloud computer still being deleted',
       description:
-        'The same workspace on 29 October, the day it left the list, while a failed delete of its cloud computer tries again. The bar says that the cloud computer is being deleted. The panel of the files says that the files and the tools go with it. Restore ended with the 14 days, so nothing offers it.',
+        'The same workspace on 29 October, the day it left the list, while a failed delete of its cloud computer tries again. The bar says that the cloud computer is being deleted. The panel of the files says that the files and the tools go with it. Restore ended with the 14 days, so nothing offers it. The same bar shows while an unresolved create request can still hold a cloud computer after the 14 days, as app/archive/pending shows before then.',
       rationale:
         'Restore ends on its last day, also while a delete that failed tries again, so no screen offers a Restore that the app refuses. The bar says that the cloud computer is deleted only after the delete.',
       movedFrom: 'app/archive/restore-ended',

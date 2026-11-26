@@ -1,5 +1,5 @@
-import menuStyles from '../../../docs/mockups/src/components/common/Menu.module.css'
-import noticeStyles from '../../../docs/mockups/src/components/common/Notice.module.css'
+import menuStyles from '../../ui/components/common/Menu.module.css'
+import noticeStyles from '../../ui/components/common/Notice.module.css'
 import { memoryNavigation } from '../../app/navigation'
 import { routes } from '../../app/router'
 import type { ManualDelay } from '../../app/test-kit'
@@ -36,6 +36,17 @@ const newest = {
 
 export type Wait = keyof typeof newest
 
+/** The first build of Acme runs, so its builds show no good image yet. */
+export const firstBuildRuns: BuildsResponse = {
+  builds: [buildOf('first', 'running', 134_000)],
+  currentImageBuildId: null,
+  changes: {
+    installScript: false,
+    addedRepositories: [],
+    removedRepositories: [],
+  },
+}
+
 /** The builds of Acme when the org image lacks the repositories `added`. */
 export function buildsOf(wait: Wait, added: readonly string[]): BuildsResponse {
   const latest = newest[wait]
@@ -63,6 +74,44 @@ export const withDashboard = chosen([
   'admin-dashboard',
 ])
 
+/**
+ * The repositories of `list` as a newer Worker sends them: each says
+ * whether the org has a good image, and whether that image holds it. With
+ * an image (`image`), the image lacks those of `lacking`. Before the first
+ * good build, the org has no image, so it holds none.
+ */
+export function withReadiness(
+  list: ReturnType<typeof chosen>,
+  lacking: readonly string[],
+  image = true,
+) {
+  return {
+    repositories: list.repositories.map((item) => ({
+      ...item,
+      ready: image && !lacking.includes(item.id),
+      imageReady: image,
+    })),
+  }
+}
+
+/**
+ * The builds of New workspace: an answer, a read that never answers, or a
+ * read that the server refuses.
+ */
+export type ShownBuilds = BuildsResponse | 'loading' | 'failed'
+
+function serveBuilds(server: FakeApiServer, builds: ShownBuilds): void {
+  const path = orgSettingsPaths.builds(org)
+  if (builds === 'loading') {
+    server.json('GET', path, new Promise<never>(() => undefined))
+  } else if (builds === 'failed') {
+    const error = { code: 'server_error', message: 'The request failed.' }
+    server.json('GET', path, { error }, 500)
+  } else {
+    server.json('GET', path, builds)
+  }
+}
+
 /** Whether a button with this name shows, and a press would act. */
 function pressable(view: HTMLElement, name: string): boolean {
   const button = queryByRole('button', name, view)
@@ -79,7 +128,7 @@ function pressable(view: HTMLElement, name: string): boolean {
  * `delay` holds the timers of the reads.
  */
 export async function newWorkspace(options: {
-  builds: BuildsResponse
+  builds: ShownBuilds
   repositories?: ReturnType<typeof chosen>
   role?: OrgRole
   draft?: string
@@ -87,7 +136,7 @@ export async function newWorkspace(options: {
 }) {
   const role = options.role ?? 'admin'
   const server = new FakeApiServer({ role })
-  server.json('GET', orgSettingsPaths.builds(org), options.builds)
+  serveBuilds(server, options.builds)
   if (options.repositories) {
     server.json('GET', orgSettingsPaths.repositories(org), options.repositories)
   }

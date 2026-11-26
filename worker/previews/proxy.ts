@@ -1,6 +1,7 @@
 import {
   PREVIEW_FILE_SERVER_PORT,
   PREVIEW_FILES_MARK_HEADER,
+  PREVIEW_FILES_ORIGIN_HEADER,
   PREVIEW_RELAY_MARK_HEADER,
 } from '../../src/shared/previews'
 import type { AppEnv } from '../env'
@@ -123,7 +124,10 @@ export class PreviewProxy {
           body: connection.wrap(request.body),
           signal: connection.signal,
         })
-        if (row.port === 0) outgoing.headers.set(PREVIEW_FILES_MARK_HEADER, '1')
+        if (row.port === 0) {
+          outgoing.headers.set(PREVIEW_FILES_MARK_HEADER, '1')
+          outgoing.headers.set(PREVIEW_FILES_ORIGIN_HEADER, url.origin)
+        }
         upstream = await timing.step('upstream', () =>
           this.dependencies.fetch(outgoing),
         )

@@ -159,6 +159,7 @@ impl PortScanner for ProcPortScanner {
                 port: socket.port,
                 name: labels.0,
                 folder: labels.1,
+                service_id: None,
             });
         }
         *metadata = current;

@@ -123,8 +123,7 @@ export function seedSecretRequests(
   const emit = (event: WorkspaceEvent, occurredAt: number) =>
     events.emit({
       workspaceId: FAKE_IDS.workspace,
-      eventNumber:
-        events.history(Number.MAX_SAFE_INTEGER).throughEventNumber + 1,
+      eventNumber: events.last(FAKE_IDS.workspace) + 1,
       occurredAt,
       event,
     })

@@ -68,6 +68,36 @@ export const acmeSecrets: readonly OrgSecret[] = [
   vercelToken,
 ]
 
+/** A secret of Jonas, which no member pre-approves or reveals. */
+function jonasSecret(name: string, description: string): OrgSecret {
+  return { name, description, creator: 'jonas', allAgents: false }
+}
+
+/**
+ * The secrets of a larger org: those of Acme and eight more, twelve in all.
+ * More than ten secrets give the secrets part of Capabilities a search.
+ */
+export const manySecrets: readonly OrgSecret[] = [
+  ...acmeSecrets,
+  jonasSecret('AWS_ACCESS_KEY_ID', 'Reads the build artifacts in S3.'),
+  jonasSecret('DATADOG_API_KEY', 'Reads the dashboards and monitors.'),
+  jonasSecret('FLY_API_TOKEN', 'Deploys the API to Fly.io.'),
+  jonasSecret('LINEAR_API_KEY', 'Reads and updates the issues.'),
+  jonasSecret('NETLIFY_TOKEN', 'Deploys the docs site to Netlify.'),
+  jonasSecret('NPM_TOKEN', 'Installs the private packages of Acme.'),
+  jonasSecret('SLACK_BOT_TOKEN', 'Posts build results in #checkout.'),
+  jonasSecret('STRIPE_TEST_KEY', 'Runs test payments in Stripe test mode.'),
+]
+
+/**
+ * A secret that Jonas added without a description. Its row in the
+ * Capabilities control shows no info icon.
+ */
+export const undescribedSecret = jonasSecret('STAGING_API_KEY', '')
+
+/** The search of the long list, which keeps the three deploy tokens. */
+export const secretSearch = 'deploy'
+
 /**
  * A secret that Jonas added before new names took only letters, digits,
  * and underscores. Its name stays as it is, and agents still use it. Only

@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'react'
 import {
   CopyLinkButton,
   type CopyResult,
-} from '../../../docs/mockups/src/components/workspace/CopyLinkButton'
-import { workspaceLabel } from '../../../docs/mockups/src/components/workspaces/label'
+} from '../../ui/components/workspace/CopyLinkButton'
+import { workspaceLabel } from '../../ui/components/workspaces/label'
 import { useServices } from '../../app/services'
 
 import { useShortcutOffer } from '../shortcuts/shortcut-context'

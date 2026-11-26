@@ -14,7 +14,7 @@ const schema = {
 export const chatMenuPlacement = defineScreen({
   title: 'Menu placement',
   description:
-    'Four commands wait in the stack above the composer, and the long script on top scrolls inside its card, which fades where it cuts the command. The model menu is open. It shows whole above its picker, over the stack and the chat, from the start of the picker. On a phone the menu opens in the same place.',
+    'Four commands wait in the stack above the composer. The long script on top scrolls inside its card and fades where the card cuts it. The model menu is open with the favourites first, as app/model-favourites gives. It shows whole above its picker, over the stack and the chat, from the start of the picker. On a phone the menu opens in the same place.',
   rationale:
     'Option B of the follow-up item about menus that a box can cut: every menu beside its button opens on one surface above every box of the page, as the menus of the shell and of the members already do. So no box that clips or scrolls cuts a menu, whatever box holds its button. A menu opens on the side of its placement when it fits there, otherwise on the side with more room, and it gets shorter to fit that room. It stays inside the window. Its choices, its keys, and its layout on a phone do not change. A view runs no script, so the screen draws the open menu above the page, and CSS places it at its picker.',
   relatedDocs: [],

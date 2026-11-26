@@ -2,7 +2,7 @@ import type { BuildLog } from '../../app/build-log-follower'
 import type { ComputerModel } from '../../app/computer-model'
 import { latestBuild } from '../../app/org-model'
 import { useServices } from '../../app/services'
-import { useStore } from '../../app/store'
+import { useStore, type Loadable } from '../../app/store'
 import { useNow } from '../../app/time'
 import {
   MemberComputerIntro,
@@ -10,7 +10,12 @@ import {
 } from '../../members/MemberComputerView'
 import { ViewportScope } from '../../members/ui/controls'
 import { Loading, LoadFailure } from '../../members/ui/Loading'
-import type { BuildLogEvent, ImageBuild } from '../../shared/org-settings'
+import type { Resource } from '../../members/useResource'
+import type {
+  BuildLogEvent,
+  ImageBuild,
+  SkillsRepositoryLookupResponse,
+} from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
 import { useOrgModel } from '../context'
 import { useMembersViewport } from './members-api'
@@ -31,12 +36,30 @@ function newestLog(
 }
 
 /**
+ * The lookup of the skills as the members UI takes it: a failed request
+ * gives the message of the API, such as an expired GitHub sign-in.
+ */
+function skillsOf(
+  lookup: Loadable<SkillsRepositoryLookupResponse>,
+): Resource<SkillsRepositoryLookupResponse> {
+  switch (lookup.state) {
+    case 'loading':
+      return { status: 'loading' }
+    case 'failed':
+      return { status: 'failed', message: lookup.error.message }
+    case 'ready':
+      return { status: 'ready', value: lookup.value }
+  }
+}
+
+/**
  * The Cloud computer tab of a member who is not an admin, and of everyone
  * in a suspended org: the read-only view of the members UI, with the live
- * builds, log, and settings of the computer model. The view follows a
- * running build as the tab of an admin does, and it shows no action,
- * because only an admin changes the cloud computer (decision 57), and
- * nobody in a suspended org.
+ * builds, log, settings, and skills lookup of the computer model. The view
+ * follows a running build as the tab of an admin does, and it shows no
+ * action, because only an admin changes the cloud computer (decision 57),
+ * and nobody in a suspended org. Its one button is Try again of a lookup
+ * of the skills that did not load, which anyone can use.
  */
 export function MemberComputer(props: {
   org: OrgSummary
@@ -47,6 +70,7 @@ export function MemberComputer(props: {
   const model = useOrgModel(org.id)
   const builds = useStore(model.builds)
   const settings = useStore(computer.settings)
+  const skills = useStore(computer.skills)
   const log = useStore(computer.log)
   const { timeZone } = useServices()
   const viewport = useMembersViewport()
@@ -59,8 +83,10 @@ export function MemberComputer(props: {
         builds={builds.value}
         log={newestLog(newest, log)}
         now={now}
+        onRetrySkills={() => void computer.loadSkills()}
         org={org}
         settings={settings.value}
+        skills={skillsOf(skills)}
         suspended={suspended}
         timeZone={timeZone}
         viewport={viewport}

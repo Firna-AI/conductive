@@ -10,6 +10,7 @@ import { chatHistoryPath } from '../../shared/events'
 import { membersPath } from '../../shared/members'
 import type { SendMessageRequest } from '../../shared/messages'
 import {
+  explainSessionPath,
   retryMessagePath,
   sessionPath,
   sessionTranscriptPath,
@@ -18,6 +19,7 @@ import {
   type ChangeModelRequest,
   type CloseSessionRequest,
   type CreateSessionRequest,
+  type ExplainSessionRequest,
   type InterruptRequest,
   type RenameSessionRequest,
 } from '../../shared/sessions'
@@ -137,6 +139,17 @@ export function createChatApi(client: ApiClient, target: WorkspaceTarget) {
       client.send('POST', routes(id).reopen, empty, readSessionResponse),
     send: (id: string, request: SendMessageRequest) =>
       client.send('POST', routes(id).messages, request, readSendResponse),
+    /**
+     * Starts an explanation of a quote of a message of the parent session.
+     * The reply holds the new session and its written prompt, as a send's.
+     */
+    explain: (parentId: string, request: ExplainSessionRequest) =>
+      client.send(
+        'POST',
+        explainSessionPath(orgId, workspaceId, parentId),
+        request,
+        readSendResponse,
+      ),
     retry: (id: string, messageId: string) =>
       client.send(
         'POST',

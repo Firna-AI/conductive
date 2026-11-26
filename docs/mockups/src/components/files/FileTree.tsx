@@ -1,9 +1,11 @@
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import type { TreeEntry } from '../../fixtures/files'
 import { ScreenLink } from '../common/ScreenLink'
-import { classes } from '../common/classes'
-import { ChangeIcon } from './ChangeIcon'
-import { EntryIcon } from './fileIcons'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { changeIcon } from '../../entries/components/files/ChangeIcon.mockup'
+import { entryIcon } from '../../entries/components/files/fileIcons.mockup'
+import { defined } from '../../defined'
+import { instanceKey } from '../../instanceKey'
 import { RowMenuItem, type FileRowMenu } from './FileRowMenu'
 import { previewPaths } from './previewPaths'
 import styles from './FileTree.module.css'
@@ -21,21 +23,33 @@ function Disclosure(props: { entry: TreeEntry }) {
 /**
  * One row of the tree. The row of the open file is marked, and the row of
  * an open menu keeps the fill of a hover, as a tab with an open menu does.
+ * `id` is the instance key of the path of its entry.
  */
-function Row(props: { entry: TreeEntry; open: boolean; menuOpen: boolean }) {
+function Row(props: {
+  entry: TreeEntry
+  id: string
+  open: boolean
+  menuOpen: boolean
+}) {
   const { entry } = props
   const content = (
     <>
       <Disclosure entry={entry} />
-      <EntryIcon
+      <entryIcon.Component
         className={styles.icon}
         folder={entry.folder}
+        moklyInstance={`icon-${props.id}`}
         name={entry.name}
-        open={entry.open}
         size={14}
+        {...defined({ open: entry.open })}
       />
       <span className={styles.name}>{entry.name}</span>
-      {entry.change ? <ChangeIcon change={entry.change} /> : null}
+      {entry.change ? (
+        <changeIcon.Component
+          change={entry.change}
+          moklyInstance={`change-${props.id}`}
+        />
+      ) : null}
     </>
   )
   const indent = { paddingLeft: 6 + entry.depth * 14 }
@@ -65,7 +79,9 @@ function Row(props: { entry: TreeEntry; open: boolean; menuOpen: boolean }) {
 
 /**
  * The path of each entry from the root of the repository, from the names of
- * the folders above it, such as `src/app/checkout`.
+ * the folders above it, such as `src/app/checkout`. Two entries of one
+ * folder never share a name, so the path stays the key of an entry when the
+ * entries around it change.
  */
 function pathsOf(entries: readonly TreeEntry[]): string[] {
   let folders: string[] = []
@@ -95,6 +111,7 @@ export function FileTree(props: {
           <RowMenuItem key={index} menu={menu}>
             <Row
               entry={entry}
+              id={instanceKey(paths[index] ?? entry.name)}
               menuOpen={menu !== undefined}
               open={entry.preview !== undefined && entry.preview === props.open}
             />

@@ -2,11 +2,11 @@ import type { LucideIcon } from 'lucide-react'
 import { Plus, Repeat, Search, Settings } from 'lucide-react'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
-import a11y from '../common/a11y.module.css'
-import { classes } from '../common/classes'
-import type { Shortcut } from '../common/KeyChips'
-import { useMacApp } from '../mac/MacApp'
-import styles from './SidebarLinks.module.css'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import type { Shortcut } from '../../../../../src/ui/components/common/KeyChips'
+import { useMacApp } from '../../../../../src/ui/components/mac/MacApp'
+import styles from '../../../../../src/ui/components/workspaces/SidebarLinks.module.css'
 
 /**
  * The cog that links to the settings of the org. Its tooltip and its hidden
@@ -108,7 +108,10 @@ export function AutomationsLink(props: {
  */
 export function SearchLink(props: {
   variant: 'sidebar' | 'page'
-  /** The key that opens the palette, such as ⌘K, or none. */
+  /**
+   * The key of a Mac that opens the palette, or none. A Mac prints the keys
+   * of a shortcut with no space between them, such as ⌘K.
+   */
   shortcut?: Shortcut
 }) {
   const mac = useMacApp()
@@ -120,7 +123,7 @@ export function SearchLink(props: {
       <Search aria-hidden className={styles.icon} size={14} />
       Search
       {props.shortcut ? (
-        <kbd className={styles.keys}>{props.shortcut}</kbd>
+        <kbd className={styles.keys}>{props.shortcut.join('')}</kbd>
       ) : null}
     </ScreenLink>
   )

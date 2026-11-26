@@ -1,8 +1,12 @@
 import type { ReactNode } from 'react'
 import { ExternalLink } from 'lucide-react'
 import { ScreenLink, useOutsideHref } from '../common/ScreenLink'
-import { InitialsTile, PersonAvatar } from '../orgs/OrgTile'
-import styles from './targets.module.css'
+import { instanceKey } from '../../instanceKey'
+import {
+  initialsTile,
+  personAvatar,
+} from '../../entries/components/orgs/OrgTile.mockup'
+import styles from '../../../../../src/ui/components/operator/targets.module.css'
 
 /** A user or an org of the operator pages, as a list row names it. */
 export type Target = { kind: 'user' | 'org'; name: string; initials: string }
@@ -12,14 +16,26 @@ function targetName(target: Target): string {
   return target.kind === 'user' ? `@${target.name}` : target.name
 }
 
-/** A person shows on a disc, and an org on a square, as in the rest of the app. */
+/**
+ * A person shows on a disc, and an org on a square, as in the rest of the
+ * app. The kind and the name of the target name the mark for Mokly.
+ */
 export function TargetMark(props: { target: Target; size?: number }) {
-  const { initials } = props.target
+  const { initials, kind } = props.target
   const size = props.size ?? 26
-  return props.target.kind === 'user' ? (
-    <PersonAvatar initials={initials} size={size} />
+  const name = `${kind}-${instanceKey(props.target.name)}`
+  return kind === 'user' ? (
+    <personAvatar.Component
+      initials={initials}
+      moklyInstance={name}
+      size={size}
+    />
   ) : (
-    <InitialsTile initials={initials} size={size} />
+    <initialsTile.Component
+      initials={initials}
+      moklyInstance={name}
+      size={size}
+    />
   )
 }
 

@@ -11,8 +11,11 @@ mod command;
 mod error;
 mod release;
 mod runner_command;
+mod runner_round;
+mod runner_services;
 mod runner_start;
 mod sandbox_command;
+mod service_command;
 mod tool_command;
 mod update_command;
 

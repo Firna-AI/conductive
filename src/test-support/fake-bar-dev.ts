@@ -7,13 +7,17 @@ import { readChoice } from '../chat/api/read-chat'
 import { readSessions } from '../chat/api/read-responses'
 import type { WorkspaceEvent } from '../shared/events'
 import { filePaths } from '../shared/files'
-import { githubPaths, type GitHubMergeMethod } from '../shared/github'
+import { githubPaths } from '../shared/github'
+import type { GitHubMergeMethod } from '../shared/generated/GitHubMergeMethod'
 import { sessionsPath } from '../shared/sessions'
-import { workspacePath, workspacePaths } from '../shared/workspaces'
+import {
+  workspacePath,
+  workspacePaths,
+  workspacesPath,
+} from '../shared/workspaces'
 import type { FakeApiServer } from './fake-api'
 import {
   CONTINUE_ID,
-  CONTINUED_BRANCH,
   continuedEvents,
   continuedReply,
   serveAccess,
@@ -26,7 +30,16 @@ import {
   type FakeMergeEnd,
   type FakeWork,
 } from './fake-bar'
+import {
+  continueNamesWith,
+  eventWith,
+  recordWith,
+  replyWith,
+  serveContinueWith,
+  type FakeBranches,
+} from './fake-branch-names'
 import { serveReady, type FakeReadyEnd } from './fake-ready'
+import { fakeTranscript } from './fake-transcript'
 import { FAKE_IDS, FAKE_ORIGIN } from './fixtures/core'
 import { toolFixtures } from './fixtures/tools'
 import { nextEnvelope } from './recorded-repairs'
@@ -39,6 +52,8 @@ export interface BarScenario {
   ready: FakeReadyEnd
   work: FakeWork
   continue: FakeContinueEnd
+  /** The branch names of the bar, as `FakeBranches` says. */
+  branches: FakeBranches
 }
 
 /** The answers that the address of a development page can choose. */
@@ -50,7 +65,15 @@ export const scenarioValues: {
   merge: ['merged', 'moved-head', 'no-right', 'refused', 'unavailable'],
   ready: ['ready', 'no-right', 'pull-changed', 'refused'],
   work: ['none', 'files', 'restored', 'commits', 'legacy'],
-  continue: ['continued', 'question', 'clash', 'stopped', 'turn'],
+  continue: [
+    'continued',
+    'question',
+    'clash',
+    'stopped',
+    'move-failed',
+    'turn',
+  ],
+  branches: ['plain', 'masked', 'masked-continue', 'masked-repository'],
 }
 
 function pick<T extends string>(values: readonly T[], value: string | null): T {
@@ -60,10 +83,10 @@ function pick<T extends string>(values: readonly T[], value: string | null): T {
 /**
  * The answers in the address. The first value of each answer is the
  * default: a member with write access and squash, a merge and a Continue
- * that succeed, and no local work.
+ * that succeed, no local work, and plain branch names.
  */
 export function readScenario(query: URLSearchParams): BarScenario {
-  const { access, method, merge, work } = scenarioValues
+  const { access, method, merge, work, branches } = scenarioValues
   return {
     access: pick(access, query.get('access')),
     method: pick(method, query.get('method')),
@@ -71,6 +94,7 @@ export function readScenario(query: URLSearchParams): BarScenario {
     ready: pick(scenarioValues.ready, query.get('ready')),
     work: pick(work, query.get('work')),
     continue: pick(scenarioValues.continue, query.get('continue')),
+    branches: pick(branches, query.get('branches')),
   }
 }
 
@@ -95,8 +119,11 @@ export function bodyOf(init: RequestInit | undefined) {
  * A fetch over the fake server that answers the bar actions of a scenario
  * as the Worker does with its state. A completed merge publishes the merged
  * state, Ready for review publishes Ready to merge, a Continue publishes the workspace on its new branch with a note
- * in each session, and a message shows the text that it sent. Every other
- * request gets the recorded reply. Development only.
+ * in each session, and a message shows the text that it sent. A transcript
+ * copy builds the Markdown of the session from the fake stream, as
+ * `fakeTranscript` says. Every other request gets the recorded reply. Each
+ * GitHub state, in a reply or an event, and each name of a Continue have
+ * the branch names of the scenario. Development only.
  */
 export function scenarioFetch(
   server: FakeApiServer,
@@ -104,6 +131,7 @@ export function scenarioFetch(
   member: MessageSender,
   now: () => number,
 ): FetchLike {
+  const { branches } = scenario
   serveAccess(
     server,
     scenario.access,
@@ -113,9 +141,13 @@ export function scenarioFetch(
   serveReady(server, scenario.ready)
   serveWork(server, scenario.work)
   serveContinue(server, scenario.continue)
+  serveContinueWith(server, branches, scenario.continue)
+  const names = continueNamesWith(branches)
   let continues = scenario.continue === 'continued'
   const emit = (event: WorkspaceEvent) =>
-    server.events.emit(nextEnvelope(server.events, event, now()))
+    server.events.emit(
+      nextEnvelope(server.events, eventWith(branches, event), now()),
+    )
   const showGitHub = (event: WorkspaceEvent) => {
     if (event.type !== 'github.updated') return
     server.json('GET', githubPaths.banner(org, id), { banner: event.banner })
@@ -154,6 +186,7 @@ export function scenarioFetch(
       [...sessions, ...history],
       member,
       moved,
+      names,
     )
     for (const event of events) {
       showGitHub(event)
@@ -162,20 +195,19 @@ export function scenarioFetch(
       }
       emit(event)
     }
-    const last = server.events.history(
-      Number.MAX_SAFE_INTEGER,
-    ).throughEventNumber
     const workspace = {
       ...detail.workspace,
-      branch: CONTINUED_BRANCH,
+      branch: names.branch,
       github: null,
     }
-    server.json('GET', workspacePath(org, id), {
-      ...detail,
-      workspace,
-      eventNumber: last,
-    })
-    continuedReply(server, workspace, last)
+    server.handle('GET', workspacePath(org, id), async () =>
+      Response.json({
+        ...detail,
+        workspace,
+        ...server.events.stateRead(id),
+      }),
+    )
+    continuedReply(server, workspace, server.events.last(id))
     continues = false
   }
   const echo = async (path: string, init: RequestInit | undefined) => {
@@ -195,19 +227,21 @@ export function scenarioFetch(
       state: 'sent',
     }
     emit({ type: 'message.accepted', message })
-    const eventNumber = server.events.history(
-      Number.MAX_SAFE_INTEGER,
-    ).throughEventNumber
+    const eventNumber = server.events.last(id)
     return Response.json(
       { eventNumber, message, turnId: null, session },
       { status: 202 },
     )
   }
   return async (input, init) => {
-    const { pathname } = new URL(input, FAKE_ORIGIN)
+    const url = new URL(input, FAKE_ORIGIN)
+    const { pathname } = url
     const method = init?.method ?? 'GET'
     if (method === 'POST' && pathname.endsWith('/messages'))
       return echo(pathname, init)
+    const copy =
+      method === 'GET' ? await fakeTranscript(server, url, now) : null
+    if (copy) return copy
     if (
       method === 'GET' &&
       pathname === githubPaths.mergeResult(org, id, `merge-${id}`)
@@ -228,6 +262,17 @@ export function scenarioFetch(
       pathname === workspacePaths.continueResult(org, id, CONTINUE_ID)
     ) {
       if (continues) await publishContinue()
+    }
+    const github =
+      pathname === githubPaths.banner(org, id) ||
+      pathname === githubPaths.stored(org, id)
+    if (method === 'GET' && github) {
+      return replyWith(branches, await server.fetch(input, init))
+    }
+    const records =
+      pathname === workspacePath(org, id) || pathname === workspacesPath(org)
+    if (method === 'GET' && records) {
+      return recordWith(branches, pathname, await server.fetch(input, init))
     }
     return server.fetch(input, init)
   }

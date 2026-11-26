@@ -2,6 +2,7 @@ import type { Workspace } from '../shared/generated/Workspace'
 import type { Section } from '../shared/sections'
 import { placeWorkspaces } from '../shared/workspace-tree'
 import { topLevelRows, workspacesUnder, type ListRow } from './list-trees'
+import { isQueued } from './merge-queue'
 import { listedWorkspaces } from './workspace-removal'
 
 export interface SectionGroup {
@@ -15,6 +16,11 @@ export interface SectionGroup {
 
 export interface WorkspaceGroups {
   sections: readonly SectionGroup[]
+  /**
+   * The queued workspaces, which show only in the Merge queue group at the
+   * top of the list (decision 318). `queueBlocks` orders them.
+   */
+  queued: readonly Workspace[]
   /** The Archived group at the end of the list, the last archived first. */
   archived: readonly Workspace[]
 }
@@ -36,9 +42,10 @@ export function ordered(sections: readonly Section[]): Section[] {
  * `placeWorkspaces`, the shared rule of the app and the Worker, places
  * them: each top-level row in the order of the workspace list, and each
  * live sub-workspace under the row of its parent, or of the nearest live
- * workspace above it while its parent is archived. An unknown section
- * falls back to General. Archived workspaces leave their sections for the
- * flat Archived group. A removed workspace, whose Restore ended by `now`,
+ * workspace above it while its parent is archived or queued. An unknown
+ * section falls back to General. Archived workspaces leave their sections
+ * for the flat Archived group, and queued ones for the Merge queue group.
+ * A removed workspace, whose Restore ended by `now`,
  * shows in neither, as `isListed` says. It is archived, so it has no row,
  * but its live sub-workspaces still show under the nearest live workspace
  * above it, as the Worker places them. This is the one place that leaves
@@ -50,12 +57,14 @@ export function groupWorkspaces(
   now: number,
 ): WorkspaceGroups {
   const rows = placeWorkspaces(workspaces, sections)
+  const listed = listedWorkspaces(workspaces, now)
   return {
     sections: ordered(sections).map((section) => ({
       section,
       rows: rows.filter((row) => row.sectionId === section.id),
     })),
-    archived: listedWorkspaces(workspaces, now)
+    queued: listed.filter(isQueued),
+    archived: listed
       .filter((workspace) => workspace.state === 'archived')
       .sort((a, b) => (b.archivedAt ?? 0) - (a.archivedAt ?? 0)),
   }
@@ -67,8 +76,8 @@ export function groupWorkspaces(
  * section without the moved one. Each workspace under the row, live or
  * archived, takes the section too, as the Worker writes it. Every other
  * workspace keeps its place. A nested row moves only with its tree, so a
- * move of it changes nothing, and neither does a move of an archived
- * workspace.
+ * move of it changes nothing, and neither does a move of an archived or a
+ * queued workspace.
  */
 export function moveWorkspace(
   workspaces: readonly Workspace[],

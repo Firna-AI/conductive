@@ -1,5 +1,6 @@
 import { defineScreen } from '@mokly/mokly'
 import {
+  hexwavePage,
   OperatorOrgScreen,
   operatorOrgSchema,
 } from '../../../../../screens/OperatorOrgScreen'
@@ -12,7 +13,7 @@ export const operatorOrgLift = defineScreen({
     'Decision 145 B chose a Lift action with a confirm step. Decision 147 puts it on the page of the org.',
   relatedDocs: [],
   propSchema: operatorOrgSchema,
-  props: { status: 'suspended', dialog: 'lift' },
+  props: { ...hexwavePage, status: 'suspended', dialog: 'lift' },
   render: (props, context) => (
     <OperatorOrgScreen state={props} viewport={context.viewport} />
   ),

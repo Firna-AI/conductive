@@ -12,6 +12,10 @@ include the page. From the repository root:
 npx vite --config src/shell/workspace/dev/vite.config.js --port 5182
 ```
 
+The fake gives a workspace seed and cutoff from the recorded log of the
+workspace. Its socket sends the events after the cursor of each caller.
+The first-start page stores its queued messages in that workspace's log.
+
 Then open `http://localhost:5182/src/shell/workspace/dev/`. The root of
 this server is the repository root, so it also serves the
 [Files development page](../../files/README.md#development) at
@@ -30,11 +34,16 @@ this server is the repository root, so it also serves the
 | `bar`      | The GitHub state of the pull request bar, such as `ready-to-merge` or `merged`. The page then uses the app's own Files part, so a phone shows the actions at the top of Checks, and `list` names the list of a phone. |
 | `turn`     | `running` starts the fake with a turn that runs. |
 | `access`, `method`, `merge`, `work`, `continue` | How the actions of the bar end: the member's access, the merge method, the end of a merge, the local work, and the end of Continue. The first value of each is the default. |
-| `repository` | The cloud computer holds each chosen repository, so the repository in the header opens its menu. The value says how a change ends: `changed`, `question`, `clash`, or `outdated`. Without it, the repository shows as text. |
+| `branches` | The branch names: `plain`, the default, `masked`, `masked-continue`, or `masked-repository`. `masked-continue` gives each name of Continue a fake secret value and its label, as [the GitHub development page](../../github/README.md#development-page) says. `masked-repository` does the same for each name of a repository change. |
+| `repository` | The cloud computer holds each chosen repository, so the repository in the header opens its menu. The value says how a change ends: `changed`, `question`, `clash`, `outdated`, or `fetch-failed`. Without it, the repository shows as text. |
+| `services` | The Preview tool lists services above the servers of a stored report of the ports: `running`, `ended`, `empty`, or `load-failed`, a first read that fails. Stop and Restart of `web` change the list, a Restart of `storybook` fails, and a Stop of `worker` loses its reply, so each toast shows. Each control answers after 1.5 seconds. Without it, the cloud computer has no services, as older software. |
+| `lists`    | `limited` ends the stored history with the lists of a large branch, whose reports leave out entries, as `app/files/limited` draws them. The tree leaves out `tsconfig.json`, so `@tsconfig` in the message field shows the line of no match of a limited tree. |
 
 For example, `?viewport=phone&view=terminal&repair=name,start,all-files,changes`
 draws the bars of the name and the start steps on the Terminal tab of a
 phone. The Files tab shows the notices of the two lists.
+`?services=running&repair=none&viewport=phone&view=preview` shows the
+services of a phone.
 
 The controls have a row for each kind: Name, Start steps, All files, and
 Changes.
@@ -59,17 +68,28 @@ With `bar`, `scenarioFetch` of `src/test-support/fake-bar-dev.ts` answers
 the actions of the bar as the Worker does with its state. A completed merge
 publishes the merged state. A Continue publishes the workspace on its new
 branch, a note in each session, the changes report of the new branch, and
-its GitHub state. A message shows the text that it sent. So the page runs
-the real action state, the real chat send, and the real event pipeline.
-For example, `?bar=merged&work=files&continue=question&viewer=member`
-asks the question of Continue, and `?bar=checks-failed&work=none` offers
-Fix checks.
+its GitHub state. A message shows the text that it sent. A copy of a
+transcript builds the text of the session from the fake stream, as
+`src/test-support/fake-transcript.ts` says. It uses `SessionMarkdown`, the
+builder of the Worker. So the page runs the real action state, the real
+chat send, and the real event pipeline. For example,
+`?bar=merged&work=files&continue=question&viewer=member` asks the question
+of Continue, and `?bar=checks-failed&work=none` offers Fix checks. With
+`branches=masked-continue`, the question, the note of each session, its
+copy, and the words of `continue=clash` show the labels.
 
 With `repository`, `repositoryFetch` of
 `src/test-support/fake-repository-change.ts` answers a repository change
 as the Worker does. A change that ends publishes the workspace in
-acme/billing-service, a note in each session, and the empty changes report
-of the new branch. For example, `?repository=question` asks the question
-with the work of the mockups first.
+acme/billing-service, a note in each session, the empty changes report of
+the new branch, and its GitHub state. For example, `?repository=question`
+asks the question with the work of the mockups first. With `bar`, the
+change takes the names of `branches`. With `branches=masked-repository`,
+the question, the note of each session, its copy, the words of
+`repository=fetch-failed`, and the New session text show the labels. With
+it, + opens a session without messages, which shows the New session text.
+For example,
+`?bar=ready-to-merge&branches=masked-repository&repository=question` asks
+the question with masked files.
 
 Run the tests with `npm run test -- src/shell/workspace`.

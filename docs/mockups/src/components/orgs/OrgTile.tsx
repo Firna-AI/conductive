@@ -1,6 +1,9 @@
 import { Avatar } from '@firna/ui/avatar'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { orgTileTint, type OrgColor } from '../../design/orgColors'
+import {
+  orgTileTint,
+  type OrgColor,
+} from '../../../../../src/ui/design/orgColors'
 import { account, type Org } from '../../fixtures/orgs'
 
 /**

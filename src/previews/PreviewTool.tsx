@@ -18,6 +18,8 @@ import { PreviewOpenForm } from './PreviewOpenForm'
 import { PreviewToolbar } from './PreviewToolbar'
 import { portFormList } from './previewsState'
 import { createPreviewsStore, type PreviewsStore } from './previewsStore'
+import { useServicesState, type PreviewServices } from './services/servicesPart'
+import { ownedPorts } from './services/servicesState'
 import styles from './PreviewTool.module.css'
 
 /**
@@ -60,6 +62,12 @@ export interface PreviewToolProps {
    * it, the tool makes its own store and connects it while it shows.
    */
   store?: PreviewsStore
+  /**
+   * The services of the workspace, which the form lists above the servers,
+   * also after "+" for a port with an open preview. Without them, the tool
+   * shows no services.
+   */
+  services?: PreviewServices
 }
 
 /** The connect of a store that the app connects itself. */
@@ -100,6 +108,7 @@ function PreviewToolBody(props: PreviewToolProps) {
     state,
     dispatch,
   )
+  const servicesState = useServicesState(props.services)
 
   const reloadList = () => dispatch({ type: 'load' })
 
@@ -123,9 +132,16 @@ function PreviewToolBody(props: PreviewToolProps) {
       <>
         <PreviewOpenForm
           error={state.openError}
-          list={portFormList(state, visible)}
+          list={portFormList(state, visible, ownedPorts(servicesState))}
           onOpen={open}
           opening={state.opening}
+          services={
+            props.services?.section(servicesState, {
+              current: null,
+              opening: state.opening,
+              onOpen: open,
+            }) ?? null
+          }
         />
         {state.portsFailedAt === null ? null : (
           <PortsNotice at={state.portsFailedAt} now={props.now ?? Date.now} />

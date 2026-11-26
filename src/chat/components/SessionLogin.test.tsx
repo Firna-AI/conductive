@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
-import composerStyles from '../../../docs/mockups/src/components/chat/Composer.module.css'
+import composerStyles from '../../ui/components/chat/Composer.module.css'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import type { OrgRole } from '../../shared/api'
 import { membersPath } from '../../shared/members'

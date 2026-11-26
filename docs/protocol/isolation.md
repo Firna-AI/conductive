@@ -36,7 +36,9 @@ says.
   through the agent tools, as
   [What the workspace tools reach](#what-the-workspace-tools-reach) says.
 - An operator is the one exception. An operator can suspend or lift any
-  user or org, as [Operator actions](operator-actions.md) says. In the
+  user or org, as [Operator actions](operator-actions.md) says. An
+  operator can also switch any org to another provider account, as
+  [Switch account](switch-account.md) says. In the
   [operator section](operator-section.md#what-the-section-shows), an
   operator also reads counts, names, IDs, dates, roles, states, and codes
   across every org (decisions 142, 144, 147, and 160). An operator also
@@ -182,8 +184,8 @@ requirements.
   [Mac commands](agent-tools.md#mac-commands) say.
 - An automation run uses the default login and the GitHub token of its
   owner while no person watches. Its sandbox follows the same rules below.
-  [Risks that stay open](automations.md#risks-that-stay-open) states the
-  risks of automations.
+  [Risks that stay open](automation-risks.md#risks-that-stay-open) states
+  the risks of automations.
 - With each turn, the agent runner gets a turn token for the login of its
   session, over its connection to the Durable Object. Reason: the sandbox
   gets its secrets only at a start, and the sessions of one sandbox can

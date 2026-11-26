@@ -66,6 +66,10 @@ open. Its pull request keeps them after the merge.
   login decision 3 A). This holds for every member. It holds also for the
   picker of a new workspace, and of an automation whose runs take the org
   login.
+- The menu of a picker that hides a model also leaves out each favourite
+  on that model. The favourite stays saved. Preferences shows it greyed
+  only for a personal endpoint of the member, as
+  [Hidden favourites](model-favourites.md#hidden-favourites) says.
 - The account page names each model of the app that the list does not
   name, with its model ID and the time when the Worker read that list. For
   an org endpoint, the Agents tab names them to an admin in the same way.

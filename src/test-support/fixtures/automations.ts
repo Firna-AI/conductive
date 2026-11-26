@@ -1,6 +1,6 @@
 import type { MessageSender } from '../../shared/generated/MessageSender'
 import { automationRows } from '../../../docs/mockups/src/fixtures/automationRows'
-import type { RunState } from '../../../docs/mockups/src/fixtures/automationRuns'
+import type { RunState } from '../../ui/components/workspaces/activityStatus'
 import {
   offAfterFailedRuns,
   automations as mockupAutomations,
@@ -21,6 +21,7 @@ import {
   timeOf,
 } from './automation-runs'
 import { fakeAccount, storedTrigger } from './automation-triggers'
+import { secretFixtures } from './secrets'
 
 const day = 86_400_000
 
@@ -100,6 +101,7 @@ function record(
     storedTrigger(item, fakeAccount),
   )
   const scheduled = triggers.some((item) => item.kind !== 'pull-request')
+  const secrets = secretFixtures().secrets
   return {
     id: automation.key,
     orgId,
@@ -110,6 +112,12 @@ function record(
     sectionId: automation.section,
     prompt: automation.prompt,
     choice: { ...automation.choice, fast: automation.choice.fast ?? false },
+    capabilities: {
+      preapprovedSecretIds: secrets
+        .filter((secret) => automation.preApproved?.includes(secret.name))
+        .map((secret) => secret.id)
+        .sort(),
+    },
     active: automation.active,
     inactiveReason: inactiveReason(automation),
     failedRunsInARow: automation.failedRunsInARow ?? 0,

@@ -16,10 +16,6 @@ function response(requestId, result = null) {
 for await (const line of lines) {
   const request = JSON.parse(line)
   switch (request.type) {
-    case 'warm':
-      response(request.requestId)
-      process.stdout.end(() => process.exit(0))
-      break
     case 'start':
       complete = request.options.choice.model === 'complete'
       if (complete)

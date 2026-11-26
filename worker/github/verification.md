@@ -131,6 +131,7 @@ So the case fails when [the production composition](composition.ts) does not con
 It covers a failed check and a later passed read, with an unchanged activity time and position.
 It also covers an older receipt replay, the repair of a missing copy, and a failed copy whose retry follows a real eviction.
 A D1 trigger makes the copy fail.
+[merge-record.test.ts](merge-record.test.ts) covers the merge record: one row for a merged read, with the owner of the first record after a reassignment and a repeated event, no row for an open or closed pull request, the merged event of an archived workspace with no GitHub read, the delivery time for an event with no merge time, no row in a deleted org, and the org purge.
 [summary-queue.test.ts](summary-queue.test.ts) proves on the production chat port that each copy ends before the next refresh reads GitHub.
 [The shared summary tests](../../src/shared/github.test.ts) cover the order of the checks and the copy of each bar state.
 

@@ -1,18 +1,20 @@
 import type { ReactNode } from 'react'
-import {
-  ScreenCapture,
-  type FrameDevice,
-  type ScreenPicture,
+import type {
+  FrameDevice,
+  ScreenPicture,
 } from '../components/marketing/ScreenFrame'
+import { screenCapture } from '../entries/components/marketing/ScreenFrame.mockup'
 import {
   marketingPictures,
   screenSizes,
   type MarketingPictureKey,
   type PictureLayout,
   type ScreenViewport,
-} from './marketingPictureList'
-import { MacAppScreen, type MacAppState } from './MacAppScreen'
-import { acmeSettings, OrgSettingsScreen } from './OrgSettingsScreen'
+} from '../../../../src/ui/screens/marketingPictureList'
+import { MacAppScreen } from './MacAppScreen'
+import type { MacAppState } from './macAppState'
+import { OrgSettingsScreen } from './OrgSettingsScreen'
+import { acmeSettings } from './orgSettingsState'
 import { WorkspaceListScreen } from './WorkspaceListScreen'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { readyWorkspace, type WorkspaceState } from './workspaceState'
@@ -26,8 +28,17 @@ const creating: WorkspaceState = {
   banner: 'no-commits',
 }
 
-/** The open picker of the model and the effort, over two attached files. */
-const picker: WorkspaceState = { ...readyWorkspace, composer: 'picker' }
+/**
+ * The open picker of the model and the effort, over two attached files. It
+ * lists four favourites, so the whole menu fits the part of the desktop
+ * screen that the picture shows, and the height limit of a menu on the
+ * phone screen of the picture, 70% of 800 px.
+ */
+const picker: WorkspaceState = {
+  ...readyWorkspace,
+  composer: 'picker',
+  favourites: 'four',
+}
 
 /** A command that waits for Allow in the window of the Mac app. */
 const waitingCommand: MacAppState = {
@@ -107,8 +118,17 @@ const screens: Readonly<
   mac: () => <MacAppScreen state={waitingCommand} />,
 }
 
-/** A picture of the home page in one layout, and how the page frames it. */
-export type FramedPicture = { picture: ScreenPicture; device: FrameDevice }
+/**
+ * A picture of the home page in one layout: its key, how the page frames
+ * it, its data, and its screen. The key names the frame for Mokly, so the
+ * parts of each picture have their own instance scope.
+ */
+export type FramedPicture = {
+  key: MarketingPictureKey
+  device: FrameDevice
+  picture: Omit<ScreenPicture, 'screen'>
+  screen: ReactNode
+}
 
 /** The device of a frame in one layout. */
 function frameDevice(
@@ -129,14 +149,15 @@ export function marketingPicture(
 ): FramedPicture {
   const view = marketingPictures[key][layout]
   return {
+    key,
+    device: frameDevice(key, layout),
     picture: {
       label: view.label,
       size: screenSizes[view.screen],
       crop: view.crop,
       scale: view.scale,
-      screen: screens[key](view.screen),
     },
-    device: frameDevice(key, layout),
+    screen: screens[key](view.screen),
   }
 }
 
@@ -148,6 +169,16 @@ export function PictureCapture(props: {
   pictureKey: MarketingPictureKey
   layout: PictureLayout
 }) {
-  const { picture } = marketingPicture(props.pictureKey, props.layout)
-  return <ScreenCapture picture={picture} />
+  const { key, picture, screen } = marketingPicture(
+    props.pictureKey,
+    props.layout,
+  )
+  const { label, size, crop } = picture
+  return (
+    <screenCapture.Component
+      moklyInstance={key}
+      picture={{ label, size, crop }}
+      screen={screen}
+    />
+  )
 }

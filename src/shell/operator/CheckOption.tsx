@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import styles from '../../../docs/mockups/src/components/common/CheckOption.module.css'
+import styles from '../../ui/components/common/CheckOption.module.css'
 
 /**
  * A checkbox with its label and a muted hint, for an option of a question,

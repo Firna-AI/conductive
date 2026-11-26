@@ -1,4 +1,5 @@
 import type { TranscriptDetail } from '../../shared/generated/TranscriptDetail'
+import type { ExplainSessionRequest } from '../../shared/sessions'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { IntakeRefusals } from '../../app/draft-files'
 import type { DeviceApprovalAction } from '../../shared/device'
@@ -15,6 +16,7 @@ import { attachFiles } from './attachment-actions'
 import { ChatRuns } from './chat-runs'
 import type { MentionRequest } from './chat-snapshot'
 import { hydrate } from './history'
+import type { SendingView } from './linked-replies'
 import {
   interruptTurn,
   resumeWorkspace,
@@ -25,6 +27,7 @@ import {
 import { addToChat, takeMention } from './mention-actions'
 import { chooseModel } from './model-actions'
 import { draftFileSource } from './draft-file-source'
+import { explainQuote, sendFollowUp } from './explain-actions'
 import { sendPrompt, type PromptOutcome } from './prompt-actions'
 import { moveTab } from './tab-actions'
 import type { TabPlace } from './tab-order'
@@ -83,6 +86,8 @@ export class ChatController extends ChatRuns {
       : reopenSession(this.context, sessionId)
   readonly loadHistory = (sessionId: string) =>
     hydrate(this.context, sessionId, true)
+  /** Loads the stored history of a session once, such as for its popover. */
+  readonly readHistory = (sessionId: string) => hydrate(this.context, sessionId)
   readonly setDraft = (sessionId: string, text: string) =>
     setDraftText(this.context, sessionId, text)
   readonly attachFiles = (
@@ -115,8 +120,30 @@ export class ChatController extends ChatRuns {
   /** The message field took the chip of a request, as `takeMention` says. */
   readonly takeMention = (request: MentionRequest) =>
     takeMention(this.context, request)
-  readonly retry = (sessionId: string, messageId: string) =>
-    this.write(() => retryTurn(this.context, sessionId, messageId))
+  /**
+   * Starts an explanation of a quote, as `explainQuote` says, and gives the
+   * ID of its session. A read-only workspace starts none.
+   */
+  readonly explain = (
+    parentId: string,
+    request: ExplainSessionRequest,
+  ): Promise<string | null> =>
+    this.readOnly()
+      ? Promise.resolve(null)
+      : explainQuote(this.context, parentId, request)
+  /**
+   * Sends the draft of a session from the popover of an explanation, `view`,
+   * as `sendFollowUp` says.
+   */
+  readonly followUp = (sessionId: string, view: SendingView) =>
+    this.write(() => sendFollowUp(this.context, sessionId, view))
+  /**
+   * Try again of a failed turn, as `retryTurn` says. The shown tab follows
+   * a linked session, or `view` when Try again was in it, such as the
+   * popover of an explanation.
+   */
+  readonly retry = (sessionId: string, messageId: string, view?: SendingView) =>
+    this.write(() => retryTurn(this.context, sessionId, messageId, view))
   readonly interrupt = (sessionId: string) =>
     this.write(() => interruptTurn(this.context, sessionId))
   readonly chooseModel = (sessionId: string, choice: AgentChoice) =>

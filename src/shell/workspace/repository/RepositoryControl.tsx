@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react'
 import { FolderGit2 } from 'lucide-react'
 import { useToast } from '@firna/ui/toast'
-import picker from '../../../../docs/mockups/src/components/workspace/RepositoryPicker.module.css'
-import { RepositoryButton } from '../../../../docs/mockups/src/components/workspace/RepositoryButton'
-import header from '../../../../docs/mockups/src/components/workspace/WorkspaceHeader.module.css'
+import picker from '../../../ui/components/workspace/RepositoryPicker.module.css'
+import { RepositoryButton } from '../../../ui/components/workspace/RepositoryButton'
+import header from '../../../ui/components/workspace/WorkspaceHeader.module.css'
 import {
   repositoryFailure,
   repositoryMenu,
-} from '../../../../docs/mockups/src/components/workspace/repositoryMoveCopy'
+} from '../../../ui/components/workspace/repositoryMoveCopy'
 import { useStore, valueOf } from '../../../app/store'
 import { nameLabel } from '../../../shared/name-label'
 import { useOrgModel } from '../../context'

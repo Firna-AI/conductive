@@ -10,6 +10,7 @@
         "src/files/markdown/markdown-worker.ts",
         "src/marketing/pages/**/*.astro",
         "tools/chatgpt-egress/proxy.ts",
+        "tools/ui-move/main.ts",
         "worker/chatgpt-egress/index.ts",
         "image/*.mjs",
         "image/live-main.ts",

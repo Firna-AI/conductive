@@ -1,6 +1,6 @@
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { ScreenLink } from '../../common/ScreenLink'
-import { classes } from '../../common/classes'
+import { classes } from '../../../../../../src/ui/components/common/classes'
 import type { DocsGuide } from './docsGuides'
 import styles from './DocsPager.module.css'
 

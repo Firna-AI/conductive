@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-10, from branch `calummoore/workspace-status-icons`, the change that shows the GitHub state in the workspace list marks.
-- **Location:** `docs/protocol/workspace-life.md`, `docs/protocol/github-banner.md`, `src/shared/github.ts`, `worker/github/workspace-state.ts`, `worker/github/summary-data.ts`, `migrations/202611102114_workspace_github_summary.sql`, `migrations/202611130900_workspace_github_bar_states.sql`, `docs/mockups/src/components/workspaces/WorkspaceMark.tsx`, `src/shell/list/WorkspaceRow.tsx`, `src/shell/palette/PaletteList.tsx`, `src/chat/links/LinksContext.tsx`, and `src/app/org-waits.ts`.
+- **Location:** `docs/protocol/workspace-life.md`, `docs/protocol/github-banner.md`, `src/shared/github.ts`, `worker/github/workspace-state.ts`, `worker/github/summary-data.ts`, `migrations/202611102114_workspace_github_summary.sql`, `migrations/202611130900_workspace_github_bar_states.sql`, `src/ui/components/workspaces/WorkspaceMark.tsx`, `src/shell/list/WorkspaceRow.tsx`, `src/shell/palette/PaletteList.tsx`, `src/chat/links/LinksContext.tsx`, and `src/app/org-waits.ts`.
 - **Reason:** The check needs the merged change on the deployment, the real GitHub App with its webhooks, and real checks on a pull request.
 
 - **Terms:**

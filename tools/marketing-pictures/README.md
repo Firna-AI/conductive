@@ -32,8 +32,8 @@ The site build reads the committed picture files and does not run Chrome.
   The command reuses this image and makes no AI request.
 - [Brand master](../../docs/brand/conductive-lockup-light.svg):
   the unchanged logo and product name.
-- [Inter font](../../docs/mockups/src/fonts/InterVariable.woff2):
-  the project font under its [SIL Open Font License](../../docs/mockups/src/fonts/Inter-OFL.txt).
+- [Inter font](../../src/ui/fonts/InterVariable.woff2):
+  the project font under its [SIL Open Font License](../../src/ui/fonts/Inter-OFL.txt).
 - The home page's shared headline in
   [features.ts](../../src/marketing/features.ts).
 - The current canonical workspace in its ready state, which the home

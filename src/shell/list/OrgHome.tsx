@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
 import { FolderGit2, PanelLeft, Plus } from 'lucide-react'
-import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
-import responsive from '../../../docs/mockups/src/components/layout/responsive.module.css'
+import { EmptyState } from '../../ui/components/common/EmptyState'
+import responsive from '../../ui/components/layout/responsive.module.css'
 import {
   SuspendedOrgAbove,
   SuspendedOrgPanel,
-} from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
+} from '../../ui/components/orgs/SuspendedOrgNotice'
 import { useListTime } from '../../app/deadlines'
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'
@@ -34,10 +34,10 @@ function ChooseWorkspace(props: { org: OrgSummary }) {
   const all = valueOf(useStore(model.workspaces))
   const listTime = useListTime(all ?? [])
   const workspaces = all ? listedWorkspaces(all, listTime) : undefined
-  const repositories = valueOf(useStore(model.repositories))
+  const repositories = valueOf(useStore(model.listRepositories))
   const go = useGo()
   const open = useNewWorkspace().open
-  useEffect(() => model.watch('repositories'), [model])
+  useEffect(() => model.watch('list'), [model])
   const newWorkspace = (
     <ActionButton
       icon={Plus}

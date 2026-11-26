@@ -1,31 +1,46 @@
 import { useId } from 'react'
 import { agentKeys, agents, type AgentKey } from '../../fixtures/agents'
 import {
-  loginLabels,
   shareNotSavedCause,
   sharedByDefault,
   type AgentLogins,
   type LoginKind,
 } from '../../fixtures/logins'
-import { noop } from '../../noop'
-import { ActionButton } from '../common/actions'
-import { classes } from '../common/classes'
-import { StatusText } from '../common/StatusText'
-import { AgentConnectForm } from './AgentConnectForm'
-import { EndpointDetails } from './EndpointDetails'
-import type { EndpointEntry } from './EndpointFields'
-import type { SignInStep } from './chatGptSignInCopy'
+import { defined } from '../../defined'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
+import { agentConnectForm } from '../../entries/components/settings/AgentConnectForm.mockup'
+import { endpointDetails } from '../../entries/components/settings/EndpointDetails.mockup'
 import {
-  LoginNotUsable,
-  SignedOutStatus,
-  type UnusableLogin,
-} from './LoginNotUsable'
-import { LoginShare } from './LoginShare'
-import { OrgLoginLines, type OrgLoginUse } from './OrgLoginLines'
-import styles from './AccountSections.module.css'
+  loginNotUsable,
+  signedOutStatus,
+} from '../../entries/components/settings/LoginNotUsable.mockup'
+import { loginShare } from '../../entries/components/settings/LoginShare.mockup'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { StatusText } from '../../../../../src/ui/components/common/StatusText'
+import { loginLabels } from '../../../../../src/ui/components/settings/agentConnectCopy'
+import type { EndpointEntry } from './EndpointFields'
+import type { SignInStep } from '../../../../../src/ui/components/settings/chatGptSignInCopy'
+import type { UnusableLogin } from './LoginNotUsable'
+import {
+  OrgLoginLines,
+  type OrgLoginUse,
+} from '../../../../../src/ui/components/settings/OrgLoginLines'
+import styles from '../../../../../src/ui/components/settings/AccountSections.module.css'
 
 /** The state of a connected login or of GitHub, in its row. */
 export const connected = <StatusText label="Connected" tone="success" />
+
+/** The state of a connected app or login. `name` names it for Mokly. */
+export function Connected(props: { name: string }) {
+  return (
+    <statusText.Component
+      label="Connected"
+      moklyInstance={props.name}
+      tone="success"
+    />
+  )
+}
 
 /**
  * The share setting under each connected login, as on the account. Each
@@ -93,15 +108,20 @@ export function AgentList(props: {
             ? props.form
             : undefined
         const nameId = `${ids}-${key}`
-        let action = form ? null : <ActionButton>Connect</ActionButton>
+        let action = form ? null : (
+          <actionButton.Component moklyInstance={`connect-${key}`}>
+            Connect
+          </actionButton.Component>
+        )
         if (login) {
           action = props.removable ? (
-            <ActionButton
+            <actionButton.Component
               accessibilityLabel={`Remove ${agents[key].name}`}
+              moklyInstance={`remove-${key}`}
               tone="plain"
             >
               Remove
-            </ActionButton>
+            </actionButton.Component>
           ) : null
         }
         return (
@@ -113,7 +133,13 @@ export function AgentList(props: {
               <span className={styles.detail}>
                 {login ? (
                   <>
-                    {unusable ? <SignedOutStatus /> : connected}
+                    {unusable ? (
+                      <signedOutStatus.Component
+                        moklyInstance={`signed-out-${key}`}
+                      />
+                    ) : (
+                      <Connected name={`${key}-connected`} />
+                    )}
                     {login.kind === 'endpoint' ? null : (
                       <span className={styles.kind}>
                         {loginLabels[key][login.kind]}
@@ -125,33 +151,44 @@ export function AgentList(props: {
               {action}
             </div>
             {login?.kind === 'endpoint' ? (
-              <EndpointDetails agent={key} login={login} />
+              <endpointDetails.Component
+                agent={key}
+                login={login}
+                moklyInstance={`endpoint-${key}`}
+              />
             ) : null}
             {unusable && !form ? (
-              <LoginNotUsable
+              <loginNotUsable.Component
                 cause={unusable.cause}
+                moklyInstance={`not-usable-${key}`}
                 signInTo={unusable.signInTo}
               />
             ) : null}
             <OrgLoginLines orgs={props.orgLogins?.[key]} />
             {form ? (
-              <AgentConnectForm
+              <agentConnectForm.Component
                 agent={key}
                 cancel={form.cancel}
                 connectTo={form.connectTo}
-                kind={form.kind}
-                signIn={form.signIn}
-                endpoint={form.endpoint}
+                moklyInstance={`connect-form-${key}`}
+                {...defined({
+                  kind: form.kind,
+                  signIn: form.signIn,
+                  endpoint: form.endpoint,
+                })}
               />
             ) : null}
             {login && props.shares ? (
-              <LoginShare
-                error={
-                  props.shares.notSaved === key ? shareNotSavedCause : null
-                }
+              <loginShare.Component
+                moklyInstance={`share-${key}`}
                 nameId={nameId}
-                onChange={noop}
                 shared={sharedByDefault[key][login.kind]}
+                {...defined({
+                  error:
+                    props.shares.notSaved === key
+                      ? shareNotSavedCause
+                      : undefined,
+                })}
               />
             ) : null}
           </li>

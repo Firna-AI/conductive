@@ -1,5 +1,6 @@
 import type { Workspace } from '../shared/generated/Workspace'
 import type { Section } from '../shared/sections'
+import type { WorkspacesResponse } from '../shared/workspaces'
 
 import { replaceWorkspace } from './list-trees'
 import type { Change } from './resource'
@@ -11,9 +12,8 @@ import {
 } from './sections'
 
 /** The list of an org: its sections, and its workspaces in their order. */
-export interface ListData {
+export interface ListData extends WorkspacesResponse {
   sections: readonly Section[]
-  workspaces: readonly Workspace[]
 }
 
 export type ListChange = Change<ListData>
@@ -28,7 +28,9 @@ export type ListChange = Change<ListData>
  * read replaces on the same branch. A branch change takes the new branch's
  * summary. A new workspace goes to the top with its initial summary. An
  * open pull request bar shows its own state over the summary, as
- * `LiveGitHubStates` says.
+ * `LiveGitHubStates` says. Only the list read carries the merge queue
+ * entry, the access of the viewer, and the GitHub base, so a listed row
+ * keeps them on the same branch.
  */
 export function workspaceUpdated(workspace: Workspace): ListChange {
   return (list) => {
@@ -39,12 +41,40 @@ export function workspaceUpdated(workspace: Workspace): ListChange {
       ...list,
       workspaces: replaceWorkspace(list.workspaces, workspace.id, (item) => ({
         ...workspace,
+        ...(item.branch === workspace.branch && listedFields(item)),
         parentId: item.parentId,
         sectionId: item.sectionId,
         github:
           item.branch === workspace.branch ? item.github : workspace.github,
       })),
     }
+  }
+}
+
+/** The fields that only the list read carries, which a listed row keeps. */
+function listedFields(
+  workspace: Workspace,
+): Pick<
+  Workspace,
+  | 'mergeQueue'
+  | 'mergeQueueLabels'
+  | 'githubCanWrite'
+  | 'githubPullBase'
+  | 'githubPullFromFork'
+> {
+  const {
+    mergeQueue,
+    mergeQueueLabels,
+    githubCanWrite,
+    githubPullBase,
+    githubPullFromFork,
+  } = workspace
+  return {
+    ...(mergeQueue !== undefined && { mergeQueue }),
+    ...(mergeQueueLabels !== undefined && { mergeQueueLabels }),
+    ...(githubCanWrite !== undefined && { githubCanWrite }),
+    ...(githubPullBase !== undefined && { githubPullBase }),
+    ...(githubPullFromFork !== undefined && { githubPullFromFork }),
   }
 }
 
@@ -89,18 +119,27 @@ export function workspaceReassigned(
 
 /**
  * A confirmed Archive or Restore changes only its own fields, so a newer
- * name, owner, or section stays. Each one raises `updatedAt`, so it changes
- * nothing over a record that is not older, such as a later Restore that a
- * read brought. An Archive also gives its place to the rows under it, as
- * `replaceWorkspace` says.
+ * name, owner, or section stays. Its fields include the state of the cloud
+ * computer, which a reply without it clears. Each one raises `updatedAt`, so
+ * it changes nothing over a record that is not older, such as a later
+ * Restore that a read brought. An Archive also gives its place to the rows
+ * under it, as `replaceWorkspace` says.
  */
 export function workspaceLifecycle(workspace: Workspace): ListChange {
-  const { state, archivedAt, restoreUntil, updatedAt } = workspace
+  const { state, archivedAt, restoreUntil, archivedComputer, updatedAt } =
+    workspace
   return (list) => ({
     ...list,
     workspaces: replaceWorkspace(list.workspaces, workspace.id, (current) =>
       current.updatedAt < updatedAt
-        ? { ...current, state, archivedAt, restoreUntil, updatedAt }
+        ? {
+            ...current,
+            state,
+            archivedAt,
+            restoreUntil,
+            archivedComputer,
+            updatedAt,
+          }
         : current,
     ),
   })
@@ -162,7 +201,10 @@ export function sectionMoved(sectionId: string, index: number): ListChange {
 
 /** Deleting a section moves its workspaces to General. */
 export function sectionDeleted(sectionId: string): ListChange {
-  return (list) => withoutSection(list.sections, list.workspaces, sectionId)
+  return (list) => ({
+    ...list,
+    ...withoutSection(list.sections, list.workspaces, sectionId),
+  })
 }
 
 /**

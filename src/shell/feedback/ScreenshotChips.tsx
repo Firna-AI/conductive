@@ -1,12 +1,9 @@
 import { ImageIcon, X } from 'lucide-react'
-import styles from '../../../docs/mockups/src/components/chat/AttachmentChips.module.css'
-import {
-  ChipIconCell,
-  useNoHover,
-} from '../../../docs/mockups/src/components/chat/ChipRemove'
-import { formatSize } from '../../../docs/mockups/src/components/chat/sizes'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { screenshotsLabel } from '../../../docs/mockups/src/components/feedback/feedbackCopy'
+import styles from '../../ui/components/chat/AttachmentChips.module.css'
+import { ChipIconCell, useNoHover } from '../../ui/components/chat/ChipRemove'
+import { formatSize } from '../../ui/components/chat/sizes'
+import { classes } from '../../ui/components/common/classes'
+import { screenshotsLabel } from '../../ui/components/feedback/feedbackCopy'
 import type { FeedbackDraftScreenshot } from '../../app/feedback-state'
 import { IconButton } from '../ui/actions'
 

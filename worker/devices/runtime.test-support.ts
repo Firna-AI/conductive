@@ -142,6 +142,14 @@ export async function deviceFixture(options: { entry?: string } = {}) {
     })
   const created = await app(sessionsPath('org', WID), { choice: CLAUDE })
   const sessionId = string(record(record(await created.json()).session).id)
+  await db
+    .prepare(
+      `INSERT INTO workspace_runtime
+       (workspace_id, org_id, created_by_user_id, session_id, first_turn_id, agent, model, effort, first_message_id)
+       VALUES (?, 'org', 'sender', ?, 'first-turn', ?, ?, ?, 'first-message')`,
+    )
+    .bind(WID, sessionId, CLAUDE.agent, CLAUDE.model, CLAUDE.effort)
+    .run()
   await app(sessionPaths.messages('org', WID, sessionId), {
     id: 'first-message',
     text: 'Run a command',

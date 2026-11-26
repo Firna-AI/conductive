@@ -2,17 +2,33 @@
 
 This guide belongs to [the Files screens](README.md). It gives the rules of
 the stream of the kept store, the open pages, the failed repairs of the
-lists, and a tree that the cloud computer could not read.
+lists, a tree that the cloud computer could not read, and the omitted
+totals of a limited list.
 [Integration](README.md#integration) shows how the app connects the store.
 
-The store reads each message of the subscription from `unknown`: the stored
-history first, in one or more pages, then the live events. The pages of
-one replay share one cutoff, and a page can leave out event numbers. The
-store reads the tree and the changes routes, then applies the file events
-in event order, and live events wait for the final page. It skips an event
-that it already has. After a gap in the numbers of the live events, it
-subscribes again from its last event number. After a gap in the tree
-revisions, it reads the tree route again.
+On its first visit, `WorkspaceFiles` starts both list reads. Each reply
+can carry `stateRead` with its cutoff, its failed repair, and its
+repository. A 503 reply for an absent list can also carry `stateRead`.
+When both reads give cutoffs, the store opens its stream after the smaller
+cutoff. As soon as a read gives no readable cutoff, the store starts its
+stream after event 0. A stream report can fill the missing list while the
+other read is still pending.
+
+Each list has an event floor. Its read cutoff sets the floor. An event
+that changes the list advances it. An event at or below a list's floor
+has no effect on that list. Each new event still counts for stream order.
+A read with a cutoff above the list's floor replaces the list. When a
+tree revision gap still needs repair, a tree reply at the floor also
+applies. It includes the event that set the floor. If the tree reply has
+a cutoff below the floor and the gap remains, the store reads the tree
+again after that reply. An error without a cutoff starts no retry. A
+legacy reply can fill a missing list or repair a gap in the tree revisions.
+
+The stream reads stored history in pages, then applies live events.
+The pages share one cutoff and can omit event numbers. Live events wait
+for the final page. After a gap in live event numbers, the stream
+subscribes again from its own progress. A kept store also resumes at
+that point. A retry updates its own list and leaves the stream in order.
 
 The stored history and the live events change the open pages in the same
 way. An event names the paths whose file or diff it may change, and the
@@ -31,6 +47,12 @@ After such an event, each open page reads its file or diff again. The
 store collects the changes of one message: a history page, or one live
 event. Then it applies them once.
 
+An accepted list read with a cutoff also refreshes every open file, diff,
+and HTML page preview. This includes a 503 with a cutoff. The read cannot
+name the paths of the events it covers. A legacy tree read that repairs a
+revision gap also refreshes all open paths. A legacy read that fills a
+missing list leaves the open paths as they are.
+
 The workspace can refuse an update of a file list. After such a first
 loss, it asks the runner for a fresh full report of that list, and the
 screens show nothing. When the workspace refuses that report too, the
@@ -44,18 +66,16 @@ the two lists:
   full report of that list, in Unix milliseconds.
 - Only a marker with `repairFailed: true` and no session adds a failed
   repair. A first loss adds nothing. The chat owns the markers of a session.
-- Only a later full report of the same list in the stream clears it. A
+- A later full report of the same list in the stream clears it. A
   tree delta and a report of the other list clear nothing.
-  [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
+  [File reports](../../docs/protocol/file-reports.md)
   says which reports replace a list.
-- A reply of a route clears nothing, also the read of the tree after a gap
-  in the revisions. Only the order of the stream shows that a report is
-  newer than the failure.
+- A read with a newer cutoff gives the open failure of its list. A legacy
+  reply without a cutoff leaves the failure in place.
 - A further failure of a failed list keeps the time of the first one.
-- The store reads the failures from the same stream as the file events, in
-  event order, and keeps them in memory. A new subscription after a gap
-  keeps them. A new store reads the stored history of the workspace from
-  its first event, so a new tab shows them too.
+- A new store takes each failure and its first time from its own list
+  read. Full replay can recover failures for a list read with no cutoff.
+  The store keeps the failures in memory across subscriptions.
 
 The workspace screen shows the failed repairs of the name and the start
 steps below its header, as [the workspace screen](../shell/workspace/README.md)
@@ -69,8 +89,8 @@ then marks the tree, until the runner sends a full tree again.
   is, because only the newest tree is unknown.
 - A reply of the tree route with `unavailable: true` sets it too. Its tree
   is the saved tree, or an empty tree at revision 0 when none was saved.
-- Only a full tree of the stream clears it. A tree update and a reply of
-  the route clear nothing, because a reply can be older than the mark.
+- A newer full tree in the stream or a read with a newer cutoff can clear
+  it. A tree update or a legacy reply leaves the mark in place.
 - The parsers keep only the value true, and they refuse nothing new.
 
 With a saved tree, All files shows it, and the notice "The latest list of
@@ -82,16 +102,42 @@ waits, or after it failed.
 A repository change moves the workspace to the folder of another
 repository, as
 [Repository change](../../docs/protocol/repository-change.md#after-the-change)
-says. The store reads the repository of each `workspace.updated` record in
-the stream, in event order:
+says. Each list starts with the repository from its read. Later
+`workspace.updated` events apply to that list above its floor.
 
-- The first record only sets the repository. A record of the same
-  repository changes nothing.
-- A record of another repository marks the tree as unavailable and drops
-  the changes, as the Worker marks its stored lists. The tree keeps its
-  revision, so the updates that follow still apply. Each open page reads
-  again.
+- The first record names the repository for a list with no ID. A record
+  of the same repository leaves the list as it is.
+- A move marks the saved tree as unavailable or drops the changes of the
+  old folder. A move between the two read cutoffs affects only the older
+  list. The saved tree keeps its revision for later updates. Each open
+  page reads again.
 - The store then reads the changes route again, which waits for the
   report of the new folder. The next full tree and the next changes report
   of the stream replace both lists.
 - `files-moved.test.ts` checks these steps.
+
+## Omitted totals
+
+A limited report leaves out entries or changed files, and it gives their
+totals. The tree keeps the count of its report in
+`FileTree.omittedEntryCount`, and the changes keep theirs in
+`ChangesResponse.omitted`. Each report replaces or keeps them, as
+[Omitted totals](../../docs/protocol/file-reports.md#omitted-totals) and
+[Updates and refreshes](../../docs/protocol/file-reports.md#updates-and-refreshes)
+say. A missing total is unknown, so no notice shows.
+
+- The parsers keep a total that is a safe count. They drop any other
+  value, and they refuse no reply because of it.
+- A tree update that waits for a tree read applies its count over that
+  tree, as it applies its entries.
+- The unavailable mark, a failed repair, and a repository move keep the
+  saved tree with its count, so its notice stays. A move drops the
+  changes with their totals.
+- A remove of a path that the tree does not hold changes no entry, also no
+  entry under that path, and the open page of that path still reads again.
+  So a file or a diff of a path that the report leaves out stays fresh, and
+  such a remove does not scan the tree.
+- `omitted-lists.test.ts` checks the totals and the refresh,
+  `files-tree-repair.test.ts` checks the count of an update that waits, and
+  `tree-model.test.ts` checks the entries and the touched path of a remove
+  of an absent path.

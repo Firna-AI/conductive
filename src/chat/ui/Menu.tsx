@@ -2,24 +2,24 @@ import {
   useLayoutEffect,
   useRef,
   type KeyboardEvent,
+  type PointerEvent,
   type ReactNode,
   type RefObject,
 } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import { Check } from 'lucide-react'
-import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { KeyChips } from '../../../docs/mockups/src/components/common/KeyChips'
-import styles from '../../../docs/mockups/src/components/common/Menu.module.css'
-import { SwitchPicture } from '../../../docs/mockups/src/components/common/SwitchPicture'
+import { ChevronLeft } from 'lucide-react'
+import { classes } from '../../ui/components/common/classes'
+import styles from '../../ui/components/common/Menu.module.css'
+import { useTouch } from '../../ui/components/common/touch'
 import type { ShortcutHint } from '../../shell/shortcuts/shortcut-hints'
 import { PopoverSurface } from '../../shell/ui/PopoverSurface'
+import { SubmenuLayer, useSubmenu } from '../../shell/ui/submenu'
 import ui from '../../shell/ui/ui.module.css'
-import controls from './controls.module.css'
 import { useFocusInside } from './dismiss'
 import local from './menu.module.css'
+import { firstItem, itemAt, MenuRows, moveFocus } from './menu-rows'
 
-type MenuItem = {
+export type MenuItem = {
   kind: 'item'
   key: string
   label: string
@@ -29,6 +29,11 @@ type MenuItem = {
   mark?: ReactNode
   /** Muted text after the label, such as the time of a session. */
   detail?: string
+  /**
+   * Muted words that follow the label in its line, such as the effort of a
+   * favourite after its model.
+   */
+  muted?: string
   /** An icon at the end of the row, such as the arrow that reopens. */
   trailingIcon?: LucideIcon
   /**
@@ -48,7 +53,7 @@ type MenuItem = {
  * Fast in the model menu. A change keeps the menu open, so the switch shows
  * its new state in place.
  */
-type MenuSwitch = {
+export type MenuSwitch = {
   kind: 'switch'
   key: string
   label: string
@@ -58,12 +63,33 @@ type MenuSwitch = {
   shortcut?: ShortcutHint
 }
 
-export type MenuEntry =
+/** A row of a menu: each entry but an item that shows a submenu. */
+export type MenuRow =
   | MenuItem
   | MenuSwitch
   | { kind: 'label'; label: string }
   | { kind: 'note'; text: string }
   | { kind: 'divider' }
+
+/**
+ * An item that shows a submenu of `entries`, such as All models, with an
+ * arrow at its end. On a computer, the submenu opens beside the menu, level
+ * with the item. In the phone layout and in a sheet, it takes the place of
+ * the menu, with Back at its top, because no room is beside the menu.
+ */
+export type MenuSubmenu = {
+  kind: 'submenu'
+  key: string
+  label: string
+  /**
+   * Muted words that follow the label in its line, such as the current
+   * effort after Effort.
+   */
+  muted?: string
+  entries: readonly MenuRow[]
+}
+
+export type MenuEntry = MenuRow | MenuSubmenu
 
 /** A point of the window, in CSS px, where a menu opens. */
 export interface MenuPoint {
@@ -96,89 +122,8 @@ const ABOVE = {
 }
 const BELOW = { ...ABOVE, gutter: 4 }
 
-/** The items that the keyboard reaches: the items that are on. */
-const ITEM = [
-  '[role="menuitem"]:not(:disabled)',
-  '[role="menuitemradio"]:not(:disabled)',
-  '[role="menuitemcheckbox"]:not(:disabled)',
-].join(', ')
-
 /** A menu at a point keeps this gap to the right and bottom of the window. */
 const edge = 4
-
-function Item(props: { entry: MenuItem }) {
-  const { entry } = props
-  const Icon = entry.icon
-  const Trailing = entry.trailingIcon
-  const choice = entry.checked !== undefined
-  let lead: ReactNode = null
-  if (entry.mark) lead = <span className={styles.mark}>{entry.mark}</span>
-  else if (Icon) lead = <Icon aria-hidden className={styles.icon} size={14} />
-  return (
-    <button
-      aria-checked={choice ? entry.checked : undefined}
-      className={classes(
-        controls.bare,
-        styles.item,
-        controls.row,
-        entry.disabled && styles.disabled,
-      )}
-      disabled={entry.disabled}
-      onClick={entry.onSelect}
-      role={choice ? 'menuitemradio' : 'menuitem'}
-      tabIndex={-1}
-      type="button"
-    >
-      {lead}
-      <span className={styles.label}>{entry.label}</span>
-      {entry.detail ? (
-        <span className={styles.detail}>{entry.detail}</span>
-      ) : null}
-      {Trailing ? (
-        <Trailing aria-hidden className={styles.icon} size={14} />
-      ) : null}
-      {entry.trailingLabel ? (
-        <span className={a11y.hidden}>{entry.trailingLabel}</span>
-      ) : null}
-      {entry.checked ? (
-        <Check aria-hidden className={styles.check} size={14} />
-      ) : null}
-    </button>
-  )
-}
-
-/**
- * The row of a switch: its label, the key of its command, and the switch,
- * as the mockup draws it. A click, Enter, or Space changes it. The row
- * names its key to a screen reader, so the key chips are hidden from it.
- */
-function SwitchItem(props: { entry: MenuSwitch }) {
-  const { entry } = props
-  return (
-    <button
-      aria-checked={entry.on}
-      aria-keyshortcuts={entry.shortcut?.aria}
-      className={classes(controls.bare, styles.item, controls.row)}
-      onClick={entry.onToggle}
-      role="menuitemcheckbox"
-      tabIndex={-1}
-      type="button"
-    >
-      <span className={styles.label}>{entry.label}</span>
-      {entry.shortcut ? (
-        <span aria-hidden className={styles.keys}>
-          <KeyChips shortcut={entry.shortcut.text} />
-        </span>
-      ) : null}
-      <SwitchPicture on={entry.on} />
-    </button>
-  )
-}
-
-function firstItem(menu: HTMLElement): HTMLElement | null {
-  const items = [...menu.querySelectorAll<HTMLElement>(ITEM)]
-  return items.find((item) => item.ariaChecked === 'true') ?? items[0] ?? null
-}
 
 /** The class of the place of a menu: its layer, a point, or a sheet. */
 function placeClass(place: MenuPlace): string | undefined {
@@ -197,6 +142,13 @@ function placeClass(place: MenuPlace): string | undefined {
  * it. Tab closes a popover, and a menu at a point gives the focus back to
  * where it was. Tab stays inside a sheet. A wide menu fits long rows, such
  * as session titles.
+ *
+ * An item with a submenu shows it after a press, Enter, Space, or the right
+ * arrow, and the focus goes into it. On a computer, a hover over the item
+ * shows it too, and a hover over another item of the menu hides it. The
+ * left arrow and Escape hide it, and its item takes the focus back. In the
+ * phone layout and in a sheet, its rows take the place of the rows of the
+ * menu, and Back shows them again.
  */
 export function Menu(
   props: {
@@ -207,8 +159,23 @@ export function Menu(
   } & MenuPlace,
 ) {
   const ref = useRef<HTMLDivElement>(null)
+  const layer = useRef<HTMLDivElement>(null)
+  const phone = useTouch()
   const { placement } = props
   const point = typeof placement === 'string' ? null : placement
+  const inPlace = phone || placement === 'sheet'
+  const submenu = useSubmenu(
+    props.entries.flatMap((entry) =>
+      entry.kind === 'submenu' ? [entry.key] : [],
+    ),
+    ref,
+    inPlace ? ref : layer,
+  )
+  const open =
+    props.entries.find(
+      (entry): entry is MenuSubmenu =>
+        entry.kind === 'submenu' && entry.key === submenu.open,
+    ) ?? null
   const x = point?.x
   const y = point?.y
   useFocusInside(ref, firstItem)
@@ -223,63 +190,96 @@ export function Menu(
     node.style.left = `${Math.max(0, Math.min(x, right))}px`
     node.style.top = `${fits ? y : Math.max(0, y - node.offsetHeight)}px`
   }, [x, y])
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    const menu = ref.current
-    if (!menu) return
-    const items = [...menu.querySelectorAll<HTMLElement>(ITEM)]
-    const index = items.findIndex((item) => item === document.activeElement)
-    let next: HTMLElement | undefined
-    if (event.key === 'ArrowDown') next = items[(index + 1) % items.length]
-    else if (event.key === 'ArrowUp') {
-      next = items[(index - 1 + items.length) % items.length]
-    } else if (event.key === 'Home') next = items[0]
-    else if (event.key === 'End') next = items.at(-1)
-    else if (event.key === 'Tab' && placement !== 'sheet') {
+  /** The keys of each list of the menu: the arrows, Home, End, and Tab. */
+  const onRowKey = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (moveFocus(event)) return
+    if (event.key === 'Tab' && placement !== 'sheet') {
       // A menu at a point has no place in the order of Tab.
       if (point) event.preventDefault()
       props.onClose()
     }
-    if (!next) return
-    event.preventDefault()
-    next.focus()
   }
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const active = document.activeElement
+    const key = active instanceof HTMLElement ? active.dataset.submenu : null
+    if (event.key === 'ArrowRight' && key) {
+      event.preventDefault()
+      submenu.show(key, true)
+    } else if (event.key === 'ArrowLeft' && open && inPlace) {
+      event.preventDefault()
+      submenu.hide(true)
+    } else onRowKey(event)
+  }
+  const onSubmenuKey = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault()
+      submenu.hide(true)
+    } else onRowKey(event)
+  }
+  // Only a mouse or a pen hovers. A touch that moves over the rows, as in a
+  // scroll of the menu, shows no submenu.
+  const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const item = inPlace || event.pointerType === 'touch' ? null : itemAt(event)
+    if (!item) return
+    const key = item.dataset.submenu
+    if (key) {
+      if (submenu.open !== key) submenu.show(key, false)
+    } else if (open) {
+      if (submenu.hasFocus()) item.focus({ preventScroll: true })
+      submenu.hide(false)
+    }
+  }
+  const rows: readonly MenuEntry[] =
+    open && inPlace
+      ? [
+          {
+            kind: 'item',
+            key: 'back',
+            label: 'Back',
+            icon: ChevronLeft,
+            onSelect: () => submenu.hide(true),
+          },
+          { kind: 'divider' },
+          ...open.entries,
+        ]
+      : props.entries
   const list = (
     <div
-      aria-label={props.label}
+      aria-label={open && inPlace ? open.label : props.label}
       className={classes(
         styles.menu,
         placeClass(props),
         props.wide && styles.wide,
       )}
       onKeyDown={onKeyDown}
+      onPointerMove={onPointerMove}
       ref={ref}
       role="menu"
     >
-      {props.entries.map((entry, index) => {
-        switch (entry.kind) {
-          case 'item':
-            return <Item entry={entry} key={entry.key} />
-          case 'switch':
-            return <SwitchItem entry={entry} key={entry.key} />
-          case 'label':
-            return (
-              <div className={styles.group} key={entry.label} role="none">
-                {entry.label}
-              </div>
-            )
-          case 'note':
-            return (
-              <p className={styles.note} key={`note-${index}`} role="none">
-                {entry.text}
-              </p>
-            )
-          case 'divider':
-            return <hr className={styles.divider} key={`divider-${index}`} />
-        }
-      })}
+      <MenuRows entries={rows} submenu={submenu} />
     </div>
   )
-  if (!props.anchor) return list
+  const beside =
+    open && !inPlace ? (
+      <SubmenuLayer layer={layer} menu={ref}>
+        <div
+          aria-label={open.label}
+          className={classes(styles.menu, styles.point)}
+          onKeyDown={onSubmenuKey}
+          role="menu"
+        >
+          <MenuRows entries={open.entries} />
+        </div>
+      </SubmenuLayer>
+    ) : null
+  if (!props.anchor) {
+    return (
+      <>
+        {list}
+        {beside}
+      </>
+    )
+  }
   const above = props.placement.startsWith('above')
   return (
     <PopoverSurface
@@ -290,6 +290,7 @@ export function Menu(
       side={above ? 'above' : 'below'}
     >
       {list}
+      {beside}
     </PopoverSurface>
   )
 }

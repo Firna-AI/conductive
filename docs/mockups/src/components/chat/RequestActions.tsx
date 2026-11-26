@@ -5,9 +5,10 @@ import { orgWithLogin } from '../../fixtures/orgLogins'
 import { orgs } from '../../fixtures/orgs'
 import type { SecretRunItem } from '../../fixtures/secretRequests'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
+import { requestStackPaths } from '../../screens/requestStackPages'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
 import { ScreenLink } from '../common/ScreenLink'
-import { StatusText } from '../common/StatusText'
+import { StatusText } from '../../../../../src/ui/components/common/StatusText'
 import { asksValue } from './requests'
 import { whoOf } from './SecretRun'
 import {
@@ -17,7 +18,7 @@ import {
   reconnectNote,
   secretRunWords,
   type SessionLoginOwner,
-} from './secretRunCopy'
+} from '../../../../../src/ui/components/chat/secretRunCopy'
 
 /** Whether a request names a secret of the org too. */
 function namesStored(item: SecretRunItem): boolean {
@@ -33,7 +34,7 @@ function namesStored(item: SecretRunItem): boolean {
 function allowPath(item: SecretRunItem, hides: boolean): string | undefined {
   const value = asksValue(item)
   if (value && namesStored(item)) return undefined
-  if (hides && !value) return paths.secretAskedAllowed
+  if (hides && !value) return requestStackPaths.secretAskedAllowed
   if (item.state === 'late') {
     return value ? paths.secretLateGiven : paths.secretLateAllowed
   }
@@ -51,7 +52,7 @@ function valuePath(item: SecretRunItem): string {
  * requests ends each of them too, so it leads to the result of each.
  */
 function denyPath(item: SecretRunItem, hides: boolean): string {
-  if (hides) return paths.secretAskedDenied
+  if (hides) return requestStackPaths.secretAskedDenied
   return item.state === 'late' ? paths.secretLateDenied : paths.secretDenied
 }
 

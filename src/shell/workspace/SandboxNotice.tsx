@@ -1,20 +1,21 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { orgSuspendedReason } from '../../../docs/mockups/src/components/orgs/suspension'
-import styles from '../../../docs/mockups/src/components/workspace/SandboxNotice.module.css'
+import { EmptyState } from '../../ui/components/common/EmptyState'
+import { Notice } from '../../ui/components/common/Notice'
+import { orgSuspendedReason } from '../../ui/components/orgs/suspension'
+import styles from '../../ui/components/workspace/SandboxNotice.module.css'
 import type {
   SandboxNoticeState,
   SandboxPanelState,
-} from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
+} from '../../ui/components/workspace/sandboxNoticeState'
 import type { ApiError } from '../../app/api/client'
 import { useServices } from '../../app/services'
 import { formatDay } from '../../app/time'
 import { WORKSPACE_RESTORE_MS } from '../../shared/workspaces'
 import { ActionButton } from '../ui/actions'
 import type { Action } from '../ui/useAction'
+import { archiveEnd } from './archive-ends'
 import {
   barBody,
   keptBody,
@@ -58,15 +59,17 @@ export function refusedStart(
 
 /**
  * The words of a notice. An archived workspace names the day of its
- * Archive and the day 14 days later, when its Restore ends and it leaves
- * the list. That day does not depend on a kept cloud computer.
+ * Archive and the end of its 14 days, as `archiveEnd` says, when its
+ * Restore ends and it leaves the list. That day does not depend on a kept
+ * cloud computer. A record without either time counts from `updatedAt`.
  */
 function useProblem(notice: SandboxNoticeState, workspace: Workspace) {
   const { timeZone } = useServices()
   const archivedAt = workspace.archivedAt ?? workspace.updatedAt
+  const end = archiveEnd(workspace) ?? archivedAt + WORKSPACE_RESTORE_MS
   return problemOf(notice, {
     archivedOn: formatDay(archivedAt, timeZone),
-    removedOn: formatDay(archivedAt + WORKSPACE_RESTORE_MS, timeZone),
+    removedOn: formatDay(end, timeZone),
   })
 }
 

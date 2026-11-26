@@ -1,5 +1,5 @@
-import type { Delay } from '../app/events'
-import { ManualDelay } from '../app/test-kit'
+import { WorkspaceStream, type Delay } from '../app/events'
+import { ManualDelay, RecordingEvents } from '../app/test-kit'
 import type {
   WorkspaceEventEnvelope,
   WorkspaceSocketMessage,
@@ -9,6 +9,7 @@ import type { FakeApiServer } from '../test-support/fake-api'
 import type { FakeWorkspaceEvents } from '../test-support/fake-events'
 import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
 import { toolFixtures } from '../test-support/fixtures/tools'
+import { emptyWorkspaceSeed } from '../test-support/fixtures/workspace-seed'
 import type { FetchLike, WorkspaceTarget } from './githubClient'
 import { GitHubStore } from './githubStore'
 
@@ -20,6 +21,17 @@ import { GitHubStore } from './githubStore'
  */
 
 export const target = { orgId: FAKE_IDS.org, workspaceId: FAKE_IDS.workspace }
+
+/** The bar gets both counters from the ordered workspace stream. */
+export function barWorkspaceStream() {
+  const events = new RecordingEvents()
+  const stream = new WorkspaceStream(events, target, new ManualDelay().delay)
+  const start = (cutoff: number) => {
+    stream.applyBaseline(cutoff, emptyWorkspaceSeed)
+    stream.start()
+  }
+  return { events, stream, start }
+}
 
 /** A GitHub event. Its banner changed at `updatedAt`, `FAKE_TIME` by default. */
 export function githubEvent(

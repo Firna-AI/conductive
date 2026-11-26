@@ -11,7 +11,7 @@ import {
   type LexicalNode,
   type NodeKey,
 } from 'lexical'
-import { FileChip } from '../../../../docs/mockups/src/components/chat/FileChip'
+import { FileChip } from '../../../ui/components/chat/FileChip'
 import { MentionIcon } from '../../mentions/MentionIcon'
 import { mentionAt } from '../../../shared/mention-text'
 import {
@@ -28,7 +28,7 @@ const mentionState = createState('mention', {
 const mentionStates = [{ flat: true, stateConfig: mentionState }] as const
 
 /**
- * The chip of a file or a folder in the field: the chip of the mockups,
+ * The chip of a file or a folder in the field: the shared `FileChip`,
  * with the icon and the label of the name. A press on the name opens the
  * file, or shows the folder in All files. The × of its icon removes it as
  * one step of undo, while the field takes changes. Until the field turns a
@@ -107,10 +107,11 @@ export class FileMentionNode extends DecoratorNode<ReactNode> {
 }
 
 /**
- * A mention of a paste or a draft that shows as text, because the tree does
- * not hold its entry, or has not loaded yet. It becomes a chip when the
- * tree holds its entry, while it keeps the text of the mention. Text typed
- * beside it stays outside it, so a typed word never joins the mention.
+ * A mention or a skill text of a paste or a draft that shows as text,
+ * because its list does not name it, or has not loaded yet. A mention
+ * becomes a file chip when the tree holds its entry, and a skill text
+ * becomes a skill chip when a skill list names it, while it keeps its text.
+ * Text typed beside it stays outside it, so a typed word never joins it.
  */
 export class MentionTextNode extends TextNode {
   $config() {
@@ -128,7 +129,7 @@ export class MentionTextNode extends TextNode {
     return false
   }
 
-  /** Whether the text is still the mention that the paste or draft gave. */
+  /** Whether the text is still the text that the paste or draft gave. */
   isMention(): boolean {
     return this.getTextContent() === $getState(this, mentionState)
   }

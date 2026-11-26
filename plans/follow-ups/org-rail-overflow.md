@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-12, from branch `calummoore/riga-188n`, the mockups of the org rail order.
-- **Location:** `docs/mockups/src/components/layout/OrgRail.module.css:1`, `docs/mockups/src/components/layout/OrgRail.module.css:20`.
+- **Location:** `src/ui/components/layout/OrgRail.module.css:1`, `src/ui/components/layout/OrgRail.module.css:20`.
 - **Reason:** The rail had this gap before the org order change, and the change does not make it worse.
 
 - **Terms:**

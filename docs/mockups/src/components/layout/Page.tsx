@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { ChevronLeft } from 'lucide-react'
 import { ScreenLink } from '../common/ScreenLink'
-import { IconButton } from '../common/actions'
-import styles from './Page.module.css'
+import { iconButton } from '../../entries/components/common/actions.mockup'
+import styles from '../../../../../src/ui/components/layout/Page.module.css'
 
 export type BackLink = { label: string; to: string }
 
@@ -54,7 +54,7 @@ function MobileHeader(props: PageProps) {
     <header className={styles.mobileHeader}>
       {props.back ? (
         <ScreenLink asChild to={props.back.to}>
-          <IconButton icon={ChevronLeft} label={props.back.label} />
+          <iconButton.Component icon="chevron-left" label={props.back.label} />
         </ScreenLink>
       ) : null}
       <Titles {...props} />

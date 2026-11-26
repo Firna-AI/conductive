@@ -1,22 +1,21 @@
 import type { ReactNode } from 'react'
-import { ArrowRight } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
-import type { MenuEntry } from '../components/common/Menu'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import type { MenuEntryData } from '../entries/components/common/menuEntries'
 import { ScreenLink } from '../components/common/ScreenLink'
 import {
   type FormRepositories,
   type FormRepository,
   formWait,
-  WaitingRepositoryNotice,
-} from '../components/new-workspace/waitingRepository'
+} from '../../../../src/ui/components/new-workspace/waitingRepository'
+import { waitingRepositoryNotice } from '../entries/components/new-workspace/waitingRepository.mockup'
 import {
   menuNotes,
   type RepositoryWait,
-} from '../components/settings/repositoryChangeCopy'
+} from '../../../../src/ui/components/settings/repositoryChangeCopy'
 import { addedRepository, repositories } from '../fixtures/repositories'
 import { savedCarts } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import { firstBuildCopy } from './firstBuildCopy'
+import { firstBuildCopy } from '../../../../src/ui/screens/firstBuildCopy'
 import type { NewWorkspaceFormState } from './newWorkspaceParts'
 
 /**
@@ -66,13 +65,13 @@ export function acmeFormRepositories(
 export function repositoryMenu(
   form: FormRepositories,
   wait: RepositoryWait,
-): MenuEntry[] {
-  const item = (entry: FormRepository, waits: boolean): MenuEntry => ({
+): MenuEntryData[] {
+  const item = (entry: FormRepository, waits: boolean): MenuEntryData => ({
     kind: 'item',
     label: entry.name,
     checked: entry.key === form.repository.key,
     disabled: waits,
-    detail: waits ? menuNotes[wait] : undefined,
+    ...(waits ? { detail: menuNotes[wait] } : {}),
   })
   return [
     ...form.ready.map((entry) => item(entry, false)),
@@ -103,17 +102,21 @@ export function waitingNotice(props: {
   const waits = formWait(props.form)
   if (!waits) return null
   return (
-    <WaitingRepositoryNotice
-      action={(wait) => (
-        <ScreenLink asChild to={computerPages[wait]}>
-          <ActionButton icon={ArrowRight}>
+    <waitingRepositoryNotice.Component
+      action={
+        <ScreenLink asChild to={computerPages[props.wait]}>
+          <actionButton.Component
+            icon="arrow-right"
+            moklyInstance="open-computer"
+          >
             {firstBuildCopy.settings}
-          </ActionButton>
+          </actionButton.Component>
         </ScreenLink>
-      )}
+      }
       admin={props.admin}
       alternative={waits.alternative}
       key="waiting-repository"
+      moklyInstance="waiting-repository-notice"
       names={waits.names}
       wait={props.wait}
     />

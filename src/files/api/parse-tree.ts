@@ -8,9 +8,24 @@ import {
   readArray,
   readCount,
   readLabel,
+  readSafeCount,
   readString,
+  type JsonObject,
 } from './guards'
 import { parseChangeKind } from './parse-changes'
+
+/**
+ * The omitted entry count of a full tree or of a tree update, as a field to
+ * spread into it. A missing count is unknown, as from an older runner, and
+ * so is a value that is not a safe count: the field stays out, and the
+ * reader refuses nothing because of it.
+ */
+function readOmittedEntryCount(
+  value: JsonObject,
+): Pick<FileTreeResponse, 'omittedEntryCount'> {
+  const count = readSafeCount(value, 'omittedEntryCount')
+  return count === null ? {} : { omittedEntryCount: count }
+}
 
 /**
  * An entry of the tree. `path` stays the real path for each read and key,
@@ -35,7 +50,8 @@ function parseFileEntry(value: unknown): FileEntry | null {
 /**
  * A full tree. Entries that do not parse are left out. Only the value true
  * of `unavailable` marks a tree that the cloud computer could not read: its
- * entries are the saved tree, or none when no tree was saved.
+ * entries are the saved tree, or none when no tree was saved. The tree keeps
+ * the omitted entry count of its report, as `readOmittedEntryCount` reads it.
  */
 export function parseFileTree(value: unknown): FileTreeResponse | null {
   if (!isObject(value)) return null
@@ -46,6 +62,7 @@ export function parseFileTree(value: unknown): FileTreeResponse | null {
     revision,
     entries: parseItems(entries, parseFileEntry),
     ...(value.unavailable === true ? { unavailable: true } : {}),
+    ...readOmittedEntryCount(value),
   }
 }
 
@@ -65,10 +82,19 @@ function parseTreeChange(value: unknown): FileTreeChange | null {
   return null
 }
 
+/**
+ * A tree update. Changes that do not parse are left out. An update with an
+ * omitted entry count gives the new count, and an update without one keeps
+ * the count of the tree.
+ */
 export function parseTreeDelta(value: unknown): FileTreeDelta | null {
   if (!isObject(value)) return null
   const revision = readCount(value, 'revision')
   const changes = readArray(value, 'changes')
   if (revision === null || changes === null) return null
-  return { revision, changes: parseItems(changes, parseTreeChange) }
+  return {
+    revision,
+    ...readOmittedEntryCount(value),
+    changes: parseItems(changes, parseTreeChange),
+  }
 }

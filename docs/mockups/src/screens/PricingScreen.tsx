@@ -1,6 +1,6 @@
 import type { Viewport } from '@mokly/mokly'
 import { pricingPageCopy } from '../../../../src/marketing/pricing'
-import { classes } from '../components/common/classes'
+import { classes } from '../../../../src/ui/components/common/classes'
 import { ClosingCall } from '../components/marketing/ClosingCall'
 import { SitePage } from '../components/marketing/SitePage'
 import { HoursRules } from '../components/pricing/HoursRules'

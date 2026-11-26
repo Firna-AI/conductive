@@ -18,10 +18,9 @@ beforeEach(async () => {
 })
 afterAll(async () => harness.dispose())
 
-it('logs the approval email in local development without sending it to Resend', async () => {
+it('logs the approval email with the local request origin without sending it to Resend', async () => {
   const client = await operatorWaitlistFixture(harness)
   const origin = 'http://127.0.0.1:5173'
-  const env = { ...harness.env, APP_ORIGIN: origin }
   const requests: Request[] = []
   const app = createApp({
     now: () => TEST_TIME,
@@ -41,7 +40,7 @@ it('logs the approval email in local development without sending it to Resend', 
           'Content-Type': 'application/json',
         },
       }),
-      env,
+      harness.env,
     )
     expect(response.status).toBe(200)
     expect(await response.json()).toMatchObject({
@@ -51,7 +50,7 @@ it('logs the approval email in local development without sending it to Resend', 
     expect(requests).toHaveLength(0)
     expect(log.mock.calls).toEqual([
       [
-        'Approval email to member@example.com: Your Conductive account is ready\nYou can now use Conductive. Sign in with GitHub to get started:\nhttps://app.conductive.build/',
+        'Approval email to member@example.com: Your Conductive account is ready\nYou can now use Conductive. Sign in with GitHub to get started:\nhttp://127.0.0.1:5173/',
       ],
     ])
   } finally {

@@ -52,6 +52,7 @@ export async function advanceStartPhases(input: {
       await storage.update({
         ...job,
         ...next,
+        waitStartedAt: dependencies.now(),
         providerRetry: null,
         processId: null,
         stdoutOffset: 0,
@@ -70,6 +71,9 @@ export async function advanceStartPhases(input: {
       row,
       job,
       call,
+      job.phase === 'startup' && job.processId === null
+        ? await call(() => endpoint.prepareWorkspaceBase())
+        : false,
     ))
   )
     return false

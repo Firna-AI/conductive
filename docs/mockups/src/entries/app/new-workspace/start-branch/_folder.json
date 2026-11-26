@@ -1,0 +1,10 @@
+{
+  "order": [
+    "picker",
+    "no-access",
+    "target-choice",
+    "missing",
+    "dialog",
+    "stacked"
+  ]
+}

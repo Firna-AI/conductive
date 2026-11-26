@@ -15,7 +15,7 @@ import type { FileListKind } from '../navigation'
 import {
   filesAfterHistory,
   filesFor,
-  heldTree,
+  heldTreeRetry,
   slow,
   startFiles,
   testNavigation,
@@ -101,6 +101,17 @@ it(
     const html = await panel(server, 'changes')
     expect(text(html)).toContain('Changes 12')
     expect(text(html)).toContain('12 files changed +300 −7')
+    expect(html).not.toContain('role="note"')
+
+    // A limited list counts the whole change, with its omitted totals.
+    server.json('GET', filePaths.changes(org, id), {
+      ...toolFixtures().changes,
+      summary: { files: 1_000, added: 24_862, removed: 7_966 },
+      omitted: { files: 1_243, added: 31_004, removed: 9_877 },
+    })
+    expect(text(await panel(server, 'changes'))).toMatch(
+      /^All files Changes 2,243 Checks 2,243 files changed \+55,866 −17,843 The totals include 1,243 files that are not listed\. Review them in the terminal, or ask the agent\. src\/app\/checkout\/ useAddressAutocomplete\.ts /,
+    )
   },
 )
 
@@ -109,6 +120,7 @@ it(
   slow,
   async () => {
     const server = new FakeApiServer()
+    server.json('GET', filePaths.tree(org, id), toolFixtures().files)
     const all = await panel(server, 'all', {
       kind: 'file',
       path: 'README.md',
@@ -170,9 +182,17 @@ it(
   async () => {
     const server = new FakeApiServer()
     const tree = filePaths.tree(org, id)
-    server.json('GET', tree, { ...toolFixtures().files, unavailable: true })
+    // A limited saved tree keeps its notice at the top of the tree.
+    server.json('GET', tree, {
+      ...toolFixtures().files,
+      unavailable: true,
+      omittedEntryCount: 18_412,
+    })
     const saved = text(await panel(server, 'all'))
     expect(saved).toContain('package.json')
+    expect(saved).toMatch(
+      / Checks 18,412 files and folders are not listed\. Find them in the terminal, or ask the agent\. \.context /,
+    )
     expect(saved).toMatch(/ The latest list of all files is unavailable$/)
 
     server.json('GET', tree, { revision: 0, entries: [], unavailable: true })
@@ -182,10 +202,11 @@ it(
     expect(none).toMatch(unread)
     expect(none).not.toContain('Files show here')
 
-    // A live mark arrives while the first reply of the tree route waits.
-    const held = heldTree(server)
+    // A live mark arrives after the first read fails, while its retry waits.
+    const held = heldTreeRetry(server)
     const files = filesAfterHistory(server, held.fetch)
-    files.start()
+    await startFiles(files)
+    files.retry()
     server.events.emit(
       nextEnvelope(server.events, { type: 'files.unavailable' }, FAKE_TIME),
     )
@@ -223,6 +244,10 @@ it(
     const emit = (event: WorkspaceEvent, at: number) =>
       server.events.emit(nextEnvelope(server.events, event, at))
     const now = () => FAKE_TIME
+    // A limited list keeps its own notice under the summary.
+    const omitted = { files: 1_243, added: 31_004, removed: 9_877 }
+    const limited = { ...toolFixtures().changes, omitted }
+    emit({ type: 'changes.updated', changes: limited }, FAKE_TIME - 10 * minute)
     // The first loss asks for a fresh report, and nothing shows.
     emit(refusedReport('changes.updated', false), FAKE_TIME - 9 * minute)
     const quiet = await panel(server, 'changes', null, true, now)
@@ -231,7 +256,7 @@ it(
     emit(refusedReport('files.snapshot', true), FAKE_TIME - 3 * minute)
     const html = await panel(server, 'changes', null, true, now)
     expect(text(html)).toMatch(
-      / files changed .* The latest list of all files is unavailable 3m ago The latest list of changes is unavailable 4m ago$/,
+      / 1,248 files changed \+31,162 −9,925 The totals include 1,243 files that are not listed\. Review them in the terminal, or ask the agent\. .* The latest list of all files is unavailable 3m ago The latest list of changes is unavailable 4m ago$/,
     )
     expect(html.match(/role="status"/g)).toHaveLength(2)
   },

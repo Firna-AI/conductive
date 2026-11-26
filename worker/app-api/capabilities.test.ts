@@ -12,6 +12,7 @@ import {
   OUTER_WORKSPACE,
 } from '../chat/integration/outer-seed.test-support'
 import { addSecret, addSessionApproval } from './secrets.test-support'
+import { CLAUDE } from '../chat/harness.test-support'
 
 let bundle: string
 let fixture: OuterRuntime | undefined
@@ -25,6 +26,13 @@ afterEach(async () => {
 
 it('lets each member change workspace capabilities and remove only the selected session approval', async () => {
   fixture = await createOuterRuntime(bundle)
+  await fixture.env.DB.prepare(
+    `INSERT INTO workspace_runtime
+     (workspace_id, org_id, created_by_user_id, session_id, first_turn_id, agent, model, effort, first_message_id)
+     VALUES (?, ?, 'owner', 'session-one', 'first-turn', ?, ?, ?, 'first-message')`,
+  )
+    .bind(OUTER_WORKSPACE, OUTER_ORG, CLAUDE.agent, CLAUDE.model, CLAUDE.effort)
+    .run()
   const path = workspaceCapabilitiesPath(OUTER_ORG, OUTER_WORKSPACE)
   const initial = await fixture.request(path)
   expect(initial.status).toBe(200)

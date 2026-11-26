@@ -1,11 +1,9 @@
-import { renderToStaticMarkup } from 'react-dom/server'
 import type { WorkspaceEvent } from '../../shared/events'
 import type { Session } from '../../shared/generated/Session'
 import type { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import type { RecordedChatScenario } from '../../test-support/recorded-chat'
-import { now, textOf } from '../components/render-kit'
-import { SessionChat } from '../components/SessionChat'
+import { sessionMarkup, textOf } from '../components/render-kit'
 import { withSessions } from '../state/linked-kit'
 import { chatFor } from '../state/test-kit'
 
@@ -47,15 +45,9 @@ export async function renderSecrets(options: {
   storeEvents(chat.server, options.events)
   await chat.controller.start()
   const page = document.createElement('div')
-  page.innerHTML = renderToStaticMarkup(
-    <SessionChat
-      controller={chat.controller}
-      mobile={false}
-      now={now}
-      readOnly={options.readOnly}
-      snapshot={chat.controller.getSnapshot()}
-    />,
-  )
+  page.innerHTML = sessionMarkup(chat.controller, {
+    readOnly: options.readOnly,
+  })
   return page
 }
 

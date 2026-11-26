@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { themeFor } from '../../../docs/mockups/src/theme'
+import { themeFor } from '../../ui/theme'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import { API_PATHS, type OrgRole } from '../../shared/api'
 import { GET_STARTED_PATH } from '../../shared/onboarding'

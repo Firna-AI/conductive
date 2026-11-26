@@ -3,7 +3,7 @@
 - **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-19, from the branch `calummoore/conductive-sandbox-loading-issue`, the wider fix of the archive retry hotfix.
-- **Location:** `worker/lifecycle/archive-retry.ts` (the archive wait to share), `worker/lifecycle/archive-state.ts:161` (the safety alarm before the archive work), `worker/lifecycle/workspace-alarm.ts:183` and `:198`, `worker/lifecycle/durable-alarm.ts:82`, `worker/lifecycle/durable-scheduling.ts:74`, `worker/lifecycle/start-storage.ts:195`, `worker/lifecycle/workspace-suspension.ts:152` and `:187`, `worker/lifecycle/computer-stop-task.ts:60` and `:73`, `worker/lifecycle/image-coordinator.ts:104`, and "The provider" in `docs/protocol/workspaces-and-sandboxes.md:42`.
+- **Location:** `worker/lifecycle/archive-retry.ts` (the archive wait to share), `worker/lifecycle/archive-state.ts:161` (the safety alarm before the archive work), `worker/lifecycle/workspace-alarm.ts:183` and `:198`, `worker/lifecycle/durable-alarm.ts:82`, `worker/lifecycle/durable-scheduling.ts:74`, `worker/lifecycle/start-storage.ts:195`, `worker/lifecycle/workspace-suspension.ts:152` and `:187`, `worker/lifecycle/computer-stop-task.ts:60` and `:73`, `worker/lifecycle/image-coordinator.ts:104`, and "The provider" in `docs/protocol/workspaces-and-sandboxes.md:46`.
 - **Reason:** On 2026-11-19 the user chose to ship the archive fix first as a hotfix, and this shared wait after the merge, because it reaches about a dozen alarm sites in other files.
 
 - **Source:** Implementation. **Category:** Product bug.

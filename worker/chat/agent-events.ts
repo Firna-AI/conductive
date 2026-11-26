@@ -115,6 +115,9 @@ export function parseAgentEvent(value: unknown): AgentChatEvent {
         messageId: identifier(input.messageId),
         text: string(input.text),
         userMessageIds: strings(input.userMessageIds),
+        ...(input.noticeIds === undefined
+          ? {}
+          : { noticeIds: strings(input.noticeIds) }),
       }
     case 'tool.updated':
       return { ...context, type: input.type, tool: tool(input.tool) }
@@ -141,6 +144,9 @@ export function parseAgentEvent(value: unknown): AgentChatEvent {
         ...(input.filesUnavailable === true ? { filesUnavailable: true } : {}),
         omittedFileCount: counter(input.omittedFileCount),
         userMessageIds: strings(input.userMessageIds),
+        ...(input.noticeIds === undefined
+          ? {}
+          : { noticeIds: strings(input.noticeIds) }),
       }
     }
     case 'turn.failed': {
@@ -151,6 +157,9 @@ export function parseAgentEvent(value: unknown): AgentChatEvent {
         error: { code: identifier(error.code), message: string(error.message) },
         retryMessageId: identifier(input.retryMessageId),
         durationMs: number(input.durationMs),
+        ...(input.noticeIds === undefined
+          ? {}
+          : { noticeIds: strings(input.noticeIds) }),
       }
     }
     default:

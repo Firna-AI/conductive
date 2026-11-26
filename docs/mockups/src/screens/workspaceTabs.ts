@@ -1,5 +1,5 @@
 import { nameLabel } from '../../../../src/shared/name-label'
-import type { MenuEntry } from '../components/common/Menu'
+import type { MenuEntryData } from '../entries/components/common/menuEntries'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { historyEntries } from '../components/workspace/WorkspaceTabs'
 import {
@@ -11,11 +11,12 @@ import {
 import { answerShot } from '../fixtures/answerFiles'
 import { screenshotCopy } from '../fixtures/attachments'
 import { detectedServers, openPort, openPorts } from '../fixtures/previews'
-import { previewTabLabel } from '../components/tools/previewCopy'
+import { previewTabLabel } from '../../../../src/ui/components/tools/previewCopy'
 import { branchPictures, splitPath } from '../fixtures/files'
 import { maskedDiffPath } from '../fixtures/maskedFiles'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { explainTabs } from './explainModel'
 import { htmlTab } from './workspaceFileTab'
 import { chatWaits, tabNeedsInput } from './workspaceRequests'
 import type { WorkspaceState } from './workspaceState'
@@ -63,7 +64,7 @@ export function noMessages(state: WorkspaceState): boolean {
 }
 
 /** The history of the workspace, with a note while a new workspace has none. */
-export function historyFor(state: WorkspaceState): readonly MenuEntry[] {
+export function historyFor(state: WorkspaceState): readonly MenuEntryData[] {
   return isNew(state)
     ? [{ kind: 'note', text: 'Sessions that you close show here.' }]
     : historyEntries
@@ -149,8 +150,9 @@ function previewTabs(state: WorkspaceState): WorkspaceTab[] {
  * messages, the second session can show, and each session tab leads to its
  * chat of that time. The file or the diff that the state opens can be the
  * temporary tab, as `withTemporaryTab` draws it. The Preview tabs show
- * after the code file. Each session tab whose session holds an open
- * request shows the needs-input mark, as `tabNeedsInput` says.
+ * after the code file. The tabs of the open explanations come last, as
+ * `explainTabs` says. A session tab shows the needs-input mark while it
+ * holds an open request.
  */
 export function tabsFor(
   state: WorkspaceState,
@@ -159,7 +161,7 @@ export function tabsFor(
 ): WorkspaceTab[] {
   if (oneSession(state)) {
     const title = workspaceName(state, workspace)
-    const needsInput = chatWaits(state)
+    const needsInput = chatWaits(state) || undefined
     return [
       {
         key: 'session',
@@ -287,10 +289,9 @@ export function tabsFor(
     ...tab,
     running: tab === active && (running || background),
     needsInput:
-      tab.kind === 'session' && tabNeedsInput(state, tab.key, tab === chat),
+      (tab.kind === 'session' && tabNeedsInput(state, tab.key, tab === chat)) ||
+      undefined,
   }))
-  return withTemporaryTab(
-    state,
-    state.tabRow === 'moved' ? withCodeMoved(states) : states,
-  )
+  const row = state.tabRow === 'moved' ? withCodeMoved(states) : states
+  return withTemporaryTab(state, [...row, ...explainTabs(state)])
 }

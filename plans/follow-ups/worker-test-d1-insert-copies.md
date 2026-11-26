@@ -1,0 +1,127 @@
+# Worker tests keep their own D1 seed inserts
+
+- **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-20, from branch `calummoore/follow-up-worker-tests-repeat-their-d1-s6dj`, which closed `plans/follow-ups/worker-test-seed-module.md`. The follow-up orchestrator asked for this item.
+- **Location:** The seed helpers are in `worker/test-support/d1-seeds.ts`. The 86 insert statements are in these 66 test files. Each entry gives the number of statements and their lines at commit `9c5f16cc2` of `main`.
+  - `worker/app-api/feedback.test.ts`: 1, at line 195.
+  - `worker/app-api/org-agent-logins.test-support.ts`: 1, at line 35.
+  - `worker/app-api/secrets-reveal.test.ts`: 1, at line 120.
+  - `worker/app-api/shell-list.test-support.ts`: 2, at lines 46 and 94.
+  - `worker/app-api/workspace-parent-refusals.test.ts`: 2, at lines 43 and 59.
+  - `worker/automations/lifecycle.test.ts`: 2, at lines 51 and 203.
+  - `worker/automations/pull-request-access.test.ts`: 1, at line 150.
+  - `worker/automations/pull-request-events.test.ts`: 1, at line 82.
+  - `worker/automations/routes.test.ts`: 1, at line 48.
+  - `worker/automations/run-failures.test.ts`: 2, at lines 132 and 227.
+  - `worker/automations/run-history-facts.test.ts`: 1, at line 67.
+  - `worker/automations/schedule-claim.test.ts`: 2, at lines 30 and 52.
+  - `worker/automations/schedule-queue.test.ts`: 3, at lines 71, 137, and 147.
+  - `worker/automations/schedule-scan.test.ts`: 1, at line 106.
+  - `worker/chat/adapter-runtime.test-support.ts`: 2, at lines 86 and 96.
+  - `worker/chat/attachment-download.test.ts`: 1, at line 184.
+  - `worker/chat/fixture-seed.test-support.ts`: 2, at lines 89 and 108.
+  - `worker/chat/integration/outer-seed.test-support.ts`: 2, at lines 36 and 55.
+  - `worker/chat/runner-seed.test-support.ts`: 2, at lines 14 and 20.
+  - `worker/devices/runtime.test-support.ts`: 2, at lines 78 and 88.
+  - `worker/features/agent-session-reads.test.ts`: 1, at line 138.
+  - `worker/features/agent-session-writes.test.ts`: 1, at line 162.
+  - `worker/files/test-support/http.ts`: 1, at line 33.
+  - `worker/files/test-support/renamed-default.ts`: 1, at line 29.
+  - `worker/github/merge-access.test.ts`: 1, at line 106.
+  - `worker/github/merge.test-support.ts`: 1, at line 20.
+  - `worker/github/queued-access.test-support.ts`: 1, at line 26.
+  - `worker/github/ready-access.test.ts`: 1, at line 98.
+  - `worker/github/sqlite-seed.test-support.ts`: 2, at lines 21 and 28.
+  - `worker/github/test-harness.ts`: 1, at line 78.
+  - `worker/lifecycle/backend-seed.test-support.ts`: 1, at line 74.
+  - `worker/lifecycle/computer-account-writes.test.ts`: 1, at line 15.
+  - `worker/lifecycle/creation-failure-runtime.test.ts`: 1, at line 180.
+  - `worker/lifecycle/creation-parent.test.ts`: 1, at line 139.
+  - `worker/lifecycle/default-branch-credential-test-support.ts`: 1, at line 37.
+  - `worker/lifecycle/first-image-build.test.ts`: 1, at line 51.
+  - `worker/lifecycle/machine-authorization-race.test.ts`: 1, at line 142.
+  - `worker/lifecycle/machine.test.ts`: 1, at line 74.
+  - `worker/lifecycle/ownership-maintenance-test-support.ts`: 1, at line 17.
+  - `worker/lifecycle/real-runtime-test-support.ts`: 1, at line 136.
+  - `worker/lifecycle/repair-budget.test.ts`: 2, at lines 32 and 50.
+  - `worker/lifecycle/retention-dates-test-support.ts`: 1, at line 43.
+  - `worker/lifecycle/runner-environment.test.ts`: 1, at line 67.
+  - `worker/lifecycle/tokens.test.ts`: 1, at line 34.
+  - `worker/lifecycle/workspace-data.test.ts`: 1, at line 185.
+  - `worker/lifecycle/workspaces.test.ts`: 1, at line 29.
+  - `worker/members/fixture-data.test-support.ts`: 2, at lines 31 and 37.
+  - `worker/members/org-order-migration.test.ts`: 1, at line 41.
+  - `worker/members/org-order.test-support.ts`: 1, at line 22.
+  - `worker/operator/overview-long-runs.test.ts`: 1, at line 79.
+  - `worker/operator/overview-orgs.test.ts`: 1, at line 50.
+  - `worker/operator/suspension-test-support.ts`: 1, at line 23.
+  - `worker/previews/revocation.test.ts`: 1, at line 48.
+  - `worker/previews/suspension-test-support.ts`: 1, at line 11.
+  - `worker/previews/test-support.ts`: 1, at line 255.
+  - `worker/sandbox/client.test.ts`: 1, at line 63.
+  - `worker/secrets/mac-access-migration.test.ts`: 2, at lines 21 and 30.
+  - `worker/terminal/access.test.ts`: 1, at line 86.
+  - `worker/terminal/handler.test.ts`: 1, at line 45.
+  - `worker/tools/handler.workspace-parents.test.ts`: 1, at line 69.
+  - `worker/tools/previews.test-support.ts`: 1, at line 66.
+  - `worker/tools/sections.test.ts`: 2, at lines 67 and 73.
+  - `worker/tools/test-support.ts`: 3, at lines 58, 124, and 235.
+  - `worker/tools/workspace-parent-moves.test.ts`: 1, at line 36.
+  - `worker/tools/workspace-reads.test.ts`: 2, at lines 83 and 138.
+  - `worker/tools/workspace-tree-actions.test.ts`: 1, at line 34.
+- **Reason:** The move changes 55 test files in many areas, and the branch that added the seed helpers moved only the nine files of its item.
+
+- **Terms:**
+  - **D1:** the Cloudflare SQLite database of the Worker. Each Worker test writes rows into its own local copy.
+  - **Seed helper:** a function in `worker/test-support/d1-seeds.ts` that returns the D1 insert statement of one row of one table.
+  - **Plain fixture insert:** an insert with listed values, from `VALUES`, that a test writes directly in its `prepare` call, not in a list of cases.
+  - **Undo case:** an entry in a list of test cases with SQL text that breaks a condition and SQL text that restores it.
+  - **Insert from a query:** an `INSERT ... SELECT` statement. It makes its rows from another row, a number sequence, or a JSON list.
+- **Background:**
+  - The Worker tests write their fixture rows into D1 with SQL statements.
+  - `worker/test-support/d1-seeds.ts` has one seed helper for each of four tables: `seedWorkspace` for `workspaces`, `seedMember` for `org_members`, `seedAutomation` for `automations`, and `seedAutomationRun` for `automation_runs`.
+  - A helper returns the statement. The caller runs it or adds it to a D1 batch.
+  - The statement holds only the fields that the caller gives. Each column that the caller leaves out gets its schema default.
+  - A user field takes a user ID, or `{ githubId }` for the user with that GitHub ID. `seedAutomation` also takes `{ id, copyFrom }`. It copies the owner, the settings, and the times of another automation.
+  - These nine test-support files use the helpers. Follow their pattern:
+    - `worker/operator/overview.test-support.ts`
+    - `worker/operator/directory.test-support.ts`
+    - `worker/members/members-test-support.ts`
+    - `worker/app-api/account-stats.test-support.ts`
+    - `worker/automations/runs.test-support.ts`
+    - `worker/automations/run-routes.test-support.ts`
+    - `worker/automations/first-turn.test-support.ts`
+    - `worker/automations/schedule-scan.test-support.ts`
+    - `worker/automations/routes.test-support.ts`
+  - The 66 test files of **Location** hold 86 insert statements for the four tables. By table: 34 for `workspaces`, 46 for `org_members`, 3 for `automations`, and 3 for `automation_runs`.
+  - 70 of these statements are plain fixture inserts. Four of them insert more than one row: `worker/chat/integration/outer-seed.test-support.ts:36`, `worker/devices/runtime.test-support.ts:78`, `worker/secrets/mac-access-migration.test.ts:30`, and `worker/tools/test-support.ts:58`.
+  - The other 16 statements hold SQL as test data, or are inserts from a query:
+    - Five undo cases: `worker/automations/run-failures.test.ts:132`, `worker/automations/schedule-claim.test.ts:52`, `worker/automations/schedule-queue.test.ts:71`, `worker/automations/schedule-scan.test.ts:106`, and `worker/chat/attachment-download.test.ts:184`. These inserts also use `VALUES`. But each test keeps the SQL text of its cases in a list, and gives that text to `prepare`. The case at `schedule-claim.test.ts:52` uses `INSERT OR IGNORE`.
+    - One writer under test: `worker/lifecycle/computer-account-writes.test.ts:15`. The test runs one insert for each of seven tables that hold a computer ID. Then it checks the account and ID history in the computer ledger.
+    - Four bulk inserts: `worker/lifecycle/repair-budget.test.ts:32` and `:50` each make 51 rows, one for each number of a recursive `sequence`. `worker/automations/schedule-queue.test.ts:137` and `:147` make one row for each value of a JSON list.
+    - Six copies of another row: `worker/files/test-support/renamed-default.ts:29`, `worker/lifecycle/runner-environment.test.ts:67`, and `worker/terminal/handler.test.ts:45` copy the columns of a workspace. `worker/previews/revocation.test.ts:48`, `worker/previews/test-support.ts:255`, and `worker/sandbox/client.test.ts:63` read the owner from `orgs.creator_user_id`.
+  - Some statements set a column of `workspaces` that `seedWorkspace` does not accept yet. Each column is in the current schema:
+    - `position`: `worker/app-api/shell-list.test-support.ts:94`.
+    - `parent_workspace_id`: `worker/tools/handler.workspace-parents.test.ts:69`, `worker/tools/workspace-parent-moves.test.ts:36`, `worker/tools/workspace-reads.test.ts:138`, and `worker/tools/workspace-tree-actions.test.ts:34`.
+    - `mac_access`: `worker/secrets/mac-access-migration.test.ts:30`.
+    - `next_disk_keepalive_at`: `worker/lifecycle/repair-budget.test.ts:50`.
+  - `worker/members/org-order-migration.test.ts` and `worker/secrets/mac-access-migration.test.ts` write their rows at the schema before a migration. A helper call in these tests can set only the columns of that schema.
+  - The trigger `workspaces_allocate_number` gives each new workspace of an org the next number, in insert order. So the order of the workspace rows matters.
+  - `worker/automations/pull-request-concurrency.test.ts:33` holds the text `INSERT OR IGNORE INTO automation_runs`. It is not a fixture insert. The test finds the production insert by this text, and holds that insert.
+  - Production code also inserts into the four tables. That code is outside this item.
+- **Problem:** 86 insert statements in 66 test files repeat the columns of four tables. A seed helper covers each of these tables, but these files do not use it. 70 of the statements are plain fixture inserts, and 16 hold SQL as test data or insert from a query.
+- **Impact if no action:** A schema change to `workspaces`, `org_members`, `automations`, or `automation_runs` must update each copy. Each new test file can add one more copy.
+- **Root question:** Which inserts of these four tables in the Worker tests go through the shared seed helpers?
+- **Options:**
+  - **A.** Change nothing. Each schema change of the four tables updates each copy. Effort: Small.
+  - **B.** Add a rule to `worker/test-support/README.md`: new tests use the seed helpers, and a branch that changes a file of **Location** moves its inserts. Copies stay in each file that no branch changes. Effort: Small.
+  - **C.** Move the 70 plain fixture inserts to the seed helpers. Keep the 16 statements that hold SQL as test data or insert from a query. Add the optional fields `position`, `parent_workspace_id`, and `mac_access` to `seedWorkspace`. Write one helper call for each row. Keep the order of the rows, and keep each call in the same batch or at the same point of the test. Keep every fixture row, assertion, and time limit. Show that each changed fixture writes the same rows, and that the same tests pass before and after the move. The move changes 55 test files, and it can split into one branch for each area. Effort: Large.
+  - **D.** Do C, and also move the 16 statements. The undo cases hold helper statements. The helpers get forms for `INSERT OR IGNORE`, bulk rows, and copies of another row. `seedWorkspace` gets `next_disk_keepalive_at`. Each new form serves one or two tests, and the writer test loses its single list of writer SQL. Effort: Large.
+- **Left out:**
+  - A lint that finds insert SQL for these tables in tests: it adds a new gate, which needs the user. Also, C and D move inserts to the helpers instead of finding them.
+  - One generic insert helper for every table, with column names as text. It fails the goal, because a renamed column still needs a change at each call.
+- **Wider fix:** C. It makes the seed helpers the one way to write a plain fixture row of these four tables. It keeps the 16 statements that hold SQL as test data or insert from a query. D also moves those 16.
+- **Previous examples:** The nine test-support files that now use the seed helpers each held their own insert SQL for these tables.
+- **Recommendation:** C. It moves the 70 plain fixture inserts with only three new optional fields, and it keeps the 16 special statements as SQL. D also moves those 16, but each of its new forms serves only one or two tests.
+- **Action:** fix after merge, apply C, because it changes 55 test files in many areas, outside the nine files of the branch that added the helpers.

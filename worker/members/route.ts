@@ -14,15 +14,17 @@ import {
   restoreOrgPath,
 } from '../../src/shared/orgs'
 
+import { createEmailMessages } from '../email-messages'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError, requiredString } from '../http'
-import { createInvitationMailer, invitationLink } from '../invitation-mailer'
+import { createInvitationMailer } from '../invitation-mailer'
 import type { RequestContext } from '../security/gate'
 import { deleteOrg } from './deletion'
 import { cancelOrgInvite, inviteOrgMember } from './invites'
 import type { LifecycleOwnership } from './lifecycle-contract'
 import type { OrgMaintenanceHooks } from './maintenance-contract'
 import { changeMemberRole, listMembers, removeOrgMember } from './membership'
+import { wakeQueuerQueues } from '../merge-queue/wake'
 import { moveOrg, updateOrg, visibleOrgs } from './org-data'
 import { readOrgUpdate } from './org-update'
 import { reassignWorkspace } from './ownership'
@@ -114,6 +116,7 @@ export async function membersRoute(
       dependencies.now(),
       hooks,
     )
+    await wakeQueuerQueues(env, orgId, actorId)
     return new Response(null, { status: 204 })
   }
   if (path === membersPath(orgId) && request.method === 'GET') {
@@ -136,7 +139,7 @@ export async function membersRoute(
       email: invite.email,
       orgName: context.org.name,
       invitedBy: context.user.displayName ?? context.user.githubLogin,
-      link: invitationLink(env.APP_ORIGIN, invite.id),
+      link: createEmailMessages(env.APP_ORIGIN).invitationLink(invite.id),
     })
     return Response.json({ invite }, { status: 201 })
   }
@@ -168,6 +171,7 @@ export async function membersRoute(
         dependencies.now(),
         hooks,
       )
+      await wakeQueuerQueues(env, orgId, memberId)
       return new Response(null, { status: 204 })
     }
   }

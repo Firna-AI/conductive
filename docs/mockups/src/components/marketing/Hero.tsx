@@ -1,10 +1,7 @@
-import type { Viewport } from '@mokly/mokly'
-import { classes } from '../common/classes'
-import {
-  ScreenFrame,
-  type FrameDevice,
-  type ScreenPicture,
-} from './ScreenFrame'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
+import { screenFrame } from '../../entries/components/marketing/ScreenFrame.mockup'
+import type { FramedPicture } from '../../screens/marketingPictures'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { SiteActions } from './SiteActions'
 import styles from './Hero.module.css'
 
@@ -17,20 +14,25 @@ export function Hero(props: {
   title: string
   text: string
   signIn: string
-  picture: ScreenPicture
-  device: FrameDevice
+  picture: FramedPicture
   viewport: Viewport
 }) {
   const mobile = props.viewport === 'mobile'
+  const { picture } = props
   return (
     <section className={classes(styles.hero, mobile && styles.mobile)}>
       <div className={styles.copy}>
         <h1 className={styles.title}>{props.title}</h1>
         <p className={styles.text}>{props.text}</p>
-        <SiteActions stack={mobile} to={props.signIn} />
+        <SiteActions place="hero" stack={mobile} to={props.signIn} />
       </div>
       <div className={styles.picture}>
-        <ScreenFrame device={props.device} picture={props.picture} />
+        <screenFrame.Component
+          device={picture.device}
+          moklyInstance={picture.key}
+          picture={picture.picture}
+          screen={picture.screen}
+        />
       </div>
     </section>
   )

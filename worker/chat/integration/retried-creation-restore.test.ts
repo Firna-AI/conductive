@@ -98,7 +98,7 @@ it('restores an interrupted replacement create with its pinned data and a fresh 
   active.boat.commandExitCode = 0
   expect((await resume()).status).toBe(200)
   expect(await active.actor(id).readCreationLifecycleResult()).toBeUndefined()
-  await advanceRetainedCreation(active, id, 'startup')
+  await advanceRetainedCreation(active, id, 'fetch')
   const results: CommandResult[] = []
   active.boat.beforeCommand = async (command, detached) => {
     if (!detached || !sandbox.contains(command, 'startup')) return
@@ -106,7 +106,7 @@ it('restores an interrupted replacement create with its pinned data and a fresh 
     results.push(result)
     active.boat.commandExitCode = result.exitCode ?? -1
   }
-  await active.actor(id).advanceStartAlarm()
+  await advanceRetainedCreation(active, id, 'startup')
   expect(results.map((result) => result.exitCode)).toEqual([125])
   const original = await retainedCreationJob(active, id)
   expect(original).toMatchObject({

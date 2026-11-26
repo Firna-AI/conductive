@@ -18,8 +18,11 @@ import {
   previewPath,
   previewsPath,
 } from '../shared/previews'
+import { servicePaths } from '../shared/services'
 import type { FakeRouteWriter } from './fake-api-routes'
-import { FAKE_IDS } from './fixtures/core'
+import type { FakeWorkspaceEvents } from './fake-events'
+import { fakeFileLists } from './fake-file-lists'
+import { FAKE_IDS, FAKE_TIME } from './fixtures/core'
 import {
   MASKED_GONE_PATH,
   MASKED_SEED_PATH,
@@ -135,13 +138,14 @@ export function fakeFilesPreview(
 
 export function fakeToolRoutes(
   routes: FakeRouteWriter,
+  events: FakeWorkspaceEvents,
   banner: BannerState,
   paths: PathState = 'plain',
 ) {
   const data = toolFixtures(banner, paths)
   const org = FAKE_IDS.org
   const id = FAKE_IDS.workspace
-  routes.json('GET', filePaths.tree(org, id), data.files)
+  fakeFileLists(routes, events)
   if (paths === 'masked') {
     const seed = MASKED_SEED_PATH
     routes.json('GET', filePaths.content(org, id, seed), maskedSeedFile())
@@ -164,7 +168,6 @@ export function fakeToolRoutes(
       },
     }),
   )
-  routes.json('GET', filePaths.changes(org, id), data.changes)
   routes.json('GET', filePaths.diff(org, id, FAKE_FILE_PATH), data.diff)
   // The upload in parts of the app's upload operation, at the routes of each
   // target: a workspace, and the first message of a new workspace. Each
@@ -204,10 +207,20 @@ export function fakeToolRoutes(
       201,
     )
   }
-  routes.json('GET', previewsPath(org, id), data.previews)
+  routes.handle('GET', previewsPath(org, id), async () =>
+    Response.json({
+      previews: data.previews.previews.filter(
+        (preview) =>
+          preview.expiresAt > FAKE_TIME &&
+          !events.previewRevoked(id, preview.id),
+      ),
+    }),
+  )
   routes.json('POST', previewsPath(org, id), data.preview, 201)
   fakeFilesPreview(routes, 'open')
   routes.empty('DELETE', previewPath(org, id, FAKE_IDS.preview))
+  // Software without services, as before, unless a test serves a list.
+  routes.json('GET', servicePaths.catalogue(org, id), { state: 'unsupported' })
   routes.json('GET', desktopPath(org, id), data.desktop)
   fakeGitHub(routes, id, banner)
 }

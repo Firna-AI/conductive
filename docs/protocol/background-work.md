@@ -17,6 +17,10 @@ work.
   activity is not live work.
 - A Claude turn stays open after a reply of the agent while live work
   remains (background work decision 1). Such a time is a wait.
+- A [service](services.md) is not live work. It runs outside every turn,
+  so it holds no turn open. A temporary check server that an agent runs as
+  a task is live work, and the agent ends it before its reply, as
+  [Agent guidance](services.md#agent-guidance) says.
 - When a task ends or a wake-up fires, the agent program notifies the
   agent. The agent then works again in the same turn.
 - The turn ends when the agent is idle and no live work remains. The agent
@@ -38,6 +42,9 @@ work.
   inside a turn.
 - A new turn that background work starts by itself was rejected, because
   sandbox code could then spend the login of the sender.
+- A [watch](session-watches.md#the-boundary-of-a-watch) keeps this rule.
+  Only a running turn can set it, and only the Worker fires it, once, at
+  the end of the watched turn.
 
 ### The note
 
@@ -51,6 +58,9 @@ work.
 - The note asks the agent to stop each task that it does not need, such as
   a dev server. It asks the agent to delete each wake-up that it does not
   need. Then it asks the agent to end its reply.
+- The note also says that a server that a member needs after the reply
+  runs as a [service](services.md). This server guidance changes no
+  trigger, no wait, and no time limit of this page.
 - The note follows the naming rules of the
   [agent instructions](agent-instructions.md#what-the-instructions-hold).
   So it never names a sandbox provider, such as Boat or E2B, and it never

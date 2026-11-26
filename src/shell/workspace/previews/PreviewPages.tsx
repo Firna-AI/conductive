@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
-import { CircleAlert, RotateCw } from 'lucide-react'
-import page from '../../../../docs/mockups/src/components/tools/PreviewPage.module.css'
+import { CircleAlert, Maximize2, RotateCw } from 'lucide-react'
+import page from '../../../ui/components/tools/PreviewPage.module.css'
+import { expandedPreviewCopy } from '../../../ui/components/tools/previewCopy'
 import type { Preview } from '../../../shared/generated/Preview'
 import { OpenInNewTab, PreviewFrame } from '../../../previews/PreviewFrame'
 import {
@@ -12,16 +13,30 @@ import {
   ToolWaiting,
 } from '../../../terminal/tool-parts/ToolStates'
 import type { ToolError } from '../../../terminal/tool-parts/request'
+import { ExpandableFrames, type ExpandedFrame } from './ExpandableFrames'
 
 /**
  * The bar of a Preview tab, over its page: Reload, which loads the page
- * again, and Open, which opens the launch page of the preview in a new
- * browser tab. Only a Preview tab has this bar. Open waits for a preview.
+ * again, Expand, which shows the page in a large window over the whole
+ * app, and Open, which opens the launch page of the preview in a new
+ * browser tab. Only a Preview tab has this bar. Open waits for a preview,
+ * and Expand for the page in its frame.
  */
-function PreviewBar(props: { preview: Preview | null; onReload: () => void }) {
+function PreviewBar(props: {
+  preview: Preview | null
+  onReload: () => void
+  onExpand: (() => void) | null
+}) {
   return (
     <div className={page.bar}>
       <ToolIconButton icon={RotateCw} label="Reload" onPress={props.onReload} />
+      {props.onExpand ? (
+        <ToolIconButton
+          icon={Maximize2}
+          label={expandedPreviewCopy.expand}
+          onPress={props.onExpand}
+        />
+      ) : null}
       {props.preview ? <OpenInNewTab preview={props.preview} /> : null}
     </div>
   )
@@ -40,6 +55,8 @@ export function PreviewTabPage(props: {
   /** The read of the list failed, rather than the open of the port. */
   listFailed: boolean
   onReload: () => void
+  /** Shows the page in its large window, or null while no page shows. */
+  onExpand: (() => void) | null
 }) {
   let state: ReactNode = null
   if (props.error) {
@@ -61,7 +78,11 @@ export function PreviewTabPage(props: {
   }
   return (
     <>
-      <PreviewBar onReload={props.onReload} preview={props.preview} />
+      <PreviewBar
+        onExpand={props.onExpand}
+        onReload={props.onReload}
+        preview={props.preview}
+      />
       {state ? <div className={page.page}>{state}</div> : null}
     </>
   )
@@ -79,15 +100,17 @@ export interface KeptFrame {
  * first show of its tab, and stays mounted and hidden while another tab
  * shows, so a return does not load it again. Only the page of `shown`
  * shows. A new preview of the port, or a reload, loads the page again.
+ * With `expanded`, the page of `shown` shows in its large window.
  */
 export function KeptPreviewFrames(props: {
   frames: readonly KeptFrame[]
   shown: number | null
+  expanded: ExpandedFrame | null
 }) {
   const visible = props.frames.some((frame) => frame.port === props.shown)
   if (props.frames.length === 0) return null
   return (
-    <div className={page.page} hidden={!visible}>
+    <ExpandableFrames expanded={props.expanded} visible={visible}>
       {props.frames.map((frame) => (
         <div
           className={page.frame}
@@ -100,6 +123,6 @@ export function KeptPreviewFrames(props: {
           />
         </div>
       ))}
-    </div>
+    </ExpandableFrames>
   )
 }

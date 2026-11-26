@@ -1,11 +1,21 @@
 import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
-import type { Automation } from '../../src/shared/automations'
+import type {
+  Automation,
+  AutomationCapabilities,
+} from '../../src/shared/automations'
+import {
+  listAutomationCapabilities,
+  readAutomationCapabilities,
+} from './automation-capabilities-data'
 import { automationNotFound } from './errors'
 import { readAutomationTriggers } from './stored-triggers'
 
 interface AutomationRow
   extends
-    Omit<Automation, 'owner' | 'choice' | 'triggers' | 'active'>,
+    Omit<
+      Automation,
+      'owner' | 'choice' | 'triggers' | 'active' | 'capabilities'
+    >,
     Omit<AgentChoice, 'fast'> {
   fast: number
   ownerUserId: string
@@ -24,7 +34,10 @@ const columns = `r.id, r.org_id AS orgId, r.owner_user_id AS ownerUserId,
   r.time_zone AS timeZone, r.triggers_json AS triggersJson, r.next_run_at AS nextRunAt,
   r.created_at AS createdAt, r.updated_at AS updatedAt`
 
-function automation(row: AutomationRow): Automation {
+function automation(
+  row: AutomationRow,
+  capabilities: AutomationCapabilities,
+): Automation {
   return {
     id: row.id,
     orgId: row.orgId,
@@ -45,6 +58,7 @@ function automation(row: AutomationRow): Automation {
       effort: row.effort,
       fast: row.fast === 1,
     },
+    capabilities,
     active: row.active === 1,
     inactiveReason: row.inactiveReason,
     failedRunsInARow: row.failedRunsInARow,
@@ -69,7 +83,7 @@ export async function readAutomation(
     .bind(orgId, id)
     .first<AutomationRow>()
   if (!row) throw automationNotFound()
-  return automation(row)
+  return automation(row, await readAutomationCapabilities(db, orgId, id))
 }
 
 export async function listAutomations(
@@ -83,7 +97,10 @@ export async function listAutomations(
     )
     .bind(orgId)
     .all<AutomationRow>()
-  return results.map(automation)
+  const capabilities = await listAutomationCapabilities(db, orgId)
+  return results.map((row) =>
+    automation(row, capabilities.get(row.id) ?? { preapprovedSecretIds: [] }),
+  )
 }
 
 export async function automationRepository(

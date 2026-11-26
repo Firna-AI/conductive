@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import orgDrag from '../../../docs/mockups/src/components/orgs/OrgDrag.module.css'
+import { classes } from '../../ui/components/common/classes'
+import orgDrag from '../../ui/components/orgs/OrgDrag.module.css'
 import type { LiftedFrame } from '../ui/useListDrag'
 import local from './orgs.module.css'
 

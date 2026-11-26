@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from 'react'
+import { createContext, useState, useSyncExternalStore } from 'react'
 
 /** The time source of the chat. Tests and the dev page pass a fixed clock. */
 export interface Clock {
@@ -6,6 +6,15 @@ export interface Clock {
 }
 
 export const systemClock: Clock = { now: () => Date.now() }
+
+/**
+ * The clock of the chat, which `ChatBody` gives from its `clock`. A part
+ * that shows a live time, such as the time of a running turn, reads it and
+ * keeps its own tick while it shows, with `useNow`. So the time moves on in
+ * each chat that shows it, such as the popover of an explanation over an
+ * idle session.
+ */
+export const ChatClock = createContext<Clock>(systemClock)
 
 /** Reads a clock once a second while a part on screen needs the time. */
 class Ticker {

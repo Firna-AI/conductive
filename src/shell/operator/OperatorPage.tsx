@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { providerWords } from '../../../docs/mockups/src/components/operator/providerCopy'
+import { providerWords } from '../../ui/components/operator/providerCopy'
+import { stopTimeWords } from '../../ui/components/operator/stopTimeCopy'
 import { routes } from '../../app/router'
 import { Page, type BackLink } from '../layout/Page'
 import { LinkTabs } from '../ui/links'
@@ -9,7 +10,13 @@ import { WaitlistOffNotice } from './SwitchParts'
 
 /** The tabs of the operator section. */
 export type OperatorTab =
-  'overview' | 'orgs' | 'users' | 'waitlist' | 'codes' | 'providers'
+  | 'overview'
+  | 'orgs'
+  | 'users'
+  | 'waitlist'
+  | 'codes'
+  | 'providers'
+  | 'settings'
 
 const tabs = [
   { tab: 'overview', label: 'Overview', to: routes.operator() },
@@ -22,11 +29,16 @@ const tabs = [
     label: providerWords.tab,
     to: routes.operatorProviders(),
   },
+  {
+    tab: 'settings',
+    label: stopTimeWords.tab,
+    to: routes.operatorSettings(),
+  },
 ] as const satisfies readonly { tab: OperatorTab; label: string; to: string }[]
 
 /**
  * A page of the operator section: the header, and the tabs Overview, Orgs,
- * Users, Waitlist, Invite codes, and Providers under it. While sign-ups
+ * Users, Waitlist, Invite codes, Providers, and Settings under it. While sign-ups
  * are paused, the page starts with the notice of the pause. While the
  * waitlist is off, the notice of the switch follows it. On a phone the
  * tabs keep one line while they fit, and the last ones move to a second

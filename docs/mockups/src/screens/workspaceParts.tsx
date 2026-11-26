@@ -1,23 +1,16 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { FilePage } from '../components/files/FilePage'
-import { FilesPanel } from '../components/files/FilesPanel'
-import { DesktopView } from '../components/tools/DesktopView'
-import { PreviewTool } from '../components/tools/PortPreview'
-import { TerminalTool } from '../components/tools/TerminalTool'
-import { SandboxPanel } from '../components/workspace/SandboxNotice'
+import { filePage } from '../entries/components/files/FilePage.mockup'
+import { filesPanel } from '../entries/components/files/FilesPanel.mockup'
+import { desktopView } from '../entries/components/tools/DesktopView.mockup'
+import { previewTool } from '../entries/components/tools/PortPreview.mockup'
+import { terminalTool } from '../entries/components/tools/TerminalTool.mockup'
+import { sandboxPanel } from '../entries/components/workspace/SandboxNotice.mockup'
 import {
   replacesList,
   replacesShownFile,
-} from '../components/workspace/sandboxNoticeState'
-import {
-  archivedSections,
-  removedSections,
-  suspendedSections,
-  workspaceSections,
-  type ChangedWorkspace,
-} from '../components/workspaces/sections'
-import { Sidebar } from '../components/workspaces/Sidebar'
+} from '../../../../src/ui/components/workspace/sandboxNoticeState'
+import { defined, plainData } from '../defined'
 import { unpushedWork } from '../fixtures/barActions'
 import {
   creatingLog,
@@ -25,16 +18,13 @@ import {
   resumingLog,
   type StartingLog,
 } from '../fixtures/starting'
-import { orgs } from '../fixtures/orgs'
-import type { Membership } from '../fixtures/members'
-import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { terminalSets } from '../fixtures/terminals'
-import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { openPort } from '../fixtures/previews'
 import { paths } from '../paths'
 import { rowMenuOf } from './workspaceRowMenu'
 import { freshPromptFor, runStartingLog } from './workspaceRun'
-import { isRemoved, panelState } from './workspaceSandbox'
+import { panelState } from './workspaceSandbox'
+import { previewServicesOf } from './workspaceServices'
 import { backFrom, openFile } from './workspaceFileTab'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -78,7 +68,12 @@ export function filePlaceholder(
 ): ReactNode {
   const panel = panelState(state)
   return panel && (panel.problem === 'starting' || replacesShownFile(panel)) ? (
-    <SandboxPanel phone={withAction} state={panel} />
+    <sandboxPanel.Component
+      moklyInstance="sandbox-file"
+      phone={withAction}
+      place="file"
+      state={plainData(panel)}
+    />
   ) : undefined
 }
 
@@ -91,7 +86,12 @@ export function filePlaceholder(
 function listsPlaceholder(state: WorkspaceState, phone: boolean): ReactNode {
   const panel = panelState(state)
   return panel && replacesList(panel, !isNew(state)) ? (
-    <SandboxPanel phone={phone} state={panel} />
+    <sandboxPanel.Component
+      moklyInstance="sandbox-files"
+      phone={phone}
+      place="files"
+      state={plainData(panel)}
+    />
   ) : undefined
 }
 
@@ -115,30 +115,43 @@ export function FilesContent(props: {
   const phone = props.viewport === 'mobile'
   const panel = panelState(state)
   if (panel?.problem === 'archived') {
-    return <SandboxPanel phone={phone} state={panel} />
+    return (
+      <sandboxPanel.Component
+        moklyInstance="sandbox-files"
+        phone={phone}
+        place="files"
+        state={plainData(panel)}
+      />
+    )
   }
   const open = openFile(state)
   if (phone && open) {
     return (
-      <FilePage
+      <filePage.Component
         back={backFrom(open)}
-        placeholder={filePlaceholder(state, true)}
+        moklyInstance="file-page"
         view={open}
+        {...defined({ placeholder: filePlaceholder(state, true) })}
       />
     )
   }
   return (
-    <FilesPanel
+    <filesPanel.Component
       banner={state.banner}
-      checksTop={props.checksTop}
       edited={!isNew(state)}
-      menu={rowMenuOf(state, props.viewport)}
-      only={changedPaths(state)}
-      open={open}
+      moklyInstance="files-panel"
       paths={state.paths}
-      placeholder={listsPlaceholder(state, phone)}
       tree={state.tree}
       view={state.files}
+      {...defined({
+        checksTop: props.checksTop,
+        // Complete lists pass nothing, so the panel keeps its earlier props.
+        lists: state.lists === 'limited' ? state.lists : undefined,
+        menu: rowMenuOf(state, props.viewport),
+        only: changedPaths(state),
+        open,
+        placeholder: listsPlaceholder(state, phone),
+      })}
     />
   )
 }
@@ -154,11 +167,10 @@ function TerminalContent(props: { state: WorkspaceState; viewport: Viewport }) {
   const set = terminalSets[state.terminals]
   const fresh = isNew(state)
   return (
-    <TerminalTool
+    <terminalTool.Component
       disconnected={state.terminals === 'disconnected'}
       lines={fresh ? [] : set.lines}
-      prompt={fresh ? freshPromptFor(state) : set.prompt}
-      shared={set.shared}
+      moklyInstance="terminal-tool"
       tabs={
         state.terminals === 'older'
           ? null
@@ -170,6 +182,10 @@ function TerminalContent(props: { state: WorkspaceState; viewport: Viewport }) {
             }
       }
       viewport={props.viewport}
+      {...defined({
+        prompt: fresh ? freshPromptFor(state) : set.prompt,
+        shared: set.shared,
+      })}
     />
   )
 }
@@ -182,70 +198,37 @@ export function ToolContent(props: {
   const { state } = props
   const mobile = props.viewport === 'mobile'
   const panel = panelState(state)
-  if (panel) return <SandboxPanel phone={mobile} state={panel} />
-  switch (state.tool) {
-    case 'terminal':
-      return <TerminalContent state={state} viewport={props.viewport} />
-    case 'preview':
-      return (
-        <PreviewTool
-          frame={mobile}
-          shownPort={state.tab === 'preview' ? openPort : null}
-          state={state.ports}
-        />
-      )
-    case 'desktop':
-      return <DesktopView />
-  }
-}
-
-/**
- * The sidebar beside an open workspace, which shows its current status. An
- * archived workspace sits in the open Archived group. A removed workspace,
- * which a link opened, has no row: the Archived group stays closed, with
- * its count, and no row is selected. In a suspended org every row shows
- * stopped, and nothing in the sidebar changes the org.
- */
-export function workspaceSidebar(props: {
-  workspace: Workspace
-  status: ActivityStatus
-  suspended: boolean
-  viewer: Membership
-  /** The rows that differ from the list of when the app opens, by then. */
-  changed: readonly ChangedWorkspace[]
-  /** The archived workspace and its cloud computer, as `archive` says. */
-  archive: WorkspaceState['archive']
-  /** The person's changes to the shortcuts, for the key of the Search row. */
-  shortcuts?: ShortcutChanges
-}): ReactNode {
-  const { workspace, status, suspended, viewer, changed, shortcuts } = props
-  if (status !== 'archived') {
-    const sections = suspended
-      ? suspendedSections(workspace)
-      : workspaceSections({ workspace, status }, undefined, changed)
+  if (panel) {
     return (
-      <Sidebar
-        org={orgs.acme}
-        sections={sections}
-        shortcuts={shortcuts}
-        suspended={suspended}
-        viewer={viewer}
+      <sandboxPanel.Component
+        moklyInstance="sandbox-tools"
+        phone={mobile}
+        place="tools"
+        state={plainData(panel)}
       />
     )
   }
-  const removed = isRemoved(props.archive)
-  const list = removed
-    ? removedSections(workspace, suspended)
-    : archivedSections(workspace, suspended, props.archive === 'kept')
-  return (
-    <Sidebar
-      archived={list.archived}
-      archivedCollapsed={removed}
-      org={orgs.acme}
-      sections={list.sections}
-      shortcuts={shortcuts}
-      suspended={suspended}
-      viewer={viewer}
-    />
-  )
+  switch (state.tool) {
+    case 'terminal':
+      return <TerminalContent state={state} viewport={props.viewport} />
+    case 'preview': {
+      // The services section is React content, so it goes in a slot, and
+      // the servers beside it go as data.
+      const services = previewServicesOf(state, props.viewport)
+      return (
+        <previewTool.Component
+          frame={mobile}
+          moklyInstance="preview-tool"
+          shownPort={state.tab === 'preview' ? openPort : null}
+          state={state.ports}
+          {...defined({
+            services: services?.section,
+            servers: services?.servers && plainData(services.servers),
+          })}
+        />
+      )
+    }
+    case 'desktop':
+      return <desktopView.Component moklyInstance="desktop-view" />
+  }
 }

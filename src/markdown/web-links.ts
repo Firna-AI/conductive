@@ -2,7 +2,7 @@ import { lineTargets } from './markdown-destination'
 import { lineLabelEnds } from './markdown-labels'
 
 /** A web address in text, with its source and optional Markdown label. */
-export type WebAddressLink = {
+type WebAddressLink = {
   kind: 'link'
   href: string
   source: string
@@ -23,7 +23,8 @@ export type WebLink =
   | { kind: 'local'; url: URL; port: number }
   | { kind: 'web'; url: URL }
 
-const barePattern = /https?:\/\/[^\s<>`]+/y
+const schemePattern = /https?:\/\//iy
+const barePattern = /[^\s<>`]+/y
 const endMarks = new Set([...'.,;:!?\'"*_~'])
 const localHosts = new Set(['localhost', '127.0.0.1', '[::1]', '0.0.0.0'])
 const invisible = /\p{Default_Ignorable_Code_Point}/gu
@@ -67,12 +68,20 @@ export function webLink(
   return { kind: 'web', url }
 }
 
+/** The end of an HTTP or HTTPS prefix at `at`, in any case, or null. */
+export function webAddressStartAt(text: string, at: number): number | null {
+  if (at < 0) return null
+  schemePattern.lastIndex = at
+  return schemePattern.test(text) ? schemePattern.lastIndex : null
+}
+
 /** The bare web address at `at`, without trailing marks outside the address. */
 export function bareAddressAt(text: string, at: number): string | null {
-  barePattern.lastIndex = at
-  const found = barePattern.exec(text)?.[0]
-  if (!found) return null
-  let address = found
+  const start = webAddressStartAt(text, at)
+  if (start === null) return null
+  barePattern.lastIndex = start
+  if (!barePattern.test(text)) return null
+  let address = text.slice(at, barePattern.lastIndex)
   let extraCloses = address.split(')').length - address.split('(').length
   let extraBrackets = address.split(']').length - address.split('[').length
   while (address !== '') {
@@ -124,7 +133,7 @@ export function webAddressParts(
         }
       }
     }
-    if (href === null && text.startsWith('http', index)) {
+    if (href === null && webAddressStartAt(text, index) !== null) {
       href = bareAddressAt(text, index)
       source = href ?? ''
       next = index + source.length

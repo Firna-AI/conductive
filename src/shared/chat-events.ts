@@ -5,6 +5,8 @@ import type { UserMessage } from './generated/UserMessage'
 import type { RunnerEvent } from './generated/RunnerEvent'
 import type { AgentChatEvent } from './generated/AgentChatEvent'
 import type { TurnStopRequester } from './session-stop'
+import type { CapabilityChangeNote } from './capability-change'
+import type { SessionWatchNotice } from './generated/SessionWatchNotice'
 
 /**
  * Maximum UTF-8 bytes of JSON.stringify(non-null detail), including quotes
@@ -62,12 +64,16 @@ export interface RunnerEventRefused {
 
 export type ChatEvent =
   | AgentChatEvent
+  | CapabilityChangeNote
+  | SessionWatchNotice
   | {
       type: 'workspace.continued'
       sessionId: string
       member: MessageSender
       branch: string
       baseBranch: string
+      displayBranch?: string
+      displayBaseBranch?: string
     }
   | {
       /** The note of a repository change in one session. */
@@ -77,6 +83,8 @@ export type ChatEvent =
       repository: { id: string; fullName: string }
       branch: string
       baseBranch: string
+      displayBranch?: string
+      displayBaseBranch?: string
     }
   | RunnerEventRefused
   | { type: 'message.accepted'; message: UserMessage }

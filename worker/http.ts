@@ -57,12 +57,20 @@ function warnUnexpected(error: unknown, request?: Request): void {
 }
 
 /**
+ * Writes the `unexpected_error` warning for an error that is not an
+ * `HttpError`, also when no reply can carry it, as after a handshake.
+ */
+export function warnUnexpectedError(error: unknown, request?: Request): void {
+  if (!(error instanceof HttpError)) warnUnexpected(error, request)
+}
+
+/**
  * The API error body of an error. An error that is not an `HttpError` also
  * writes the `unexpected_error` warning, with the route of `request` when
  * the caller gives it.
  */
 export function errorResponse(error: unknown, request?: Request): Response {
-  if (!(error instanceof HttpError)) warnUnexpected(error, request)
+  warnUnexpectedError(error, request)
   if (objectRestarted(error)) {
     return Response.json(
       {

@@ -74,7 +74,7 @@ describe('retry eligibility and queued work', () => {
       { turnId: cancelledId },
     )
     expect(await stopped.json()).toEqual({
-      eventNumber: 22,
+      eventNumber: 23,
       turnId: cancelledId,
       state: 'stopped',
     })

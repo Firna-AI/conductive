@@ -7,7 +7,7 @@ import {
   type DeviceSettingsOutcome,
 } from '../../shared/device'
 import { deviceObject, deviceText } from '../../shared/device-read'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import {
   FAKE_PAIRING,
   fakeMacSettings,
@@ -161,6 +161,7 @@ describe('MacSettingsController', () => {
     const mac = gatedMac([failed])
     const controller = new MacSettingsController(
       createDeviceApi(createApiClient(mac.fetch)),
+      { now: () => FAKE_TIME },
     )
     await controller.start()
     await controller.change(removeLint)
@@ -169,6 +170,7 @@ describe('MacSettingsController', () => {
         change: removeLint,
         subject: 'npm run lint',
         outcome: failed,
+        at: FAKE_TIME,
       },
     }
     expect(controller.get().results).toEqual(kept)
@@ -190,6 +192,7 @@ describe('MacSettingsController', () => {
       change: removeLint,
       subject: 'npm run lint',
       outcome: { status: 'done' },
+      at: FAKE_TIME,
     })
   })
 

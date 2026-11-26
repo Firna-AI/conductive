@@ -30,19 +30,85 @@ The child page `app/orgs/suspended/settings/secrets` has the tab of a
 suspended org, with no action.
 
 `app/new-workspace/capabilities` has the Capabilities control open on the
-New workspace page: the secrets of Acme with FIGMA_TOKEN pre-approved, and
-Mac access off. A phone opens it as a sheet from the menu of the + button.
-Its `no-secrets` variant has Firna without secrets, and its `menu` variant
-has that menu open on a phone. `app/new-workspace/dialog/capabilities` has
-the same control in the dialog.
+New workspace page: the secrets of Acme with FIGMA_TOKEN pre-approved. A
+browser shows no Mac access part, so the control holds only the Secrets
+part. A phone opens it as a sheet from the menu of the + button. Its
+`no-secrets` variant has Firna without secrets, and its `menu` variant
+has that menu open on a phone. Its `search` variant has twelve secrets,
+with a Search secrets field above them and "deploy" typed in it. Its
+`info` variant has the info box of PROD_DATABASE_URL open, with its
+description, after a press on its info icon. STAGING_API_KEY there has no
+description, so it has no info icon. `app/new-workspace/dialog/capabilities`
+has the same control in the dialog.
 
-`app/capabilities` has the control of Checkout address autocomplete, with
-the approvals of its sessions and its value for the workspace, each with
-Remove. Its `mac-access-off` variant has Mac access off. Its `menu` variant
-has the menu of the + button of a phone, with Attach files and
-Capabilities. The
-`mac-access-off` variant of `app/mac-commands` has a Mac command that the
-workspace refused for that reason.
+`app/capabilities` has the control of Checkout address autocomplete in a
+browser, with the approval of its open session and its value for the
+workspace, each with Remove. It hides an approval of the pre-approved
+FIGMA_TOKEN and an approval of another session. A browser shows no Mac
+access part. Its child pages:
+
+- `menu` has the menu of the + button of a phone, with Attach files and
+  Capabilities.
+- `changed` has the note of a change in the chat of a session, from the
+  capability prompts decisions of 20 November 2026. While a turn of Cal
+  runs, Priya pre-approves VERCEL_TOKEN. The note says "Priya Raman
+  pre-approved VERCEL_TOKEN." at the time of the change, and the agent
+  then runs the deploy with no question. Its child pages:
+  - `idle` has the note at the time of the change in an idle session, the
+    next message of Cal after it, and the agent that uses the secret.
+  - `removed` has a removed pre-approval and a removed value for this
+    workspace: two writes, so two notes, each with its own member.
+  - `several` has one edit with three changes in one note. The other
+    session gets only the change of its own facts.
+  - `you` has the same chat as Priya, who made the change, sees it: "You
+    pre-approved VERCEL_TOKEN."
+
+The `mac-access-off` variant of `app/mac-commands` has the card of an
+older Mac command that a workspace refused while its Mac access was off.
+
+In the Mac app, the control ends with the Mac access part: one switch with
+no hint, from Mac access decision 7 of 21 November 2026. Each member sees
+the switch of their own Mac. On starts a grant until Stop of the workspace
+on this Mac, and off stops it. `mac-app/capabilities` has the control of
+Checkout address autocomplete after Cal turned the switch on in the Mac
+app. The switch is on, because this Mac started a grant until Stop, and the
+bar of the workspace says Until you stop. The page shows only its canonical
+screen. Its child pages:
+
+- `off` has the switch of Cal's Mac off, with no grant. Priya's Mac has a
+  grant, and Cal's Mac asks first at each command.
+- `fifteen-minutes` has the switch off while the 15 minutes run. The bar
+  gives the time left, 14:32, and the part has no hint.
+- `stopped` has the switch after Cal turned it off. Stopped shows under it:
+  each command from this workspace asks first. The bar names the same
+  result.
+- `not-started` has a start that the Mac did not make. The switch is off,
+  with Not started and the cause that the Mac gave.
+- `not-reached` has a start that found this Mac not available. The page
+  cannot read the settings of this Mac, so the switch is off and disabled.
+  Its result says that each command still asks first.
+- `not-available` has the switch while the page cannot read the settings
+  of this Mac, with no result. The switch is off and disabled, and the
+  words under it say that this Mac is not available.
+
+`mac-app/new-workspace` has the control of New workspace in the Mac app,
+with the switch on, so the create starts the grant. Its variants:
+
+- `mac-access-off` has the switch off, with no hint.
+- `created` has the new workspace Saved carts after a create that started
+  the grant, with the bar that says Until you stop.
+- `not-started` has Saved carts after a create whose grant did not start,
+  with a notice over the composer and Try again.
+- `not-reached` has the same notice for a Mac that was not available.
+
+`app/automations/automation/capabilities` has the control of an automation,
+from the automation capabilities decisions of 18 November 2026. It opens
+above the Capabilities icon in the bar of the prompt box, and a phone opens
+it as a sheet. It has only the Secrets part: the secrets of Acme, with
+FIGMA_TOKEN and VERCEL_TOKEN checked for each run workspace. Under the
+prompt box, a line names the secrets that runs can use with no question,
+and the hint of a pull request trigger follows. The `member` and `admin`
+child pages of `app/automations/automation` have the same line, read-only.
 
 `app/secret-requests` has a request for PROD_DATABASE_URL just above the
 composer, while the tool call waits, and the needs-input mark on the tab

@@ -1,10 +1,7 @@
-import { chatGptSignInCopy } from '../components/settings/chatGptSignInCopy'
+import { chatGptSignInCopy } from '../../../../src/ui/components/settings/chatGptSignInCopy'
 import type { AgentKey } from './agents'
-import {
-  keptModelCheck,
-  proxyModelCheck,
-  type ModelListCheck,
-} from './endpointModels'
+import { keptModelCheck, proxyModelCheck } from './endpointModels'
+import { type ModelListCheck } from '../../../../src/ui/components/settings/modelListCheck'
 
 /**
  * How a user connects an agent: Claude with a subscription token from
@@ -16,38 +13,6 @@ import {
 export const loginKinds = ['token', 'api-key', 'endpoint'] as const
 
 export type LoginKind = (typeof loginKinds)[number]
-
-/**
- * The name of each kind of login, by agent. The ChatGPT sign-in of Codex
- * shows as the plan that Codex then runs on.
- */
-export const loginLabels: Readonly<
-  Record<AgentKey, Readonly<Record<LoginKind, string>>>
-> = {
-  claude: {
-    token: 'Subscription token',
-    'api-key': 'API key',
-    endpoint: 'Own endpoint',
-  },
-  codex: {
-    token: 'ChatGPT plan',
-    'api-key': 'API key',
-    endpoint: 'Own endpoint',
-  },
-}
-
-/**
- * The kinds of each agent in the order of the switch of its Connect form.
- * The first kind starts selected. An OpenAI API key needs no step before
- * it, and the ChatGPT sign-in needs a setting of ChatGPT first, so the API
- * key comes first for Codex.
- */
-export const connectKinds: Readonly<
-  Record<AgentKey, readonly [LoginKind, ...LoginKind[]]>
-> = {
-  claude: ['token', 'api-key', 'endpoint'],
-  codex: ['api-key', 'token', 'endpoint'],
-}
 
 /**
  * A connected own endpoint login, as the account shows it: the host of its
@@ -80,7 +45,7 @@ export const accountLogins: Readonly<Record<AgentKey, AgentLogin>> = {
 }
 
 /** The host of Cal's proxy, which serves both agents. */
-const endpointHost = 'proxy.example.com'
+export const endpointHost = 'proxy.example.com'
 
 /** The logins of the account after Cal connected both agents to the proxy. */
 export const endpointLogins: AgentLogins = {
@@ -149,15 +114,6 @@ export const sharedByDefault: Readonly<
  */
 export const shareNotSavedCause = 'The request failed. Try again.'
 
-/** The command that makes a Claude subscription token on the own computer. */
-export const claudeTokenCommand = 'claude setup-token'
-
-/** The page where a user makes an Anthropic API key for Claude. */
-export const anthropicKeyPage = 'https://console.anthropic.com/settings/keys'
-
-/** The page where a user makes an OpenAI API key for Codex. */
-export const openAiKeyPage = 'https://platform.openai.com/api-keys'
-
 /**
  * How the gateway calls an own endpoint for each agent. The base address of
  * Claude has no `/v1`, and the base address of Codex ends with `/v1`, as
@@ -165,22 +121,11 @@ export const openAiKeyPage = 'https://platform.openai.com/api-keys'
  * the base address.
  */
 export const endpointApis: Readonly<
-  Record<AgentKey, { name: string; basePath: string; requestPath: string }>
+  Record<AgentKey, { basePath: string; requestPath: string }>
 > = {
-  claude: {
-    name: 'the Anthropic Messages API',
-    basePath: '',
-    requestPath: '/v1/messages',
-  },
-  codex: {
-    name: 'the OpenAI Responses API',
-    basePath: '/v1',
-    requestPath: '/responses',
-  },
+  claude: { basePath: '', requestPath: '/v1/messages' },
+  codex: { basePath: '/v1', requestPath: '/responses' },
 }
-
-/** The origin of the example address that the form shows. */
-export const exampleEndpointOrigin = 'https://gateway.example.com'
 
 /**
  * The address of Cal's proxy as Cal types it for each agent, and the base

@@ -1,10 +1,12 @@
-import type { ChatItem, MessageTable } from './conversations'
+import { code, inline, p, table, type Inline } from './agentText'
+import type { ChatItem } from './conversations'
+import { tableLineBreaks } from './tableBreakTurn'
 import { tablesInWork } from './tableWorkTurn'
 
 /**
  * Replies with Markdown tables: the resources of the cloud computer, also
- * while the agent writes them, a short row, a wide table, and the tables
- * among the work of a turn.
+ * while the agent writes them, a short row, a wide table, cells with line
+ * breaks, and the tables among the work of a turn.
  */
 
 const machineQuestion: ChatItem = {
@@ -21,22 +23,22 @@ const machineCheck: ChatItem = {
   status: 'done',
 }
 
-const machineIntro =
-  'I run in a KVM virtual machine with 4 vCPUs, 7.8 GiB of RAM, and a 79 GiB disk.'
+const machineIntro = p(
+  'I run in a KVM virtual machine with 4 vCPUs, 7.8 GiB of RAM, and a 79 GiB disk.',
+)
 
 /** The resources of the cloud computer, as the agent reports them. */
-const resources: MessageTable = {
-  kind: 'table',
-  align: [null, null],
-  head: ['Resource', 'Value'],
-  rows: [
+const resources = table(
+  [null, null],
+  ['Resource', 'Value'],
+  [
     ['Virtualization', 'KVM virtual machine'],
     ['CPU', '4 vCPUs, 1 thread per core, AMD Ryzen 7 9700X'],
     ['Memory', '7.8 GiB total, about 6.0 GiB available, plus 2.0 GiB swap'],
-    ['Disk (`/home`)', '79 GiB total, 54 GiB free'],
+    [['Disk (', code('/home'), ')'], '79 GiB total, 54 GiB free'],
     ['OS', 'Linux 6.8.0-117-generic'],
   ],
-}
+)
 
 /** The items of a turn that still runs, then its working line. */
 function writing(items: ChatItem[], elapsed: string): ChatItem[] {
@@ -52,7 +54,11 @@ const machineTurn: readonly ChatItem[] = [
     blocks: [
       machineIntro,
       resources,
-      'The host has 8 cores, and this machine gets 4 of them. That is enough for `npm run build` and the unit tests. The end-to-end tests run slower on 4 cores.',
+      p(
+        'The host has 8 cores, and this machine gets 4 of them. That is enough for ',
+        code('npm run build'),
+        ' and the unit tests. The end-to-end tests run slower on 4 cores.',
+      ),
     ],
   },
   { kind: 'turn-end', id: 'turn-end', duration: '11s', files: [] },
@@ -82,18 +88,23 @@ const bundleTurn: readonly ChatItem[] = [
     kind: 'agent',
     id: 'bundles',
     blocks: [
-      'The checkout page grows by 7 KB. The places proxy runs on the server, so the browser never loads it.',
-      {
-        kind: 'table',
-        align: [null, 'right', 'right', 'right'],
-        head: ['Bundle', 'Main', 'This branch', 'Change'],
-        rows: [
-          ['`checkout`', '182 KB', '189 KB', '+7 KB'],
-          ['`account`', '96 KB', '96 KB', '0 KB'],
-          ['`api/places`', 'Server only'],
+      p(
+        'The checkout page grows by 7 KB. The places proxy runs on the server, so the browser never loads it.',
+      ),
+      table(
+        [null, 'right', 'right', 'right'],
+        ['Bundle', 'Main', 'This branch', 'Change'],
+        [
+          [code('checkout'), '182 KB', '189 KB', '+7 KB'],
+          [code('account'), '96 KB', '96 KB', '0 KB'],
+          [code('api/places'), 'Server only'],
         ],
-      },
-      'The 7 KB is the `useAddressAutocomplete` hook and the list of suggestions.',
+      ),
+      p(
+        'The 7 KB is the ',
+        code('useAddressAutocomplete'),
+        ' hook and the list of suggestions.',
+      ),
     ],
   },
   { kind: 'turn-end', id: 'turn-end', duration: '1m 52s', files: [] },
@@ -111,8 +122,8 @@ const browsers = [
 ]
 
 /** A test that passed in every browser project. */
-function passedRow(test: string, retries: string, time: string): string[] {
-  return [test, ...browsers.map(() => 'Passed'), retries, time]
+function passedRow(test: string, retries: string, time: string): Inline[] {
+  return [code(test), ...browsers.map(() => 'Passed'), retries, time]
 }
 
 const browserTurn: readonly ChatItem[] = [
@@ -133,23 +144,19 @@ const browserTurn: readonly ChatItem[] = [
     kind: 'agent',
     id: 'browsers',
     blocks: [
-      'Yes. All 21 runs pass. One WebKit run passed on its second try, because a suggestion came late.',
-      {
-        kind: 'table',
-        align: [
-          null,
-          ...browsers.map(() => 'center' as const),
-          'right',
-          'right',
+      p(
+        'Yes. All 21 runs pass. One WebKit run passed on its second try, because a suggestion came late.',
+      ),
+      table(
+        [null, ...browsers.map(() => 'center' as const), 'right', 'right'],
+        ['Test', ...browsers, 'Retries', 'Time'],
+        [
+          passedRow('checkout.spec.ts:14', '0', '41s'),
+          passedRow('checkout.spec.ts:38', '1', '52s'),
+          passedRow('checkout.spec.ts:61', '0', '23s'),
         ],
-        head: ['Test', ...browsers, 'Retries', 'Time'],
-        rows: [
-          passedRow('`checkout.spec.ts:14`', '0', '41s'),
-          passedRow('`checkout.spec.ts:38`', '1', '52s'),
-          passedRow('`checkout.spec.ts:61`', '0', '23s'),
-        ],
-      },
-      'The retry was in the test that fills the address from a suggestion.',
+      ),
+      p('The retry was in the test that fills the address from a suggestion.'),
     ],
   },
   { kind: 'turn-end', id: 'turn-end', duration: '3m 26s', files: [] },
@@ -169,7 +176,7 @@ export const tableConversations = {
       {
         kind: 'agent',
         id: 'machine-answer',
-        blocks: [machineIntro, '| Resource | Value |'],
+        blocks: [machineIntro, p('| Resource | Value |')],
       },
     ],
     '6s',
@@ -187,7 +194,7 @@ export const tableConversations = {
             ...resources,
             rows: [
               ...resources.rows.slice(0, 2),
-              ['Memory', '7.8 GiB total, about 6.0 GiB'],
+              [inline('Memory'), inline('7.8 GiB total, about 6.0 GiB')],
             ],
           },
         ],
@@ -197,5 +204,6 @@ export const tableConversations = {
   ),
   'table-short-row': bundleTurn,
   'table-wide': browserTurn,
+  'table-line-breaks': tableLineBreaks,
   'tables-in-work': tablesInWork,
 } as const satisfies Record<string, readonly ChatItem[]>

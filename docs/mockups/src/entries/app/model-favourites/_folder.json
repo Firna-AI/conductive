@@ -1,0 +1,10 @@
+{
+  "order": [
+    "all-models",
+    "changed",
+    "endpoint",
+    "no-favourites",
+    "new-account",
+    "preferences"
+  ]
+}

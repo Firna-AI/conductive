@@ -1,7 +1,9 @@
 //! Controlled repository captures and a recording agent-command owner.
 
 use std::collections::BTreeMap;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use async_trait::async_trait;
 use cnd_runner::emitter::{EventEmitter, SavingEmitter};
@@ -12,39 +14,60 @@ use cnd_runner::reports::prepare::{ReportFilter, UnfilteredReports};
 use cnd_runner::repository::error;
 use cnd_runner::repository::service::{Checkpoint, Repository, RepositorySnapshot};
 use cnd_runner::runtime::CommandHandler;
+use cnd_runner::skills::boundary::SkillReports;
+use cnd_runner::watcher::service::ReportWatches;
 use cnd_runner_interface::file_changes::{ChangedFile, ChangesResponse, ChangesResponseSummary};
 use cnd_runner_interface::file_tree::{FileEntry, FileEntryKind};
 use cnd_runner_interface::files::{DiffResponse, FileResponse};
+use cnd_runner_interface::runner::RunnerEvent;
 use cnd_runner_interface::runner_commands::{
     RunnerCommand, RunnerControlCommand, RunnerReportKind, RunnerReportRefresh,
 };
 use futures_util::future::BoxFuture;
-use tokio::sync::{Notify, mpsc};
+use tokio::sync::{Notify, mpsc, watch};
+use tokio::time::timeout;
 
 use crate::support::fixture::{FixedClock, Fixture};
 
 pub(super) struct Source {
     pub current: Mutex<RepositorySnapshot>,
     pub hold: Mutex<Option<Arc<Gate>>>,
+    pub scans: AtomicUsize,
+    canceled: watch::Sender<bool>,
 }
 
 #[derive(Default)]
 pub(super) struct Gate {
     pub arrived: Notify,
     pub release: Notify,
+    pub canceled: Notify,
 }
 
 #[async_trait]
 impl Repository for Source {
+    fn cancel(&self) {
+        self.canceled.send_replace(true);
+    }
     async fn prepare_context(&self) -> error::Result<()> {
         Ok(())
     }
     async fn snapshot(&self, _: String) -> error::Result<RepositorySnapshot> {
+        self.scans.fetch_add(1, Ordering::Relaxed);
+        let mut canceled = self.canceled.subscribe();
+        if *canceled.borrow() {
+            return Err(error::Error::Canceled);
+        }
         let current = self.current.lock().unwrap().clone();
         let gate = self.hold.lock().unwrap().take();
         if let Some(gate) = gate {
             gate.arrived.notify_one();
-            gate.release.notified().await;
+            tokio::select! {
+                _ = canceled.wait_for(|stopped| *stopped) => {
+                    gate.canceled.notify_one();
+                    return Err(error::Error::Canceled);
+                }
+                _ = gate.release.notified() => {}
+            }
         }
         Ok(current)
     }
@@ -95,6 +118,7 @@ pub(super) fn snapshot(paths: Vec<String>) -> RepositorySnapshot {
                 change: None,
             })
             .collect(),
+        context_only_paths: Default::default(),
         changes: ChangesResponse {
             base_branch: "main".into(),
             display_base_branch: None,
@@ -106,6 +130,7 @@ pub(super) fn snapshot(paths: Vec<String>) -> RepositorySnapshot {
                 added: 0,
                 removed: 0,
             },
+            omitted: None,
         },
         identities: BTreeMap::new(),
         read_identities: BTreeMap::new(),
@@ -117,6 +142,8 @@ pub(super) fn source(paths: Vec<String>) -> Arc<Source> {
     Arc::new(Source {
         current: Mutex::new(snapshot(paths)),
         hold: Mutex::new(None),
+        scans: AtomicUsize::new(0),
+        canceled: watch::channel(false).0,
     })
 }
 
@@ -135,6 +162,40 @@ pub(super) async fn files(
     ))
 }
 
+struct TrackedReceipts {
+    emitter: SavingEmitter,
+    receipts: mpsc::UnboundedSender<String>,
+}
+
+#[async_trait]
+impl EventEmitter for TrackedReceipts {
+    async fn emit(&self, events: Vec<RunnerEvent>, receipt: Option<String>) -> Result<()> {
+        self.emitter.emit(events, receipt.clone()).await?;
+        if let Some(receipt) = receipt {
+            self.receipts.send(receipt).unwrap();
+        }
+        Ok(())
+    }
+}
+
+pub(super) fn track_receipts(
+    h: &Fixture,
+) -> (Arc<dyn EventEmitter>, mpsc::UnboundedReceiver<String>) {
+    let (receipts, recorded) = mpsc::unbounded_channel();
+    let emitter = TrackedReceipts {
+        emitter: SavingEmitter::new(h.link.clone()),
+        receipts,
+    };
+    (Arc::new(emitter), recorded)
+}
+
+pub(super) async fn next_receipt(receipts: &mut mpsc::UnboundedReceiver<String>) -> String {
+    timeout(Duration::from_secs(10), receipts.recv())
+        .await
+        .expect("report receipt hang guard")
+        .expect("report receipt channel closed")
+}
+
 pub(super) async fn handler(
     h: &Fixture,
     files: Arc<dyn FileReports>,
@@ -142,8 +203,32 @@ pub(super) async fn handler(
     Arc<dyn CommandHandler>,
     mpsc::UnboundedReceiver<RunnerCommand>,
 ) {
+    handler_with_skills(h, files, None).await
+}
+
+pub(super) async fn handler_with_skills(
+    h: &Fixture,
+    files: Arc<dyn FileReports>,
+    skills: Option<Arc<dyn SkillReports>>,
+) -> (
+    Arc<dyn CommandHandler>,
+    mpsc::UnboundedReceiver<RunnerCommand>,
+) {
+    handler_with_reports(h, files, skills, None).await
+}
+
+pub(super) async fn handler_with_reports(
+    h: &Fixture,
+    files: Arc<dyn FileReports>,
+    skills: Option<Arc<dyn SkillReports>>,
+    watches: Option<Arc<dyn ReportWatches>>,
+) -> (
+    Arc<dyn CommandHandler>,
+    mpsc::UnboundedReceiver<RunnerCommand>,
+) {
     let (send, receive) = mpsc::unbounded_channel();
     let dependencies = ReportDependencies {
+        skills,
         files,
         ports: None,
         emitter: Arc::new(SavingEmitter::new(h.link.clone())),
@@ -151,7 +236,7 @@ pub(super) async fn handler(
         store: h.store.clone(),
         clock: Arc::new(FixedClock),
         filter: Arc::new(UnfilteredReports),
-        watches: None,
+        watches,
         next: Arc::new(Next(send)),
     };
     (

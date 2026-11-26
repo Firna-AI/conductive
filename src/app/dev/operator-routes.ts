@@ -25,8 +25,10 @@ import {
   type OperatorRouteKit,
 } from './operator-waitlist-routes'
 import { providerRoutes } from './provider-routes'
+import { idleStopRoutes } from './idle-stop-routes'
 import { ID, json, RouteError, type Route } from './router'
 import { signupRoutes } from './signup-routes'
+import { followSuspension, switchRoutes } from './switch-routes'
 
 /** The samples count their days back from the first time of the dev clock. */
 const BASE = FAKE_TIME
@@ -40,7 +42,8 @@ function ids(count: number, prefix: string): string[] {
  * mockups, and the orgs that Create org made in the page, which Suspend and
  * Lift change, the waitlist and the codes of `operatorWaitlistRoutes`, the
  * pause and the waitlist switch of `signupRoutes`, and the provider
- * accounts of `providerRoutes`. Only an operator, from `operator=1`, gets
+ * accounts of `providerRoutes`, and the switches of their accounts of
+ * `switchRoutes`. Only an operator, from `operator=1`, gets
  * an answer, as the Worker says. A suspension of an org of the user also
  * suspends it in the state of the fake, so the fake refuses each write of
  * that org with `org_suspended`. The open app does not read its orgs
@@ -141,6 +144,7 @@ export function operatorRoutes(backend: DevBackend): Route[] {
         }
         suspensions.set(org.id, suspension)
         follow(org.id, suspension.suspendedAt)
+        followSuspension(state.switches, org.id, true, backend.now())
         const reply: OrgSuspensionResponse = {
           orgId: org.id,
           suspendedAt: suspension.suspendedAt,
@@ -161,6 +165,8 @@ export function operatorRoutes(backend: DevBackend): Route[] {
         const org = orgOf(params.org)
         const lifted = records().orgSuspensions.delete(org.id)
         follow(org.id, null)
+        if (lifted)
+          followSuspension(state.switches, org.id, false, backend.now())
         return json({
           orgId: org.id,
           liftedAt: lifted ? backend.now() : null,
@@ -204,5 +210,13 @@ export function operatorRoutes(backend: DevBackend): Route[] {
     ...operatorWaitlistRoutes(kit),
     ...signupRoutes(kit),
     ...providerRoutes(backend, guard, operator),
+    ...switchRoutes(state.switches, {
+      now: backend.now,
+      newId: backend.newId,
+      accounts: () => state.providers.accounts,
+      orgOf,
+      operator,
+    }),
+    ...idleStopRoutes(backend, guard, operator),
   ]
 }

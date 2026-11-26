@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import card from '../../../docs/mockups/src/components/chat/MacCommand.module.css'
+import card from '../../ui/components/chat/MacCommand.module.css'
 import { ActionButton } from '../ui/actions'
 import { useClipped } from './use-clipped'
 

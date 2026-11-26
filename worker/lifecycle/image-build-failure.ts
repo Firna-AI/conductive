@@ -13,6 +13,8 @@ import {
 import { cleanupBuild } from './build-execution'
 import type { ImageRuntime } from './image-builds'
 import { cleanupBuildImageSources } from './image-sources/cleanup'
+import { ImageSourceFailure } from './image-sources/materialize'
+import { readSourceRun, sourceRunFailure } from './image-sources/run-data'
 import { saveImageRetry } from './image-retry-data'
 import { scheduleIdleImage } from './image-schedule'
 import { IMAGE_BUILD_TIME_LIMIT_MS, JobTimeLimit } from './job-time-limit'
@@ -22,6 +24,7 @@ import {
   transientProviderError,
 } from './provider-retry'
 import { liveBuildComputers } from './computer-ledger'
+import { switchBuildFailureCause } from './provider-switch-end'
 
 export async function failUnscheduledBuild(
   runtime: ImageRuntime,
@@ -55,7 +58,8 @@ export async function handleImageBuildFailure(
     ['user_suspended', 'org_suspended'].includes(error.code)
   const failure =
     !suspended &&
-    dependencies.now() >= job.startedAt + IMAGE_BUILD_TIME_LIMIT_MS
+    dependencies.now() >=
+      (job.executionStartedAt ?? job.startedAt) + IMAGE_BUILD_TIME_LIMIT_MS
       ? new JobTimeLimit('build')
       : error
   const retry = nextProviderRetry(
@@ -89,13 +93,31 @@ export async function handleImageBuildFailure(
       error instanceof ProviderError &&
       !transientProviderError(error)
     )
+  const sourceFailure =
+    job.phase !== 'sources'
+      ? null
+      : error instanceof ImageSourceFailure
+        ? error
+        : failure instanceof JobTimeLimit
+          ? sourceRunFailure(await readSourceRun(env.DB, buildId))
+          : null
   warnWorker({
     kind: 'image_build_failed',
     buildId: WarningId.checked(buildId),
     phase: job.phase,
+    sourceStep:
+      sourceFailure?.sourceStep ?? (job.phase === 'sources' ? 'unknown' : null),
+    githubStatus: sourceFailure?.githubStatus ?? null,
     error: errorSummary(failure),
   })
-  await failBuild(env.DB, buildId, message, dependencies.now())
+  await failBuild(env.DB, buildId, message, dependencies.now(), {
+    cause: switchBuildFailureCause(failure),
+    wait: suspended
+      ? failure instanceof HttpError && failure.code === 'org_suspended'
+        ? 'suspended'
+        : 'admin'
+      : undefined,
+  })
   if (!unresolvedAllocation) await updateBuildJob(env.DB, buildId, 'cleanup')
   if (!(await cleanupBuildImageSources(env, dependencies.fetch, buildId)))
     return false

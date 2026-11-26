@@ -4,8 +4,8 @@ These parts show the GitHub state of a workspace branch: the pull request bar
 of the right column, the compact pull request row of a phone, and the Checks
 tab. The bar shows the main action of each state beside its links to
 GitHub: a fixed prompt for the agent, Merge, Ready for review, or Continue
-and Archive. On a
-phone, the actions top the Checks tab. [GitHub banner](../../docs/protocol/github-banner.md)
+and Archive. On a phone, the actions top the Checks tab, under the branch
+and its base while the branch has no pull request. [GitHub banner](../../docs/protocol/github-banner.md)
 states the requirements, and the mockups under `app/banner` draw them.
 [The actions of the bar](actions.md) gives their state and their rules.
 
@@ -48,12 +48,10 @@ const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly
   page. The fake API's `server.events.subscribe` has this shape. The
   workspace screen gives the GitHub events of the ordered stream of the
   workspace, each checked with the readers of the replies. A new event goes
-  as a live message. The stream replays the stored history of the
-  workspace each time that it opens, and that history can hold many old
-  GitHub states. So only the newest replayed GitHub state goes to the
-  store, as one `history` message at the end of each replay. The bar then
-  never steps through the old states, and they never cancel the read of
-  the current state.
+  as a live message. Each replay gives the store one `history` message
+  with the newest GitHub event of its pages. A new subscriber to a seeded
+  stream gets an empty history at the stream's current complete number.
+  The store starts its own stored and fresh reads in its usual order.
 - `delay` is `AppServices.delay`, the timer of the app. The store waits with
   it before each [backup read](#backup-reads). The development page gives
   `browserDelay`.
@@ -63,7 +61,10 @@ const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly
   Give it a value that changes each minute.
 - `controls` gives the actions, the link, and the message of the state that
   shows, from the one action state of the screen, as
-  [The actions of the bar](actions.md) says. The bar and the row draw only
+  [The actions of the bar](actions.md) says. It also gives the merge queue
+  of the workspace: Add to merge queue, and the line of a queued
+  workspace with Remove from queue, as
+  [The merge queue](actions.md#the-merge-queue) says. The bar and the row draw only
   what it gives. After a merge, Archive shows only to the workspace owner
   and the admins. `archive` runs the app's Archive, which archives at once
   with one request, and `archiving` makes the button busy while it runs.
@@ -82,6 +83,12 @@ const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly
   `onOpenChecks` lets the app's router open the tab in place. A branch
   without a pull request opens the tab too, when the bar has an action, so
   Create PR stays one tap away.
+- `ChecksActions` tops the Checks tab of a phone: the message of the bar,
+  then its actions and its link to GitHub. While the branch has no pull
+  request, the branch and its base stand above the actions, also when the
+  bar has none, as
+  [The branch and its base on a phone](../../docs/protocol/github-banner-layouts.md#the-branch-and-its-base-on-a-phone)
+  says. The names wrap, so each name shows in full.
 - A failed load shows one Try again on each screen: in the bar on desktop,
   and in the row on a phone. The Checks tab names the error without its own
   button, so keep the bar or the row on the screen with the Checks tab.
@@ -92,7 +99,7 @@ const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly
 The app shell provides the rest of the design:
 
 - the `--ui-*` design tokens and the Firna theme of the colour scheme, as
-  `docs/mockups/src/theme.ts` makes them
+  `src/ui/theme.ts` makes them
 - a right column that is a size container (`container-type: inline-size`), so
   that a narrow column drops the detail and the link labels of the bar
 - `--ui-touch-min: 40px` on a phone, as the mockups set it. The phone row is
@@ -109,6 +116,10 @@ store. `BarActions` calls it, as [The actions of the bar](actions.md) says.
   so it stays out of the shared GitHub store and its events.
 - `merge` starts a merge of the head that the member saw. It returns a
   pending app job with its `mergeId`, or a completed merge.
+- The bar reads the count of open pull requests that land in a stack
+  merge and whether a lower pull request is queued. `mergeQueue` sends the
+  checked count and head when a member merges an unqueued top through the
+  queue of this org.
 - `mergeResult` reads that job once. Only the member who started the job
   can read it.
 - A refusal throws `GitHubActionError` with the app's error `code` and its
@@ -148,7 +159,8 @@ The store applies them in this way:
   stored state.
   `useGitHubState` connects the store and subscribes the views through
   `useWorkspaceStore` in `src/app/workspace-store.ts`.
-- A live GitHub event shows at once, and it cancels a read that runs.
+- A live GitHub event shows its banner and checks at once. An in-flight
+  read can still update the queue for the same pull request.
 - A history that comes before a read shows at once. The reply of the read
   then replaces it, because the read returns the current state.
 - A history that comes during a read, or after its reply shows, has no known
@@ -169,8 +181,8 @@ connected:
 
 - The store waits five minutes after a read ends, then reads again. The
   wait is a choice of the app, not a product limit.
-- A live event that cancels a read starts the wait too. A live event keeps
-  a wait that runs, so events never put off a backup read.
+- A live event starts the wait when no read or timer runs. A live event
+  keeps a wait that runs, so events never put off a backup read.
 - A backup read never overlaps another read, because each read stops the
   wait.
 - A backup read shows no loading. When it fails, the state or the error that
@@ -193,15 +205,35 @@ mounts it, and the production build leaves it out.
   chat that sends the prompts, and the files store of the local work.
   `access` is `write`, `read`, or `unknown`, and `method` is a merge method
   or `none`. `merge` chooses how a merge ends, `work` the local work, `turn`
-  a turn that runs, and `continue` how Continue ends. `scenarioFetch` of
-  `src/test-support/fake-bar-dev.ts` answers as the Worker does.
+  a turn that runs, and `continue` how Continue ends. `branches` is
+  `plain`, the default, `masked`, `masked-continue`, or
+  `masked-repository`. `masked` gives the target branch a fake secret
+  value and its label in the stored and fresh replies, the live events,
+  and the question of Continue. The screens show "[redacted]".
+  Prompts outside the queue use the real name. The workspace branch
+  stays plain, because the screen compares it with the workspace record.
+  The question of `masked` has no label of its own, as from an
+  older Worker, so the dialog takes the label of the bar.
+  `masked-continue` also gives the value and its label to the workspace
+  branch, to a changed file of the question, and to the new branch. It
+  gives them to the default branch that Continue starts from too, which
+  differs from the target. The question, the note, its copy, and the words
+  of a clash then show the labels. `masked-repository` gives the value and
+  its label to the workspace branch and the target, as `masked-continue`
+  does, and keeps the names of Continue plain. Only the workspace
+  development page gives them to the names of a repository change too.
+  `src/test-support/fake-branch-names.ts` holds these rules.
+  `scenarioFetch` of `src/test-support/fake-bar-dev.ts` answers as the
+  Worker does, also on the workspace development page.
 - Under the frames, the page shows the last message of the chat, such as
   the prompt of an action, and the question of Continue with its Cancel and
   Continue anyway. The [workspace development page](../shell/workspace/development-page.md)
   shows the actions in the whole screen.
 - `sample` changes the fake data to other valid data: `every-check` gives
   one check in each of the nine states, `no-checks` a pull request without
-  checks, and `long-base` a long target branch. `fake`, the default, keeps the data of the fake API.
+  checks, and `long-base` a long target branch. `base-moved` gives a base
+  that GitHub deleted, whose line shows under the bar of `none` and
+  `no-commits`. `fake`, the default, keeps the data of the fake API.
   The live events of a sample carry the same data as its replies.
 - Send gives a live `github.updated` event. With `github=error`, "Let GitHub
   answer" makes the next Try again succeed.
@@ -237,7 +269,11 @@ mounts it, and the production build leaves it out.
 - [Shared state comparison](../shared/github-state.ts) compares two GitHub states, without the banner time.
 - `githubClient.ts` and `githubParse.ts`: read the API replies of the
   banner, the checks, and the stored state, and check them against the
-  contract, with the head commit of the pull request.
+  contract, with the head commit of the pull request. They keep the
+  optional labels `displayBranch`, `displayBaseBranch`, and
+  `displayBaseMoved` of the banner, and the optional queue state of a
+  queued workspace, which the snapshot keeps as `queue`. The queue state
+  can give filtered branch labels and the rebase input from queue order.
 - `githubActions.ts` and `githubActionParse.ts`: the action client and the
   checks of its replies. `githubActions.test.ts` checks the requests, the
   replies, the refusal codes, and replies outside the contract.
@@ -245,7 +281,10 @@ mounts it, and the production build leaves it out.
   `ChecksList.tsx`: the views.
 - `bannerStatus.ts` and `checkStatus.ts`: the words, the icons, and the tints
   of each state. The `tint` of `barView.ts` gives the main action the tint
-  of its bar.
+  of its bar. `branchLabel` and `baseBranchLabel` give the names that a
+  screen shows: the label of each branch, which hides each secret value, or
+  the real name when the banner has none. Prompts and requests keep the
+  real names.
 - `bannerParts.tsx`: the parts of the bar. `PullRequestNumber` links the
   number of a pull request to GitHub, so the desktop bar of a pull request
   shows no other link to it.

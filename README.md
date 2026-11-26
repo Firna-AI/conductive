@@ -38,8 +38,8 @@ feature that is not complete yet says so.
   An operator can turn the waitlist off. Each new person then gets in at
   once, unless sign-ups are paused.
 - Every cloud computer runs in an account of the app with a sandbox
-  provider, Boat or E2B, so users need no provider account. Each org keeps
-  one provider account for its whole life.
+  provider, Boat or E2B, so users need no provider account. Each org runs
+  in one provider account at a time.
 - A new workspace starts as an empty chat. The first message creates it,
   with its own cloud computer and branch.
 - Chat with agents powered by Claude and Codex. A workspace holds several

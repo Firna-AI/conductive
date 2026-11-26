@@ -1,5 +1,5 @@
-import type { Viewport } from '@mokly/mokly'
-import { classes } from '../common/classes'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import styles from './SectionIntro.module.css'
 
 /**

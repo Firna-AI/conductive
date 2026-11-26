@@ -26,10 +26,14 @@ function orderedDetailReply(
   backend: DevBackend,
   org: OrgState,
   workspaceId: string,
+  includeSeed = false,
 ): Response {
+  const order = includeSeed
+    ? backend.events.stateRead(workspaceId)
+    : { eventNumber: backend.events.last(workspaceId) }
   return json({
     ...workspaceDetail(org, workspaceId),
-    eventNumber: backend.eventNumber,
+    ...order,
   } satisfies OrderedWorkspaceResponse)
 }
 
@@ -43,7 +47,7 @@ function readWorkspace(
   if (current.state !== 'stopped' && backend.state.stopAfterMs !== null) {
     stopLater(backend, org, workspaceId, backend.state.stopAfterMs)
   }
-  return orderedDetailReply(backend, org, workspaceId)
+  return orderedDetailReply(backend, org, workspaceId, true)
 }
 
 /** Output that the open workspace shows counts as read. */
@@ -77,6 +81,14 @@ export function workspaceRoutes(backend: DevBackend): Route[] {
       answer: ({ params }) =>
         json({
           workspaces: orgOf(params).workspaces,
+          repositories: orgOf(params).repositories.map(
+            ({ id, fullName, defaultBranch, selected }) => ({
+              id,
+              fullName,
+              defaultBranch,
+              selected,
+            }),
+          ),
         } satisfies WorkspacesResponse),
     },
     {

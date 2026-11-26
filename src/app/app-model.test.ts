@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from 'vitest'
 import { ACCOUNT_PATHS } from '../shared/account'
 import { API_PATHS } from '../shared/api'
+import { repositoryBranchesPath } from '../shared/branches'
 import { workspacesPath } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
 import {
@@ -234,5 +235,25 @@ describe('AppModel', () => {
 
     expect(kept).toEqual({ canWrite: true, mergeMethod: 'squash' })
     expect(access.get()).toBeUndefined()
+  })
+
+  test('another person who signs in gets no branch list of the person before', async () => {
+    const server = new FakeApiServer()
+    server.json('GET', repositoryBranchesPath(FAKE_IDS.org, 'storefront'), {
+      branches: [{ name: 'calummoore/private-work', committedAt: null }],
+    })
+    const app = new AppModel(testServices(server))
+    await app.start()
+    const lists = app.org(FAKE_IDS.org).branches
+    await lists.of('storefront').read()
+    const kept = lists.of('storefront').store.get().state
+
+    server.signIn(fakeUsers[1])
+    await app.start()
+
+    expect({ kept, after: lists.of('storefront').store.get() }).toEqual({
+      kept: 'ready',
+      after: { state: 'loading' },
+    })
   })
 })

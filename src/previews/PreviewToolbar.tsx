@@ -2,13 +2,13 @@ import type { Preview } from '../shared/generated/Preview'
 import { useRef, useState, type MouseEvent } from 'react'
 import { Plus, RotateCw, X } from 'lucide-react'
 import type { ListeningPort } from '../shared/generated/ListeningPort'
-import { classes } from '../../docs/mockups/src/components/common/classes'
+import { classes } from '../ui/components/common/classes'
 import {
   previewTabLabel,
   serverDescription,
-} from '../../docs/mockups/src/components/tools/previewCopy'
-import tabStyles from '../../docs/mockups/src/components/tools/PreviewTabs.module.css'
-import tabScroll from '../../docs/mockups/src/components/workspace/TabScroll.module.css'
+} from '../ui/components/tools/previewCopy'
+import tabStyles from '../ui/components/tools/PreviewTabs.module.css'
+import tabScroll from '../ui/components/workspace/TabScroll.module.css'
 import { useRowScroll } from '../chat/components/row-scroll'
 import { TabNodes } from '../chat/components/tab-nodes'
 

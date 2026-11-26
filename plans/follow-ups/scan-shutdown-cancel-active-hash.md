@@ -1,0 +1,36 @@
+# Shutdown waits for file hashes in progress
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-21, from branch `calummoore/no-response-issue-l1pn`, review finding 3.
+- **Location:** `crates/cnd-runner/src/repository/io.rs:198-239` (`identity`, with the read loop at `:215-224`), `crates/cnd-runner/src/repository/snapshot.rs:40-71` (`read_identities`, with the cancellation check at `:53`), `crates/cnd-runner/src/reports/files.rs:259-263` (`FileReporter::close`), `crates/cnd-runner/tests/core/reports/support.rs:46` (the test repository), `crates/cnd-cli/src/main.rs:19` (the runtime).
+- **Reason:** A Medium product bug with the likelihood Rare waits for a later branch under the fix rule. The automatic restart of the Worker already recovers a runner that stays away.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **File reporter:** the part of the runner that scans the repository files and sends file updates to the Worker (`crates/cnd-runner/src/reports/files.rs`).
+  - **File hash:** the SHA-256 of the bytes of a file, which the reporter compares between two scans to find the changed files.
+  - **Install at idle:** the install of a newer release that the runner makes in its own process after its workspace was idle for 2 minutes ("Installs at idle" in `docs/protocol/sandbox-software.md`).
+  - **Automatic restart:** the restart that the Worker starts by itself when the runner stays away while a message waits ("Automatic restart" in `docs/protocol/restart-the-software.md`).
+- **Background:**
+  - For an install at idle, the runner closes its connection and ends its work as at a shutdown. Then it runs the new release.
+  - At a shutdown, `ReportCommandHandler::shutdown` closes the file reporter. `FileReporter::close` marks the reporter stopped, cancels the repository scan, then waits for the scan that runs (`files.rs:259-263`).
+  - A scan reads the hashes of up to 16 files at once (`IDENTITY_READ_CONCURRENCY` in `snapshot.rs`). It checks the cancellation before it starts to read each file (`snapshot.rs:53`). `read_identities` waits for each read that it started before it returns.
+  - `identity` in `io.rs` hashes a file in a blocking task, with a loop of 64 KiB reads. The loop has no cancellation check, so a hash that started runs to the end of its file (`io.rs:215-224`).
+  - The runner keeps the hash of each unchanged file in memory and reuses it. So full reads happen mostly at the first scan of a new runner process, and for changed files.
+  - The shutdown tests use a test repository that supplies its own immediate cancellation (`Source` in `crates/cnd-runner/tests/core/reports/support.rs`). So no test covers a cancellation while a real scan hashes a file.
+- **Problem:** The shutdown waits until each hash that started ends, at most 16 files. A large or slow file, such as a large file under `.context/`, holds up the install at idle after the runner closed its connection.
+- **Impact if no action:** The runner stays away during that wait. A waiting message then depends on the automatic restart of the Worker, which starts only after 3 minutes away.
+- **Root question:** How does each runner shutdown end within a bound, whatever step the active scan is in?
+- **Options:**
+  - **A.** Pass the existing cancellation signal to the hash reader, and check it between the reads of 64 KiB. Test a cancellation after the real scan started to read a file. Effort: Small.
+  - **B.** Give each disk operation of the scan one cancellation contract: the hashes, the copy of the Git index, and the file listing. After A, only the capture loops in `snapshot.rs:104-112` and the copy of the index in `temporary_index` in `io.rs` still lack a check. Effort: Medium.
+  - **C.** Run the repository scans in a child process that the shutdown can end and reap. Effort: Large.
+  - **D.** Hash only the files up to the read limit of the workspace tools, 5 MiB. Identify each larger file by the metadata of its descriptor. A file tab cannot read a larger file, so its hash serves no reload. D conflicts with option A of `plans/follow-ups/hash-reuse-misses-mapped-writes.md` for files above 5 MiB, but not with its chosen option F. Effort: Small.
+  - **E.** Put a time limit of a few seconds on each shutdown wait for scan work. At the limit, stop the wait, log a warning, and go on with the shutdown. Also give the runtime of `crates/cnd-cli/src/main.rs` a shutdown with a time limit, so that a blocking read cannot hold the exit. Effort: Medium.
+- **Left out:** An abort of the task that waits for a blocking read, because the blocking read keeps running.
+- **Wider fix:** E. Each shutdown then ends within a bound, whatever step the scan is in, also a step that a later change adds.
+- **Previous examples:** Commit `5f513c06d` added the parallel scan reads, and made the scan wait for the reads that it started (`crates/cnd-runner/tests/repository/scan_reads_tests.rs`).
+- **Related:** `plans/follow-ups/hash-reuse-misses-mapped-writes.md`: the same code, `identity` in `io.rs:198-239`. Land that fix with this one, or after it. Option D here conflicts with its option A for files above 5 MiB.
+- **Recommendation:** A. It stops the active hash with no change of the scan order. E best protects each shutdown.
+- **Action:** fix after merge, apply A, with E as its wider fix, because a Medium product bug with the likelihood Rare gets fix after merge.

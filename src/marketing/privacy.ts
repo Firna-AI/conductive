@@ -1,4 +1,4 @@
-import { productName } from '../../docs/mockups/src/brand'
+import { productName } from '../shared/brand'
 import {
   legalAddress,
   legalOperator,
@@ -10,6 +10,7 @@ import {
   type LegalDocument,
 } from './legal-text'
 import { privacyRecipientsSection } from './privacy-recipients'
+import { privacySkillsSection } from './privacy-skills'
 import { privacyUsesSection } from './privacy-uses'
 
 /**
@@ -24,7 +25,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 18 November 2026.`,
+  it uses it, and who gets it. Effective date: 24 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -42,6 +43,7 @@ export const privacyDocument: LegalDocument = {
     },
     privacyUsesSection,
     privacyRecipientsSection,
+    privacySkillsSection,
     {
       title: 'Transfers to other countries',
       blocks: [
@@ -67,7 +69,7 @@ export const privacyDocument: LegalDocument = {
           text`The cloud computer providers are companies registered in the
             United States. ${productName} uses their European Union regions
             for cloud computers and saved snapshots. These locations include
-            Belgium, Germany, Finland, and France. UK adequacy regulations
+            Germany, Finland, and France. UK adequacy regulations
             approve transfers to countries in the European Economic Area.
             Other provider operations can involve processing outside that
             area.`,
@@ -96,6 +98,12 @@ export const privacyDocument: LegalDocument = {
           then deletes the cloud computer, unless a member restores the
           workspace before then. At the end of the 14 days, the workspace
           leaves the Archived group and the command palette.`,
+        paragraph`Service definitions and raw logs use memory in the running
+          cloud computer. Retained logs hold at most 10 MiB in total per
+          service. A computer stop discards these definitions, logs, and
+          the current service list. They do not enter saved disks and do
+          not restore themselves after a resume. A program can still write
+          copied output or secrets to its own files.`,
         paragraph`Removing a workspace from the list keeps its chat history
           until the org is deleted. A direct link or a chat link still opens
           its read-only chat.`,
@@ -111,10 +119,12 @@ export const privacyDocument: LegalDocument = {
         paragraph`Account records, the latest Terms acceptance, the time of
           your last activity, and suspension records do not automatically expire when you stop
           using ${productName}. Workspace chat history, Mac command records,
-          and secret request records stay while their org exists, including
+          secret request records, and merge records stay while their org
+          exists, including
           while a cloud computer is stopped or a workspace is removed. When
           ${productName} passes on model requests and their answers, it keeps
-          no copy of them.`,
+          no copy of them. ${productName} deletes each record of the steps of
+          a build or a start after 90 days.`,
         paragraph`A secret in the Secrets settings of an org stays until a
           member who may delete it deletes it. A value that a member gives
           an agent for 15 minutes stays for 15 minutes. A value for a
@@ -130,6 +140,10 @@ export const privacyDocument: LegalDocument = {
           your browser until you clear its saved data. The providers above
           can keep their own records under their
           terms and privacy notices.`,
+        paragraph`For a pending merge queue stack cleanup, ${productName}
+          keeps the workspace and the member whose action caused the entry
+          to leave. It uses this record to choose an account for cleanup
+          retries. It clears the record when the stack is gone.`,
         paragraph`The team keeps each feedback email in its inbox while it
           helps to improve ${productName}. It deletes the email when it no
           longer helps, or when the sender asks. ${productName} keeps no copy
@@ -175,8 +189,9 @@ export const privacyDocument: LegalDocument = {
           text`An env var is secret until an admin clears its mark. Before
             ${productName} puts the text of agent output in the chat history
             or on a screen, it hides each exact copy of a secret value in it.
-            It also hides such a copy in each start log that it shows, and in
-            the names and folders of the servers that it lists. It does not
+            It also hides such a copy in each start log that it shows, in
+            the server and service details that it lists, in service logs,
+            and in the names and descriptions of the skills that it lists. It does not
             hide a changed or encoded value, or a value in a picture that an
             agent answer shows. A change of the mark applies at the next start
             of a cloud computer.`,
@@ -187,9 +202,10 @@ export const privacyDocument: LegalDocument = {
             of a secret value in these paths and names. Your browser still gets
             the real values, so a secret value can show in the data that your
             browser gets and sends (decision 145).`,
-          text`Agent output, start logs, and the lists of servers can show
-            the value of an env var that is not secret. Each member who reads
-            them then sees that value. The agents and each member with a terminal can read every
+          text`Agent output, start logs, and service logs can show the value
+            of an env var that is not secret. The lists of servers, services,
+            and skills can show it too. Each member who reads them then sees
+            that value. The agents and each member with a terminal can read every
             env var value in the cloud computers. Secret values can also stay
             on the disk of a cloud computer, for example in its agent sessions
             and its agent output.`,
@@ -197,6 +213,12 @@ export const privacyDocument: LegalDocument = {
             its value is in the cloud computer. Programs there, and each
             member with a terminal, can read it then. The command can also
             write it to a file on the disk of the cloud computer.`,
+          text`A service uses the org environment values installed at this
+            computer start, plus values supplied for that service. It does
+            not inherit the agent's credentials, turn context, or secrets
+            added to an approved command. It runs as the same computer user
+            as other programs and can still read available files and
+            credentials, including those of later turns.`,
         ),
       ],
     },

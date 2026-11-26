@@ -41,11 +41,16 @@ says. The copy of a transcript gives that session's link.
 - `toolSessionSummary` in `session-summary.ts` builds each session entry:
   its ID, link, title, choice, starter, state, and closed mark.
 - `getAgentMessage` finds the session first, so an unknown session gives
-  HTTP 404 `session_not_found`. A message that the store does not hold, or
-  that belongs to another session, gives HTTP 404 `message_not_found`.
-- A message reply gives the stored ID, session, sender, text, state, and
-  acceptance time. Its `turnId` comes from the stored message-turn record,
-  else it is `null`.
+  HTTP 404 `session_not_found`. It then reads the stored member message.
+  When the request query sets `agentMessages=true`, it next looks for a
+  finished agent message in the paged history of the session, with
+  `finishedAgentMessage` from `worker/chat/agent-message.ts`. Anything else
+  gives HTTP 404 `message_not_found`.
+- A member reply, with `author: "member"`, gives the stored ID, session,
+  sender, text, state, and acceptance time. Its `turnId` comes from the
+  stored message-turn record, else it is `null`.
+- An agent reply, with `author: "agent"`, gives the ID, session, text, and
+  time of the `assistant.completed` event, and the turn of that event.
 
 ## Session list paging
 
@@ -106,7 +111,8 @@ The [Rust tools crate](../../crates/cnd-tools/README.md) tests CLI parsing and M
 
 - `sessions.test.ts`: session creation, exact message text, request replay, transcripts, defaults, and Worker refusals.
 - `session-management-reads.test.ts`: exact session and message facts
-  across workspaces, archived reads, and session list paging edges.
+  across workspaces, finished agent messages and the request flag that
+  allows them, archived reads, and session list paging edges.
 - `session-management-writes.test.ts`: a rename of another workspace's
   session as the stored sender, and closes of running and queued sessions
   with no computer start.

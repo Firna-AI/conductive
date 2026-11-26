@@ -4,8 +4,9 @@ import { isLateRequest } from './requests'
 /**
  * The work of a turn: its agent messages and its tool calls, with the Mac
  * command cards, the cards of runs with secrets, and the lost lines among
- * them. A late request is not work. It waits above the composer, and after
- * its answer it stays at its place, unfolded.
+ * them. A late request waits above the composer. After its answer or end,
+ * it shows at its place in the transcript, unfolded. A capability change
+ * also stays unfolded, including during a turn.
  */
 export type WorkItem = Extract<
   ChatItem,
@@ -62,14 +63,15 @@ function isWork(item: ChatItem): item is WorkItem {
  * The parts of each ended turn. The mockup items have no turn IDs, so the
  * items after a member message, up to an end, form one turn. The line of
  * a late Allow starts a turn too. A message sent during the turn joins it
- * and starts a new part. A linked line starts no turn. A turn without an
- * end, such as a running one, does not fold.
+ * and starts a new part. The line of a wake starts a turn, or joins the
+ * running turn as a message does. A linked line starts no turn. A turn
+ * without an end, such as a running one, does not fold.
  */
 function endedParts(items: readonly ChatItem[]): ChatItem[][] {
   const ended: ChatItem[][] = []
   let parts: ChatItem[][] = []
   for (const item of items) {
-    if (item.kind === 'user') {
+    if (item.kind === 'user' || item.kind === 'wake') {
       parts = item.during && parts.length > 0 ? [...parts, []] : [[]]
     } else if (item.kind === 'late-answer') {
       parts = [[]]
@@ -108,9 +110,9 @@ function foldedRuns(part: readonly ChatItem[]): WorkItem[][] {
 
 /**
  * The IDs of the items of the running turn: the items after the member
- * message or the late Allow that started it, up to the working line. A
- * message sent during the turn joins it. No turn runs when the chat has
- * no working line.
+ * message, the late Allow, or the wake that started it, up to the working
+ * line. A message or a wake during the turn joins it. No turn runs when
+ * the chat has no working line.
  */
 function runningItems(items: readonly ChatItem[]): Set<string> {
   const working = items.findIndex((item) => item.kind === 'working')
@@ -118,7 +120,7 @@ function runningItems(items: readonly ChatItem[]): Set<string> {
   const start = items.findLastIndex(
     (item, index) =>
       index < working &&
-      ((item.kind === 'user' && !item.during) ||
+      (((item.kind === 'user' || item.kind === 'wake') && !item.during) ||
         item.kind === 'late-answer' ||
         isEnd(item)),
   )

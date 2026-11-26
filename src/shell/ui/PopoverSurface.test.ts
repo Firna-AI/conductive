@@ -37,4 +37,20 @@ describe('the placement of a menu beside its button', () => {
       noRoom: { side: 'bottom', top: 70, bottom: undefined, left: 244 },
     })
   })
+
+  test('a surface that keeps its side opens below also when it does not fit there, limited to the room below', () => {
+    const tall = { width: 320, height: 240 }
+    const at = (keepSide: boolean) => {
+      const placed = surfacePlacement(button(300), tall, room, {
+        align: 'start',
+        side: 'below',
+        keepSide,
+      })
+      return { side: placed.side, top: placed.top, maxHeight: placed.maxHeight }
+    }
+    expect({ flips: at(false), keeps: at(true) }).toEqual({
+      flips: { side: 'top', top: undefined, maxHeight: 288 },
+      keeps: { side: 'bottom', top: 330, maxHeight: 162 },
+    })
+  })
 })

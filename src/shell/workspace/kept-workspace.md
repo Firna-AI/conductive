@@ -13,8 +13,9 @@ the `AppModel` of the tab, for the signed-in user.
   Each stream keeps its last event number.
 - A return draws the kept header, notices, and chat at once. Then each
   socket asks only for the events after its own last event number.
-- On a return, the model reads the workspace again, as at each open. The
-  chat reads nothing again: no history, no session list, and no view.
+- On a return, the model reads the workspace detail again and keeps the
+  cursor it reached. An event after that cursor can still revoke a
+  preview. The chat keeps its history, session list, and view.
 - Each kept chat takes the account, the models, its org, and the members of
   the org from the app models, as its `sources`. So a login that the
   account screen saves, a new default model, or a new org name shows in
@@ -41,6 +42,12 @@ the `AppModel` of the tab, for the signed-in user.
   them follow the stream of the model before it opens, as the notices do.
   They keep the revokes of previews, and give each tool the kept revokes
   first, then the live events.
+- The tab also keeps the `WorkspaceSkills` of each workspace, the latest
+  skill lists for the list of `/` of its chat. Each show makes it follow
+  the stream of the model before it opens, as the tool events do. It
+  loads until it takes a report from the seed or the stream. Each later
+  event replaces the lists. A report that the app cannot read keeps the
+  last lists. `workspace-skills.test.ts` checks it.
 - The tab also keeps the `WorkspaceFiles` of each workspace that it
   showed. The workspace screen connects it while it shows a workspace that
   is not archived, so a return shows the lists at once, and its socket asks
@@ -56,7 +63,13 @@ the `AppModel` of the tab, for the signed-in user.
   of that connection forgets the files preview, so a return opens it
   again, as [The tabs of HTML files](html-tabs.md) says. A sign-out forgets
   the store.
-- Nothing goes to browser storage. So a reload or a new tab starts empty,
-  and reads the stored history again.
+- The tab also keeps the store of the services of each workspace that it
+  showed, which the Preview tool reads. `KeptConnections` connects it while
+  the cloud computer runs. The end of that connection forgets the list, so
+  a return reads it again and never shows the list of an earlier run. A
+  Stop or a Restart keeps running in the store after its page left. Its
+  result can still show a toast. A sign-out forgets the store.
+- Nothing goes to browser storage. A reload or a new tab starts empty and
+  gets its own workspace read and cutoff.
 - The memory has no size limit. It keeps each workspace that the tab
   showed until a reload or a sign-out.

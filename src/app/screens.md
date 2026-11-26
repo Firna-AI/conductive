@@ -63,7 +63,7 @@ the Help row of the command palette opens.
   By weights, the default, or a configured account by its ID, from the
   operator's providers reply. Only a chosen account goes into the create.
   The create does not wait for that reply. Nobody else sees the choice or
-  sends its read, as [Provider accounts](../shell/operator/README.md#provider-accounts)
+  sends its read, as [Provider accounts](../shell/operator/provider-accounts.md#provider-accounts)
   says.
 - The rail, the org switcher, and General show the saved initials of an
   org. An org without them shows the initials of its name.
@@ -95,15 +95,16 @@ the Help row of the command palette opens.
   that the head of the builds offers Try again or Build computer.
 - The repository notice of the Repositories and Cloud computer tabs reads
   `BuildsResponse.changes`, as
-  [The repository notice](../../docs/protocol/org-image.md#the-repository-notice)
+  [The repository notice](../../docs/protocol/org-image-repositories.md#the-repository-notice)
   says, so each of these tabs reads the builds while it shows. Its state
-  comes from `repositoryWaitOf`, and its words and its look from
-  `repositoryChangeCopy.ts` and `RepositoryNotice.tsx` of the mockups. In
+  comes from `repositoryWaitOf`, and its words and its look from the shared
+  `repositoryChangeCopy.ts` and `RepositoryNotice.tsx`. In
   a suspended org it names no admin who can act. The build history stays
   closed while a change of the install script or of the repositories
   waits for a build.
 - A save of the install script and each repository save read the builds
-  again, so the notices and the build that an add starts show at once.
+  again, so the notices show at once. Done of the Repositories tab starts
+  the build of the added repositories, and the build shows at once.
 - A step of a panel, by a key or a drag, starts from the width that the
   panel shows. It stays in a range that holds that width, so a shrink
   never widens a panel that the layout shows narrower than its range. A
@@ -147,14 +148,15 @@ the Help row of the command palette opens.
   `placeWorkspaces`, the shared rule of the Worker, so a row whose parent
   is archived shows under the nearest live row above it. Each row that the
   list shows above a row in its tree indents it by one step, through the
-  classes `.nested` and `.indent1` to `.indent3` of the mockups. The guide
+  classes `.nested` and `.indent1` to `.indent3` of the shared
+  `WorkspaceRow.module.css`. The guide
   lines join the rows of a tree as in a file tree, as
   [the design](../../docs/mockups/design.md) says. A stub runs down from
   the mark of a row with nested rows, and a connector runs to the mark of
   each nested row. A line ends at its last nested row. An outer line runs
   through a row only while its row has a nested row further down.
   `treeRows` in `list-trees.ts` gives each row its lines from `treeLines`,
-  a shared helper. The mockups use the same helper, and their
+  a shared helper. The mockups use the same helper, and the shared
   `guideClasses` gives the classes of the lines. A collapsed section
   counts its nested rows too. The Archived group and the command palette
   stay flat.
@@ -173,6 +175,29 @@ the Help row of the command palette opens.
   `list-trees.ts`). So these rows stay where they showed: while the
   Archive runs, after its reply, after an event of the archived record,
   and after the next read of the list.
+- The Merge queue group shows at the top of the list while a queue of
+  the org has entries, as
+  [The Merge queue group](../../docs/protocol/merge-queue-in-the-app.md#the-merge-queue-group)
+  says. `groupWorkspaces` leaves each queued workspace out of the
+  sections, and `placeWorkspaces` places its live sub-workspaces under the
+  nearest workspace above them that is not queued, as for an archived
+  parent (decision 318). The list read alone carries the entry, so a
+  newer record of a listed row keeps it on the same branch. The group
+  has one block for each repository, in the order of the repositories,
+  and a block names its repository only while two or more queues have
+  entries. A line of the shared `MergeQueue.module.css` joins the marks
+  of a block. The group collapses for this view only, as the Archived
+  group does, because the collapse has no stored value.
+- A member with write access drags an entry inside its block, by a long
+  press on a phone, or moves it by Alt with Up or Down. Each moves the
+  whole unit of the entry. During each drag of a row of a section, the
+  group shows as a drop target. A row that can join takes the outline of
+  the block of its repository, or the zone of the group when that
+  repository has no queue with entries, or when the group is collapsed.
+  A row that cannot join names its reason there and takes no drop. Add,
+  Remove, and each move show at once, and go back with a toast when the
+  Worker refuses them. The list then reads again, because the Worker can
+  change more entries, such as the lower pull requests of a member stack.
 - A move of a workspace row by keys keeps the focus on the row. The list
   gives back only a lost focus, as a layer does: when a render takes the
   focused row out of the page and the focus falls to the page, the
@@ -223,8 +248,8 @@ the Help row of the command palette opens.
   runs. An action of the dialog that opens another page, such as Connect
   or Choose repositories, closes the dialog first.
 - The dialog and the page of one org and section share one draft:
-  `OrgModel.newWorkspace(sectionId)`. So a close keeps the message and its
-  files. The menu of General, the default section, opens New workspace
+  `OrgModel.newWorkspace(sectionId)`. So a close keeps the message, its
+  files, and its branch. The menu of General, the default section, opens New workspace
   with no section, as the row does, so General keeps one draft. A create that the server accepts opens the new workspace, also
   when the dialog closed while the create ran. A failed create request
   keeps the dialog open with Try again.
@@ -242,7 +267,9 @@ the Help row of the command palette opens.
   only for such a move, until the focus leaves it. On a phone, no main
   area takes it.
 - The page and the dialog share their form (`useNewWorkspaceForm`): the
-  repository picker, the notices, the send, and one readiness. In an org
+  repository picker, the branch control with its target choice, as
+  [Start from a branch](start-branch.md) says, the notices, the send, and
+  one readiness. In an org
   without chosen repositories, an admin gets Choose repositories, and a
   member who is not an admin reads that an admin chooses them, as the
   empty page of the org says. Both ask only after the repositories load.
@@ -258,23 +285,39 @@ the Help row of the command palette opens.
   notice of the first build on the page and in the dialog, as
   [Create a workspace](../../docs/protocol/create-a-workspace.md#before-the-first-good-build)
   says, and Send, Create, and Try again stay off. The shared form watches
-  the builds and owns the notice. Its words come from
-  `firstBuildCopy.ts` of the mockups. While the builds load or after a
-  failed load, no notice shows, and the Worker refuses a create of an org
-  with no good image.
+  the builds and owns the notice. Its words come from the shared
+  `firstBuildCopy.ts`. When the repositories reply shows a
+  good image, through `imageReady` or a ready repository, the builds are
+  older, and the notice gives way. `imageReadyOf` reads every repository
+  of the reply, also one that the org no longer chose. While the builds
+  load or after a failed load, the notice of the first build does not
+  show. Send still stays off for a repository that the reply gives
+  `ready: false`. A reply of a previous
+  Worker has no `ready`. Send can then go, and the Worker refuses a create
+  of an org with no good image.
 - The shared form shows the
-  [waiting repositories](../../docs/protocol/create-a-workspace.md#waiting-repositories)
-  that `BuildsResponse.changes` lists as added: off in the repository
-  menu, with the note of `menuNotes`, and in the notice over the
-  composer while the repository of the form waits, with the words of
-  `waitingFormText`. The note of the cloud computer under the picker then
-  gives way. The Worker lists no waiting repository before the first good
-  build, so this notice and the notice of the first build never show
-  together. The builds read again while a build runs, so a waiting
-  repository turns on when a build that holds it succeeds. A draft keeps
-  the repository that the form showed at its first text or file
-  (`NewWorkspaceModel`), so a repository that turns on moves no written
-  draft.
+  [waiting repositories](../../docs/protocol/create-a-workspace.md#waiting-repositories):
+  off in the repository menu, with the note of `menuNotes`, and in the
+  notice over the composer while the repository of the form waits, with
+  the words of `waitingFormText`. The note of the cloud computer under the
+  picker then gives way. A chosen repository waits when the repositories
+  reply gives it `ready: false`, also while the builds load, after a
+  failed load, or with older builds (`waitsForBuild`). With `ready: true`,
+  it stays on in each case. Without `ready`, the repositories that
+  `BuildsResponse.changes` lists as added wait. The builds give how a
+  repository waits. Without an answer of the builds, the note and the
+  notice name the next build.
+- Before the first good build, no repository waits, so this notice and the
+  notice of the first build never show together. The form knows that time
+  from `imageReady: false`. Without that field, the builds list no added
+  repository in that time.
+- When the builds show a build that ended or a new image, the repositories
+  read again, as [Data lifecycle](data-lifecycle.md) says. A waiting
+  repository turns on when that answer gives it `ready: true`. Until then,
+  it keeps its notice. Without `ready`, it turns on when the builds no
+  longer list it. A draft keeps the repository that the form showed at its
+  first text or file (`NewWorkspaceModel`), so a repository that turns on
+  moves no written draft.
 - Every composer reads its send key through `useSendKey`: the chat, the
   page and the dialog of New workspace, and the Feedback dialog. On a
   computer, Enter sends and Shift+Enter adds a
@@ -306,12 +349,27 @@ the Help row of the command palette opens.
   holds Attach files and Capabilities, which opens the control as a sheet
   (secrets decision 16 G). The control lists the secrets of the org, which
   it reads each time that it opens, with a checkbox that pre-approves each
-  one for the new workspace, and the switch of Mac access, off by default.
-  A secret for all agents stays checked and off. The draft keeps the
-  choices, the create sends them, and a create that succeeds ends them, so
-  the next draft starts again from the defaults. The create leaves out
-  each pre-approved secret that the last read no longer lists, and a
-  refusal of a missing secret reads the secrets again for Try again.
+  one for the new workspace. A secret for all agents stays checked and
+  off. The draft keeps the choices, the create sends them, and a create
+  that succeeds ends them, so the next draft starts again from the
+  defaults. The create leaves out each pre-approved secret that the last
+  read no longer lists, and a refusal of a missing secret reads the
+  secrets again for Try again.
+- In the Mac app, the control also shows the switch of Mac access, a
+  choice of the draft that starts off. The create does not send it. After
+  the create, the page starts the grant until Stop of the new workspace on
+  this Mac, only while the switch was on. A start that fails shows as a
+  notice in the new workspace, with Try again. A browser shows no Mac
+  access part, and starts no grant.
+- The automation page gives its owner the same icon before the model
+  picker, in the bar of the prompt box. Its control has the secrets part
+  only, with no Mac access. On a phone the icon stays in the bar and opens
+  the control as a sheet. A change of the checks turns Save on, and the
+  icon is off while a save runs. Under the prompt, every member reads the
+  line that names the chosen secrets. While the triggers hold a pull
+  request trigger, the pull request hint follows that line. For the owner,
+  both follow the form. For another member, both follow the saved
+  automation.
 - The Secrets tab of the org settings follows the Agents tab (secrets
   decisions 2, 3, and 6). Its rights come from `secretRights` in
   `permissions.ts`: every member adds secrets, a member replaces and
@@ -324,8 +382,10 @@ the Help row of the command palette opens.
   sends only the fields that changed, and an empty new value keeps the
   stored value. Delete asks first.
 - A create request that fails keeps the message in the form, with "The
-  workspace wasn't created". Try again sends the same message ID. A failed
-  first start keeps its workspace instead, as
+  workspace wasn't created". Try again sends the same message ID. A
+  refusal of the branch check names its cause and its own action, as
+  [Refusals of the branch check](start-branch.md#refusals-of-the-branch-check)
+  says. A failed first start keeps its workspace instead, as
   [Creation recovery](creation-recovery.md#a-failed-first-start) says.
 
 ## The waitlist

@@ -161,4 +161,48 @@ describe('AllowAllBar', () => {
     )
     expect(queryByRole('alert', `Stopped, not saved ${unsaved}`)).toBeNull()
   })
+
+  it('keeps the grant of the last read that worked, with Stop, after a read again fails, because the grant may still run', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ onMac: true })
+    let controller: MacSettingsController | undefined
+    await mount(
+      <Bar
+        clock={{ now: () => FAKE_TIME }}
+        fetch={server.fetch}
+        found={(found) => {
+          controller = found
+        }}
+      />,
+    )
+    await waitFor(() => queryByText('14:32 left'), 'the time left')
+    const badGateway = new Response('Bad gateway', { status: 502 })
+    server.response('GET', DEVICE_SETTINGS_PATH, badGateway)
+    await act(() => controller?.refresh())
+    expect({
+      left: queryByText('14:32 left') !== null,
+      stop: queryByRole('button', 'Stop') !== null,
+    }).toEqual({ left: true, stop: true })
+    server.json(
+      'POST',
+      DEVICE_SETTINGS_PATH,
+      fakeSettingsReply({ ...fakeMacSettings(), workspaceWindows: [] }),
+    )
+    await press(byRole('button', 'Stop'))
+    await waitFor(
+      () =>
+        queryByRole(
+          'status',
+          'Stopped Each command from this workspace asks first.',
+        ),
+      'the stopped 15 minutes',
+    )
+    const [sent] = server.requests.filter(
+      (request) => request.method === 'POST',
+    )
+    expect(await sent.clone().json()).toEqual({
+      ...FAKE_PAIRING,
+      operation: { action: 'stop-workspace', workspaceId: FAKE_IDS.workspace },
+    })
+  })
 })

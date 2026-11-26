@@ -1,4 +1,4 @@
-import { ToastLayer } from './ToastLayer'
+import { toastLayer } from '../../entries/components/common/ToastLayer.mockup'
 
 /**
  * The toast that confirms a change that went through, such as a sent
@@ -7,7 +7,7 @@ import { ToastLayer } from './ToastLayer'
  */
 export function SuccessToast(props: { title: string; phone: boolean }) {
   return (
-    <ToastLayer
+    <toastLayer.Component
       phone={props.phone}
       toast={{ title: props.title, tone: 'success' }}
     />

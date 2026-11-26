@@ -2,13 +2,19 @@ import { Input } from '@firna/ui/input'
 import { Switch } from '@firna/ui/switch'
 import { Plus } from 'lucide-react'
 import { newSecret, refusedName, type OrgSecret } from '../../fixtures/secrets'
-import { noop } from '../../noop'
-import { ActionButton } from '../common/actions'
-import { useControlSizes } from '../common/touch'
-import { addNameHint, refusedNameError } from './secretNameCopy'
-import { allAgentsHint, secretsWords } from './secretsCopy'
-import sections from '../settings/Section.module.css'
-import styles from './SecretsTab.module.css'
+import { noop } from '../../../../../src/ui/noop'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import {
+  addNameHint,
+  refusedNameError,
+} from '../../../../../src/ui/components/secrets/secretNameCopy'
+import {
+  allAgentsHint,
+  secretsWords,
+} from '../../../../../src/ui/components/secrets/secretsCopy'
+import sections from '../../../../../src/ui/components/settings/Section.module.css'
+import styles from '../../../../../src/ui/components/secrets/SecretsTab.module.css'
 
 /**
  * The Replace form under the row of a secret: its description, which the

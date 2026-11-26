@@ -1,9 +1,9 @@
 import { defineScreen } from '@mokly/mokly'
+import { OrgSettingsScreen } from '../../../../../screens/OrgSettingsScreen'
 import {
   acmeSettings,
-  OrgSettingsScreen,
   orgSettingsSchema,
-} from '../../../../../screens/OrgSettingsScreen'
+} from '../../../../../screens/orgSettingsState'
 
 const decision =
   'The user chose option C of decision 241 on 10 November 2026, and asked for a notice on the Cloud computer tab too: a repository change gets its own notice on the Repositories and Cloud computer tabs, for admins and members, and the notice of the install script shows only for a change of the install script.'
@@ -15,8 +15,8 @@ const noButton =
 export const repositoriesChanged = defineScreen({
   title: 'Repositories changed',
   description:
-    'Cal added acme/admin-dashboard on the Repositories tab, and the add started a build. The notice under the intro says that acme/admin-dashboard is ready after the build, with a spinner and no button. The card shows the build that runs, with its log. The install script did not change, so its notice does not show.',
-  rationale: `${decision} The user chose option C of decision 240 on the same day, so an added repository starts a build by itself. The notice shows once the org has a cloud computer, because the notices of the first build cover the time before it. ${noButton} New workspace links an admin here while the build of a waiting repository runs.`,
+    'Cal added acme/admin-dashboard on the Repositories tab and selected Done, which started a build. The notice under the intro says that acme/admin-dashboard is ready after the build, with a spinner and no button. The card shows the build that runs, with its log. The install script did not change, so its notice does not show.',
+  rationale: `${decision} The user chose option C of decision 240 on the same day, so an added repository starts a build by itself. The user asked on 18 November 2026, decision 295, that the build start at Done of the Repositories tab, not at each add. The notice shows once the org has a cloud computer, because the notices of the first build cover the time before it. ${noButton} New workspace links an admin here while the build of a waiting repository runs.`,
   relatedDocs: [],
   propSchema: orgSettingsSchema,
   props: {
@@ -33,7 +33,7 @@ export const repositoriesChanged = defineScreen({
       slug: 'build-failed',
       title: 'Newest build failed',
       description:
-        'The build of acme/admin-dashboard failed. The notice says that acme/admin-dashboard is ready after a build succeeds, and that the last build failed. It has no button. The card under it shows the saved message, the end of the log, and Try again.',
+        'The build of acme/admin-dashboard failed. The title of the notice says that the last build failed. Its body says that acme/admin-dashboard is ready after a build succeeds. It has no button. The card under it shows the saved message, the end of the log, and Try again.',
       rationale: `${decision} ${noButton} New workspace links an admin here while no chosen repository is ready after a failed build, as app/new-workspace/waiting-repository/none-ready shows.`,
       props: { build: 'failed' },
     },

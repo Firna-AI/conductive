@@ -1,3 +1,4 @@
+import { code } from './agentText'
 import type { ChatItem } from './conversations'
 import {
   agent,
@@ -132,7 +133,9 @@ export function secretConversations(
       run(iconsRequest, 'allowed', { grant: { kind: 'pre-approved' } }),
       agent(
         'icons-done',
-        'I exported the 4 address icons into `src/app/checkout/icons`.',
+        'I exported the 4 address icons into ',
+        code('src/app/checkout/icons'),
+        '.',
       ),
       working('14s'),
     ],

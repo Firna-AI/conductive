@@ -80,10 +80,11 @@ it('gives Claude original attachment metadata and copied paths', async () => {
   onTestFinished(() => provider.close())
   await provider.send(command)
   expect((await sdk.nextUser()).message.content).toBe(
-    'Sender: @alice [member ID: "alice"]\n\nChange the file.\n' +
+    'Change the file.\n' +
       'The sender attached these files. Read each file, or the parts of a large file that you need, before you answer.\n' +
       'Attached file: {"name":"Plan \\"A\\".PDF","mediaType":"application/pdf","path":"/test/repository/.context/attachments/11111111111111111111111111111111/Plan-A.pdf","sizeBytes":23}\n' +
-      'Attached file: {"name":"Screenshot.PNG","mediaType":"image/png","path":"/test/repository/.context/attachments/22222222222222222222222222222222/Screenshot.png","sizeBytes":12}',
+      'Attached file: {"name":"Screenshot.PNG","mediaType":"image/png","path":"/test/repository/.context/attachments/22222222222222222222222222222222/Screenshot.png","sizeBytes":12}\n\n' +
+      'Sender: @alice [member ID: "alice"]',
   )
 })
 
@@ -100,7 +101,7 @@ it('gives Codex original metadata and image input at exactly 25 MB', async () =>
       input: [
         {
           type: 'text',
-          text: 'Sender: @alice [member ID: "alice"]\n\nChange the file.',
+          text: 'Change the file.',
           text_elements: [],
         },
         {
@@ -122,6 +123,11 @@ it('gives Codex original metadata and image input at exactly 25 MB', async () =>
           type: 'localImage',
           path: '/test/repository/.context/attachments/22222222222222222222222222222222/Screenshot.png',
         },
+        {
+          type: 'text',
+          text: 'Sender: @alice [member ID: "alice"]',
+          text_elements: [],
+        },
       ],
     },
   })
@@ -139,7 +145,7 @@ it('gives Codex original metadata and image input at exactly 25 MB', async () =>
       input: [
         {
           type: 'text',
-          text: 'Sender: @alice [member ID: "alice"]\n\nChange the file.',
+          text: 'Change the file.',
           text_elements: [],
         },
         {
@@ -150,6 +156,11 @@ it('gives Codex original metadata and image input at exactly 25 MB', async () =>
         {
           type: 'text',
           text: 'Attached file: {"name":"Plan \\"A\\".PDF","mediaType":"application/pdf","path":"/test/repository/.context/attachments/11111111111111111111111111111111/Plan-A.pdf","sizeBytes":23}',
+          text_elements: [],
+        },
+        {
+          type: 'text',
+          text: 'Sender: @alice [member ID: "alice"]',
           text_elements: [],
         },
       ],
@@ -171,7 +182,7 @@ it('gives Codex original metadata and image input at exactly 25 MB', async () =>
       input: [
         {
           type: 'text',
-          text: 'Sender: @alice [member ID: "alice"]\nCurrent branches: workspace "owner/next"; target "trunk".\n\nChange the file.',
+          text: 'Change the file.',
           text_elements: [],
         },
         {
@@ -192,6 +203,11 @@ it('gives Codex original metadata and image input at exactly 25 MB', async () =>
         {
           type: 'localImage',
           path: '/test/repository/.context/attachments/22222222222222222222222222222222/Screenshot.png',
+        },
+        {
+          type: 'text',
+          text: 'Sender: @alice [member ID: "alice"]\nCurrent branches: workspace "owner/next"; target "trunk".',
+          text_elements: [],
         },
       ],
     },
@@ -230,7 +246,7 @@ it.each([false, true])(
         input: [
           {
             type: 'text',
-            text: 'Sender: @alice [member ID: "alice"]\n\nChange the file.',
+            text: 'Change the file.',
             text_elements: [],
           },
           {
@@ -262,6 +278,11 @@ it.each([false, true])(
                 { type: 'localImage', path: '/test/repository/small.png' },
               ]
             : []),
+          {
+            type: 'text',
+            text: 'Sender: @alice [member ID: "alice"]',
+            text_elements: [],
+          },
         ],
       },
     })

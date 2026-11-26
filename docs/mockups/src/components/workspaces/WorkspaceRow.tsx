@@ -1,20 +1,23 @@
 import type { ReactNode } from 'react'
-import { Archive, ArchiveRestore } from 'lucide-react'
 import type { TreeLines } from '../../../../../src/shared/workspace-tree-lines'
+import { workspaceMark } from '../../entries/components/workspaces/WorkspaceMark.mockup'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
-import { IconButton } from '../common/actions'
-import a11y from '../common/a11y.module.css'
-import { classes } from '../common/classes'
-import { guideClasses } from './guideLines'
-import { RowPointMenu, type RowControls } from './RowMenu'
+import { iconButton } from '../../entries/components/common/actions.mockup'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { guideClasses } from '../../../../../src/ui/components/workspaces/guideLines'
+import { rowPointMenu } from '../../entries/components/workspaces/RowMenu.mockup'
+import type { RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
-import { listMarkLabel } from './status'
+import { listMarkLabel } from '../../../../../src/ui/components/workspaces/status'
 import type { RowIndent } from './trees'
-import { WorkspaceMark } from './WorkspaceMark'
-import { WorkspaceName, type EmphasisClasses } from './WorkspaceName'
-import rowMenu from './RowMenu.module.css'
-import styles from './WorkspaceRow.module.css'
+import {
+  WorkspaceName,
+  type EmphasisClasses,
+} from '../../../../../src/ui/components/workspaces/WorkspaceName'
+import rowMenu from '../../../../../src/ui/components/workspaces/RowMenu.module.css'
+import styles from '../../../../../src/ui/components/workspaces/WorkspaceRow.module.css'
 
 /** How a drag shows a row: lifted under the pointer, or left behind. */
 export type RowDrag = 'lifted' | 'placeholder'
@@ -70,7 +73,7 @@ function RenameRow(props: {
         nestedClasses(row.indent, row.lines),
       )}
     >
-      <WorkspaceMark github={row.github} status={row.status} />
+      <workspaceMark.Component github={row.github} status={row.status} />
       <span
         aria-label="Workspace name"
         className={classes(rowMenu.field, page && rowMenu.fieldPage)}
@@ -99,13 +102,23 @@ function rowAction(
   if (row.status === 'archived') {
     return restorable ? (
       <ScreenLink asChild to={paths.restored}>
-        <IconButton icon={ArchiveRestore} label="Restore workspace" quiet />
+        <iconButton.Component
+          icon="archive-restore"
+          label="Restore workspace"
+          moklyInstance="restore"
+          quiet
+        />
       </ScreenLink>
     ) : null
   }
   return archivable ? (
     <ScreenLink asChild to={paths.justArchived}>
-      <IconButton icon={Archive} label="Archive workspace" quiet />
+      <iconButton.Component
+        icon="archive"
+        label="Archive workspace"
+        moklyInstance="archive"
+        quiet
+      />
     </ScreenLink>
   ) : null
 }
@@ -156,7 +169,7 @@ export function WorkspaceRowView(props: {
   )
   const content = (
     <>
-      <WorkspaceMark github={row.github} status={row.status} />
+      <workspaceMark.Component github={row.github} status={row.status} />
       <WorkspaceName
         className={styles.name}
         emphasis={nameEmphasis}
@@ -207,7 +220,7 @@ export function WorkspaceRowView(props: {
       {action === null ? null : (
         <span className={styles.archive}>{action}</span>
       )}
-      {controls ? <RowPointMenu controls={controls} /> : null}
+      {controls ? <rowPointMenu.Component controls={controls} /> : null}
     </span>
   )
 }

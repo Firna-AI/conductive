@@ -27,7 +27,7 @@ export async function e2bLiveMain(
 ): Promise<void> {
   if (arguments_.includes('--help')) {
     process.stdout.write(
-      `Usage: node image/live-check.mjs --provider=e2b [--prepare]\nRequired: ${e2bRequiredInputs.join(', ')}\nOptional: LIVE_E2B_STATE_DIR, LIVE_OUTPUT, LIVE_CONDUCTIVE_RELEASE_SERVER. Keep state under .context/ and use the same state key when reopening it.\nThis mode builds two clean disposable images with the current sandbox release and checks a probe sandbox. It runs no agent or app workspace.\n--prepare uses no credential or provider. Real checks require EU and filesystem-only project support.\n`,
+      `Usage: node image/live-check.mjs --provider=e2b [--prepare]\nRequired: ${e2bRequiredInputs.join(', ')}\nOptional: LIVE_E2B_STATE_DIR, LIVE_OUTPUT, LIVE_CONDUCTIVE_RELEASE_SERVER. Keep state under .context/ and use the same state key when reopening it.\nThis mode builds two clean disposable images with the current sandbox release and checks a probe sandbox. It runs no agent or app workspace.\n--prepare uses no credential or provider. image/e2b/live-check.md gives the project settings that a real check needs.\n`,
     )
     return
   }

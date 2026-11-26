@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react'
 import type { OpenAgentForm } from '../components/settings/AgentList'
 import type { OrgAgentsTab } from '../components/settings/OrgAgents'
-import type { ReadOnlyCause } from '../components/settings/OrgSections'
+import type { ReadOnlyCause } from '../../../../src/ui/components/settings/readOnlyCause'
 import { shareNotSavedCause, type AgentLogins } from '../fixtures/logins'
 import {
   acmeOrgLogins,
@@ -11,7 +11,7 @@ import {
   unlistedOrgLogins,
 } from '../fixtures/orgLogins'
 import { paths } from '../paths'
-import type { OrgSettingsState } from './OrgSettingsScreen'
+import type { OrgSettingsState } from './orgSettingsState'
 
 /**
  * The parts of the state of the org settings that the Agents tab shows,

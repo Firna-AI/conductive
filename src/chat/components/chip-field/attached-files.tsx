@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from 'react'
-import type { ChipFile } from '../../../../docs/mockups/src/components/chat/attachedFileParts'
-import type { ChipUpload } from '../../../../docs/mockups/src/components/chat/DraftFileChip'
+import type { ChipFile } from '../../../ui/components/chat/attachedFileParts'
+import type { ChipUpload } from '../../../ui/components/chat/DraftFileChip'
 import type { DraftFile } from '../../../app/draft-files'
 import { attachmentForMention } from '../../../shared/attachment-mentions'
 import { mentionText, type Mention } from '../../../shared/mention-text'

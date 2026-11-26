@@ -1,5 +1,5 @@
-import type { MacChip } from '../../docs/mockups/src/brand.ts'
-import type { MarketingPictureKey } from '../../docs/mockups/src/screens/marketingPictureList.ts'
+import type { MacChip } from '../shared/brand.ts'
+import type { MarketingPictureKey } from '../ui/screens/marketingPictureList.ts'
 import type { FeatureIconName } from './icon-shapes.ts'
 
 /**

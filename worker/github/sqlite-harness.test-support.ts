@@ -68,7 +68,11 @@ export async function createGitHubSQLiteHarness() {
               SQLITE_CHOICE,
               'interleaved',
               startedBy,
-              chatDependencies(base.env, () => SQLITE_WORKSPACE_ID),
+              chatDependencies(
+                base.env,
+                () => SQLITE_WORKSPACE_ID,
+                actor.api.storage,
+              ),
             )
           },
         )

@@ -4,8 +4,10 @@ import { ApiError } from '../../app/api/client'
 import { uploadingFile, type DraftFile } from '../../app/draft-files'
 import { fileMark } from '../../app/draft-marks'
 import { ACCOUNT_PATHS } from '../../shared/account'
+import type { ArchivedComputerState } from '../../shared/generated/ArchivedComputerState'
+import type { Workspace } from '../../shared/generated/Workspace'
 import { sessionPaths } from '../../shared/sessions'
-import { workspacePath } from '../../shared/workspaces'
+import { WORKSPACE_RESTORE_MS, workspacePath } from '../../shared/workspaces'
 import {
   coreFixtures,
   FAKE_IDS,
@@ -74,19 +76,46 @@ describe('SessionChat', () => {
     )
     expect(archived.text()).not.toContain('Try again. Try again')
     expect(archived.markup()).not.toContain('placeholder="Message the agent"')
-    const removed = await renderChat({
-      workspaceState: 'archived',
-      setup: (server) => {
-        const { detail } = workspaceFixtures('archived')
-        server.json('GET', workspacePath(FAKE_IDS.org, FAKE_IDS.workspace), {
-          ...detail,
-          workspace: { ...detail.workspace, archivedAt: REMOVED_ARCHIVED_AT },
-        })
-      },
-    })
+    /** The archived chat with `fields` in its workspace record. */
+    const archivedWith = (fields: Partial<Workspace>) =>
+      renderChat({
+        workspaceState: 'archived',
+        setup: (server) => {
+          const { detail } = workspaceFixtures('archived')
+          server.json('GET', workspacePath(FAKE_IDS.org, FAKE_IDS.workspace), {
+            ...detail,
+            workspace: { ...detail.workspace, ...fields },
+          })
+        },
+      })
+    const removed = await archivedWith({ archivedAt: REMOVED_ARCHIVED_AT })
     expect(removed.text()).toContain(
       'Removed on 8 January It left the list. Its cloud computer is deleted, and the chat is read-only.',
     )
+    // The state of the cloud computer and the end of its 14 days.
+    const computer = (state: ArchivedComputerState, archivedAt: number) =>
+      archivedWith({
+        archivedAt,
+        archivedComputer: {
+          state,
+          restoreUntil: archivedAt + WORKSPACE_RESTORE_MS,
+        },
+      })
+    expect({
+      pending: (await computer('may-exist', FAKE_TIME)).text(),
+      pendingEnded: (await computer('may-exist', REMOVED_ARCHIVED_AT)).text(),
+      unknown: (await computer('unknown', FAKE_TIME)).text(),
+    }).toEqual({
+      pending: expect.stringContaining(
+        'Archived on 15 January Your chat history is available. It leaves the list on 29 January.',
+      ),
+      pendingEnded: expect.stringContaining(
+        'Removed on 8 January It left the list. Its cloud computer is being deleted, and the chat is read-only.',
+      ),
+      unknown: expect.stringContaining(
+        'Archived on 15 January Its cloud computer is deleted, and the chat is read-only. It leaves the list on 29 January.',
+      ),
+    })
   })
 
   it('shows thinking with the time since the turn started, and Stop beside Send', async () => {

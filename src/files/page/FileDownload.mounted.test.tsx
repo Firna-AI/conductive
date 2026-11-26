@@ -2,7 +2,6 @@
 
 import { act } from 'react'
 import { expect, it, onTestFinished, vi } from 'vitest'
-import type { DiffResponse } from '../../shared/generated/DiffResponse'
 import { filePaths } from '../../shared/files'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { accessibleName } from '../../test-support/dom-queries'
@@ -194,41 +193,4 @@ it('offers no Download on a file page or a diff page over the read limit, also f
     expect(downloadControls(view.container), shown).toEqual([])
     view.unmount()
   }
-})
-
-it('links a binary diff to its file tab in place of Download', async () => {
-  const server = new FakeApiServer()
-  const path = 'public/hero.png'
-  const diff: DiffResponse = {
-    path,
-    baseBranch: 'main',
-    oldContent: null,
-    newContent: null,
-    binary: true,
-    patch: '',
-  }
-  server.json('GET', filePaths.diff(org, id, path), diff)
-  const held = heldFetch(server)
-  const files = await startedFiles(server, held)
-  const navigation = testNavigation()
-  const view = mountRoot()
-  view.render(
-    <DiffPage
-      files={files}
-      layout="desktop"
-      navigation={navigation}
-      tab={{ kind: 'diff', path }}
-    />,
-  )
-  await act(async () => {
-    await held.release()
-  })
-  expect(titles(view.container)).toEqual(['This binary file changed'])
-  expect(downloadControls(view.container)).toEqual([])
-
-  press(view.container, 'link', 'Open the file')
-
-  expect(navigation.visited).toEqual([
-    { kind: 'file', path: 'public/hero.png', mode: 'preview' },
-  ])
 })

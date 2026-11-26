@@ -31,6 +31,7 @@ export interface PreviewsState {
 
 export type PreviewsAction =
   | { type: 'load' }
+  | { type: 'workspace-seeded' }
   | { type: 'loaded'; previews: readonly Preview[] }
   | { type: 'load-failed'; error: ToolError }
   | { type: 'open' }
@@ -82,15 +83,23 @@ export type PortFormList =
   /** The servers that have no preview yet, in the order of their ports. */
   | { kind: 'servers'; servers: readonly ListeningPort[] }
 
-/** The list of the port form. A port with an open preview leaves it. */
+const noPorts: ReadonlySet<number> = new Set()
+
+/**
+ * The list of the port form. A port with an open preview leaves it, and so
+ * does each port of `owned`, which the row of its service shows.
+ */
 export function portFormList(
   state: PreviewsState,
   visible: readonly Preview[],
+  owned: ReadonlySet<number> = noPorts,
 ): PortFormList {
   if (state.ports === null) return { kind: 'field' }
   if (state.ports.length === 0) return { kind: 'empty' }
   const open = new Set(visible.map((preview) => preview.port))
-  const servers = state.ports.filter((server) => !open.has(server.port))
+  const servers = state.ports.filter(
+    (server) => !open.has(server.port) && !owned.has(server.port),
+  )
   return servers.length === 0 ? { kind: 'field' } : { kind: 'servers', servers }
 }
 
@@ -117,17 +126,21 @@ export function previewOfPort(
  * The list of the tool on desktop: each server of the report, then each
  * port with a Preview tab or an open preview that the report does not name,
  * in the order of their ports. Such a port has no name and no folder, so
- * its row shows the port alone.
+ * its row shows the port alone. Each port of `owned` leaves the list,
+ * because the row of its service shows it.
  */
 export function panelPortList(
   state: PreviewsState,
   visible: readonly Preview[],
   tabPorts: readonly number[],
+  owned: ReadonlySet<number> = noPorts,
 ): PortFormList {
-  const reported = state.ports ?? []
-  const named = new Set(reported.map((server) => server.port))
+  const named = new Set((state.ports ?? []).map((server) => server.port))
+  const reported = (state.ports ?? []).filter(
+    (server) => !owned.has(server.port),
+  )
   const others = [...new Set([...tabPorts, ...visible.map((p) => p.port)])]
-    .filter((port) => !named.has(port))
+    .filter((port) => !named.has(port) && !owned.has(port))
     .sort((left, right) => left - right)
     .map((port): ListeningPort => ({ port, name: null, folder: null }))
   const servers = [...reported, ...others]
@@ -160,6 +173,13 @@ export function previewsReducer(
   action: PreviewsAction | WorkspaceEvent,
 ): PreviewsState {
   switch (action.type) {
+    case 'workspace-seeded':
+      return {
+        ...state,
+        previews: [],
+        load: { state: 'loading' },
+        read: state.read + 1,
+      }
     case 'load':
       return { ...state, load: { state: 'loading' }, read: state.read + 1 }
     case 'loaded':

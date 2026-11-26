@@ -18,7 +18,28 @@ export interface ChangeResult {
   /** The exact command, or the name of the workspace of the grant. */
   subject: string
   outcome: DeviceSettingsOutcome
+  /** When the change ended, in Unix milliseconds, by the controller's clock. */
+  at: number
+  /**
+   * The change failed because this Mac was not available, so it never
+   * reached the Mac: no pairing showed, the read before a start failed, or
+   * the Worker found no connection.
+   */
+  unreached?: boolean
 }
+
+/** Why a change failed when this Mac was not available. */
+export const notAvailableCause =
+  'This Mac is not available. Try again once it connects.'
+
+/**
+ * Why a start failed when the Mac said done but its settings do not list
+ * the grant until Stop.
+ */
+const notListedCause = 'The Mac could not change this permission. Try again.'
+
+/** What a Stop that the Mac made and saved means for the workspace. */
+export const stoppedMessage = 'Each command from this workspace asks first.'
 
 /**
  * Whether a grant runs at `now`: the 15 minutes before their end, or a
@@ -26,6 +47,26 @@ export interface ChangeResult {
  */
 export function grantRuns(grant: DeviceWorkspaceWindow, now: number): boolean {
   return grant.expiresAt === null || grant.expiresAt > now
+}
+
+/**
+ * The outcome of a change as the page counts it: the outcome that the Mac
+ * gave, except that a start counts as done only when the settings after it
+ * list the grant of its workspace with no end. So the page never shows a
+ * grant until Stop that the settings of the Mac do not hold.
+ */
+export function countedOutcome(
+  change: SettingsChange,
+  settings: DeviceSettings,
+  outcome: DeviceSettingsOutcome,
+): DeviceSettingsOutcome {
+  if (change.action !== 'start-workspace-until-stop') return outcome
+  if (outcome.status === 'failed') return outcome
+  const started = settings.workspaceWindows.some(
+    (grant) =>
+      grant.workspaceId === change.workspaceId && grant.expiresAt === null,
+  )
+  return started ? outcome : { status: 'failed', message: notListedCause }
 }
 
 /**
@@ -41,15 +82,16 @@ export function controlOf(change: SettingsChange): string {
 
 /**
  * What a change acts on: the exact command, or the name of a workspace. A
- * Stop whose grant is gone keeps the name of its last result.
+ * Stop whose grant is gone keeps the name of its last result. Null
+ * settings, of a Mac that shows none, name no workspace.
  */
 export function subjectOf(
   change: SettingsChange,
-  settings: DeviceSettings,
+  settings: DeviceSettings | null,
   last: ChangeResult | undefined,
 ): string {
   if (change.action === 'remove-command') return change.command
-  const grant = settings.workspaceWindows.find(
+  const grant = settings?.workspaceWindows.find(
     (window) => window.workspaceId === change.workspaceId,
   )
   return grant
@@ -104,6 +146,7 @@ const verbs = {
   'stop-workspace': 'stop',
   'keep-workspace': 'keep',
   'extend-workspace': 'extend',
+  'start-workspace-until-stop': 'start',
 } as const satisfies Record<SettingsChange['action'], string>
 
 /**
@@ -115,9 +158,7 @@ export function staleCause(
   shown: DevicePairing | null,
   sent: DevicePairing,
 ): string | null {
-  if (shown === null) {
-    return 'This Mac is not available. Try again once it connects.'
-  }
+  if (shown === null) return notAvailableCause
   return equalPairing(shown, sent)
     ? null
     : 'This Mac reconnected before the change reached it. Try again.'
@@ -143,6 +184,11 @@ const titles = {
     done: 'Kept until you stop',
     'done-not-saved': 'Kept, not saved',
     failed: 'Not kept',
+  },
+  'start-workspace-until-stop': {
+    done: 'Started',
+    'done-not-saved': 'Started, not saved',
+    failed: 'Not started',
   },
 } as const satisfies Record<
   SettingsChange['action'],

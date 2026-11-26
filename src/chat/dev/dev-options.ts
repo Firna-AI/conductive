@@ -49,10 +49,18 @@ export interface DevOptions {
   /**
    * The answer of each scripted turn: a line of text, three tables that
    * arrive one line at a time, a review under headings, with a plan under a
-   * heading, or screenshots of the context folder, with a plan that holds
-   * a screenshot.
+   * heading, quotes, a rule, marks, and line breaks, with a plan that holds
+   * them too, an answer of about 100 KiB that then grows in ten parts, task
+   * lists in the plan and in the answer, or screenshots of the context
+   * folder, with a plan that holds a screenshot.
    */
-  answer: 'text' | 'tables' | 'headings' | 'pictures'
+  answer:
+    'text' | 'tables' | 'headings' | 'prose' | 'long' | 'tasks' | 'pictures'
+  /**
+   * The skill lists of the list of `/`: the sample lists, no report yet, an
+   * unavailable list, or a repository without skills.
+   */
+  skills: 'listed' | 'loading' | 'unavailable' | 'none'
 }
 
 export const choices = {
@@ -65,6 +73,11 @@ export const choices = {
     'queued',
     'first-turn',
     'loss',
+    'wake-finished',
+    'wake-failed',
+    'wake-stopped',
+    'wake-other-workspace',
+    'wake-during-turn',
   ],
   workspace: ['existing', 'new'],
   state: [
@@ -105,7 +118,8 @@ export const choices = {
   page: ['chat', 'this-mac'],
   files: ['listed', 'unread'],
   speed: ['none', 'fast', 'limit', 'older', 'other'],
-  answer: ['text', 'tables', 'headings', 'pictures'],
+  answer: ['text', 'tables', 'headings', 'prose', 'long', 'tasks', 'pictures'],
+  skills: ['listed', 'loading', 'unavailable', 'none'],
 } as const satisfies Record<keyof DevOptions, readonly string[]>
 
 /** The options in the order that the page lists them. */
@@ -127,6 +141,7 @@ export const optionNames = [
   'files',
   'speed',
   'answer',
+  'skills',
 ] as const satisfies readonly (keyof DevOptions)[]
 
 function pick<T extends string>(
@@ -157,6 +172,7 @@ export function readOptions(search: string): DevOptions {
     files: pick(choices.files, get('files')),
     speed: pick(choices.speed, get('speed')),
     answer: pick(choices.answer, get('answer')),
+    skills: pick(choices.skills, get('skills')),
   }
 }
 

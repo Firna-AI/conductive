@@ -1,28 +1,83 @@
-# Whole-value draft editors can lose an admin's edit
+# Saved draft editors can lose a user's edit
 
-- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Outside the scope.
-- **Added:** 2026-11-10, from branch `calummoore/routines-feature-brainstorm`: a new problem of the check of finding 101 of its review, and a new problem of the check of finding 106 of its second review.
-- **Location:** `src/shell/ui/useSavedDraft.ts` (the whole-value mode, near line 51), `src/shell/settings/GeneralTab.tsx:37`, and `src/shell/settings/ScriptSection.tsx:30`.
-- **Reason:** The two editors and the whole-value mode are unchanged code of `main`, outside the automations change.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-10, from branch `calummoore/routines-feature-brainstorm`: a new problem of the check of finding 101 of its review, and a new problem of the check of finding 106 of its second review. Updated 2026-11-18 from branch `calummoore/oslo-3u7a`: implementation finding 409 of the trust change and its independent check merged into this item. The update raised the severity from Low and the effort from Small, and changed the kind from Outside the scope. Options A and B of finding 409 are F and G here. Its option C and the check's options D and E keep their letters.
+- **Location:** `src/shell/ui/useSavedDraft.ts:38` (`untouched`), `:53` (`wholeValue`), `:78` (`eachField`), and `:119` (`save`), `src/shell/settings/GeneralTab.tsx:44`, `src/shell/settings/ScriptSection.tsx:30`, `src/shell/settings/SkillsSection.tsx:104`, `:137-139`, and `:148`, `src/shell/automations/AutomationEditor.tsx:70`, `src/shell/automations/useAutomationSave.ts:58-64`, `src/app/computer-model.ts:156`, `:172`, and `:191`, `src/app/app-model.ts:282`, and `src/app/screens.md:177-192`.
+- **Reason:** Each loss needs a rare overlap of edits and saves, and the fix reaches the shared hook and three editors outside the trust change.
 
 - **Terms:**
-  - **Saved draft hook:** `useSavedDraft`, which keeps the draft of an editor through its saves while newer saved values arrive.
-  - **Whole-value mode:** the default mode of the hook. It treats the draft as one value: a newer saved value replaces the draft only while the whole draft is unchanged, or while it still equals the draft that went out for a save.
-  - **Per-field mode:** the mode `eachField`, which the automations branch added for the automation form. Each field follows the saved value on its own, and a field that went out for a save settles only on the result of that save.
+  - **Saved draft hook:** `useSavedDraft` in `src/shell/ui/useSavedDraft.ts`, which keeps the draft of an editor through its saves while newer saved values arrive.
+  - **Whole-value mode:** the default mode of the hook, which treats the draft as one value.
+  - **Per-field mode:** the mode `eachField`, in which each field of a form follows the saved value on its own.
+  - **Equality check:** `untouched` in the hook, which counts a value as unchanged while it equals the earlier saved value or what went out for a save.
+  - **Trust switch:** the switch "Trust this skills repository" under the Repository field of the Skills section, in the Cloud computer tab of the org settings.
 - **Background:**
-  - The General tab of the org settings edits the org name and the initials as one whole-value draft (`GeneralTab.tsx`). The script editor edits one script as a whole-value draft (`ScriptSection.tsx`).
-  - The comment of the hook and `src/app/screens.md` say: "A failed save keeps the draft".
-- **Problem:** Two cases lose an admin's edit:
-  - When another admin renames the org or changes its initials during an edit, the hook keeps the whole old draft, so Save writes the other field's old value back.
-  - When a newer saved value arrives while Save waits, the hook takes it as the answer of the save and replaces the sent draft. When the save then fails, the typed name or script is gone, against the documented rule.
-- **Impact if no action:** A rename by one admin can undo the rename of another, and an admin can lose a typed name or script after a failed save.
-- **Root question:** How do the editors of the whole-value mode keep each admin's edit when a newer saved value arrives?
+  - The General tab of the org settings edits the org name and the initials as one whole-value draft, at `GeneralTab.tsx:44`. Its fields are read-only while a rename waits.
+  - The script editor edits one script as a whole-value draft, at `ScriptSection.tsx:30`. Its field stays editable while a save waits.
+  - The Skills section edits the skills repository and its trust choice as one whole-value draft, at `SkillsSection.tsx:104`. Each edit of the text turns the trust switch off. The field and the switch stay usable while Save waits.
+  - The automation page edits its form in the per-field mode, at `AutomationEditor.tsx:70`. The automations change added that mode for the automation form.
+  - In the whole-value mode, a newer saved value replaces the draft only while the whole draft is unchanged, or while it still equals the draft that went out for a save.
+  - In the whole-value mode, a success without a newer saved value settles a draft that still equals what went out to the current saved value. Edits made during the save stay.
+  - In the per-field mode, each field follows the saved value on its own, and a field that went out for a save settles only on the result of that save.
+  - The comment of the hook and `src/app/screens.md` say: "A failed save keeps the draft". The approved trust design keeps edits made during a save.
+  - The `write` that `save` takes resolves with nothing, at `useSavedDraft.ts:119`. So the hook guesses which newer saved value answers its save. No requirement asks for this guess.
+  - Each write gets the saved value from its reply, but none passes it back. `ComputerModel.write` gets the settings from `Resource.save`, and `renameOrg` gets the org. `updateAutomation` returns the saved automation, and `useAutomationSave.ts:58-64` drops it.
+  - The screens read the answer through `useStore`, which uses `useSyncExternalStore`. By code reading, a browser renders the answer before the save ends. The DOM tests wrap replies in `act` through `settle()` of `src/shell/test-mount.tsx`, so there the save ends first.
+  - "Save" in `docs/protocol/org-skills-trust.md` requires that the field and the switch form one draft. Save repository saves both in one request, and a failed Save keeps the draft.
+  - On 2026-11-18, the trust change kept the pair in the whole-value mode, as a design call. Reason: the two values must follow a saved reply together. A per-field pair could join a newer saved grant to typed text for another repository.
+  - A GitHub link that names the saved repository settles the field to `owner/name` after Save, and Save turns off. The test at `SkillsSection.test.tsx:132` covers it.
+  - `saveSkillsRepository` runs the skills lookup after each Save, also a Save that changes only trust, at `computer-model.ts:198`. A design call of 2026-11-18 chose this, so that one saved-settings path owns the list refresh.
+  - The trust and Repository cases below are inside the scope of the trust change on branch `calummoore/oslo-3u7a`. The org name, script, and automation cases are code of `main`, outside the scope of the automations change, where this item started.
+- **Problem:** Three cases lose an edit:
+  - **Overwrite:** When another admin renames the org or changes its initials during an edit, the hook keeps the whole old draft, so Save writes the other field's old value back.
+  - **Failed save:** When a newer saved value arrives while Save waits, the hook takes it as the answer of the save and replaces the sent draft. When the save then fails, the typed name, script, or repository choice is gone, against the documented rule.
+  - **Edit back:** When the user changes a value back to its earlier saved value while Save waits, the equality check counts it as unchanged. The answer of the save then replaces it, in both modes and in either order.
+  - An example of the edit back: start with an untrusted saved repository. Turn trust on, press Save repository, then turn trust off before the reply. The section then shows trust on, and Save is off.
+  - The edit back also loses text typed back to the saved repository while the saved choice is untrusted, a script typed back to its saved text, and an automation field changed back to its earlier value.
+- **Impact if no action:** A rename by one admin can undo another admin's rename, and a failed save can lose a typed name, script, or repository choice. After an edit back during a save, the saved value shows, such as trust on, until the user makes the edit again and saves it.
+- **Root question:** How does each editor of a saved value keep every user's edit when a newer saved value arrives, also while a save waits?
 - **Options:**
-  - **A.** Change nothing. Effort: Small.
-  - **B.** Move the org name editor to the per-field mode, and give the whole-value mode the settle rule of the per-field mode: a sent draft keeps its value until the save resolves, and takes the latest saved value only then. Add a regression for each case. Effort: Small.
-- **Left out:** A conflict notice. With B, only edits of the same field conflict, and the newer edit should win.
-- **Wider fix:** B, with one settle rule for every mode of the hook.
-- **Previous examples:** Findings 101 and 106 of the automations review fixed the same rules in the automation form.
-- **Recommendation:** B.
-- **Action:** fix after merge, apply B, because the editors and the whole-value mode are outside the automations change.
+  - **A.** Change nothing. All three cases keep losing edits. Effort: Small.
+  - **B.** Move the org name editor to the per-field mode, and give the whole-value mode the settle rule of the per-field mode: a sent draft keeps its value until the save resolves, and takes the latest saved value only then. Add a regression for the overwrite and for the failed save. B keeps the equality check, so the edit back is still lost, in both modes. Effort: Small.
+  - **C.** Record explicit edits in the shared saved draft hook. Follow and settle use that record, rather than inferring intent only from equal values. Extend the existing editor tests. This protects every editor from the edit back and must preserve per-field behavior. Effort: Medium.
+    - C keeps the guess of which newer saved value answers a save. So its edit record must last until the answer renders, also after the save ends.
+    - A newer saved value that is not the answer can still replace a sent draft, so the failed save stays. The overwrite stays too.
+  - **D.** Give the hook the saved value at the end of its own save: `write` resolves with it. Effort: Medium.
+    - While a save waits, a newer saved value does not replace a value in the save. It also does not replace a value that the user changed after the save went out.
+    - On success, each value that still equals what went out takes the saved value. Every other value stays.
+    - This works for one value and for each field. It also fixes the failed save.
+    - Cost: four model writes must return their saved value: `saveScript`, `saveSkillsRepository`, `renameOrg`, and the automation update.
+    - The regression test must cover both orders: the answer renders before the save ends, and the save ends first.
+    - D alone keeps the org name editor in the whole-value mode, so the overwrite stays.
+  - **E.** Fix every case: apply D in both modes, and move the org name editor to the per-field mode, as B says. Effort: Medium.
+    - Each write resolves with the saved value of its own save. `saveScript` returns the saved script, and `saveSkillsRepository` returns `savedSkillsChoice` of the saved settings.
+    - `renameOrg` returns the saved org, and the General tab passes back its name and initials. The automation save passes back `draftOf` of the automation that `updateAutomation` returns.
+    - While a save waits, the hook records each explicit edit, also an edit back to the earlier saved value. A newer saved value replaces neither a value in the save nor an edited value.
+    - The hook settles with the result of its own save. Each value that still equals what went out takes the saved value, and every other value stays. A failed save keeps the draft.
+    - Both modes keep every changed value, whether the answer renders before or after the save ends.
+    - With the per-field org name editor, a field that another admin changed shows its new value, and Save does not write the old value back.
+    - Keep the equivalent-link result and the skills lookup after each Save of the Skills section. Keep the repository and trust as one whole-value draft.
+    - Add no new product restriction. Each field and the trust switch stay as usable during a save as they are today.
+    - Add one regression test for each case. The overwrite: another admin renames the org during an edit. The failed save: a newer value arrives during a save, then the save fails.
+    - The edit back: the user changes a value back to the earlier saved value during a save. Test it on the trust switch and on one automation field. The tests of a save cover both orders.
+    - Update the draft rules in `src/app/screens.md:177-192` and the comments of the hook.
+  - **F.** Give the Skills section a local draft mode that records edits during a save. This fixes the trust form but duplicates shared draft rules. The org name, script, and automation editors keep their losses. Effort: Small.
+  - **G.** Disable the trust switch during Save. This prevents the trust sequence but changes the approved rule that edits remain possible, and it adds a product restriction. Effort: Small.
+    - G covers only the switch. With an untrusted saved choice, text typed back to the saved repository during a Save is still lost.
+    - The switch stays usable through a design call of the trust change, made on 2026-11-18. G still needs a user decision because it adds a product restriction.
+- **Left out:**
+  - A conflict notice. With the per-field org name editor of B or E, only edits of the same field conflict, and the newer edit should win.
+  - A trust-only save retry: it does not recover an erased draft.
+  - A rule that compares the draft only with what went out while a save waits: it works only when the answer renders before the save ends. The `act` tests run the other order, so the edit is still lost there.
+  - G extended to the Repository field: it does not fix the script, org name, or automation editors. It also removes typing during a save, which the comment at `SkillsSection.tsx:81-83` and the test at `skills-trust.test.tsx:176` keep.
+  - An automatic second save in the model: it would save a trust change that the admin did not save.
+  - A change in the Worker: the Worker saves what each request sends. The loss happens only in the draft in the browser.
+  - The repository and trust in the per-field mode: a newer saved grant could join typed text for another repository.
+- **Wider fix:** E. Its D part gives both modes one settle rule from the result of their own save, so no editor guesses the answer. Its per-field org name editor stops the overwrite. B and C were the earlier wider fixes, but B keeps the equality check, and C keeps the guess.
+- **Previous examples:**
+  - Commit `aa6d2f9cc` of 2026-11-06 added the equality check. Commit `d39e64eb1` of 2026-11-10 only moved it into `untouched`, which both modes use.
+  - In `d39e64eb1`, the automations change fixed the same rules in the automation form with the per-field mode. A failed save there no longer lost the edited prompt.
+- **Related:** `plans/follow-ups/org-saves-restore-older-fields.md` covers the same org name editor. Its fix keeps the latest value of each org field in the app model. The per-field draft of B or E does not stop that defect, so the two items stay apart. Both fixes change `renameOrg`, so the later fix keeps the rule of the earlier one.
+- **Recommendation:** E, changed from B. Before the merge, the trust case recommended C. E does not guess which saved value answers a save, so it works in either order, and it fixes all three cases.
+- **Action:** fix after merge, apply E, because each loss needs a rare overlap of edits and saves, and E changes the shared hook and three editors outside the trust change.

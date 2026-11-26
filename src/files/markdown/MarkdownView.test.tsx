@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, it } from 'vitest'
-import textLink from '../../../docs/mockups/src/components/common/TextLink.module.css'
+import prose from '../../ui/components/common/MarkdownProse.module.css'
+import textLink from '../../ui/components/common/TextLink.module.css'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { parseRoute, routes } from '../../app/router'
 import { orgPath } from '../../shared/api'
@@ -9,14 +10,13 @@ import {
   type LinkOpening,
 } from '../../shell/ui/text-links'
 import { FAKE_IDS, FAKE_ORIGIN } from '../../test-support/fixtures/core'
-import { parseBlocks } from './markdown-blocks'
-import { parseMarkdown } from './markdown-document'
+import { previewDocument } from './preview-blocks'
 import { MarkdownView } from './MarkdownView'
 
 /** A static render, with the whole parse of the worker on this thread. */
 function render(text: string): string {
   return renderToStaticMarkup(
-    <MarkdownView parser={parseMarkdown} text={text} />,
+    <MarkdownView parser={previewDocument} text={text} />,
   )
 }
 
@@ -36,7 +36,7 @@ function renderInScreen(text: string): string {
   return renderToStaticMarkup(
     <NavigationContext.Provider value={memoryNavigation(routes.home())}>
       <LinkOpeningProvider value={opening}>
-        <MarkdownView parser={parseMarkdown} text={text} />
+        <MarkdownView parser={previewDocument} text={text} />
       </LinkOpeningProvider>
     </NavigationContext.Provider>,
   )
@@ -146,12 +146,25 @@ it('links only absolute http, https, and mailto addresses, with the shared link 
       `[agents](${FAKE_ORIGIN}${agents})`,
       `<a class="${textLink.link}" href="${agents}" title="${FAKE_ORIGIN}${agents}">agents</a>`,
     ],
-    ['[run](javascript:alert(1))', '<p>run</p>'],
-    ['[run](JaVaScRiPt:alert(1))', '<p>run</p>'],
-    ['[page](data:text/html,hi)', '<p>page</p>'],
+    // The parser makes no link of a script or a data address, so the link
+    // shows as typed. A link that the preview does not open shows its label.
+    ['[run](javascript:alert(1))', '<p>[run](javascript:alert(1))</p>'],
+    ['[run](JaVaScRiPt:alert(1))', '<p>[run](JaVaScRiPt:alert(1))</p>'],
+    ['[page](data:text/html,hi)', '<p>[page](data:text/html,hi)</p>'],
     ['[setup](docs/setup.md)', '<p>setup</p>'],
     ['[other](//evil.example/x)', '<p>other</p>'],
-    ['![logo](https://example.com/logo.png)', '<p>logo</p>'],
+    // An image shows its alt text, as a link where a link of the same
+    // address opens. No picture loads.
+    [
+      '![logo](https://example.com/logo.png)',
+      `<p><a ${drawn('https://example.com/logo.png')} href="https://example.com/logo.png" ${newTab}>logo</a></p>`,
+    ],
+    ['![logo](assets/logo.png)', '<p>logo</p>'],
+    ['![mail](mailto:dev@example.com)', '<p>mail</p>'],
+    [
+      '[![logo](https://example.com/logo.png) home](https://example.com/)',
+      `<a ${drawn('https://example.com/')} href="https://example.com/" ${newTab}>logo home</a>`,
+    ],
     [
       '[ref]\n\n[ref]: https://example.com/ref',
       `<a ${drawn('https://example.com/ref')} href="https://example.com/ref" ${newTab}>ref</a>`,
@@ -173,7 +186,7 @@ it('keeps a link to a local address as a link that opens a new tab, also where t
   )
 })
 
-it('renders a table, a quote, a rule, and a task list', () => {
+it('renders a table, a quote, a rule, and a task list, with the box of a task with sub-tasks at the start of its words', () => {
   const html = render(`| Name | Count |
 | :--- | ---: |
 | a \\| b | 2 |
@@ -184,28 +197,23 @@ it('renders a table, a quote, a rule, and a task list', () => {
 
 - [x] Done
 - [ ] Open
+  - Saved addresses
 `)
   expect(html).toContain('<th style="text-align:left">Name</th>')
   expect(html).toContain('<td style="text-align:left">a | b</td>')
   expect(html).toContain('<td style="text-align:right">2</td>')
   expect(html).toContain('<blockquote><p>Quoted</p></blockquote>')
   expect(html).toContain('<hr/>')
+  // Quotes, rules, and task items take the look that the chat shares.
+  const article = /<article class="([^"]*)"/u.exec(html)?.[1].split(' ')
+  expect(article).toContain(prose.prose)
   expect(html.match(/type="checkbox"/g)).toHaveLength(2)
-  expect(html).toContain('<input disabled="" type="checkbox" checked=""/>Done')
-  expect(html).toContain('<input disabled="" type="checkbox"/>Open')
-  expect(parseBlocks('- [ ]\n\n  Continue.').blocks).toEqual([
-    {
-      kind: 'list',
-      ordered: false,
-      start: 1,
-      items: [
-        {
-          checked: false,
-          blocks: [{ kind: 'paragraph', text: 'Continue.' }],
-        },
-      ],
-    },
-  ])
+  expect(html).toContain(
+    `<li class="${prose.task}"><input class="${prose.taskBox}" disabled="" type="checkbox" checked=""/>Done</li>`,
+  )
+  expect(html).toContain(
+    `<li class="${prose.task}"><p><input class="${prose.taskBox}" disabled="" type="checkbox"/>Open</p><ul><li>Saved addresses</li></ul></li>`,
+  )
 })
 
 it('shows quotes nested deeper than the limit as text, without a stack overflow', () => {
@@ -240,8 +248,9 @@ function bare(html: string): string {
 }
 
 /**
- * 1,202 bytes: 200 header cells, then 200 rows of one empty cell. Each row
- * gets 199 empty cells, so the table adds 39,800.
+ * 1,202 bytes: 200 header cells, then 200 rows of one pipe. The parser reads
+ * no cell in such a row, so each row gets 200 empty cells, and the table
+ * adds 40,000.
  */
 const sparseTable = `${'a|'.repeat(200)}\n${'-|'.repeat(200)}\n${'|\n'.repeat(200)}`
 
@@ -253,24 +262,25 @@ it('fills the short rows of all tables of one file, also in a list and a quote, 
     .map((line, index) => `${index === 0 ? '- ' : '  '}> ${line}`)
     .join('\n')
   const html = render(`${sparseTable}\n${inItem}\n- after\n`)
-  // 25,736 empty cells remain for the quoted table: 129 rows of 199.
+  // 25,536 empty cells remain for the quoted table: 127 rows of 200.
   expect(tableSizes(html)).toEqual([
     { head: 200, rows: 200, cells: 40_000 },
-    { head: 200, rows: 129, cells: 25_800 },
+    { head: 200, rows: 127, cells: 25_400 },
   ])
-  // The tail starts at the 130th row, and holds the later item.
+  // The tail starts at the 128th row, and holds the later item.
   expect(html.match(/<li>/g)).toHaveLength(1)
   expect(bare(html)).toContain(
-    `</ul><p>${'  &gt; |\n'.repeat(71)}- after</p></article>`,
+    `</ul><p>${'  &gt; |\n'.repeat(73)}- after</p></article>`,
   )
 })
 
 it('allows exactly 65,536 empty cells in one file, then shows the rest of the file as text, with no Markdown', () => {
-  // Each row of one cell under 1,025 header cells adds 1,024 empty cells.
-  const wide = `${'a|'.repeat(1_025)}\n${'-|'.repeat(1_025)}\n${'|\n'.repeat(65)}`
+  // Each row of one pipe under 1,024 header cells adds 1,024 empty cells.
+  // The parser also ends its table at the 65th row, by its own limit.
+  const wide = `${'a|'.repeat(1_024)}\n${'-|'.repeat(1_024)}\n${'|\n'.repeat(65)}`
   const later = '| x | y |\n| - | - |\n| 1 | 2 |\n'
   const html = render(`${wide}\n${later}\n# After **this**\n`)
-  expect(tableSizes(html)).toEqual([{ head: 1_025, rows: 64, cells: 65_600 }])
+  expect(tableSizes(html)).toEqual([{ head: 1_024, rows: 64, cells: 65_536 }])
   expect(html).not.toContain('<h1>')
   expect(bare(html)).toContain(
     '</table></div><p>|\n\n| x | y |\n| - | - |\n| 1 | 2 |\n\n# After **this**</p></article>',

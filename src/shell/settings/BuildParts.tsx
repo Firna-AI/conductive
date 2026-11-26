@@ -1,6 +1,6 @@
 import { ChevronRight, CircleAlert, Hammer, RotateCw } from 'lucide-react'
-import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
-import styles from '../../../docs/mockups/src/components/settings/BuildSection.module.css'
+import { StatusText } from '../../ui/components/common/StatusText'
+import styles from '../../ui/components/settings/BuildSection.module.css'
 import { formatDuration } from '../../app/time'
 import type { ImageBuild } from '../../shared/org-settings'
 import { ActionButton, type ActionTone } from '../ui/actions'

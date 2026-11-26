@@ -1,0 +1,34 @@
+# File server tag misses memory-mapped writes
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-21, from branch `calummoore/no-response-issue-l1pn`, a problem outside the scope of its review, beside review finding 4.
+- **Location:** `crates/cnd-runner/src/file_server/files.rs:76-90` (`RepositoryFiles::open` builds the tag), `crates/cnd-runner/src/file_server/response.rs:60-75` and `:95-98` (`unchanged` and the 304 reply), `docs/protocol/file-server.md:52-60` (the cache and `ETag` rules).
+- **Reason:** The tag of the file server is on `origin/main`, and the branch does not change the file server.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **File server:** the part of the agent runner that serves the files of the repository folder for the preview of HTML files (`crates/cnd-runner/src/file_server/`, `docs/protocol/file-server.md`).
+  - **ETag:** an HTTP header that names one version of a file, which the browser sends back in `If-None-Match` to ask for a 304 reply.
+  - **Memory-mapped write:** a program changes the bytes of a file through a shared memory mapping, not through a write call.
+- **Background:**
+  - Each reply of the file server carries `Cache-Control: no-cache`, so each reload asks the server again. On 11 November 2026 the user chose to keep these cache rules for previews, because `no-store` made each reload a full load (commit `cad68800a`).
+  - `docs/protocol/file-server.md` says that the `ETag` changes with each change of the file, also within one second.
+  - `RepositoryFiles::open` builds the `ETag` from the inode, the size, and the full modification and change times of the opened file (`files.rs:80-88`). Commit `908da17da` added these values on 20 November 2026, for rewrites in the same second.
+  - A request whose `If-None-Match` matches the current tag gets 304 (`unchanged` in `response.rs:60-68`). The browser then shows its stored copy.
+  - Linux updates the times of a file at the first write fault on a clean mapped page. A later write to a page that is still dirty changes no time. On 21 November 2026 a Linux probe changed bytes in that way, and the device, the inode, the size, and both times stayed equal.
+  - Inotify reports no write through a memory mapping. So the file reports of the runner do not see such a write by themselves. The frame of an HTML file tab then does not reload. The member must select Reload.
+- **Problem:** A memory-mapped write that keeps the metadata keeps the `ETag`. Reload of the preview then gets 304, and the page shows the old bytes. This breaks the rule that the `ETag` changes with each change of the file.
+- **Impact if no action:** After Reload, the preview can show an old version of the page or of a file that it loads. This lasts until the file changes in another way.
+- **Root question:** How does a reload show the current bytes of a file with unchanged metadata, without a full load of each unchanged file?
+- **Options:**
+  - **A.** Build the `ETag` from a SHA-256 of the bytes for each file up to a fixed size. The 5 MiB read limit of the workspace tools is one choice. Keep the metadata tag for a larger file. Each request then reads such a file once more before the reply. A memory-mapped write into a larger file still keeps its tag, so the rule of `docs/protocol/file-server.md` still fails for such a file, as today. Test the change with a write through a memory mapping, which needs a new development dependency or a seam in `RepositoryFiles`. Effort: Medium.
+  - **B.** Build the `ETag` from a hash of the bytes for each file of any size. It also covers large files. But each request of a large video then reads the whole file before its first byte, also each range request. Effort: Medium.
+  - **C.** Send no `ETag` and no `Last-Modified`, so that each reload loads each file in full. It goes against the choice of 11 November 2026 to keep the low-cost reload, so it needs the user. Effort: Small.
+  - **D.** Keep the metadata tag, and add a risk to `docs/protocol/file-server.md`: a memory-mapped write that keeps the metadata keeps the old `ETag`. It changes a requirement, so it needs the user. Effort: Small.
+- **Left out:** A hash from the scans of the file reporter in the tag. No scan runs for a memory-mapped write, and that hash can be stale too, as `plans/follow-ups/hash-reuse-misses-mapped-writes.md` says. A version query in the address of the frame, because it renews only the page, not the files that it loads.
+- **Wider fix:** B. The tag of each file then comes from its bytes, so no case of the metadata can keep an old tag.
+- **Previous examples:** Commit `908da17da` replaced the whole-second date with the metadata tag, after rewrites in the same second showed a stale page. The follow-up item that this commit closed listed a hash of the content as an option, with the cost of a full read before the reply.
+- **Related:** `plans/follow-ups/hash-reuse-misses-mapped-writes.md`: the same cause. The file reports also infer a change of the bytes from the metadata. No option of either item fixes the other.
+- **Recommendation:** A. It meets the `ETag` rule for each page file that a reload checks, and it changes no requirement. Its cost is one more read of each small file. B best protects the codebase, but it reads each large file in full at each request.
+- **Action:** fix after merge, apply A, because the problem is on `origin/main`, outside the files of the branch. A meets the existing `ETag` rule for each file up to the limit and adds no requirement, so no condition of the decision test holds.

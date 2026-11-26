@@ -1,0 +1,34 @@
+# Each capability write reads facts per session
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-21, from branch `calummoore/workspace-capability-prompts-issue-2daj`, the round 1 check of finding 34 of its review.
+- **Location:** `worker/chat/capability-changes.ts:31`, in `captureCapabilities`, and `recordCapabilityChanges` in the same file. `worker/secrets/session-capabilities.ts:12`, in `readSessionCapabilities`.
+- **Reason:** The notes are correct, and the review fixes of that branch change the code around these reads at the same time.
+
+- **Terms:**
+  - **Facts of a session:** the secrets that a session can use with no approval.
+  - **Capability write:** a change of the facts of a workspace. It is an edit in the Capabilities control, the Remove of a value for this workspace, or a secret answer that gives such a value.
+  - **Change note:** the line of the app that tells the chat and the agent of a session which of its facts changed.
+  - **Eligible session:** a session that can get a change note. Each session that started a turn is eligible, also a closed one.
+- **Background:**
+  - Each capability write reads the facts of each eligible session before the write, and again after it. The Worker then gives each session a change note with only the difference of its own facts.
+  - `captureCapabilities` in `worker/chat/capability-changes.ts` makes the reads before the write. `recordCapabilityChanges` in the same file makes the reads after it. Both call `readSessionCapabilities` once for each session, in parallel with `Promise.all`.
+  - The write paths that call them are in `worker/secrets/workspace-capabilities-write.ts`, `worker/secrets/remove-workspace-value.ts`, and `worker/secrets/request-answer.ts`.
+  - `readSessionCapabilities` in `worker/secrets/session-capabilities.ts` makes two D1 queries for each session. They are `secretWorkspaceState` and `secretGrants` in `worker/secrets/grant-data.ts`. It also reads the names of the values for this workspace from the storage of the Durable Object.
+  - Only the session approvals that `secretGrants` joins depend on the session. The workspace row, the org secrets, the pre-approvals of the workspace, and the value names are the same for each session.
+  - The turn command also calls `readSessionCapabilities`, for one session, through `worker/chat/dependencies.ts`.
+- **Problem:** One capability write makes four D1 queries for each eligible session, and most of them read the same rows again. So the D1 work of one click grows with the number of sessions of the workspace, closed sessions included.
+- **Impact if no action:** Each click in the Capabilities control gets slower as a workspace collects sessions. A workspace with many sessions can also reach the limit of D1 queries in one invocation. When a read fails, the write logs `capability_notes_failed`, and no session gets a note of that write.
+- **Root question:** How can one capability write find the changed facts of each session with D1 work that does not grow with the number of sessions?
+- **Options:**
+  - **A.** Change nothing. The notes stay correct, and the reads of each session run in parallel. Effort: Small.
+  - **B.** Read the shared facts once for each read of a write. They are the workspace row, the org secrets with the pre-approvals of the workspace, and the value names. Read the session approvals of all eligible sessions in one query. Build the facts of each session from these rows. One write then makes a fixed number of D1 queries. The turn command can use the same reader for its one session. Effort: Medium.
+- **Left out:** Only two approaches are real, for these reasons:
+  - Facts from the report of the write alone, with no read after it, fail the goal. The facts name secrets only, not the grant that gives each, so the report cannot tell whether another grant still covers a removed name.
+  - A stored copy of the facts of each session drifts. Changes that send no note, such as a new mark for all agents, also change the facts.
+  - A batch of the same queries for each session saves round trips but keeps the number of queries, so B is better on every point.
+- **Wider fix:** B. One reader of the shared facts keeps a later caller from reading the same workspace rows for each session.
+- **Previous examples:** None found.
+- **Recommendation:** B. It gives the same facts and notes with a fixed number of D1 queries for each write.
+- **Action:** fix after merge, apply B, because the notes are correct and the review fixes of that branch change the code around these reads.

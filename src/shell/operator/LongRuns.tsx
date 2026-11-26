@@ -4,12 +4,12 @@ import {
   copyComputerLabel,
   formatRunLength,
   longRunsWords,
-} from '../../../docs/mockups/src/components/operator/longRunsCopy'
-import styles from '../../../docs/mockups/src/components/operator/LongRuns.module.css'
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
-import { workspaceLabel } from '../../../docs/mockups/src/components/workspaces/label'
-import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
-import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
+} from '../../ui/components/operator/longRunsCopy'
+import styles from '../../ui/components/operator/LongRuns.module.css'
+import { Section } from '../../ui/components/settings/Section'
+import { workspaceLabel } from '../../ui/components/workspaces/label'
+import { StatusGlyph } from '../../ui/components/workspaces/StatusGlyph'
+import { activityPresentation } from '../../ui/components/workspaces/status'
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'
 import { formatWhen } from '../../app/time'

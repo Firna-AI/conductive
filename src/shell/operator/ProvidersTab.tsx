@@ -1,19 +1,16 @@
 import { useEffect, useState } from 'react'
 import { CircleAlert } from 'lucide-react'
-import { InlineText } from '../../../docs/mockups/src/components/common/InlineText'
-import { AccountCounts } from '../../../docs/mockups/src/components/operator/AccountCounts'
+import { InlineText } from '../../ui/components/common/InlineText'
+import { AccountCounts } from '../../ui/components/operator/AccountCounts'
 import {
   onlyAccountLine,
   providerWords,
   weightsChangedLine,
-} from '../../../docs/mockups/src/components/operator/providerCopy'
-import { WeightFields } from '../../../docs/mockups/src/components/operator/WeightFields'
-import { WeightSlider } from '../../../docs/mockups/src/components/operator/WeightSlider'
-import {
-  Section,
-  SectionText,
-} from '../../../docs/mockups/src/components/settings/Section'
-import styles from '../../../docs/mockups/src/screens/OperatorProvidersScreen.module.css'
+} from '../../ui/components/operator/providerCopy'
+import { WeightFields } from '../../ui/components/operator/WeightFields'
+import { WeightSlider } from '../../ui/components/operator/WeightSlider'
+import { Section, SectionText } from '../../ui/components/settings/Section'
+import styles from '../../ui/screens/OperatorProvidersScreen.module.css'
 import { OperatorProviders } from '../../app/operator-providers'
 import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'

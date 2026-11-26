@@ -111,6 +111,34 @@ function accept(backend: DevBackend, session: Session, outgoing: Outgoing) {
   return answer(backend.agent.start(session.id, [message]))
 }
 
+/**
+ * Starts an explanation, as the Worker does: an open session with the
+ * anchor of the selection, whose first message is a prompt that the page
+ * writes. The scripted agent answers it, and the parent tab stays shown.
+ */
+async function explain(backend: DevBackend, parent: Session, request: Request) {
+  const body = await bodyOf(request)
+  const quote = text(body.quote).slice(0, 2000)
+  const before = text(body.before)
+  const anchor = {
+    parentSessionId: parent.id,
+    messageId: text(body.messageId),
+    quote,
+    before: before.slice(Math.max(0, before.length - 300)),
+    after: text(body.after).slice(0, 300),
+  }
+  const choice = { ...parent.choice, fast: false }
+  const session = newSession(backend, choice, { anchor })
+  const [firstLine = ''] = quote.split(/\r\n|\n|\r/)
+  backend.count += 1
+  return accept(backend, session, {
+    id: `dev-explain-${backend.count}`,
+    text: `Explain "${firstLine}"\n\nKeep the answer short, because it shows in a small popover.`,
+    attachments: [],
+    choice,
+  })
+}
+
 async function sessionWrite(
   backend: DevBackend,
   request: Request,
@@ -145,6 +173,8 @@ async function sessionWrite(
   }
   if (method === 'POST' && action === 'messages')
     return send(backend, session, request)
+  if (method === 'POST' && action === 'explain')
+    return explain(backend, session, request)
   if (method === 'POST' && action === 'interrupt' && running) {
     requestStop(backend, session.id)
     return recordReply(backend, { turnId: running, state: 'stopping' })

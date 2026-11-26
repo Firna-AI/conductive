@@ -1,13 +1,15 @@
-import type { Viewport } from '@mokly/mokly'
-import { RotateCcw } from 'lucide-react'
-import { productName } from '../../brand'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
+import { productName } from '../../../../../src/shared/brand'
 import {
   keyboardOf,
   type Keyboard,
   type ShortcutHost,
 } from '../../fixtures/shortcutHosts'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import {
+  confirmDialog,
+  dialogText,
+} from '../../entries/components/common/ConfirmDialog.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { shortcutPages } from './shortcutPages'
 
@@ -33,9 +35,13 @@ export function ResetShortcutsDialog(props: {
   const pages = shortcutPages[props.host]
   const commands =
     props.changed === 1 ? '1 command gets' : `${props.changed} commands get`
-  const cancel = <ActionButton>Cancel</ActionButton>
+  const cancel = (
+    <actionButton.Component moklyInstance="dialog-cancel">
+      Cancel
+    </actionButton.Component>
+  )
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           {pages.changes ? (
@@ -46,19 +52,24 @@ export function ResetShortcutsDialog(props: {
             cancel
           )}
           <ScreenLink asChild to={pages.tab}>
-            <ActionButton icon={RotateCcw} tone="danger">
+            <actionButton.Component
+              icon="rotate-ccw"
+              moklyInstance="dialog-reset-all"
+              tone="danger"
+            >
               Reset all
-            </ActionButton>
+            </actionButton.Component>
           </ScreenLink>
         </>
       }
+      moklyInstance="reset-shortcuts-dialog"
       title="Reset all shortcuts?"
       viewport={props.viewport}
     >
-      <DialogText>
+      <dialogText.Component>
         {commands} their default shortcuts again, wherever you use {productName}{' '}
         {keyboardPlaces[keyboardOf(props.host)]}.
-      </DialogText>
-    </ConfirmDialog>
+      </dialogText.Component>
+    </confirmDialog.Component>
   )
 }

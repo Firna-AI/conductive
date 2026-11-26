@@ -97,6 +97,26 @@ export function readNativePacket(value: unknown): NativePacket {
   throw new Error('Invalid native test bridge packet.')
 }
 
+export async function readNativeReply(
+  response: { status: number; text(): Promise<string> },
+  invocation: NativeInvocation,
+): Promise<NativePacket> {
+  const text = await response.text()
+  let value: unknown
+  try {
+    value = JSON.parse(text)
+  } catch (cause) {
+    const call = [invocation.reference.id, ...invocation.reference.path].join(
+      '.',
+    )
+    throw new Error(
+      `Native call ${call} returned non-JSON (HTTP ${response.status}):\n${text}`,
+      { cause },
+    )
+  }
+  return readNativePacket(value)
+}
+
 export async function* nativePackets(body: ReadableStream<Uint8Array>) {
   const reader = body.getReader()
   const decoder = new TextDecoder()

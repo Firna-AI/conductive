@@ -176,10 +176,10 @@ These facts belong to this implementation, not to the protocol docs.
   A changed-file read failure also keeps the turn's completed state and
   marks its files as unavailable.
 - The [file reports guide](file-reports.md) gives the base of each
-  comparison, the counts of each changes report, and the limits of file
-  reads and diffs.
-- Before it connects, the runner reads the `claude` program file once, so
-  that the disk loads it early. It uses no credential and starts no agent.
+  comparison, the counts of each changes report, the report limits, and
+  the limits of file reads and diffs.
+- Before it connects, the runner removes stale agent credentials and starts
+  its file watches. Each agent start loads its own program.
 - After a start from a saved snapshot on Boat, the provider restores the
   disk in the background. When the restore ends, a running program keeps
   an old view of the disk at another path, such as

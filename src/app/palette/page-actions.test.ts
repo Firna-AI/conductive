@@ -90,4 +90,33 @@ describe('the actions of an open workspace', () => {
       mergeLatestArchived: ['session-history'],
     })
   })
+
+  test('offer the action of the merge queue that the menu of the workspace offers, after Merge latest and before Archive', () => {
+    const ids = (overrides: Partial<WorkspacePage>) =>
+      workspaceActionIds({
+        access: { role: 'member', suspended: false },
+        workspace,
+        viewer: cal,
+        rightColumn: false,
+        chat: false,
+        desktopTool: false,
+        offersRestore: false,
+        mergeLatest: true,
+        ...overrides,
+      })
+    expect({
+      add: ids({ queue: 'add' }),
+      remove: ids({ queue: 'remove' }),
+      none: ids({ queue: null }),
+      suspended: ids({
+        access: { role: 'member', suspended: true },
+        queue: 'remove',
+      }),
+    }).toEqual({
+      add: ['merge-latest', 'add-to-merge-queue', 'archive-workspace'],
+      remove: ['merge-latest', 'remove-from-merge-queue', 'archive-workspace'],
+      none: ['merge-latest', 'archive-workspace'],
+      suspended: [],
+    })
+  })
 })

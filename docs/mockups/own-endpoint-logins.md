@@ -18,7 +18,11 @@
     and `app/chat/endpoint-models` show. On an org endpoint, every picker
     of a session or a new session on the org login hides them (decision
     3 A of the org logins plan), as `app/chat/endpoint-models/org` and
-    `app/automations/automation/new/org-models` show.
+    `app/automations/automation/new/org-models` show. The model menu also
+    leaves out each favourite on a hidden model, as
+    `app/model-favourites/endpoint` shows. Preferences greys such a
+    favourite only for an own endpoint of the member, as
+    `app/model-favourites/preferences/hidden` shows.
   - The address is the base address of the endpoint. The placeholder gives
     an example, without `/v1` for Claude, and with `/v1` for Codex. One
     shared rule checks the address and builds the exact address of each
@@ -46,7 +50,8 @@
     endpoint under its row, such as "Own endpoint at proxy.example.com", so
     that a phone shows both in full. It never shows the key or the full
     address, as `app/account/own-endpoint/connected` shows. The part lives
-    in `src/components/settings/LoginEndpoint.tsx`.
+    in
+    [`src/ui/components/settings/LoginEndpoint.tsx`](../../src/ui/components/settings/LoginEndpoint.tsx).
   - When the typed address of a Codex endpoint gives no model list and the
     same address with `/v1` gives one, the save stores the address with
     `/v1` (Codex base decision 1 C, which Cal chose
@@ -63,13 +68,15 @@
     models that the list leaves out. The row then has one Refresh, beside
     the warning, as `app/account/endpoint-models/read-failed-unlisted`
     shows.
-  - `EndpointRead.tsx` in `src/components/settings/` draws the note and the
-    warning. The caller gives the warning its Refresh button, so that the
-    app can give the button its own action. `endpointReadCopy.ts` beside it
-    holds the words of both and of Refresh, with the product name from
-    `brand.ts`. Neither imports a fixture, so the app can import them.
-    `EndpointDetails.tsx` puts the lines under an own endpoint login in
-    order, and gives the row its one Refresh. The Agents tab of the org
+  - `EndpointRead.tsx` in
+    [`src/ui/components/settings/`](../../src/ui/components/settings/)
+    draws the note and the warning. The caller gives the warning its
+    Refresh button, so that the app can give the button its own action.
+    `endpointReadCopy.ts` beside it holds the words of both and of Refresh,
+    with the product name from [`brand.ts`](../../src/shared/brand.ts). The
+    app and the mockups import both. `EndpointDetails.tsx` in
+    `src/components/settings/` puts the lines under an own endpoint login
+    in order, and gives the row its one Refresh. The Agents tab of the org
     settings uses it too. There its `owner` is the org, so the model line
     names the pickers on the login, and its `readOnly` shows a member only
     the kind and the host.

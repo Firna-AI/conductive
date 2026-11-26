@@ -1,15 +1,23 @@
 //! Fixed web media types, independent of content and case.
 
+/// Media type for changed HTML pages.
+pub(super) const HTML: &str = "text/html; charset=utf-8";
+/// Media type for changed stylesheets.
+pub(super) const CSS: &str = "text/css; charset=utf-8";
+/// Media type for changed SVG documents.
+pub(super) const SVG: &str = "image/svg+xml; charset=utf-8";
+
+/// Find the media type for the requested file extension.
 pub(super) fn content_type(path: &str) -> &'static str {
     let extension = path
         .rsplit_once('.')
         .map(|(_, value)| value.to_ascii_lowercase());
     match extension.as_deref() {
-        Some("html" | "htm") => "text/html; charset=utf-8",
-        Some("css") => "text/css; charset=utf-8",
+        Some("html" | "htm") => HTML,
+        Some("css") => CSS,
         Some("js" | "mjs") => "text/javascript; charset=utf-8",
         Some("json" | "map") => "application/json; charset=utf-8",
-        Some("svg") => "image/svg+xml; charset=utf-8",
+        Some("svg") => SVG,
         Some("png") => "image/png",
         Some("jpg" | "jpeg") => "image/jpeg",
         Some("gif") => "image/gif",

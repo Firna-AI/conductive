@@ -27,12 +27,13 @@ export function withPreapproval(
 
 /**
  * The Capabilities of one workspace that exists (secrets decision 8 B):
- * the secrets that it pre-approves, the approvals of its sessions, the
- * values that members gave for the workspace, and Mac access. Every member
- * changes them. A change shows at once and saves, and
- * its answer is the whole value. A failed change shows the saved value
- * again, and throws. A change applies to each session of the workspace from
- * that moment.
+ * the secrets that it pre-approves, the approvals of its sessions, and the
+ * values that members gave for the workspace. Every member changes them. A
+ * change shows at once and saves, and its answer is the whole value. A
+ * failed change shows the saved value again, and throws. A change applies
+ * to each session of the workspace from that moment. The answer also holds
+ * the stored Mac access of the workspace, which no page changes and which
+ * gates nothing (Mac access decision 7).
  */
 export class WorkspaceCapabilitiesModel {
   readonly grants: Resource<WorkspaceGrants>
@@ -120,16 +121,6 @@ export class WorkspaceCapabilitiesModel {
       }),
       { removeSessionApprovals: [{ secretId, sessionId }] },
     )
-  }
-
-  /**
-   * Turns Mac access on or off. While it is off, the Worker refuses each Mac
-   * command request of the workspace.
-   */
-  setMacAccess(on: boolean): Promise<void> {
-    return this.change((grants) => ({ ...grants, macAccess: on }), {
-      macAccess: on,
-    })
   }
 }
 

@@ -1,6 +1,6 @@
 ---
 title: Terminal and previews
-description: Run commands on a workspace's cloud computer and open a running web app by its port.
+description: Run commands and named services on a workspace's cloud computer, then open a running web app by its port.
 group: Work
 order: 40
 ---
@@ -60,6 +60,8 @@ If that does not work, it shows **Disconnected**, and the terminal keeps its las
 Select **Reconnect** to return to the same shell and running commands.
 **Restart** in the workspace header drops terminal connections until the agents are back.
 It keeps the shells and their commands running.
+An [automatic restart of the software](/docs/workspaces#restart-the-software) does the same.
+It also stops running agent turns without asking first.
 If you end its shell with `exit`, **Reconnect** opens a new shell in the same tab.
 Stopping the cloud computer ends every terminal's shell and running commands.
 The terminal tabs stay after a resume.
@@ -69,7 +71,7 @@ After a repository change, a server that already runs keeps the old folder, so s
 The commands that you typed stay in the shell's command history after a stop.
 After a resume, press the Up arrow or Ctrl-R to find them.
 A command that still runs at the stop, such as a server, is not kept.
-After an automatic software update, an older cloud computer gets the new terminal software at **Restart** or a later computer start.
+After an automatic software update, an older cloud computer gets the new terminal software when Conductive [restarts its software](/docs/workspaces#restart-the-software), or at a later computer start.
 
 ## Use terminal tabs
 
@@ -140,7 +142,7 @@ Another panel can show smaller text, or empty space after the terminal.
 Type in a panel to give the terminal its size.
 
 A workspace with older cloud computer software shows only the visible screen when you drag.
-After an automatic software update, **Restart** or a later cloud computer start brings the newer terminal.
+After an automatic software update, the newer terminal arrives when Conductive [restarts its software](/docs/workspaces#restart-the-software), or at a later cloud computer start.
 [Apply setup changes](/docs/cloud-computer#apply-setup-changes) explains when updates apply.
 
 ## Know which GitHub account a command uses
@@ -174,25 +176,118 @@ This can include repositories outside the Conductive org.
 A repository change fetches with the GitHub account of the member who changes the repository.
 All workspace terminals still use the workspace owner's account.
 
+Outside the queue, if GitHub deletes the workspace's base branch, Conductive moves its base to the default branch.
+Those workspaces also follow changes to the default branch when it is their target.
+A move that no member starts fetches with the workspace owner's GitHub account.
+This includes moves from GitHub events, automatic retries, and resumes of stopped cloud computers.
+The merge queue also uses the workspace owner's GitHub account to fetch a new base.
+
 - [Use pull request actions](/docs/pull-requests)
+
+## Run a server as a service
+
+A service is a named program that runs outside the agent's turn.
+Use a service for a server that you need after the agent replies.
+Ask the agent to start it as a service, or run this command in your repository's folder:
+
+```bash
+conductive services start --name web -- npm run dev
+```
+
+Replace `npm run dev` with your server command.
+The service uses the folder where you run the command.
+Its environment uses the org values from this computer start, plus values supplied for the service.
+It does not inherit the agent's credentials, turn context, or secrets added to an approved command.
+[Understand service access](/docs/security#understand-services) explains the remaining credential risks.
+
+Starting returns promptly by default.
+You can request a wait of up to 30 seconds for a port that belongs to the service.
+A timeout leaves the service running.
+Starting an exact name that already runs returns that service unchanged.
+For a stopped, ended, or failed service, Start uses the new command and settings that you supply.
+The agent can also list, stop, restart, and read logs of services on this cloud computer.
+
+Services keep running after an agent reply.
+They survive crashes and updates of the agent software.
+**Restart** in the workspace header keeps them running too.
+Stop a service when you finish with it.
+A computer stop ends every service and discards its saved command, settings, and log.
+After **Resume**, start needed services again.
+Services never keep the computer running.
+Using their previews or reading their logs adds no awake time.
+
+Builds, tests, and waits for checks that must finish stay in the agent's work.
+Agents stop temporary check servers before replying.
+
+## Manage services
+
+Open **Preview** to find **Services** above the other servers.
+The list includes services with no port and services that stopped, ended, or failed.
+Each row shows its name, program, folder, state, start time, and ports.
+It also links to the session where it started when Conductive can match that session.
+Otherwise, it shows **Local command**.
+This source gives context and does not prove which person started the service.
+
+If **Services** is missing, the computer can need newer software.
+[Apply a software update](/docs/cloud-computer#apply-setup-changes) to get service support.
+
+Select a port in a service's row to open its preview.
+On a phone, use **+**, named **Preview another port**, to return to the list.
+Each service stays in the list while its previews are open.
+
+Open a service's menu for these actions:
+
+- **Stop** asks first, then ends the service and its child programs for everyone in the workspace.
+- **Restart** runs its saved command and settings again, with no confirmation.
+  It also works for a stopped, ended, or failed service.
+
+The menu follows the access rule of [Restart in the workspace header](/docs/workspaces#restart-the-software).
+Every member who can read the workspace can read its service list and logs.
+A service does not restart itself after an exit or failure.
+Its result stays in the list until the computer stops.
+
+If a reply is lost, the action shows **Unconfirmed**, and the list refreshes the actual state.
+Check that state before choosing the action again.
+A control for a run that already changed does nothing.
+Pending controls end when the computer stops.
+
+Closing a preview keeps its service running.
+Stopping or restarting a service keeps its preview tabs.
+After a restart, select **Reload** in the preview to load the app again.
+
+## Read service logs
+
+Select **Show log** in a service's row.
+The log opens as plain text in a dialog on a computer or a sheet on a phone.
+Select **Reload** to read the latest output.
+If the read fails, use **Try again**.
+
+The computer keeps up to 10 MiB of log output in total per service.
+These logs use the computer's memory and end when the computer stops.
+Each read shows up to 200 lines and 64 KiB.
+A notice says when output was left out.
+Conductive hides exact copies of known secret values before showing the text.
+Changed or encoded values can still appear.
+
+- [Understand secret masking](/docs/security#understand-environment-values)
 
 ## Preview a running app
 
-1. Start your web server with the agent or **Terminal**.
+1. Start your web server as a service, or with **Terminal**.
 2. Open **Preview**.
-3. Select your server in the list.
+3. Select its port under **Services**, or select it under **Servers**.
 
 On a computer, the preview opens in its own tab beside your sessions and files.
 Select another server to open it in another tab.
 Select a server that already has a tab to show that tab.
 
-Each row shows a port and can also show a short program name and repository folder.
+Each row under **Servers** shows a port and can also show a short program name and repository folder.
 The list updates as servers start and stop.
 The row of the shown preview tab is highlighted.
-When the list is empty, the form asks you to start a server in **Terminal** or ask the agent.
+When no server runs, start one in **Terminal** or ask the agent to start a service.
 
 On a phone, the preview opens on the **Preview** page.
-Servers that already have an open preview appear in its tabs, not in the list.
+Servers outside a service that already have an open preview appear in its tabs, not in the list.
 
 When the terminal shows the local address of your server, open it from there.
 An HTML file of the repository needs no server.
@@ -226,6 +321,9 @@ The program name uses at most 10 characters, including **…** when shortened.
 Its tooltip and screen reader label give the full name and folder.
 Drag a preview tab to move it, as with other tabs.
 Use **Reload** in the bar above the page to load the page again.
+Use **Expand** in the same bar to show the page in a large window over the whole app.
+The page keeps its place, so you can go on where you were.
+Use **Close** or press **Escape** to go back to the tab.
 Use **Open** in the same bar to show the app in a new browser tab.
 Use the **×** on a preview tab to close the tab.
 The preview stays open, so select its server again to bring the tab back.

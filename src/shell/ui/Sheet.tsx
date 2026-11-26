@@ -4,13 +4,10 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react'
-import styles from '../../../docs/mockups/src/components/common/Sheet.module.css'
-import {
-  focusableSelector,
-  Overlay,
-  useModalLayer,
-  type Focusable,
-} from './Overlay'
+import { classes } from '../../ui/components/common/classes'
+import styles from '../../ui/components/common/Sheet.module.css'
+import { Overlay, useModalLayer, type Focusable } from './Overlay'
+import { controlsOf, keepTabInside, tabWithScrollingBody } from './tab-stops'
 
 /**
  * Keeps the Tab key inside a modal layer, as a dialog needs. Tab from the
@@ -18,27 +15,20 @@ import {
  * last. From the layer itself, which takes the focus on a press outside its
  * controls, Tab goes to the first and Shift+Tab to the last. The layer
  * listens in the capture phase, because a text field stops its key events.
+ * `tabbableOf` gives the elements that Tab moves between, in their order.
+ * By default they are the controls of the layer that can take the focus.
+ * `body` is the box of a card that scrolls its content. While it scrolls
+ * text without a control, it is a stop too, as `tabWithScrollingBody` says.
  */
-export function trapTab(event: KeyboardEvent<HTMLElement>): void {
+export function trapTab(
+  event: KeyboardEvent<HTMLElement>,
+  tabbableOf: (layer: HTMLElement) => readonly HTMLElement[] = controlsOf,
+  body: HTMLElement | null = null,
+): void {
   if (event.key !== 'Tab') return
-  const tabbable = Array.from(
-    event.currentTarget.querySelectorAll<HTMLElement>(focusableSelector),
-  ).filter((element) => element.tabIndex >= 0)
-  const first = tabbable[0]
-  const last = tabbable.at(-1)
-  if (!first || !last) {
-    event.preventDefault()
-    return
-  }
-  const from = event.target
-  const inside = tabbable.some((element) => element === from)
-  if (event.shiftKey && (from === first || !inside)) {
-    event.preventDefault()
-    last.focus()
-  } else if (!event.shiftKey && (from === last || !inside)) {
-    event.preventDefault()
-    first.focus()
-  }
+  const tabbable = tabbableOf(event.currentTarget)
+  if (tabWithScrollingBody(event, tabbable, body)) return
+  keepTabInside(event, tabbable, event.target)
 }
 
 /**
@@ -49,12 +39,18 @@ export function trapTab(event: KeyboardEvent<HTMLElement>): void {
  * to its trigger. `returnFocus` names that trigger when a render can
  * replace it while the sheet shows, such as the row of a menu that moves
  * the row. `initial` is the part that takes the focus as it opens.
+ *
+ * The title takes one line, with an ellipsis when it is longer.
+ * `wrapTitle` gives it more lines in place of the ellipsis, for a title
+ * that is the only place where the sheet names its subject, such as a
+ * repository in a question.
  */
 export function Sheet(props: {
   title: string
   close: () => void
   returnFocus?: () => void
   initial?: RefObject<Focusable | null>
+  wrapTitle?: boolean
   children: ReactNode
 }) {
   const sheet = useRef<HTMLElement>(null)
@@ -76,7 +72,14 @@ export function Sheet(props: {
           tabIndex={-1}
         >
           <span aria-hidden className={styles.handle} />
-          <h2 className={styles.title}>{props.title}</h2>
+          <h2
+            className={classes(
+              styles.title,
+              props.wrapTitle && styles.wrapTitle,
+            )}
+          >
+            {props.title}
+          </h2>
           <div className={styles.body}>{props.children}</div>
         </section>
       </div>

@@ -1,0 +1,18 @@
+import type { Timestamp } from './generated/Timestamp'
+import { repositoryPath } from './org-settings'
+
+export function repositoryBranchesPath(
+  orgId: string,
+  repositoryId: string,
+): string {
+  return `${repositoryPath(orgId, repositoryId)}/branches`
+}
+
+export interface RepositoryBranch {
+  name: string
+  committedAt: Timestamp | null
+}
+
+export interface RepositoryBranchesResponse {
+  branches: readonly RepositoryBranch[]
+}

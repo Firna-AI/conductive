@@ -22,7 +22,8 @@ interface WorkspaceOperationOptions {
   workspaceId(): string | null
   bind(id: string): void
   publish(events: readonly WorkspaceEventEnvelope[]): void
-  closeRunner(): void
+  closeRunner(workspaceId: string): Promise<void>
+  closeRunnerAfterRestartFailure(): void
   flushRunner(): Promise<void>
 }
 
@@ -111,16 +112,33 @@ export class WorkspaceOperations {
     )
   }
 
-  async stop(workspaceId: string): Promise<void> {
-    const { store, bind, publish, closeRunner } = this.options
+  async stop(
+    workspaceId: string,
+    keepQueued?: boolean,
+    restartFailed?: boolean,
+  ): Promise<void> {
+    const { store, bind, publish, closeRunner, dependencies } = this.options
     bind(workspaceId)
-    closeRunner()
+    if (restartFailed) this.options.closeRunnerAfterRestartFailure()
+    else await closeRunner(workspaceId)
     await store.change(
       workspaceId,
       async (transaction) => {
         await transaction.emit({ type: 'ports.updated', ports: null })
-        await stopDispatchedTurns(transaction)
+        await stopDispatchedTurns(
+          transaction,
+          keepQueued ? dependencies.randomId : undefined,
+        )
       },
+      publish,
+    )
+  }
+
+  stopTurnsForRestart(workspaceId: string): Promise<void> {
+    const { store, publish, dependencies } = this.options
+    return store.change(
+      workspaceId,
+      (transaction) => stopDispatchedTurns(transaction, dependencies.randomId),
       publish,
     )
   }

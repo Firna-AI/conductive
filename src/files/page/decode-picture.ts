@@ -1,4 +1,4 @@
-import type { PictureSize } from '../../../docs/mockups/src/components/files/ImageView'
+import type { PictureSize } from '../../ui/components/files/ImageView'
 
 /** The outcome of one decode: the size of the picture, or a failure. */
 export type DecodedPicture =

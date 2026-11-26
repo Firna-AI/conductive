@@ -1,6 +1,6 @@
 import { Repeat } from 'lucide-react'
 import { ScreenLink, useOutsideHref } from '../common/ScreenLink'
-import styles from './RunLinks.module.css'
+import styles from '../../../../../src/ui/components/workspace/RunLinks.module.css'
 
 /** The automation of a run workspace, and the pull request of its run. */
 export type RunSource = {

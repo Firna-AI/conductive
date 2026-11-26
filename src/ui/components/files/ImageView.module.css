@@ -1,0 +1,69 @@
+/* The tab of an image file: the stage of the picture, then the zoom bar. */
+.view {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/*
+ * The stage of the picture. It is a size container, so the fitted picture
+ * in its middle can fit both the width and the height of the stage. It
+ * cuts a zoomed picture at its edges. The app reads each touch of the stage
+ * itself, so the browser does not scroll or zoom the page.
+ */
+.stage {
+  display: flex;
+  position: relative;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 16px;
+  overflow: hidden;
+  box-sizing: border-box;
+  container-type: size;
+  touch-action: none;
+  user-select: none;
+}
+
+/* A zoomed picture that is larger than the stage moves with a drag. */
+.movable {
+  cursor: grab;
+}
+
+.dragging {
+  cursor: grabbing;
+}
+
+/*
+ * The fitted picture keeps its proportions. It is never larger than its own
+ * size, and as large as the stage allows. A hairline keeps a light picture
+ * apart from a light tab.
+ */
+.picture {
+  flex-shrink: 0;
+  width: min(100cqw, var(--picture-width), calc(100cqh * var(--picture-ratio)));
+  aspect-ratio: var(--picture-ratio);
+  outline: 1px solid var(--ui-border);
+}
+
+/* A zoomed picture: its style gives its size and its move from the middle. */
+.placed {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  aspect-ratio: auto;
+}
+
+.picture > svg,
+.picture > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  -webkit-user-drag: none;
+}
+
+.sharp > img {
+  image-rendering: pixelated;
+}

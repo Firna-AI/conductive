@@ -1,13 +1,13 @@
 # The file preview shows bare addresses as text
 
-- **Severity:** Low. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
-- **Added:** 2026-11-10, from the plan `plans/pressable-chat-links.md` on branch `calummoore/chat-link-handling`.
-- **Location:** `src/files/markdown/markdown-inline.ts:181`, the `autolink` method, and the safety rules of `src/files/README.md`.
+- **Added:** 2026-11-10, from the plan `plans/pressable-chat-links.md` on branch `calummoore/chat-link-handling`. Updated on 2026-11-17 on branch `calummoore/output-summary-f7sm`, after the shared Markdown parser replaced the reader of the file preview.
+- **Location:** `src/files/markdown/preview-inline.ts:203`, `previewInline`, which keeps each text token of the parser as text. `src/markdown/parser.ts:27`, where the shared parser turns `linkify` off. The safety rules of `src/files/README.md`.
 - **Reason:** The change that makes chat links pressable covers the links that the file preview already draws, and leaves the preview's Markdown reading as it is.
 
 - **Terms:**
-  - **File preview:** the Files view that shows a Markdown file of the branch as formatted text. Its parser lives in `src/files/markdown/` and runs in a worker.
+  - **File preview:** the Files view that shows a Markdown file of the branch as formatted text. `previewDocument` in `src/files/markdown/preview-blocks.ts` reads the file with the shared `markdown-it` parser of `src/markdown/parser.ts`, in a worker.
   - **Bare address:** a web address with no Markdown around it, such as `https://github.com/Firna-AI/home/pull/2`.
   - **Autolink:** an address that a Markdown reader turns into a link with no link syntax.
 - **Background:**
@@ -20,19 +20,16 @@
 - **Impact if no action:** A member copies each such address of a README into a browser by hand.
 - **Root question:** How does a member open a bare address of a Markdown file in the file preview?
 - **Options:**
-  - **A.** Add the autolink extension of GitHub to the inline parser of the file preview: bare `http` and `https` addresses and `www.` addresses, with GitHub's end rule. Each such link goes through the same link checks as a Markdown link. Effort: Medium.
-  - **B.** Read bare addresses with the shared reader of chat text, `src/markdown/web-links.ts`, in the worker parse of the file preview. Effort: Medium.
+  - **A.** Add an inline rule for the autolink extension of GitHub to a parser of the file preview, with the settings of the shared parser: bare `http` and `https` addresses and `www.` addresses, with GitHub's end rule. The rule reads an address before the marks, so an address that holds a pair of `*` stays whole. Each such link goes through the same link checks as a Markdown link. Effort: Medium.
+  - **B.** Read bare addresses in the text tokens of the file preview with `bareAddressAt` of `src/markdown/web-links.ts`, in `previewInline`, as the chat does in `src/chat/markdown/answer-text.ts`. Cost: an address that holds a pair of `*` ends at the first mark, as in the chat. Effort: Small.
   - **C.** Keep bare addresses as text. Cost: the preview stays apart from GitHub. Effort: Small.
-  - **D.** Find bare addresses in the worker parse with a link library, such as `linkify-it`, which reads `http`, `https`, `www.`, and email forms. Cost: a new dependency that needs a safety review, and the chat keeps its own reader, so the two views can still differ. Effort: Medium.
+  - **D.** Turn on the `linkify` option of `markdown-it` for the file preview. The parser then finds addresses with `linkify-it`, which it already installs, and which reads `http`, `https`, `www.`, and email forms. Cost: it reverses the rejection of a link library in `docs/protocol/chat-markdown.md`, it needs a safety review, and the chat keeps its own reader, so the two views can still differ. Effort: Medium.
   - **E.** Do B, and teach the shared reader `www.` addresses for both views. Cost: chat text then links `www.` addresses too, where today it links only `http` and `https` addresses. Effort: Medium.
 - **Left out:**
-  - One parser for both views: `docs/protocol/chat-markdown.md` rejects it, and on 10 November 2026 the user kept the file preview's full parser out of the chat.
-  - A pass over the text while the preview draws it: an address that holds a pair of `*` is already split into emphasis by then.
+  - A pass over the text while the preview draws it: B does the same work once in the worker, and an address that holds a pair of `*` is already split into emphasis by then.
 - **Wider fix:** B. One reader then finds bare addresses in the chat and in the file preview.
 - **Previous examples:** None found.
 - **Related:**
-  - `plans/follow-ups/one-markdown-reader-for-chat-and-preview.md`: the chat and the file preview read Markdown blocks with different readers.
-  - `plans/follow-ups/chat-code-not-read-as-markdown.md`: the chat reads inline code with its own grammar.
   - A bare local address that B links, such as `http://localhost:3000`, follows the rule for local addresses of the file preview in `docs/protocol/workspace-tools.md`.
 - **Recommendation:** B. The chat and the file preview then link the same bare addresses. E closes the gap of `www.` addresses if output that matches GitHub matters more.
 - **Action:** ask the user, because B adds links that the file preview does not draw today, and no requirement covers them.

@@ -1,6 +1,6 @@
 # Provider assignment
 
-This service selects the fixed provider account of a new org. Create org
+This service selects the provider account of a new org. Create org
 calls it after it checks repositories, before its D1 insert and first build.
 It changes no existing org, workspace, or saved resource account.
 
@@ -43,7 +43,7 @@ The tests use local D1 and deterministic random tokens.
 - [weights.ts](weights.ts): configured shares, rounding, and safe recovery.
 - [data.ts](data.ts): the raw D1 setting reader.
 - [feature-org.ts](../app-api/feature-org.ts): selection before org creation.
-- [org-provider-account.ts](../data/org-provider-account.ts): the fixed org account reader.
+- [org-provider-account.ts](../data/org-provider-account.ts): the org account reader.
 
 ### Related docs
 

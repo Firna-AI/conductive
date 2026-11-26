@@ -9,8 +9,8 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import frame from '../../../docs/mockups/src/components/layout/AppFrame.module.css'
+import { classes } from '../../ui/components/common/classes'
+import frame from '../../ui/components/layout/AppFrame.module.css'
 import { useHref, useNavigation } from '../../app/navigation'
 import { useStore } from '../../app/store'
 import { useMacApp, useNarrowWindow } from '../mac/mac-app'
@@ -45,7 +45,9 @@ function isTextField(target: EventTarget | null): boolean {
  * layer, such as a row menu of the list or the palette, so the popover
  * stays. Escape counts only after the page had it: a field of the popover,
  * such as a rename field, cancels on Escape, and a key that a handler took
- * or that an input method composes does not close the popover.
+ * or that an input method composes does not close the popover. An Escape
+ * that closes it stops the default action of the key, so the page takes no
+ * other action for it, such as a close of the temporary tab.
  */
 function useDismiss(
   parts: readonly RefObject<HTMLElement | null>[],
@@ -65,6 +67,8 @@ function useDismiss(
       if (event.key !== 'Escape' || event.defaultPrevented) return
       if (event.isComposing || layerOpen()) return
       if (inside(event.target) && isTextField(event.target)) return
+      // The key closes the popover, so no other Escape action of the page runs.
+      event.preventDefault()
       close()
     }
     document.addEventListener('pointerdown', onPointer)

@@ -1,9 +1,11 @@
-import type { Viewport } from '@mokly/mokly'
-import { Trash2 } from 'lucide-react'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import type { Automation } from '../../fixtures/automations'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import {
+  confirmDialog,
+  dialogText,
+} from '../../entries/components/common/ConfirmDialog.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 
 /**
@@ -16,25 +18,32 @@ export function DeleteAutomationDialog(props: {
   viewport: Viewport
 }) {
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           <ScreenLink asChild to={paths.automation}>
-            <ActionButton>Cancel</ActionButton>
+            <actionButton.Component moklyInstance="dialog-cancel">
+              Cancel
+            </actionButton.Component>
           </ScreenLink>
           <ScreenLink asChild to={paths.automations}>
-            <ActionButton icon={Trash2} tone="danger">
+            <actionButton.Component
+              icon="trash-2"
+              moklyInstance="dialog-delete-automation"
+              tone="danger"
+            >
               Delete automation
-            </ActionButton>
+            </actionButton.Component>
           </ScreenLink>
         </>
       }
+      moklyInstance="delete-automation-dialog"
       title={`Delete ${props.automation.name}?`}
       viewport={props.viewport}
     >
-      <DialogText>
+      <dialogText.Component>
         Its triggers and prompt are deleted. Its run workspaces stay.
-      </DialogText>
-    </ConfirmDialog>
+      </dialogText.Component>
+    </confirmDialog.Component>
   )
 }

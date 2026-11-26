@@ -20,6 +20,7 @@ use futures_util::future::BoxFuture;
 use serde_json::json;
 use tokio::sync::{Notify, watch};
 
+use crate::relocation_services::HeldServices;
 use crate::support::fixture::Fixture;
 use crate::support::workspace::{EndpointConnector, request};
 
@@ -72,6 +73,7 @@ struct Harness {
     turns: Arc<Turns>,
     stop: watch::Sender<bool>,
     running: tokio::task::JoinHandle<Result<RunExit>>,
+    services: Arc<HeldServices>,
     _folders: tempfile::TempDir,
 }
 
@@ -88,6 +90,8 @@ async fn start(root: tempfile::TempDir) -> Harness {
         home: root.path().into(),
         default_branch: "main".into(),
         workspace_branch: Some("alice/cart-v1-ab12".into()),
+        skills_repository: None,
+        trusted_skills_repository: None,
         repository_directories: BTreeMap::from([
             ("CONDUCTIVE_REPOSITORY_BILLING_DIR".into(), billing.clone()),
             (
@@ -105,6 +109,7 @@ async fn start(root: tempfile::TempDir) -> Harness {
     std::fs::create_dir_all(billing.join(".git")).unwrap();
     std::fs::create_dir_all(root.path().join("empty")).unwrap();
     let fixture = Fixture::new().await;
+    fixture.endpoint.state.lock().await.services = Some(true);
     let link = Arc::new(
         SavedRunnerLink::new(
             "workspace".into(),
@@ -115,9 +120,11 @@ async fn start(root: tempfile::TempDir) -> Harness {
             fixture.store.clone(),
             false,
         )
-        .with_repository_folder(&current),
+        .with_repository_folder(&current)
+        .with_services(),
     );
     let turns = Arc::new(Turns::default());
+    let services = Arc::new(HeldServices::default());
     let core = RunnerCore::new(
         link,
         fixture.store.clone(),
@@ -125,6 +132,7 @@ async fn start(root: tempfile::TempDir) -> Harness {
         turns.clone(),
         Arc::new(NoUpdates),
     )
+    .with_services(services.clone())
     .with_folders(RepositoryFolders::new(
         &configuration,
         Arc::new(LocalRepositoryIo),
@@ -137,6 +145,7 @@ async fn start(root: tempfile::TempDir) -> Harness {
         turns,
         stop,
         running,
+        services,
         _folders: root,
     }
 }
@@ -172,6 +181,8 @@ async fn names_its_folder_in_hello_and_moves_after_the_turns_end() {
         panic!("expected hello");
     };
     assert_eq!(repository_folder, Some(current.to_string_lossy().into()));
+    h.fixture.endpoint.raw(serde_json::to_vec(&json!({"type":"services.logs","request":{"requestId":"held","target":{"bootId":"boot","serviceId":"web","generation":"run"}}})).unwrap()).await;
+    h.services.entered.notified().await;
     h.turns.working.store(true, Ordering::SeqCst);
     send_move(&h, "move", &billing).await;
     for _ in 0..3 {
@@ -189,6 +200,7 @@ async fn names_its_folder_in_hello_and_moves_after_the_turns_end() {
         })
     );
     assert!(h.turns.ended.load(Ordering::SeqCst));
+    assert!(h.services.canceled.load(Ordering::SeqCst));
     assert!(replies(&h.fixture.endpoint.state.lock().await.received).is_empty());
 }
 

@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-18, from the check of review finding 3, round 2, on branch `calummoore/follow-up-tool-detail-cuts-precede-env-q1hv`, a problem outside the scope of that review.
-- **Location:** `scanSecretText` and `filterSecretText` in `src/shared/secret-text.ts`, `OutputSanitizer` in `src/shared/output-sanitizer.ts`, and `agentItem` in `src/shared/transcript/turn-events.ts:130`.
+- **Location:** `scanSecretText` and `filterSecretText` in `src/shared/secret-text.ts`, `OutputSanitizer` in `src/shared/output-sanitizer.ts`, and `agentItem` in `src/shared/transcript/turn-events.ts:32`.
 - **Reason:** No protocol doc states the literal-marker rule, so each option waits for the user's choice of that rule.
 
 - **Source:** Review.

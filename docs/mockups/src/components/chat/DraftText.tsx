@@ -1,14 +1,22 @@
-import type { Attachment } from '../../fixtures/attachments'
-import type { MentionEntry } from '../../fixtures/fileMentions'
-import { useChatWorkspaces, type ChatRow } from './chatWorkspaces'
-import { DraftFileChip, type ChipUpload } from './DraftFileChip'
 import { draftParts } from '../../../../../src/app/draft-marks'
-import { entryName } from './entryPaths'
-import { FileChip } from './FileChip'
+import { webAddressParts } from '../../../../../src/markdown/web-links'
+import type { AgentSkill } from '../../../../../src/shared/generated/AgentSkill'
+import { mentionParts } from '../../../../../src/shared/mention-text'
+import { skillTextAt } from '../../../../../src/shared/skill-text'
+import { draftFileChip } from '../../entries/components/chat/DraftFileChip.mockup'
+import { instanceKey } from '../../instanceKey'
+import type { Attachment } from '../../fixtures/attachments'
+import type { MentionEntry } from '../../../../../src/ui/components/chat/mentionEntry'
+import { findEntry, findSkill, mockupEntry } from './chatReading'
+import { useChatWorkspaces } from './chatWorkspaces'
+import type { ChipUpload } from '../../../../../src/ui/components/chat/DraftFileChip'
+import { entryName } from '../../../../../src/ui/components/chat/entryPaths'
+import { FileChip } from '../../../../../src/ui/components/chat/FileChip'
+import { LinkChip } from './LinkChip'
 import { iconOf } from './MentionChip'
-import { LinkChip } from './MessageText'
-import { linkTarget, textParts, type LinkTarget } from './workspaceLinks'
-import styles from './DraftText.module.css'
+import { SkillChip } from '../../../../../src/ui/components/chat/SkillChip'
+import { linkTarget, type LinkTarget, type RowLinks } from './workspaceLinks'
+import styles from '../../../../../src/ui/components/chat/DraftText.module.css'
 
 /** A part of a draft as the field draws it: text, the caret, or a chip. */
 type DraftItem =
@@ -16,41 +24,75 @@ type DraftItem =
   | { kind: 'caret' }
   | { kind: 'file'; file: Attachment }
   | { kind: 'mention'; entry: MentionEntry }
+  | { kind: 'skill'; skill: AgentSkill }
   | { kind: 'link'; target: LinkTarget }
 
 /**
- * The parts of a draft: its text, the chip of each attached file at its
- * mark, the chip of each link to a workspace of the org or to one of its
- * sessions, and the chip of each mention of the tree. A mark of a file that
- * the draft does not hold shows nothing.
+ * The items of text outside mentions and skill texts: each link to a
+ * workspace of the org or to one of its sessions is a chip, and the rest
+ * stays text.
+ */
+function linkItems(text: string, links: RowLinks): DraftItem[] {
+  return webAddressParts(text).map((part): DraftItem => {
+    if (part.kind === 'text') return part
+    const target = linkTarget(part.href, links)
+    return target
+      ? { kind: 'link', target }
+      : { kind: 'text', text: part.source }
+  })
+}
+
+/**
+ * The items of text outside mentions, with each skill text that
+ * `skillTextAt` of the app reads: a skill chip when it names a skill of the
+ * list, else text. The rest gives its links.
+ */
+function skillItems(text: string, links: RowLinks): DraftItem[] {
+  const items: DraftItem[] = []
+  let plain = ''
+  let index = 0
+  while (index < text.length) {
+    const found = skillTextAt(text, index)
+    if (!found) {
+      plain += text[index]
+      index += 1
+      continue
+    }
+    const skill = findSkill(found.name)
+    items.push(
+      ...linkItems(plain, links),
+      skill ? { kind: 'skill', skill } : { kind: 'text', text: found.source },
+    )
+    plain = ''
+    index += found.source.length
+  }
+  return [...items, ...linkItems(plain, links)]
+}
+
+/**
+ * The parts of a draft, as the field of the app finds its chips: its text,
+ * the chip of each attached file at its mark, and the chip of each mention
+ * of an entry of the tree, as `mentionParts` of the app reads it. The rest
+ * gives the chips of its skills and of its links to the workspaces of the
+ * org or to their sessions. A mark of a file that the draft does not hold
+ * shows nothing.
  */
 function itemsOf(
   text: string,
   files: readonly Attachment[],
-  rows: readonly ChatRow[],
+  links: RowLinks,
 ): DraftItem[] {
   return draftParts(text).flatMap((part): DraftItem[] => {
     if (part.kind === 'file') {
       const file = files.find((item) => item.id === part.id)
       return file ? [{ kind: 'file', file }] : []
     }
-    return textParts(part.text, false, true).map((piece): DraftItem => {
-      switch (piece.kind) {
-        case 'mention':
-          return { kind: 'mention', entry: piece.entry }
-        case 'link': {
-          const target = linkTarget(piece.href, rows)
-          return target
-            ? { kind: 'link', target }
-            : { kind: 'text', text: piece.source }
-        }
-        case 'attached':
-        case 'file-link':
-          return { kind: 'text', text: piece.source }
-        case 'text':
-        case 'code':
-          return { kind: 'text', text: piece.text }
-      }
+    return mentionParts(part.text).flatMap((piece): DraftItem[] => {
+      if (piece.kind === 'text') return skillItems(piece.text, links)
+      const entry = findEntry(piece.path, piece.folder)
+      return entry
+        ? [{ kind: 'mention', entry: mockupEntry(entry) }]
+        : [{ kind: 'text', text: piece.source }]
     })
   })
 }
@@ -59,18 +101,18 @@ function itemsOf(
 const caretItem: DraftItem = { kind: 'caret' }
 
 function isChip(item: DraftItem): boolean {
-  return item.kind === 'file' || item.kind === 'mention' || item.kind === 'link'
+  return item.kind !== 'text' && item.kind !== 'caret'
 }
 
 /**
  * The draft holds a chip: an attached file, a link to a workspace of the
- * org or to one of its sessions, or a mention of a file or a folder of the
- * tree.
+ * org or to one of its sessions, a mention of a file or a folder of the
+ * tree, or a skill.
  */
-export function holdsChips(draft: string, rows: readonly ChatRow[]): boolean {
+export function holdsChips(draft: string, links: RowLinks): boolean {
   return (
     draftParts(draft).some((part) => part.kind === 'file') ||
-    itemsOf(draft, [], rows).some(isChip)
+    itemsOf(draft, [], links).some(isChip)
   )
 }
 
@@ -85,20 +127,23 @@ function uploadOf(file: Attachment): ChipUpload {
 
 /**
  * The draft of a message box as plain text, with each attached file, each
- * link to a workspace of the org or to one of its sessions, and each
- * mention of the tree as a chip. A link to a session that the chat read is
- * a session chip. A chip is one unit of the text, which the caret steps
- * over and Backspace removes whole, so it is not editable inside the
- * editable field. Each chip starts with the cell of its icon, which a
- * pointer turns into a × that removes it. In the app a press on the name of
- * a file chip opens the file, and a press on the name of an attached file
- * opens nothing.
+ * link to a workspace of the org or to one of its sessions, each mention
+ * of the tree, and each skill as a chip. A link to a session that the
+ * chat read is a session chip. A chip is one unit of the text, which the
+ * caret steps over and Backspace removes whole, so it is not editable
+ * inside the editable field. Each chip starts with the cell of its icon,
+ * which a pointer turns into a × that removes it. In the app a press on
+ * the name of a file chip opens the file, and a press on the name of an
+ * attached file or of a skill opens nothing.
  *
  * `files` are the files of the draft, by the draft IDs of their marks. A
  * view runs no script, so `caret` draws the caret at that index of the
  * text: where a drop puts its files while they hover over the box, or
  * where the caret stands after a drop or a pick. A view has no pointer, so
  * `pointer` draws it over the icon of the first chip.
+ *
+ * The draft ID of an attached file names its chip for Mokly. A mention and
+ * a link can repeat in a draft, so their chips keep the plain parts.
  */
 export function DraftText(props: {
   text: string
@@ -106,16 +151,16 @@ export function DraftText(props: {
   pointer?: boolean
   caret?: number
 }) {
-  const rows = useChatWorkspaces()
+  const links = useChatWorkspaces()
   const files = props.files ?? []
   const { text, caret } = props
   const items =
     caret === undefined
-      ? itemsOf(text, files, rows)
+      ? itemsOf(text, files, links)
       : [
-          ...itemsOf(text.slice(0, caret), files, rows),
+          ...itemsOf(text.slice(0, caret), files, links),
           caretItem,
-          ...itemsOf(text.slice(caret), files, rows),
+          ...itemsOf(text.slice(caret), files, links),
         ]
   const firstChip = items.findIndex(isChip)
   return (
@@ -130,8 +175,13 @@ export function DraftText(props: {
           case 'file':
             return (
               <span contentEditable={false} key={index}>
-                <DraftFileChip
-                  file={item.file}
+                <draftFileChip.Component
+                  file={{
+                    name: item.file.name,
+                    kind: item.file.kind,
+                    sizeBytes: item.file.sizeBytes,
+                  }}
+                  moklyInstance={`file-${instanceKey(item.file.id)}`}
                   removal={{ name: item.file.name, pointer }}
                   upload={uploadOf(item.file)}
                 />
@@ -144,6 +194,15 @@ export function DraftText(props: {
                   entry={item.entry}
                   icon={iconOf(item.entry)}
                   removal={{ name: entryName(item.entry), pointer }}
+                />
+              </span>
+            )
+          case 'skill':
+            return (
+              <span contentEditable={false} key={index}>
+                <SkillChip
+                  removal={{ name: item.skill.name, pointer }}
+                  skill={item.skill}
                 />
               </span>
             )

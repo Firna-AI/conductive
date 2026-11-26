@@ -7,12 +7,12 @@ import {
   notAttachedTitle,
   smallerFileLabel,
   tooLargeBody,
-} from '../../../docs/mockups/src/components/chat/attachmentCopy'
-import styles from '../../../docs/mockups/src/components/chat/AttachmentChips.module.css'
-import states from '../../../docs/mockups/src/components/chat/AttachmentStates.module.css'
-import { formatSize } from '../../../docs/mockups/src/components/chat/sizes'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+} from '../../ui/components/chat/attachmentCopy'
+import styles from '../../ui/components/chat/AttachmentChips.module.css'
+import states from '../../ui/components/chat/AttachmentStates.module.css'
+import { formatSize } from '../../ui/components/chat/sizes'
+import { classes } from '../../ui/components/common/classes'
+import { Notice } from '../../ui/components/common/Notice'
 import { ActionButton } from '../ui/actions'
 
 function KindIcon(props: { kind: Attachment['kind'] }) {

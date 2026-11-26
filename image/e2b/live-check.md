@@ -31,7 +31,7 @@ Put no credential in a saved command, file, `.env`, or `.dev.vars`.
 
 | Name | Value |
 | --- | --- |
-| `LIVE_E2B_KEY` | The API key of the dedicated EU project. |
+| `LIVE_E2B_KEY` | The API key of the dedicated E2B project. |
 | `LIVE_E2B_DOMAIN` | The routing domain of that project. |
 | `LIVE_E2B_TEMPLATE_ID` | The actual ID printed by the template builder. |
 | `LIVE_E2B_STATE_KEY` | A stable 32-byte random encryption key, encoded as Base64. Keep it in memory and reuse it for the same state directory. |
@@ -45,7 +45,7 @@ Optional inputs:
 | `LIVE_CONDUCTIVE_RELEASE_SERVER` | Another release server. The default is `https://runner.conductive.build`. The check reads the newest release from it. |
 
 No app cookie, private repository, or agent login is needed.
-Use a project with the EU region and filesystem-only support enabled.
+Use a project with filesystem-only support enabled. Any E2B region works.
 Confirm the required disk capacity and the operating authorization from
 [Deployment inputs](../../docs/deployment.md).
 
@@ -187,4 +187,4 @@ The offline state-reopen and journal integration tests use real local D1
 and the E2B fake. They check identity-only cleanup and retained unknown
 operations. A separate test checks the provisioned MiB disk size against
 the request while retaining formatted capacity as an observation.
-These tests do not prove a real EU runtime.
+These tests do not prove a real E2B runtime.

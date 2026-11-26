@@ -81,3 +81,75 @@ describe('the line of an end reason', () => {
     )
   })
 })
+
+describe('the text that the agent writes', () => {
+  it('closes an open mark only in the message that the running turn writes last, and shows it as typed once a later step or the end of the turn follows', async () => {
+    const { chat, markup } = await renderChat({ conversation: 'running' })
+    const write = (messageId: string, text: string) =>
+      chat.emit({ ...turn, type: 'assistant.delta', messageId, text })
+    write('answer-2', '**Next:')
+    const writing = markup()
+    chat.emit({
+      ...turn,
+      type: 'tool.updated',
+      tool: {
+        id: 'unit',
+        kind: 'run',
+        target: 'npm test',
+        detail: null,
+        omittedDetailBytes: 0,
+        state: 'running',
+      },
+    })
+    const stepped = markup()
+    write('answer-3', 'Then **push')
+    const last = markup()
+    chat.emit({
+      ...turn,
+      type: 'turn.completed',
+      state: 'finished',
+      durationMs: 5_000,
+      files: [],
+      omittedFileCount: 0,
+      userMessageIds: [],
+    })
+    const ended = markup()
+    expect({
+      writing: writing.includes('<strong>Next:</strong>'),
+      stepped: [stepped.includes('**Next:'), stepped.includes('<strong>')],
+      last: [last.includes('**Next:'), last.includes('<strong>push</strong>')],
+      ended: [ended.includes('Then **push'), ended.includes('<strong>')],
+    }).toEqual({
+      writing: true,
+      stepped: [true, false],
+      last: [true, true],
+      ended: [true, false],
+    })
+  })
+
+  it('shows an open mark as typed once assistant.completed ends the message, before any later step', async () => {
+    const { chat, markup } = await renderChat({ conversation: 'running' })
+    chat.emit({
+      ...turn,
+      type: 'assistant.delta',
+      messageId: 'answer-2',
+      text: '**Next:',
+    })
+    const writing = markup()
+    chat.emit({
+      ...turn,
+      type: 'assistant.completed',
+      messageId: 'answer-2',
+      text: '**Next:',
+      userMessageIds: [],
+    })
+    const complete = markup()
+    expect({
+      writing: writing.includes('<strong>Next:</strong>'),
+      complete: [
+        complete.includes('**Next:'),
+        complete.includes('<strong>Next:'),
+      ],
+    }).toEqual({ writing: true, complete: [true, false] })
+  })
+})

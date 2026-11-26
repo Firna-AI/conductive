@@ -1,5 +1,5 @@
 import type { RunnerEventRefused } from '../../shared/chat-events'
-import { LostLine } from '../../../docs/mockups/src/components/chat/LostLine'
+import { LostLine } from '../../ui/components/chat/LostLine'
 import { lostData } from '../../shared/transcript/lost-data'
 
 /**

@@ -61,7 +61,7 @@ describe('authenticated Stop attribution', () => {
       fixture.memberCookie,
     )
     expect(await response.json()).toEqual({
-      eventNumber: 6,
+      eventNumber: 7,
       turnId: turn.turnId,
       state: 'stopping',
     })

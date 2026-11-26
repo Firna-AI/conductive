@@ -36,7 +36,7 @@ archived workspace.
   one, `input` and `unread` stay, and `working` becomes `ready`.
 - `lastActivityAt` becomes the later of its stored value and the stored
   time of the newest turn end. So a repair, a hello, a heartbeat, or a
-  restart never starts a new 30-minute idle period.
+  restart never starts a new idle period.
 - On the normal path, `DurableLifecycle.turn` takes no time from its
   caller. The `lastTurnEndedAt` hook of `createWorkspaceLifecycle` reads
   the stored time of the newest turn end from the same committed chat
@@ -80,11 +80,15 @@ change of a Mac request call it while they hold the chat queue. It adds no
 queue of its own.
 
 - It reads the raw lifecycle state with `lifecycle.read`, and the waiting
-  Mac requests through the `deviceWaiting` hook of `WorkspacePlatform`. It
-  reads the latest committed agent title through `readChatRecovery`. No
-  read enters a queue again.
-- A waiting request shows `input` over `starting`, `working`, `ready`, and
-  `unread`. `stopped`, `error`, and `archived` show over a waiting request.
+  Mac and secret requests through the `deviceWaiting` hook of
+  `WorkspacePlatform`. It reads the latest committed agent title through
+  `readChatRecovery`. No read enters a queue again.
+- A waiting request shows `input` over `working`, `ready`, and `unread`.
+  `starting`, `stopped`, `error`, and `archived` show over a waiting
+  request. So a start or a Restart shows `starting`, also while a request
+  waits. When the runner is ready and the lifecycle leaves `starting`, a
+  waiting request shows `input` again. A late secret request counts as
+  waiting, and a start or a Restart does not end it.
 - When the name in D1 differs from the latest committed agent title, it
   writes that title to D1 before the state. So no `workspace.updated` of
   this writer carries an older title.

@@ -1,4 +1,12 @@
-import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 
 import { sessionPaths } from '../../src/shared/sessions'
 import { WORKSPACE_ID } from '../chat/harness.test-support'
@@ -18,6 +26,7 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
+afterEach(() => vi.restoreAllMocks())
 
 it('continues as another member, keeps workspace identity, and publishes one note in every open and closed session', async () => {
   const f = await continueFixture(harness)
@@ -72,7 +81,7 @@ it('continues as another member, keeps workspace identity, and publishes one not
     {
       id: WORKSPACE_ID,
       branch: result.workspace.branch,
-      baseBranch: 'main',
+      baseBranch: null,
       defaultBranch: 'main',
     },
   ])
@@ -138,27 +147,47 @@ it('returns the full local-work question before fetching and retries only after 
 
 it('keeps the branch and chat unchanged when the move fails and expires its fetch credential scope', async () => {
   const f = await continueFixture(harness)
-  const session = await f.createSession()
-  const pending = await f.start()
-  if (pending.state !== 'pending') throw new Error('Expected pending Continue.')
-  const job = await f.advanceTo('move')
-  f.boat.commandExitCode = 1
-  await f.finish()
-  await expect(f.result(pending.continueId)).rejects.toMatchObject({
-    status: 409,
-    code: 'workspace_continue_failed',
-  })
-  expect((await readWorkspace(f.env.DB, f.org.id, WORKSPACE_ID)).branch).toBe(
-    'octocat/test',
-  )
-  expect(
-    (await f.history(session.id)).events.filter(
-      ({ event }) => event.type === 'workspace.continued',
-    ),
-  ).toEqual([])
-  await expect(f.credential(job.fetchId)).rejects.toMatchObject({
-    code: 'current_turn_required',
-  })
+  for (const [exitCode, stopCause] of [
+    [1, 'unknown'],
+    [80, 'checkout-clash'],
+    [81, 'index-lock'],
+    [82, 'comparison-metadata-failed'],
+    [125, 'command-start-uncertain'],
+    [128, 'unknown'],
+  ] as const) {
+    await f.resetContinue()
+    f.boat.commandExitCode = 0
+    f.boat.synchronousOutput = '\0' + '0\n'
+    const session = await f.createSession()
+    const pending = await f.start()
+    if (pending.state !== 'pending')
+      throw new Error('Expected pending Continue.')
+    const job = await f.advanceTo('move')
+    f.boat.commandExitCode = exitCode
+    await f.finish()
+    expect(
+      await f.storage.get(continueJobKey(pending.continueId)),
+    ).toMatchObject({ stopCause })
+    await expect(f.result(pending.continueId)).rejects.toMatchObject({
+      status: 409,
+      code: 'workspace_continue_failed',
+      message:
+        exitCode === 80
+          ? 'Continue stopped: the changed files clash with the latest main. The workspace stays on octocat/test.'
+          : 'Continue could not finish.',
+    })
+    expect((await readWorkspace(f.env.DB, f.org.id, WORKSPACE_ID)).branch).toBe(
+      'octocat/test',
+    )
+    expect(
+      (await f.history(session.id)).events.filter(
+        ({ event }) => event.type === 'workspace.continued',
+      ),
+    ).toEqual([])
+    await expect(f.credential(job.fetchId)).rejects.toMatchObject({
+      code: 'current_turn_required',
+    })
+  }
 })
 
 it('repairs publication after a committed transaction loses its reply without a second branch move or duplicate note', async () => {
@@ -208,7 +237,7 @@ it('repairs publication after a committed transaction loses its reply without a 
   expect(await readWorkspace(f.env.DB, f.org.id, WORKSPACE_ID)).toMatchObject({
     baseBranch: 'main',
   })
-  expect(f.refreshed).toMatchObject([{ baseBranch: 'main' }])
+  expect(f.refreshed).toMatchObject([{ baseBranch: null }])
   expect(
     (await f.history(session.id)).events.filter(
       ({ event }) => event.type === 'workspace.continued',
@@ -218,6 +247,7 @@ it('repairs publication after a committed transaction loses its reply without a 
 })
 
 it('publishes an already switched branch after the command loses its exit result and runs no second checkout', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
   const f = await continueFixture(harness)
   const session = await f.createSession()
   const pending = await f.start()
@@ -232,10 +262,14 @@ it('publishes an already switched branch after the command loses its exit result
     'octocat/test',
   )
   f.inspectBranch(job.branch)
-  f.boat.synchronousExitCode = 1
+  f.boat.synchronousExitCode = 82
   f.reconstruct()
   await f.coordinator.advance()
   expect(await f.result(pending.continueId)).toEqual(pending)
+  expect(await f.active()).toMatchObject({
+    stopCause: 'comparison-metadata-failed',
+  })
+  expect(warn).not.toHaveBeenCalled()
   expect((await readWorkspace(f.env.DB, f.org.id, WORKSPACE_ID)).branch).toBe(
     'octocat/test',
   )
@@ -249,6 +283,9 @@ it('publishes an already switched branch after the command loses its exit result
   expect((await readWorkspace(f.env.DB, f.org.id, WORKSPACE_ID)).branch).toBe(
     job.branch,
   )
+  expect(await f.storage.get(continueJobKey(job.id))).toMatchObject({
+    stopCause: 'unknown',
+  })
   expect(
     f.boat.commandRequests.filter(({ detached }) => detached),
   ).toHaveLength(2)
@@ -257,4 +294,5 @@ it('publishes an already switched branch after the command loses its exit result
       ({ event }) => event.type === 'workspace.continued',
     ),
   ).toHaveLength(1)
+  expect(warn).not.toHaveBeenCalled()
 })

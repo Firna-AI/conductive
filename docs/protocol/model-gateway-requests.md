@@ -4,9 +4,9 @@ This doc holds the requirements and the decisions in force for the model
 requests that the gateway sends on to the upstream, and for their answers.
 It covers the upstream of each login, and the routes, the headers, and
 the bodies that pass. It also covers the own endpoints, the streams, and
-the risks, and it says that the gateway keeps no copy. It belongs to
-[Model gateway](model-gateway.md), which covers the turn token, how the
-agents reach the gateway, and the checks of each request. The terms are
+the risks, and it says that the gateway keeps no copy. It
+belongs to [Model gateway](model-gateway.md), which covers the turn token,
+how the agents reach the gateway, and the checks of each request. The terms are
 those of the [model gateway](model-gateway.md#terms) and of the
 [architecture doc](../architecture.md#terms). A decision number
 names a dated record, as
@@ -80,6 +80,8 @@ complete.
   constraints. Reason: Codex must stay on the gateway while the Worker
   follows the real routing for each model request.
 - An error body also passes unchanged, unless it holds the real login.
+  A long wait for Codex is the one other exception, as
+  [Model gateway: long waits](model-gateway-long-waits.md) says.
 - For a ChatGPT sign-in, the gateway never passes on an OpenAI 401.
   [How the agents reach the gateway](model-gateway.md#how-the-agents-reach-the-gateway)
   states its recovery and terminal answers.
@@ -216,7 +218,8 @@ complete.
   renewal. It never copies or replays a model upload. Codex decides its resend.
 - The gateway adds no model filter, no rate limit, and no time or byte
   limit on an answer. The limits of the provider and of the agent program
-  apply.
+  apply. A long wait of the upstream ends a Codex turn, as
+  [Model gateway: long waits](model-gateway-long-waits.md) says.
 - A model filter was rejected, because the agent programs choose their own
   models for work in the background.
 - A rate limit was rejected, because subagents send requests in parallel.

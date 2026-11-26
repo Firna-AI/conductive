@@ -18,5 +18,5 @@
   4. Read the Worker logs of the steps for errors.
   5. When an agent used the computer tools on E2B, delete `plans/follow-ups/second-provider-computer-tools.md`, as its "Done when" asks.
 - **Impact if no action:** The app path on E2B stays unproven, so a real outage of Boat could meet a broken backup.
-- **Needs:** The merged change on production. `plans/follow-ups/e2b-production-account.md` done. An operator account, and Claude and Codex logins.
+- **Needs:** The merged change on production, and the E2B account on the deployed Worker, which the secret `SANDBOX_PROVIDER_ACCOUNTS` got on 20 November 2026. The 51 GB disk and the Pro plan of `plans/follow-ups/e2b-production-account.md` are not needed for a short test with a small repository. The project has a 15 GB disk, and Hobby limits a sandbox to 1 hour of running without a pause. An operator account, and Claude and Codex logins.
 - **Done when:** Every step passes. A failed step gets its own follow-up item. Then delete this item.

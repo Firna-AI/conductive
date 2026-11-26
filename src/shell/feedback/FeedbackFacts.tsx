@@ -1,15 +1,15 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { Info, Reply } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
+import { classes } from '../../ui/components/common/classes'
 import {
   contextLine,
   noReplyLine,
   replyLine,
   replyLoadingLine,
   replyNotLoadedTitle,
-} from '../../../docs/mockups/src/components/feedback/feedbackCopy'
-import styles from '../../../docs/mockups/src/components/feedback/FeedbackDialog.module.css'
+} from '../../ui/components/feedback/feedbackCopy'
+import styles from '../../ui/components/feedback/FeedbackDialog.module.css'
 import type { FeedbackState } from '../../app/feedback-state'
 import { LoadFailure } from '../ui/LoadFailure'
 

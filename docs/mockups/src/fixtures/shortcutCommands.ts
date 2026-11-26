@@ -1,17 +1,11 @@
-import type { Shortcut } from '../components/common/KeyChips'
-import {
-  sendFeedbackLabel,
-  sendFeedbackWords,
-} from '../components/feedback/feedbackCopy'
+import type { Shortcut } from '../../../../src/ui/components/common/KeyChips'
+import { sendFeedbackLabel } from '../../../../src/ui/components/feedback/feedbackCopy'
 import {
   agentActionLabels,
   type CommandAgentAction,
-} from '../components/workspace/barCopy'
-import {
-  mergeLatestCommandLabel,
-  mergeLatestWords,
-} from '../components/workspace/mergeLatestCopy'
-import { transcriptItems } from '../components/workspace/transcriptCopy'
+} from '../../../../src/ui/components/workspace/barCopy'
+import { mergeLatestCommandLabel } from '../../../../src/ui/components/workspace/mergeLatestCopy'
+import { transcriptItems } from '../../../../src/ui/components/workspace/transcriptCopy'
 import {
   fixed,
   fixedGroups,
@@ -21,6 +15,7 @@ import {
   tabMenuKeys,
   type FixedSpec,
 } from './fixedShortcuts'
+import { commandWords } from './shortcutWords'
 
 const digits = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const
 
@@ -101,50 +96,10 @@ export type GroupSpec = {
   only?: 'mac-app'
 }
 
-/**
- * The words that a person may search for and that the label of a command
- * lacks. A command that the palette also lists has the palette's words.
- */
-const commandWords: Partial<Record<CommandId, readonly string[]>> = {
-  'command-palette': ['search'],
-  'keyboard-shortcuts': ['keys', 'hotkeys', 'keybindings'],
-  'account-page': ['settings', 'preferences'],
-  'create-org': ['new', 'team'],
-  'send-feedback': sendFeedbackWords,
-  'previous-tab': ['session'],
-  'next-tab': ['session'],
-  'close-tab': ['session'],
-  'reopen-session': ['tab'],
-  'repositories-settings': ['github'],
-  'new-workspace': ['create', 'task'],
-  'new-section': ['group'],
-  'restore-workspace': ['unarchive'],
-  'copy-link': ['url', 'workspace', 'clipboard'],
-  'create-pull-request': ['pull request', 'github', 'publish'],
-  'fix-checks': ['ci', 'errors', 'pull request'],
-  'resolve-conflicts': ['merge', 'rebase', 'pull request'],
-  'merge-latest': mergeLatestWords,
-  'address-review': ['comments', 'feedback', 'pull request'],
-  'commit-and-push': ['git', 'save', 'publish'],
-  'mark-ready-for-review': ['draft', 'pull request', 'github'],
-  'merge-pull-request': ['pull request', 'github', 'squash', 'rebase'],
-  'continue-after-merge': ['new branch', 'merged', 'workspace'],
-  'open-pull-request': ['pull request', 'github', 'browser'],
-  'go-to-checks': ['ci'],
-  'go-to-preview': ['port'],
-  'new-terminal': ['shell', 'tab'],
-  'new-session': ['tab', 'agent', 'chat'],
-  'session-history': ['closed', 'reopen'],
-  'attach-files': ['upload'],
-  'stop-agent': ['cancel'],
-  'copy-concise-transcript': ['markdown', 'clipboard', 'chat'],
-  'copy-full-transcript': ['markdown', 'clipboard', 'chat', 'expanded'],
-}
-
 function command(
   id: CommandId,
   label: string,
-  ...mac: Shortcut[]
+  mac: readonly Shortcut[] = [],
 ): CommandSpec {
   return { kind: 'command', id, label, mac, words: commandWords[id] }
 }
@@ -153,24 +108,27 @@ function command(
 function macAppCommand(
   id: CommandId,
   label: string,
-  ...mac: Shortcut[]
+  mac: readonly Shortcut[] = [],
 ): CommandSpec {
-  return { ...command(id, label, ...mac), only: 'mac-app' }
+  return { ...command(id, label, mac), only: 'mac-app' }
 }
 
 /** An agent action of the pull request bar, with the label of its button. */
-function agentCommand(id: CommandAgentAction, ...mac: Shortcut[]): CommandSpec {
-  return command(id, agentActionLabels[id], ...mac)
+function agentCommand(
+  id: CommandAgentAction,
+  mac: readonly Shortcut[] = [],
+): CommandSpec {
+  return command(id, agentActionLabels[id], mac)
 }
 
 /** The nine commands that open the org or the workspace at a place. */
 function numbered(
   prefix: 'org' | 'workspace',
   label: string,
-  keys: (digit: Digit) => Shortcut[],
+  keys: (digit: Digit) => readonly Shortcut[],
 ): CommandSpec[] {
   return digits.map((digit) =>
-    command(`${prefix}-${digit}`, `${label} ${digit}`, ...keys(digit)),
+    command(`${prefix}-${digit}`, `${label} ${digit}`, keys(digit)),
   )
 }
 
@@ -202,40 +160,63 @@ export const shortcutSpecs: readonly GroupSpec[] = [
   {
     label: 'General',
     rows: [
-      command('command-palette', 'Command palette', '⌘K'),
-      command('keyboard-shortcuts', 'Keyboard shortcuts', '⌥⌘/'),
-      command('account-page', 'Account page', '⌘,'),
+      command('command-palette', 'Command palette', [['⌘', 'K']]),
+      command('keyboard-shortcuts', 'Keyboard shortcuts', [['⌥', '⌘', '/']]),
+      command('account-page', 'Account page', [['⌘', ',']]),
       command('create-org', 'Create org'),
-      command('send-feedback', sendFeedbackLabel, '⌥⌘F'),
-      fixed('Close a dialog or a menu', ['Esc']),
+      command('send-feedback', sendFeedbackLabel, [['⌥', '⌘', 'F']]),
+      fixed('Close a dialog or a menu', [['Esc']]),
       focusedButtonKeys,
     ],
   },
   {
     label: 'View',
     rows: [
-      command('toggle-sidebar', 'Hide or show the sidebar', '⌘B', '['),
-      command(
-        'toggle-right-column',
-        'Hide or show the right column',
-        '⌥⌘B',
-        ']',
-      ),
+      command('toggle-sidebar', 'Hide or show the sidebar', [
+        ['⌘', 'B'],
+        ['['],
+      ]),
+      command('toggle-right-column', 'Hide or show the right column', [
+        ['⌥', '⌘', 'B'],
+        [']'],
+      ]),
     ],
   },
   {
     label: 'Navigation',
     description: 'The orgs count from the top of the rail.',
     rows: [
-      macAppCommand('back', 'Back', '⌘['),
-      macAppCommand('forward', 'Forward', '⌘]'),
-      command('workspace-list', 'Workspace list', '⇧⌘H'),
-      command('previous-tab', 'Previous tab', '⌃⇧Tab', '⇧⌘[', '⌥⌘←', '⌥⌘['),
-      command('next-tab', 'Next tab', '⌃Tab', '⇧⌘]', '⌥⌘→', '⌥⌘]'),
-      command('close-tab', 'Close tab', '⌘W', '⌥⌘W'),
-      command('reopen-session', 'Reopen closed session', '⇧⌘T', '⌥⇧⌘T'),
-      ...numbered('org', 'Switch to org', (digit) => [`⌃${digit}`]),
-      command('repositories-settings', 'Repositories settings', '⌥⌘A'),
+      macAppCommand('back', 'Back', [['⌘', '[']]),
+      macAppCommand('forward', 'Forward', [['⌘', ']']]),
+      command('workspace-list', 'Workspace list', [['⇧', '⌘', 'H']]),
+      command('previous-tab', 'Previous tab', [
+        ['⌃', '⇧', 'Tab'],
+        ['⇧', '⌘', '['],
+        ['⌥', '⌘', '←'],
+        ['⌥', '⌘', '['],
+      ]),
+      command('next-tab', 'Next tab', [
+        ['⌃', 'Tab'],
+        ['⇧', '⌘', ']'],
+        ['⌥', '⌘', '→'],
+        ['⌥', '⌘', ']'],
+      ]),
+      command('close-tab', 'Close tab', [
+        ['⌘', 'W'],
+        ['⌥', '⌘', 'W'],
+      ]),
+      command('reopen-session', 'Reopen closed session', [
+        ['⇧', '⌘', 'T'],
+        ['⌥', '⇧', '⌘', 'T'],
+      ]),
+      ...numbered('org', 'Switch to org', (digit) => [['⌃', digit]]),
+      command('repositories-settings', 'Repositories settings', [
+        ['⌥', '⌘', 'A'],
+      ]),
+      {
+        ...fixed('Close the temporary tab', [['Esc']]),
+        words: ['italic', 'file'],
+      },
       tabMenuKeys,
     ],
   },
@@ -243,32 +224,46 @@ export const shortcutSpecs: readonly GroupSpec[] = [
     label: 'Workspace',
     description: 'The workspaces count from the top of the list.',
     rows: [
-      command('new-workspace', 'New workspace', '⌘N', '⌥⌘N'),
-      command('new-section', 'New section'),
-      command('archive-workspace', 'Archive workspace', '⇧⌘A'),
-      command('restore-workspace', 'Restore workspace'),
-      command('copy-link', 'Copy link', '⇧⌘C'),
-      ...numbered('workspace', 'Open workspace', (digit) => [
-        `⌘${digit}`,
-        `⌥⌘${digit}`,
+      command('new-workspace', 'New workspace', [
+        ['⌘', 'N'],
+        ['⌥', '⌘', 'N'],
       ]),
-      command('previous-workspace', 'Previous workspace', '⌥⌘↑', '⌃⌘↑'),
-      command('next-workspace', 'Next workspace', '⌥⌘↓', '⌃⌘↓'),
-      command('next-needs-input', 'Next workspace that needs input', '⌥⌘L'),
-      agentCommand('create-pull-request', '⇧⌘P', '⌥⇧⌘P'),
-      agentCommand('fix-checks', '⌥⌘X'),
+      command('new-section', 'New section'),
+      command('archive-workspace', 'Archive workspace', [['⇧', '⌘', 'A']]),
+      command('restore-workspace', 'Restore workspace'),
+      command('copy-link', 'Copy link', [['⇧', '⌘', 'C']]),
+      ...numbered('workspace', 'Open workspace', (digit) => [
+        ['⌘', digit],
+        ['⌥', '⌘', digit],
+      ]),
+      command('previous-workspace', 'Previous workspace', [
+        ['⌥', '⌘', '↑'],
+        ['⌃', '⌘', '↑'],
+      ]),
+      command('next-workspace', 'Next workspace', [
+        ['⌥', '⌘', '↓'],
+        ['⌃', '⌘', '↓'],
+      ]),
+      command('next-needs-input', 'Next workspace that needs input', [
+        ['⌥', '⌘', 'L'],
+      ]),
+      agentCommand('create-pull-request', [
+        ['⇧', '⌘', 'P'],
+        ['⌥', '⇧', '⌘', 'P'],
+      ]),
+      agentCommand('fix-checks', [['⌥', '⌘', 'X']]),
       agentCommand('resolve-conflicts'),
       command('merge-latest', mergeLatestCommandLabel),
       agentCommand('address-review'),
-      agentCommand('commit-and-push', '⇧⌘Y'),
+      agentCommand('commit-and-push', [['⇧', '⌘', 'Y']]),
       command('mark-ready-for-review', 'Mark PR ready for review'),
-      command('merge-pull-request', 'Merge PR', '⇧⌘M'),
+      command('merge-pull-request', 'Merge PR', [['⇧', '⌘', 'M']]),
       command('continue-after-merge', 'Continue after merge'),
-      command('open-pull-request', 'Open PR on GitHub', '⇧⌘G'),
+      command('open-pull-request', 'Open PR on GitHub', [['⇧', '⌘', 'G']]),
       command('go-to-all-files', 'Go to All files'),
-      command('go-to-changes', 'Go to Changes', '⌥⌘U'),
+      command('go-to-changes', 'Go to Changes', [['⌥', '⌘', 'U']]),
       command('go-to-checks', 'Go to Checks'),
-      command('go-to-terminal', 'Go to Terminal', '⌘J'),
+      command('go-to-terminal', 'Go to Terminal', [['⌘', 'J']]),
       command('go-to-preview', 'Go to Preview'),
       command('new-terminal', 'New terminal'),
       ...focusedKeys,
@@ -277,15 +272,23 @@ export const shortcutSpecs: readonly GroupSpec[] = [
   {
     label: 'Chat',
     rows: [
-      command('new-session', 'New session', '⌘T', '⌥⌘T'),
+      command('new-session', 'New session', [
+        ['⌘', 'T'],
+        ['⌥', '⌘', 'T'],
+      ]),
       command('session-history', 'Session history'),
-      command('focus-message', 'Focus the message field', '⌘L', '⇧⌘L'),
-      command('attach-files', 'Attach files', '⌘U'),
-      command('model-picker', 'Model picker', '⌘/'),
-      command('next-effort', 'Next effort level', '⌃⌘/'),
-      command('fast-mode', 'Fast mode', '⇧⌘E'),
-      command('stop-agent', 'Stop the agent', '⌃⌘⌫'),
-      command('copy-concise-transcript', transcriptItems.concise, '⌥⌘C'),
+      command('focus-message', 'Focus the message field', [
+        ['⌘', 'L'],
+        ['⇧', '⌘', 'L'],
+      ]),
+      command('attach-files', 'Attach files', [['⌘', 'U']]),
+      command('model-picker', 'Model picker', [['⌘', '/']]),
+      command('next-effort', 'Next effort level', [['⌃', '⌘', '/']]),
+      command('fast-mode', 'Fast mode', [['⇧', '⌘', 'E']]),
+      command('stop-agent', 'Stop the agent', [['⌃', '⌘', '⌫']]),
+      command('copy-concise-transcript', transcriptItems.concise, [
+        ['⌥', '⌘', 'C'],
+      ]),
       command('copy-full-transcript', transcriptItems.full),
       ...messageKeys,
     ],

@@ -33,8 +33,7 @@ export class FakeTerminalList {
     const list = {
       terminals: structuredClone(this.terminals),
       several: this.several,
-      eventNumber: this.events.history(Number.MAX_SAFE_INTEGER)
-        .throughEventNumber,
+      eventNumber: this.events.last(id),
     }
     if (['ready', 'working', 'unread', 'input'].includes(state))
       return {
@@ -129,8 +128,7 @@ export class FakeTerminalList {
   }
 
   private changed() {
-    const eventNumber =
-      this.events.history(Number.MAX_SAFE_INTEGER).throughEventNumber + 1
+    const eventNumber = this.events.last(this.workspace.id) + 1
     this.events.emit({
       workspaceId: this.workspace.id,
       eventNumber,

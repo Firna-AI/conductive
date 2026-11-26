@@ -1,0 +1,36 @@
+# One draw error blanks the whole app
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-17, from branch `calummoore/output-summary-f7sm`, review round 1, the check of finding 21. The problem is already on `origin/main`.
+- **Location:** `src/main.tsx:25`, where the web app mounts `App` with no error boundary. `desktop/renderer/main.tsx:15`, where the Mac app does the same. The parts that draw untrusted text: `src/chat/components/AgentText.tsx`, `src/chat/components/MessageLine.tsx`, and `src/files/markdown/MarkdownView.tsx`.
+- **Reason:** The problem is already on `origin/main`, outside the Markdown work of the branch that found it, and each option needs the user's choice.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Draw:** the render of a React component into the page.
+  - **Error boundary:** a React component that catches an exception that its children throw while they draw, and draws a fallback in their place.
+  - **Root:** the `#root` element of the page, where `createRoot` mounts the app.
+- **Background:**
+  - The web app starts in `src/main.tsx`, and the Mac app starts in `desktop/renderer/main.tsx`. Each mounts `App` in the root with `createRoot`, with no error boundary around it.
+  - The app uses React 19. When a component throws while it draws, and no error boundary catches the exception, React removes the whole tree from the root. The page is then empty.
+  - The only error boundary in the app is `LexicalErrorBoundary`, at `src/chat/components/chip-field/ChipTextField.tsx:140`. It covers only the Lexical editor of the text fields with chips, such as the message box.
+  - The chat draws agent messages, which sandbox code can shape. The file preview draws the Markdown of repository files. Both are untrusted, as "Trust boundaries" in `docs/architecture/data-and-trust.md` says.
+  - On 17 November 2026, a check drew an agent message of 3,000 nested `**` pairs, about 12 KB, in a fresh page. The draw threw, React emptied the root, and the page went blank on each load of that chat.
+  - Agent messages now nest marks at most 12 levels deep, as `docs/protocol/chat-markdown.md` says, which stops that input. Any other exception during a draw still blanks the page.
+  - No protocol doc or mockup says what the app shows after a draw error.
+- **Problem:** Any exception while a component draws empties the root, so the web app and the Mac app show a blank page. The member gets no message and no way back except a reload. A reload that opens the same view throws again.
+- **Impact if no action:** One defect in any component, or untrusted text that meets such a defect, makes the whole app unusable for each member who opens that view.
+- **Root question:** How does a member keep using the app when one part of a screen fails to draw?
+- **Options:**
+  - **A.** Put one error boundary around `App` in both entry points. After a draw error, it shows a page that says that the app hit a problem, with Reload and a link to the start page. Cost: one failed part still replaces the whole screen, and a reload of the same view fails again. It needs a mockup state and a rule in a protocol doc. Effort: Small.
+  - **B.** Do A. Also put an error boundary around each part that draws untrusted text. These parts are each agent message, each message line of the work of a turn, and the Markdown view of the file preview. A failed agent message or message line shows its text as typed. A failed Markdown view shows the file as source, as its switch to source does. The rest of the chat and of the app keeps working. Cost: two more fallback states, with mockups, rules in `docs/protocol/chat-markdown.md` and `docs/protocol/workspace-tools.md`, and tests. Effort: Medium.
+  - **C.** Do B. Also put an error boundary around each region of the app. The regions are the workspace list, the chat, each tab of the centre column, and each tool panel. A failed region says that it didn't load, with Try again, and the other regions keep working. Cost: a fallback for each region, with mockups, copy, and tests. Effort: Large.
+- **Left out:**
+  - Change nothing: the page stays blank, so it fails the goal.
+  - A fix for each exception when members find it: the next unknown defect still blanks the page, so it fails the goal.
+  - The `onUncaughtError` option of `createRoot`, or a handler of `window` errors, in place of the boundary of A. It is a variant of A, and it runs only after React has emptied the root, so it must mount the page again.
+- **Wider fix:** C. Each region then fails alone, so no draw error can take down the whole app.
+- **Previous examples:** The deep-mark draw error of agent messages, in the background above. Commit `0ba309356`, on 6 November 2026, stopped untrusted files from crashing the file preview or stalling its layout. Neither change added an error boundary.
+- **Recommendation:** B. It gives every draw error a way back, and a bad message or file no longer takes down the chat or the preview. C best protects the codebase, because each region then fails alone.
+- **Action:** ask the user, because each option adds a screen after a draw error that no protocol doc or mockup covers.

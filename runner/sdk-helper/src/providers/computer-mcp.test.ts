@@ -139,7 +139,7 @@ it.each(['claude', 'codex'] as const)(
             ? {
                 role: 'user',
                 content:
-                  'Sender: @alice [member ID: "alice"]\n\nChange the file.',
+                  'Change the file.\n\nSender: @alice [member ID: "alice"]',
               }
             : { clientUserMessageId: 'message-computer' },
         )

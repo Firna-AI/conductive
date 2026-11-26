@@ -14,17 +14,33 @@ import { click } from '../test-mount'
 import {
   buildsOf,
   chosen,
+  firstBuildRuns,
   menuRows,
   newWorkspace,
   shown,
   withDashboard,
+  withReadiness,
+  type ShownBuilds,
   type Wait,
 } from './waiting-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
+/** What New workspace shows for a draft kept in acme/admin-dashboard. */
+async function keptDashboard(
+  builds: ShownBuilds,
+  repositories: ReturnType<typeof withReadiness>,
+) {
+  const { view } = await newWorkspace({
+    builds,
+    repositories,
+    draft: 'admin-dashboard',
+  })
+  return shown(view)
+}
+
 describe('the notice of a waiting repository in New workspace', () => {
-  test('a kept draft keeps its waiting repository, turns Send off, and says when the repository is ready', async () => {
+  test('a kept draft keeps its waiting repository, turns Send off, and says when the repository is ready, also while the builds are missing, failed, or older than the repositories', async () => {
     holdAnimationFrames()
     const { view } = await newWorkspace({
       builds: buildsOf('building', ['admin-dashboard']),
@@ -40,9 +56,49 @@ describe('the notice of a waiting repository in New workspace', () => {
       send: false,
       note: false,
     })
+    // The repositories reply of a newer Worker says that the org image
+    // lacks acme/admin-dashboard. The builds still load, failed to load, or
+    // come from before an admin added it, so they list no added repository.
+    const lacking = withReadiness(withDashboard, ['admin-dashboard'])
+    const waits = {
+      notices: [
+        'acme/admin-dashboard is ready after the next build Build the computer, or choose another repository. Cloud computer settings',
+      ],
+      spinner: false,
+      picker: 'Repository: acme/admin-dashboard',
+      send: false,
+      note: false,
+    }
+    expect({
+      loading: await keptDashboard('loading', lacking),
+      failed: await keptDashboard('failed', lacking),
+      older: await keptDashboard(imageBuilds([]), lacking),
+    }).toEqual({ loading: waits, failed: waits, older: waits })
   })
 
-  test('with no chosen repository ready, Send is off, an admin gets Cloud computer settings in each state, a refresh shows no build, and a member reads that an admin can act', async () => {
+  test('a kept draft in a repository that the repositories reply marks ready keeps Send on with no notice, also when older builds list it as added or show no good image', async () => {
+    holdAnimationFrames()
+    const ready = withReadiness(withDashboard, [])
+    const on = {
+      notices: [],
+      spinner: false,
+      picker: 'Repository: acme/admin-dashboard',
+      send: true,
+    }
+    expect({
+      added: await keptDashboard(
+        buildsOf('building', ['admin-dashboard']),
+        ready,
+      ),
+      firstBuild: await keptDashboard(firstBuildRuns, ready),
+    }).toEqual({
+      added: { ...on, note: true },
+      // The builds name no good build, so the page names no build time.
+      firstBuild: { ...on, note: false },
+    })
+  })
+
+  test('with no chosen repository ready, Send is off, an admin gets Cloud computer settings in each state, a refresh shows no build, a member reads that an admin can act, and a repositories reply that shows an image wins over older builds of the first build', async () => {
     holdAnimationFrames()
     const only = chosen(['admin-dashboard'])
     const page = async (wait: Wait, role: OrgRole = 'admin') => {
@@ -62,6 +118,16 @@ describe('the notice of a waiting repository in New workspace', () => {
       }),
       repositories: only,
     })
+    // The repositories reply says that the org has an image that holds no
+    // repository of Acme. Older builds still show the first build, so the
+    // notice of the first build gives way to the one of the repository.
+    const imageReady = await newWorkspace({
+      builds: firstBuildRuns,
+      repositories: withReadiness(
+        only,
+        only.repositories.map((item) => item.id),
+      ),
+    })
     const off = { send: false, note: false }
     const picker = 'Repository: acme/admin-dashboard'
     expect({
@@ -70,6 +136,7 @@ describe('the notice of a waiting repository in New workspace', () => {
       waiting: (await page('waiting')).page,
       building: (await page('building')).page,
       refresh: shown(refreshing.view),
+      imageReady: shown(imageReady.view),
     }).toEqual({
       failed: {
         notices: [
@@ -108,6 +175,14 @@ describe('the notice of a waiting repository in New workspace', () => {
           'acme/admin-dashboard is ready after the next build Build the computer to send your message. Cloud computer settings',
         ],
         spinner: false,
+        picker,
+        ...off,
+      },
+      imageReady: {
+        notices: [
+          "acme/admin-dashboard is ready after the build You can send when it's ready. Cloud computer settings",
+        ],
+        spinner: true,
         picker,
         ...off,
       },

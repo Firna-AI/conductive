@@ -23,7 +23,8 @@
  * Preview tab of port 6006 (decision 291). `preview-behind` shows the first
  * session, and both Preview tabs stay in the row with their pages loaded.
  * A phone row shows no Preview tab, so a phone shows the page on its
- * Preview page.
+ * Preview page. `explanation` shows the tab of the explanation of Cal
+ * after Expand, at the end of the row.
  */
 export const tabStates = [
   'session',
@@ -47,6 +48,7 @@ export const tabStates = [
   'html-failed',
   'preview',
   'preview-behind',
+  'explanation',
 ] as const
 
 /**
@@ -82,7 +84,10 @@ export const temporaryTabStates = [
  * list lacks a model.
  *
  * The `mention-` states open the list of `@`: with a query, without one,
- * with no match, while the tree loads, and with no tree. `file-chips` holds
+ * with no match, while the tree loads, and with no tree. `mention-omitted`
+ * asks for tsconfig.json. The states with a ready tree search the tree of
+ * the `lists` of the workspace. A limited tree leaves out tsconfig.json, so
+ * nothing that the list offers matches it there. `file-chips` holds
  * a file chip and a folder chip. `file-added` holds the chip that Add to
  * chat of a row menu put at the end of the draft, with a space after it.
  * The field takes the focus on desktop, so the caret stands after the
@@ -98,11 +103,26 @@ export const temporaryTabStates = [
  * where the pick goes, then the picked file at the caret.
  *
  * The `capabilities` states open the Capabilities control of the icon
- * beside the attach button (secrets decision 8): with Mac access on, and
- * after a member turned it off. A computer draws it above the icon, and a
- * phone as a sheet. `menu` opens the menu of the one button of a phone,
- * which holds Attach files and Capabilities (secrets decision 16 G). A
- * computer has no such menu, so it draws the composer as it is.
+ * beside the attach button (secrets decision 8). A computer draws it above
+ * the icon, and a phone as a sheet. `menu` opens the menu of the one button
+ * of a phone, which holds Attach files and Capabilities (secrets decision
+ * 16 G). A computer has no such menu, so it draws the composer as it is.
+ *
+ * Only the Mac app shows the Mac access part, with the switch of this Mac
+ * (Mac access decision 7). A browser shows no Mac access part, so its view
+ * of each state of the switch shows only the secrets. The switch is on in
+ * `capabilities-on`, because this Mac has a grant until Stop for the
+ * workspace. It is off in each other state. This Mac has no grant in
+ * `capabilities`. In `capabilities-fifteen-minutes`, the 15 minutes run,
+ * and the bar gives their time left. `capabilities-stopped` has the result
+ * of the Stop of a switch-off. `capabilities-not-started` has a start that
+ * failed, and `capabilities-not-reached` a start that found this Mac not
+ * available (Mac access decision 3 A). In `capabilities-not-reached` and
+ * `capabilities-not-available`, the page cannot read the settings of this
+ * Mac, so the switch is disabled. `grant-not-started` and
+ * `grant-not-reached` draw the notice over the composer of a new workspace
+ * whose grant did not start after the create. Only the Mac app starts a
+ * grant, so only its screens use them.
  */
 export const composerStates = [
   'empty',
@@ -123,9 +143,17 @@ export const composerStates = [
   'mention-none',
   'mention-loading',
   'mention-unavailable',
+  'mention-omitted',
   'file-chips',
   'file-added',
   'file-chip-pointer',
+  'skill-query',
+  'skill-start',
+  'skill-loading',
+  'skill-unavailable',
+  'skill-none',
+  'skill-chip',
+  'skill-chip-pointer',
   'workspace-link-pointer',
   'attachment-pointer',
   'drop-over',
@@ -133,6 +161,13 @@ export const composerStates = [
   'dropped-folder',
   'unreadable-folder',
   'capabilities',
-  'capabilities-mac-off',
+  'capabilities-on',
+  'capabilities-fifteen-minutes',
+  'capabilities-stopped',
+  'capabilities-not-started',
+  'capabilities-not-reached',
+  'capabilities-not-available',
+  'grant-not-started',
+  'grant-not-reached',
   'menu',
 ] as const

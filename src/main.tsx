@@ -15,7 +15,7 @@ async function services(): Promise<AppServices> {
     const { createFakeServices } = await import('./app/dev/fake-services')
     return createFakeServices(window.location.search)
   }
-  return createLiveServices(window)
+  return createLiveServices(window, window.location.origin, 'same-origin')
 }
 
 const root = document.getElementById('root')

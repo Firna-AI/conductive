@@ -3,6 +3,8 @@
 use serde::Serialize;
 use serde_json::Value;
 
+use cnd_runner_interface::tools::session_actions::AgentGetMessageRequest;
+
 use crate::call::Call;
 use crate::error::{ErrorResultExt, Result};
 
@@ -68,11 +70,19 @@ pub(crate) fn request(call: &Call) -> Result<Request> {
         Call::StopSession(workspace, session) => {
             write(format!("{}/stop", session_path(workspace, session)), &())?
         }
-        Call::GetMessage(workspace, session, message) => read(format!(
-            "{}/messages/{}",
-            session_path(workspace, session),
-            component(message)
-        )),
+        Call::WatchSession(workspace, session, input) => {
+            write(format!("{}/watch", session_path(workspace, session)), input)?
+        }
+        Call::GetMessage(workspace, session, message) => read(query(
+            format!(
+                "{}/messages/{}",
+                session_path(workspace, session),
+                component(message)
+            ),
+            &AgentGetMessageRequest {
+                agent_messages: true,
+            },
+        )?),
         Call::CreateSection(input) => write("/v1/tools/sections".into(), input)?,
         Call::DeleteSection(section) => write(
             format!("/v1/tools/sections/{}/delete", component(section)),

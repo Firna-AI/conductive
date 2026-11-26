@@ -1,10 +1,10 @@
-import type { Shortcut } from '../components/common/KeyChips'
+import type { Shortcut } from '../../../../src/ui/components/common/KeyChips'
 
 const digits = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const
 
 /** A modifier with each digit, such as Alt+1 to Alt+9. */
 function digitKeys(modifier: string): Shortcut[] {
-  return digits.map((digit) => `${modifier}${digit}`)
+  return digits.map((digit) => [modifier, digit])
 }
 
 /**
@@ -19,34 +19,34 @@ function digitKeys(modifier: string): Shortcut[] {
  * those keys of the browser. "Keys that the app leaves to the browser" in
  * `docs/protocol/keyboard-shortcuts-keys.md` gives the complete table.
  */
-const macBrowserKeys = [...digitKeys('⌘'), '⌘L']
+const macBrowserKeys = [...digitKeys('⌘'), ['⌘', 'L']]
 
-const windowsBrowserKeys = [...digitKeys('Ctrl+'), 'Ctrl+L']
+const windowsBrowserKeys = [...digitKeys('Ctrl'), ['Ctrl', 'L']]
 
-const chromeLinuxBrowserKeys = [...windowsBrowserKeys, ...digitKeys('Alt+')]
+const chromeLinuxBrowserKeys = [...windowsBrowserKeys, ...digitKeys('Alt')]
 
-const firefoxLinuxBrowserKeys = [...digitKeys('Alt+'), 'Ctrl+L']
+const firefoxLinuxBrowserKeys = [...digitKeys('Alt'), ['Ctrl', 'L']]
 
 /**
  * The keys that a normal Chrome tab on a Mac never gives the page, from
  * `kReservedCommandIds` of Chromium. Edge keeps the same keys.
  */
 const chromeMacKept = [
-  '⌘N',
-  '⇧⌘N',
-  '⌘T',
-  '⇧⌘T',
-  '⌘W',
-  '⇧⌘W',
-  '⌘Q',
-  '⌃Tab',
-  '⌃⇧Tab',
-  '⇧⌘[',
-  '⇧⌘]',
-  '⌥⌘←',
-  '⌥⌘→',
-  '⌃PgUp',
-  '⌃PgDn',
+  ['⌘', 'N'],
+  ['⇧', '⌘', 'N'],
+  ['⌘', 'T'],
+  ['⇧', '⌘', 'T'],
+  ['⌘', 'W'],
+  ['⇧', '⌘', 'W'],
+  ['⌘', 'Q'],
+  ['⌃', 'Tab'],
+  ['⌃', '⇧', 'Tab'],
+  ['⇧', '⌘', '['],
+  ['⇧', '⌘', ']'],
+  ['⌥', '⌘', '←'],
+  ['⌥', '⌘', '→'],
+  ['⌃', 'PgUp'],
+  ['⌃', 'PgDn'],
 ]
 
 /**
@@ -54,24 +54,24 @@ const chromeMacKept = [
  * page, but Firefox still switches the tab. Firefox lets the page take ⇧⌘T.
  */
 const firefoxMacKept = [
-  '⌘N',
-  '⌘T',
-  '⌘W',
-  '⇧⌘W',
-  '⇧⌘P',
-  '⌘Q',
-  '⌃Tab',
-  '⌃⇧Tab',
-  '⌃PgUp',
-  '⌃PgDn',
-  '⌃⇧PgUp',
-  '⌃⇧PgDn',
-  '⌥⌘←',
-  '⌥⌘→',
-  '⌥⌘↑',
-  '⌥⌘↓',
-  '⇧⌘[',
-  '⇧⌘]',
+  ['⌘', 'N'],
+  ['⌘', 'T'],
+  ['⌘', 'W'],
+  ['⇧', '⌘', 'W'],
+  ['⇧', '⌘', 'P'],
+  ['⌘', 'Q'],
+  ['⌃', 'Tab'],
+  ['⌃', '⇧', 'Tab'],
+  ['⌃', 'PgUp'],
+  ['⌃', 'PgDn'],
+  ['⌃', '⇧', 'PgUp'],
+  ['⌃', '⇧', 'PgDn'],
+  ['⌥', '⌘', '←'],
+  ['⌥', '⌘', '→'],
+  ['⌥', '⌘', '↑'],
+  ['⌥', '⌘', '↓'],
+  ['⇧', '⌘', '['],
+  ['⇧', '⌘', ']'],
 ]
 
 /**
@@ -79,18 +79,18 @@ const firefoxMacKept = [
  * page. Edge keeps the same keys.
  */
 const chromeWindowsKept = [
-  'Ctrl+N',
-  'Ctrl+Shift+N',
-  'Ctrl+T',
-  'Ctrl+Shift+T',
-  'Ctrl+W',
-  'Ctrl+F4',
-  'Ctrl+Shift+W',
-  'Alt+F4',
-  'Ctrl+Tab',
-  'Ctrl+Shift+Tab',
-  'Ctrl+PgDn',
-  'Ctrl+PgUp',
+  ['Ctrl', 'N'],
+  ['Ctrl', 'Shift', 'N'],
+  ['Ctrl', 'T'],
+  ['Ctrl', 'Shift', 'T'],
+  ['Ctrl', 'W'],
+  ['Ctrl', 'F4'],
+  ['Ctrl', 'Shift', 'W'],
+  ['Alt', 'F4'],
+  ['Ctrl', 'Tab'],
+  ['Ctrl', 'Shift', 'Tab'],
+  ['Ctrl', 'PgDn'],
+  ['Ctrl', 'PgUp'],
 ]
 
 /**
@@ -99,19 +99,19 @@ const chromeWindowsKept = [
  * Firefox lets the page take Ctrl+Shift+T.
  */
 const firefoxLinuxKept = [
-  'Ctrl+N',
-  'Ctrl+T',
-  'Ctrl+W',
-  'Ctrl+Shift+W',
-  'Ctrl+Shift+P',
-  'Ctrl+Tab',
-  'Ctrl+Shift+Tab',
-  'Ctrl+PgUp',
-  'Ctrl+PgDn',
-  'Ctrl+Shift+PgUp',
-  'Ctrl+Shift+PgDn',
-  'Ctrl+F4',
-  'Ctrl+Q',
+  ['Ctrl', 'N'],
+  ['Ctrl', 'T'],
+  ['Ctrl', 'W'],
+  ['Ctrl', 'Shift', 'W'],
+  ['Ctrl', 'Shift', 'P'],
+  ['Ctrl', 'Tab'],
+  ['Ctrl', 'Shift', 'Tab'],
+  ['Ctrl', 'PgUp'],
+  ['Ctrl', 'PgDn'],
+  ['Ctrl', 'Shift', 'PgUp'],
+  ['Ctrl', 'Shift', 'PgDn'],
+  ['Ctrl', 'F4'],
+  ['Ctrl', 'Q'],
 ]
 
 /**
@@ -120,9 +120,9 @@ const firefoxLinuxKept = [
  * decisions 192 B and 196 leave to it.
  */
 export const tabKeys = {
-  chromeMac: new Set([...chromeMacKept, ...macBrowserKeys]),
-  firefoxMac: new Set([...firefoxMacKept, ...macBrowserKeys]),
-  chromeWindows: new Set([...chromeWindowsKept, ...windowsBrowserKeys]),
-  chromeLinux: new Set([...chromeWindowsKept, ...chromeLinuxBrowserKeys]),
-  firefoxLinux: new Set([...firefoxLinuxKept, ...firefoxLinuxBrowserKeys]),
-} as const satisfies Readonly<Record<string, ReadonlySet<Shortcut>>>
+  chromeMac: [...chromeMacKept, ...macBrowserKeys],
+  firefoxMac: [...firefoxMacKept, ...macBrowserKeys],
+  chromeWindows: [...chromeWindowsKept, ...windowsBrowserKeys],
+  chromeLinux: [...chromeWindowsKept, ...chromeLinuxBrowserKeys],
+  firefoxLinux: [...firefoxLinuxKept, ...firefoxLinuxBrowserKeys],
+} as const satisfies Readonly<Record<string, readonly Shortcut[]>>

@@ -1,0 +1,40 @@
+# Failed restarts can prevent the idle stop
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-21, from branch `calummoore/no-response-issue-l1pn`, review finding 5.
+- **Location:** `worker/lifecycle/durable-restart.ts:57` (`failedRestartLifecycle`), `worker/lifecycle/durable-turns.ts:14-15` (the early return of `applyLifecycleTurn`), `worker/lifecycle/durable-alarm.ts:60-79` (the deadline extension and the idle stop), `worker/lifecycle/automatic-restart.ts` (the catch path of the command step), `worker/lifecycle/durable-start.ts:70` (`readyLifecycle` fails a late restart).
+- **Reason:** A Medium product bug with the likelihood Rare waits for a later branch under the fix rule. Its wider fix changes the idle rule of each error state.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Lifecycle alarm:** the timer of the workspace object that checks the restart time limits and stops an idle cloud computer (`advanceLifecycleAlarm` in `worker/lifecycle/durable-alarm.ts`).
+  - **Running sessions:** the saved list of sessions that the lifecycle treats as having active work (`runningSessions` in the lifecycle state).
+  - **Failed restart:** the error state with the code `restart_failed` and the text "The software didn't restart. Try again.", which keeps the cloud computer running for Try again.
+  - **Automatic restart:** the restart that the Worker starts by itself when the runner stays away while a message waits ("Automatic restart" in `docs/protocol/restart-the-software.md`).
+- **Background:**
+  - A restart fails when its command fails, or when the runner is not ready 3 minutes after the restart began. `failedRestartLifecycle` then sets the error state. It keeps the running sessions.
+  - When the state becomes error, the stop hook ends the running turns in chat (`worker/lifecycle/create-workspace-lifecycle.ts:53-57`). Each turn end reaches `applyLifecycleTurn` in `worker/lifecycle/durable-turns.ts`.
+  - For a failed automatic restart, `applyLifecycleTurn` returns at once, so that the turn end keeps the error state (`durable-turns.ts:14-15`). So the turn end removes no session from the running sessions.
+  - An automatic restart can fail before it ends the running turns. Its time limit can pass during the update check of up to 60 seconds. A ready event after the time limit also fails it in `readyLifecycle`.
+  - The lifecycle alarm extends the provider deadline while running sessions exist. It stops an idle computer only when none exist (`durable-alarm.ts:60-79`). A failed restart otherwise keeps the idle stop (`isFailedRestart`).
+- **Problem:** After such a failure, the running sessions stay saved although their turns ended. A focused probe showed that a later alarm extended the provider deadline after the idle limit, and made no stop request.
+- **Impact if no action:** The cloud computer keeps running, and the provider charges for it, after all its turns ended.
+- **Root question:** How does a failed restart allow the cloud computer to stop after its work ends?
+- **Options:**
+  - **A.** Clear the saved running sessions when an automatic restart expires and ends its turns. Effort: Small.
+  - **B.** Apply the turn-end bookkeeping in the failed state, and keep the restart error. A missed turn-end callback can still leave stale entries. Effort: Small.
+  - **C.** Read the active work from the committed chat before a restart error extends an idle deadline. Add a regression test that expires during a held update check with a running turn. Effort: Medium.
+  - **D.** Set the saved running sessions to empty in `failedRestartLifecycle`. Each failure point then starts the error state with no sessions. The failure points are the expiry, the catch path of the automatic restart, a late ready event, and a failed manual Restart. Add the regression test: a running turn, an update check held past the time limit, then a stop request after the stop time. Effort: Small.
+  - **E.** Use one idle rule for each state whose cloud computer can run, that is each state that is not confirmed stopped. The rule reads the running turns from the committed chat. It merges option B of `plans/follow-ups/sandbox-may-run-idle-stop.md`. Effort: Medium.
+- **Left out:** An immediate stop of the computer at a failed restart. It breaks the Restart rule that the shells of the terminals keep running. Try again could then not use the running computer.
+- **Wider fix:** E. The idle stop then uses the actual turns for each state whose computer can run, also after a missed turn-end notice.
+- **Previous examples:** The review of the manual Restart recorded a similar idle-stop risk for failed restarts, in `plans/follow-ups/sandbox-may-run-idle-stop.md`.
+- **Related:**
+  - `plans/follow-ups/sandbox-may-run-idle-stop.md`: E merges its option B. Apply E there and here in one branch.
+  - `plans/follow-ups/failed-restart-error-hidden-by-turn-end.md`: the same code, `applyLifecycleTurn`. A failed manual Restart loses its error at a turn end. Its option A needs D here first.
+  - `plans/follow-ups/restart-hold-delivery-after-submission.md`: the same code. Keep the order of the turn-end steps.
+  - `plans/follow-ups/worker-stopped-ends-mark-files-unavailable.md`: the same code, the stopped ends that the failure writes.
+  - `plans/follow-ups/runner-readiness-per-process.md`: the same code. A late ready event also fails a restart in `readyLifecycle`, and D covers that path.
+- **Recommendation:** D, in place of the review's C. One change of the failure state covers each failure point. E best protects the codebase.
+- **Action:** fix after merge, apply D, with E as its wider fix, because a Medium product bug with the likelihood Rare gets fix after merge.

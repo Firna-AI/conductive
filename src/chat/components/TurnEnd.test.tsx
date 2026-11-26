@@ -2,7 +2,7 @@
 
 import { expect, it, vi } from 'vitest'
 import type { ChangedFile } from '../../shared/generated/ChangedFile'
-import { TouchScreen } from '../../../docs/mockups/src/components/common/touch'
+import { TouchScreen } from '../../ui/components/common/touch'
 import { accessibleName, byRole } from '../../test-support/dom-queries'
 import { mount, MOUNTED_TEST_TIMEOUT, press } from '../../test-support/mount'
 import { TurnEnd } from './TurnEnd'

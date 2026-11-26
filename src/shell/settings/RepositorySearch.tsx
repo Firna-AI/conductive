@@ -1,9 +1,9 @@
 import { useState, type ReactNode } from 'react'
 import { InputFrame } from '@firna/ui/input'
 import { Check, FolderGit2, Plus, Search, X } from 'lucide-react'
-import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import styles from '../../../docs/mockups/src/components/settings/RepositoryList.module.css'
+import { EmptyState } from '../../ui/components/common/EmptyState'
+import { useControlSizes } from '../../ui/components/common/touch'
+import styles from '../../ui/components/settings/RepositoryList.module.css'
 import { useStore } from '../../app/store'
 import { useGitHubInstallLink } from '../account/githubInstall'
 import { useApp } from '../context'
@@ -32,8 +32,6 @@ export function ChoiceActions(props: {
   name: string
   selected: boolean
   press: (selected: boolean) => void
-  /** The change of this repository runs. */
-  busy?: boolean
   disabled?: boolean
 }) {
   if (props.selected) {
@@ -44,7 +42,6 @@ export function ChoiceActions(props: {
           Added
         </span>
         <IconButton
-          busy={props.busy}
           disabled={props.disabled}
           icon={X}
           label={`Remove ${props.name}`}
@@ -57,7 +54,6 @@ export function ChoiceActions(props: {
   return (
     <ActionButton
       accessibilityLabel={`Add ${props.name}`}
-      busy={props.busy}
       disabled={props.disabled}
       icon={Plus}
       onPress={() => props.press(true)}

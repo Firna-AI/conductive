@@ -68,7 +68,8 @@ app.
 - The default keys copy the keys of Conductor, except where
   [The keys](keyboard-shortcuts-keys.md) gives another key and its reason.
 - A command without a key in Conductor starts with no key. The person can
-  give it one.
+  give it one. Explain the selection is an exception, as
+  [The default keys](keyboard-shortcuts-keys.md#the-default-keys) says.
 - New terminal is a command too. It starts with no key, although Conductor
   has one, as [The default keys](keyboard-shortcuts-keys.md#the-default-keys) says.
 - Go to Desktop has no command while the app hides Desktop, as
@@ -118,7 +119,8 @@ app.
     [Opening an org](org-rail-order.md#opening-an-org) says.
   - Open workspace 1 to 9 opens the workspace at that place among the rows
     that the workspace list shows, counted from the top. A collapsed
-    section and a closed Archived group add no row.
+    section adds only the row of the open workspace, and a closed
+    Archived group adds no row.
   - Previous workspace and Next workspace open the workspace above or
     below the open workspace, among the rows that the list shows.
   - Next workspace that needs input opens the next workspace of the list

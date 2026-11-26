@@ -127,6 +127,8 @@ export async function storeChangedRepository(
   const { DB: db } = options.env
   const { binding, target } = job
   const now = options.dependencies.now()
+  const storedBase =
+    job.baseBranch === target.binding.defaultBranch ? null : job.baseBranch
   await db.batch([
     db
       .prepare(DROP_FILE_TABS)
@@ -140,7 +142,7 @@ export async function storeChangedRepository(
       .bind(
         target.repositoryId,
         job.branch,
-        job.baseBranch,
+        storedBase,
         now,
         ...oldWorkspaceBindings(job),
       ),
@@ -164,7 +166,7 @@ export async function storeChangedRepository(
   if (
     row.repositoryId !== target.repositoryId ||
     row.branch !== job.branch ||
-    row.baseBranch !== job.baseBranch ||
+    (row.baseBranch ?? target.binding.defaultBranch) !== job.baseBranch ||
     row.sandboxId !== job.sandboxId ||
     row.providerAccount !== job.providerAccount
   )

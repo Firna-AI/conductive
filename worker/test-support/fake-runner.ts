@@ -23,6 +23,7 @@ export interface FakeRunnerOptions {
   repositoryFolder?: string
   processStartId?: RunnerHello['processStartId']
   completeToolDetails?: RunnerHello['completeToolDetails']
+  capabilityNotices?: RunnerHello['capabilityNotices']
 }
 
 /**
@@ -64,6 +65,9 @@ export class FakeRunner {
       ...(this.options.completeToolDetails === undefined
         ? {}
         : { completeToolDetails: this.options.completeToolDetails }),
+      ...(this.options.capabilityNotices === undefined
+        ? {}
+        : { capabilityNotices: this.options.capabilityNotices }),
       ...(this.options.processStartId === undefined
         ? {}
         : { processStartId: this.options.processStartId }),
@@ -124,6 +128,12 @@ export class FakeRunner {
       if (message.type === 'welcome') this.resend(through + 1)
     } else if (message.type === 'resend') {
       this.resend(message.fromEventNumber)
+    } else if (
+      message.type === 'services.report' ||
+      message.type === 'services.control' ||
+      message.type === 'services.logs'
+    ) {
+      return
     } else {
       this.commands.push(message)
     }

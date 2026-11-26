@@ -10,6 +10,14 @@ const current = { workspaceBranch: 'owner/new', targetBranch: 'trunk' }
 const fixed =
   'Fixed instructions.\n\nWorkspace branch: "owner/old"\n\nTarget branch: "main"'
 
+/** The Codex input of the text "Change the file." with its sender lines. */
+function codexInput(footer: string) {
+  return [
+    { type: 'text', text: 'Change the file.', text_elements: [] },
+    { type: 'text', text: footer, text_elements: [] },
+  ]
+}
+
 it.each(['claude', 'codex'] as const)(
   'keeps %s fixed instructions and adds changed branch context only to input',
   async (agent) => {
@@ -27,12 +35,12 @@ it.each(['claude', 'codex'] as const)(
     await provider.send(first)
     expect(adapter.prompt()).toBe(fixed)
     expect(adapter.conversationId()).toBe('saved-conversation')
-    const text =
-      'Sender: @bob [member ID: "bob"]\nCurrent branches: workspace "owner/new"; target "trunk".\n\nChange the file.'
+    const footer =
+      'Sender: @bob [member ID: "bob"]\nCurrent branches: workspace "owner/new"; target "trunk".'
     expect(await adapter.input()).toMatchObject(
       agent === 'claude'
-        ? { role: 'user', content: text }
-        : { input: [{ type: 'text', text, text_elements: [] }] },
+        ? { role: 'user', content: `Change the file.\n\n${footer}` }
+        : { input: codexInput(footer) },
     )
     expect(first).toEqual(unchanged)
   },
@@ -50,11 +58,11 @@ it.each(['claude', 'codex'] as const)(
     })
     onTestFinished(() => provider.close())
     await provider.send({ ...h.command, branches: original })
-    const text = 'Sender: @alice [member ID: "alice"]\n\nChange the file.'
+    const footer = 'Sender: @alice [member ID: "alice"]'
     expect(await adapter.input()).toMatchObject(
       agent === 'claude'
-        ? { content: text }
-        : { input: [{ type: 'text', text, text_elements: [] }] },
+        ? { content: `Change the file.\n\n${footer}` }
+        : { input: codexInput(footer) },
     )
     await provider.send({
       ...duringTurn(turn('during', 'bob', agent)),
@@ -62,11 +70,11 @@ it.each(['claude', 'codex'] as const)(
       branches: { ...original, targetBranch: 'trunk' },
     })
     const changed =
-      'Sender: @bob [member ID: "bob"]\nCurrent branches: workspace "owner/old"; target "trunk".\n\nChange the file.'
+      'Sender: @bob [member ID: "bob"]\nCurrent branches: workspace "owner/old"; target "trunk".'
     expect(await adapter.input(true)).toMatchObject(
       agent === 'claude'
-        ? { content: changed }
-        : { input: [{ type: 'text', text: changed, text_elements: [] }] },
+        ? { content: `Change the file.\n\n${changed}` }
+        : { input: codexInput(changed) },
     )
     expect(adapter.prompt()).toBe(fixed)
   },
@@ -90,12 +98,12 @@ it.each(['claude', 'codex'] as const)(
     })
     onTestFinished(() => provider.close())
     await provider.send({ ...h.command, branches: current, repository })
-    const text =
-      'Sender: @alice [member ID: "alice"]\nCurrent repository: "acme/billing" in the folder "/home/user/code/billing". The workspace now works in this folder. Its context folder is "/home/user/code/billing/.context".\nCurrent branches: workspace "owner/new"; target "trunk".\n\nChange the file.'
+    const footer =
+      'Sender: @alice [member ID: "alice"]\nCurrent repository: "acme/billing" in the folder "/home/user/code/billing". The workspace now works in this folder. Its context folder is "/home/user/code/billing/.context".\nCurrent branches: workspace "owner/new"; target "trunk".'
     expect(await adapter.input()).toMatchObject(
       agent === 'claude'
-        ? { content: text }
-        : { input: [{ type: 'text', text, text_elements: [] }] },
+        ? { content: `Change the file.\n\n${footer}` }
+        : { input: codexInput(footer) },
     )
     expect(adapter.prompt()).toBe(fixed)
   },
@@ -121,6 +129,6 @@ it.each([
     ...(current ? { repository: current } : {}),
   })
   expect(await adapter.input()).toMatchObject({
-    content: 'Sender: @alice [member ID: "alice"]\n\nChange the file.',
+    content: 'Change the file.\n\nSender: @alice [member ID: "alice"]',
   })
 })

@@ -1,0 +1,3 @@
+{
+  "order": ["select", "popover", "marks", "closed", "tab", "read-only"]
+}

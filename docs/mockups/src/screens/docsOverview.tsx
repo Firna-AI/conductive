@@ -1,4 +1,4 @@
-import { productName } from '../brand'
+import { productName } from '../../../../src/shared/brand'
 import type {
   DocsPage,
   DocsSection,

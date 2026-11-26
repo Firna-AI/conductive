@@ -1,7 +1,9 @@
 import { useMemo, useSyncExternalStore, type ReactNode } from 'react'
 import { CircleAlert, CircleSlash, FileDiff, Files } from 'lucide-react'
 import type { WorkspaceTab } from '../../shared/workspace-view'
-import { allFilesUnavailable } from '../../../docs/mockups/src/components/chat/lostCopy'
+import { allFilesUnavailable } from '../../ui/components/chat/lostCopy'
+import { noChanges, wholeChange } from '../../ui/components/files/changeTotals'
+import { ListNotice } from '../../ui/components/files/ListNotice'
 import type { FilesError } from '../api/files-errors'
 import type { FilesSnapshot, WorkspaceFiles } from '../model/files-store'
 import { treeRows } from '../model/tree-rows'
@@ -96,27 +98,37 @@ function AllFiles(props: ListProps) {
       <ReadFailed onRetry={() => files.retry()} title="The files didn't load" />
     )
   }
+  // A tree whose report leaves out entries says how many, above its rows,
+  // also under the mark of a failed read. Such a tree is no empty branch.
+  const omitted = tree.omittedEntryCount ?? 0
+  const notice =
+    omitted > 0 ? <ListNotice count={omitted} list="all-files" /> : null
   if (rows.length === 0) {
     return (
-      <EmptyState
-        body="Files that the agent creates appear as it works."
-        icon={Files}
-        title="Files show here"
-      />
+      notice ?? (
+        <EmptyState
+          body="Files that the agent creates appear as it works."
+          icon={Files}
+          title="Files show here"
+        />
+      )
     )
   }
   return (
-    <div className={styles.scroll}>
-      <FileTree
-        navigation={props.navigation}
-        onFolder={(path, isOpen) => files.setFolderOpen(path, isOpen)}
-        openMode={open?.kind === 'file' ? open.mode : 'preview'}
-        openPath={openPath}
-        revealed={snapshot.revealed}
-        rowMenu={props.rowMenu}
-        rows={rows}
-      />
-    </div>
+    <>
+      {notice}
+      <div className={styles.scroll}>
+        <FileTree
+          navigation={props.navigation}
+          onFolder={(path, isOpen) => files.setFolderOpen(path, isOpen)}
+          openMode={open?.kind === 'file' ? open.mode : 'preview'}
+          openPath={openPath}
+          revealed={snapshot.revealed}
+          rowMenu={props.rowMenu}
+          rows={rows}
+        />
+      </div>
+    </>
   )
 }
 
@@ -134,7 +146,8 @@ function Changes(props: ListProps) {
       />
     )
   }
-  if (changes.files.length === 0) {
+  // The mockups share the rule: a list that leaves out files has changes.
+  if (noChanges(changes.summary, changes.omitted)) {
     return (
       <EmptyState
         body="Files that the agent edits appear as it works."
@@ -195,7 +208,11 @@ export function FilesPanel(props: {
   const { files, list, navigation, listKeys } = props
   const snapshot = useFilesSnapshot(files)
   const open = isFilesTab(props.activeTab) ? props.activeTab : null
-  const count = snapshot.changes?.summary.files ?? 0
+  // The tab counts the whole change, also the files that the list omits.
+  const { changes } = snapshot
+  const count = changes
+    ? wholeChange(changes.summary, changes.omitted).files
+    : 0
   const tabs: LinkTab[] = [
     {
       label: 'All files',

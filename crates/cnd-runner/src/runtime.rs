@@ -10,10 +10,14 @@ use tokio::task::JoinSet;
 
 use crate::clock::Clock;
 use crate::error::Result;
-use crate::link::ports::{LinkUpdate, RunnerLink};
-use crate::relocation::{RepositoryFolders, RepositoryTarget, check_move, requested_move};
+use crate::link::ports::RunnerLink;
+use crate::relocation::{RepositoryFolders, RepositoryTarget};
+use crate::services::ports::ServiceEffects;
+use crate::startup_log::StartupLog;
 use crate::state::store::EventStore;
-use crate::update::{IdleUpdate, ReleaseReadiness};
+use crate::update::ReleaseReadiness;
+
+mod connection;
 
 /// Why the runner completed its normal shutdown path.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -30,7 +34,7 @@ pub enum RunExit {
 #[cfg_attr(test, unimock::unimock(api = CommandHandlerMock))]
 #[async_trait]
 pub trait CommandHandler: Send + Sync {
-    /// Start warm-up and offline report schedules before the first connection attempt.
+    /// Remove stale credentials and start offline report schedules before the first connection attempt.
     async fn start(&self) -> Result<()> {
         Ok(())
     }
@@ -63,6 +67,8 @@ pub struct RunnerCore {
     handler: Arc<dyn CommandHandler>,
     releases: Arc<dyn ReleaseReadiness>,
     folders: Option<RepositoryFolders>,
+    startup_log: Option<Arc<dyn StartupLog>>,
+    services: Option<Arc<dyn ServiceEffects>>,
 }
 
 impl RunnerCore {
@@ -81,6 +87,8 @@ impl RunnerCore {
             handler,
             releases,
             folders: None,
+            startup_log: None,
+            services: None,
         }
     }
 
@@ -90,90 +98,16 @@ impl RunnerCore {
         self
     }
 
-    async fn connected(
-        &self,
-        shutdown: &mut watch::Receiver<bool>,
-        jobs: &mut JoinSet<(u64, Result<()>)>,
-        round: u64,
-    ) -> Option<RunExit> {
-        let mut step = self.link.step();
-        let mut check = self.clock.update_delay();
-        let mut idle = IdleUpdate::default();
-        let mut welcomed = false;
-        let mut relocation: Option<RepositoryTarget> = None;
-        loop {
-            if let Some(target) = relocation.take() {
-                match self.handler.working().await {
-                    Ok(false) => return Some(RunExit::Relocate(target)),
-                    Ok(true) => relocation = Some(target),
-                    Err(_) => {
-                        tracing::warn!("The runner could not check its turns before a move.");
-                        relocation = Some(target);
-                    }
-                }
-            }
-            tokio::select! {
-                biased;
-                _ = async { let _ = shutdown.wait_for(|stopped| *stopped).await; } => return None,
-                finished = jobs.join_next(), if !jobs.is_empty() => {
-                    match finished {
-                        Some(Ok((job_round, Err(_)))) => {
-                            tracing::warn!("The runner command could not finish.");
-                            if job_round == round {
-                                drop(step);
-                                let _ = self.link.close().await;
-                                return None;
-                            }
-                        },
-                        Some(Err(_)) => tracing::warn!("The runner command task could not finish."),
-                        _ => {},
-                    }
-                },
-                update = &mut step => {
-                    match update {
-                        Ok(LinkUpdate::Connected) => {
-                            welcomed = true;
-                            let connected = self.handler.connected();
-                            jobs.spawn(async move { (round, connected.await) });
-                        },
-                        Ok(LinkUpdate::Command(command)) => {
-                            idle.reset();
-                            if let Some(request) = requested_move(&command) {
-                                if let Some(target) = check_move(self.folders.as_ref(), self.link.as_ref(), request).await {
-                                    relocation = Some(target);
-                                }
-                            } else if self.handler.command(*command).is_err() { tracing::warn!("The runner command could not finish."); }
-                        },
-                        Ok(LinkUpdate::Progress) => {},
-                        Ok(LinkUpdate::Disconnected) | Err(_) => return None,
-                    }
-                    step = self.link.step();
-                },
-                _ = &mut check => {
-                    check = self.clock.update_delay();
-                    if !welcomed || !jobs.is_empty() {
-                        idle.reset();
-                        continue;
-                    }
-                    match self.check_update(&mut idle).await {
-                        Ok(true) => return Some(RunExit::Swap),
-                        Ok(false) => {},
-                        Err(error) => {
-                            idle.reset();
-                            tracing::warn!(%error, "The runner could not check its idle update.");
-                        }
-                    }
-                },
-                _ = self.clock.move_delay(), if relocation.is_some() => {},
-            }
-        }
+    /// Share the process startup measurements supplied by the composition root.
+    pub fn with_startup_log(mut self, startup_log: Arc<dyn StartupLog>) -> Self {
+        self.startup_log = Some(startup_log);
+        self
     }
 
-    async fn check_update(&self, idle: &mut IdleUpdate) -> Result<bool> {
-        let busy = self.handler.busy().await?;
-        let now = self.clock.monotonic();
-        let release = self.releases.status()?;
-        Ok(idle.observe(now, busy, release))
+    /// Compose private service work without adding ordinary busy or turn jobs.
+    pub fn with_services(mut self, services: Arc<dyn ServiceEffects>) -> Self {
+        self.services = Some(services);
+        self
     }
 }
 
@@ -197,12 +131,15 @@ impl Runner for RunnerCore {
                 _ = async { let _ = shutdown.wait_for(|stopped| *stopped).await; } => break,
                 connected = self.link.connect() => connected,
             };
-            if connected.is_ok()
-                && let Some(ended) = self.connected(&mut shutdown, &mut jobs, round).await
-            {
-                swap_close = self.link.close().await;
-                exit = ended;
-                break;
+            if connected.is_ok() {
+                if let Some(log) = &self.startup_log {
+                    log.connected();
+                }
+                if let Some(ended) = self.connected(&mut shutdown, &mut jobs, round).await {
+                    swap_close = self.link.close().await;
+                    exit = ended;
+                    break;
+                }
             }
             if *shutdown.borrow() || shutdown.has_changed().is_err() {
                 break;

@@ -10,6 +10,8 @@ import {
 } from '../../shared/orgs'
 import { isOrgColor } from '../../shared/org-colors'
 import { record, text, type JsonObject } from '../api/parse'
+import { selectActiveOrgs } from '../active-orgs'
+import { setupOrg } from '../setup-steps'
 import { requireOrg, type DevBackend } from './backend'
 import { startBuild } from './build-routes'
 import { newOrgAccount } from './provider-routes'
@@ -140,7 +142,8 @@ function restoreOrg(org: OrgState): Response {
  */
 function leaveSetupOrg(state: DevState, orgId: string): void {
   if (state.getStarted.orgId !== orgId) return
-  const next = state.orgs.find((item) => !item.org.deletion)?.org.id ?? null
+  const next =
+    setupOrg(selectActiveOrgs(state.orgs.map((item) => item.org)))?.id ?? null
   state.getStarted = {
     orgId: next,
     steps: state.getStarted.steps.map((item) =>

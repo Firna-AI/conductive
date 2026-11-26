@@ -14,7 +14,13 @@ export function createGitHubStatePort(
       chat.authorizedWorkspaceOperation(workspaceId, authorize, (operation) =>
         work({
           transaction: (action) =>
-            operation.change((transaction) => action(transaction.github)),
+            operation.change((transaction) =>
+              action({
+                get: (key) => transaction.github.get(key),
+                put: (key, value) => transaction.github.put(key, value),
+                emit: (event) => transaction.github.emit(event),
+              }),
+            ),
           publish: async (envelope) => operation.publish(envelope),
         }),
       ),

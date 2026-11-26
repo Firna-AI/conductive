@@ -1,8 +1,9 @@
 import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRunner'
 import type { WorkspaceSocketMessage } from '../../src/shared/events'
-import { HttpError } from '../http'
+import { HttpError, warnUnexpectedError } from '../http'
 import type { WorkspaceChat } from './backend'
 import type { BrowserAccess } from './browser-authorization'
+import { closeTab } from './browser-subscription'
 import { afterNumber } from './http-routes'
 import type { BrowserPeer } from './types'
 
@@ -32,29 +33,37 @@ function socketPair(request: Request) {
   return { client: pair[0], server: pair[1] }
 }
 
+/**
+ * Answers the events socket once the tab is registered, before its history.
+ * A refusal before then is the HTTP reply. The history pages follow the
+ * handshake, so the tab reads them while the replay goes on. The replay
+ * closes the socket itself when it fails. The route logs the failure.
+ */
 export async function browserUpgrade(
   chat: WorkspaceChat,
   request: Request,
   access: BrowserAccess,
 ): Promise<Response> {
   const { client, server } = socketPair(request)
+  const after = afterNumber(new URL(request.url))
   const peer = {
     send: (message: WorkspaceSocketMessage) =>
       server.send(JSON.stringify(message)),
     close: () => server.close(1000, 'Connection closed.'),
   }
+  let registered: () => void = () => undefined
+  const ready = new Promise<void>((resolve) => {
+    registered = resolve
+  })
+  const replay = chat.subscribe(access, after, peer, server, () => registered())
   try {
-    await chat.subscribe(
-      access,
-      afterNumber(new URL(request.url)),
-      peer,
-      server,
-    )
-    return new Response(null, { status: 101, webSocket: client })
+    await Promise.race([ready, replay])
   } catch (error) {
-    peer.close()
+    closeTab(peer)
     throw error
   }
+  void replay.catch((error: unknown) => warnUnexpectedError(error, request))
+  return new Response(null, { status: 101, webSocket: client })
 }
 
 export async function runnerUpgrade(

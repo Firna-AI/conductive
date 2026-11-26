@@ -1,22 +1,27 @@
 import type { MessageSender } from '../shared/generated/MessageSender'
 import type { Session } from '../shared/generated/Session'
 import type { Workspace } from '../shared/generated/Workspace'
-import { repositoryFailure } from '../../docs/mockups/src/components/workspace/repositoryMoveCopy'
-import { pullRequest } from '../../docs/mockups/src/fixtures/pullRequests'
-import {
-  movedBranch,
-  repositoryWork,
-} from '../../docs/mockups/src/fixtures/repositoryMove'
+import { repositoryFailure } from '../ui/components/workspace/repositoryMoveCopy'
+import { movedBranch } from '../../docs/mockups/src/fixtures/repositoryMove'
 import type { FetchLike } from '../app/api/client'
 import { readOrderedWorkspaceResponse } from '../app/api/read-workspaces'
 import { readSessions } from '../chat/api/read-responses'
 import type { WorkspaceEvent } from '../shared/events'
 import { filePaths } from '../shared/files'
+import { githubPaths } from '../shared/github'
 import { sessionsPath } from '../shared/sessions'
 import { workspaceViewPath } from '../shared/workspace-view'
 import { workspacePath, workspacePaths } from '../shared/workspaces'
 import type { FakeApiServer } from './fake-api'
 import { bodyOf, read } from './fake-bar-dev'
+import type { FakeBranches } from './fake-branch-names'
+import {
+  MOVED_REPOSITORY,
+  newBranchGitHub,
+  questionWith,
+  repositoryNamesWith,
+  type RepositoryNames,
+} from './fake-repository-names'
 import { FAKE_IDS, FAKE_ORIGIN } from './fixtures/core'
 import { workspaceFixtures } from './fixtures/workspaces'
 import { nextEnvelope } from './recorded-repairs'
@@ -31,19 +36,14 @@ const org = FAKE_IDS.org
 const id = FAKE_IDS.workspace
 
 /** The repository change job of the fake workspace. */
-const CHANGE_ID = `repository-change-${id}`
-
-/** The repository that the member picks, as the mockups pick it. */
-const MOVED_REPOSITORY = {
-  id: 'billing-service',
-  fullName: 'acme/billing-service',
-} as const
+export const CHANGE_ID = `repository-change-${id}`
 
 /** The new branch in the folder of the new repository. */
 export const MOVED_BRANCH = movedBranch
 
 /** How a repository change of the fake ends. */
-export type FakeRepositoryEnd = 'changed' | 'question' | 'clash' | 'outdated'
+export type FakeRepositoryEnd =
+  'changed' | 'question' | 'clash' | 'outdated' | 'fetch-failed'
 
 /** The view of the fake workspace with the repositories that it holds. */
 export function serveHeld(
@@ -57,30 +57,20 @@ export function serveHeld(
   })
 }
 
-/** The question of the change, with the work of the mockups. */
-const repositoryQuestionReply = {
-  state: 'confirmation-required',
-  repository: MOVED_REPOSITORY,
-  branch: workspaceFixtures().detail.workspace.branch,
-  baseBranch: 'main',
-  work: {
-    localWork: {
-      uncommittedFiles: repositoryWork.left.files,
-      unpushedCommits: repositoryWork.left.commits,
-    },
-    pullRequest: { number: pullRequest.number, url: pullRequest.url },
-    pushedCommits: repositoryWork.pushedCommits,
-    carriedFiles: repositoryWork.carried.files,
-  },
-} as const
+/** The safe words of the Worker for a default branch that it could not fetch. */
+function fetchWords(base: string, repository: string): string {
+  return `The latest ${base} of ${repository} could not be fetched. Check your GitHub access, then try again.`
+}
 
 /**
- * The replies of a change start and its poll. A `changed` poll needs the
+ * The replies of a change start and its poll, with the names of
+ * `branches`, as `repositoryNamesWith` says. A `changed` poll needs the
  * event number of the published events, so `changedReply` gives it.
  */
 export function serveRepositoryChange(
   server: FakeApiServer,
   end: FakeRepositoryEnd,
+  branches: FakeBranches = 'plain',
 ): void {
   const start = workspacePaths.repository(org, id)
   const poll = workspacePaths.repositoryResult(org, id, CHANGE_ID)
@@ -93,13 +83,18 @@ export function serveRepositoryChange(
     return
   }
   server.json('POST', start, { state: 'pending', changeId: CHANGE_ID }, 202)
-  if (end === 'question') server.json('GET', poll, repositoryQuestionReply)
-  if (end === 'clash') {
-    const error = {
-      code: 'workspace_repository_change_failed',
-      message: repositoryFailure.clash(MOVED_REPOSITORY.fullName),
-    }
+  if (end === 'question') server.json('GET', poll, questionWith(branches))
+  const failed = (message: string) => {
+    const error = { code: 'workspace_repository_change_failed', message }
     server.json('GET', poll, { error }, 409)
+  }
+  if (end === 'clash')
+    failed(repositoryFailure.clash(MOVED_REPOSITORY.fullName))
+  if (end === 'fetch-failed') {
+    // The Worker masks each secret value in the words of a failure.
+    const names = repositoryNamesWith(branches)
+    const base = names.displayBaseBranch ?? names.baseBranch
+    failed(fetchWords(base, MOVED_REPOSITORY.fullName))
   }
 }
 
@@ -113,12 +108,15 @@ export function changedReply(
   server.json('GET', poll, { state: 'changed', workspace, eventNumber })
 }
 
-/** The record of the workspace after the change. */
-export function movedWorkspace(workspace: Workspace): Workspace {
+/** The record of the workspace after the change, on the new `branch`. */
+export function movedWorkspace(
+  workspace: Workspace,
+  branch: string = MOVED_BRANCH,
+): Workspace {
   return {
     ...workspace,
     repositoryId: MOVED_REPOSITORY.id,
-    branch: MOVED_BRANCH,
+    branch,
     github: null,
   }
 }
@@ -126,31 +124,38 @@ export function movedWorkspace(workspace: Workspace): Workspace {
 /**
  * The events of a repository change, as the Worker publishes them in one
  * chat transaction: the workspace in the new repository, and one note for
- * each session.
+ * each session. The notes carry the labels of `names`, as the Worker sends
+ * them to a browser.
  */
 export function repositoryChangedEvents(
   workspace: Workspace,
   sessions: readonly Session[],
   member: MessageSender,
+  names: RepositoryNames = repositoryNamesWith('plain'),
 ): WorkspaceEvent[] {
   return [
-    { type: 'workspace.updated', workspace: movedWorkspace(workspace) },
+    {
+      type: 'workspace.updated',
+      workspace: movedWorkspace(workspace, names.branch),
+    },
     ...sessions.map((session): WorkspaceEvent => ({
       type: 'workspace.repository-changed',
       sessionId: session.id,
       member,
       repository: MOVED_REPOSITORY,
-      branch: MOVED_BRANCH,
-      baseBranch: 'main',
+      ...names,
     })),
   ]
 }
 
 /**
  * A fetch over the fake server that answers a repository change as the
- * Worker does. A change that ends publishes the workspace in the new
- * repository, a note in each session, and the empty changes report of the
- * new branch. Every other request goes to `next`. Development only.
+ * Worker does, with the names of `branches`. A change that ends publishes
+ * the workspace in the new repository, a note in each session, the empty
+ * changes report of the new branch, and then its GitHub state, as
+ * `newBranchGitHub` says. With `masked-repository`, New session opens a
+ * session without messages. Every other request goes to `next`.
+ * Development only.
  */
 export function repositoryFetch(
   server: FakeApiServer,
@@ -158,8 +163,10 @@ export function repositoryFetch(
   member: MessageSender,
   now: () => number,
   next: FetchLike,
+  branches: FakeBranches = 'plain',
 ): FetchLike {
-  serveRepositoryChange(server, end)
+  serveRepositoryChange(server, end, branches)
+  const names = repositoryNamesWith(branches)
   let publishes = end === 'changed'
   const emit = (event: WorkspaceEvent) =>
     server.events.emit(nextEnvelope(server.events, event, now()))
@@ -175,10 +182,13 @@ export function repositoryFetch(
       readSessions,
     )
     const all = [...sessions, ...history]
-    for (const event of repositoryChangedEvents(detail.workspace, all, member))
-      emit(event)
+    const events = repositoryChangedEvents(detail.workspace, all, member, names)
+    for (const event of events) emit(event)
     const changes = {
-      baseBranch: 'main',
+      baseBranch: names.baseBranch,
+      ...(names.displayBaseBranch === undefined
+        ? {}
+        : { displayBaseBranch: names.displayBaseBranch }),
       unpushedCommits: 0,
       uncommittedFileCount: 0,
       files: [],
@@ -186,20 +196,55 @@ export function repositoryFetch(
     }
     server.json('GET', filePaths.changes(org, id), changes)
     emit({ type: 'changes.updated', changes })
-    const last = server.events.history(
-      Number.MAX_SAFE_INTEGER,
-    ).throughEventNumber
-    const workspace = movedWorkspace(detail.workspace)
-    server.json('GET', workspacePath(org, id), {
-      ...detail,
-      workspace,
-      eventNumber: last,
+    const workspace = movedWorkspace(detail.workspace, names.branch)
+    server.handle('GET', workspacePath(org, id), async () =>
+      Response.json({
+        ...detail,
+        workspace,
+        ...server.events.stateRead(id),
+      }),
+    )
+    changedReply(server, workspace, server.events.last(id))
+    const github = newBranchGitHub(names)
+    const { banner, checks } = github
+    server.json('GET', githubPaths.banner(org, id), { banner })
+    server.json('GET', githubPaths.checks(org, id), checks)
+    server.json('GET', githubPaths.stored(org, id), {
+      state: { banner, checks },
     })
-    changedReply(server, workspace, last)
+    emit(github)
+  }
+  let opened = 0
+  // A New session of `masked-repository` opens a session without messages,
+  // so the page shows the New session text. The list keeps the session, so
+  // a change gives it a note too.
+  const openSession = async () => {
+    const listed = await read(server, sessionsPath(org, id), readSessions)
+    opened += 1
+    const session: Session = {
+      ...listed.sessions[0],
+      id: `new-${opened}`,
+      title: null,
+      createdAt: now(),
+      activeTurnId: null,
+      activeTurnStartedAt: null,
+      retryMessageId: null,
+    }
+    const eventNumber = server.events.last(id)
+    const sessions = [...listed.sessions, session]
+    server.json('GET', sessionsPath(org, id), {
+      ...listed,
+      sessions,
+      eventNumber,
+    })
+    return Response.json({ session, eventNumber }, { status: 201 })
   }
   return async (input, init) => {
     const { pathname } = new URL(input, FAKE_ORIGIN)
     const method = init?.method ?? 'GET'
+    const masked = branches === 'masked-repository'
+    if (method === 'POST' && pathname === sessionsPath(org, id) && masked)
+      return openSession()
     if (method === 'POST' && pathname === workspacePaths.repository(org, id)) {
       if (bodyOf(init).allowWork === true) publishes = true
     }

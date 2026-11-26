@@ -1,4 +1,4 @@
-import { productDomain } from '../../docs/mockups/src/brand'
+import { productDomain } from './brand'
 
 const internalDomains = [
   'localhost',

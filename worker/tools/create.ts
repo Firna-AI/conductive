@@ -81,6 +81,8 @@ export async function createFromTool(
     orgId: caller.orgId,
     owner,
     repositoryId: input.repositoryId,
+    startBranch: input.startBranch,
+    baseBranch: input.baseBranch,
     ...((input.parentId === undefined || input.sectionId !== undefined) && {
       sectionId,
     }),

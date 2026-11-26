@@ -27,7 +27,7 @@ These docs belong to this doc:
 - [Attachment uploads](attachment-uploads.md): the upload of an attached
   file in parts, with the gate rules and the body limit of its routes.
 - [Step timing](step-timing.md): the `Server-Timing` header of a reply,
-  and what it may hold.
+  and what it may hold, and the job step records of builds and starts.
 
 ## Sign-in
 
@@ -59,6 +59,9 @@ These docs belong to this doc:
 - Each sign-in with the agreement records the revision. It records the
   time only when the stored revision differs, so a repeat keeps the first
   time.
+- Each change to the words of the Terms gives a new revision, with no
+  manual step. The user chose this on 20 November 2026. Reason: a manual
+  revision was missed in five changes of the Terms.
 - A changed revision of the Terms applies at the user's next sign-in,
   within 7 days for a user who keeps using the app (decision 126).
   Browser and Mac app sign-in sessions last at most 7 days.

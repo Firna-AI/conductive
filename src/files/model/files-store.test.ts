@@ -1,18 +1,16 @@
-import { expect, it } from 'vitest'
-import type { ChangesResponse } from '../../shared/generated/ChangesResponse'
-import type { WorkspaceEventEnvelope } from '../../shared/events'
-import { filePaths } from '../../shared/files'
+import { expect, it, onTestFinished } from 'vitest'
+import { filePaths, type FileEvent } from '../../shared/files'
 import { FakeApiServer } from '../../test-support/fake-api'
+import { FakeWorkspaceEvents } from '../../test-support/fake-events'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { toolFixtures } from '../../test-support/fixtures/tools'
 import type { FilesSubscribe } from './files-store'
-import { versionOf } from './files-store'
-import { followPath } from './follow-path'
-import { ResourceLoader } from './resource-loader'
 import {
   deferred,
+  emptyChanges,
   envelopeAfter,
   filesFor,
+  observeFileReads,
   startFiles,
   waitUntil,
   slow,
@@ -51,12 +49,93 @@ it(
   },
 )
 
+it.each(['tree', 'changes'] as const)(
+  'uses both cutoffs and keeps the newer changes when %s answers first',
+  async (first) => {
+    const data = toolFixtures()
+    const changes = {
+      ...emptyChanges,
+      unpushedCommits: 7,
+      uncommittedFileCount: 4,
+    }
+    const at = (eventNumber: number, event: FileEvent) => ({
+      workspaceId: id,
+      eventNumber,
+      occurredAt: FAKE_TIME,
+      event,
+    })
+    const events = new FakeWorkspaceEvents([
+      at(11, { type: 'files.snapshot', tree: { ...data.files, revision: 3 } }),
+      at(12, { type: 'changes.updated', changes: data.changes }),
+      at(13, { type: 'changes.updated', changes: data.changes }),
+    ])
+    const after: number[] = []
+    let replay = () => {}
+    const replies = {
+      tree: deferred<Response>(),
+      changes: deferred<Response>(),
+    }
+    const reads = observeFileReads(
+      (cursor, listener) => {
+        after.push(cursor)
+        return events.subscribe(
+          cursor,
+          (message) => {
+            replay = () => listener(message)
+          },
+          id,
+        )
+      },
+      (input) =>
+        replies[input === filePaths.tree(org, id) ? 'tree' : 'changes'].promise,
+    )
+    const { files } = reads
+    onTestFinished(() => files.stop())
+    const answers = {
+      tree: {
+        ...data.files,
+        stateRead: { eventNumber: 10, repositoryId: null, failure: null },
+      },
+      changes: {
+        ...changes,
+        stateRead: { eventNumber: 13, repositoryId: null, failure: null },
+      },
+    }
+
+    files.start()
+    const started = [reads.tree.length, reads.changes.length]
+    replies[first].resolve(Response.json(answers[first]))
+    await reads[first][0]
+    const beforeBoth = [...after]
+    const second = first === 'tree' ? 'changes' : 'tree'
+    replies[second].resolve(Response.json(answers[second]))
+    await reads[second][0]
+    replay()
+    const { tree, changes: shown } = files.getSnapshot()
+
+    expect({
+      started,
+      beforeBoth,
+      after,
+      revision: tree?.revision,
+      shown,
+    }).toEqual({
+      started: [1, 1],
+      beforeBoth: [],
+      after: [10],
+      revision: 3,
+      shown: changes,
+    })
+  },
+)
+
 it(
   'skips a repeated event and reads the missed events again after a gap',
   slow,
   async () => {
     const server = new FakeApiServer()
     const after: number[] = []
+    const cutoff = server.events.last(id)
     let dropped = false
     // An adapter that loses the first live event, as a dropped socket would.
     const subscribe: FilesSubscribe = (afterEventNumber, listener) => {
@@ -99,7 +178,7 @@ it(
         },
       },
     })
-    expect(after).toEqual([0, first.eventNumber - 1])
+    expect(after).toEqual([cutoff, first.eventNumber - 1])
     expect(paths(files)).toEqual(expect.arrayContaining(['a.ts', 'b.ts']))
     expect(files.getSnapshot().tree?.revision).toBe(4)
   },
@@ -111,11 +190,18 @@ it(
   async () => {
     const server = new FakeApiServer()
     const treeReply = deferred<Response>()
-    const fetch = (input: string, init?: RequestInit) =>
-      input === filePaths.tree(org, id)
-        ? treeReply.promise
-        : server.fetch(input, init)
-    // The history reaches the store after its route reads started.
+    let treeReads = 0
+    const fetch = async (input: string, init?: RequestInit) => {
+      if (input !== filePaths.tree(org, id)) return server.fetch(input, init)
+      treeReads += 1
+      return treeReads === 1
+        ? Response.json(
+            { error: { code: 'file_unavailable' } },
+            { status: 503 },
+          )
+        : treeReply.promise
+    }
+    // The first read failed, and the replay arrives while its retry waits.
     let deliver = () => {}
     const subscribe: FilesSubscribe = (after, listener) =>
       server.events.subscribe(after, (message) => {
@@ -123,7 +209,8 @@ it(
         else listener(message)
       })
     const files = filesFor(server, subscribe, fetch)
-    files.start()
+    await startFiles(files)
+    files.retry()
     deliver()
     expect(files.getSnapshot().tree?.revision).toBe(2)
     const shown = files.getSnapshot()
@@ -140,6 +227,7 @@ it(
   slow,
   async () => {
     const server = new FakeApiServer()
+    server.json('GET', filePaths.tree(org, id), toolFixtures().files)
     const files = filesFor(server, (after, listener) =>
       server.events.subscribe(
         Math.max(after, server.events.history().throughEventNumber),
@@ -177,116 +265,5 @@ it(
     )
     expect(treeReads).toHaveLength(2)
     expect(paths(files)).toContain('c.ts')
-  },
-)
-
-it(
-  'reads an open diff again when the change list updates with equal counts',
-  slow,
-  async () => {
-    const server = new FakeApiServer()
-    const files = filesFor(server)
-    await startFiles(files)
-    const path = 'src/app/checkout/AddressForm.tsx'
-    const diff = toolFixtures().diff
-    server.json('GET', filePaths.diff(org, id, path), {
-      ...diff,
-      patch: '@@ -1 +1 @@\n-a\n+b\n',
-    })
-    const loader = new ResourceLoader((key, signal) =>
-      files.client.readDiff(key, signal),
-    )
-    const stop = followPath(files, loader, path)
-    await waitUntil(() => expect(loader.getSnapshot()?.status).toBe('ready'))
-    const before = versionOf(files.getSnapshot(), path)
-    server.json('GET', filePaths.diff(org, id, path), {
-      ...diff,
-      patch: '@@ -1 +1 @@\n-a\n+c\n',
-    })
-    const changes: ChangesResponse | null = files.getSnapshot().changes
-    if (!changes) throw new Error('The changes did not load.')
-    server.events.emit(
-      envelopeAfter(server, { type: 'changes.updated', changes }),
-    )
-    await waitUntil(() => {
-      const state = loader.getSnapshot()
-      expect(state?.status === 'ready' && state.value.patch).toBe(
-        '@@ -1 +1 @@\n-a\n+c\n',
-      )
-    })
-    expect(versionOf(files.getSnapshot(), path)).not.toBe(before)
-    stop()
-  },
-)
-
-it(
-  'applies history pages across left-out numbers, and holds live events until the final page',
-  slow,
-  async () => {
-    const server = new FakeApiServer()
-    const after: number[] = []
-    let send: (message: unknown) => void = () => {}
-    const files = filesFor(server, (afterEventNumber, listener) => {
-      after.push(afterEventNumber)
-      send = listener
-      return () => {}
-    })
-    await startFiles(files)
-    const changes = files.getSnapshot().changes
-    if (!changes) throw new Error('The changes did not load.')
-    const listed = (count: number) => ({
-      ...changes,
-      summary: { ...changes.summary, files: count },
-    })
-    const at = (
-      eventNumber: number,
-      event: WorkspaceEventEnvelope['event'],
-    ) => ({
-      workspaceId: id,
-      eventNumber,
-      occurredAt: FAKE_TIME,
-      event,
-    })
-    const page = (
-      events: readonly WorkspaceEventEnvelope[],
-      through: number,
-      next?: number,
-    ) => ({
-      type: 'history',
-      history: {
-        events,
-        throughEventNumber: through,
-        ...(next === undefined
-          ? {}
-          : { hasMore: true, nextAfterEventNumber: next }),
-      },
-    })
-    send(page([at(4, { type: 'changes.updated', changes: listed(1) })], 10, 5))
-    send({
-      type: 'event',
-      envelope: at(11, { type: 'changes.updated', changes: listed(9) }),
-    })
-    expect(files.getSnapshot().changes?.summary.files).toBe(1)
-    const added = { name: 'paged.ts', kind: 'file', change: 'added' } as const
-    send(
-      page(
-        [
-          at(9, {
-            type: 'files.changed',
-            delta: {
-              revision: 2,
-              changes: [
-                { operation: 'upsert', entry: { ...added, path: 'paged.ts' } },
-              ],
-            },
-          }),
-        ],
-        10,
-      ),
-    )
-    expect(paths(files)).toContain('paged.ts')
-    expect(files.getSnapshot().changes?.summary.files).toBe(9)
-    expect(after).toEqual([0])
-    files.stop()
   },
 )

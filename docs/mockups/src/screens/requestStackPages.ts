@@ -1,5 +1,16 @@
 import type { ConversationKey } from '../fixtures/conversations'
-import { paths } from '../paths'
+
+export const requestStackPaths = {
+  secretStack: 'app/secret-requests/several/waiting-and-late',
+  secretStackNext: 'app/secret-requests/several/waiting-and-late/next',
+  secretStackLast: 'app/secret-requests/several/waiting-and-late/last',
+  secretAskedDenied: 'app/secret-requests/several/asked-again/denied',
+  secretAskedAllowed: 'app/secret-requests/several/asked-again/allowed',
+  secretStackMac: 'app/secret-requests/several/mac-command',
+  secretStackMacNext: 'app/secret-requests/several/mac-command/next',
+  macRequests: 'mac-app/requests',
+  macRequestsNext: 'mac-app/requests/next',
+} as const
 
 type StackPages = Partial<Record<ConversationKey, readonly string[]>>
 
@@ -10,16 +21,22 @@ type StackPages = Partial<Record<ConversationKey, readonly string[]>>
  */
 const browserPages: StackPages = {
   'secret-waiting-late': [
-    paths.secretStack,
-    paths.secretStackNext,
-    paths.secretStackLast,
+    requestStackPaths.secretStack,
+    requestStackPaths.secretStackNext,
+    requestStackPaths.secretStackLast,
   ],
-  'mac-waiting-secret': [paths.secretStackMac, paths.secretStackMacNext],
+  'mac-waiting-secret': [
+    requestStackPaths.secretStackMac,
+    requestStackPaths.secretStackMacNext,
+  ],
 }
 
 /** The pages of each stack of requests that the Mac app draws. */
 const macPages: StackPages = {
-  'mac-waiting-many': [paths.macRequests, paths.macRequestsNext],
+  'mac-waiting-many': [
+    requestStackPaths.macRequests,
+    requestStackPaths.macRequestsNext,
+  ],
 }
 
 /**

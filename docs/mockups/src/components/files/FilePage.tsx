@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react'
 import { SegmentedControl } from '@firna/ui/segmented'
-import { ChevronLeft, Code, Copy, Download, Eye } from 'lucide-react'
+import { ChevronLeft, Code, Eye } from 'lucide-react'
 import { splitPath } from '../../fixtures/files'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { ScreenLink } from '../common/ScreenLink'
-import { IconButton } from '../common/actions'
-import { classes } from '../common/classes'
-import { useControlSizes } from '../common/touch'
+import { iconButton } from '../../entries/components/common/actions.mockup'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 import type { BackLink } from '../layout/Page'
 import { PreviewActions } from '../tools/PortPreview'
 import { specFor } from './fileSpecs'
@@ -43,8 +43,9 @@ function isDiff(view: FileTabView): boolean {
  * whose name the app does not know shows "File". A file that is not text,
  * such as a picture, keeps Download, and its Copy is off. A Markdown or an
  * HTML file has the switch between Preview and Source at the end. The page
- * of an HTML file in a frame adds Reload and Open before Copy, as the bar
- * of a Preview tab has them. A narrow page, such as a phone, moves them to
+ * of an HTML file in a frame adds Reload, Expand on desktop, and Open
+ * before Copy, as the bar of a Preview tab has them. A picture has its
+ * zoom bar under it, with Expand on desktop. A narrow page, such as a phone, moves them to
  * a second line of the header, so the path keeps its room.
  *
  * `placeholder` shows in place of the content, such as the state of a
@@ -56,8 +57,13 @@ export function FilePage(props: {
   view: FileTabView
   back?: BackLink
   placeholder?: ReactNode
+  /**
+   * The screen of the page of an HTML file or of a picture in its large
+   * window, which Expand shows. Only the centre of the desktop gives it.
+   */
+  expandTo?: string
 }) {
-  const spec = specFor(props.view)
+  const spec = specFor(props.view, props.expandTo)
   const { folder, name } = splitPath(spec.path)
   const Icon = spec.icon
   const waiting = props.placeholder !== undefined
@@ -80,20 +86,25 @@ export function FilePage(props: {
             <span className={styles.name}>{name}</span>
           </span>
           {closed ? null : (
-            <IconButton icon={Download} label={`Download ${name}`} />
+            <iconButton.Component
+              icon="download"
+              label={`Download ${name}`}
+              moklyInstance="download-file"
+            />
           )}
         </div>
         {pageUrl ? (
           <div className={styles.pageActions}>
-            <PreviewActions href={pageUrl} />
+            <PreviewActions expandTo={props.expandTo} href={pageUrl} />
           </div>
         ) : null}
         <div className={styles.end}>
           {meta ? <span className={styles.meta}>{meta}</span> : null}
-          <IconButton
+          <iconButton.Component
             disabled={closed || spec.binary === true}
-            icon={Copy}
+            icon="copy"
             label={`Copy the text of ${name}`}
+            moklyInstance="copy-file-text"
           />
           {spec.mode ? <ViewSwitch value={spec.mode} /> : null}
         </div>

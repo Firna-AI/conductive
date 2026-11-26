@@ -1,0 +1,13 @@
+{
+  "order": [
+    "ended",
+    "ports",
+    "unavailable",
+    "load-failed",
+    "menu",
+    "stop",
+    "restart",
+    "results",
+    "log"
+  ]
+}

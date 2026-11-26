@@ -1,7 +1,7 @@
 import { Search } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import links from '../../../docs/mockups/src/components/workspaces/SidebarLinks.module.css'
-import { ariaShortcut, formatShortcut } from '../../app/shortcuts/keys'
+import { classes } from '../../ui/components/common/classes'
+import links from '../../ui/components/workspaces/SidebarLinks.module.css'
+import { ariaShortcut, shortcutTokens } from '../../app/shortcuts/keys'
 import { useServices, type Platform } from '../../app/services'
 import type { ShortcutKeyText } from '../../shared/shortcut-key'
 import type { RowVariant } from '../list/WorkspaceRow'
@@ -10,13 +10,12 @@ import ui from '../ui/ui.module.css'
 import { useViewport } from '../ui/viewport'
 import { usePalette } from './palette-context'
 
-/** The key as the row shows it: ⌘K on a Mac, and Ctrl K on Windows and Linux. */
+/**
+ * The key as the row shows it: its keys with no space between them on a
+ * Mac, such as ⌘K, and with a space on Windows and Linux, such as Ctrl K.
+ */
 function rowKey(key: ShortcutKeyText, keyboard: Platform): string {
-  const text = formatShortcut(key, keyboard)
-  if (keyboard === 'mac') return text
-  return text.replace(/^(?:(?:Ctrl|Alt|Shift|Meta)\+)+/, (modifiers) =>
-    modifiers.replaceAll('+', ' '),
-  )
+  return shortcutTokens(key, keyboard).join(keyboard === 'mac' ? '' : ' ')
 }
 
 /**

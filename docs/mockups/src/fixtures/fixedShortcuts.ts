@@ -1,5 +1,5 @@
-import { productName } from '../brand'
-import type { Shortcut } from '../components/common/KeyChips'
+import { productName } from '../../../../src/shared/brand'
+import type { Shortcut } from '../../../../src/ui/components/common/KeyChips'
 
 /**
  * A fixed shortcut, which the app, the system, or the menus of the Mac app
@@ -63,27 +63,43 @@ export const focusedKeys: readonly FixedSpec[] = [
   {
     ...fixed(
       'Move a focused workspace or org up or down',
-      ['⌥↑', '⌥↓'],
-      ['Alt+↑', 'Alt+↓'],
+      [
+        ['⌥', '↑'],
+        ['⌥', '↓'],
+      ],
+      [
+        ['Alt', '↑'],
+        ['Alt', '↓'],
+      ],
     ),
     words: ['reorder'],
   },
   {
-    ...fixed('Move a focused divider', ['←', '→', '↑', '↓']),
+    ...fixed('Move a focused divider', [['←'], ['→'], ['↑'], ['↓']]),
     words: dividerWords,
   },
   {
     ...fixed(
       'Move a focused divider in bigger steps',
-      ['⇧←', '⇧→', '⇧↑', '⇧↓'],
-      ['Shift+←', 'Shift+→', 'Shift+↑', 'Shift+↓'],
+      [
+        ['⇧', '←'],
+        ['⇧', '→'],
+        ['⇧', '↑'],
+        ['⇧', '↓'],
+      ],
+      [
+        ['Shift', '←'],
+        ['Shift', '→'],
+        ['Shift', '↑'],
+        ['Shift', '↓'],
+      ],
     ),
     words: dividerWords,
   },
   {
     ...fixed('Make the panel of a focused divider smallest or largest', [
-      'Home',
-      'End',
+      ['Home'],
+      ['End'],
     ]),
     words: dividerWords,
   },
@@ -93,8 +109,8 @@ export const focusedKeys: readonly FixedSpec[] = [
 export const tabMenuKeys: FixedSpec = {
   ...fixed(
     'Open the menu of a focused tab',
-    ['⇧F10', 'Menu'],
-    ['Shift+F10', 'Menu'],
+    [['⇧', 'F10'], ['Menu']],
+    [['Shift', 'F10'], ['Menu']],
   ),
   words: ['context', 'right-click'],
 }
@@ -106,7 +122,7 @@ export const tabMenuKeys: FixedSpec = {
  * shows Enter and Space, and the Send row shows Enter with ⌘ or Ctrl.
  */
 export const focusedButtonKeys: FixedSpec = {
-  ...fixed('Press a focused button', ['Enter', 'Space']),
+  ...fixed('Press a focused button', [['Enter'], ['Space']]),
   words: ['click', 'toggle', 'checkbox', 'switch'],
 }
 
@@ -115,8 +131,8 @@ export const focusedButtonKeys: FixedSpec = {
  * ⌘ or Ctrl, and Shift+Enter adds a line.
  */
 export const messageKeys: readonly FixedSpec[] = [
-  fixed('Send', ['Enter', '⌘Enter'], ['Enter', 'Ctrl+Enter']),
-  fixed('New line', ['⇧Enter'], ['Shift+Enter']),
+  fixed('Send', [['Enter'], ['⌘', 'Enter']], [['Enter'], ['Ctrl', 'Enter']]),
+  fixed('New line', [['⇧', 'Enter']], [['Shift', 'Enter']]),
 ]
 
 /**
@@ -126,22 +142,76 @@ export const messageKeys: readonly FixedSpec[] = [
  * style from its Edit menu.
  */
 const textKeys: readonly FixedSpec[] = [
-  fixed('Undo', ['⌘Z'], ['Ctrl+Z', 'Alt+Backspace']),
-  fixed('Redo', ['⇧⌘Z'], ['Ctrl+Y', 'Ctrl+Shift+Z', 'Alt+Shift+Backspace']),
-  fixed('Cut', ['⌘X'], ['Ctrl+X', 'Shift+Delete']),
-  fixed('Copy', ['⌘C'], ['Ctrl+C', 'Ctrl+Insert']),
-  fixed('Paste', ['⌘V'], ['Ctrl+V', 'Shift+Insert']),
-  { ...fixed('Paste and match style', ['⌥⇧⌘V'], []), only: 'mac-app' },
-  fixed('Paste as plain text', [], ['Ctrl+Shift+V']),
-  fixed('Select all', ['⌘A'], ['Ctrl+A']),
+  fixed(
+    'Undo',
+    [['⌘', 'Z']],
+    [
+      ['Ctrl', 'Z'],
+      ['Alt', 'Backspace'],
+    ],
+  ),
+  fixed(
+    'Redo',
+    [['⇧', '⌘', 'Z']],
+    [
+      ['Ctrl', 'Y'],
+      ['Ctrl', 'Shift', 'Z'],
+      ['Alt', 'Shift', 'Backspace'],
+    ],
+  ),
+  fixed(
+    'Cut',
+    [['⌘', 'X']],
+    [
+      ['Ctrl', 'X'],
+      ['Shift', 'Delete'],
+    ],
+  ),
+  fixed(
+    'Copy',
+    [['⌘', 'C']],
+    [
+      ['Ctrl', 'C'],
+      ['Ctrl', 'Insert'],
+    ],
+  ),
+  fixed(
+    'Paste',
+    [['⌘', 'V']],
+    [
+      ['Ctrl', 'V'],
+      ['Shift', 'Insert'],
+    ],
+  ),
   {
-    ...fixed('Move by word', ['⌥←', '⌥→'], ['Ctrl+←', 'Ctrl+→']),
+    ...fixed('Paste and match style', [['⌥', '⇧', '⌘', 'V']], []),
+    only: 'mac-app',
+  },
+  fixed('Paste as plain text', [], [['Ctrl', 'Shift', 'V']]),
+  fixed('Select all', [['⌘', 'A']], [['Ctrl', 'A']]),
+  {
+    ...fixed(
+      'Move by word',
+      [
+        ['⌥', '←'],
+        ['⌥', '→'],
+      ],
+      [
+        ['Ctrl', '←'],
+        ['Ctrl', '→'],
+      ],
+    ),
     words: ['cursor'],
   },
   {
     ...fixed(
       'Move to the start or end of a line',
-      ['⌘←', '⌘→', '⌃A', '⌃E'],
+      [
+        ['⌘', '←'],
+        ['⌘', '→'],
+        ['⌃', 'A'],
+        ['⌃', 'E'],
+      ],
       [],
     ),
     words: ['cursor'],
@@ -149,15 +219,39 @@ const textKeys: readonly FixedSpec[] = [
   {
     ...fixed(
       'Move to the start or end of the text',
-      ['⌘↑', '⌘↓'],
-      ['Ctrl+Home', 'Ctrl+End'],
+      [
+        ['⌘', '↑'],
+        ['⌘', '↓'],
+      ],
+      [
+        ['Ctrl', 'Home'],
+        ['Ctrl', 'End'],
+      ],
     ),
     words: ['cursor'],
   },
-  fixed('Delete by word', ['⌥⌫', '⌥⌦'], ['Ctrl+Backspace', 'Ctrl+Delete']),
-  fixed('Delete to the start or end of a line', ['⌘⌫', '⌘⌦', '⌃K'], []),
-  fixed('Save a rename', ['Enter']),
-  fixed('Cancel a rename', ['Esc']),
+  fixed(
+    'Delete by word',
+    [
+      ['⌥', '⌫'],
+      ['⌥', '⌦'],
+    ],
+    [
+      ['Ctrl', 'Backspace'],
+      ['Ctrl', 'Delete'],
+    ],
+  ),
+  fixed(
+    'Delete to the start or end of a line',
+    [
+      ['⌘', '⌫'],
+      ['⌘', '⌦'],
+      ['⌃', 'K'],
+    ],
+    [],
+  ),
+  fixed('Save a rename', [['Enter']]),
+  fixed('Cancel a rename', [['Esc']]),
 ]
 
 /** The groups that hold only fixed shortcuts. They close the list. */
@@ -165,10 +259,10 @@ export const fixedGroups: readonly FixedGroupSpec[] = [
   {
     label: 'Menus and palette',
     rows: [
-      fixed('Move up or down', ['↑', '↓']),
-      fixed('First or last item', ['Home', 'End']),
-      fixed('Run the item', ['Enter']),
-      fixed('Switch the palette tab', ['←', '→']),
+      fixed('Move up or down', [['↑'], ['↓']]),
+      fixed('First or last item', [['Home'], ['End']]),
+      fixed('Run the item', [['Enter']]),
+      fixed('Switch the palette tab', [['←'], ['→']]),
     ],
   },
   {
@@ -181,17 +275,17 @@ export const fixedGroups: readonly FixedGroupSpec[] = [
     label: 'Mac app',
     only: 'mac-app',
     rows: [
-      fixed(`Hide ${productName}`, ['⌘H']),
-      fixed('Hide others', ['⌥⌘H']),
-      fixed(`Quit ${productName}`, ['⌘Q']),
-      fixed('Reload', ['⌘R']),
-      fixed('Force reload', ['⇧⌘R']),
-      fixed('Developer tools', ['⌥⌘I']),
-      fixed('Actual size', ['⌘0']),
-      fixed('Zoom in', ['⌘+']),
-      fixed('Zoom out', ['⌘-']),
-      fixed('Full screen', ['⌃⌘F']),
-      fixed('Minimize', ['⌘M']),
+      fixed(`Hide ${productName}`, [['⌘', 'H']]),
+      fixed('Hide others', [['⌥', '⌘', 'H']]),
+      fixed(`Quit ${productName}`, [['⌘', 'Q']]),
+      fixed('Reload', [['⌘', 'R']]),
+      fixed('Force reload', [['⇧', '⌘', 'R']]),
+      fixed('Developer tools', [['⌥', '⌘', 'I']]),
+      fixed('Actual size', [['⌘', '0']]),
+      fixed('Zoom in', [['⌘', '+']]),
+      fixed('Zoom out', [['⌘', '-']]),
+      fixed('Full screen', [['⌃', '⌘', 'F']]),
+      fixed('Minimize', [['⌘', 'M']]),
     ],
   },
 ]

@@ -1,9 +1,11 @@
 import type { OrgSuspensionResponse } from '../../src/shared/operator'
 import { jobSoftware, readBuildJob } from '../lifecycle/build-data'
+import { pauseSwitchBuilds } from '../lifecycle/provider-switch-control'
 import { imageRuntime } from '../lifecycle/runtime'
 import type { WorkspaceRuntime } from '../lifecycle/workspace-runtime'
 import { orgBuilds, orgWorkspaces, recordOrgSuspension } from './org-data'
 import { stopRecordedComputers } from './stop-computers'
+import { leaveOrgQueues } from '../merge-queue/wake'
 
 export async function suspendOrg(
   runtime: WorkspaceRuntime,
@@ -17,6 +19,8 @@ export async function suspendOrg(
     operatorId,
     dependencies.now(),
   )
+  const images = imageRuntime(env, dependencies)
+  await pauseSwitchBuilds(images, { orgId })
   const pendingWorkspaceIds: string[] = []
   for (const workspace of await orgWorkspaces(env.DB, orgId)) {
     try {
@@ -36,7 +40,7 @@ export async function suspendOrg(
     pendingBuildIds.push(build.id)
     try {
       const job = await readBuildJob(env.DB, orgId, build.id)
-      await imageRuntime(env, dependencies).scheduler.schedule(
+      await images.scheduler.schedule(
         orgId,
         jobSoftware(job),
         dependencies.now(),
@@ -53,5 +57,6 @@ export async function suspendOrg(
     pendingWorkspaceIds,
     pendingBuildIds,
   )
+  await leaveOrgQueues(env, orgId)
   return { ...org, pendingWorkspaceIds, pendingBuildIds }
 }

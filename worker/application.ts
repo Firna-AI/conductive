@@ -27,9 +27,7 @@ import { routeMacCommand } from './tools/mac-command'
 import { appOrigin } from './security/app-origin'
 import { handleGitCredential } from './lifecycle/machine'
 import { routeMachineGrant } from './machine-grants'
-import { imageRuntime, workspaceRuntime } from './lifecycle/runtime'
-import { repairLifecycleAlarms } from './lifecycle/repair'
-import { repairSoftwareImages } from './software-image/repair'
+import { workspaceRuntime } from './lifecycle/runtime'
 import {
   handleSoftwareImage,
   SOFTWARE_IMAGE_PATH,
@@ -43,28 +41,22 @@ import { DESKTOP_EXCHANGE_PATH } from './security/desktop-contract'
 import { desktopCors, desktopPreflight } from './security/desktop-origin'
 import { checkOrigin, sessionGate } from './security/gate'
 import { membersGate } from './members/gate'
-import { productionMembersHooks } from './members/composition'
-import { cleanupDeletedOrgs } from './members/cleanup'
 import { routePreview, routeWorkspaceFeatures } from './features/router'
 import { productionAgentTools } from './tools/composition'
 import { isAgentToolPath } from './tools/lists'
 import { productionGitHubWebhook } from './github/composition'
 import { appFrameSources } from './configuration'
-import { latestSoftwareRelease } from './lifecycle/software-release'
 import { appSiteResponse } from './marketing/assets'
-import { retryApprovalEmails } from './operator/approval-email'
 import { freshCodexLogin } from './codex-auth/renew'
 import { codexTaskOwner } from './codex-auth/tasks'
 import { failCodexAccessToken } from './codex-auth/failure'
 import { waitForCodexRotation } from './codex-auth/rotation'
-import { cleanupCodexDevices } from './codex-auth/device-store'
-import { warnWorker } from './warnings'
+import { runScheduledMaintenance } from './application-scheduled'
 import { automationRunRuntime } from './automations/run-runtime'
 import { scanAutomationSchedules } from './automations/schedule-scan'
 import { healthResponse } from './health-response'
 import { isSecretMachinePath } from './secrets/routes'
 import { routeSecretTool } from './tools/secrets'
-import { cleanupFeedbackSends } from './app-api/feedback-quota-data'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -271,29 +263,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         return
       }
       if (event.cron !== '*/15 * * * *') return
-      await cleanupFeedbackSends(env.DB, dependencies.now())
-      await cleanupCodexDevices(env.DB, dependencies.now())
-      await cleanupDeletedOrgs(
-        env,
-        dependencies,
-        productionMembersHooks(env, dependencies),
-      )
-      await repairLifecycleAlarms(
-        workspaceRuntime(env, dependencies),
-        imageRuntime(env, dependencies),
-        () => latestSoftwareRelease(env, dependencies.fetch),
-      )
-      try {
-        await repairSoftwareImages({ env, dependencies })
-      } catch {
-        warnWorker({ kind: 'software_image_repair_failed' })
-      }
-      // Last, so that a slow or failed email never holds back the repairs.
-      try {
-        await retryApprovalEmails(env, dependencies)
-      } catch {
-        warnWorker({ kind: 'approval_email_retry_failed' })
-      }
+      await runScheduledMaintenance(env, dependencies)
     },
   }
 }

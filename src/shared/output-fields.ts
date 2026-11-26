@@ -6,6 +6,15 @@ import type { FileResponse } from './generated/FileResponse'
 import type { FileTreeResponse } from './generated/FileTreeResponse'
 import type { RunnerFileEvent } from './generated/RunnerFileEvent'
 import type { RunnerEvent } from './generated/RunnerEvent'
+import type { AgentSkill } from './generated/AgentSkill'
+import type { GitHubBanner } from './github'
+import { movedBaseLabel } from './moved-base-label'
+import type { ChatEvent } from './chat-events'
+import type {
+  ChangeRepositoryResponse,
+  ContinueWorkspaceResponse,
+  LocalWork,
+} from './workspaces'
 type FilterText = (value: string) => string
 
 function pathLabel<T extends { path: string; displayPath?: string }>(
@@ -28,6 +37,92 @@ function baseLabel<
     : { ...value, displayBaseBranch }
 }
 
+function branchLabel<T extends { branch: string; displayBranch?: string }>(
+  value: T,
+  text: FilterText,
+): T {
+  const displayBranch = text(value.displayBranch || value.branch)
+  return displayBranch === value.branch && value.displayBranch === undefined
+    ? value
+    : { ...value, displayBranch }
+}
+
+export function filterGitHubBanner<T extends GitHubBanner>(
+  banner: T,
+  text: FilterText,
+): T {
+  return movedBaseLabel(branchLabel(baseLabel(banner, text), text), text)
+}
+
+export function filterContinued(
+  event: Extract<ChatEvent, { type: 'workspace.continued' }>,
+  text: FilterText,
+): typeof event {
+  return branchLabel(baseLabel(event, text), text)
+}
+
+export function filterRepositoryChanged(
+  event: Extract<ChatEvent, { type: 'workspace.repository-changed' }>,
+  text: FilterText,
+): typeof event {
+  return branchLabel(baseLabel(event, text), text)
+}
+
+function fileLabels(
+  paths: readonly string[],
+  labels: readonly string[] | undefined,
+  text: FilterText,
+): readonly string[] | undefined {
+  const display = paths.map((path, index) => text(labels?.[index] || path))
+  return labels !== undefined ||
+    display.some((path, index) => path !== paths[index])
+    ? display
+    : undefined
+}
+
+function localWorkLabels(work: LocalWork, text: FilterText): LocalWork {
+  const displayUncommittedFiles = fileLabels(
+    work.uncommittedFiles,
+    work.displayUncommittedFiles,
+    text,
+  )
+  return displayUncommittedFiles === undefined
+    ? work
+    : { ...work, displayUncommittedFiles }
+}
+
+export function filterContinueResponse(
+  response: ContinueWorkspaceResponse,
+  text: FilterText,
+): ContinueWorkspaceResponse {
+  if (response.state !== 'confirmation-required') return response
+  return {
+    ...baseLabel(response, text),
+    localWork: localWorkLabels(response.localWork, text),
+  }
+}
+
+export function filterRepositoryChangeResponse(
+  response: ChangeRepositoryResponse,
+  text: FilterText,
+): ChangeRepositoryResponse {
+  if (response.state !== 'confirmation-required') return response
+  const work = response.work
+  const displayCarriedFiles = fileLabels(
+    work.carriedFiles,
+    work.displayCarriedFiles,
+    text,
+  )
+  return {
+    ...response,
+    work: {
+      ...work,
+      localWork: localWorkLabels(work.localWork, text),
+      ...(displayCarriedFiles === undefined ? {} : { displayCarriedFiles }),
+    },
+  }
+}
+
 function fileEntry(entry: FileEntry, text: FilterText): FileEntry {
   return { ...pathLabel(entry, text), name: text(entry.name) }
 }
@@ -42,6 +137,21 @@ function changedFile<T extends ChangedFile>(file: T, text: FilterText): T {
     file.previousDisplayPath === undefined
     ? result
     : { ...result, previousDisplayPath }
+}
+
+/**
+ * Leaves out each skill whose name held a hidden value, because its chip
+ * would name a skill that the agent does not have.
+ */
+function filterSkills(
+  skills: readonly AgentSkill[],
+  text: FilterText,
+): AgentSkill[] {
+  return skills.flatMap((skill) =>
+    text(skill.name) === skill.name
+      ? [{ ...skill, description: text(skill.description) }]
+      : [],
+  )
 }
 
 export function filterTree<T extends FileTreeResponse>(
@@ -151,6 +261,12 @@ export function filterOutput(
         name: port.name === null ? null : text(port.name),
         folder: port.folder === null ? null : text(port.folder),
       })),
+    }
+  if (event.type === 'skills.updated')
+    return {
+      ...event,
+      claude: filterSkills(event.claude, text),
+      codex: filterSkills(event.codex, text),
     }
   if (event.type === 'assistant.delta' || event.type === 'assistant.completed')
     return { ...event, text: text(event.text) }

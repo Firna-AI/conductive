@@ -1,10 +1,18 @@
 import { describe, expect, test } from 'vitest'
 import type { Automation } from '../shared/automations'
 import { cronProblem } from './automation-cron'
-import { draftOf, sameDraft, updateRequest } from './automation-draft'
+import {
+  draftOf,
+  sameDraft,
+  updateRequest,
+  withChosenSecret,
+} from './automation-draft'
 import { addAuthor, removeAuthor, setMembers } from './automation-triggers'
 
-/** A saved automation with a preset schedule and an author filter of accounts. */
+/**
+ * A saved automation with a preset schedule, an author filter of accounts,
+ * and two chosen secrets.
+ */
 const saved: Automation = {
   id: 'error-triage',
   orgId: 'acme',
@@ -20,6 +28,7 @@ const saved: Automation = {
   sectionId: 'infra',
   prompt: 'Read the errors of the last hour.',
   choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high', fast: false },
+  capabilities: { preapprovedSecretIds: ['figma-token', 'vercel-token'] },
   active: false,
   inactiveReason: 'failed_runs',
   failedRunsInARow: 3,
@@ -42,7 +51,7 @@ const saved: Automation = {
 }
 
 describe('the draft of an automation', () => {
-  test('a saved automation becomes a draft with logins, and without the cron of a preset', () => {
+  test('a saved automation becomes a draft with logins, its chosen secrets, and without the cron of a preset', () => {
     expect(draftOf(saved)).toEqual({
       name: 'Triage new errors',
       active: false,
@@ -55,6 +64,7 @@ describe('the draft of an automation', () => {
         effort: 'high',
         fast: false,
       },
+      capabilities: { preapprovedSecretIds: ['figma-token', 'vercel-token'] },
       timeZone: 'Europe/London',
       triggers: [
         { kind: 'hourly', minute: 15 },
@@ -71,9 +81,15 @@ describe('the draft of an automation', () => {
     })
   })
 
-  test('an update sends only the fields that changed, also fast mode alone, and Active only when the owner changed it', () => {
+  test('an update sends only the fields that changed, also fast mode alone, Active only when the owner changed it, and the chosen secrets only when other secrets are chosen', () => {
     const draft = draftOf(saved)
     const fast = { ...draft, choice: { ...draft.choice, fast: true } }
+    // A check that the owner takes back leaves the same secrets in another order.
+    const takenBack = withChosenSecret(
+      withChosenSecret(draft, 'figma-token', false),
+      'figma-token',
+      true,
+    )
     expect({
       unchanged: updateRequest(draft, draft),
       prompt: updateRequest(draft, { ...draft, prompt: 'Group the errors.' }),
@@ -94,6 +110,18 @@ describe('the draft of an automation', () => {
       fast: {
         same: sameDraft(fast, draft),
         update: updateRequest(draft, fast),
+      },
+      chosen: updateRequest(
+        draft,
+        withChosenSecret(draft, 'prod-database-url', true),
+      ),
+      unchosen: updateRequest(
+        draft,
+        withChosenSecret(draft, 'vercel-token', false),
+      ),
+      takenBack: {
+        same: sameDraft(takenBack, draft),
+        update: updateRequest(draft, takenBack),
       },
     }).toEqual({
       unchanged: {},
@@ -119,6 +147,17 @@ describe('the draft of an automation', () => {
           },
         },
       },
+      chosen: {
+        capabilities: {
+          preapprovedSecretIds: [
+            'figma-token',
+            'vercel-token',
+            'prod-database-url',
+          ],
+        },
+      },
+      unchosen: { capabilities: { preapprovedSecretIds: ['figma-token'] } },
+      takenBack: { same: true, update: {} },
     })
   })
 

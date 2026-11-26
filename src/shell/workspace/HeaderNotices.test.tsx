@@ -3,11 +3,15 @@
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import type { AppModel } from '../../app/app-model'
-import type { WorkspaceEventSource } from '../../app/events'
 import type { WorkspaceEvent } from '../../shared/events'
+import { workspacePath } from '../../shared/workspaces'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import { queryByRole } from '../../test-support/dom-queries'
+import {
+  emptyWorkspaceSeed,
+  seededFailure,
+} from '../../test-support/fixtures/workspace-seed'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import {
@@ -26,21 +30,13 @@ const minute = 60_000
 const nameLost = 'The new workspace name is unavailable'
 const stepsLost = 'The latest start steps are unavailable'
 
-/** The event socket of the fake server, as the development fake opens it. */
-function socketOf(server: FakeApiServer): WorkspaceEventSource {
-  return {
-    open: (target, handlers) =>
-      server.events.subscribe(target.afterEventNumber, handlers.message),
-  }
-}
-
 function emit(server: FakeApiServer, event: WorkspaceEvent, at = FAKE_TIME) {
   act(() => server.events.emit(nextEnvelope(server.events, event, at)))
 }
 
 /** A new tab of the app, signed in, over the fake server and its stream. */
 function newTab(server: FakeApiServer): Promise<AppModel> {
-  return startedApp(server, { events: socketOf(server) })
+  return startedApp(server, { events: server.events })
 }
 
 /** Mounts the workspace in a tab, and lets it open and read its history. */
@@ -91,6 +87,38 @@ function dismiss(container: HTMLElement): void {
 }
 
 describe('the notices of a failed repair under the workspace header', () => {
+  test('shows the first seeded failure time and keeps Dismiss over a later failure', async () => {
+    const server = new FakeApiServer()
+    const { org, workspace } = FAKE_IDS
+    const { detail } = workspaceFixtures()
+    const cutoff = server.events.history().throughEventNumber
+    server.json('GET', workspacePath(org, workspace), {
+      ...detail,
+      eventNumber: cutoff,
+      seed: {
+        ...emptyWorkspaceSeed,
+        failures: {
+          ...emptyWorkspaceSeed.failures,
+          'workspace.title': seededFailure(
+            'workspace.title',
+            2,
+            FAKE_TIME - 2 * minute,
+          ),
+        },
+      },
+    })
+    const view = await openWorkspace(await newTab(server))
+    expect(notices(view)).toEqual([`${nameLost} 2m ago`])
+    emit(server, refusedReport('workspace.title', true, 2))
+    expect(notices(view)).toEqual([`${nameLost} 2m ago`])
+    dismiss(view)
+    emit(server, refusedReport('workspace.title', true, 3))
+    expect(notices(view)).toEqual([])
+    emit(server, fullReport('workspace.title'))
+    emit(server, refusedReport('workspace.title', true, 4))
+    expect(notices(view)).toEqual([`${nameLost} now`])
+  })
+
   test('show only after the fresh report is lost too, below the header on every phone tab', async () => {
     const server = new FakeApiServer()
     // A first loss asks for a fresh report and shows nothing. A marker of

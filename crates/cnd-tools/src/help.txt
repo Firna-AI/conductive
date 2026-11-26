@@ -7,6 +7,7 @@ conductive workspaces get [--workspace ID]
 conductive workspaces create --repository ID --message TEXT
   [--agent claude|codex --model NAME] [--effort LEVEL] [--fast true|false] [--section ID] [--name TEXT]
   [--parent ID] [--first-session-title TEXT] [--request-id ID]
+  [--start-branch BRANCH] [--base-branch BRANCH]
 conductive workspaces rename --name TEXT [--workspace ID]
 conductive workspaces move [--section ID] [--parent ID | --top-level] [--workspace ID]
 conductive workspaces archive [--workspace ID]
@@ -51,7 +52,11 @@ Previews require sign-in. Open returns a private preview link.
 Close of an already closed preview succeeds with closed: false.
 
 Create uses the calling workspace's org and owner.
-Omitted workspace model and effort use the owner's defaults and the default section.
+Omitted workspace model and effort use the owner's defaults. An omitted section uses the default section.
+--start-branch creates the workspace branch from that branch.
+--base-branch sets the pull request target and Changes comparison branch.
+If both branches are omitted, both use the repository default branch.
+If only one branch is given, both use that branch.
 For workspace create, --parent ID nests the new workspace under that parent.
 Nest work that belongs to the calling workspace's task: a part of a large task that can run in parallel,
 follow-up work that the task starts, work in another repository for the same task,
@@ -96,10 +101,36 @@ Use names and returned links in normal answers. A session link holds workspace a
 A workspace link in a message names that workspace. Workspace and session links in an answer show as chips.
 A Sent by: line names the sending session. Do not reply only to confirm it.
 
+Use secrets list before you ask a member for an API key, a token, or another credential.
+Use secrets run for each command that needs a secret.
+
+Session watches
+
+conductive sessions watch --session ID [--workspace ID] [--turn-id ID]
+
+Watch wakes the calling session once when one turn finishes, fails, or stops.
+Use the reply's actual session and exact turnId after sending or creating work, when available.
+Older workspace-create replies can omit turnId.
+Without --turn-id, watch selects current queued, running, or stopping work, or returns idle.
+The reply gives the target workspace and linked session, with one state:
+- watching, with watchId and turnId.
+- idle.
+- finished, failed, or stopped, with turnId.
+An idle or ended reply sets no watch and sends no wake. Read the session at once.
+Repeated calls for the same calling session, member, exact target, and valid Stop period give one watch.
+Only a watch of the exact active calling turn is refused with invalid_input.
+Set the watch, then end your reply when only the watched work remains.
+After a wake, use sessions read or read_session for the result.
+A turn end does not mean the whole delegated task is complete.
+Explicit Stop of the calling session drops older pending wakes. Automatic idle computer stops keep watches.
+Watch follows the common tool rights and current member and session login checks.
+A new wake turn acts for the member who set the watch. A joined wake keeps the running turn's sender.
+
 Secrets list gives each org secret's name, environmentVariable, description, and availability, never its value.
 Read each value through its environmentVariable, also when the secret name has spaces.
 A running turn adds session approvals to availability. Without it, only org and workspace grants count.
 Secrets run needs an active turn. It puts approved values only in the command's environment.
+It uses approved secrets with no request. It requests approval for other names.
 Repeat --secret for more names. A missing name asks a member for a temporary value.
 Two names that need one environment key fail before any request. Run those names separately.
 Put the command and its arguments after --. To use shell syntax, run sh -c 'command'.
@@ -108,3 +139,30 @@ After the command ends, stderr gives environmentVariables: followed by the JSON 
 A request waits up to 90 seconds. Pending, denied, or not-answered prints the message and exits 1.
 After a late-answer notice, call secrets run again. A pending call never starts the command.
 Keep each value out of output, files, and answers. The filter hides only exact copies.
+
+Use mac run when the task needs the member's Mac.
+It needs an active calling turn.
+The request goes to the Mac of the member whose message started the turn.
+The Mac app asks before each command, unless a permission that its user chose there covers it.
+
+Local services
+
+conductive services start --name TEXT [--env NAME=VALUE ...]
+  [--wait-for-port [PORT]] [--request-id ID] -- <command> [arguments ...]
+conductive services list
+conductive services stop --name TEXT [--request-id ID]
+conductive services restart --name TEXT [--request-id ID]
+conductive services logs --name TEXT
+
+Services act only on this cloud computer. They need no workspace token or active turn.
+A service runs outside every turn until Stop, its own end, or the computer stop.
+It survives a restart of the agent runner. It never keeps the computer running.
+Start uses this call's current folder and preserves the exact name and arguments.
+A running exact name returns its current command unchanged. Other states use the new definition.
+Restart uses the saved command, folder, explicit values, and start source, also after an end.
+The clean environment contains frozen org values, basic user/project variables, and explicit --env values.
+It inherits no caller credentials, turn values, or secret-run additions. Results print no environment map.
+--wait-for-port waits at most 30 seconds for an owned port. Omit PORT for the first one.
+A timeout leaves the service running. There is no custom timeout input.
+Logs gives complete retained stdout and stderr. Oldest output leaves its rotating 10 MiB runtime log first.
+After an unconfirmed control, check the list before another explicit try. Controls never retry automatically.

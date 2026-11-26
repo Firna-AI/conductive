@@ -1,5 +1,5 @@
-import { agentActionLabels } from '../../../docs/mockups/src/components/workspace/barCopy'
-import { transcriptItems } from '../../../docs/mockups/src/components/workspace/transcriptCopy'
+import { agentActionLabels } from '../../ui/components/workspace/barCopy'
+import { transcriptItems } from '../../ui/components/workspace/transcriptCopy'
 import {
   shortcutDigits,
   type ShortcutCommandId,
@@ -13,7 +13,7 @@ import {
 
 type ShortcutGroup = 'General' | 'View' | 'Navigation' | 'Workspace' | 'Chat'
 type ShortcutScope =
-  'every-page' | 'palette' | 'workspace' | 'org-page' | 'mac-app'
+  'every-page' | 'palette' | 'workspace' | 'org-page' | 'mac-app' | 'selection'
 
 export interface ShortcutCommand extends CommandText {
   readonly id: ShortcutCommandId
@@ -177,6 +177,8 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
     'squash',
     'rebase',
   ]),
+  palette('add-to-merge-queue', 'Workspace'),
+  palette('remove-from-merge-queue', 'Workspace'),
   command(
     'continue-after-merge',
     'Workspace',
@@ -215,5 +217,10 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
     'clipboard',
     'chat',
     'expanded',
+  ]),
+  command('explain-selection', 'Chat', 'selection', 'Explain the selection', [
+    'ask',
+    'quote',
+    'question',
   ]),
 ]

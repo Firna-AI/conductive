@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { LostUpdateRow } from '../../../docs/mockups/src/components/chat/LostUpdate'
-import type { UnavailableData } from '../../../docs/mockups/src/components/chat/lostCopy'
+import { LostUpdateRow } from '../../ui/components/chat/LostUpdate'
+import type { UnavailableData } from '../../ui/components/chat/lostCopy'
 import { formatAgo } from '../../chat/state/format'
 import type { FileReportKind } from '../api/parse-events'
 import type { FailedRepairs } from '../model/failed-repairs'

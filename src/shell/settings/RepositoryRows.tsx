@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { FolderGit2 } from 'lucide-react'
-import styles from '../../../docs/mockups/src/components/settings/RepositoryList.module.css'
+import styles from '../../ui/components/settings/RepositoryList.module.css'
 import type { Repository } from '../../shared/org-settings'
 
 /** What a row shows of a repository of the org or of the GitHub catalogue. */

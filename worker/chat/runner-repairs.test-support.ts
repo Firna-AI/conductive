@@ -11,6 +11,7 @@ export const reportKinds: readonly RunnerReportKind[] = [
   'start.updated',
   'workspace.title',
   'ports.updated',
+  'skills.updated',
 ]
 
 export function fullReport(
@@ -65,6 +66,12 @@ export function fullReport(
       return {
         type: kind,
         ports: [{ port: 3000, name: 'vite dev', folder: null }],
+      }
+    case 'skills.updated':
+      return {
+        type: kind,
+        claude: [{ name: 'plans', description: `Plans ${revision}` }],
+        codex: [],
       }
   }
 }

@@ -7,7 +7,7 @@ import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { nested, record } from '../api/parse'
 import { readOrg } from '../api/read-core'
-import { readBuilds } from '../api/read-settings'
+import { readBuilds, readRepositories } from '../api/read-settings'
 import { createBackend, guardScope } from './backend'
 import { buildRoutes } from './build-routes'
 import { createRoutes } from './create-routes'
@@ -93,6 +93,23 @@ it('requires repositories and starts the first simulated build with the complete
     currentImageBuildId: null,
   })
   expect((await builds(org.id)).changes.installScript).toBe(false)
+  // Before the first good build, the org has no image that holds a
+  // repository, and the repositories reply says so, as the Worker does.
+  const repositories = readRepositories(
+    await (await request(orgSettingsPaths.repositories(org.id))).json(),
+  )
+  expect(
+    repositories
+      .filter((item) => item.selected)
+      .map(({ fullName, ready, imageReady }) => ({
+        fullName,
+        ready,
+        imageReady,
+      })),
+  ).toEqual([
+    { fullName: 'acme/data-pipeline', ready: false, imageReady: false },
+    { fullName: 'acme/mobile-app', ready: false, imageReady: false },
+  ])
   const refused = await request(workspacesPath(org.id), 'POST', {
     repositoryId: state.repositories[0].id,
     firstMessage: {

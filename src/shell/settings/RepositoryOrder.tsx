@@ -1,24 +1,26 @@
-import type { KeyboardEvent } from 'react'
+import type { KeyboardEvent, RefCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useToast } from '@firna/ui/toast'
 import { FolderGit2, GripVertical, MoreHorizontal } from 'lucide-react'
-import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import list from '../../../docs/mockups/src/components/settings/RepositoryList.module.css'
-import styles from '../../../docs/mockups/src/components/settings/RepositoryOrderList.module.css'
+import a11y from '../../ui/components/common/a11y.module.css'
+import { classes } from '../../ui/components/common/classes'
+import list from '../../ui/components/settings/RepositoryList.module.css'
+import styles from '../../ui/components/settings/RepositoryOrderList.module.css'
 import {
   defaultRepositoryLabel,
   repositoryMenuItems,
-} from '../../../docs/mockups/src/components/settings/repositoryOrder'
+} from '../../ui/components/settings/repositoryOrder'
 import { errorMessage } from '../../app/api/client'
 import type { OrgModel } from '../../app/org-model'
 import { moveRepository } from '../../app/settings-actions'
 import type { Repository } from '../../shared/org-settings'
-import { SectionText } from '../../../docs/mockups/src/components/settings/Section'
+import { SectionText } from '../../ui/components/settings/Section'
 import { IconButton } from '../ui/actions'
 import { MenuButton, type MenuEntry } from '../ui/Menu'
 import type { ListDrag } from '../ui/useListDrag'
 import { useListOrder } from '../ui/useListOrder'
+import { RemoveRepositoryDialog } from './RemoveRepositoryDialog'
+import { useRowRemoval } from './useRowRemoval'
 
 /** A chosen repository as the order moves it: its ID and its spoken name. */
 interface Movable {
@@ -87,17 +89,21 @@ function DropLine() {
 
 /**
  * The chosen repositories of the org in the repository order, for an admin
- * outside Edit (repository-order decision 1 F). The first one shows
- * Default. Each row moves by a drag, by a long press on a phone, by its
- * row menu with Make default, Move up, and Move down, and by Alt and Up or
- * Down while the focus is in the row. Each move saves at once and starts
- * no build. A failed save takes back that move and shows a toast. The
- * status tells a screen reader the place of a drag or the new place after
- * a move.
+ * outside Edit, as the repository order protocol doc says. The first one
+ * shows Default. Each row moves by a drag, by a long press on a phone, by
+ * its row menu with Make default, Move up, and Move down, and by Alt and
+ * Up or Down while the focus is in the row. Each move saves at once and
+ * starts no build. A failed save takes back that move and shows a toast.
+ * Remove, the last item of the row menu, asks first, as `useRowRemoval`
+ * and `RemoveRepositoryDialog` say. The question renders outside the rows,
+ * so its keys never reach the moves of a row. The status tells a screen
+ * reader the place of a drag, the new place after a move, or a removal.
+ * It stays when no row is left. `focusEdit` gives the focus to Edit.
  */
 export function RepositoryOrder(props: {
   model: OrgModel
   repositories: readonly Repository[]
+  focusEdit: () => void
 }) {
   const { toast } = useToast()
   const items: Movable[] = props.repositories
@@ -117,41 +123,61 @@ export function RepositoryOrder(props: {
     )
   }
   const { drag, moves, status } = useListOrder({ items, move })
-  if (items.length === 0) {
-    return <SectionText muted>Select Edit to add a repository.</SectionText>
-  }
-
+  const removal = useRowRemoval({
+    rows: items,
+    status,
+    forgetMoves: moves.forget,
+    focusEdit: props.focusEdit,
+  })
   const entries = (item: Movable, place: number): MenuEntry[] =>
-    repositoryMenuItems(place, items.length).map((entry) => ({
-      kind: 'item',
-      label: entry.label,
-      icon: entry.icon,
-      disabled: entry.disabled,
-      onSelect: () => {
-        if (entry.move === 'default') moves.place(item, 0)
-        else moves.step(item, entry.move === 'up' ? -1 : 1)
-      },
-    }))
+    repositoryMenuItems(place, items.length).map((entry) =>
+      entry.kind === 'divider'
+        ? entry
+        : {
+            ...entry,
+            onSelect: () => {
+              if (entry.action === 'remove') removal.ask(item, place)
+              else if (entry.action === 'default') moves.place(item, 0)
+              else moves.step(item, entry.action === 'up' ? -1 : 1)
+            },
+          },
+    )
   return (
-    <div className={styles.wrap}>
-      <ul aria-label="Repositories" className={list.list}>
-        {items.map((item, place) => (
-          <Row
-            drag={drag}
-            entries={entries(item, place)}
-            item={item}
-            key={item.id}
-            onKeyDown={(event) => moves.onKeyDown(item, event)}
-            place={place}
-          />
-        ))}
-        {drag.lineAtEnd ? <DropLine /> : null}
-      </ul>
-      <LiftedRow drag={drag} />
-      <span className={a11y.hidden} role="status">
-        {status}
-      </span>
-    </div>
+    <>
+      <div className={styles.wrap}>
+        {items.length === 0 ? (
+          <SectionText muted>Select Edit to add a repository.</SectionText>
+        ) : (
+          <ul aria-label="Repositories" className={list.list}>
+            {items.map((item, place) => (
+              <Row
+                drag={drag}
+                entries={entries(item, place)}
+                item={item}
+                key={item.id}
+                menuRef={removal.menuRef(item.id)}
+                onKeyDown={(event) => moves.onKeyDown(item, event)}
+                place={place}
+              />
+            ))}
+            {drag.lineAtEnd ? <DropLine /> : null}
+          </ul>
+        )}
+        <LiftedRow drag={drag} />
+        <span className={a11y.hidden} role="status">
+          {removal.status}
+        </span>
+      </div>
+      {removal.asked ? (
+        <RemoveRepositoryDialog
+          asked={removal.asked}
+          close={removal.close}
+          done={removal.done}
+          model={props.model}
+          returnFocus={removal.returnFocus}
+        />
+      ) : null}
+    </>
   )
 }
 
@@ -161,6 +187,8 @@ function Row(props: {
   entries: readonly MenuEntry[]
   drag: ListDrag<Movable>
   onKeyDown: (event: KeyboardEvent<HTMLElement>) => boolean
+  /** The ref of the row menu button, which takes the focus after a removal. */
+  menuRef: RefCallback<unknown>
 }) {
   const { item, drag } = props
   return (
@@ -184,6 +212,7 @@ function Row(props: {
           label={item.name}
           trigger={({ open, toggle }) => (
             <IconButton
+              buttonRef={props.menuRef}
               expanded={open}
               icon={MoreHorizontal}
               label={`More for ${item.name}`}

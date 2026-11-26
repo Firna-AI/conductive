@@ -14,6 +14,12 @@ export const mergeHeadChanged = () =>
     'github_head_changed',
     'Not merged: the branch has new commits. Review them, then merge again.',
   )
+export const mergeStackChanged = () =>
+  new HttpError(
+    409,
+    'merge_stack_changed',
+    'The stack changed. Review it, then try again.',
+  )
 export const mergeUnavailable = () =>
   new HttpError(
     404,

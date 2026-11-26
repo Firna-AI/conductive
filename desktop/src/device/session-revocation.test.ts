@@ -1,12 +1,12 @@
 import { expect, it } from 'vitest'
 
-import type { DeviceSettingsAction } from '../../../src/shared/device.ts'
+import type { DeviceSettingsOperation } from '../../../src/shared/device.ts'
 import { deviceLifecycleFixture } from '../../tests/device-lifecycle-support.js'
 import type { PermissionStore } from './permissions.js'
 
 const cases: {
   action: string
-  operation: DeviceSettingsAction
+  operation: DeviceSettingsOperation
   revokedCommand: string
   allow(permissions: PermissionStore): void
 }[] = [
@@ -160,7 +160,10 @@ it.each(cases)(
       requestId: 'after-reconnect',
       command: revokedCommand,
     })
-    test.receive({ type: 'command.request', request: reconnected })
+    test.receive({
+      type: 'command.request',
+      request: reconnected,
+    })
     expect(test.processes).toHaveLength(3)
     expect(test.notify).toHaveBeenLastCalledWith(reconnected)
     expect(test.notify).toHaveBeenCalledTimes(3)

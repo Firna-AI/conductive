@@ -1,3 +1,4 @@
+import { code, type Inline } from './agentText'
 import type { ChatItem } from './conversations'
 import { onMac } from './macConversations'
 import {
@@ -64,14 +65,25 @@ const byCityAsk: readonly ChatItem[] = [
   agent('plan-city', "I'll list the top 20 cities from the same replica."),
 ]
 
-const waitsForPreview =
-  'I asked for `PROD_DATABASE_URL` and `VERCEL_TOKEN`, and no one has answered yet. I will deploy the preview when a member allows them.'
+const waitsForPreview: readonly Inline[] = [
+  'I asked for ',
+  code('PROD_DATABASE_URL'),
+  ' and ',
+  code('VERCEL_TOKEN'),
+  ', and no one has answered yet. I will deploy the preview when a member allows them.',
+]
 
-const waitsByCountry =
-  'I asked for `PROD_DATABASE_URL` again, and no one has answered yet. I will split the count when a member allows it.'
+const waitsByCountry: readonly Inline[] = [
+  'I asked for ',
+  code('PROD_DATABASE_URL'),
+  ' again, and no one has answered yet. I will split the count when a member allows it.',
+]
 
-const waitsByCity =
-  'I asked for `PROD_DATABASE_URL` again, and no one has answered yet. I will list the cities when a member allows it.'
+const waitsByCity: readonly Inline[] = [
+  'I asked for ',
+  code('PROD_DATABASE_URL'),
+  ' again, and no one has answered yet. I will list the cities when a member allows it.',
+]
 
 /**
  * The turn of a request that nobody answered in time, as `outlived` draws
@@ -81,7 +93,7 @@ function lateTurn(
   key: string,
   ask: readonly ChatItem[],
   widget: SecretRunItem,
-  waits: string,
+  waits: readonly Inline[],
 ): ChatItem[] {
   return outlived(ask, widget, waits).map((item) => ({
     ...item,

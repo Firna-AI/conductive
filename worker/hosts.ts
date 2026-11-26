@@ -1,4 +1,4 @@
-import { productDomain } from '../docs/mockups/src/brand'
+import { productDomain } from '../src/shared/brand'
 import { siteResponse } from './marketing/site'
 import type { AppEnv } from './env'
 import { HttpError } from './http'

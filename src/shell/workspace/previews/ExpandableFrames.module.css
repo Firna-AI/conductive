@@ -1,0 +1,7 @@
+/*
+ * The expanded window covers the whole app from its place in the page, so
+ * its frames do not move and load again.
+ */
+.fixed {
+  position: fixed;
+}

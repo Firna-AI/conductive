@@ -112,7 +112,8 @@
 - **Related:** `plans/follow-ups/org-deletion-lost-build-allocation.md` is the same class at the Delete org exit.
   - Its option C, one shared recovery queue, is the Delete org form of D. The purge step that I needs is the same work as its option B.
   - That item does not wait for this one.
-  - `plans/follow-ups/archived-computer-certainty.md` reads the live ledger row of an unresolved request to decide whether a computer may still exist. A fix here must keep that meaning of a live row. Neither item waits for the other.
+  - The Worker sets the `archivedComputer` field of each archived workspace reply from the ledger rows of that workspace. A live row means that its cloud computer may still exist, as `plans/follow-ups/archived-computer-unknown-outcome.md` says. A fix here must keep that meaning of a live row. It can also leave fewer records with the state `unknown`. Neither item waits for the other.
+  - `plans/follow-ups/archived-computer-cleanup-publication.md` covers notice publication after the same cleanup writes. Its option E follows changes from a later cleanup driver without a new call from that driver. Neither item waits for the other.
   - The Delete org cleanup deletes each expired archived computer itself. An unapplied alternative moves that delete to the Archive owner. It overlaps the ownership design here, so it should follow that design.
     - In the 7 days before the purge, the scheduled run of `cleanupDeletedOrgs` in `worker/members/cleanup.ts` deletes each expired archived computer. It uses `cleanupOrgArchives` in `worker/members/archive-cleanup.ts`, under the cleanup lease of the org.
     - The alternative makes the Archive owner in `worker/lifecycle/archive-state.ts` the only deleter of an expired archived computer, also in those 7 days. Delete org then leaves the Archive alarm armed, fenced by the org lifecycle generation, and the org run does no Archive delete.

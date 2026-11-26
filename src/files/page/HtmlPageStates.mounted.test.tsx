@@ -2,6 +2,9 @@
 
 import { useLayoutEffect } from 'react'
 import { describe, expect, it } from 'vitest'
+import { filePaths } from '../../shared/files'
+import { FakeApiServer } from '../../test-support/fake-api'
+import { FAKE_IDS } from '../../test-support/fixtures/core'
 import type { HtmlPageView } from './html-preview'
 import {
   htmlFile,
@@ -13,6 +16,16 @@ import {
   serverWithReport,
   standInShell,
 } from './html-test-kit'
+
+const { org, workspace: id } = FAKE_IDS
+
+/** The name of the page and the label of its path in the header. */
+function named(container: HTMLElement) {
+  return {
+    name: container.querySelector('section')?.getAttribute('aria-label'),
+    label: container.querySelector('span[title]')?.getAttribute('title'),
+  }
+}
 
 /**
  * Stands in for the kept frame of the shell, which draws nothing in place:
@@ -85,6 +98,95 @@ describe('the page of an HTML file', () => {
       },
       // The page shows while the read runs, until the missing file ends it.
       calls: ['show', 'stop', 'show'],
+    })
+  })
+
+  it('keeps the label of the last read of an HTML file that no list names at a return and after a read over the limit, and shows its page only while that label hides no secret value', async () => {
+    // No list names these files, so only a read gives each label.
+    const files: Record<string, { path: string; displayPath?: string }> = {
+      plain: { path: 'coverage/report.html' },
+      hidden: {
+        path: 'coverage/acme-7f3k.html',
+        displayPath: 'coverage/[redacted].html',
+      },
+    }
+    const shown: Record<string, unknown> = {}
+    for (const [kind, { path, displayPath }] of Object.entries(files)) {
+      const server = new FakeApiServer()
+      const content = filePaths.content(org, id, path)
+      server.json('GET', content, {
+        ...htmlFile(path, reportSource),
+        displayPath,
+      })
+      const { view, render, release } = await mountedReport(server, path)
+      const { calls, preview } = standInShell()
+      const page = preview({ kind: 'page', frame: pageFrame, kept: false })
+      render(page)
+      const beforeRead = named(view.container)
+      await release()
+      // The file grows past the read limit while another tab shows. The
+      // shell keys each page by its path, so the return mounts a new page,
+      // which renders before its read answers.
+      server.json(
+        'GET',
+        content,
+        {
+          error: {
+            code: 'file_too_large',
+            message: 'The file is too large to open.',
+            sizeBytes: 6_000_000,
+            limitBytes: 5_242_880,
+          },
+        },
+        413,
+      )
+      view.render(null)
+      render(page)
+      const atReturn = { ...seen(view.container), ...named(view.container) }
+      await release()
+      shown[kind] = {
+        beforeRead,
+        atReturn,
+        afterRead: { ...seen(view.container), ...named(view.container) },
+        calls,
+      }
+    }
+
+    const unknown = { name: 'File', label: undefined }
+    const plain = { name: 'report.html', label: 'coverage/report.html' }
+    const hidden = {
+      name: '[redacted].html',
+      label: 'coverage/[redacted].html',
+    }
+    const withPage = {
+      frame: true,
+      checked: ['Preview'],
+      buttons: ['Reload'],
+      links: [],
+      rows: 0,
+    }
+    const noPage = {
+      frame: false,
+      checked: [],
+      buttons: [],
+      links: [],
+      rows: 0,
+    }
+    expect(shown).toEqual({
+      plain: {
+        beforeRead: unknown,
+        atReturn: { ...withPage, ...plain },
+        afterRead: { ...withPage, ...plain },
+        // The return shows the page at once, and the read over the limit
+        // keeps it.
+        calls: ['show', 'stop', 'show'],
+      },
+      hidden: {
+        beforeRead: unknown,
+        atReturn: { ...noPage, ...hidden },
+        afterRead: { ...noPage, ...hidden },
+        calls: [],
+      },
     })
   })
 

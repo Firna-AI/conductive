@@ -6,7 +6,7 @@ import {
 } from './image-software-script.test-support'
 
 const APT = [
-  'apt-get update',
+  'apt-get -o Acquire::AllowReleaseInfoChange::Label=true update',
   'apt-get install -y ttyd tmux',
   'systemctl disable --now ttyd.service',
   'systemctl mask ttyd.service',
@@ -30,7 +30,7 @@ const CURRENT: ImageState = {
   updater: 'works',
 }
 
-it('installs every package and bootstraps the program on the base image', async () => {
+it('installs every package after a release Label change and bootstraps the program on the base image', async () => {
   const result = await runSoftwareStep(
     { packages: [], ttyd: 'enabled', program: false, updater: 'works' },
     'install',

@@ -1,4 +1,5 @@
-import { githubPaths, type GitHubMergeRequest } from '../../src/shared/github'
+import { githubPaths } from '../../src/shared/github'
+import type { GitHubMergeRequest } from '../../src/shared/generated/GitHubMergeRequest'
 import type { OrgRole } from '../../src/shared/api'
 import { TEST_ORIGIN, TEST_TIME } from '../test-support/harness'
 import { saveGitHubTokens } from '../security/github-tokens'

@@ -6,6 +6,7 @@ use cnd_runner_interface::json::decoder;
 
 use crate::call::Name;
 use crate::schema;
+use crate::services::tools::ServiceName;
 
 use super::PROTOCOL_VERSION;
 pub(crate) use super::wire::Response;
@@ -23,6 +24,16 @@ pub(super) enum Action {
         name: Name,
         fields: Map<String, Value>,
     },
+    Services {
+        id: Id,
+        name: ServiceName,
+        fields: Map<String, Value>,
+    },
+}
+
+enum SelectedName {
+    Workspace(Name),
+    Services(ServiceName),
 }
 
 fn error(id: Option<Id>, code: i32, message: &'static str) -> Action {
@@ -112,14 +123,20 @@ pub(super) fn prepare(line: &str, phase: &mut Phase) -> Action {
     let Some(Value::String(name)) = params.get("name") else {
         return error(Some(id), -32602, "Choose a workspace tool.");
     };
-    let name = match serde_json::from_value::<Name>(Value::String(name.clone())) {
-        Ok(name) => name,
-        Err(_) => return error(Some(id), -32602, "Unknown workspace tool."),
+    let name = match serde_json::from_value::<ServiceName>(Value::String(name.clone())) {
+        Ok(name) => SelectedName::Services(name),
+        Err(_) => match serde_json::from_value::<Name>(Value::String(name.clone())) {
+            Ok(name) => SelectedName::Workspace(name),
+            Err(_) => return error(Some(id), -32602, "Unknown workspace tool."),
+        },
     };
     let fields = match params.get("arguments") {
         Some(Value::Object(fields)) => fields.clone(),
         None => Map::new(),
         _ => return error(Some(id), -32602, "Invalid request parameters."),
     };
-    Action::Tool { id, name, fields }
+    match name {
+        SelectedName::Services(name) => Action::Services { id, name, fields },
+        SelectedName::Workspace(name) => Action::Tool { id, name, fields },
+    }
 }

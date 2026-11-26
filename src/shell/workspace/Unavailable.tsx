@@ -1,5 +1,5 @@
 import { SearchX } from 'lucide-react'
-import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
+import { EmptyState } from '../../ui/components/common/EmptyState'
 import { routes } from '../../app/router'
 import { ActionButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'

@@ -8,19 +8,15 @@
  * with, so a later change of its automation changes no past run.
  */
 
+import type { RunState } from '../../../../src/ui/components/workspaces/activityStatus'
 import type { AgentKey } from './agents'
 import type { Person } from './members'
+import type { Automation } from './automations'
 import type {
   PullRequestEvent,
-  Automation,
   ScheduleTrigger,
-} from './automations'
-import type { ActivityStatus } from './workspaces'
-
-/** The states of a run that are not the state of a workspace. */
-type RunOnlyState = 'queued' | 'failed' | 'skipped'
-
-export type RunState = ActivityStatus | RunOnlyState
+} from '../../../../src/ui/components/automations/triggers'
+import type { ActivityStatus } from '../../../../src/ui/components/workspaces/activityStatus'
 
 /** What started a run: a schedule, Run now, or a pull request event. */
 export type RunTrigger =

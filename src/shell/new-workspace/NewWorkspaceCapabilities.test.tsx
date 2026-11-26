@@ -2,6 +2,7 @@
 
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
+import { DEVICE_SETTINGS_PATH } from '../../shared/device'
 import { secretsPath } from '../../shared/secrets'
 import { workspacesPath } from '../../shared/workspaces'
 import { byLabel, byRole } from '../../test-support/dom-queries'
@@ -15,7 +16,7 @@ vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const { secrets } = secretFixtures()
 
-/** The checkbox of a secret in the open control, and the switch of Mac access. */
+/** The checkbox of a secret in the open control, and the parts it shows. */
 function choices(control: HTMLElement) {
   const box = (name: string) => {
     const found = byLabel(name, control)
@@ -30,13 +31,15 @@ function choices(control: HTMLElement) {
       checked: box(name).checked,
       off: box(name).disabled,
     }),
-    mac: () =>
-      byRole('switch', 'Mac access', control).getAttribute('aria-checked'),
+    parts: () =>
+      Array.from(control.querySelectorAll('section[aria-label]'), (part) =>
+        part.getAttribute('aria-label'),
+      ),
   }
 }
 
 describe('the Capabilities control of New workspace', () => {
-  test('the create sends the secrets that it pre-approves and its Mac access, a secret for all agents stays checked and off, and the next draft starts again from the defaults', async () => {
+  test('the create sends the secrets that it pre-approves and no Mac access, a secret for all agents stays checked and off, a browser shows no Mac access part and starts no grant, and the next draft starts again from the defaults', async () => {
     const server = serverWith('page')
     server.json('GET', secretsPath(org), { secrets })
     const tab = await openTab(server, { at: routes.newWorkspace(org) })
@@ -45,13 +48,14 @@ describe('the Capabilities control of New workspace', () => {
     await settle()
     const control = choices(byRole('dialog', 'Capabilities', main))
     const allAgents = control.state('SENTRY_AUTH_TOKEN')
-    const before = { vercel: control.state('VERCEL_TOKEN'), mac: control.mac() }
+    const before = control.state('VERCEL_TOKEN')
+    const parts = control.parts()
     click(control.box('VERCEL_TOKEN'))
-    click(byRole('switch', 'Mac access', main))
     typeText(messageIn(main), 'Deploy a preview of the checkout.')
     click(byRole('button', 'Send', main))
     await settle()
     const [sent] = await bodiesOf(server, 'POST', workspacesPath(org), 0)
+    const starts = await bodiesOf(server, 'POST', DEVICE_SETTINGS_PATH, 0)
     await tab.go(routes.newWorkspace(org))
     const next = mainOf(tab.view)
     click(byRole('button', 'Capabilities', next))
@@ -60,18 +64,19 @@ describe('the Capabilities control of New workspace', () => {
     expect({
       allAgents,
       before,
+      parts,
       sent,
-      after: { vercel: again.state('VERCEL_TOKEN'), mac: again.mac() },
+      starts,
+      after: again.state('VERCEL_TOKEN'),
     }).toEqual({
       allAgents: { checked: true, off: true },
-      before: { vercel: { checked: false, off: false }, mac: 'false' },
+      before: { checked: false, off: false },
+      parts: ['Secrets'],
       sent: expect.objectContaining({
-        capabilities: {
-          preapprovedSecretIds: ['vercel-token'],
-          macAccess: true,
-        },
+        capabilities: { preapprovedSecretIds: ['vercel-token'] },
       }),
-      after: { vercel: { checked: false, off: false }, mac: 'false' },
+      starts: [],
+      after: { checked: false, off: false },
     })
   })
 })

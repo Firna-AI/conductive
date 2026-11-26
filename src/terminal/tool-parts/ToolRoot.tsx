@@ -3,7 +3,7 @@ import {
   control,
   touchControl,
   type ControlSizes,
-} from '../../../docs/mockups/src/design/metrics'
+} from '../../ui/design/metrics'
 import styles from './ToolRoot.module.css'
 
 const TouchContext = createContext(false)

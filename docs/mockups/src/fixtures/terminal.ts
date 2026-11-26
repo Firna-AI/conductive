@@ -2,7 +2,7 @@
  * Terminal sessions. Each line is a list of coloured segments.
  */
 
-import { failedBuild, timedOutBuild } from './computer'
+import { endedBuild, failedBuild, timedOutBuild } from './computer'
 import { checkoutAutocomplete, savedCarts } from './workspaces'
 
 export type TerminalTone =
@@ -161,8 +161,8 @@ const acmeCommits = [
 
 /**
  * The log of a build of Acme that clones the chosen repositories, such as
- * the build that an added repository starts, at the start of its install
- * script. The log box shows the first lines of a log, so this log is no
+ * the build that Done starts after an add of a repository, at the start
+ * of its install script. The log box shows the first lines of a log, so this log is no
  * longer than the log of other builds.
  */
 export function acmeBuildLog(
@@ -184,6 +184,30 @@ export const failedBuildLog: readonly TerminalLine[] = [
   error('npm error ERESOLVE unable to resolve dependency tree'),
   error('npm error peer react@"^18.0.0" from react-day-picker@8.10.1'),
   muted('The install script stopped with exit code 1.'),
+]
+
+/**
+ * A build that an admin started while another update of the cloud computer
+ * runs, which members do not see. Its first step waits for that update, so
+ * the log names the wait as that step starts. The steps of the build follow
+ * when the wait ends.
+ */
+export const waitingBuildLog: readonly TerminalLine[] = [
+  muted('Waiting for another update of the cloud computer to finish'),
+]
+
+/**
+ * The end of a build of Acme that an operator ended for another update of
+ * the cloud computer. The app adds the saved message of the build as the
+ * last line.
+ */
+export const endedBuildLog: readonly TerminalLine[] = [
+  ...acmeBuildLog([
+    'acme/storefront',
+    'acme/billing-service',
+    'acme/marketing-site',
+  ]),
+  muted(endedBuild.error),
 ]
 
 /**
@@ -229,6 +253,15 @@ export const failedFirstBuildLog: readonly TerminalLine[] = [
   ...firstBuildLog,
   muted('Saving the cloud computer image'),
   muted(failedBuild.error),
+]
+
+/**
+ * The first build of Firna, which an operator ended for another update of
+ * the cloud computer, as a switch question can end a first build.
+ */
+export const endedFirstBuildLog: readonly TerminalLine[] = [
+  ...firstBuildLog,
+  muted(endedBuild.error),
 ]
 
 /**

@@ -13,6 +13,7 @@ import {
   LiftedFileTab,
 } from '../../../files/tabs/FileTabItem'
 import type { WorkspaceTab } from '../../../shared/workspace-view'
+import { usePageEscape } from '../../shortcuts/page-escape'
 import { useShortcutOffer } from '../../shortcuts/shortcut-context'
 import type { WorkspaceContext } from '../features'
 import { useSavedView } from '../saved-view'
@@ -60,7 +61,8 @@ function useTabLabels(
  * view marks it as the temporary tab. Close of the shown tab shows the next
  * file tab, else the one before, else the chat with its session. A close of
  * the temporary tab clears the mark. While the tab shows, the key of Close
- * tab closes it, as its Close does.
+ * tab closes it, as its Close does. While the temporary tab shows, Escape
+ * closes it too, when no menu, dialog, drag, or text field takes the key.
  */
 function FileTab(props: {
   context: WorkspaceContext
@@ -97,6 +99,7 @@ function FileTab(props: {
     )
   }
   useShortcutOffer('close-tab', isShown(tab) ? close : null)
+  usePageEscape(isShown(tab) && props.temporary ? close : null)
   return (
     <FileTabItem
       label={props.label}
@@ -133,9 +136,10 @@ export interface ChatFiles {
  * session active while `content` shows a file, the address goes back to the
  * chat. The chat reads the kept files for the list of `@` and the file
  * chips, also on a phone before a visit to Files: `KeptConnections` of the
- * screen keeps them connected. A file or diff tab that leaves the saved
- * view, such as one that the user closed, forgets its kept scroll offset.
- * An archived workspace has no files.
+ * screen keeps them connected. It reads the skill lists of the workspace
+ * for the list of `/` and the skill chips. A file or diff tab that leaves
+ * the saved view, such as one that the user closed, forgets its kept scroll
+ * offset. An archived workspace has no files and no skills.
  */
 export function useChatFiles(
   context: WorkspaceContext,

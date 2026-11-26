@@ -41,9 +41,11 @@ other pages.
   buttons, as `app/org-settings/agents/form/not-saved` shows.
   `OrgAgents.tsx` in `src/components/settings/` draws the tab, with
   `AgentConnectForm`, `EndpointFields`, and `EndpointDetails` of the
-  account. `orgAgentsCopy.ts` beside it holds the words of the tab, which
-  the app shares. `EndpointDetails` draws the host, the note, the warning, and
-  the model list of an own endpoint, with one Refresh, as on the account.
+  account. `orgAgentsCopy.ts` in
+  [`src/ui/components/settings/`](../../src/ui/components/settings/) holds
+  the words of the tab, which the app shares. `EndpointDetails` draws the
+  host, the note, the warning, and the model list of an own endpoint, with
+  one Refresh, as on the account.
 - Under each org login, the switch "Use for every member" of decision 7 B
   starts off. While it is off, the org login serves each member with no
   usable login of their own (decisions 4 and 6 A). While it is on, each new
@@ -83,14 +85,20 @@ other pages.
   `app/account/codex-token/sign-in-again` shows. The row keeps the login
   with Remove, and the share switch stays, until a new sign-in replaces
   the login.
-- `chatGptSignInCopy.ts` in `src/components/settings/` gives the words of
-  the ChatGPT sign-in, the address of the ChatGPT settings, the row of a
-  sign-in that stopped working, and the causes of the Worker. It imports no
-  fixture, so the app and the Worker can import the same words.
+- `chatGptSignInCopy.ts` in
+  [`src/ui/components/settings/`](../../src/ui/components/settings/) gives
+  the words of the ChatGPT sign-in, the address of the ChatGPT settings,
+  the row of a sign-in that stopped working, and the causes of the Worker.
+  The app, the Worker, and the mockups import the same words.
 - A connected login shows its kind and Remove. The name of the kind
   depends on the agent: a Claude token is a "Subscription token", the
   ChatGPT sign-in of Codex is "ChatGPT plan", and a key is an "API key".
-  `loginLabels` in `src/fixtures/logins.ts` holds the names. On a phone,
+  `agentConnectCopy.ts` in
+  [`src/ui/components/settings/`](../../src/ui/components/settings/) holds
+  the names.
+  It also holds the switch order of `AgentConnectForm`, the field labels
+  and placeholders, the words above the field, and the addresses of the
+  key pages. The app shares these words. On a phone,
   the state and the kind go on a second line under the name of the agent,
   so that the kind shows in full.
 - Under each connected login, the switch "Let other members use this
@@ -101,8 +109,8 @@ other pages.
   `app/account/codex-token` shows. The switch saves at once. A
   change that the app did not save shows its cause beside the switch, as
   `app/account/share-not-saved` shows. The part lives in
-  `src/components/settings/LoginShare.tsx`. The org logins plan keeps this
-  switch as it is (decision 2).
+  [`src/ui/components/settings/LoginShare.tsx`](../../src/ui/components/settings/LoginShare.tsx).
+  The org logins plan keeps this switch as it is (decision 2).
 - Under an agent, the account names each org whose org login serves the
   new sessions of the user: "Your new sessions in Acme use Acme's login."
   It shows while the user has no usable login of their own for the agent,
@@ -110,7 +118,7 @@ other pages.
   turned on "Use for every member", as `app/account/agents/every-member`
   shows. The account names the default login of each org and agent, so the
   page shows that value and does not work it out. The part lives in
-  `src/components/settings/OrgLoginLines.tsx`.
+  [`src/ui/components/settings/OrgLoginLines.tsx`](../../src/ui/components/settings/OrgLoginLines.tsx).
 - Get started has three steps: install the GitHub App, create an org, and
   connect Claude or Codex, from decision 33. The next step opens its form.
   It opens only after app access, so a person who waits sees the
@@ -143,7 +151,7 @@ other pages.
   composer and keeps Send off, as `app/new-workspace/first-build` shows.
   Only an admin gets the link to the Cloud computer tab. The app and the
   mockups take the words of that notice from
-  `src/screens/firstBuildCopy.ts`.
+  [`src/ui/screens/firstBuildCopy.ts`](../../src/ui/screens/firstBuildCopy.ts).
 - A personal login belongs to the person, so the agent step has its own
   state. A person who leaves the last org returns to Get started with the
   agent still connected, as `app/sign-in/get-started/no-org` shows.
@@ -152,8 +160,8 @@ other pages.
   Restore before its steps, as `app/sign-in/get-started/deleted-orgs`
   shows. Otherwise it shows no list.
 - The app and the mockups take the words of Get started from
-  `src/screens/getStartedCopy.ts`. The words make no claim about earlier
-  use.
+  [`src/ui/screens/getStartedCopy.ts`](../../src/ui/screens/getStartedCopy.ts).
+  The words make no claim about earlier use.
 - The composer and the New workspace form show a notice when no login
   serves the agent of the chosen model: no usable login of the viewer, and
   no usable org login (decision 4 of the org logins plan). A form whose

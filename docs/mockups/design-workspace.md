@@ -3,10 +3,11 @@
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
 messages that wait for the sandbox and the tab row of the centre column,
-with its temporary tab and the needs-input mark of a session tab, and the
-menu of a row of the Files panel. It gives
-the page of an HTML file in its tab. It also gives the number of a
-workspace with Copy link, and the bars of the cloud computer.
+with its temporary tab and the needs-input mark of a session tab. It
+gives the menu of a row of the Files panel, the notices of the file
+lists of a large branch, the page of an HTML file in its tab, the terminal
+tabs, and the services of the Preview tool. It also gives the number of
+a workspace with Copy link, and the bars of the cloud computer.
 
 - While a sandbox starts, also for the first time, Send queues each
   message in the workspace, as `app/new-workspace/waiting` shows. A queued
@@ -39,10 +40,11 @@ workspace with Copy link, and the bars of the cloud computer.
   Rename session opens a field in place of the title of that tab, also when
   the tab does not show. The field marks that tab, which takes no fill, so
   only the shown tab is filled. On a phone, a long press that ends without a
-  move opens the menu as a sheet. `WorkspaceTabs.module.css` styles the row
-  and its tabs. `TabScroll.module.css` styles a full row, `TabDrag.module.css`
-  a drag, and `TabRename.module.css` the rename field. The app shares these
-  modules.
+  move opens the menu as a sheet. `WorkspaceTabs.module.css` in
+  [`src/ui/components/workspace/`](../../src/ui/components/workspace/)
+  styles the row and its tabs. `TabScroll.module.css` beside it styles a
+  full row, `TabDrag.module.css` a drag, and `TabRename.module.css` the
+  rename field. The app shares these modules.
 - A session tab whose session holds an open request, a Mac command or a
   secret request, shows the needs-input mark in place of its icon, from
   needs-input decision 2 B, as `app/tabs/needs-input` shows. The mark shows
@@ -57,8 +59,9 @@ workspace with Copy link, and the bars of the cloud computer.
     too. It shows on the lifted copy of a drag, as the spinner does.
   - It takes the 13 px of the chat icon, so the title does not move.
     Screen readers hear "Needs input" before the title.
-  - `SessionTabIcon` in `src/components/workspace/` draws the chat icon,
-    the spinner, and the mark. The app shares it.
+  - `SessionTabIcon` in
+    [`src/ui/components/workspace/`](../../src/ui/components/workspace/)
+    draws the chat icon, the spinner, and the mark. The app shares it.
 - The temporary tab, from decisions 284 to 287, is the one file or diff tab
   that the next press on a file or a diff replaces, as
   `app/files/temporary` shows. A press on a row of All files or Changes, or
@@ -96,12 +99,38 @@ workspace with Copy link, and the bars of the cloud computer.
   hides a secret value opens no menu. A read-only workspace shows no rows.
   The row of an open menu keeps the fill of a hover, as a tab with an open
   menu does, also under the sheet of a phone. `FileRowMenu.tsx` beside the
-  lists gives the items and the sheet, and `rowMenuCopy.ts` gives the
+  lists gives the items and the sheet, and `rowMenuCopy.ts` in
+  [`src/ui/components/files/`](../../src/ui/components/files/) gives the
   words of the items and of the toast. Add to chat has the icon of the `@`
   of a mention, because the speech bubble with a plus names New session.
+- `ListNotice` in
+  [`src/ui/components/files/`](../../src/ui/components/files/) draws the
+  notice of a file list that leaves out entries, from runner file report
+  limits, as `app/files/limited` and `app/files/changes/limited` show. The
+  app draws the same part. It is a row in
+  the fill of a raised surface, with the info icon. It stands at the top of
+  All files and under the summary of Changes, and it does not scroll with
+  the rows. Its edges stay neutral, with one line under it. All files counts
+  the files and folders that it does not show together, because the limit
+  counts each folder. The summary and the tab of Changes count the whole
+  change, and the notice says that these totals include the files that the
+  list does not show. Each notice says where the member finds those files:
+  in the terminal, or through the agent. The amber notice of a list that is
+  not the latest one keeps its place under the lists, so a saved limited
+  list shows both. `listNoticeCopy.ts` beside it holds the words, also the
+  line of the list of `@` when nothing in a limited tree matches. The file
+  counts of the Changes tab and of the summary, the line totals, and the
+  counts in the notices, show with thousands separators, such as 2,243.
+  `formatCount` in
+  [`src/ui/components/common/counts.ts`](../../src/ui/components/common/counts.ts)
+  writes each of them. Each file link of
+  a limited screen opens the limited page of its file or list, from the
+  table of `src/limitedListPaths.ts`, which `ScreenLink` reads. The Checks
+  tab and the other views of the workspace keep their standard pages.
 - The tab of an HTML file shows its page in a frame, from HTML preview
   decision 1 A, as `app/files/html` shows. `PageFrame` in
-  `src/components/files/` holds the page from edge to edge under the
+  [`src/ui/components/files/`](../../src/ui/components/files/) holds the
+  page from edge to edge under the
   header of the file, as a Preview tab holds the page of a port. The page
   is the member's own, so it keeps its own colours in both colour schemes.
   The header adds Reload and Open, from `PreviewActions` of the Preview
@@ -117,7 +146,8 @@ workspace with Copy link, and the bars of the cloud computer.
     that asks for Restart. It imports no fixture, so the app can share it.
   - A failed open shows `PreviewOpenFailure` of `src/components/tools/`:
     "The preview couldn't open", the message of the server, and Try
-    again, as a Preview tab shows it. The words live in `previewCopy.ts`.
+    again, as a Preview tab shows it. The words live in
+    [`src/ui/components/tools/previewCopy.ts`](../../src/ui/components/tools/previewCopy.ts).
 - `TerminalTabs` in `src/components/tools/` draws the terminals of a
   workspace as a row of tabs above the shown terminal, with + at its end,
   from decisions 1 to 3 of the terminal tabs change, as `app/tools` shows. Its tabs are
@@ -126,12 +156,43 @@ workspace with Copy link, and the bars of the cloud computer.
   last terminal has no close button. At the limit of 10 the + is off, and a
   line under the row says how to open another. `TerminalTool` beside it
   adds the shown terminal and the Disconnected bar.
+- `ServiceSection` in `src/components/tools/ServiceList.tsx` draws the
+  services of the Preview tool above its servers, as `app/tools/services`
+  shows. The headings Services and Servers take the type of a menu group.
+  Each row has three lines. The first holds the name, the label of the
+  program, and the folder, which shorten with "…", then the quiet scroll
+  icon of Show log and the quiet menu button, which never shrink. The
+  second holds the state as `StatusText`, the time, and the start source.
+  The last holds the ports as small buttons in the type of the port column,
+  and it wraps. The port of the shown Preview tab has the fill of the
+  current server row. A row with an open menu keeps the fill of a hover.
+  - After a first read of the list that failed, `LoadFailure` takes the
+    place of the rows under the heading, in the width of the rows. No port
+    leaves Servers for a service, as
+    `app/tools/services/load-failed` shows.
+  - The menu holds Restart, then Stop in the danger colour. Desktop draws
+    it below its button, and a phone as a sheet, through `ServiceMenuSheet`.
+    `StopServiceDialog` asks before Stop, through `ConfirmDialog`.
+  - `ServiceLogView` in `ServiceLog.tsx` shows the log in a wide
+    `ConfirmDialog`, which is a sheet on a phone: the state, then the
+    output as plain text in the mono type, which wraps and scrolls.
+  - `ServiceResultToast` shows a failed control as the toast of a failed
+    change, an unconfirmed control as a warning toast, and a control for a
+    run that ended as an info toast.
+  - `serviceCopy.ts` in
+    [`src/ui/components/tools/`](../../src/ui/components/tools/) holds the
+    words, which take plain values or the types of the report, and the
+    sample shapes of the mockups. It imports no fixture, so the app shares
+    its words.
 - Each workspace has a number in its org, and `workspaceLabel` in
-  `src/components/workspaces/label.ts` shows it as `W-395`. The number
+  [`src/ui/components/workspaces/label.ts`](../../src/ui/components/workspaces/label.ts)
+  shows it as `W-395`. The number
   shows in the header, in chips, and in a row of the command palette
   whose search matches it. The rows of the list keep their layout.
-  - `CopyLinkButton` in `src/components/workspace/` is the label in the
-    header, after the name. The label shows alone, without an icon, as a
+  - `CopyLinkButton` in
+    [`src/ui/components/workspace/`](../../src/ui/components/workspace/) is
+    the label in the header, after the name. The label shows alone, without
+    an icon, as a
     plain Firna button: a pointer over it shows the hover fill, and the
     keyboard focus shows the focus ring. A press copies the link of the
     workspace, and a note under it says "Link copied" for a moment, over
@@ -153,12 +214,20 @@ workspace with Copy link, and the bars of the cloud computer.
   action. The notice takes any refusal reason. An archived workspace
   offers Restore until its last day, and the bar gives that day and says
   that the workspace leaves the list then. A bar without Restore gives
-  that day too. After it, the workspace is removed: the bar says "Removed
-  on" and the day, that the workspace left the list, and that the chat is
-  read-only. It says that the cloud computer is being deleted while a
-  failed delete tries again, and that it is deleted only after the
-  delete. Its panels say Removed. `sandboxNoticeState.ts` beside it owns
-  the types of the bar and the panels, which the app imports too.
+  that day too. While an unresolved create request, or a delete that tries
+  again, can still hold a cloud computer that the workspace does not name,
+  the bar promises only the chat history, as `app/archive/pending` shows.
+  After the last day, the workspace is removed: the bar says "Removed on"
+  and the day, that the workspace left the list, and that the chat is
+  read-only. It says that the cloud computer is being deleted while the
+  workspace names it or such a request can still hold it, and that it is
+  deleted only after the delete. Its panels say Removed.
+  `sandboxNoticeState.ts` in
+  [`src/ui/components/workspace/`](../../src/ui/components/workspace/) owns
+  the types of the bar and the panels, which the app imports too. It also
+  owns the stage of an archived
+  workspace, which keeps what the app knows of the cloud computer apart
+  from Restore.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`
     variant show.

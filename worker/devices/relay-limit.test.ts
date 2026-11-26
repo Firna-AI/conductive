@@ -33,7 +33,10 @@ it('delivers a command request frame of exactly 1,000,000 bytes to the connected
   expect(response.status).toBe(202)
   const accepted = readDeviceRecord(deviceObject(await response.json()).request)
   const frame = await mac.inbox.next()
-  expect(frame).toEqual({ type: 'command.request', request: accepted })
+  expect(frame).toEqual({
+    type: 'command.request',
+    request: accepted,
+  })
   expect(bytes(frame)).toBe(1_000_000)
   expect(accepted).toMatchObject({
     requestId: input.requestId,

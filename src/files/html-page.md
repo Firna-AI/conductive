@@ -18,7 +18,7 @@ Preview shows the page, as `app/files/html` of the mockups draws it.
   it, and the Files code sends no preview request.
 - The view is the wait, the page in its frame, a failed open, or the
   notice of older software. `page/HtmlPagePreview.tsx` draws each one with
-  the parts and the words of the mockups: the look of the launch page with
+  the shared parts and words: the look of the launch page with
   the logo tile and "Opening preview", the failure of a Preview tab with
   Try again, and the notice of `htmlPreviewCopy` with no button.
 - The header keeps Download and Copy. While the page opens or shows, it

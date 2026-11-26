@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Globe } from 'lucide-react'
 import { InputFrame } from '@firna/ui/input'
-import { classes } from '../../docs/mockups/src/components/common/classes'
-import rows from '../../docs/mockups/src/components/tools/PortForm.module.css'
-import { portFormCopy } from '../../docs/mockups/src/components/tools/previewCopy'
+import { classes } from '../ui/components/common/classes'
+import rows from '../ui/components/tools/PortForm.module.css'
+import { portFormCopy } from '../ui/components/tools/previewCopy'
+import { servicesCopy } from '../ui/components/tools/serviceCopy'
+import part from '../ui/components/tools/ServiceList.module.css'
 import { ToolButton } from '../terminal/tool-parts/ToolButtons'
 import { useControlSizes } from '../terminal/tool-parts/ToolRoot'
 import message from '../terminal/tool-parts/ToolStates.module.css'
@@ -28,10 +30,23 @@ interface FormProps {
   onOpen: (port: number) => void
   /** The port whose Preview tab shows, on desktop, or null. */
   current?: number | null
+  /**
+   * The Services part above the servers, or null when none shows, as for
+   * older software.
+   */
+  services?: ReactNode
 }
 
 /** The port field: a typed port, or a mark when a press has no port. */
-function PortField(props: FormProps & { label: string; placeholder: string }) {
+function PortField(props: {
+  opening: boolean
+  error: ToolError | null
+  onOpen: (port: number) => void
+  /** The field is the Other port row under a list. */
+  servers: boolean
+  label: string
+  placeholder: string
+}) {
   const [text, setText] = useState('')
   /** A press without a port number marks the field, and sends nothing. */
   const [missing, setMissing] = useState(false)
@@ -45,7 +60,7 @@ function PortField(props: FormProps & { label: string; placeholder: string }) {
     setText(next)
     setMissing(false)
   }
-  const servers = props.list.kind === 'servers'
+  const { servers } = props
   return (
     <>
       <div className={servers ? rows.port : styles.port}>
@@ -90,29 +105,40 @@ function OpenError(props: { error: ToolError | null; className?: string }) {
  * start one. Without a report, and when every server already has a tab, it
  * shows the field alone, in the centred message of a tool.
  *
+ * The Services part, when it shows, stands above the servers, which then
+ * take the heading Servers. It goes with the list also when the report
+ * names no server, because a service can listen on no port.
+ *
  * Each state draws the same tree, so the port field keeps its place. A new
  * report changes the words, the rows, and the classes around the field, and
  * never mounts a new field. So the typed port, its focus, and its selection
- * stay while servers start and stop.
+ * stay while servers and services start and stop.
  */
 export function PreviewOpenForm(props: FormProps) {
   const { list } = props
-  const servers = list.kind === 'servers'
+  const services = props.services ?? null
+  const servers = list.kind === 'servers' || services !== null
   const body =
-    list.kind === 'empty' ? portFormCopy.noServers : portFormCopy.body
+    !servers && list.kind === 'empty'
+      ? portFormCopy.noServers
+      : portFormCopy.body
   return (
     <div className={servers ? rows.list : message.message}>
       {servers ? null : (
         <Globe className={message.icon} size={28} strokeWidth={1.5} />
       )}
       {servers ? null : <h2 className={message.title}>{portFormCopy.title}</h2>}
+      {services}
+      {services === null ? null : (
+        <h3 className={part.heading}>{servicesCopy.serversHeading}</h3>
+      )}
       <p className={servers ? rows.intro : message.body}>{body}</p>
       {servers ? (
         <ServerRows
           current={props.current}
           disabled={props.opening}
           onOpen={props.onOpen}
-          servers={list.servers}
+          servers={list.kind === 'servers' ? list.servers : []}
         />
       ) : null}
       <div
@@ -125,9 +151,12 @@ export function PreviewOpenForm(props: FormProps) {
             </span>
           ) : null}
           <PortField
-            {...props}
+            error={props.error}
             label={servers ? portFormCopy.otherPort : 'Port'}
+            onOpen={props.onOpen}
+            opening={props.opening}
             placeholder={servers ? '8080' : '3000'}
+            servers={servers}
           />
         </div>
         <OpenError

@@ -1,4 +1,4 @@
-import { productName } from '../../docs/mockups/src/brand'
+import { productName } from '../shared/brand'
 import { list, text, type LegalDocument } from './legal-text'
 
 /**
@@ -28,9 +28,13 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         GitHub login of the workspace owner. It can also hold a short form
         of the workspace name, which can come from the text of the first
         message. A push sends the branch name to GitHub, and each reader of
-        the repository sees it. The Mac app also checks
-        GitHub for updates and downloads new versions. These requests
-        send your network address to GitHub.`,
+        the repository sees it. The merge queue asks GitHub to change pull
+        request targets, update stacks, rebase branches, and merge pull
+        requests. For cleanup of its GitHub stack, the queue can use the
+        GitHub token of the member whose action caused an entry to leave.
+        It can also use the workspace owner's token. The Mac app checks
+        GitHub for updates and downloads new versions. These requests send
+        your network address to GitHub.`,
       text`Resend sends the org invitations, approval emails, and feedback
         emails of ${productName}. An invitation gives it the invited email
         address, org name, inviter's name, and invitation link. An approval
@@ -40,9 +44,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
       text`The email provider of the operator hosts the team inbox and
         receives your feedback message, screenshots, context, and reply
         address. The team reads them there.`,
-      text`A cloud computer provider runs each org's cloud computers in
-        an account that ${productName} owns. The org keeps that account
-        for its life. Your code, your files, and your agent sessions
+      text`A cloud computer provider runs each workspace's cloud computer in
+        an account that ${productName} owns. The operator can switch an org
+        to another account for new workspaces after a successful build of
+        its cloud computer setup there. Existing workspaces keep their
+        accounts. Your code, your files, and your agent sessions
         are in those computers. ${productName} sends their provider
         requests to start, stop, and use them.`,
       text`For a ChatGPT sign-in, OpenAI sends the account owner's email,
@@ -60,6 +66,10 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
       text`Anthropic, OpenAI, or the chosen endpoint gets the messages,
         files, code, and command results of turns on the session's login.
         This includes the messages of other members who use that login.
+        With Explain, the first message of a new session holds the text that
+        a member selects in a chat, with the text around it. That text can
+        come from a message of another member or from a session on another
+        login.
         Each Mac command request and its result also go to the agent and
         to that provider or endpoint. They also get each listed secret's
         name, description, and environment variable name. They get the
@@ -68,7 +78,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         changed or encoded value.
         With each message, they also get
         the GitHub login, the display name, and the ${productName} user ID of
-        its sender. They get the
+        its sender. They also get the names of secrets that a session uses
+        with no request, and the name of each member who changes the
+        capabilities of its workspace. They get the
         names of the workspace branch and the branch that a pull request
         targets. Later messages give the current names when either branch
         changes. Each workspace branch name starts with the GitHub login of
@@ -89,9 +101,14 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         login cannot be used. The app refuses the message when no usable
         login serves its sender. The terms of that provider or endpoint apply.`,
       text`The members of your orgs see the workspaces of the org,
-        their chats, and each Mac command request and result. They also see
-        the automations of the org, with their prompts and their runs. They see
-        each secret request and result, without a value. They see the name
+        their chats, and each Mac command request and result.
+        Members also see the org's merge queues. The pull request bar can
+        say that another org queues a lower pull request. It gives no
+        details of that org or its queue. Members can read
+        the service lists and logs with workspace read access. They also
+        see the automations of the org, with their prompts, chosen secret names, and
+        their runs. Only the automation's owner changes its chosen secrets.
+        They see each secret request and result, without a value. They see the name
         and the description of each secret, who added it, and who last
         revealed its current value. In an active org, an admin can reveal
         the value of each secret, also of a secret that you added.
@@ -99,16 +116,17 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         the GitHub token of a turn that runs there. They can also read the
         value of a secret while a command runs with it there. During Continue
         or a repository change, they can also read the GitHub token of the
-        member who started it, while the branch fetch runs. Outside an agent turn,
-        the GitHub CLI uses the workspace owner's account. Each member with
-        a terminal can get that owner's GitHub token without a running
-        turn.`,
+        member who started it, while the branch fetch runs. They can read
+        the workspace owner's GitHub token during a merge queue base fetch.
+        Outside an agent turn, the GitHub CLI uses the workspace owner's
+        account. Each member with a terminal can get that owner's GitHub
+        token without a running turn.`,
       text`A member with a terminal or a program in a cloud computer can
         read the temporary credential of a turn that runs there. Through
         ${productName}, that credential can use the session's personal or
         org login. It works while the turn runs, also from
         outside the cloud computer. A program that keeps running, such as a
-        dev server or a program that the startup script starts, can also
+        service or a program that the startup script starts, can also
         get the credentials of later turns. This includes the turns of
         sessions that other members start. Agent settings in the repository
         can make the agent send its model requests, with their content and
@@ -126,8 +144,12 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         steer the agent while the run uses its session's agent login, your
         GitHub token, and the org's env vars. It can also steer the agent to
         run commands with the secrets that need no new approval, such as a
-        secret that an admin marked for all agents. Such text can also steer the
-        agent to read and change work across the org, with your workspace
+        secret that an admin marked for all agents or one that you chose
+        for the automation. The automation page warns every member about
+        this risk when the automation has a pull request trigger and a
+        chosen secret.
+        Such text can also steer the agent to read and change work across
+        the org, with your workspace
         tool rights. Messages follow the same session login rules.`,
       text`A workspace token is a credential for the workspace tools.
         Any program with that token can read workspace, session, and
@@ -139,12 +161,19 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         and the org remains active.`,
       text`During a turn in the calling workspace, the tools can also
         create, rename, move, and archive workspaces across the org.
-        They can create, rename, stop, and close sessions, and send
-        messages. They can create and delete sections, and open and close
-        private previews. The actions use that turn's sender, who must
+        They can create, rename, stop, and close sessions, send messages,
+        and watch one turn of a session. They can create and delete
+        sections, and open and close private previews.
+        The actions use that turn's sender, who must
         still belong to the org. Each action follows that member's rights
         in the app. The tools can also run a command with each secret that
         the session of that turn may use, with no question.`,
+      text`A watch tells the session that set it once when the watched turn
+        finishes, fails, or stops. Its wake can start a new turn after the
+        turn that set the watch ended. That new turn acts for the member
+        whose turn set the watch, with that member's GitHub token and Mac.
+        A wake that joins a running turn keeps that turn's sender.
+        Current membership and session login rules apply at delivery.`,
       text`Only a workspace owner or org admin can archive it.
         An agent can archive the workspace where it runs, which ends its
         turn. Previews that agents open need sign-in and workspace access.

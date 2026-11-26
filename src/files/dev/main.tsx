@@ -1,11 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import '../../../docs/mockups/src/render.css'
+import '../../ui/render.css'
 import type { WorkspaceIdentity } from '../../app/workspace-store'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { storeFailedRepairs } from '../../test-support/recorded-repairs'
 import { createFilesClient } from '../api/files-client'
-import { WorkspaceFiles, type FilesSubscribe } from '../model/files-store'
+import { WorkspaceFiles } from '../model/files-store'
 import { registerDevFiles } from './dev-fixtures'
 import { devTargets } from './dev-targets'
 import { DevApp } from './DevApp'
@@ -19,10 +19,8 @@ import { devNow } from './RepairControls'
  * build does not include it.
  */
 const server = new FakeApiServer()
-registerDevFiles(server)
-const baseline = server.events.history().throughEventNumber
 const view = readView(location.search)
-const live = view.scenario === 'live'
+registerDevFiles(server, view)
 // The stored history of the lists that `?repair=` names: a lost update,
 // then its lost fresh report. Both data sets read it.
 storeFailedRepairs(
@@ -33,10 +31,6 @@ storeFailedRepairs(
   devNow(),
 )
 storeUnreadTree(server, view.tree, devNow())
-// Mockup data reads the routes only. Live data replays the recorded events.
-const subscribe: FilesSubscribe = (after, listener) =>
-  server.events.subscribe(live ? after : Math.max(after, baseline), listener)
-
 /** Makes the store of the page over the fake API. It starts nothing. */
 function createFiles({
   orgId,
@@ -44,7 +38,8 @@ function createFiles({
 }: WorkspaceIdentity): WorkspaceFiles {
   return new WorkspaceFiles({
     client: createFilesClient({ fetch: server.fetch, orgId, workspaceId }),
-    subscribe,
+    subscribe: (after, listener) =>
+      server.events.subscribe(after, listener, workspaceId),
   })
 }
 

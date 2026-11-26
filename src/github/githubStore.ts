@@ -7,6 +7,7 @@ import {
   GitHubLoadError,
   loadGitHubSnapshot,
   loadStoredSnapshot,
+  queueOnGitHubEvent,
   type GitHubSnapshot,
   type WorkspaceTarget,
 } from './githubClient'
@@ -26,23 +27,17 @@ export interface GitHubFeed {
 /** A read of the banner and the checks that has not answered yet. */
 interface Read {
   controller: AbortController
-  /** A history came during the read, so the two have no known order. */
-  sawHistory: boolean
+  stream: 'history' | 'live' | null
 }
 
 /**
  * The GitHub state of one workspace, from API reads and from the
  * `github.updated` events of the workspace stream. Events apply in the order
- * of their numbers. A live event is the newest state, so it cancels a read
- * that runs. A read that starts after the history returns a state at least
- * as new, because the Worker reads the current state. A history that comes
- * during a read, or after its reply shows, has no known order against that
- * reply: when the two differ, the store keeps what it shows and reads again.
- *
- * While connected, the timer of the next fresh read waits whenever no read
- * runs. It starts when a read ends or a live event cancels a read, and each
- * read stops it. So a timed read never overlaps or cancels another read. A
- * live event keeps a timer that waits, so events never put off the reads.
+ * of their numbers. A live event supplies the newest banner and checks.
+ * A read already in flight can still supply the queue state. A history
+ * and a read that started before it have no known order. If they differ,
+ * the store keeps what it shows and reads again.
+ * A timed read starts only after the previous read ends.
  */
 export class GitHubStore {
   readonly target: WorkspaceTarget
@@ -148,7 +143,7 @@ export class GitHubStore {
     if (!source) return Promise.resolve()
     this.cancelRead()
     this.stopTimer()
-    const read: Read = { controller: new AbortController(), sawHistory: false }
+    const read: Read = { controller: new AbortController(), stream: null }
     this.running = read
     if (!timed && this.state.status === 'error') this.set({ status: 'loading' })
     return loadGitHubSnapshot(
@@ -159,7 +154,7 @@ export class GitHubStore {
       (reply) => {
         if (this.running !== read) return
         this.running = null
-        this.readReply(reply, read.sawHistory)
+        this.readReply(reply, read.stream)
         this.schedule()
       },
       (error: unknown) => {
@@ -220,8 +215,7 @@ export class GitHubStore {
     const live = this.next(envelope)
     this.resumeEventNumber = this.lastEventNumber
     if (!live) return
-    // A live event is newer than the reply of any read that runs.
-    this.cancelRead()
+    if (this.running) this.running.stream = 'live'
     this.show(live, false)
     this.schedule()
   }
@@ -236,11 +230,18 @@ export class GitHubStore {
     this.lastEventNumber = envelope.eventNumber
     const { event } = envelope
     if (event.type !== 'github.updated') return null
-    return { banner: event.banner, checks: event.checks }
+    return {
+      banner: event.banner,
+      checks: event.checks,
+      ...queueOnGitHubEvent(
+        this.state.status === 'ready' ? this.state.snapshot : undefined,
+        event.banner,
+      ),
+    }
   }
 
   private readHistory(history: GitHubSnapshot): void {
-    if (this.running) this.running.sawHistory = true
+    if (this.running) this.running.stream ??= 'history'
     if (this.state.status === 'ready' && this.shownFromRead) {
       // A shown reply and a later history have no known order.
       if (!sameGitHubState(this.state.snapshot, history)) void this.load()
@@ -249,9 +250,19 @@ export class GitHubStore {
     this.show(history, false)
   }
 
-  private readReply(reply: GitHubSnapshot, sawHistory: boolean): void {
+  private readReply(reply: GitHubSnapshot, stream: Read['stream']): void {
     const shown = this.state.status === 'ready' ? this.state.snapshot : null
-    if (sawHistory && shown && !sameGitHubState(shown, reply)) {
+    if (stream === 'live' && shown) {
+      const { banner, checks, ...previous } = shown
+      const fields = queueOnGitHubEvent(reply, banner)
+      if (
+        fields &&
+        (Object.keys(previous).length || Object.keys(fields).length)
+      )
+        this.show({ banner, checks, ...fields }, false)
+      return
+    }
+    if (stream === 'history' && shown && !sameGitHubState(shown, reply)) {
       // One more read starts after the history, so its reply shows.
       void this.load()
       return

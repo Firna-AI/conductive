@@ -1,6 +1,6 @@
+import { bullets, code, item, p } from './agentText'
 import type { ChatItem } from './conversations'
 import { changedFiles } from './files'
-import { bullets } from './listConversations'
 import { safariTest } from './mac'
 
 /**
@@ -19,14 +19,22 @@ function steeredTurn(chats: {
       kind: 'agent',
       id: 'suggestions',
       blocks: [
-        "Suggestions now show under the first address line, and choosing one fills the other fields. Next I'll add the tests.",
+        p(
+          "Suggestions now show under the first address line, and choosing one fills the other fields. Next I'll add the tests.",
+        ),
       ],
     },
     { kind: 'user', id: 'steer', text: chats.steer, during: true },
     {
       kind: 'agent',
       id: 'plan-debounce',
-      blocks: ["I'll debounce the lookups in `useAddressAutocomplete` first."],
+      blocks: [
+        p(
+          "I'll debounce the lookups in ",
+          code('useAddressAutocomplete'),
+          ' first.',
+        ),
+      ],
     },
     {
       kind: 'tool',
@@ -65,11 +73,13 @@ function steeredTurn(chats: {
       kind: 'agent',
       id: 'done',
       blocks: [
-        'Done. Checkout suggests addresses as you type, and each lookup waits 250 ms after the last key press.',
+        p(
+          'Done. Checkout suggests addresses as you type, and each lookup waits 250 ms after the last key press.',
+        ),
         bullets(
-          'Choosing a suggestion fills the street, city, and postcode.',
-          'Manual entry still works when there is no match.',
-          'Opened pull request #482.',
+          item('Choosing a suggestion fills the street, city, and postcode.'),
+          item('Manual entry still works when there is no match.'),
+          item('Opened pull request #482.'),
         ),
       ],
     },
@@ -96,7 +106,9 @@ const macAndLostTurn: readonly ChatItem[] = [
     kind: 'agent',
     id: 'plan-safari',
     blocks: [
-      'The cloud computer has no Safari, so I asked to run the checkout test on your Mac.',
+      p(
+        'The cloud computer has no Safari, so I asked to run the checkout test on your Mac.',
+      ),
     ],
   },
   { kind: 'mac-command', id: 'mac', request: safariTest, state: 'done' },
@@ -104,7 +116,9 @@ const macAndLostTurn: readonly ChatItem[] = [
     kind: 'agent',
     id: 'plan-webkit',
     blocks: [
-      "It passes in Safari. I'll also run the WebKit project of the end-to-end tests on the cloud computer, which covers the other checkout pages.",
+      p(
+        "It passes in Safari. I'll also run the WebKit project of the end-to-end tests on the cloud computer, which covers the other checkout pages.",
+      ),
     ],
   },
   {
@@ -120,7 +134,9 @@ const macAndLostTurn: readonly ChatItem[] = [
     kind: 'agent',
     id: 'safari-done',
     blocks: [
-      'The address suggestions work in Safari. The checkout test passes on your Mac, and the WebKit tests pass on the cloud computer.',
+      p(
+        'The address suggestions work in Safari. The checkout test passes on your Mac, and the WebKit tests pass on the cloud computer.',
+      ),
     ],
   },
   { kind: 'turn-end', id: 'turn-end', duration: '1m 38s', files: [] },

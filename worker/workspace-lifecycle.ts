@@ -1,3 +1,4 @@
+import { rememberWorkerVersion } from './lifecycle/job-steps'
 import { DurableObject } from 'cloudflare:workers'
 import type { UserMessage } from '../src/shared/generated/UserMessage'
 import type { StartStep } from '../src/shared/generated/StartStep'
@@ -11,8 +12,8 @@ import type { DeviceOperationResult } from './devices/internal'
 import {
   createWorkspaceIntegration,
   type WorkspaceCompositionEnv,
-  type WorkspaceChatResolvers,
 } from './chat/workspace-integration'
+import type { WorkspaceChatResolvers } from './chat/workspace-resolvers'
 import { DeviceRuntime } from './devices/runtime'
 import { activeStoredTurn } from './devices/access'
 import { credentialSender } from './lifecycle/credential-sender'
@@ -63,6 +64,7 @@ export class WorkspaceLifecycle
     activitySchedule?: ConnectionScheduler,
   ) {
     super(context, env)
+    rememberWorkerVersion(env)
     this.context = context
     this.activityNow = now
     const integration = createWorkspaceIntegration(context, env, now, resolvers)
@@ -278,8 +280,9 @@ export class WorkspaceLifecycle
     return this.run(() => this.controller.finishDiskMaintenance())
   }
 
-  protected async alarmLifecycle(): Promise<void> {
-    await this.run((turn) => this.controller.alarm(turn))
+  protected alarmLifecycle(restart?: () => Promise<void>): Promise<void> {
+    const advance = (turn: QueueTurn) => this.controller.alarm(turn, restart)
+    return this.run(this.integration.startRecords.queued(advance))
   }
 
   deviceOperation(

@@ -60,6 +60,7 @@ it('delivers scoped protocol 2 credentials in native login modes and sends messa
         }),
         attachments: [],
         branches: { workspaceBranch: 'octocat/test', targetBranch: 'main' },
+        capabilities: { secrets: [] },
         credential: {
           agent,
           kind,

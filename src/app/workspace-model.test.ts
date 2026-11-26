@@ -55,7 +55,10 @@ describe('WorkspaceModel', () => {
 
   test('a start event shows the new steps while the sandbox starts', async () => {
     const { events, workspace } = setup(
-      new FakeApiServer({ workspaceState: 'starting' }),
+      new FakeApiServer({
+        workspaceState: 'starting',
+        legacyWorkspaceRead: true,
+      }),
     )
     await workspace.open()
     events.send({
@@ -156,7 +159,10 @@ describe('WorkspaceModel', () => {
   })
 
   test('a newer update while the read mark runs stays in place', async () => {
-    const server = new FakeApiServer({ workspaceState: 'unread' })
+    const server = new FakeApiServer({
+      workspaceState: 'unread',
+      legacyWorkspaceRead: true,
+    })
     const { held, events, workspace } = setup(server)
     const readPath = workspacePaths.read(org, id)
     held.hold('PUT', readPath)
@@ -189,7 +195,7 @@ describe('WorkspaceModel', () => {
   })
 
   test('an update to unread that comes with the newest event is marked read', async () => {
-    const server = new FakeApiServer()
+    const server = new FakeApiServer({ legacyWorkspaceRead: true })
     const { events, workspace } = setup(server)
     const readPath = workspacePaths.read(org, id)
     await workspace.open()

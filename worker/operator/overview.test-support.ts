@@ -7,6 +7,10 @@ import {
 } from '../../src/shared/operator'
 
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
+import {
+  seedMember,
+  seedWorkspace as seedWorkspaceRecord,
+} from '../test-support/d1-seeds'
 
 export async function overview(
   harness: TestHarness,
@@ -60,12 +64,12 @@ export async function seedOrg(
         org.createdAt ?? TEST_TIME,
         org.deletedAt ?? null,
       ),
-    db
-      .prepare(
-        `INSERT INTO org_members (org_id, user_id, role, joined_at)
-         SELECT ?, id, 'admin', ? FROM users WHERE github_id = 7`,
-      )
-      .bind(org.id, org.createdAt ?? TEST_TIME),
+    seedMember(db, {
+      orgId: org.id,
+      userId: { githubId: 7 },
+      role: 'admin',
+      joinedAt: org.createdAt ?? TEST_TIME,
+    }),
     db
       .prepare(
         `INSERT INTO repositories
@@ -91,27 +95,21 @@ export async function seedWorkspace(
   },
 ): Promise<void> {
   const createdAt = workspace.createdAt ?? TEST_TIME
-  await harness.env.DB.prepare(
-    `INSERT INTO workspaces
-     (id, org_id, repository_id, owner_user_id, name, branch, state,
-      created_at, updated_at, archived_at, running_since, last_activity_at, sandbox_id)
-     SELECT ?, ?, ?, id, ?, 'main', ?, ?, ?, ?, ?, ?, ? FROM users WHERE github_id = ?`,
-  )
-    .bind(
-      workspace.id,
-      workspace.orgId,
-      `repo-${workspace.orgId}`,
-      workspace.id,
-      workspace.state ?? 'ready',
-      createdAt,
-      createdAt,
-      workspace.archivedAt ?? null,
-      workspace.runningSince ?? null,
-      workspace.lastActivityAt ?? null,
-      workspace.sandboxId ?? null,
-      workspace.ownerGithubId ?? 7,
-    )
-    .run()
+  await seedWorkspaceRecord(harness.env.DB, {
+    id: workspace.id,
+    orgId: workspace.orgId,
+    repositoryId: `repo-${workspace.orgId}`,
+    ownerUserId: { githubId: workspace.ownerGithubId ?? 7 },
+    name: workspace.id,
+    branch: 'main',
+    state: workspace.state ?? 'ready',
+    createdAt,
+    updatedAt: createdAt,
+    archivedAt: workspace.archivedAt ?? null,
+    runningSince: workspace.runningSince ?? null,
+    lastActivityAt: workspace.lastActivityAt ?? null,
+    sandboxId: workspace.sandboxId ?? null,
+  }).run()
 }
 
 export async function seedBuild(

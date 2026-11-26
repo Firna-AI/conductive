@@ -11,6 +11,7 @@ import { workspaceResponse } from './workspace-response'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import { workspaceRepositoryLocations } from './repository-location-data'
 import { retryFailedCreation } from './retry-creation'
+import { creationStartBranch } from './creation-branch-data'
 
 export async function resumeWorkspace(
   runtime: WorkspaceRuntime,
@@ -49,6 +50,7 @@ export async function resumeWorkspace(
     environmentCiphertext: settings.envVarsCiphertext,
     defaultBranch: repository.defaultBranch,
     baseBranch: row.baseBranch ?? undefined,
+    startBranch: await creationStartBranch(env.DB, workspaceId),
     repositoryLocations: await workspaceRepositoryLocations(
       env.DB,
       workspaceId,

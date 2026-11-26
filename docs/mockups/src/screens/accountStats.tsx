@@ -1,11 +1,10 @@
 import type { Viewport } from '@mokly/mokly'
-import { RotateCw } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
+import { actionButton } from '../entries/components/common/actions.mockup'
 import {
-  StatsFailed,
-  StatsLoading,
-  StatsNumbers,
-} from '../components/settings/StatsSections'
+  statsFailed,
+  statsLoading,
+  statsNumbers,
+} from '../entries/components/settings/StatsSections.mockup'
 import { accountStats, emptyAccountStats } from '../fixtures/accountStats'
 import type { AccountState } from './accountState'
 
@@ -21,16 +20,33 @@ export function StatsTab(props: {
   const narrow = props.viewport === 'mobile'
   switch (props.stats) {
     case 'loading':
-      return <StatsLoading />
+      return <statsLoading.Component moklyInstance="stats-loading" />
     case 'failed':
       return (
-        <StatsFailed
-          action={<ActionButton icon={RotateCw}>Try again</ActionButton>}
+        <statsFailed.Component
+          action={
+            <actionButton.Component icon="rotate-cw" moklyInstance="try-again">
+              Try again
+            </actionButton.Component>
+          }
+          moklyInstance="stats-failed"
         />
       )
     case 'empty':
-      return <StatsNumbers narrow={narrow} stats={emptyAccountStats} />
+      return (
+        <statsNumbers.Component
+          moklyInstance="stats"
+          narrow={narrow}
+          stats={emptyAccountStats}
+        />
+      )
     case 'ready':
-      return <StatsNumbers narrow={narrow} stats={accountStats} />
+      return (
+        <statsNumbers.Component
+          moklyInstance="stats"
+          narrow={narrow}
+          stats={accountStats}
+        />
+      )
   }
 }

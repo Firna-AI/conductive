@@ -10,14 +10,14 @@
   - **Org image:** the saved snapshot that every new cloud computer of an org starts from. A build makes it.
   - **Waiting repository:** a repository that the org chose and that the org image does not hold yet.
 - **Background:**
-  - Since 2026-11-10, an admin who adds a repository on the Repositories tab of the org settings starts a build at once.
+  - Since 2026-11-10, an admin who adds a repository on the Repositories tab of the org settings starts a build. Since 2026-11-18, the build starts at Done, after all the adds of one edit.
   - While the build runs, New workspace shows the added repository as off in its repository menu, with a note that says when it is ready. The Repositories tab and the Cloud computer tab show a notice for the repository change.
   - When the build succeeds, the repository turns on, and a workspace can start in it.
-  - `docs/protocol/org-image.md` (section "Repository changes") and `docs/protocol/create-a-workspace.md` (section "Waiting repositories") hold the requirements.
+  - `docs/protocol/org-image-repositories.md` and `docs/protocol/create-a-workspace.md` (section "Waiting repositories") hold the requirements.
   - The tests run with fake GitHub and cloud computer servers, so no test reaches the real services.
 - **Task:**
   1. On the test deployment at `conductive.build`, open an org with a good build, as an admin.
-  2. Add a repository on the Repositories tab. Check that a build starts and that the notice shows.
+  2. Select Edit on the Repositories tab, add a repository, and select Done. Check that a build starts after Done, not at the add, and that the notice shows.
   3. Open New workspace. Check that the repository is off, with its note.
   4. Wait for the build to succeed. Check that the notice goes and that the repository turns on.
   5. Start a workspace in the repository. Check that it starts, with the repository in its folder.

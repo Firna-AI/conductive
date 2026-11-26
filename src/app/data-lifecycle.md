@@ -13,8 +13,14 @@ of the data that the screens read and write.
   of an automation waits, starts, works, or needs input, or while a build
   runs. Otherwise it is slow, so that changes from other tabs, other
   people, and GitHub show. Repositories and the members read at entry and
-  at focus only. The waits are choices of the app, not product
+  at focus, with no timer. The waits are choices of the app, not product
   limits. `org-waits.ts` holds them.
+- While a screen shows the repositories, they also read again when an
+  answer of the builds shows a build that ended or a new current image.
+  Without an earlier answer of the builds, each ended build and each
+  current image count as new. That read starts after the repositories read
+  that runs, if any. Until its answer, each repository keeps its readiness.
+  It starts no read of the builds. `org-refresh.ts` holds it.
 - A row that the list already has takes its GitHub state only from list
   reads while its branch stays the same. Each other record keeps that row's GitHub state: a read, a
   Resume reply, or a `workspace.updated` event. So the open row shows a
@@ -114,8 +120,12 @@ of the data that the screens read and write.
   choices from other saves and other clients. The save queue keeps an add
   before a later remove of the same repository.
 - Each repository save and each save of the install script reads the
-  builds again, because an add starts a build, and each of these saves
-  changes `BuildsResponse.changes`.
+  builds again, because each of these saves changes
+  `BuildsResponse.changes`. A repository save starts no build. The
+  Repositories tab keeps the Add and Remove changes of an edit in the
+  page until Done. Done saves them, the removals first, and then starts
+  one build when it saved an add. A change that does not save stays in
+  the edit.
 - A read or a Resume reply carries the event number of its state. It shows
   only when no newer state has shown, from the stream or another reply.
   After it, an older stream event changes nothing. A new owner, an
@@ -206,9 +216,13 @@ of the data that the screens read and write.
   says. A return opens the model again, and its stream starts after the
   event number that it reached. A sign-out, or a sign-in of another user,
   closes and forgets every kept model.
-- An open reads the workspace detail, shows it, and starts the read marks
-  and the event stream. Only then does a stopped workspace, or one whose
-  later start failed, get its Resume. A failed first start waits for Try
+- An open reads and shows the workspace detail. On the first open, the
+  model gives a valid seed to its stream before it starts the read marks
+  and the socket. The read marks and the socket use the seed's cutoff.
+  After a read without a seed, a new stream starts at event 0. A return
+  opens the stream at the cursor that it kept. The model starts the
+  stream before it resumes a stopped workspace or a later start that
+  failed. A failed first start waits for Try
   again. So a refused or failed start keeps the detail and the stream, and
   `startError` of `WorkspaceModel` holds the error. A manual Resume still
   rejects for its caller.
@@ -220,7 +234,13 @@ of the data that the screens read and write.
   or from an `org_suspended` refusal, and what its screens show.
 - The secrets of an org are one value of `OrgModel.secrets`, a
   `SecretsModel`. The Secrets tab and the Capabilities control read them
-  each time that they show, and share the answer. A write shows its answer
+  each time that they show, and share the answer. The automation page
+  names the saved chosen secrets of the automation from its answer, with
+  no read of the list. A secret that the owner checks before Save takes
+  its name from the list that the control loaded. The answer of a
+  previous Worker has no names of chosen secrets. The page of a new
+  automation has no answer. In both cases, the page reads the list when a
+  chosen secret has no name in it. A write shows its answer
   in the list. The list never holds a value: a reveal gives its value to
   its caller only, shows the record of the reveal at once, and reads the
   list again for the record of the Worker.
@@ -228,6 +248,15 @@ of the data that the screens read and write.
   `WorkspaceCapabilitiesModel` of each open control, which reads them when
   it opens. A change shows at once, and its answer is the whole value. A
   failed change shows the saved value again, with a toast.
+- In the Mac app, the settings of this Mac are one value of the window for
+  each person signed in: `ThisMac` of
+  [`../shell/mac/this-mac.ts`](../shell/mac/this-mac.ts). The bar of each
+  workspace, the switch of Mac access of the Capabilities control, and the
+  notice of a new workspace share it, so a start of a grant shows on the
+  bar at once, and its result stays after the control closes or New
+  workspace opens the new workspace. Only the Mac keeps the grants. The
+  page keeps only what the Mac last reported, and the result of the last
+  change of each grant, until the next change of that grant.
 - The settings of the cloud computer are one value of the org in
   `OrgModel`. Every opening of the Cloud computer tab shares them, so a
   save from a closed tab shows in the reopened tab.
@@ -244,6 +273,16 @@ of the data that the screens read and write.
   not the settings, say which saved changes the org image lacks, in
   `BuildsResponse.changes`. They read again while a build runs and at
   its end, so the end of a build reads no settings.
+- Each opening of the Cloud computer tab looks up the skills repository
+  on GitHub, through the Worker, beside the read of the settings. Nothing
+  keeps the list after the tab closes, as
+  [The list of skills](../../docs/protocol/org-skills-list.md#the-list-of-skills)
+  says. A save of the repository that succeeds removes the list of the
+  old repository at once, and looks it up again while the tab shows. Only
+  the answer of the newest lookup shows, so the lookup after a save wins
+  over an older one. An answer after the tab closed changes nothing. A
+  failed lookup shows its notice in the Skills section only, and the other
+  settings still show.
 - While the tab shows, `ComputerModel` owns one `BuildLogFollower` for the
   log of the newest build that runs or failed. A newer build replaces the
   follower, so an answer for an older build changes neither the log nor
@@ -286,6 +325,9 @@ of the data that the screens read and write.
   - After the replay, the newest live event.
 - A live event during an unfinished replay moves no number. The store holds
   that event until the final page.
+- `WorkspaceStream.applyBaseline` gives the first read's seed to the
+  subscribers that take it. It advances `last` and replay progress to the
+  cutoff and publishes `seeded`. The seed adds no stream event or reconnect.
 - `WorkspaceStream.subscribe` gives each event of the workspace once, in
   order, both from the replay and live. It also tells a replayed event
   from a live one. Its optional `replayEnded` runs after the final page of

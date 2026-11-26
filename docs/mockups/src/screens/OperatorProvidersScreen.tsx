@@ -1,18 +1,21 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { CircleAlert } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
-import { InlineText } from '../components/common/InlineText'
+import { ActionButton } from '../../../../src/ui/components/common/actions'
+import { InlineText } from '../../../../src/ui/components/common/InlineText'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { AccountCounts } from '../components/operator/AccountCounts'
+import { AccountCounts } from '../../../../src/ui/components/operator/AccountCounts'
 import { OperatorPage } from '../components/operator/OperatorPage'
 import {
   onlyAccountLine,
   providerWords,
   weightsChangedLine,
-} from '../components/operator/providerCopy'
-import { WeightFields } from '../components/operator/WeightFields'
-import { WeightSlider } from '../components/operator/WeightSlider'
-import { Section, SectionText } from '../components/settings/Section'
+} from '../../../../src/ui/components/operator/providerCopy'
+import { WeightFields } from '../../../../src/ui/components/operator/WeightFields'
+import { WeightSlider } from '../../../../src/ui/components/operator/WeightSlider'
+import {
+  Section,
+  SectionText,
+} from '../../../../src/ui/components/settings/Section'
 import {
   defaultProviders,
   movedProviders,
@@ -22,7 +25,7 @@ import {
   type ProviderSettings,
 } from '../fixtures/operatorProviders'
 import { paths } from '../paths'
-import styles from './OperatorProvidersScreen.module.css'
+import styles from '../../../../src/ui/screens/OperatorProvidersScreen.module.css'
 
 export const operatorProvidersSchema = {
   type: 'object',
@@ -164,9 +167,9 @@ function WeightsSection(props: {
  * The Providers tab of the operator: the weights that give each new org
  * its provider account, as one slider between `boat` and `e2b`, or a field
  * for each of three or more accounts, and the number of orgs on each
- * account. Operator screens name each account by
- * its ID. An org keeps its account for its whole life, so a change of the
- * weights moves no org.
+ * account. Operator screens name each account by its ID. A change of the
+ * weights moves no org. An operator switches an org to another account on
+ * the page of the org.
  */
 export function OperatorProvidersScreen(props: {
   state: OperatorProvidersState

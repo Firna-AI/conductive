@@ -26,13 +26,7 @@ describe('mentions in a sent message', () => {
     const text =
       'Move @src/app.ts into @src/lib/ and @src/lib but not @src/gone.ts'
     expect(
-      shapes(
-        chatParts(text, links, {
-          strong: false,
-          web: webLinkOf,
-          mentions: lookup,
-        }),
-      ),
+      shapes(chatParts(text, links, { web: webLinkOf, mentions: lookup })),
     ).toEqual([
       { text: 'Move ' },
       { file: 'src/app.ts' },
@@ -42,28 +36,23 @@ describe('mentions in a sent message', () => {
     ])
   })
 
-  test('a mention in code stays code, and an answer without mentions keeps its text', () => {
-    const text = 'Read `@src/app.ts` and @src/app.ts'
+  test('a mention in code stays code, and so does a path in code', () => {
+    const read = (text: string) =>
+      chatParts(text, links, { web: webLinkOf, mentions: lookup })
     expect({
-      message: shapes(
-        chatParts(text, links, {
-          strong: false,
-          web: webLinkOf,
-          mentions: lookup,
-        }),
-      ),
-      answer: shapes(chatParts(text, links, { strong: true, web: webLinkOf })),
+      mention: shapes(read('Read `@src/app.ts` and @src/app.ts')),
+      path: read('`src/app.ts` and @src/app.ts'),
     }).toEqual({
-      message: [
+      mention: [
         { text: 'Read ' },
         { code: '@src/app.ts' },
         { text: ' and ' },
         { file: 'src/app.ts' },
       ],
-      answer: [
-        { text: 'Read ' },
-        { code: '@src/app.ts' },
-        { text: ' and @src/app.ts' },
+      path: [
+        { kind: 'code', text: 'src/app.ts' },
+        { kind: 'text', text: ' and ' },
+        { kind: 'file', source: '@src/app.ts', entry: entries[0], lines: null },
       ],
     })
   })
@@ -92,7 +81,6 @@ describe('mentions in a sent message', () => {
     const read = (mentions?: EntryLookup) =>
       shapes(
         chatParts(text, links, {
-          strong: false,
           web: webLinkOf,
           mentions,
           attachments: [legacy, shot],

@@ -1,3 +1,5 @@
+import type { TextBlock } from '../../../../src/chat/markdown/agent-blocks'
+import { code, link, p } from './agentText'
 import type { ChatItem } from './conversations'
 import { newWorkspaceConversations } from './newWorkspaceConversations'
 import {
@@ -69,7 +71,9 @@ const debounceTurn: readonly ChatItem[] = [
     kind: 'agent',
     id: 'debounce-done',
     blocks: [
-      'The lookups now wait 250 ms after the last key press. A new test types a whole address at once, and only one lookup runs.',
+      p(
+        'The lookups now wait 250 ms after the last key press. A new test types a whole address at once, and only one lookup runs.',
+      ),
     ],
   },
   {
@@ -97,9 +101,17 @@ const debounceTurn: readonly ChatItem[] = [
  * The answer of the second session after its agent sent both messages. A
  * bare link and a Markdown link to a session show as session chips.
  */
-const sendsAnswer: readonly string[] = [
-  `I told ${sessionLink(autocomplete)} to set \`delay: 0\` in its tests. I told [Saved carts](${sessionLink(savedCartsSession)}) to fill a restored address with \`setAddress\`, which skips the lookup.`,
-  'Both sessions work on it now.',
+const sendsAnswer: readonly TextBlock[] = [
+  p(
+    `I told ${sessionLink(autocomplete)} to set `,
+    code('delay: 0'),
+    ' in its tests. I told ',
+    link(sessionLink(savedCartsSession), 'Saved carts'),
+    ' to fill a restored address with ',
+    code('setAddress'),
+    ', which skips the lookup.',
+  ),
+  p('Both sessions work on it now.'),
 ]
 
 /** The first turn of Saved carts up to the message from the other session. */

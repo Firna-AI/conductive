@@ -1,1 +1,12 @@
-{ "order": ["suspend", "suspended", "lift", "deleted"] }
+{
+  "order": [
+    "switch",
+    "switch-waiting",
+    "switch-build",
+    "switched",
+    "suspend",
+    "suspended",
+    "lift",
+    "deleted"
+  ]
+}

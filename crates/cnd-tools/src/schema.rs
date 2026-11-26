@@ -49,6 +49,8 @@ struct Schema {
     #[serde(skip_serializing_if = "Option::is_none")]
     items: Option<Box<Schema>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    additional_properties: Option<Box<Schema>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     minimum: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     maximum: Option<i64>,
@@ -59,5 +61,10 @@ struct Schema {
 }
 
 pub(crate) fn tools() -> Result<Vec<Descriptor>> {
-    serde_json::from_str(include_str!("mcp-tools.json")).internal()
+    let mut tools: Vec<Descriptor> =
+        serde_json::from_str(include_str!("mcp-tools.json")).internal()?;
+    let services: Vec<Descriptor> =
+        serde_json::from_str(include_str!("mcp-services.json")).internal()?;
+    tools.extend(services);
+    Ok(tools)
 }

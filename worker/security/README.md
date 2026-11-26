@@ -97,6 +97,7 @@ An abstract tab peer of a feature test, which has no physical socket, uses the `
 
 Each GitHub sign-in starts after an agreement to the current Terms.
 `TERMS_VERSION` in [`src/shared/terms.ts`](../../src/shared/terms.ts) names the current revision.
+It is a digest of the Terms text, so each change to the text gives a new revision.
 
 - `startSignIn` sends the browser to GitHub only when the address of `API_PATHS.githubSignIn` has the current revision as its `terms_version` value.
 - The sign-in screen of the app shows the agreement, and its button opens `acceptedTermsSignInPath()`, which adds that value.

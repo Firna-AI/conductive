@@ -1,4 +1,4 @@
-import { productName } from '../../docs/mockups/src/brand'
+import { productName } from '../shared/brand'
 import { list, paragraph, text, type LegalDocument } from './legal-text'
 
 /**
@@ -37,13 +37,28 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         token for your account. ${productName} stores it encrypted, for
         every account, also while you wait for app access. It uses the
         token to read GitHub for you, and for the git calls of your
-        turns. It reads your repository rights and merge method. A merge
-        and Ready for review of a draft pull request use the token of the
-        member who clicks. Continue fetches the
-        latest default branch with the token of the member who clicks
-        Continue. A repository change fetches the latest default branch of
-        the new repository with the token of the member who changes the
-        repository.`,
+        turns. It reads your repository rights and merge method.
+        It reads the current branch list with your token and stores no copy
+        of that list. It checks named branches other than the default before
+        creating a workspace. This check uses the GitHub token of the member
+        who requests the workspace. Selecting a merge action or Ready for
+        review uses your GitHub token. Add to merge queue uses it to mark a
+        draft ready. An automatic merge uses the stored GitHub token of the
+        member who added the last pull request that the queue asks GitHub
+        to merge. The queue sends agent turns as the member who added the
+        pull request. Continue fetches the branch that the pull request
+        merged into with the token of the member who clicks Continue.
+        If that branch no longer exists, it fetches the default branch.
+        A repository change fetches the latest default branch of the new
+        repository with the token of the member who changes the repository.
+        For a workspace outside the merge queue, ${productName} fetches
+        the default branch if GitHub deletes its base or changes the default
+        branch it follows. The cloud computer uses the new base only after
+        the fetch succeeds. When no member starts the move, the fetch
+        uses the workspace owner's GitHub token. This includes moves from
+        GitHub events, automatic retries, and resumes of stopped cloud
+        computers. A merge queue base fetch also uses the workspace owner's
+        GitHub token.`,
       text`The waitlist: a new account without app access waits while the
         waitlist is on or sign-ups are paused. It sees only the waitlist.
         When the waitlist is off and sign-ups are not paused, open sign-up
@@ -90,10 +105,12 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         repositories, workspaces, automations, scripts, and settings that you and your
         team make. Each invite includes the invited email address. They
         run the service.`,
-      text`Automations: the prompt, the triggers, and the author filters of
-        each automation, with the GitHub accounts that a filter names. Each
-        run keeps its owner, its agent, its trigger, its state, and its pull
-        request. A skipped
+      text`Automations: the prompt, the triggers, the chosen org secrets, and
+        the author filters of each automation, with the GitHub accounts
+        that a filter names. Each run keeps its owner, its agent, its trigger,
+        its state, and its pull request. Each run workspace records the
+        chosen secrets as pre-approved by the owner. Its agents use them
+        without a new request. A skipped
         run keeps the GitHub login of the account outside the org whose
         event it skipped. They run the automations and show their runs.`,
       text`Keys and logins: the env var values and agent logins of each
@@ -138,38 +155,67 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         gets the messages, the files, and the command results of each turn
         on the login, whoever sent the message.`,
       text`Your work: ${productName} keeps your messages, including those
-        sent by pull request bar actions, and the answers of the agents as
-        the chat history of each workspace.
+        sent by pull request bar actions and by Explain, and the answers of
+        the agents as the chat history of each workspace.
+        It also keeps messages from the merge queue.
         Messages from agent tools end with Sent by: and a link to the
         sending session. The chat history keeps that link.
+        Explain sends a message for you that quotes the text that you
+        select, with the text around it and a link to its session. The new
+        session keeps that quote and its place, so that the chat marks it.
         A stop through agent tools also records the sending session.
         This includes a close that stops a running turn. The chat and
         copied transcripts name that session with Stopped from and its link.
-        The chat history also records
-        who used Continue, the new branch, and the branch it starts from.
-        It also records who changed the repository of a workspace, the new
-        repository, and the new branch. It keeps
-        the last file list and the last summary of changes of each
-        workspace. With the chat history, it keeps each list of the
-        servers that run in the cloud computer of a workspace: the port,
-        a short program name, and the folder of each server. The files
-        that you attach to a message stay in the storage of
+        The chat history also records who used Continue, the new branch,
+        and the branch it starts from. It also records who changed the
+        repository of a workspace, the new repository, and the new branch.
+        It also records who changed the capabilities of a workspace, and
+        the names of the secrets that changed. It keeps the last file list
+        and the last summary of changes of each workspace. With the chat
+        history, it keeps each list of the servers that run in the cloud
+        computer of a workspace: the port, a short program name, and the
+        folder of each server. It also keeps the latest list of the skills
+        of each workspace, with the name and the description of each skill.
+        The files that you attach to a message stay in the storage of
         ${productName} at Cloudflare until the agent starts work on the
         message. The cloud computer of the workspace then downloads them.
         When the cloud computer has a file and its first start succeeded,
         ${productName} deletes its own copy. The file stays in the cloud
         computer. Removing the workspace from the list keeps its chat
         history until the org is deleted.`,
+      text`Services: a service is a named program outside an agent turn.
+        ${productName} keeps its filtered name, short program label, folder,
+        state, times, exit result, ports, and originating session when it
+        can match that session. Otherwise, the source shows Local command.
+        This context does not prove which person started it. The list
+        and control results let members follow and manage services.
+        The saved full command, environment values, and raw logs stay in
+        runtime storage on the cloud computer. ${productName} reads and
+        filters recent output when a member opens or reloads its log.
+        It sends that excerpt to the member to show the log.`,
       text`Operational logs: ${productName} records when the program that
         runs workspace agents connects to the service or disconnects.
         It also records turns that end without a Stop request, including
         whether they finished, stopped, or failed.
+        It also records work on a message from that program when a restart
+        of the service ends that work. That record holds the kind of the
+        work, how far it got, the event type and number, and the size of the
+        message. To find such work, ${productName} keeps a short note of
+        the work that starts in the first 30 seconds after the program
+        connects. It keeps the note while the work runs, and after a
+        restart until the program connects again.
         These records include the workspace ID and any available turn,
         connection, and event stream IDs, and communication protocol version.
         When available, they also include a random ID for each start of that
         program. The team uses these logs to investigate connection problems,
         program restarts, and interrupted agent work. These logs hold no tokens,
-        secret values, message text, file contents, or connection close reasons.`,
+        secret values, message text, file contents, or connection close reasons.
+        ${productName} also records when each step of a cloud computer
+        build and of a workspace start begins and ends, with the IDs of the
+        org, the workspace, and the build or the start, and the time of its calls to
+        other services. The team uses these records to make builds and
+        starts faster. They hold no names of repositories or branches, and
+        no message text, file contents, or secret values.`,
       text`Mac commands: ${productName} keeps each request and its result.
         They record the command, its folder, its reason, its time limit,
         and the output. A request also names the Mac that gets it.
@@ -202,6 +248,24 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         repository, which GitHub sends to ${productName}. An automation
         also uses the GitHub accounts that open, push to, or merge a pull
         request, to decide whether the event starts a run.`,
+      text`For each merge queue, ${productName} keeps its repository and
+        default branch. Each entry records its workspace, pull request,
+        place, member who added it, state, and the time of each step.
+        The queue uses these records and GitHub events to run and show its
+        progress to the org. For the workspace list, ${productName}
+        temporarily stores your write access and when GitHub checked it.
+        It also stores open pull request bases, whether they come from
+        forks, and whether the default branch needs GitHub's queue.`,
+      text`Merge records: ${productName} keeps one record for each merged
+        pull request of a workspace branch. This includes each pull request
+        that the queue merges. The record holds the GitHub
+        repository ID, the pull request number, the org, the workspace, the
+        workspace owner at the time of the record, the merge time from
+        GitHub, and the time of the record. ${productName} writes it when it
+        reads a merged pull request from GitHub for a workspace, and when
+        GitHub sends the event of the merge, also for an archived workspace.
+        The records are for the counts of merged pull requests on the Stats
+        tab of your account page.`,
       text`Feedback: your message and any screenshots help the team answer
         questions, find problems, and improve ${productName}. Each message
         includes your ${productName} user ID, GitHub user ID and login, the

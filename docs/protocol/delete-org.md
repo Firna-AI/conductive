@@ -17,8 +17,10 @@ says.
   sandbox costs no machine time.
 - A delete at once was rejected, because an admin could then delete the
   unpushed work of a member.
-- The delete also removes the saved snapshots of the org, with the org
-  image.
+- The delete also removes the saved snapshots of the org, with its org
+  image on each provider account. After a switch, an older org image stays
+  on the old account until this delete, as
+  [The switch](switch-account.md#the-switch) says.
 - A deleted org leaves the org rail at once. Its other members cannot
   open it.
 - For 7 days, the General tab of the Account page lists the deleted org
@@ -50,6 +52,9 @@ says.
 - Restore brings the org back as it was. Its workspaces start again when
   they open. A workspace whose owner is suspended does not start, as
   [Operator actions](operator-actions.md#starts-stops-and-builds) says.
+- Restore also starts a switch build that waits for it, as
+  [When the switch build starts](switch-account.md#when-the-switch-build-starts)
+  says.
 - The automations of a deleted org start no runs. After a Restore, each runs
   once for the schedule times that it missed, as
   [Suspensions and deleted orgs](automations.md#suspensions-and-deleted-orgs)

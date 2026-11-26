@@ -1,5 +1,6 @@
 import { defineScreen } from '@mokly/mokly'
 import {
+  hexwavePage,
   OperatorOrgScreen,
   operatorOrgSchema,
 } from '../../../../../screens/OperatorOrgScreen'
@@ -12,7 +13,7 @@ export const operatorOrgDeleted = defineScreen({
     'A deleted org hides from its members, and only its admins can restore it, until everything of it is deleted. A suspension stops that restore, and a lift leaves the org deleted, as the operator protocol says. So each text of a deleted org says so, and no text says that its members can open, read, or change it.',
   relatedDocs: [],
   propSchema: operatorOrgSchema,
-  props: { status: 'deleted', dialog: 'none' },
+  props: { ...hexwavePage, status: 'deleted' },
   render: (props, context) => (
     <OperatorOrgScreen state={props} viewport={context.viewport} />
   ),

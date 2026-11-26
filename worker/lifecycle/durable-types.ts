@@ -1,3 +1,7 @@
+import {
+  DEFAULT_IDLE_STOP_MINUTES,
+  IDLE_STOP_CHOICES,
+} from '../../src/shared/operator-idle-stop'
 import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
 import type { WorkspaceStart } from '../../src/shared/generated/WorkspaceStart'
 import type { SendMessageRequest } from '../../src/shared/messages'
@@ -10,7 +14,10 @@ import type {
 
 export type LifecyclePublisher = WorkspacePlatform['publish']
 
-export const IDLE_MS = 30 * 60 * 1_000
+/** The stop time before an operator changes it. */
+export const IDLE_MS = DEFAULT_IDLE_STOP_MINUTES * 60_000
+/** The shortest stop time that an operator can choose. */
+export const SHORTEST_IDLE_MS = Math.min(...IDLE_STOP_CHOICES) * 60_000
 export const DISK_KEEPALIVE_MS = 13 * 24 * 60 * 60 * 1_000
 export const TURN_HEARTBEAT_MS = 5 * 60 * 1_000
 export const RESTORE_POLL_MS = 5_000
@@ -34,6 +41,10 @@ export interface DurableLifecycleState {
   lastActivityAt: number
   runningSessions: readonly string[]
   runnerConnected: boolean
+  runnerDisconnectedAt?: number
+  /** The attempt already made in the current absence. */
+  automaticRestartAt?: number
+  automaticRestartSubmitted?: true
   startupPrepared?: boolean
   restoreWatchAt?: number
   startStop?: 'pending' | 'stopped' | 'error'
@@ -63,6 +74,8 @@ export type LifecycleDeadlineRequest =
     }
 
 export interface LifecycleHooks {
+  /** The stop time of an idle sandbox, which the operator sets. */
+  idleMs(): Promise<number>
   changed(
     state: DurableLifecycleState,
     publish?: LifecyclePublisher,
@@ -79,6 +92,8 @@ export interface LifecycleHooks {
   reconcile?(): Promise<LifecycleReconciliation>
   checkRestore?(): Promise<LifecycleRestoreResult>
   startPending?(): Promise<boolean>
+  /** Whether a start waits for the end of a pending stop. */
+  startHeld?(): Promise<boolean>
   recoverTurns?(workspaceId: string): Promise<LifecycleTurnRecovery | undefined>
   lastTurnEndedAt?(workspaceId: string): Promise<number | null>
 }

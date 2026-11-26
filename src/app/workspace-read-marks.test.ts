@@ -1,9 +1,10 @@
 import type { WorkspaceState } from '../shared/generated/WorkspaceState'
 import { expect, test } from 'vitest'
 import type { WorkspaceEvent } from '../shared/events'
-import { workspacePaths } from '../shared/workspaces'
+import { workspacePath, workspacePaths } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
+import { emptyWorkspaceSeed } from '../test-support/fixtures/workspace-seed'
 import { workspaceFixtures } from '../test-support/fixtures/workspaces'
 import { OrgModel } from './org-model'
 import { valueOf } from './store'
@@ -40,7 +41,10 @@ const output: WorkspaceEvent = {
 }
 
 function setup(state: WorkspaceState = 'unread') {
-  const server = new FakeApiServer({ workspaceState: state })
+  const server = new FakeApiServer({
+    workspaceState: state,
+    legacyWorkspaceRead: true,
+  })
   const held = new HeldRequests(server)
   const events = new RecordingEvents()
   const delay = new ManualDelay()
@@ -66,6 +70,22 @@ function setup(state: WorkspaceState = 'unread') {
     })
   return { server, held, events, delay, org, workspace, marks, history }
 }
+
+test('marks the seeded cutoff as read before any socket event arrives', async () => {
+  const { server, workspace, marks } = setup()
+  server.json('GET', workspacePath(orgId, workspaceId), {
+    ...workspaceFixtures('unread').detail,
+    eventNumber: 18,
+    seed: emptyWorkspaceSeed,
+  })
+
+  await workspace.open()
+  await flushMicrotasks()
+  expect(workspace.stream.last.get()).toBe(18)
+  expect(await marks()).toEqual([{ throughEventNumber: 18 }])
+  expect(valueOf(workspace.detail.get())?.workspace.state).toBe('ready')
+  workspace.close()
+})
 
 test('marks live output through working and ready, and joins later numbers after the answer', async () => {
   const { held, events, delay, workspace, marks } = setup('ready')

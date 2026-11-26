@@ -7,7 +7,7 @@
 - **Reason:** the production D1 records and Worker logs are unread, because no read-only Cloudflare request was approved, and the check of the fix needs a deploy run after the merge.
 
 - **Terms:**
-  - **Software image:** one saved snapshot for each version of the app's own software. A first build of an org starts from it. `docs/protocol/sandbox-software.md`, section "The software image", gives its rules.
+  - **Software image:** one saved snapshot for each version of the app's own software. A first build of an org starts from it. `docs/protocol/software-image.md`, section "The software image", gives its rules.
   - **Poll request:** one request of the deploy step "Build software image" to `POST /v1/deploy/software-image` on `api.conductive.build`. Each request advances the build in the Worker.
   - **Attempt:** one row of the D1 table `software_images`, one build of one software version. Its phases are `create`, `allocating`, `software`, `journal`, `snapshot`, `publish`, `cleanup`, and `done`.
   - **Provider:** the sandbox provider, Boat. Its API creates, reads, and saves the cloud computers.
@@ -87,7 +87,7 @@
   - Later on 18 November 2026, request `3PJQ4hO1O0gs1nfOd74OnU7Cxi1I-AykiAUeaOYAL8Q` also stayed pending, and its command did not run. It used only the secret Cloudflare (read-only), through `run_with_secrets`. Its query selected the ID, state, phase, error, start, and end of the 24 newest attempts.
   - So the D1 records and the Worker logs are unread. Nobody knows whether they still exist.
   - These requirements stay:
-    - `docs/protocol/sandbox-software.md`, section "The software image": each deploy run asks the Worker to build the software image of its version, and waits for the result.
+    - `docs/protocol/software-image.md`, section "The software image": each deploy run asks the Worker to build the software image of its version, and waits for the result.
     - The same section: the deploy run fails unless the image is ready when its wait ends. The new Worker stays live. A warning in place of the failure was rejected.
     - The same section: one software image build runs at a time. A failed build starts again only for a later deploy run. A build has a time limit of 60 minutes, and goes on after the wait of its deploy run ends.
     - `docs/automatic-deploys.md`, section "Steps of a run": the deploy run waits for the software image for up to 15 minutes.

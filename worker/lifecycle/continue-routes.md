@@ -1,7 +1,7 @@
 # Continue routes
 
 This page belongs to [Continue](continue.md). It gives the routes of
-Continue, their replies, and their errors.
+Continue, their replies, their labels, and their errors.
 [Continue](../../docs/protocol/continue.md) states the requirements.
 
 ## Routes
@@ -30,6 +30,30 @@ after the browser gate, beside the Archive route.
 - The workspace link of a `continued` reply uses the app origin of the
   request. No origin is saved in the job or in the events.
 - The reply holds no fetch ID, token, command output, or GitHub error text.
+
+## Labels
+
+`continueRoute` passes each result of the workspace object through
+`labelContinueResult` of [`continue-output.ts`](continue-output.ts), as
+[Labels](continue.md#labels) says. The job keeps the real names.
+
+- Only a `confirmation-required` reply and a `workspace_continue_failed`
+  error get labels. The route reads the secret values of the sandbox only
+  for these two results.
+- Each other reply and error passes unchanged, with no read of the secret
+  values. An example is a refusal of access, such as 404
+  `workspace_not_found`.
+- A `confirmation-required` reply gets `displayBaseBranch`, and its
+  `localWork` gets `displayUncommittedFiles`: the label of each path of
+  `uncommittedFiles`, in the same order. The `branch` of the question
+  gets no label.
+- `filterContinueResponse` of
+  [the output fields](../../src/shared/output-fields.ts) leaves out the
+  label when it equals `baseBranch`. It leaves out the list when each label
+  equals its path.
+- The route hides each secret value in the message of a
+  `workspace_continue_failed` error, before it throws the error. The
+  message of a clash names the real branches.
 
 ## Errors
 

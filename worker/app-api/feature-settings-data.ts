@@ -7,6 +7,8 @@ import type { OrgEnvironment } from '../lifecycle/org-environment'
 export interface ShellSettingsRow {
   installScript: string
   startupScript: string
+  skillsRepository: string
+  trustedSkillsRepository: string
   envVarsCiphertext: string | null
   revision: number
   updatedAt: number
@@ -19,7 +21,9 @@ export async function readShellSettings(
   const row = await db
     .prepare(
       `SELECT install_script AS installScript, startup_script AS startupScript,
-       env_vars_ciphertext AS envVarsCiphertext, revision, updated_at AS updatedAt
+       env_vars_ciphertext AS envVarsCiphertext, skills_repository AS skillsRepository,
+       trusted_skills_repository AS trustedSkillsRepository,
+       revision, updated_at AS updatedAt
        FROM settings WHERE org_id = ?`,
     )
     .bind(orgId)
@@ -37,6 +41,8 @@ export function shellSettingsView(
     baseImage: BASE_IMAGE,
     installScript: row.installScript,
     startupScript: row.startupScript,
+    skillsRepository: row.skillsRepository,
+    trustedSkillsRepository: row.trustedSkillsRepository,
     envVars: Object.entries(environment)
       .sort(([a], [b]) => (a === b ? 0 : a < b ? -1 : 1))
       .map(([name, entry]) => ({ name, secret: entry.secret })),
@@ -52,6 +58,8 @@ export function updateShellSettings(
     before: ShellSettingsRow
     installScript?: string
     startupScript?: string
+    skillsRepository?: string
+    trustedSkillsRepository?: string
     envVarsCiphertext?: string
     now: number
   },
@@ -61,9 +69,11 @@ export function updateShellSettings(
     .prepare(
       `UPDATE settings SET
        revision = revision + CASE WHEN install_script != ? THEN 1 ELSE 0 END,
-       install_script = ?, startup_script = ?, env_vars_ciphertext = ?, updated_at = ?
+       install_script = ?, startup_script = ?, env_vars_ciphertext = ?,
+       skills_repository = ?, trusted_skills_repository = ?, updated_at = ?
        WHERE org_id = ? AND revision = ? AND startup_script = ?
-         AND env_vars_ciphertext IS ? AND ${activeAdminPredicate}
+         AND env_vars_ciphertext IS ? AND skills_repository = ?
+         AND trusted_skills_repository = ? AND ${activeAdminPredicate}
        RETURNING org_id AS orgId`,
     )
     .bind(
@@ -71,11 +81,15 @@ export function updateShellSettings(
       input.installScript ?? before.installScript,
       input.startupScript ?? before.startupScript,
       input.envVarsCiphertext ?? before.envVarsCiphertext,
+      input.skillsRepository ?? before.skillsRepository,
+      input.trustedSkillsRepository ?? before.trustedSkillsRepository,
       input.now,
       input.orgId,
       before.revision,
       before.startupScript,
       before.envVarsCiphertext,
+      before.skillsRepository,
+      before.trustedSkillsRepository,
       input.orgId,
       input.userId,
     )

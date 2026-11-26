@@ -1,6 +1,6 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import styles from '../../../docs/mockups/src/components/palette/CommandPalette.module.css'
+import styles from '../../ui/components/palette/CommandPalette.module.css'
 import type { PaletteRead } from '../../app/palette/palette-source'
 import type { PaletteStatus } from '../../app/palette/palette-status'
 import { LoadFailure } from '../ui/LoadFailure'

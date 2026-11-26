@@ -3,6 +3,7 @@ import type { MessageSender } from '../../src/shared/generated/MessageSender'
 import type { Workspace } from '../../src/shared/generated/Workspace'
 import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
 import { readGitHubSummary } from '../../src/shared/github-read'
+import { readArchivedComputer } from '../../src/shared/archived-computer-read'
 import { choice, record, text, ToolInputError } from './input'
 
 export function workspaceState(value: unknown): WorkspaceState {
@@ -44,6 +45,7 @@ export function messageSender(value: unknown): MessageSender {
 
 function workspace(value: unknown): Workspace {
   const fields = record(value)
+  const archivedComputer = readArchivedComputer(fields.archivedComputer)
   return {
     id: text(fields.id),
     number: timestamp(fields.number),
@@ -64,6 +66,7 @@ function workspace(value: unknown): Workspace {
       fields.archivedAt === null ? null : timestamp(fields.archivedAt),
     restoreUntil:
       fields.restoreUntil === null ? null : timestamp(fields.restoreUntil),
+    ...(archivedComputer !== undefined && { archivedComputer }),
   }
 }
 
@@ -73,6 +76,7 @@ export function createdWorkspace(value: unknown): AgentCreateWorkspaceResponse {
     workspace: workspace(fields.workspace),
     sessionId: text(fields.sessionId),
     sessionLink: text(fields.sessionLink),
+    ...(fields.turnId !== undefined && { turnId: text(fields.turnId) }),
     ...(fields.notice !== undefined && { notice: text(fields.notice) }),
   }
 }

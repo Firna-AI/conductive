@@ -1,28 +1,5 @@
+import { bullets, code, item, numbered, p, under } from './agentText'
 import type { ChatItem } from './conversations'
-
-/** A list of a message, with the lists that the agent indents under it. */
-export type MessageList = {
-  kind: 'list'
-  numbered: boolean
-  items: readonly MessageListItem[]
-}
-
-/** An item of a list: its text, and the list under it, if any. */
-type MessageListItem = { text: string; list?: MessageList }
-
-/** A bulleted list, each item a line of text. */
-export function bullets(...texts: string[]): MessageList {
-  return {
-    kind: 'list',
-    numbered: false,
-    items: texts.map((text) => ({ text })),
-  }
-}
-
-/** A numbered list, each item with its text and the list under it. */
-function steps(...items: MessageListItem[]): MessageList {
-  return { kind: 'list', numbered: true, items }
-}
 
 /**
  * A reply with two choices for the user. The agent indents the lettered
@@ -46,24 +23,36 @@ const choicesTurn: readonly ChatItem[] = [
     kind: 'agent',
     id: 'choices',
     blocks: [
-      'Both providers return the same suggestions for the test addresses. Two choices need your answer:',
-      steps(
-        {
-          text: 'Provider (medium effort). The form calls the places proxy at `/api/places` today.',
-          list: bullets(
-            'a. Keep the places proxy. It runs on the server, so the browser loads no key.',
-            'b. Move to the hosted widget. It needs a key in the browser.',
-            'Recommended: a.',
+      p(
+        'Both providers return the same suggestions for the test addresses. Two choices need your answer:',
+      ),
+      numbered(
+        under(
+          item(
+            'Provider (medium effort). The form calls the places proxy at ',
+            code('/api/places'),
+            ' today.',
           ),
-        },
-        {
-          text: 'Manual fields (small effort). The street, city, and postcode fields show under the suggestions.',
-          list: bullets(
-            'a. Keep them as a fallback.',
-            'b. Hide them until the person chooses to type the address.',
-            'Recommended: a.',
+          bullets(
+            item(
+              'a. Keep the places proxy. It runs on the server, so the browser loads no key.',
+            ),
+            item(
+              'b. Move to the hosted widget. It needs a key in the browser.',
+            ),
+            item('Recommended: a.'),
           ),
-        },
+        ),
+        under(
+          item(
+            'Manual fields (small effort). The street, city, and postcode fields show under the suggestions.',
+          ),
+          bullets(
+            item('a. Keep them as a fallback.'),
+            item('b. Hide them until the person chooses to type the address.'),
+            item('Recommended: a.'),
+          ),
+        ),
       ),
     ],
   },
@@ -84,19 +73,19 @@ const planInWork: readonly ChatItem[] = [
     kind: 'agent',
     id: 'plan',
     blocks: [
-      'The plan, in this order:',
-      steps(
-        {
-          text: 'Add the debounce to `useAddressAutocomplete`.',
-          list: bullets(
-            'Wait 250 ms after the last key press.',
-            'Cancel the lookup that a new key press replaces.',
+      p('The plan, in this order:'),
+      numbered(
+        under(
+          item('Add the debounce to ', code('useAddressAutocomplete'), '.'),
+          bullets(
+            item('Wait 250 ms after the last key press.'),
+            item('Cancel the lookup that a new key press replaces.'),
           ),
-        },
-        {
-          text: 'Cover it with a test.',
-          list: bullets('Use a fake clock, so the test never sleeps.'),
-        },
+        ),
+        under(
+          item('Cover it with a test.'),
+          bullets(item('Use a fake clock, so the test never sleeps.')),
+        ),
       ),
     ],
   },
@@ -119,7 +108,7 @@ const planInWork: readonly ChatItem[] = [
   {
     kind: 'agent',
     id: 'done',
-    blocks: ['Done. Each lookup now waits 250 ms after the last key press.'],
+    blocks: [p('Done. Each lookup now waits 250 ms after the last key press.')],
   },
   { kind: 'turn-end', id: 'turn-end', duration: '1m 48s', files: [] },
 ]

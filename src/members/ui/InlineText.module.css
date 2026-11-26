@@ -1,0 +1,10 @@
+/* Code inside a line of text, such as a file name in a notice. */
+.code {
+  padding: 1px 5px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: 0.86em;
+}

@@ -4,18 +4,18 @@ import {
   memberStopped,
   stoppedUnnamed,
   stoppedFrom,
-} from '../../../docs/mockups/src/components/chat/stopCopy'
+} from '../../ui/components/chat/stopCopy'
 import type { StopSessionReference } from '../session-stop'
 import type { User } from '../api'
 import {
   turnFilesUnavailable,
   unlistedFiles,
-} from '../../../docs/mockups/src/components/chat/lostCopy'
+} from '../../ui/components/chat/lostCopy'
 import {
   knownSpeedCause,
   standardSpeedText,
   type StandardSpeedCause,
-} from '../../../docs/mockups/src/components/chat/speedCopy'
+} from '../../ui/components/chat/speedCopy'
 import type { Transcript } from './transcript'
 
 export const turnCopy = {

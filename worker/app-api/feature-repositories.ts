@@ -11,6 +11,7 @@ import { latestSoftwareRelease } from '../lifecycle/software-release'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import { startImageBuild } from '../lifecycle/image-builds'
+import { currentImageRepositoryReadiness } from '../lifecycle/published-image-data'
 import { imageRuntime } from '../lifecycle/runtime'
 import {
   assertCanChangeSharedSettings,
@@ -60,6 +61,22 @@ function mergeRepositories(
   return [...result.values()].sort(compareInRepositoryOrder(chosenIds))
 }
 
+async function withRepositoryReadiness(
+  db: D1Database,
+  orgId: string,
+  repositories: readonly Repository[],
+): Promise<Repository[]> {
+  const { imageReady, repositoryIds } = await currentImageRepositoryReadiness(
+    db,
+    orgId,
+  )
+  return repositories.map((repository) => ({
+    ...repository,
+    ready: repositoryIds.has(repository.id),
+    imageReady,
+  }))
+}
+
 export async function shellRepositoryChoices(
   env: AppEnv,
   orgId: string,
@@ -68,25 +85,43 @@ export async function shellRepositoryChoices(
 ): Promise<Repository[]> {
   await requireOrgMember(env.DB, orgId, userId)
   const stored = await shellRepositories(env.DB, orgId)
-  if (!(await readGitHubConnection(env.DB, userId))) return stored
+  if (!(await readGitHubConnection(env.DB, userId)))
+    return withRepositoryReadiness(env.DB, orgId, stored)
   const access = await shellGitHubAccess(env, userId, dependencies)
-  return mergeRepositories(orgId, stored, access.repositories)
+  return withRepositoryReadiness(
+    env.DB,
+    orgId,
+    mergeRepositories(orgId, stored, access.repositories),
+  )
 }
 
+/**
+ * Adds or removes one repository of the org. An add starts a build unless
+ * `build` is false: the app then starts one build at Done, after all the
+ * adds of one edit. A request without `build`, from an older app, still
+ * starts a build at each add. The reply merges fresh stored rows with the
+ * GitHub catalogue read before the save, so a later GitHub failure cannot
+ * fail a saved change.
+ */
 export async function changeShellRepository(
   env: AppEnv,
   orgId: string,
   userId: string,
   repositoryId: string,
-  selected: boolean,
+  change: { selected: boolean; build: boolean },
   dependencies: AppDependencies,
 ): Promise<Response> {
+  const { selected } = change
   await assertCanChangeSharedSettings(env.DB, orgId, userId)
   const stored = await shellRepositories(env.DB, orgId)
   let repository = stored.find((entry) => entry.id === repositoryId)
+  if (!selected && !repository) throw repositoryNotFound()
+  const availableRepositories =
+    selected || (await readGitHubConnection(env.DB, userId))
+      ? (await shellGitHubAccess(env, userId, dependencies)).repositories
+      : []
   if (selected) {
-    const access = await shellGitHubAccess(env, userId, dependencies)
-    const available = access.repositories.find((entry) =>
+    const available = availableRepositories.find((entry) =>
       repository
         ? entry.githubId === repository.githubId
         : shellRepositoryId(orgId, entry.githubId) === repositoryId,
@@ -110,7 +145,7 @@ export async function changeShellRepository(
     await assertCanChangeSharedSettings(env.DB, orgId, userId)
     throw repositoryNotFound()
   }
-  if (saved.added) {
+  if (saved.added && change.build) {
     try {
       await startImageBuild(
         imageRuntime(
@@ -128,13 +163,14 @@ export async function changeShellRepository(
       warnWorker({ kind: 'repository_image_build_start_failed' })
     }
   }
+  await requireOrgMember(env.DB, orgId, userId)
+  const repositories = mergeRepositories(
+    orgId,
+    await shellRepositories(env.DB, orgId),
+    availableRepositories,
+  )
   return Response.json({
-    repositories: await shellRepositoryChoices(
-      env,
-      orgId,
-      userId,
-      dependencies,
-    ),
+    repositories: await withRepositoryReadiness(env.DB, orgId, repositories),
   })
 }
 

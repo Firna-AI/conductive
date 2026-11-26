@@ -1,10 +1,7 @@
 import { useCallback } from 'react'
 import { FolderGit2 } from 'lucide-react'
-import order from '../../docs/mockups/src/components/settings/RepositoryOrderList.module.css'
-import {
-  defaultRepositoryLabel,
-  repositoryDefaultNote,
-} from '../../docs/mockups/src/components/settings/repositoryOrder'
+import order from '../ui/components/settings/RepositoryOrderList.module.css'
+import { defaultRepositoryLabel } from '../ui/components/settings/repositoryOrder'
 import type { Org } from '../shared/api'
 import type { BuildsResponse, Repository } from '../shared/org-settings'
 import type { MembersApi } from './api/client'
@@ -61,7 +58,7 @@ export function OrgRepositoryList(props: {
  * The Repositories tab of the org settings for a member who is not an
  * admin: the repositories of the org, read-only. Only admins change them,
  * as decision 57 says. In a suspended org everyone sees this tab, and it
- * adds no sentence about admins, because the notice of the org says why.
+ * has no description, because the notice of the org says why.
  * With `builds`, the repository notice above the list names the changes
  * that the cloud computer does not hold yet. Mount it in the page column
  * of the org settings.
@@ -76,15 +73,12 @@ export function MemberRepositoriesTab(props: {
   builds?: BuildsResponse
 }) {
   const { api, org } = props
-  const note = props.suspended ? '' : ' Only an admin can change them.'
+  const note = props.suspended ? undefined : 'Only an admin can change them.'
   const load = useCallback(() => api.repositories(org.id), [api, org.id])
   const { state, retry } = useResource(load)
   return (
     <ViewportScope viewport={props.viewport}>
-      <Section
-        description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them. ${repositoryDefaultNote}${note}`}
-        title="Repositories"
-      >
+      <Section description={note} title="Repositories">
         {props.builds ? (
           <RepositoryNotice
             builds={props.builds}

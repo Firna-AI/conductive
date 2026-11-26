@@ -1,15 +1,15 @@
 import { Button } from '@firna/ui/button'
 import { Ticket } from 'lucide-react'
-import { GitHubMark } from '../../../docs/mockups/src/components/common/GitHubMark'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+import { GitHubMark } from '../../ui/components/common/GitHubMark'
+import { Notice } from '../../ui/components/common/Notice'
 import {
   RunningText,
   type TextLinkRenderer,
-} from '../../../docs/mockups/src/components/marketing/RunningText'
-import { signInCopy } from '../../../docs/mockups/src/screens/signInCopy'
-import styles from '../../../docs/mockups/src/screens/SignInScreen.module.css'
-import frame from '../../../docs/mockups/src/screens/signInFrame.module.css'
-import { waitlistCopy } from '../../../docs/mockups/src/screens/waitlistCopy'
+} from '../../ui/components/marketing/RunningText'
+import { signInCopy } from '../../ui/screens/signInCopy'
+import styles from '../../ui/screens/SignInScreen.module.css'
+import frame from '../../ui/screens/signInFrame.module.css'
+import { waitlistCopy } from '../../ui/screens/waitlistCopy'
 import { termsAgreement } from '../../marketing/legal-text'
 import { acceptedTermsSignInPath } from '../../shared/terms'
 import { useServices } from '../../app/services'

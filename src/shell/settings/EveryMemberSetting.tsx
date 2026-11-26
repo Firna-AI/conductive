@@ -1,7 +1,7 @@
 import type { Agent } from '../../shared/generated/Agent'
-import lineStyles from '../../../docs/mockups/src/components/settings/OrgLoginLines.module.css'
-import { orgAgentsCopy } from '../../../docs/mockups/src/components/settings/orgAgentsCopy'
-import { SettingSwitch } from '../../../docs/mockups/src/components/settings/SettingSwitch'
+import lineStyles from '../../ui/components/settings/OrgLoginLines.module.css'
+import { orgAgentsCopy } from '../../ui/components/settings/orgAgentsCopy'
+import { SettingSwitch } from '../../ui/components/settings/SettingSwitch'
 import type { OrgAgentLogins } from '../../app/org-agent-logins'
 import { useAction } from '../ui/useAction'
 

@@ -1,11 +1,11 @@
-import type { Viewport } from '@mokly/mokly'
-import { Plus } from 'lucide-react'
-import { IconButton } from '../common/actions'
-import { classes } from '../common/classes'
-import { TabItem } from '../workspace/TabItem'
-import tabScroll from '../workspace/TabScroll.module.css'
-import tabRow from '../workspace/WorkspaceTabs.module.css'
-import styles from './TerminalTabs.module.css'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
+import { iconButton } from '../../entries/components/common/actions.mockup'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { defined } from '../../defined'
+import { tabItem } from '../../entries/components/workspace/TabItem.mockup'
+import tabScroll from '../../../../../src/ui/components/workspace/TabScroll.module.css'
+import tabRow from '../../../../../src/ui/components/workspace/WorkspaceTabs.module.css'
+import styles from '../../../../../src/ui/components/tools/TerminalTabs.module.css'
 
 /** The words under the row at the limit of 10 terminals. */
 const terminalLimitHint =
@@ -48,21 +48,29 @@ export function TerminalTabs(props: {
           {props.numbers.map((number) => {
             const selected = number === props.shown
             return (
-              <TabItem
+              <tabItem.Component
                 closable={props.numbers.length > 1}
-                closeTo={selected ? props.closeTo : undefined}
                 key={number}
+                moklyInstance={`terminal-${number}`}
                 tab={{
                   key: `terminal-${number}`,
                   kind: 'terminal',
                   title: `Terminal ${number}`,
                   selected,
                 }}
+                {...defined({
+                  closeTo: selected ? props.closeTo : undefined,
+                })}
               />
             )
           })}
         </ul>
-        <IconButton disabled={atLimit} icon={Plus} label="New terminal" />
+        <iconButton.Component
+          disabled={atLimit}
+          icon="plus"
+          label="New terminal"
+          moklyInstance="new-terminal"
+        />
       </nav>
       {atLimit ? <p className={styles.hint}>{terminalLimitHint}</p> : null}
     </div>

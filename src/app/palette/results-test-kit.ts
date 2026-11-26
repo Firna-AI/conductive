@@ -6,8 +6,9 @@ import {
   FAKE_TIME,
 } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
+import { activeOrgSource } from '../active-orgs'
 import { routes } from '../router'
-import { ready } from '../store'
+import { ready, Store } from '../store'
 import type { PaletteResults } from './palette-results'
 import type { PaletteRow } from './palette-rows'
 import type { PaletteQuery, PaletteSource } from './palette-source'
@@ -27,6 +28,7 @@ export const accountRows = [
   'Sign-in',
   'GitHub',
   'Agents',
+  'Favourites',
   'New workspaces',
   'Keyboard shortcuts',
 ]
@@ -34,7 +36,6 @@ export const accountRows = [
 /** What the palette reads on the list of Acme, with the overrides. */
 export function source(overrides: Partial<PaletteSource> = {}): PaletteSource {
   return {
-    orgs,
     org: acme,
     suspended: false,
     list: ready({ sections, workspaces }),
@@ -46,6 +47,7 @@ export function source(overrides: Partial<PaletteSource> = {}): PaletteSource {
     offers: [],
     mac: false,
     ...overrides,
+    orgs: activeOrgSource(new Store(overrides.orgs ?? orgs)).get(),
   }
 }
 

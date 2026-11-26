@@ -8,8 +8,8 @@ import {
 } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '@firna/ui/button'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import styles from '../../../docs/mockups/src/components/common/actions.module.css'
+import { useControlSizes } from '../../ui/components/common/touch'
+import styles from '../../ui/components/common/actions.module.css'
 import type { ShortcutCommandId } from '../../shared/shortcut-commands'
 import {
   ShortcutTip,

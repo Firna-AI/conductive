@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react'
-import { InputFrame } from '@firna/ui/input'
-import { useSharedUiTheme } from '@firna/ui/theme'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
+import { Section } from '../../ui/components/settings/Section'
 import type { ComputerModel, ScriptKind } from '../../app/computer-model'
+import { CodeField } from '../../files/code/CodeField'
 import { ActionButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
 import { useSavedDraft } from '../ui/useSavedDraft'
@@ -20,13 +18,11 @@ interface ScriptProps {
 }
 
 /**
- * A script of the org, which an admin edits in a code field (decision 57).
- * Save script waits for a change. The field keeps the text that the user
- * types while a save runs.
+ * A script of the org, which an admin edits in a code field with line
+ * numbers and shell colours (decision 57). Save script waits for a change.
+ * The field keeps the text that the user types while a save runs.
  */
 export function ScriptSection(props: ScriptProps) {
-  const theme = useSharedUiTheme()
-  const { field } = useControlSizes()
   const script = useSavedDraft(props.script)
   const save = useAction(
     () => script.save((draft) => props.computer.saveScript(props.kind, draft)),
@@ -47,17 +43,10 @@ export function ScriptSection(props: ScriptProps) {
       description={props.description}
       title={props.title}
     >
-      <InputFrame
-        accessibilityLabel={props.title}
-        autoCapitalize="none"
-        autoComplete="off"
-        autoCorrect={false}
-        inputStyle={{ fontFamily: theme.fonts.mono, fontSize: 12.5 }}
-        multiline
-        numberOfLines={Math.max(3, script.draft.split('\n').length)}
-        onChangeText={script.change}
-        size={field}
-        spellCheck={false}
+      <CodeField
+        label={props.title}
+        name="script.sh"
+        onChange={script.change}
         value={script.draft}
       />
       {props.notice}

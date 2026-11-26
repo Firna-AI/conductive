@@ -3,7 +3,11 @@ import type { AgentChatEvent } from '../../src/shared/generated/AgentChatEvent'
 import type { ChatEvent } from '../../src/shared/chat-events'
 import { sessionPaths } from '../../src/shared/sessions'
 import { recordedChatEvents } from '../../src/test-support/recorded-chat'
-import { createHarness, type TestHarness } from '../test-support/harness'
+import {
+  createHarness,
+  TEST_TIME,
+  type TestHarness,
+} from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
 describe('workspace chat recorded events', () => {
   let harness: TestHarness
@@ -46,9 +50,21 @@ describe('workspace chat recorded events', () => {
       },
     })
     await fixture.drain()
+    // File results stay out of the history. The one event is the skills
+    // state of a runner that sent no skills report.
     expect(
       await fixture.chat.store.read(WORKSPACE_ID, (view) => view.history(0)),
-    ).toEqual({ events: [], throughEventNumber: 0 })
+    ).toEqual({
+      events: [
+        {
+          workspaceId: WORKSPACE_ID,
+          eventNumber: 1,
+          occurredAt: TEST_TIME,
+          event: { type: 'skills.updated', skills: null },
+        },
+      ],
+      throughEventNumber: 1,
+    })
     expect(
       await fixture.chat.store.read(WORKSPACE_ID, (view) => view.pending()),
     ).toEqual([])
@@ -99,6 +115,7 @@ describe('workspace chat recorded events', () => {
           event.type === 'message.sent' ||
           event.type === 'secrets.run' ||
           event.type === 'secrets.notice' ||
+          event.type === 'session.watch-notice' ||
           event.type === 'runner.event-refused'
         )
           continue

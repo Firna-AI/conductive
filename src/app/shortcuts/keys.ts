@@ -20,7 +20,7 @@ export type ShortcutPress = Pick<
   | 'repeat'
   | 'isComposing'
 > &
-  Partial<Pick<KeyPress, 'layoutModifiers'>>
+  Partial<Pick<KeyPress, 'layoutModifiers' | 'firstPressConsumed'>>
 
 /** Restores shortcuts with Ctrl, Alt, or Meta. Ordinary typing keeps its original identity. */
 export function restoreLayoutModifiers(press: ShortcutPress): ShortcutPress {
@@ -122,29 +122,41 @@ const names: Readonly<Record<string, string>> = {
 const keypadDigit = /^Numpad(?=\d$)/
 
 /**
- * Visible key text, with Mac symbols or the names on the other keyboard. A
+ * Visible key tokens, with Mac symbols or the names on the other keyboard. A
  * keypad digit shows as Num 8, so that it differs from the top-row 8.
  */
-export function formatShortcut(
+export function shortcutTokens(
   key: ShortcutKeyText,
   keyboard: ShortcutKeyboard,
-): string {
+): readonly string[] {
   const chord = shortcutChord(key)
   const name =
     keyboard === 'other' && ['Backspace', 'Delete'].includes(chord.key)
       ? chord.key
       : (names[chord.key] ?? chord.key.replace(keypadDigit, 'Num '))
   if (keyboard === 'mac')
-    return `${chord.ctrlKey ? '⌃' : ''}${chord.altKey ? '⌥' : ''}${chord.shiftKey ? '⇧' : ''}${chord.metaKey ? '⌘' : ''}${name}`
+    return [
+      chord.ctrlKey ? '⌃' : '',
+      chord.altKey ? '⌥' : '',
+      chord.shiftKey ? '⇧' : '',
+      chord.metaKey ? '⌘' : '',
+      name,
+    ].filter(Boolean)
   return [
     chord.ctrlKey ? 'Ctrl' : '',
     chord.altKey ? 'Alt' : '',
     chord.shiftKey ? 'Shift' : '',
     chord.metaKey ? 'Meta' : '',
     name,
-  ]
-    .filter(Boolean)
-    .join('+')
+  ].filter(Boolean)
+}
+
+/** Visible key text, joined as each keyboard prints its shortcut. */
+export function formatShortcut(
+  key: ShortcutKeyText,
+  keyboard: ShortcutKeyboard,
+): string {
+  return shortcutTokens(key, keyboard).join(keyboard === 'mac' ? '' : '+')
 }
 
 /** Exact fixed control keys, shared by workspace rows and panel dividers. */

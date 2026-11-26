@@ -2,9 +2,12 @@ import {
   agents,
   defaultChoice,
 } from '../../../docs/mockups/src/fixtures/agents'
+import { favouriteLists } from '../../../docs/mockups/src/fixtures/favourites'
 import {
+  agentSkills,
   envVars,
   installScript,
+  skillsRepository,
   startupScript,
 } from '../../../docs/mockups/src/fixtures/computer'
 import {
@@ -28,6 +31,7 @@ import type {
   BuildResponse,
   BuildsResponse,
   OrgSettingsResponse,
+  SkillsRepositoryLookupResponse,
 } from '../../shared/org-settings'
 import type { CreateOrgResponse, OrgsResponse } from '../../shared/orgs'
 import type { SectionsResponse } from '../../shared/sections'
@@ -62,6 +66,10 @@ export function coreFixtures(role: OrgRole = 'admin') {
   const account: AccountResponse = {
     user: role === 'member' ? fakeUsers[1] : fakeUser,
     defaultChoice: { ...defaultChoice, fast: defaultChoice.fast ?? false },
+    favourites: favouriteLists.starting.map((choice) => ({
+      ...choice,
+      fast: choice.fast === true,
+    })),
     newWorkspaceView: 'page',
     shortcuts: { mac: [], other: [] },
     agentLogins: [
@@ -133,14 +141,24 @@ export function coreFixtures(role: OrgRole = 'admin') {
       createdAt: FAKE_TIME - 172_800_000,
     })),
   }
+  /** Acme's skills repository starts untrusted, as each repository does. */
   const settings: OrgSettingsResponse = {
     settings: {
       baseImage: BASE_IMAGE,
       installScript,
       startupScript,
+      skillsRepository,
+      trustedSkillsRepository: '',
       envVars,
       updatedAt: FAKE_TIME,
     },
+  }
+  /** The lookup of the skills repository of Acme, which lists its skills. */
+  const skills: SkillsRepositoryLookupResponse = {
+    repository: skillsRepository,
+    skills: agentSkills,
+    notice: null,
+    clashes: [],
   }
   const build: BuildResponse = {
     build: {
@@ -197,6 +215,7 @@ export function coreFixtures(role: OrgRole = 'admin') {
     sectionList,
     members,
     settings,
+    skills,
     build,
     builds,
     githubInstallations,

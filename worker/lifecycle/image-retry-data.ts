@@ -4,9 +4,9 @@ import { IMAGE_BUILD_TIME_LIMIT_MS } from './job-time-limit'
 async function readImageJobPolicy(db: D1Database, buildId: string) {
   const row = await db
     .prepare(
-      `SELECT b.provider_retry_json AS retry, b.started_at AS startedAt FROM image_builds b
+      `SELECT b.provider_retry_json AS retry, COALESCE(b.execution_started_at, b.started_at) AS startedAt FROM image_builds b
        JOIN image_build_jobs j ON j.build_id = b.id
-       WHERE b.id = ? AND b.state = 'running' AND j.phase != 'cleanup'`,
+       WHERE b.id = ? AND b.state = 'running' AND j.phase != 'cleanup' AND b.waiting_for_switch_id IS NULL`,
     )
     .bind(buildId)
     .first<{ retry: string | null; startedAt: number }>()

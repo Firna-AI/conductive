@@ -4,6 +4,8 @@ import type { HelperRequest } from './generated/HelperRequest'
 import { failureCause } from './providers/failure'
 import { ProviderLifetime } from './providers/lifetime'
 import type { ProviderFactory, ProviderProcess } from './providers/types'
+import type { SkillInputs } from './providers/skill-input'
+import { SkillScanner } from './skills'
 
 /** Owns one agent start, including cancellation while setup is pending. */
 export class HelperSession {
@@ -14,6 +16,8 @@ export class HelperSession {
   private closing: Promise<void> | null = null
   private queue = Promise.resolve()
   private finished = false
+  private scanner: SkillScanner | null = null
+  private readonly skillInputs?: SkillInputs
 
   private readonly providers: Record<Agent, ProviderFactory>
   private readonly output: (output: HelperOutput) => void
@@ -25,7 +29,9 @@ export class HelperSession {
     output: (output: HelperOutput) => void,
     warm: () => Promise<unknown>,
     ended: () => void,
+    skillInputs?: SkillInputs,
   ) {
+    this.skillInputs = skillInputs
     this.providers = providers
     this.output = (message) => {
       if (!this.finished) output(message)
@@ -53,6 +59,20 @@ export class HelperSession {
     this.queue = this.queue.then(async () => {
       try {
         if (this.closing) throw new Error('The agent process ended.')
+        if (request.type === 'skills') {
+          this.scanner ??= new SkillScanner({
+            repository: request.repository,
+            home: request.home,
+            now: Date.now,
+            warn: (message) => this.output({ type: 'warning', message }),
+          })
+          const skills = await this.scanner.scan(
+            request.reload,
+            request.orgSkills ?? null,
+          )
+          this.output({ type: 'skills', requestId: request.requestId, skills })
+          return
+        }
         const result = await this.run(request)
         this.output({ type: 'response', requestId: request.requestId, result })
         if (request.type === 'warm') {
@@ -82,7 +102,9 @@ export class HelperSession {
     return this.closing
   }
 
-  private async run(request: Exclude<HelperRequest, { type: 'close' }>) {
+  private async run(
+    request: Exclude<HelperRequest, { type: 'close' | 'skills' }>,
+  ) {
     if (request.type === 'warm') {
       await this.warm()
       return null
@@ -109,8 +131,10 @@ export class HelperSession {
     }
     if (!this.provider) throw new Error('The agent is unavailable. Try again.')
     if (request.type === 'model') return this.provider.model(request.choice)
-    if (request.type === 'send') await this.provider.send(request.input)
-    else await this.provider.interrupt()
+    if (request.type === 'send') {
+      this.skillInputs?.replace(request.skills ?? [])
+      await this.provider.send(request.input)
+    } else await this.provider.interrupt()
     return null
   }
 

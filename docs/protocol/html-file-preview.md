@@ -12,7 +12,8 @@ are those of the [architecture doc](../architecture.md#terms). A decision
 number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. An HTML
 preview decision number names a decision of the change that shows HTML
-files rendered. The
+files rendered. A sandbox files decision number names a decision of the
+change that shows agent pages with their files and fonts. The
 [mockup catalogue](../mockups/catalogue-attachments-and-files.md) draws
 the tab at `app/files/html`, on desktop and on a phone.
 
@@ -21,14 +22,16 @@ the tab at `app/files/html`, on desktop and on a phone.
 - **HTML file:** a file whose name ends with `.html` or `.htm`, in any
   case.
 - **File server:** the part of the agent runner that answers HTTP requests
-  for the files of the workspace's repository folder, as
-  [File server](file-server.md) says.
+  for the files of the workspace's repository folder and for the system
+  fonts, as [File server](file-server.md) says.
 - **Files preview:** the preview that shows the files of the file server.
 - **Dot file:** a file whose own name starts with a dot, such as `.env` or
   `.npmrc`. A file in a folder whose name starts with a dot, such as
   `.context/report.html`, is not a dot file.
 - **Files mark:** the header `X-Conductive-Files: 1` on a request to the
   file server.
+- **System font:** a font file of the cloud computer under
+  `/usr/share/fonts` or `/usr/local/share/fonts`.
 
 ## The tab of an HTML file
 
@@ -40,7 +43,7 @@ the tab at `app/files/html`, on desktop and on a phone.
   starts no server, and a large page loads at the speed of a local server.
 - Source shows the text with line numbers and syntax colours, as code
   shows. A tab that opens at a line or a range of lines shows Source, as
-  [Line targets](file-mentions.md#line-targets) says for a Markdown file.
+  [Line targets](file-mentions-answers.md#line-targets) says for a Markdown file.
 - Preview shows the page in a frame from the files preview of the
   workspace. So the scripts of the page run on the preview domain, never
   on the app's site.
@@ -51,6 +54,10 @@ the tab at `app/files/html`, on desktop and on a phone.
 - So the page loads each other file by its relative address, such as
   `style.css` or `images/chart.png`. An address that starts with `/` names
   a file from the top of the repository.
+- A page can also load a file of the repository folder by its absolute
+  path or by a local `file:` address. It can also load the system fonts.
+  [Files of an HTML page](html-page-files.md) gives the
+  rules and the limits.
 - These options of HTML preview decision 1 were not chosen:
   - A "Serve and preview" action that starts a static server in a
     terminal. The image then needs Python or Node, the server keeps
@@ -76,8 +83,13 @@ the tab at `app/files/html`, on desktop and on a phone.
 - Reload loads the page again. Open opens the page at the path of the file
   in a new browser tab. The Mac app opens it in the default browser, with
   a [browser launch](desktop-app.md#port-previews).
+- On desktop, the header also has Expand, after Reload, while the page
+  shows. Expand shows the page in the large window of a Preview tab, as
+  [Port previews](port-previews.md) says. The window names the file. It
+  also closes when the files preview ends, because Reload and Open then
+  need a new files preview, which only a show of the tab opens.
 - On a phone, the file page also shows the frame, with Reload and Open in
-  its header.
+  its header, and with no Expand.
 - While the frame has the focus, every key goes to the frame, as
   [Where a key goes](keyboard-shortcuts.md#where-a-key-goes) says for the
   frame of a port preview.
@@ -110,6 +122,9 @@ the tab at `app/files/html`, on desktop and on a phone.
   load.
 - The page and the files that it loads have no read limit. The read limit
   of 5 MiB holds for Source.
+- Source, Copy, and Download give the file as it is on disk. The changes
+  that the [file server](file-server.md#local-file-addresses) makes apply
+  only to the files preview.
 
 ## Older software
 
@@ -159,7 +174,8 @@ the tab at `app/files/html`, on desktop and on a phone.
   with the credential cookie and the access of its viewer, as
   [Port previews](terminal-previews-and-desktop.md#port-previews) says.
 - Each such request reaches the file server through the preview relay,
-  with the files mark. The cookie and header rules of a port preview apply
+  with the files mark and the
+  [preview origin](file-server.md#the-preview-origin). The cookie and header rules of a port preview apply
   to it. Each reply carries `X-Content-Type-Options: nosniff`.
 - The Worker refuses a WebSocket upgrade of a files preview with the 404
   of an unknown preview, before any call to the cloud computer.
@@ -182,44 +198,5 @@ the tab at `app/files/html`, on desktop and on a phone.
 
 ## Which files a page can load
 
-- The files preview serves each file that a file tab can read, except dot
-  files (HTML preview decision 2 D). That is each regular file of the
-  workspace's repository folder, also a file that Git ignores, outside
-  `.git`, through links that stay inside the folder.
-- A file in a folder whose name starts with a dot still loads. A link
-  whose target is a dot file does not load. Reason: a link named
-  `config.txt` that leads to `.env` must not give the page that content.
-- Reason: one files preview, so one origin, serves every HTML file of the
-  workspace. A script of a page can read each file that the files preview
-  serves, and send it to another site. Option D serves almost every page
-  that the option with dot files serves, and it keeps files such as `.env`
-  and `.npmrc` away from each page, as common static servers do.
-- Risk: a page that loads a dot file breaks. A secret in a file with
-  another name, such as `key.pem`, stays readable by the script of a page.
-- These options of HTML preview decision 2 were not chosen:
-  - Each file that a file tab can read, also dot files. A script of an
-    untrusted page could then send `.env` to another site.
-  - Only the files that All files lists. A page that loads ignored build
-    output breaks, and an ignored page, such as `coverage/index.html`,
-    cannot show.
-  - A files preview with its own hostname for each previewed folder. A
-    workspace gets several files previews, a page that loads `../assets/`
-    breaks, and a page at the top of the repository still reaches each file.
-  - The values of the secret env vars hidden in each reply. It protects
-    only those values, and a page whose script holds such a value breaks.
-  - A setting of each repository that chooses, because it needs a new
-    setting with its screens and its storage.
-- These ways were rejected:
-  - Only the folder of the HTML file and the folders below it, with one
-    files preview, because the file server sees only the path.
-  - A content security policy that blocks requests to other sites, because
-    it breaks pages that load a library from another site, and a
-    navigation can still carry the data away.
-  - A frame with no origin of its own, because module scripts, fonts, and
-    fetch calls then send no preview cookie.
-  - A press before the page runs its scripts, or a notice of the files
-    that a page read, because the page reads the files after the press,
-    and a notice comes after the file left.
-- The files of other repositories and of the home folder stay out. All
-  files never shows them, and the home folder holds the files of the app's
-  own software.
+[Files of an HTML page](html-page-files.md) gives the files that a page
+can load, with HTML preview decision 2 and sandbox files decision 1.

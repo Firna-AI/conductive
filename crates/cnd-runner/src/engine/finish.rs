@@ -68,6 +68,7 @@ impl Session {
             files_unavailable: None,
             omitted_file_count: 0,
             user_message_ids: vec![],
+            notice_ids: vec![],
         }])
         .await
     }
@@ -138,12 +139,18 @@ impl Session {
             }
         }
         let stopped = stopped || turn.control.stopped();
+        let notice_ids = turn
+            .notice_ids
+            .into_iter()
+            .filter(|id| turn.read_notice_ids.contains(id))
+            .collect();
         let event = match end {
             End::Failed(error) if !stopped => AgentChatEvent::TurnFailed {
                 turn_event_context: context,
                 error: failure(error),
                 retry_message_id: turn.retry_message_id,
                 duration_ms,
+                notice_ids,
             },
             end => {
                 let end_reason = match end {
@@ -168,6 +175,7 @@ impl Session {
                     files_unavailable: unavailable.then_some(WireTrue),
                     omitted_file_count: 0,
                     user_message_ids: turn.message_ids,
+                    notice_ids,
                 }
             }
         };

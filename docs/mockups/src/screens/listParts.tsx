@@ -1,40 +1,38 @@
-import { ArchiveRestore, ChevronDown, PanelLeft, Plus } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { ActionButton } from '../components/common/actions'
-import a11y from '../components/common/a11y.module.css'
-import { EmptyState } from '../components/common/EmptyState'
-import { LoadFailure } from '../components/common/LoadFailure'
-import { AppFrame } from '../components/layout/AppFrame'
-import { acmeRail, type RailState } from '../components/layout/OrgRail'
-import responsive from '../components/layout/responsive.module.css'
-import { OrgTile } from '../components/orgs/OrgTile'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import { defined } from '../defined'
+import a11y from '../../../../src/ui/components/common/a11y.module.css'
+import { emptyState } from '../entries/components/common/EmptyState.mockup'
+import { loadFailure } from '../entries/components/common/LoadFailure.mockup'
+import responsive from '../../../../src/ui/components/layout/responsive.module.css'
+import { orgTile } from '../entries/components/orgs/OrgTile.mockup'
 import {
-  SuspendedOrgAbove,
-  SuspendedOrgNotice,
-  SuspendedOrgPanel,
-} from '../components/orgs/SuspendedOrgNotice'
+  suspendedOrgAbove,
+  suspendedOrgNotice,
+  suspendedOrgPanel,
+} from '../entries/components/orgs/SuspendedOrgNotice.mockup'
+import type { ListQueue } from '../components/workspaces/queueList'
 import type { RowFocus } from '../components/workspaces/rowControls'
 import type { MenuStyle } from '../components/workspaces/SectionList'
-import { SectionList } from '../components/workspaces/SectionList'
-import {
-  suspendedSections,
-  type ListDrag,
-  type ListMenu,
-  type SidebarSection,
-  type WorkspaceRow,
+import { sectionList } from '../entries/components/workspaces/SectionList.mockup'
+import type {
+  ListDrag,
+  ListMenu,
+  SidebarSection,
+  WorkspaceRow,
 } from '../components/workspaces/sections'
-import { Sidebar } from '../components/workspaces/Sidebar'
 import {
-  NewWorkspaceLink,
-  AutomationsLink,
-  SearchLink,
-  SettingsLink,
-} from '../components/workspaces/SidebarLinks'
+  newWorkspaceLink,
+  automationsLink,
+  searchLink,
+  settingsLink,
+} from '../entries/components/workspaces/SidebarLinks.mockup'
 import { deletedOrg, orgs, suspendedOrg, type Org } from '../fixtures/orgs'
 import type { Membership } from '../fixtures/members'
 import { paletteShortcut } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
-import styles from './WorkspaceListScreen.module.css'
+import styles from '../../../../src/ui/screens/WorkspaceListScreen.module.css'
 
 /**
  * The action that starts a new workspace, in an empty main area. `to` is
@@ -43,9 +41,13 @@ import styles from './WorkspaceListScreen.module.css'
 function NewWorkspaceAction(props: { to?: string }) {
   return (
     <ScreenLink asChild to={props.to ?? paths.newWorkspace}>
-      <ActionButton icon={Plus} tone="primary">
+      <actionButton.Component
+        icon="plus"
+        moklyInstance="new-workspace"
+        tone="primary"
+      >
         New workspace
-      </ActionButton>
+      </actionButton.Component>
     </ScreenLink>
   )
 }
@@ -64,12 +66,14 @@ export function ListHeader(props: {
   return (
     <header className={styles.header}>
       <ScreenLink className={styles.switcher} to={paths.orgs}>
-        <OrgTile current org={props.org} size={24} />
+        <orgTile.Component current org={props.org} size={24} />
         <span className={a11y.hidden}>Switch org: </span>
         <span className={styles.orgName}>{props.org.name}</span>
         <ChevronDown aria-hidden className={styles.chevron} size={15} />
       </ScreenLink>
-      {props.settings === false ? null : <SettingsLink to={props.settingsTo} />}
+      {props.settings === false ? null : (
+        <settingsLink.Component {...defined({ to: props.settingsTo })} />
+      )}
     </header>
   )
 }
@@ -83,27 +87,29 @@ export function ListHeader(props: {
  * the sections.
  * `newWorkspaceTo` is the New workspace page of the org, such as that
  * of a new org. `focus` names the row whose menu, field, or hover the view
- * draws.
+ * draws. The props of `ListQueue` add the Merge queue group.
  */
-export function HomeList(props: {
-  org: Org
-  sections: readonly SidebarSection[]
-  viewer: Membership
-  menu?: ListMenu
-  menuStyle: MenuStyle
-  drag?: ListDrag
-  suspended?: boolean
-  newWorkspaceTo?: string
-  /** Show ⌘K, the key of the palette, beside Search. */
-  keys?: boolean
-  /** The workspace list of the org did not load. */
-  failed?: boolean
-  focus?: RowFocus
-  /** The archived workspaces, in the Archived group at the end. */
-  archived?: readonly WorkspaceRow[]
-  /** The Archived group shows collapsed, with its count. */
-  archivedCollapsed?: boolean
-}) {
+export function HomeList(
+  props: {
+    org: Org
+    sections: readonly SidebarSection[]
+    viewer: Membership
+    menu?: ListMenu
+    menuStyle: MenuStyle
+    drag?: ListDrag
+    suspended?: boolean
+    newWorkspaceTo?: string
+    /** Show ⌘K, the key of the palette, beside Search. */
+    keys?: boolean
+    /** The workspace list of the org did not load. */
+    failed?: boolean
+    focus?: RowFocus
+    /** The archived workspaces, in the Archived group at the end. */
+    archived?: readonly WorkspaceRow[]
+    /** The Archived group shows collapsed, with its count. */
+    archivedCollapsed?: boolean
+  } & ListQueue,
+) {
   const suspended = props.suspended ?? false
   return (
     <>
@@ -112,34 +118,48 @@ export function HomeList(props: {
         settingsTo={suspended ? paths.suspendedSettings : undefined}
       />
       <div className={styles.scroll} data-mokly-scroll="workspace-page">
-        {suspended ? <SuspendedOrgNotice org={props.org} /> : null}
+        {suspended ? (
+          <suspendedOrgNotice.Component org={{ name: props.org.name }} />
+        ) : null}
         <div className={styles.links}>
           {suspended ? null : (
-            <NewWorkspaceLink to={props.newWorkspaceTo} variant="page" />
+            <newWorkspaceLink.Component
+              variant="page"
+              {...defined({ to: props.newWorkspaceTo })}
+            />
           )}
-          <AutomationsLink
-            to={suspended ? paths.suspendedAutomations : undefined}
+          <automationsLink.Component
             variant="page"
+            {...defined({
+              to: suspended ? paths.suspendedAutomations : undefined,
+            })}
           />
-          <SearchLink
-            shortcut={props.keys ? paletteShortcut() : undefined}
+          <searchLink.Component
             variant="page"
+            {...defined({
+              shortcut: props.keys ? paletteShortcut() : undefined,
+            })}
           />
         </div>
         {props.failed ? (
-          <LoadFailure title="The workspaces didn't load" />
+          <loadFailure.Component title="The workspaces didn't load" />
         ) : (
-          <SectionList
-            archived={props.archived}
-            archivedCollapsed={props.archivedCollapsed}
-            drag={props.drag}
-            focus={props.focus}
-            menu={props.menu}
+          <sectionList.Component
             menuStyle={props.menuStyle}
             readOnly={suspended}
             sections={props.sections}
             variant="page"
             viewer={props.viewer}
+            {...defined({
+              archived: props.archived,
+              archivedCollapsed: props.archivedCollapsed,
+              drag: props.drag,
+              focus: props.focus,
+              menu: props.menu,
+              queue: props.queue,
+              queueDrag: props.queueDrag,
+              queueable: props.queueable,
+            })}
           />
         )}
       </div>
@@ -148,36 +168,22 @@ export function HomeList(props: {
 }
 
 /**
- * The list of a suspended org on desktop. The main area shows the notice
- * of the org in place of New workspace. A narrow window shows the list as
- * a page, with the notice at its top. The menu of each row holds only Copy
- * link. `focus` names the row whose menu or hover the view draws. `rail` is
- * the rail before the org shows as suspended in it, such as a rail in the
- * middle of a reorder.
+ * The main area of the list of a suspended org on desktop: the notice of
+ * the org in place of New workspace. A narrow window shows the list as a
+ * page, with the notice at its top. The menu of each row holds only Copy
+ * link. `focus` names the row whose menu or hover the view draws. The
+ * screen draws the rail and the sidebar around it.
  */
 export function SuspendedList(props: {
   viewer: Membership
   focus?: RowFocus
-  sections?: readonly SidebarSection[]
-  rail?: RailState
+  sections: readonly SidebarSection[]
 }) {
   const org = orgs[suspendedOrg]
-  const sections = props.sections ?? suspendedSections()
   return (
-    <AppFrame
-      rail={{ ...(props.rail ?? acmeRail), suspended: suspendedOrg }}
-      sidebar={
-        <Sidebar
-          focus={props.focus}
-          org={org}
-          sections={sections}
-          suspended
-          viewer={props.viewer}
-        />
-      }
-    >
+    <>
       <div className={`${responsive.wideOnly} ${styles.choose}`}>
-        <SuspendedOrgPanel org={org} />
+        <suspendedOrgPanel.Component org={{ name: org.name }} />
       </div>
       <div className={`${responsive.narrowOnly} ${styles.narrowList}`}>
         <HomeList
@@ -185,21 +191,22 @@ export function SuspendedList(props: {
           keys
           menuStyle="anchored"
           org={org}
-          sections={sections}
+          sections={props.sections}
           suspended
           viewer={props.viewer}
         />
       </div>
-    </AppFrame>
+    </>
   )
 }
 
 /** The main area of a desktop list: the user picks a workspace. */
 export function ChooseWorkspace() {
   return (
-    <EmptyState
+    <emptyState.Component
       action={<NewWorkspaceAction />}
-      icon={PanelLeft}
+      icon="panel-left"
+      moklyInstance="choose-workspace"
       title="Choose a workspace"
     />
   )
@@ -219,10 +226,11 @@ export function NewOrgEmpty(props: { org: NewOrg; newWorkspaceTo?: string }) {
   const { org } = props
   const used = org.repositories.filter((item) => item.used)
   return (
-    <EmptyState
+    <emptyState.Component
       action={<NewWorkspaceAction to={props.newWorkspaceTo} />}
       body={`Workspaces of ${org.name} start in ${used.map((item) => item.name).join(' or ')}.`}
-      icon={Plus}
+      icon="plus"
+      moklyInstance="new-org-empty"
       title={`Start the first workspace in ${org.name}`}
     />
   )
@@ -239,25 +247,34 @@ export function DeletedOrg(props: { suspended?: boolean }) {
   const facts =
     "Its cloud computers are stopped, and its members can't open it."
   const page = (
-    <EmptyState
-      action={
-        props.suspended ? undefined : (
+    <emptyState.Component
+      moklyInstance="deleted-org"
+      {...defined({
+        action: props.suspended ? undefined : (
           <ScreenLink asChild to={paths.shell}>
-            <ActionButton icon={ArchiveRestore} tone="primary">
+            <actionButton.Component
+              icon="archive-restore"
+              moklyInstance="restore-org"
+              tone="primary"
+            >
               {`Restore ${org.name}`}
-            </ActionButton>
+            </actionButton.Component>
           </ScreenLink>
-        )
-      }
+        ),
+      })}
       body={
         props.suspended
           ? facts
           : `${facts} Restore it to bring back its workspaces, chats, and settings.`
       }
-      icon={ArchiveRestore}
+      icon="archive-restore"
       title={`${org.name} is deleted on ${deletedOrg.deletes}`}
     />
   )
   if (!props.suspended) return page
-  return <SuspendedOrgAbove org={org}>{page}</SuspendedOrgAbove>
+  return (
+    <suspendedOrgAbove.Component org={{ name: org.name }}>
+      {page}
+    </suspendedOrgAbove.Component>
+  )
 }

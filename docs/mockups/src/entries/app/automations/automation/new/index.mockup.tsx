@@ -32,9 +32,9 @@ export const newAutomation = defineScreen({
       slug: 'org-models',
       title: 'Models of the org endpoint',
       description:
-        'The same new automation of Priya, with the model picker open. The Claude login of Acme runs on its gateway, whose model list does not name Fable 5.1. So the Claude group shows Opus 5.5 and Sonnet 5.5, without Fable 5.1, as the composer on that login does. The Codex group keeps both of its models.',
+        'The same new automation of Priya, with the model picker open. The Claude login of Acme runs on its gateway, whose model list does not name Fable 5.1. So the menu lists four of her five favourites, without Fable 5.1 Low, and All models leaves out Fable 5.1, as the composer on that login does. Effort and the Fast switch follow. An automation has no session yet, so no favourite shows the external link icon.',
       rationale:
-        'The user chose decision 3 A of the org logins plan on 16 November 2026: each picker of a session or a new session on the org login follows the last model list of the org endpoint. The automation form does the same as the composer, as app/chat/endpoint-models/org shows, so a run does not fail on a model that the list leaves out. Only an admin sees the list itself, on the Agents tab of the org settings, as app/org-settings/agents/endpoint-models shows.',
+        'The user chose decision 3 A of the org logins plan on 16 November 2026: each picker of a session or a new session on the org login follows the last model list of the org endpoint. The automation form does the same as the composer, as app/chat/endpoint-models/org shows, so a run does not fail on a model that the list leaves out. Only an admin sees the list itself, on the Agents tab of the org settings, as app/org-settings/agents/endpoint-models shows. The prompt box shows the favourites menu, as each model picker does, from the design calls of 16 November 2026 of the model favourites, and it leaves out each favourite on a model that the list does not name.',
       props: { viewer: 'member', login: 'org', modelMenu: 'open' },
     },
   ],

@@ -68,6 +68,9 @@ pub(super) fn retain_revision(state: &mut RunnerState, event: &RunnerEvent) {
         RunnerEvent::RunnerStartUpdated(report) => {
             state.reports.latest.start = Some(report.clone())
         }
+        RunnerEvent::RunnerSkillsUpdated(report) => {
+            state.reports.latest.skills = Some(report.clone())
+        }
         RunnerEvent::RunnerWorkspaceTitle(report) => {
             state.reports.latest.title = Some(report.clone())
         }

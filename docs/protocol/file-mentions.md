@@ -17,6 +17,9 @@ names a decision of the change that added file chips to answers. The
 [mockup catalogue](../mockups/catalogue.md) draws these screens at
 `app/file-mentions`, at `app/attachments/sent`, at
 `app/files/menu/added`, and in the flow `user-flows/mention-a-file`.
+[Skill mentions](skill-mentions.md) states the list of `/` and the skill
+chips. That list opens in the place of this list, and it shares the keys
+and the highlight of [The list](#the-list).
 
 ## The list
 
@@ -33,13 +36,22 @@ names a decision of the change that added file chips to answers. The
   [Labels of paths](tokens-and-secrets.md#secrets-that-users-enter) says.
 - The rows come from the file tree that the workspace keeps, which All
   files shows. It holds the tracked files, the untracked files that Git
-  does not ignore, every file of the
+  does not ignore, the files of the
   [context folder](repository-folders.md#the-context-folder), and their
   folders, as
   [Files and changes](workspace-tools.md#files-and-changes) says.
 - Reason: the list works while the cloud computer sleeps, and it needs no
   new route. A live search on the cloud computer with ignored files, and a
   list of ignored files beside the tree, were rejected (decision 214).
+- The tree holds only the entries that its report lists, as
+  [Which entries stay](file-reports.md#which-entries-stay) says. A path
+  that the report omits gives no row. A mention of it stays text, as for
+  each other path outside the tree (Cal, 23 November 2026).
+- Reason: one tree then serves All files, the list, the chips, the answers,
+  and Add to chat, with no new route. A read of each mentioned path, and a
+  second list that pages or searches all files, were not chosen, because
+  they add reads, routes, and states. Chips for paths without an entry
+  were not chosen, because a wrong path would then open a missing file.
 - An entry whose label hides a secret value does not show. Reason: the
   message would hold its real path.
 - An entry whose path holds a double quote or a line break does not show.
@@ -59,7 +71,9 @@ names a decision of the change that added file chips to answers. The
   - "Loading files…" while the tree loads
   - "The list of all files is unavailable" when the workspace has no tree,
     as All files says
-  - "Nothing matches “<query>”" when no entry matches
+  - "Nothing matches “<query>”" when no entry matches. While the tree
+    omits entries, the line goes on: "Some files are not listed, so type
+    the path or ask the agent."
 - When the workspace marks its saved tree as unavailable, the list still
   shows the entries of that tree.
 
@@ -156,8 +170,8 @@ names a decision of the change that added file chips to answers. The
   writes it.
 - A mention starts at the start of the text, or after a space or a line
   break. Where the chat reads Markdown marks, as in an answer, a mention
-  can also start right after a mark, such as in `**@src/app.ts**` (answer
-  chip decision 5). Today `**` is the only mark that the chat reads.
+  can also start right after a `*`, `_`, or `~~`, such as in
+  `**@src/app.ts**` or `_@src/app.ts_` (answer chip decision 5).
 - Reason: agents often write a file name in bold. A start after any
   character was rejected, because `a@b.com` would then start a mention.
 - A mention of a file can end with a line target, such as
@@ -167,8 +181,9 @@ names a decision of the change that added file chips to answers. The
   `:`, `!`, `?`, or `)`, the chat drops that one character and reads the
   mention again. The character then shows as text after the chip. Reason:
   agents end sentences right after a mention, as in "See @src/app.ts."
-- Where `**` marks bold, as in an answer, a mention ends before the next
-  `**`. So bold around a mention stays bold.
+- Where the chat reads Markdown marks, a mention ends before the next `*`
+  or `~~`, and before a `_` that closes a mark. So bold, emphasis, and
+  strikethrough around a mention keep their look.
 - The draft, the sent message, and the text that the agent gets hold the
   same mention of a file or a folder. For an attached file, Send writes
   the mention at the place of its chip, because the path comes only with
@@ -195,8 +210,10 @@ names a decision of the change that added file chips to answers. The
 - A press on the chip opens the file tab of the copy, as a press on a file
   chip opens its file (decision 264 B). The press can resume a stopped
   cloud computer, as the open of each file does.
-- All files lists the copy, as it lists every file of the
+- All files lists the copy, as it lists the other files of the
   [context folder](repository-folders.md#the-context-folder).
+- When the tree report omits the copy, the chip still shows and opens it,
+  because the chip comes from the message (Cal, 23 November 2026).
 - Reason: the member sees the file again in the file tab, as each other
   file of the workspace. A chip that opens nothing was rejected, because
   the member then cannot see the file after Send. A read of the file from
@@ -223,7 +240,7 @@ agents, and their line targets.
 
 - Each chip of the composer shows its icon in a cell at its start
   (decision 215). This holds for each chip of the message field: a file
-  chip, a workspace chip, and the chip of an attached file.
+  chip, a workspace chip, a skill chip, and the chip of an attached file.
 - While a pointer is over the cell, a × takes the place of the icon. A
   press on the × removes the chip. The removal is one step of undo.
 - A keyboard removes a chip with Backspace or Delete, so the cell takes no

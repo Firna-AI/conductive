@@ -9,13 +9,13 @@ import { requireFeatureResult } from '../features/result'
 import { HttpError } from '../http'
 import { providerForAccount } from '../sandbox/client'
 import { ProviderError } from '../sandbox/errors'
+import { WarningId } from '../warning-values'
+import { warnWorker } from '../warnings'
 import { reserveContinue } from './continue-admission'
 import { authorizeContinue } from './continue-data'
-import {
-  advanceContinue,
-  continueFailed,
-  type ContinueProgress,
-} from './continue-progress'
+import { continueFailed } from './continue-failure'
+import { advanceContinue, type ContinueProgress } from './continue-progress'
+import { readContinueStopCause } from './continue-stop-causes'
 import {
   CONTINUE_JOB_KEY,
   continueJobKey,
@@ -116,7 +116,10 @@ export class WorkspaceContinue implements ContinueProgress {
     await this.options.run(async () => {
       const current = await readContinueJob(this.options.storage)
       if (!current || current.id !== job.id || current.outcome) return
-      if (current.cancelled) job.cancelled = true
+      if (current.cancelled) {
+        job.cancelled = true
+        job.stopCause = 'cancelled'
+      }
       await this.options.storage.put(continueJobKey(job.id), job)
       await this.options.storage.put(CONTINUE_JOB_KEY, job)
     })
@@ -127,15 +130,23 @@ export class WorkspaceContinue implements ContinueProgress {
     outcome: NonNullable<ContinueJob['outcome']>,
   ): Promise<void> {
     this.scope = null
-    await this.options.run(async () => {
+    const ended = await this.options.run(async () => {
       const current = await readContinueJob(this.options.storage)
-      if (!current || current.id !== job.id) return
+      if (!current || current.id !== job.id) return false
       await this.options.storage.put(continueJobKey(job.id), {
         ...job,
         outcome,
       })
       await this.options.storage.put(CONTINUE_JOB_KEY, null)
+      return true
     })
+    if (ended && !outcome.ok)
+      warnWorker({
+        kind: 'workspace_continue_ended',
+        workspaceId: WarningId.checked(job.binding.id),
+        phase: job.phase,
+        stopCause: readContinueStopCause(job.stopCause),
+      })
   }
 
   advance(): Promise<void> {
@@ -229,6 +240,7 @@ export class WorkspaceContinue implements ContinueProgress {
   async cancel(): Promise<void> {
     this.scope = null
     const job = await readContinueJob(this.options.storage)
-    if (job) await this.save({ ...job, cancelled: true })
+    if (job)
+      await this.save({ ...job, cancelled: true, stopCause: 'cancelled' })
   }
 }

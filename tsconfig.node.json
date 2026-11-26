@@ -8,6 +8,7 @@
     "vite.config.ts",
     "vitest.config.ts",
     "astro.config.ts",
-    "tools/chatgpt-egress"
+    "tools/chatgpt-egress",
+    "tools/ui-move"
   ]
 }

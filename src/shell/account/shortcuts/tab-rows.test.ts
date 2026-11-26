@@ -44,9 +44,9 @@ test('a browser tab leaves out the rows and the group of the Mac app, and each g
     appView: ['Hide or show the sidebar', 'Hide or show the right column'],
     appGroups: ['Menus and palette', 'Text', 'Mac app'],
     chat: [
-      'Stop the agent',
       'Copy concise transcript',
       'Copy full transcript',
+      'Explain the selection',
       'Send (fixed)',
       'New line (fixed)',
     ],

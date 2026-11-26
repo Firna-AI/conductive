@@ -4,7 +4,10 @@
  * Continue creates.
  */
 
-import type { MergeMethod, PromptFacts } from '../components/workspace/barCopy'
+import type {
+  MergeMethod,
+  PromptFacts,
+} from '../../../../src/ui/components/workspace/barCopy'
 import { people } from './members'
 import { changesRequestedBy, checksByState, pullRequest } from './pullRequests'
 import { repositories } from './repositories'

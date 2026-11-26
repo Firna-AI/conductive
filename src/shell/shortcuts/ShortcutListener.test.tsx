@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, onTestFinished, test, vi } from 'vitest'
 import { routes } from '../../app/router'
 import { sessionPaths } from '../../shared/sessions'
 import { byRole } from '../../test-support/dom-queries'
@@ -15,6 +15,7 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
+import { messageIn, serverWith } from '../new-workspace/dialog-test-kit'
 import {
   openPaletteTab,
   palette,
@@ -28,6 +29,7 @@ import {
   OfferedCommand,
   pressCommand,
   pressShortcut,
+  serveShortcutChanges,
 } from './shortcut-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -104,19 +106,41 @@ describe('the shortcut listener', () => {
     })
   })
 
-  test('a held key runs its command once, and its repeats go no further', async () => {
-    await openPaletteTab(routes.org(org))
-    const first = pressCommand('command-palette', 'other', document.body)
-    const field = searchField()
-    const heard = keysHeardBy(field)
-    const repeat = pressShortcut('Ctrl+K', field, { repeat: true })
-    expect({
-      first: first.defaultPrevented,
-      palette: palette() !== null,
-      repeat: repeat.defaultPrevented,
-      heard,
-    }).toEqual({ first: true, palette: true, repeat: true, heard: [] })
-  })
+  test.each([
+    { source: 'palette key', key: 'Ctrl+K', dialogName: 'Search' },
+    {
+      source: 'New workspace key',
+      key: 'Alt+Shift+N',
+      dialogName: 'New workspace',
+    },
+    { source: 'recorded text key', key: 'K', dialogName: 'Search' },
+  ])(
+    'a held $source runs its command once, and its repeats go no further',
+    async ({ key, dialogName }) => {
+      onTestFinished(() => {
+        window.dispatchEvent(new Event('blur'))
+      })
+      const server = serverWith('dialog')
+      if (key === 'K') {
+        serveShortcutChanges(server, 'other', [
+          { command: 'command-palette', keys: ['K'] },
+        ])
+      }
+      await openPaletteTab(routes.org(org), { server })
+      const first = pressShortcut(key, document.body)
+      await settle()
+      const dialog = byRole('dialog', dialogName)
+      const field = dialogName === 'Search' ? searchField() : messageIn(dialog)
+      const heard = keysHeardBy(field)
+      const repeat = pressShortcut(key, field, { repeat: true })
+      expect({
+        first: first.defaultPrevented,
+        dialog: byRole('dialog', dialogName) === dialog,
+        repeat: repeat.defaultPrevented,
+        heard,
+      }).toEqual({ first: true, dialog: true, repeat: true, heard: [] })
+    },
+  )
 
   test('on Windows and Linux, only the screen of the terminal keeps its keys, so Ctrl+K runs from Reconnect', async () => {
     holdAnimationFrames()

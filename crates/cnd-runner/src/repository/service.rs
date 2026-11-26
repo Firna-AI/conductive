@@ -1,6 +1,6 @@
 //! Repository service boundary and injected production dependencies.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -8,10 +8,12 @@ use async_trait::async_trait;
 use cnd_runner_interface::file_changes::{ChangedFile, ChangesResponse};
 use cnd_runner_interface::file_tree::FileEntry;
 use cnd_runner_interface::files::{DiffResponse, FILE_READ_MAX_BYTES, FileResponse};
+use tokio::sync::Mutex;
 
 use super::access::{response, safe_path};
 use super::error::{Error, Result};
 use super::git::{Cancellation, GitRequest, GitRunner};
+use super::identity_cache::IdentityCache;
 use super::io::RepositoryIo;
 
 /// Git identities used by reports and by the turn owner's before/after capture.
@@ -20,9 +22,11 @@ pub type Checkpoint = BTreeMap<String, String>;
 /// One captured state supplies a tree and its complete changes report.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RepositorySnapshot {
-    /// Flat file and directory entries.
+    /// Flat file and directory entries in path order, with all their ancestors.
     pub entries: Vec<FileEntry>,
-    /// Complete changes with counts from the same scan.
+    /// Paths, including directories, added only by the ignored context scan.
+    pub context_only_paths: BTreeSet<String>,
+    /// Complete changes in path order with counts from the same scan.
     pub changes: ChangesResponse,
     /// Git representation identities.
     pub identities: Checkpoint,
@@ -36,7 +40,9 @@ pub struct RepositorySnapshot {
 #[cfg_attr(test, unimock::unimock(api = RepositoryMock))]
 #[async_trait]
 pub trait Repository: Send + Sync {
-    /// Prepare ignored context storage before runner warm-up and connection.
+    /// Cancel work on this repository instance. A repository without pending work can omit this.
+    fn cancel(&self) {}
+    /// Prepare ignored context storage before credential cleanup and the first connection.
     async fn prepare_context(&self) -> Result<()>;
     /// Capture all reports using the current comparison base.
     async fn snapshot(&self, branch: String) -> Result<RepositorySnapshot>;
@@ -59,6 +65,7 @@ pub struct GitRepository {
     pub(super) runner: Arc<dyn GitRunner>,
     pub(super) io: Arc<dyn RepositoryIo>,
     pub(super) cancellation: Cancellation,
+    pub(super) identity_cache: Arc<Mutex<IdentityCache>>,
 }
 
 impl GitRepository {
@@ -74,6 +81,7 @@ impl GitRepository {
             runner,
             io,
             cancellation,
+            identity_cache: Arc::new(Mutex::new(IdentityCache::default())),
         }
     }
 
@@ -162,6 +170,10 @@ impl GitRepository {
 
 #[async_trait]
 impl Repository for GitRepository {
+    fn cancel(&self) {
+        self.cancellation.cancel();
+    }
+
     async fn prepare_context(&self) -> Result<()> {
         let exclude = self
             .run(&["rev-parse", "--git-path", "info/exclude"])

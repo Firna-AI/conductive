@@ -1,6 +1,6 @@
 import type { ChatTransaction } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
-import type { PendingCommand } from './types'
+import type { PendingCommand } from './pending-command'
 
 export type DispatchState = 'send' | 'wait' | 'skip'
 export type DispatchResult<T> =

@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import '../../../docs/mockups/src/render.css'
+import '../../ui/render.css'
 import { DevPage } from './DevPage'
 
 const root = document.getElementById('root')

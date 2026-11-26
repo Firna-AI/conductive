@@ -1,8 +1,14 @@
 /**
  * The page of one org, as the operator opens it, in each state of the
- * page. The pages of a user are in `operatorUserPages.ts`.
+ * page. The pages of a user are in `operatorUserPages.ts`, and the states
+ * of a switch of the provider account in `operatorSwitch.ts`.
  */
-import type { StateCounts } from './operator'
+import type { AccountWorkspaces } from '../components/operator/AccountSection'
+import type {
+  LastSwitch,
+  OrgSwitch,
+} from '../../../../src/ui/components/operator/switchCopy'
+import type { StateCounts } from '../../../../src/ui/components/settings/statCounts'
 import type {
   OrgMember,
   SuspensionNote,
@@ -16,7 +22,7 @@ export type OrgPage = {
   id: string
   name: string
   initials: string
-  /** The provider account of the org, which it keeps for its whole life. */
+  /** The provider account of the org, where its new workspaces start. */
   account: AccountId
   created: string
   repositories: number
@@ -27,6 +33,14 @@ export type OrgPage = {
   suspension?: SuspensionNote
   /** The day of the delete, and the day when everything is deleted. */
   deleted?: { on: string; purge: string }
+  /** A build of the org that an admin started, which runs now. */
+  runningBuild?: { by: string; since: string }
+  /** The newest switch of the account that did not change it. */
+  switch?: OrgSwitch
+  /** The last switch that changed the account. */
+  lastSwitch?: LastSwitch
+  /** The workspaces on each account, which show on more than one. */
+  byAccount?: readonly AccountWorkspaces[]
 }
 
 const hexwaveMembers: readonly OrgMember[] = [

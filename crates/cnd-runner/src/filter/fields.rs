@@ -8,6 +8,7 @@ use cnd_runner_interface::runner::{RunnerEvent, RunnerStartUpdated, RunnerWorksp
 use cnd_runner_interface::runner_files::{
     DiffReadOutcome, FileReadOutcome, RunnerDiffResult, RunnerFileResponse, RunnerFileResult,
 };
+use cnd_runner_interface::skills::RunnerSkillsUpdated;
 
 fn label(path: &str, display: &mut Option<String>, text: &dyn Fn(&str) -> String) {
     let value = text(display.as_deref().filter(|s| !s.is_empty()).unwrap_or(path));
@@ -76,6 +77,20 @@ pub(super) fn clean(mut event: RunnerEvent, text: &dyn Fn(&str) -> String) -> Ru
             for port in ports {
                 port.name = port.name.as_deref().map(text);
                 port.folder = port.folder.as_deref().map(text);
+            }
+        }
+        RunnerEvent::RunnerSkillsUpdated(RunnerSkillsUpdated::SkillsUpdated { claude, codex }) => {
+            for list in [claude, codex] {
+                list.retain_mut(|skill| {
+                    if text(&skill.name) != skill.name {
+                        tracing::warn!(
+                            "A skill name holds a credential. The report leaves it out."
+                        );
+                        return false;
+                    }
+                    skill.description = text(&skill.description);
+                    true
+                });
             }
         }
         RunnerEvent::AgentChatEvent(event) => match event {

@@ -1,7 +1,7 @@
 import { ScreenLink } from '../common/ScreenLink'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { mobileTabs, type MobileTabKey } from './tools'
-import styles from './MobileTabBar.module.css'
+import styles from '../../../../../src/ui/components/workspace/MobileTabBar.module.css'
 
 /**
  * The workspace tabs of a phone: the chat, the files, and each tool that

@@ -16,6 +16,8 @@ decision number names a dated record, as
 
 - Only an operator can suspend a user (decision 28) or an org
   (decision 129).
+- Only an operator can switch an org to another provider account, as
+  [Switch account](switch-account.md) says.
 - An org suspension is a second action, beside the suspension of a user.
   It changes no rule of a user suspension.
 - Reason: a user suspension alone may not stop misuse. An abuse report
@@ -144,9 +146,13 @@ A lift ends the suspension of a user or of an org (decision 145).
   [Workspace tokens and runners](#workspace-tokens-and-runners) says.
 - No preview that the suspension revoked comes back. No build that the
   suspension failed comes back.
+- When a switch of an org waits for Lift, the lift starts a new switch
+  build, as
+  [When the switch build starts](switch-account.md#when-the-switch-build-starts)
+  says. This also holds when the suspension ended a switch build.
 - On Boat, a lift gives back the restart near day 14 of the stop. It
   covers each stopped workspace on Boat that the user owns, or each
-  stopped workspace of the org when the org runs on Boat.
+  stopped workspace of the org on Boat.
 - A restart whose day 14 has already passed runs at once after the lift.
   Reason: lifts are rare, and the disk may still exist.
 - A workspace whose owner or org is still suspended gets no restart, as

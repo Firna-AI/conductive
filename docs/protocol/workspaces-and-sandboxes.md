@@ -14,17 +14,23 @@ the merge.
 
 These docs belong to this doc:
 
-- [Provider accounts](provider-accounts.md): the account of each org, its
-  weights, and the regions of the accounts.
+- [Provider accounts](provider-accounts.md): the account of each org and
+  its switch, the account of each workspace, the weights, and the regions
+  of the accounts.
 - [Org image](org-image.md): its builds, refreshes, and first build.
 - [Sandbox software](sandbox-software.md): the releases of the app's own
-  software, the updates of each sandbox, the install in a build, and the
-  software image.
+  software, the updates of each sandbox, and the install in a build.
+  - [Software image](software-image.md): the software image that a first
+    build starts from, its build at each deploy, and the images that the
+    app keeps.
 - [Create a workspace](create-a-workspace.md): New workspace as a page or
   as a dialog, the create, the branch, and a failed first start.
 - [Repository folders](repository-folders.md): the folder and the shell
   variable of each repository in a sandbox, and the context folder of each
   workspace.
+- [Org skills](org-skills.md): the skills repository of the org, its copy
+  in each cloud computer, the skills that load, the list of skills, and
+  the trust choice of the repository.
 - [Life of a workspace](workspace-life.md): the start steps, the time
   limits, the states, the stop and resume, the archive, the restore, the
   removal from the list after 14 days, and Continue.
@@ -73,7 +79,9 @@ These docs belong to this doc:
 - Every sandbox has one machine size for now, on each provider: Boat's
   default size, with 4 vCPU and 8 GB.
 - [Provider accounts](provider-accounts.md) gives the account of each org
-  and the regions of the accounts.
+  and of each workspace, and the regions of the accounts.
+  [Switch account](switch-account.md) gives the switch of an org to
+  another account by an operator.
 
 ## Disk flushes
 
@@ -118,6 +126,11 @@ for, downloads, and applies an update.
 - [Repository folders](repository-folders.md) gives the folder and the
   shell variable of each repository in a sandbox (decision 94).
 
+## Org skills
+
+- [Org skills](org-skills.md) gives the skills repository of the org, and
+  how its skills reach the agents of each workspace.
+
 ## Startup script and env vars
 
 - The startup script runs in the sandbox of each workspace at each start
@@ -130,6 +143,10 @@ for, downloads, and applies an update.
 - Only an admin changes the install script, the startup script, the env
   vars, and the repositories (decision 57). Other members see them
   read-only.
+- Only an admin changes the skills repository and its trust choice, as
+  [The Skills section](org-skills.md#the-skills-section) and
+  [Who changes the choice](org-skills-trust.md#who-changes-the-choice)
+  say.
 - Each sandbox gets the org's env vars at create and at each resume
   (decision 17). A changed value applies at the next start.
 - The app's own variables replace an org env var with the same name.
@@ -202,7 +219,8 @@ for, downloads, and applies an update.
 ### Files and changes
 
 - [Files and changes](workspace-tools.md#files-and-changes) states the
-  file lists of a workspace and the file reports of the runner.
+  file lists of a workspace. [File reports](file-reports.md) states the
+  file reports of the runner.
 
 ### Terminal
 

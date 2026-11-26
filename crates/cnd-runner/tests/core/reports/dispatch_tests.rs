@@ -1,17 +1,22 @@
 //! A held repository scan permits report repair and agent commands before readiness.
 
 use std::sync::Arc;
+use std::time::Duration;
 
+use cnd_runner::reports::files::FileReportKind;
+use cnd_runner_interface::file_tree::RunnerFileEvent;
+use cnd_runner_interface::runner::RunnerEvent;
 use cnd_runner_interface::runner_commands::{
     RunnerCommand, RunnerControlCommand, RunnerInterrupt, RunnerReportKind,
 };
 use cnd_runner_interface::runner_files::{RunnerFileCommand, RunnerReadFile};
 use cnd_runner_interface::runner_handshake::{RunnerEventEnvelope, RunnerToWorkspace};
+use tokio::time::timeout;
 
 use crate::support::events::title;
 use crate::support::fixture::Fixture;
 
-use super::support::{self, Gate};
+use super::support::{self, Gate, next_receipt};
 
 #[tokio::test]
 async fn handles_retained_report_agent_command_and_file_read_while_initial_scan_waits() {
@@ -100,7 +105,7 @@ async fn report_commands_keep_scan_order_and_deduplicate_inflight_and_saved_requ
     let gate = Arc::new(Gate::default());
     *source.hold.lock().unwrap() = Some(gate.clone());
     let files = support::files(&h, source, None, None).await;
-    let (handler, _) = support::handler(&h, files).await;
+    let (handler, _) = support::handler(&h, files.clone()).await;
     handler
         .command(support::refresh(RunnerReportKind::FilesSnapshot, "first"))
         .unwrap();
@@ -113,6 +118,13 @@ async fn report_commands_keep_scan_order_and_deduplicate_inflight_and_saved_requ
         .unwrap();
     assert!(h.endpoint.state.lock().await.events.is_empty());
     gate.release.notify_one();
+    timeout(
+        Duration::from_secs(10),
+        files.refresh(false, Some(FileReportKind::Tree), None),
+    )
+    .await
+    .unwrap()
+    .unwrap();
     handler.shutdown().await.unwrap();
     let state = h.store.snapshot().await;
     assert_eq!(state.reports.commands, ["first", "second"]);
@@ -136,6 +148,7 @@ async fn report_commands_keep_scan_order_and_deduplicate_inflight_and_saved_requ
     restarted
         .command(support::refresh(RunnerReportKind::FilesSnapshot, "second"))
         .unwrap();
+    assert!(!restarted.busy().await.unwrap());
     restarted.shutdown().await.unwrap();
     assert_eq!(
         h.store.snapshot().await.next_event_number,
@@ -150,7 +163,8 @@ async fn welcome_reserves_the_initial_scan_before_a_later_request_without_pollin
     let source = support::source(vec!["first".into()]);
     let gate = Arc::new(Gate::default());
     *source.hold.lock().unwrap() = Some(gate.clone());
-    let files = support::files(&h, source, None, None).await;
+    let (emitter, mut receipts) = support::track_receipts(&h);
+    let files = support::files(&h, source, Some(emitter), None).await;
     let (handler, _) = support::handler(&h, files).await;
     let connected = handler.connected();
     handler
@@ -160,20 +174,22 @@ async fn welcome_reserves_the_initial_scan_before_a_later_request_without_pollin
     assert!(h.store.snapshot().await.outbox.is_empty());
     gate.release.notify_one();
     connected.await.unwrap();
+    assert_eq!(next_receipt(&mut receipts).await, "second");
     handler.shutdown().await.unwrap();
     let state = h.store.snapshot().await;
-    let mut requested = None;
-    let mut changes_revision = None;
-    for RunnerEventEnvelope::Event { event, .. } in &state.outbox {
-        let value = serde_json::to_value(event).unwrap();
-        if value["type"] == "files.snapshot" {
-            requested = value["tree"]["revision"].as_u64();
-        }
-        if value["type"] == "changes.updated" {
-            changes_revision = requested;
-        }
-    }
-    assert_eq!(changes_revision, Some(1));
-    assert_eq!(requested, Some(2));
+    let report_order: Vec<_> = state
+        .outbox
+        .iter()
+        .filter_map(|RunnerEventEnvelope::Event { event, .. }| match event {
+            RunnerEvent::RunnerFileEvent(RunnerFileEvent::FilesSnapshot { tree }) => {
+                Some(("tree", tree.part.revision))
+            }
+            RunnerEvent::RunnerFileEvent(RunnerFileEvent::ChangesUpdated { changes }) => {
+                Some(("changes", changes.runner_file_revision_part.revision))
+            }
+            _ => None,
+        })
+        .collect();
+    assert_eq!(report_order, [("changes", 1), ("tree", 1), ("tree", 2)]);
     assert_eq!(state.reports.commands, ["second"]);
 }

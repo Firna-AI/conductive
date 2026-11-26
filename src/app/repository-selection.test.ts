@@ -128,11 +128,23 @@ describe('repository selection', () => {
       {
         method: 'PUT',
         path: repositoryPath(orgId, 'admin-dashboard'),
-        body: {},
+        body: { build: false },
       },
-      { method: 'PUT', path: repositoryPath(orgId, 'mobile-app'), body: {} },
-      { method: 'PUT', path: repositoryPath(orgId, pipeline.id), body: {} },
-      { method: 'DELETE', path: repositoryPath(orgId, pipeline.id), body: {} },
+      {
+        method: 'PUT',
+        path: repositoryPath(orgId, 'mobile-app'),
+        body: { build: false },
+      },
+      {
+        method: 'PUT',
+        path: repositoryPath(orgId, pipeline.id),
+        body: { build: false },
+      },
+      {
+        method: 'DELETE',
+        path: repositoryPath(orgId, pipeline.id),
+        body: { build: false },
+      },
     ])
   })
 
@@ -164,9 +176,13 @@ describe('repository selection', () => {
       {
         method: 'PUT',
         path: repositoryPath(orgId, 'admin-dashboard'),
-        body: {},
+        body: { build: false },
       },
-      { method: 'PUT', path: repositoryPath(orgId, 'mobile-app'), body: {} },
+      {
+        method: 'PUT',
+        path: repositoryPath(orgId, 'mobile-app'),
+        body: { build: false },
+      },
     ])
   })
 })

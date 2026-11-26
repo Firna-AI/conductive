@@ -14,13 +14,14 @@ import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 export async function seededCompletedWorkspace(
   fixture: Awaited<ReturnType<typeof backendFixture>>,
   input: {
+    workspaceId?: string
     repositoryLocations?: readonly RepositoryLocation[]
     environmentCiphertext?: string | null
   } = {},
 ) {
   const { runtime, org, user, repositoryId } = fixture
   const { env, dependencies } = runtime
-  const id = 'captured-workspace'
+  const id = input.workspaceId ?? 'captured-workspace'
   const sessionId = `${id}-session`
   const turnId = `${id}-turn`
   const now = dependencies.now()

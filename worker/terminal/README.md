@@ -224,7 +224,7 @@ during the shutdown can come after the last save. The
 [disk flush rules](../../docs/protocol/workspaces-and-sandboxes.md#disk-flushes)
 say that a normal stop loses nothing, which this loss contradicts for
 writes during the shutdown. With the append, the write comes while the
-sandbox runs. An idle stop comes at least 30 minutes after the last input,
+sandbox runs. An idle stop comes at least 15 minutes after the last input,
 so each finished command is on the disk well before it. The append has
 these limits:
 

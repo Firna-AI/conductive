@@ -6,14 +6,21 @@ import {
   type OrgSecret,
 } from '../../fixtures/secrets'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
 import { ScreenLink } from '../common/ScreenLink'
-import { Section, SectionText } from '../settings/Section'
+import {
+  Section,
+  SectionText,
+} from '../../../../../src/ui/components/settings/Section'
 import { AddSecretForm } from './SecretForms'
 import { SecretRow, type RowLinks, type RowMode } from './SecretRow'
 import { mayAddSecret, secretRights, type SecretsAccess } from './secretRights'
-import { envVarsNote, secretsIntro, secretsWords } from './secretsCopy'
-import styles from './SecretsTab.module.css'
+import {
+  envVarsNote,
+  secretsIntro,
+  secretsWords,
+} from '../../../../../src/ui/components/secrets/secretsCopy'
+import styles from '../../../../../src/ui/components/secrets/SecretsTab.module.css'
 
 /**
  * What the tab shows: the list, the value that an admin just revealed, the

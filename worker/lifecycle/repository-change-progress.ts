@@ -54,7 +54,7 @@ export async function advanceRepositoryChange(
       binding: {
         ...job.target.binding,
         defaultBranch: job.baseBranch,
-        baseBranch: job.baseBranch,
+        baseBranch: null,
       },
     }
     job.oldBranch = await options.oldBranchWork(job.binding, job.member.id)

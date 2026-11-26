@@ -2,17 +2,15 @@ import {
   approvalDetail,
   secretsPartWords,
   valueDetail,
-} from '../../../docs/mockups/src/components/capabilities/capabilitiesCopy'
-import styles from '../../../docs/mockups/src/components/capabilities/Capabilities.module.css'
+} from '../../ui/components/capabilities/capabilitiesCopy'
+import styles from '../../ui/components/capabilities/Capabilities.module.css'
 import type { SessionSecretApproval } from '../../shared/secrets'
 import { ActionButton } from '../ui/actions'
 
-/** One approval of a secret in a session, in the words of its row. */
+/** One approval of a secret in the open session, in the words of its row. */
 export interface ShownApproval {
   approval: SessionSecretApproval
   secret: string
-  /** The title of the session, or Untitled. */
-  session: string
   /** Who allowed it: "you", or the name of the member. */
   who: string
   /** When, as words in a sentence, such as "12 minutes ago". */
@@ -57,9 +55,9 @@ function GrantRow(props: {
 }
 
 /**
- * The grants of a workspace that its members can end (secrets decision
- * 8 B): each approval of a secret in a session, with its session, who
- * allowed it, and when, and each value that a member gave for the
+ * The grants that the members of a workspace can end from one session
+ * (secrets decision 8 B): each approval of a secret in this session, with
+ * who allowed it and when, and each value that a member gave for the
  * workspace, with who gave it. Each has Remove. A group without grants
  * hides.
  */
@@ -74,16 +72,16 @@ export function GrantList(props: {
     <>
       {props.approvals.length > 0 ? (
         <div className={styles.group}>
-          <h4 className={styles.groupTitle}>{secretsPartWords.sessions}</h4>
+          <h4 className={styles.groupTitle}>{secretsPartWords.session}</h4>
           <ul className={styles.grants}>
             {props.approvals.map((item) => (
               <GrantRow
-                detail={approvalDetail(item.session, item.who, item.when)}
+                detail={approvalDetail(item.who, item.when)}
                 disabled={props.disabled}
-                key={`${item.approval.secretId} ${item.approval.sessionId}`}
+                key={item.approval.secretId}
                 name={item.secret}
                 remove={() => props.removeApproval(item)}
-                what={`${item.secret} from ${item.session}`}
+                what={`${item.secret} from this session`}
               />
             ))}
           </ul>

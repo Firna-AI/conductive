@@ -30,4 +30,8 @@ export type RunnerWelcome = {
    * Accept the optional complete tool source offer.
    */
   completeToolDetails?: boolean
+  /**
+   * Accept independent services only when hello also offered them.
+   */
+  services?: boolean
 }

@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'vitest'
 import { WorkspaceStream } from '../../../app/events'
-import { ManualDelay, RecordingEvents } from '../../../app/test-kit'
+import {
+  HeldRequests,
+  ManualDelay,
+  RecordingEvents,
+  requestLines,
+} from '../../../app/test-kit'
 import { GitHubStore } from '../../../github/githubStore'
 import {
   githubEvent,
@@ -11,8 +16,14 @@ import {
   shown,
   target,
 } from '../../../github/storeDoubles'
-import type { WorkspaceEventEnvelope } from '../../../shared/events'
+import { snapshotOf } from '../../../github/testing'
+import type {
+  WorkspaceEventEnvelope,
+  WorkspaceSocketMessage,
+} from '../../../shared/events'
+import { githubPaths } from '../../../shared/github'
 import { FakeApiServer } from '../../../test-support/fake-api'
+import { emptyWorkspaceSeed } from '../../../test-support/fixtures/workspace-seed'
 import { githubSubscribe } from './github-events'
 
 /** One page of a replay whose pages share the cutoff `through`. */
@@ -50,6 +61,55 @@ function open(server: FakeApiServer) {
 }
 
 describe('the GitHub events of the ordered stream', () => {
+  test('a late GitHub store gets one empty seeded history and shows the stored state before the fresh read', async () => {
+    const server = new FakeApiServer({ banner: 'merged' })
+    const { orgId, workspaceId } = target
+    const banner = githubPaths.banner(orgId, workspaceId)
+    const checks = githubPaths.checks(orgId, workspaceId)
+    const stored = githubPaths.stored(orgId, workspaceId)
+    server.json('GET', stored, { state: snapshotOf('checks-running') })
+    const held = new HeldRequests(server)
+    held.holdAnswer('GET', banner)
+    const events = new RecordingEvents()
+    const delay = new ManualDelay().delay
+    const stream = new WorkspaceStream(events, target, delay)
+    stream.applyBaseline(12, emptyWorkspaceSeed)
+    stream.start()
+
+    const store = new GitHubStore(target)
+    const subscribe = githubSubscribe(stream)
+    const messages: WorkspaceSocketMessage[] = []
+    const seen = [shown(store)]
+    store.subscribe(() => seen.push(shown(store)))
+    const readStored = nextChange(store)
+    const stop = store.connect({
+      fetch: held.fetch,
+      subscribe: (after, listener) =>
+        subscribe(after, (message) => {
+          messages.push(message)
+          listener(message)
+        }),
+      delay,
+    })
+    const history = page([], 12)
+    expect(messages).toEqual([history])
+    events.send(history)
+    await readStored
+    expect(shown(store)).toBe('checks-running')
+    const readFresh = nextChange(store)
+    held.release('GET', banner)
+    await readFresh
+    expect(requestLines(server)).toEqual([
+      `GET ${banner}`,
+      `GET ${checks}`,
+      `GET ${stored}`,
+    ])
+    expect(seen).toEqual(['loading', 'checks-running', 'merged'])
+    expect(messages).toEqual([history])
+    stop()
+    stream.stop()
+  })
+
   test('a replay shows only its newest GitHub state, and the read of the current state still shows', async () => {
     const server = new FakeApiServer()
     const { replies, events, store, seen } = open(server)

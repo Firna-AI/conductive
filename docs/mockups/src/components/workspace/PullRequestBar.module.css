@@ -158,6 +158,14 @@
   flex: 1;
 }
 
+/* The place of a queued workspace in the compact row of a phone. */
+.queue {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-xs);
+  white-space: nowrap;
+}
+
 /* Why a branch without commits has no link that creates a pull request. */
 .note {
   flex-shrink: 0;

@@ -1,6 +1,6 @@
 import { useRef, type ReactNode } from 'react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import frame from '../../../docs/mockups/src/components/layout/AppFrame.module.css'
+import { classes } from '../../ui/components/common/classes'
+import frame from '../../ui/components/layout/AppFrame.module.css'
 import { FeedbackLayer } from '../feedback/FeedbackLayer'
 import { NewWorkspaceHost } from '../new-workspace/NewWorkspaceHost'
 import { PaletteLayer } from '../palette/PaletteLayer'

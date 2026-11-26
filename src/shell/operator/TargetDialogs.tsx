@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Ban, CircleAlert, LockOpen, TriangleAlert } from 'lucide-react'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { disableCodeOffer } from '../../../docs/mockups/src/components/operator/accessCopy'
+import { Notice } from '../../ui/components/common/Notice'
+import { disableCodeOffer } from '../../ui/components/operator/accessCopy'
 import {
   liftQuestion,
   selfSuspendWarning,
   suspendQuestion,
   type QuestionTarget,
-} from '../../../docs/mockups/src/components/operator/operatorCopy'
+} from '../../ui/components/operator/operatorCopy'
 import { ActionButton } from '../ui/actions'
 import { Dialog, DialogText } from '../ui/Dialog'
 import { CheckOption } from './CheckOption'
@@ -83,10 +83,12 @@ export function SuspendDialog(props: {
  * The operator confirms a lift. The question says what comes back, and that a
  * workspace on the `boat` account that stopped 14 days ago or more may have
  * lost its files. A deleted org stays deleted, so its question promises no
- * access. A failed lift shows its error, and the question stays open.
+ * access. `extra` adds a paragraph, such as the switch build that the lift
+ * starts. A failed lift shows its error, and the question stays open.
  */
 export function LiftDialog(props: {
   target: QuestionTarget
+  extra?: string
   lift: () => Promise<void>
   close: () => void
 }) {
@@ -112,6 +114,7 @@ export function LiftDialog(props: {
       {liftQuestion(target).map((text) => (
         <DialogText key={text}>{text}</DialogText>
       ))}
+      {props.extra ? <DialogText>{props.extra}</DialogText> : null}
       {lift.error ? (
         <Notice
           body={lift.error.message}

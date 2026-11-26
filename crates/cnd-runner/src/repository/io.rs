@@ -1,7 +1,11 @@
 //! Injectable filesystem operations for repository comparisons.
 
+use std::fs::Metadata;
 use std::io::Read;
+use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::time::SystemTime;
 
 use async_trait::async_trait;
 use sha2::{Digest, Sha256};
@@ -38,10 +42,60 @@ impl IndexDirectory {
     }
 }
 
+/// The metadata that identifies a version of an opened file.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FileFingerprint {
+    device: u64,
+    inode: u64,
+    size: u64,
+    modified_ns: i128,
+    pub(super) changed_ns: i128,
+}
+
+impl From<&Metadata> for FileFingerprint {
+    fn from(metadata: &Metadata) -> Self {
+        let nanoseconds = |seconds, nanos| i128::from(seconds) * 1_000_000_000 + i128::from(nanos);
+        Self {
+            device: metadata.dev(),
+            inode: metadata.ino(),
+            size: metadata.len(),
+            modified_ns: nanoseconds(metadata.mtime(), metadata.mtime_nsec()),
+            changed_ns: nanoseconds(metadata.ctime(), metadata.ctime_nsec()),
+        }
+    }
+}
+
+/// A content identity captured from a file with stable metadata.
+#[derive(Debug, Clone)]
+pub struct CachedIdentity {
+    pub(super) fingerprint: FileFingerprint,
+    pub(super) hash: Arc<str>,
+}
+
+/// The outcome of checking an opened file for its content identity.
+#[derive(Debug)]
+pub enum IdentityRead {
+    /// The descriptor still matches a prior read.
+    Reused(CachedIdentity),
+    /// The file bytes supplied a new hash.
+    Hashed {
+        /// The SHA-256 identity of the bytes read.
+        hash: String,
+        /// Metadata that stayed stable throughout the read, when available.
+        fingerprint: Option<FileFingerprint>,
+    },
+    /// The file could not be opened or read.
+    Unavailable,
+}
+
 /// Disk boundary shared by scans, reads, and diffs.
 #[cfg_attr(test, unimock::unimock(api = RepositoryIoMock))]
 #[async_trait]
 pub trait RepositoryIo: Send + Sync {
+    /// Wall time for comparing the start of a scan with file change times.
+    fn wall_time(&self) -> SystemTime {
+        SystemTime::now()
+    }
     /// Add the context exclusion once and create context attachment storage.
     async fn prepare_context(&self, root: PathBuf, exclude: PathBuf) -> Result<()>;
     /// Inspect an entry without following its link.
@@ -50,8 +104,13 @@ pub trait RepositoryIo: Send + Sync {
     async fn read(&self, root: PathBuf, path: String, max_bytes: u64) -> Result<Vec<u8>>;
     /// Read link text after checking the real parent.
     async fn link(&self, root: PathBuf, path: String) -> Result<Vec<u8>>;
-    /// Stream all readable bytes to detect changes outside Git representations.
-    async fn identity(&self, root: PathBuf, path: String) -> Result<String>;
+    /// Reuse a matching identity or stream the readable bytes from the opened file.
+    async fn identity(
+        &self,
+        root: PathBuf,
+        path: String,
+        cached: Option<CachedIdentity>,
+    ) -> Result<IdentityRead>;
     /// Create private storage and copy the real index when it exists.
     async fn temporary_index(&self, index: PathBuf) -> Result<IndexDirectory>;
 }
@@ -136,29 +195,44 @@ impl RepositoryIo for LocalRepositoryIo {
             .to_vec())
     }
 
-    async fn identity(&self, root: PathBuf, path: String) -> Result<String> {
+    async fn identity(
+        &self,
+        root: PathBuf,
+        path: String,
+        cached: Option<CachedIdentity>,
+    ) -> Result<IdentityRead> {
         tokio::task::spawn_blocking(move || {
-            let mut file = match verified_file(&root, &path) {
-                Ok(opened) => opened.file,
-                Err(_) => return Ok("unavailable".into()),
+            let Ok(opened) = verified_file(&root, &path) else {
+                return Ok(IdentityRead::Unavailable);
             };
+            let fingerprint = FileFingerprint::from(&opened.metadata);
+            if let Some(cached) = cached.filter(|cached| cached.fingerprint == fingerprint) {
+                return Ok(IdentityRead::Reused(cached));
+            }
+            let mut file = opened.file;
             let mut hash = Sha256::new();
             let mut buffer = [0; 65536];
             loop {
                 let count = match file.read(&mut buffer) {
                     Ok(count) => count,
-                    Err(_) => return Ok("unavailable".into()),
+                    Err(_) => return Ok(IdentityRead::Unavailable),
                 };
                 if count == 0 {
                     break;
                 }
                 hash.update(&buffer[..count]);
             }
-            Ok(hash
+            let hash = hash
                 .finalize()
                 .iter()
                 .map(|byte| format!("{byte:02x}"))
-                .collect())
+                .collect();
+            let fingerprint = file
+                .metadata()
+                .ok()
+                .map(|metadata| FileFingerprint::from(&metadata))
+                .filter(|after| *after == fingerprint);
+            Ok(IdentityRead::Hashed { hash, fingerprint })
         })
         .await
         .internal()?

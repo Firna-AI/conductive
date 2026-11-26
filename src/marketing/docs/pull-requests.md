@@ -1,6 +1,6 @@
 ---
 title: Pull requests
-description: Create and merge pull requests, ask agents to fix checks and conflicts, and continue on a new branch after a merge.
+description: Create and merge pull requests, use the merge queue, ask agents to fix checks and conflicts, and continue after a merge.
 group: Work
 order: 50
 ---
@@ -25,13 +25,33 @@ The bar can ask the agent to create a pull request with files not committed or c
 
 The action asks the agent to commit the changes, push this branch, and open a pull request.
 It targets the workspace's base branch, which is the branch this work will merge into.
-A workspace you create uses the repository's default branch.
+A workspace you create targets the branch you select in **New workspace**.
+You can choose the default branch as the target instead.
 For a pull request run, its first message names the initial target under **Your work goes to**.
-The pull request bar names the current target.
-After **Continue**, the workspace targets the latest default branch of its repository.
-After a repository change, it targets the latest default branch of the new repository.
+On a computer, the pull request bar names the workspace's base branch.
+On a phone, the top of **Checks** shows the branch and its base while the branch has no pull request.
+After **Continue**, it targets the branch the pull request merged into, or the default branch if that branch is gone.
+After a repository change, the workspace targets the latest default branch of the new repository.
 Your draft and its attached files stay unchanged.
 Conductive then shows the pull request's state for that branch.
+
+Outside the merge queue, Conductive fetches the default branch if GitHub deletes the workspace's base branch.
+The cloud computer uses the new base only after that fetch succeeds.
+The bar explains that change until a pull request opens.
+
+A workspace that targets the default branch also follows a later rename of that default branch.
+This includes a workspace after a repository change.
+Conductive fetches the new default before the cloud computer targets it.
+A stopped computer completes this move when it resumes.
+Outside the merge queue, a workspace that targets another branch keeps that target.
+
+If the computer cannot complete the move, Conductive retries it automatically, also when the computer resumes.
+The pull request bar still shows GitHub state while that update waits.
+
+Outside the queue, changing a pull request's target on GitHub leaves the workspace's base unchanged.
+Check the target on GitHub before merging after such a change.
+The base of a queued workspace follows its pull request's target on GitHub.
+If you change that target on GitHub, the pull request leaves the queue.
 
 If the bar shows **No commits yet**, make a change or ask the agent to start the task.
 GitHub write access enables the agent actions.
@@ -75,7 +95,7 @@ The actions and GitHub links sit at the top of that view.
 | No pull request, with local work or commits on GitHub that its base branch does not have | **Create PR** asks the agent to prepare it. |
 | Checks running | Wait for the checks to finish. |
 | Checks failed | **Fix checks** asks the agent to investigate, fix, commit, and push. |
-| Merge conflict | **Resolve conflicts** asks the agent to merge the latest target branch, fix conflicts, test, commit, and push. |
+| Merge conflict | **Resolve conflicts** asks the agent to bring in the latest target branch, fix conflicts, test, and push. |
 | Changes requested | **Address review** asks the agent to read the comments, change code, commit, and push. |
 | Draft | **Ready for review** marks it ready for review on GitHub. |
 | Blocked | Open GitHub for the reason it blocks the merge. |
@@ -88,16 +108,19 @@ Local work means files not committed or commits that have not been pushed.
 When any file is not committed, **Commit and push** asks the agent to commit and push that work.
 When only commits are left, **Push** asks the agent to push the branch.
 
-Each agent action sends a fixed message to the chat session you viewed last.
+Each agent action you select sends a fixed message to the chat session you viewed last.
 It uses that session's model, effort, **Fast** setting, and normal send rules.
 It preserves your draft and uploads.
 
-To bring the latest target branch into your branch at any time, open the command palette and choose **Merge latest**.
+Outside the queue, open the command palette and choose **Merge latest** to bring in the latest target branch.
 The row names the target branch, as in **Merge latest main**.
 It asks the agent to merge that branch, fix conflicts, test, commit, and push.
 It sends its message in the same way as the agent actions of the bar.
 You see it when the agent actions are available to you.
 It is not offered after the pull request merges.
+
+**Resolve conflicts** and **Merge latest** check the queue when you select them.
+While the workspace is queued, they ask the agent to move only this pull request's commits onto the branch that the queue selected.
 
 **Address review** asks the agent to change code without replying on GitHub.
 Select the pull request number to read, reply to, or resolve review comment threads on GitHub.
@@ -109,7 +132,7 @@ GitHub also has the other pull request controls.
 ## Merge the pull request
 
 Review the changes before selecting the merge action.
-Its label names the method: **Merge**, **Squash and merge**, or **Rebase and merge**.
+For a pull request that lands alone, the button shows **Merge**, **Squash and merge**, or **Rebase and merge**, according to the merge method.
 One selection starts the merge without a confirmation question.
 
 The merge uses your GitHub account.
@@ -125,6 +148,90 @@ The merge alone does not archive the workspace.
 If the branch has new commits, review them before merging again.
 If the error says your GitHub access does not allow the merge, ask a GitHub repository admin for access.
 For another refusal, use **Open on GitHub** to inspect the cause.
+
+### Merge a GitHub stack
+
+On a workspace outside the queue, **Merge stack (N)** counts your pull request and the open pull requests below it that will land together.
+When those lower pull requests are outside the queue, the merge uses your GitHub account and merge method directly.
+If a lower pull request is in this org's queue, the click goes through that queue.
+The queued layers must be ready at the front.
+If a lower pull request is queued in another org, the bar explains why you cannot merge the stack.
+
+## Merge queue
+
+The merge queue merges pull requests in order into the repository's default branch, such as `main`.
+The first pull request in a stack builds on the default branch.
+Each other pull request in that stack builds on the one directly ahead of it.
+The queue can merge several ready pull requests in the same GitHub stack together.
+
+### Add a pull request
+
+You need GitHub write access to add, remove, or re-order pull requests.
+The workspace needs an open pull request.
+Pull requests from forks cannot join.
+
+A pull request that targets another branch, such as `develop`, cannot join on its own.
+If you already made a stack of pull requests, its first pull request must target the default branch.
+Adding a pull request from that stack also adds the earlier ones that are still outside the queue.
+You can queue the bottom part of your stack by adding a pull request in the middle.
+An automatic merge lands the queued pull requests from your stack.
+The ones you left out stay open. Use **Merge stack** on an upper pull request to include it in a merge through this org's queue.
+Later queue entries wait for those pull requests to merge, then rebase onto the default branch.
+The queue cannot accept pull requests if the default branch requires GitHub's own merge queue.
+It also cannot accept them while another org has entries or is creating its GitHub stack for the same repository.
+
+Add the pull request in one of these places.
+
+- Select **Add to merge queue** in the pull request bar.
+- Open the workspace row's menu and select **Add to merge queue**.
+- Select the workspace name in the header and choose **Add to merge queue**.
+- Open the command palette and select **Add to merge queue**.
+- Drag the workspace row into **Merge queue** in the sidebar.
+
+The drop target appears while you drag, even when the queue is empty.
+If a workspace cannot join, the drop target shows the reason.
+A pull request that joins on its own goes at the end of its repository's queue.
+Adding a draft marks it ready for review on GitHub with your account.
+
+### Follow or change the queue
+
+The **Merge queue** group appears at the top of the sidebar when it has entries.
+Each repository has its own queue, with place 1 first.
+A vertical line joins the workspace marks of each stack.
+A line under the pull request bar shows the place and what the pull request builds on or waits for.
+On a phone, open **Checks** to see that line.
+
+Drag a row within its repository's queue to change its place.
+On a phone, press and hold the row to start the drag.
+A stack you made moves together.
+Wait for a merge to finish before moving a row ahead of it.
+
+A pull request with failed checks or requested changes keeps its place.
+Ready pull requests ahead of it can still merge, including while an entry rebases after a re-order.
+The ones after it wait.
+Use **Fix checks** or **Address review** to ask the agent to help.
+The queue waits while the workspace has work that has not been pushed.
+It checks again after a local change is discarded, and when it could not check local work earlier.
+
+If the queue's rebase hits a conflict, it starts one agent turn as the member who added the pull request.
+If the conflict remains, select **Resolve conflicts** or remove the pull request from the queue.
+
+Before the merge starts, use **Remove from queue** under the bar or in the row or header menu.
+Select **Remove** to confirm.
+The question names the branch that the pull request will target after it loses its place.
+A pull request that joined on its own targets the default branch again.
+An upper pull request in a stack you made can keep the branch below it.
+If you remove a pull request from a stack you made, the later ones in that stack leave with it.
+
+### Merge from the queue
+
+An automatic merge uses the GitHub account of the member who added the last pull request that the queue asks GitHub to merge.
+GitHub checks that account's access and the branch rules.
+
+The merge action appears when this pull request and the ones ahead of it are ready to merge in the same GitHub stack.
+For example, **Merge with 2 ahead** asks the queue to merge this pull request and the two ahead of it as its next step.
+The first pull request's button names the merge method, such as **Squash and merge**.
+Selecting the action uses your GitHub account and merge method.
 
 ## Mark a draft ready for review
 
@@ -178,9 +285,10 @@ Ask the org admin to check the GitHub App's repository access when needed.
 ## Continue after a merge
 
 Every org member can select **Continue** after the workspace's pull request merges.
-It starts a branch from the latest default branch in the same workspace.
-The branch name uses the workspace name and a version, such as `v2`.
-That default branch becomes the workspace's new base branch.
+It starts a branch from the latest commit of the branch that the pull request merged into.
+If that branch no longer exists, it uses the repository's default branch.
+That starting branch becomes the workspace's new base branch.
+The new branch name uses the workspace name and a version, such as `v2`.
 It keeps the computer, files, sessions, and workspace name.
 Your GitHub account supplies the repository access for that fetch.
 Continue waits while an agent turn runs in any session of the workspace.

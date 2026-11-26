@@ -1,5 +1,5 @@
 import { Repeat } from 'lucide-react'
-import styles from '../../../docs/mockups/src/components/workspace/RunLinks.module.css'
+import styles from '../../ui/components/workspace/RunLinks.module.css'
 import { routes } from '../../app/router'
 import type { RunAutomation } from '../../chat/api/read-view'
 import { AppLink } from '../ui/AppLink'

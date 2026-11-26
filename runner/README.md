@@ -3,7 +3,7 @@
 The agent runner is the program of Conductive in each cloud computer, a
 sandbox on Boat or E2B. It runs the agents powered by Claude and Codex for one
 workspace. It also reports the files and the changes of the workspace
-repository and the listening ports.
+repository, the listening ports, and the skills of each agent.
 
 The runner opens one outbound WebSocket to the workspace Durable Object.
 It speaks runner protocol version 2. It sends numbered events. It gets
@@ -46,7 +46,8 @@ The service runs `/opt/conductive/current/conductive runner`.
 The [Rust runner library](../crates/cnd-runner/README.md) owns the connection,
 saved state, turns, reports, and output filter. Its [SDK helper](sdk-helper/README.md)
 is a separate Node 24 package. The runner starts one helper child for each
-agent start. Private pipes carry JSON lines. Only the helper starts the SDK adapters.
+agent start. A separate helper reads agent skill metadata.
+Private pipes carry JSON lines. Only the helper starts the SDK adapters.
 
 The release has three parts: `node`, `system`, and `sdk-helper`.
 The runner uses the Node and helper beside its running executable.
@@ -64,6 +65,43 @@ background work of its agent, the note at the end of a reply, the time
 limit of 30 days, the end reason, and their key code. A workspace gets
 this behavior when its software update applies.
 
+## Org skills
+
+The Rust runner copies the public GitHub repository named by
+`CONDUCTIVE_SKILLS_REPOSITORY` in the background at start and every five
+minutes. It keeps complete commit folders under `~/.conductive/skills/`.
+Its Git process has no inherited credentials or credential helper.
+A failed copy warns and stops no start or turn.
+
+Each helper start gets the optional `HelperOptions.orgSkills` value. It is
+absent when `CONDUCTIVE_SKILLS_REPOSITORY` holds no valid name. Otherwise
+its `OrgSkills` value carries the configured `repository`, `trustedRepository` from
+`CONDUCTIVE_TRUSTED_SKILLS_REPOSITORY`, and the leased current complete
+folder as `directory` when one exists. A present value keeps its trust
+policy also without a folder. [Runner configuration](configuration.md) gives both
+variables.
+
+The helper uses the shared folder rule and compares names as each agent
+shows them. Workspace skills win. Duplicate org names keep the first path.
+The helper exports a safe view for both agents. It removes executable
+metadata. It makes inline shell commands inert, except in Claude's view
+of a trusted repository. For an untrusted repository, the Claude adapter
+also turns on Claude's own inline shell restriction for the whole session.
+The Codex view does not depend on trust. The helper
+[README](sdk-helper/README.md#org-skills) explains the metadata allowlist
+and the trust policy.
+Claude gets skill links in an additional directory. Codex gets extra skill
+roots. Existing turns keep their folders. The next turn gets updates.
+
+The runner removes escaping and dangling links before publication.
+It reclaims retired copies after their last helper closes. Its startup
+sweep removes crash leftovers and prunes unreachable Git objects.
+The runner and the helper ship in one release. A helper request without
+the org skills value loads no org skills and sets no trust policy.
+[Org skills](../docs/protocol/org-skills.md) and
+[Repository trust](../docs/protocol/org-skills-trust.md) state the
+requirements.
+
 ## Event limits
 
 [Event limits](event-limits.md) gives the byte and count limits of each
@@ -73,7 +111,8 @@ the outbox size check.
 ## Report requests
 
 The [report guide](reports.md) gives full report requests, their saved
-receipts, and the listening-port scan and scheduling boundaries.
+receipts, the listening-port scan and scheduling boundaries, and the
+skills report of each agent.
 
 ## Preview relay
 
@@ -110,6 +149,18 @@ The separate Rust gate checks the Rust runner and static program build.
 
 The [service guide](service/README.md) describes how each build of the org
 image installs the runner as a systemd service, and how that service starts.
+
+## Services of a workspace
+
+[Services](../docs/protocol/services.md) are named programs that run
+outside every turn, in system units of their own.
+The [native services library](../crates/cnd-services/README.md) provides the
+manager, private socket, process reconciliation, cgroup ownership, and logs.
+The [local tool guide](../tools/services.md) gives CLI and MCP calls.
+The runner also negotiates a separate private Worker transport for reports,
+controls, and complete log reads. It captures each request's connection generation.
+Each accepted connection publishes a full snapshot with a higher saved revision.
+Its private jobs hold no turn and never delay an idle update or repository move.
 
 ## Configuration
 
@@ -149,10 +200,12 @@ guides that give the entry points of each part.
 - [Agent runner: background work](../docs/protocol/agent-runner.md#background-work)
 - [Agent runner: lost workspace updates](../docs/protocol/lost-workspace-updates.md)
 - [Agent runner: listening ports](../docs/protocol/agent-runner.md#listening-ports)
+- [Skill mentions: the skills report](../docs/protocol/skill-mentions.md#the-skills-report)
 - [Agents and sessions: agents](../docs/protocol/agents-and-sessions.md#agents)
 - [Agent instructions](../docs/protocol/agent-instructions.md)
 - [Access and security: agent logins in a sandbox](../docs/protocol/isolation.md#agent-logins-in-a-sandbox)
 - [Workspaces and sandboxes: files and changes](../docs/protocol/workspace-tools.md#files-and-changes)
+- [Files and changes: file reports](../docs/protocol/file-reports.md)
 - [Agent tools: computer tools](../docs/protocol/agent-tools.md#computer-tools)
 - [Agent tools: workspace tools](../docs/protocol/agent-tools.md#workspace-tools)
 - [Shared contracts](../src/shared/README.md)

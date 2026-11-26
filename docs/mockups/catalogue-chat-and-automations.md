@@ -10,7 +10,18 @@ failure, which moved from `app/chat/running`, `steer`, `interrupted`, and
 the agent of another session stopped with a workspace tool, from decision
 279. Its line says "Stopped from" and shows the session chip of that
 session, for a session of the same workspace and, in `other-workspace`, of
-another workspace. `app/chat/work` draws the work of ended
+another workspace. In `unknown-source`, the list of the org does not hold
+the workspace of that session. So the line shows the whole session link
+as text. The link breaks to fit the line.
+
+`app/chat/wakes` draws the line that wakes a session when a turn that it
+watched ends, from watch decisions 1 C and 6 B. Its canonical screen has
+"A turn finished in" and the session chip of the watched session, then
+the new turn, which reads that session. Its variants have a failed turn,
+a stopped turn, a session of another workspace whose turn finished at the
+time limit of background work, with that end reason after a dot, and a
+wake that joins a turn that runs.
+`app/chat/work` draws the work of ended
 turns, from decisions 150 and 151: the open work of the finished turn with
 one message open, a turn with a message that the user sent during it, whose
 two parts each fold their own work, a turn whose open work holds a Mac
@@ -18,12 +29,23 @@ command card and a lost line at their place, and a turn whose open work
 holds two messages with tables, one closed and one open. The `fold` state
 opens the folds. `app/chat/tables` draws tables in replies: the resources
 of the cloud computer, a short row whose last cell spans the missing
-columns, a wide table that scrolls sideways inside the reply, and the
-reply while the agent writes it, before its separator row arrives and
-after its table appears. `app/chat/lists` draws a reply with a numbered
+columns, a wide table that scrolls sideways inside the reply, cells with
+line breaks, and the reply while the agent writes it, before its
+separator row arrives and after its table appears. Its saved states
+`short-row`, `wide`, `header`, and `rows` moved into their own folders and
+kept their paths, so the page shows only its canonical screen. The new
+child page `app/chat/tables/line-break` compares the two address providers
+in a table whose cells hold two lines, where the agent wrote `<br>`,
+`<br/>`, or `<br />`, from item 1 of the Markdown plan. Each cell stands
+at the top of its row, from item 12 B of 18 November 2026. `app/chat/lists` draws a reply with a numbered
 list of choices, each with its options in a list under its text, as the
 user chose on 10 November 2026, and an open message line in the work of a
-turn with a plan whose steps sit under each item. `app/chat/headings`
+turn with a plan whose steps sit under each item. Its `tasks` variant draws
+a reply with a task list, whose fixed check boxes take the place of the
+bullets, from item 14 B of the Markdown plan of 18 November 2026. Its
+`tasks-work` variant draws the work of the same turn: two closed message
+lines with the boxes before the words of their tasks, and an open message
+line with the boxes in the place of the bullets. `app/chat/headings`
 draws headings in a reply, as the user chose on 11 November 2026: a review
 with a title at level 1, the section Needs your answer at level 2, a
 heading at level 3 for each choice with its bold fields under it, and a
@@ -31,6 +53,29 @@ heading at level 4 inside the first choice. Its `work` variant has the
 open work of a turn: a closed message line that shows its heading as text
 in the line, and an open message line that shows its heading on its own
 line, in the weight of a heading.
+
+`app/chat/formatting` draws the quotes, the rules, the emphasis, the
+strikethrough, and the line breaks of a reply, from items 8 D and 5 A of
+the Markdown plan, which the user chose on 17 November 2026, and item 1 of
+16 November 2026. Its canonical screen has an answer that quotes the two
+review comments of Priya, with a rule between them, a word in italics, an
+option with a line through it, an address on two lines, and a bold label.
+Its variants:
+
+- `work` has the open work of a turn. Its closed message lines show a
+  quote as its text, a rule as a middle dot, and a line break in a table
+  cell as a space. Its open message line shows a quote and a rule as
+  blocks, and a line break as a new line.
+- `writing` has the same answer while the agent writes it: the bold label
+  at its end has no closing `**` yet, and the open mark closes at the end
+  of the text, so the label shows bold at once, from item 9 C of
+  18 November 2026.
+- `as-typed` has marks without a pair, which show as typed, and `<kbd>`
+  tags, which show as text.
+- `pictures` has a picture at a web address, which shows its alt text as
+  a link, a picture at a path that no file has, which shows its alt text
+  only, and the screenshot of the workspace, which shows as its picture
+  and opens its file, as `app/file-mentions/answers` shows.
 
 `app/chat/links` draws the links of chat text, as the user chose on 10
 November 2026 with D of chat link decision 1, C of chat link decision 2,
@@ -50,6 +95,63 @@ variants:
 - `work` has the open work of a turn: a closed message line that starts
   with a label link, and an open message line whose long address breaks to
   fit the line.
+
+`app/chat/explain` draws Explain, which the user asked for on 17 November
+2026 and changed on 20 November 2026. A member selects text in one
+finished answer or member message and presses Explain. The app writes a
+prompt with the context that the agent needs and sends it at once. The
+prompt starts an explanation: a normal session whose first message names
+the quote, the parent session with its link, the message ID, and the quote
+with the lines around it. The quote keeps a mark in the parent chat. The
+answer shows in a small popover by the mark, and a press on the mark shows
+the popover again. The docs call the panel a popover, because "preview"
+names port previews. The canonical screen has the popover after the
+answer: below the mark on a computer, and a sheet at half height on a
+phone. The tab of the explanation stands at the end of the row, and the
+parent tab stays the shown tab. The `explainMarks`, `explainSession`, and
+`explainOpen` states of the workspace screen draw the pages. Its child
+pages:
+
+- `app/chat/explain/select` has Explain above the middle of a selection in
+  the answer. On a phone the selection menu of the phone stays above the
+  selection, so the button stands above the composer. Its `message`
+  variant has a selection in a member message, where the button lines up
+  with the end of the selection.
+- `app/chat/explain/popover` has the popover just after Explain, while the
+  agent works with no answer yet. Its child pages:
+  - `app/chat/explain/popover/run` has the answer as it comes in. Its
+    `starting` variant has the popover while the cloud computer starts,
+    with the written prompt in the queue. Its `follow-up` variant has a
+    follow-up of Cal that runs. Its `waiting` variant has the request for a
+    secret above the follow-up field.
+  - `app/chat/explain/popover/failed` has a failed first turn with Try
+    again. Its `stopped` variant has a turn that Cal stopped. Its
+    `computer-stopped` variant has the popover of an answered explanation
+    while the cloud computer is stopped: the bar of a stopped tab, with
+    Resume, takes the place of the follow-up field, as it takes the place
+    of the composer.
+  - `app/chat/explain/popover/long` has a long answer, which scrolls inside
+    the popover at its highest height, and in the sheet of a phone at half
+    height. Its `full` variant has the sheet of a phone at full height.
+- `app/chat/explain/marks` has four marks with no popover open: one whose
+  explanation waits for a member, one that runs, one that has its answer,
+  and one that failed. Each open explanation has a tab at the end of the
+  row. Its `running` variant has the mark of Cal after the popover closes.
+  Its `overlap` variant has a mark inside another mark, with a deeper fill
+  where they overlap. Its `menu` variant has the menu of both explanations,
+  which is a sheet on a phone. Its `stale` variant has a mark whose text no
+  longer matches, so the mark covers the whole answer.
+- `app/chat/explain/closed` has the popover of an explanation whose tab is
+  closed: its chat to read, and the notice that a follow-up or Expand
+  reopens it.
+- `app/chat/explain/tab` has the explanation in its tab after Expand, with
+  the written prompt as its first message.
+- `app/chat/explain/read-only` has an archived workspace: the marks stay,
+  and a selection shows no Explain. Its `popover` variant has the popover
+  to read, with no follow-up field.
+
+The flow `user-flows/explain-chat-text` goes from the selection, through
+the popover and the mark, to the tab of the explanation.
 
 `app/chat/lost-data` draws the data that the
 chat does not have, from decision 76: tool output and turn files that the
@@ -74,8 +176,9 @@ All files.
 `app/chat/endpoint-models` shows option G of decision 10 of the own
 endpoint plan, which Cal chose on 10 November 2026: the pickers of the
 owner of a login hide each model that its endpoint does not list. In a
-session of Cal, the picker shows the models of the app without Fable 5.1,
-because the model list of Cal's proxy does not name it. Its `not-served`
+session of Cal, the picker has All models open, with the models of the app
+without Fable 5.1, because the model list of Cal's proxy does not name it.
+The menu leaves out the favourite on Fable 5.1 too. Its `not-served`
 variant has a stopped turn on Fable 5.1, which the session kept as its
 model, and the notice names the model ID and no host. Its `member`
 variant has the same notice as Priya sees it. Its `org` variant has the
@@ -101,30 +204,40 @@ the same words after a dot. A fast turn at fast speed ends as any turn
 does, as `app/fast-mode/trigger` shows.
 
 `app/chat/menu-placement` draws menus that show whole over a box that
-scrolls. Its canonical screen has the model menu over the stack of the
-requests that wait above the composer. Its `history` variant has the
-session history beside a full tab row. Its `allow` variant has More ways
-to allow of the card on top of a stack of four requests in the Mac app.
-The app opens these menus in the top layer, so no box cuts them.
+scrolls. Its canonical screen has the model menu, with the favourites
+first, over the stack of requests above the composer. Its `history`
+variant has the session history beside a full tab row. Its `allow`
+variant has More ways to allow of the card on top of a stack of four
+requests in the Mac app. The app opens these menus in the top layer, so
+no box cuts them.
 
 `app/automations` lists the automations of Acme, which the Automations link below
 New workspace opens. Its child pages:
 
 - `app/automations/empty` has an org without automations.
-- `app/automations/automation` has the owner's view of a saved automation. Its
-  child pages: `new` has a new automation, whose `org-login` variant has a
+- `app/automations/automation` has the owner's view of a saved automation,
+  with the Capabilities icon in the bar of its prompt box. Under the box, a
+  line names the secrets that its runs can use with no question, and the
+  hint of its pull request triggers follows. Its child pages: `new` has a
+  new automation, whose `org-login` variant has a
   new automation of Priya whose runs use the org login of Acme, from decision
   5 A of the org logins plan, and whose `org-models` variant has its open
-  model picker without Fable 5.1, from decision 3 A. `member` has the view
-  of a member, whose `org-login` variant has the runs of Cal on the org
+  model picker without the favourite on Fable 5.1, from decision 3 A. `member` has
+  the view of a member, with the secrets of the runs read-only and the pull
+  request hint, whose `org-login` variant has the runs of Cal on the org
   login of Acme: "Runs use Acme's Claude login and Cal's GitHub access.",
-  `admin` the view of an admin with Turn off and Delete, `owner-left` an
+  `admin` the view of an admin with Turn off and Delete and the secret of
+  the runs of Priya read-only, `owner-left` an
   automation that moved, turned off, to Cal, the admin who got the
   workspaces of a member who left, `turned-off` an automation that turned
   off after three runs in a row failed, and `delete` the question that
   Delete asks first, because a deleted automation cannot come back. The first
   four were saved states of the page. They moved into their own folders
   and kept their paths, so the page shows only its canonical screen.
+  `capabilities` has the Capabilities control of the owner open, with two
+  secrets checked for each run workspace and the pull request hint, from
+  automation capabilities decisions 1 A to 3 A. A phone opens the control
+  as a sheet.
   `unavailable` has the page of an automation that the org no longer has,
   because it was deleted or the address is wrong, with Open Automations.
   `not-loaded` has the page after the read of the automation failed, with

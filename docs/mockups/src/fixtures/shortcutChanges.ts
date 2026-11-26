@@ -1,4 +1,7 @@
-import type { Shortcut } from '../components/common/KeyChips'
+import {
+  sameShortcut,
+  type Shortcut,
+} from '../../../../src/ui/components/common/KeyChips'
 import type { CommandId } from './shortcutCommands'
 import {
   keyboardOf,
@@ -24,9 +27,9 @@ export type ShortcutChanges = Partial<
  * shortcut now.
  */
 export const editedShortcuts: ShortcutChanges = {
-  'command-palette': ['⇧⌘P'],
-  'keyboard-shortcuts': ['⌘/'],
-  'create-pull-request': ['⌥⇧⌘P'],
+  'command-palette': [['⇧', '⌘', 'P']],
+  'keyboard-shortcuts': [['⌘', '/']],
+  'create-pull-request': [['⌥', '⇧', '⌘', 'P']],
   'model-picker': [],
 }
 
@@ -98,18 +101,18 @@ export function refusedShortcut(
   const mac = keyboardOf(host) === 'mac'
   switch (change) {
     case 'refused':
-      if (host === 'mac-app') return '⌘H'
-      return mac ? '⌘Z' : 'Ctrl+Z'
+      if (host === 'mac-app') return ['⌘', 'H']
+      return mac ? ['⌘', 'Z'] : ['Ctrl', 'Z']
     case 'refused-space':
-      return 'Space'
+      return ['Space']
     case 'refused-enter':
-      return mac ? '⇧⌘Enter' : 'Ctrl+Shift+Enter'
+      return mac ? ['⇧', '⌘', 'Enter'] : ['Ctrl', 'Shift', 'Enter']
   }
 }
 
 /** A recorded shortcut of another command, which Replace moves here. */
 export const takenShortcut = {
-  shortcut: '⌘/',
+  shortcut: ['⌘', '/'],
   owner: 'model-picker',
 } as const satisfies { shortcut: Shortcut; owner: CommandId }
 
@@ -133,7 +136,9 @@ export function heldDefault(
     const owner = commandIds.find(
       (other) =>
         other !== id &&
-        shortcutsOf(other, changes, keyboard).includes(shortcut),
+        shortcutsOf(other, changes, keyboard).some((key) =>
+          sameShortcut(key, shortcut),
+        ),
     )
     if (owner) return { shortcut, owner }
   }
@@ -147,5 +152,5 @@ export function heldDefault(
  */
 export const unsavedChange = {
   command: 'command-palette',
-  shortcut: '⇧⌘P',
+  shortcut: ['⇧', '⌘', 'P'],
 } as const satisfies { command: CommandId; shortcut: Shortcut }

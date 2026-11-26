@@ -1,9 +1,9 @@
 import { defineScreen } from '@mokly/mokly'
-import { capturePagePath } from '../../../screens/marketingPictureCaptures'
+import { capturePagePath } from '../../../../../../src/ui/screens/marketingPictureCaptures'
 import {
   marketingPictures,
   type MarketingPictureKey,
-} from '../../../screens/marketingPictureList'
+} from '../../../../../../src/ui/screens/marketingPictureList'
 import { PictureCapture } from '../../../screens/marketingPictures'
 
 /**

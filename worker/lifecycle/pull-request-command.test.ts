@@ -31,6 +31,7 @@ it.each(['head', 'missing-head', 'merged'] as const)(
       const job = {
         ...saved,
         baseBranch: base,
+        startBranch: base,
         startSha:
           kind === 'head'
             ? first

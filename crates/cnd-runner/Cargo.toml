@@ -31,6 +31,8 @@ tokio = { version = "1.54.1", features = ["fs", "io-util", "net", "sync", "time"
 tokio-tungstenite = { version = "0.30.0", default-features = false, features = ["connect", "rustls-tls-webpki-roots"] }
 tokio-util = { version = "0.7.20", features = ["io"] }
 tracing = "0.1.44"
+ttf-parser = { version = "0.25.1", default-features = false, features = ["std", "variable-fonts"] }
+unimock = "0.6.8"
 url = "2.5.8"
 
 [lints]
@@ -38,4 +40,7 @@ workspace = true
 
 [dev-dependencies]
 tokio = { version = "1.54.1", features = ["test-util", "rt-multi-thread"] }
-unimock = "0.6.8"
+
+[[test]]
+name = "file_server_font_tests"
+path = "src/file_server/_tests_/font_server_tests.rs"

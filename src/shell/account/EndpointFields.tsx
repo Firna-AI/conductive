@@ -1,8 +1,8 @@
 import { Input } from '@firna/ui/input'
 import type { Agent } from '../../shared/generated/Agent'
-import { productName } from '../../../docs/mockups/src/brand'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import styles from '../../../docs/mockups/src/components/settings/AgentConnectForm.module.css'
+import { useControlSizes } from '../../ui/components/common/touch'
+import { agentConnectCopy } from '../../ui/components/settings/agentConnectCopy'
+import styles from '../../ui/components/settings/AgentConnectForm.module.css'
 import type { SecretForm } from '../../app/secret-form'
 import { useStore } from '../../app/store'
 import {
@@ -12,37 +12,27 @@ import {
 import { useApp } from '../context'
 import { SecretField } from './SecretFields'
 
+const copy = agentConnectCopy.endpoint
+
 /**
- * The API that the endpoint of each agent serves, the example of its base
- * address, and the route that the gateway of the app adds to the base for
- * each request. A Claude base has no `/v1`, and a Codex base ends with it.
+ * The route that the gateway of the app adds to the base address of the
+ * endpoint of each agent for each request. A Claude base has no `/v1`, and
+ * a Codex base ends with it.
  */
-const endpointApis = {
-  claude: {
-    name: 'the Anthropic Messages API',
-    example: 'https://gateway.example.com',
-    route: '/v1/messages',
-  },
-  codex: {
-    name: 'the OpenAI Responses API',
-    example: 'https://gateway.example.com/v1',
-    route: '/responses',
-  },
-} as const satisfies Record<
-  Agent,
-  { name: string; example: string; route: string }
->
+const requestRoutes = {
+  claude: '/v1/messages',
+  codex: '/responses',
+} as const satisfies Record<Agent, string>
 
 /** Names in a sentence, such as "A", "A and B", or "A, B, and C". */
 const names = new Intl.ListFormat('en', { type: 'conjunction' })
 
 /** What the endpoint must serve, with the models of the app for the agent. */
 function servesText(agent: Agent, labels: readonly string[]): string {
-  const offered =
-    labels.length > 0
-      ? `, with the models that ${productName} offers: ${names.format(labels)}`
-      : ''
-  return `Use a gateway or a proxy that serves ${endpointApis[agent].name}${offered}.`
+  return copy.serves(
+    agent,
+    labels.length > 0 ? names.format(labels) : undefined,
+  )
 }
 
 /**
@@ -53,14 +43,11 @@ function servesText(agent: Agent, labels: readonly string[]): string {
  * the form saves.
  */
 function addressHint(agent: Agent, typed: string): string {
-  const api = endpointApis[agent]
-  const requests = (upstream: string) =>
-    `Requests go through ${productName} to ${upstream}.`
-  const address = readEndpointAddress(typed, agent, { route: api.route })
-  if (!address) return requests(`${api.example}${api.route}`)
-  const saves =
-    address.endpoint === typed.trim() ? '' : `Saves as ${address.endpoint}. `
-  return `${saves}${requests(address.upstream)}`
+  const route = requestRoutes[agent]
+  const address = readEndpointAddress(typed, agent, { route })
+  if (!address) return copy.addressHint(`${copy.examples[agent]}${route}`)
+  const saved = address.endpoint === typed.trim() ? undefined : address.endpoint
+  return copy.addressHint(address.upstream, saved)
 }
 
 /**
@@ -108,10 +95,10 @@ export function EndpointFields(props: {
           props.refusal ? undefined : addressHint(props.agent, props.address)
         }
         inputMode="url"
-        label="Endpoint"
+        label={copy.addressLabel}
         onChangeText={props.changeAddress}
         onSubmitEditing={props.submit}
-        placeholder={endpointApis[props.agent].example}
+        placeholder={copy.examples[props.agent]}
         size={field}
         value={props.address}
       />

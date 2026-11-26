@@ -59,3 +59,8 @@
   - `worker/chat/integration/README.md:142` keeps that anchor in HTML: `<a id="milestone-9-files"></a>`. The heading under it is `## Files`, with the anchor `#files`.
   - Both files are the same on captured main `f5eb804fcc2007b3348fa76d67d759363d01fb3d`.
   - A check that reads only headings reports this link as missing. This note closes the report. It changes no file and adds no gate.
+- **Evidence update, 2026-11-20:** the watch protocol audit found an existing wrong anchor on captured main `a3cb5f457`.
+  - `docs/protocol/html-file-preview.md:43` links `file-mentions.md#line-targets`.
+  - The heading is in `docs/protocol/file-mentions-answers.md`. The intended target is `file-mentions-answers.md#line-targets`.
+  - The watch branch leaves this unrelated link unchanged. It adds no reference gate.
+  - The same audit again flagged the link from `worker/files/README.md` to `../chat/integration/README.md#milestone-9-files`. That target still exists as an explicit HTML anchor in `worker/chat/integration/README.md`. It remains a checker false positive, not a second broken link.

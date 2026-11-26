@@ -2,7 +2,7 @@ import { expect, it } from 'vitest'
 
 import { createHarness } from '../test-support/harness'
 import { applyMigrations } from '../test-support/migrations'
-import { workspaceMacAccess } from './capabilities-data'
+import { readWorkspaceCapabilities } from './capabilities-data'
 
 const migration = '202611171200_mac_access_off.sql'
 
@@ -36,9 +36,9 @@ it('turns Mac access off in each existing workspace', async () => {
     await applyMigrations(db, { from: migration })
 
     const access = await Promise.all(
-      ['on', 'off'].map((id) => workspaceMacAccess(db, id)),
+      ['on', 'off'].map((id) => readWorkspaceCapabilities(db, 'org', id)),
     )
-    expect(access).toEqual([false, false])
+    expect(access.map(({ macAccess }) => macAccess)).toEqual([false, false])
   } finally {
     await harness.dispose()
   }

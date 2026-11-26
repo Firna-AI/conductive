@@ -8,9 +8,7 @@ import { readJsonObject } from '../http/json-body'
 import { readSecretAnswer, readSecretRun } from './request-input'
 import type { SecretRuntime } from './runtime'
 import { authorizeChatBrowser } from '../chat/browser-authorization'
-import { pruneSavedOutputSecrets } from '../chat/output-filter-records'
-import { agentOutputSecrets, storedAgentOutputSecrets } from './output-values'
-import { runningOutputSecrets } from '../lifecycle/output-secrets'
+import { removeWorkspaceValue } from './remove-workspace-value'
 
 export function isSecretMachinePath(path: string) {
   return path === SECRET_TOOL_PATHS.list || path === SECRET_TOOL_PATHS.run
@@ -94,33 +92,18 @@ export async function fetchSecretRequests(
           'workspace_archived',
           'The archived chat is read-only.',
         )
-      await runtime.chat.changeWorkspace(workspaceId, async (view) => {
-        await authorizeChatBrowser(request, runtime.env, runtime.now(), {})
-        const running = await runningOutputSecrets(
-          runtime.env,
-          access.workspace,
-        )
-        const before = new Set([
-          ...running,
-          ...(await storedAgentOutputSecrets(
-            runtime.env,
-            view.secrets,
-            access.workspace,
-          )),
-        ])
-        await view.secrets.removeValue(decodeId(value[1]))
-        const after = new Set([
-          ...running,
-          ...(await agentOutputSecrets(
-            runtime.env,
-            view.secrets,
-            access.workspace,
-            runtime.now(),
-          )),
-        ])
-        await view.output.maskTools(runtime.env, workspaceId, before, after)
-        await pruneSavedOutputSecrets(runtime.env, view, after, before)
-      })
+      await removeWorkspaceValue(
+        runtime,
+        request,
+        access.workspace,
+        decodeId(value[1]),
+        {
+          id: access.context.user.id,
+          githubLogin: access.context.user.githubLogin,
+          displayName: access.context.user.displayName,
+          avatarUrl: access.context.user.avatarUrl,
+        },
+      )
       return privateResponse(new Response(null, { status: 204 }))
     }
     return methodResponse(value ? 'DELETE' : app?.[1] ? 'POST' : 'GET')

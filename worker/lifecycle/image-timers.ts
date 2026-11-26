@@ -1,4 +1,7 @@
-import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
+import { readOrgProviderAccount } from '../data/org-provider-account'
+import { readOrgSwitchContext } from '../operator/switch-context-data'
+import { progressProviderSwitch } from './provider-switch-builds'
+import { promoteWaitingImageBuild } from './waiting-image-data'
 import type { ImageSoftwareArtifact } from './image-software'
 import { runningBuild } from './build-data'
 import {
@@ -19,8 +22,8 @@ import {
   claimPushRefresh,
   consumePendingPushRefresh,
   markPendingPushRefresh,
-  imageHoldsOldValues,
   pushedImageRepositories,
+  markSwitchPushRefresh,
 } from './org-image-refresh-data'
 
 export { IMAGE_POLL_MS } from './image-schedule'
@@ -38,8 +41,19 @@ export async function refreshImagesForPush(
   const repositories = await pushedImageRepositories(runtime.env.DB, input)
   const builds: string[] = []
   for (const repository of repositories) {
-    const providerAccount = repository.providerAccount
     if (input.ref !== `refs/heads/${repository.defaultBranch}`) continue
+    if (
+      await markSwitchPushRefresh(
+        runtime.env.DB,
+        repository.orgId,
+        runtime.dependencies.now(),
+      )
+    )
+      continue
+    const providerAccount = await readOrgProviderAccount(
+      runtime.env.DB,
+      repository.orgId,
+    )
     const admin = await firstActiveOrgAdmin(runtime.env.DB, repository.orgId)
     if (!admin) continue
     const image = await readOrgImage(
@@ -73,13 +87,8 @@ export async function refreshImagesForPush(
       await startImageBuild(runtime, {
         orgId: repository.orgId,
         userId: admin.userId,
-        kind: (await imageHoldsOldValues(
-          runtime.env.DB,
-          repository.orgId,
-          providerAccount,
-        ))
-          ? 'build'
-          : 'refresh',
+        // Admission makes the refresh a build while the image holds old values.
+        kind: 'refresh',
         software: input.software,
       }),
     )
@@ -100,7 +109,12 @@ export async function runImageAlarm(
   runtime: ImageRuntime,
   state: ImageCoordinatorState,
 ): Promise<void> {
-  const providerAccount = state.providerAccount ?? DEFAULT_PROVIDER_ACCOUNT
+  await promoteWaitingImageBuild(
+    runtime.env.DB,
+    state.orgId,
+    runtime.dependencies.now(),
+  )
+  const switching = await progressProviderSwitch(runtime, state.orgId)
   if (!(await firstOrgAdmin(runtime.env.DB, state.orgId))) {
     if (
       !(await cleanupOrgImageSources(
@@ -110,8 +124,23 @@ export async function runImageAlarm(
       ))
     )
       throw new Error('Image source access cleanup is pending')
+    if (switching) {
+      const context = await readOrgSwitchContext(runtime.env.DB, state.orgId)
+      if (context.waitReason === 'admin')
+        await runtime.scheduler.schedule(
+          state.orgId,
+          state.software,
+          runtime.dependencies.now() + IMAGE_POLL_MS,
+          null,
+          context.providerAccount,
+        )
+    }
     return
   }
+  const providerAccount = await readOrgProviderAccount(
+    runtime.env.DB,
+    state.orgId,
+  )
   const next = await readImageSchedule(
     runtime.env.DB,
     state.orgId,
@@ -146,7 +175,17 @@ export async function runImageAlarm(
     return
   }
   const admin = await firstActiveOrgAdmin(runtime.env.DB, state.orgId)
-  if (!admin || !next.imageName) return
+  if (!admin || !next.imageName) {
+    if (switching)
+      await runtime.scheduler.schedule(
+        state.orgId,
+        state.software,
+        runtime.dependencies.now() + IMAGE_POLL_MS,
+        null,
+        providerAccount,
+      )
+    return
+  }
   if (next.pendingAt <= runtime.dependencies.now()) {
     await consumePendingPushRefresh(
       runtime.env.DB,
@@ -158,7 +197,8 @@ export async function runImageAlarm(
   await startImageBuild(runtime, {
     orgId: state.orgId,
     userId: admin.userId,
-    kind: next.oldValues ? 'build' : 'refresh',
+    // Admission makes the refresh a build while the image holds old values.
+    kind: 'refresh',
     software: state.software,
     dailyRefresh: next.dailyAt <= runtime.dependencies.now(),
   })

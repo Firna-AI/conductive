@@ -3,17 +3,19 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-14, from branch `calummoore/porto-vtqz`, PR #342, from the check of review finding 202.
+- **Updated:** 2026-11-20, from the watch plan's options check. The retry explanation in `docs/protocol/session-calls.md` also needs alignment.
 - **Location:** `crates/cnd-tools/src/error.rs:53`.
 - **Reason:** The Node tools on `origin/main` had the same text, so the change did not cause it.
 
 - **Terms:**
   - **Request ID:** the retry key of a workspace tool write. The same ID makes the Worker return the first result and not repeat the write.
 - **Background:** A workspace tool write, such as `sessions send`, can succeed in the Worker and still fail in the tool, for example when the reply does not arrive. The tool then prints a generic error that ends with "Try again." It does not print the request ID that it generated for the call.
+  `crates/cnd-tools/src/runtime.rs` makes a fresh UUID for each invocation. The native HTTP adapter does not implement a retry with that ID. The protocol says an automatically made ID prevents duplicates after a lost reply. That statement does not cover a new call by the agent without the earlier ID.
 - **Problem:** An agent that follows "Try again." without `--request-id` makes a new ID, so the Worker can apply the write twice.
 - **Impact if no action:** A rare failed reply can send a message twice or create two workspaces.
 - **Root question:** How does a caller retry a write safely after an unclear failure?
 - **Options:**
-  - **A.** Print the generated request ID in the failure text of each write, and tell the caller to retry with it. Effort: Small.
+  - **A.** Print the generated request ID in the failure text of each write, and tell the caller to retry with it. Align the protocol explanation with retries that preserve that ID. Effort: Small.
   - **B.** Make the tool retry a write itself, with the same request ID, before it reports a failure. Effort: Medium.
 - **Left out:** No change, because it keeps the duplicate risk.
 - **Wider fix:** A.

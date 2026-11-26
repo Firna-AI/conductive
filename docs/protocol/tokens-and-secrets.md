@@ -36,8 +36,8 @@ that doc says.
     277)
   - make the writes of the agent tools in its org while a turn of its
     workspace runs: create, rename, move, and archive workspaces, start,
-    rename, close, and stop sessions, send messages, create and delete
-    sections, and open and close previews (decision 277)
+    rename, close, stop, and watch sessions, send messages, create and
+    delete sections, and open and close previews (decision 277)
   - ask for a command on the Mac of the sender of a turn that runs now,
     through the agent tools
   - list the secrets of its org at any time, and run a command with the

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { PictureSize } from '../../../docs/mockups/src/components/files/ImageView'
+import type { PictureSize } from '../../ui/components/files/ImageView'
 import { decodePicture } from '../../files/page/decode-picture'
 import type { ChatPictures, PictureRead } from '../../files/page/picture-reads'
 

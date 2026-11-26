@@ -36,7 +36,9 @@ export interface PointerDrag<T, P> {
 
 export interface PointerDragOptions<T, P> {
   /** The drop place at the pointer. `last` is the place before this move. */
-  locate: (item: T, x: number, y: number, last: P) => P
+  locate: (item: T, x: number, y: number, last: P, from: P) => P
+  /** Read the place again at the coordinates of the release. */
+  locateOnRelease?: true
   /**
    * The release of a drag. A long press that ends with no move comes here
    * too, with `moved` false. Escape, a cancel of the browser, and an unmount
@@ -96,12 +98,13 @@ export function isOwnPress(event: Event): boolean {
  * Drag and drop with any pointer. A mouse or a pen drags after a move of
  * more than 4 px. A finger lifts the item after a long press of 450 ms, and
  * the page does not scroll while the item is lifted. A finger that moves
- * first scrolls the page. Escape ends a drag with no drop. The click that
- * ends a lifted press reaches nothing, also the click that a finger sends
- * after it lets go. A finger opens no menu of the browser, and no press
- * starts a native drag. A press of a mouse or a pen that opens a menu ends,
- * so the menu takes the pointer. A scroll during a drag, of the page or of
- * any element, finds the drop place again.
+ * first scrolls the page. Escape ends a drag with no drop, and it stops
+ * the default action of the key, so the page takes no other action for it.
+ * The click that ends a lifted press reaches nothing, also the click that
+ * a finger sends after it lets go. A finger opens no menu of the browser,
+ * and no press starts a native drag. A press of a mouse or a pen that opens
+ * a menu ends, so the menu takes the pointer. A scroll during a drag, of
+ * the page or of any element, finds the drop place again.
  *
  * `bind(item, from)` gives the handlers of the element where a drag starts.
  * `locate` finds the drop place at each move of the pointer, and `drop`
@@ -135,7 +138,7 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
       show({
         item,
         from,
-        place: latest.current.locate(item, x, y, from),
+        place: latest.current.locate(item, x, y, from, from),
         x,
         y,
         box,
@@ -149,7 +152,7 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
       const current = press.current
       if (!current || event.pointerId !== current.pointerId) return
       // The release came out of sight, such as over a menu of the system.
-      if ((event.buttons & 1) === 0) return finish(false)
+      if ((event.buttons & 1) === 0) return finish()
       current.x = event.clientX
       current.y = event.clientY
       const distance = Math.hypot(
@@ -157,7 +160,7 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
         current.y - current.startY,
       )
       if (!current.lifted) {
-        if (current.touch && distance > touchSlop) finish(false)
+        if (current.touch && distance > touchSlop) finish()
         else if (!current.touch && distance > dragDistance) lift(current)
         return
       }
@@ -170,6 +173,7 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
           current.x,
           current.y,
           state.place,
+          state.from,
         ),
         x: current.x,
         y: current.y,
@@ -190,19 +194,23 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
         current.x,
         current.y,
         state.place,
+        state.from,
       )
       if (!Object.is(place, state.place)) show({ ...state, place })
     }
     function onKey(event: KeyboardEvent) {
-      if (event.key === 'Escape') cancel.current()
+      if (event.key !== 'Escape') return
+      // The key ends the press, so no other Escape action of the page runs.
+      event.preventDefault()
+      cancel.current()
     }
     function onUp(event: PointerEvent) {
-      if (event.pointerId === press.current?.pointerId) finish(true)
+      if (event.pointerId === press.current?.pointerId) finish(event)
     }
     function onCancel(event: PointerEvent) {
-      if (event.pointerId === press.current?.pointerId) finish(false)
+      if (event.pointerId === press.current?.pointerId) finish()
     }
-    function finish(release: boolean) {
+    function finish(release?: PointerEvent) {
       const current = press.current
       const state = dragging.current
       if (current?.timer) clearTimeout(current.timer)
@@ -217,7 +225,12 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
       if (!current?.lifted) return
       clickWait.current?.()
       clickWait.current = stopNextClick()
-      if (release && state) latest.current.drop(state)
+      if (!release || !state) return
+      const { locate, locateOnRelease, drop } = latest.current
+      if (!locateOnRelease) return drop(state)
+      const { clientX: x, clientY: y } = release
+      const place = locate(state.item, x, y, state.place, state.from)
+      drop({ ...state, x, y, place })
     }
     start.current = (next) => {
       press.current = next
@@ -232,15 +245,15 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
       })
       if (next.touch) next.timer = setTimeout(() => lift(next), longPress)
     }
-    end.current = () => finish(false)
+    end.current = () => finish()
     cancel.current = () => {
       if (!press.current) return
       // The press stays until its release, so that the release selects nothing.
       if (press.current.lifted) show(null)
-      else finish(false)
+      else finish()
     }
     return () => {
-      finish(false)
+      finish()
       clickWait.current?.()
     }
   }, [])

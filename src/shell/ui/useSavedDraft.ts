@@ -47,7 +47,8 @@ function untouched<V>(
 /**
  * The mode of a draft of one value, such as a script. The next newer saved
  * value after a save counts as its answer: a draft that still equals what
- * went out takes it.
+ * went out takes it. If no newer saved value arrives, success settles that
+ * draft to the current saved value. Edits made during the save stay.
  */
 function wholeValue<T>(same: Same<T>): DraftMode<T> {
   return {
@@ -57,7 +58,11 @@ function wholeValue<T>(same: Same<T>): DraftMode<T> {
       draft: untouched(same, draft, before, sent) ? saved : draft,
       sent: null,
     }),
-    settle: (state) => state,
+    settle: ({ draft, saved, sent }) => ({
+      saved,
+      draft: untouched(same, draft, saved, sent) ? saved : draft,
+      sent: null,
+    }),
   }
 }
 
@@ -124,7 +129,8 @@ export interface SavedDraft<T> {
  * `mode` says when the draft that went out for a save takes the answer,
  * which can differ from it, as a trimmed name does. The default is the
  * equality of a draft of one value: a draft that still equals what went
- * out takes the next newer saved value. `eachField` is the mode of a draft
+ * out takes the next newer saved value, or the current saved value on
+ * success when no newer value arrives. `eachField` is the mode of a draft
  * with several fields: each field follows the saved value on its own, and
  * a field that went out takes the latest saved value only when its save
  * succeeds.

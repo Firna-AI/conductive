@@ -42,6 +42,11 @@ merge.
     days, each with its total for the 30 days.
   - The five orgs with the most workspaces. Their counts hold every
     workspace, also the archived and the removed ones.
+- A build that waits runs no cloud computer, so the count of cloud
+  computers that run now leaves it out until its wait ends. This covers a
+  build of an admin that waits for a switch build, as
+  [What members see](switch-account.md#what-members-see) says. A switch
+  build that runs counts as each build does.
 - The count of users keeps every account, by join day, also each person
   who waits. Reason: decision 144 chose the counts, and the two numbers
   still show who can use the app.
@@ -106,7 +111,8 @@ merge.
     the owner is suspended
   - the workspace number, such as `W-12`
   - the cloud computer ID, with Copy
-  - the last activity, from which the stop after 30 minutes counts
+  - the last activity, from which the
+    [stop time](stop-and-resume.md#the-stop) counts
   - the run length, with the state mark of the workspace
 - A deleted org shows Deleted, also when it is suspended.
 - A run whose cloud computer has no ID yet shows a dash in place of the
@@ -149,8 +155,8 @@ merge.
   a guessed start, such as the time of a release.
 - So a workspace that already ran at the release of the list joins it when
   the app next records its state. In an org that is not deleted, that
-  takes up to 30 minutes, or up to 5 minutes during a turn.
+  takes up to the stop time, or up to 5 minutes during a turn.
 - A cloud computer that the provider stopped can still show for up to
-  about 30 minutes, until the app finds the stop.
+  about the stop time, until the app finds the stop.
 - A cloud computer that runs while that record says stopped does not
   show. An example is the restart near day 14 of a stop.

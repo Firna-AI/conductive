@@ -2,10 +2,15 @@
 import type { RunnerCommand } from './RunnerCommand.js'
 import type { RunnerConfirm } from './RunnerConfirm.js'
 import type { RunnerResend } from './RunnerResend.js'
+import type { RunnerServiceCommand } from './RunnerServiceCommand.js'
 import type { RunnerWelcome } from './RunnerWelcome.js'
 
 /**
  * WorkspaceToRunner wire alternatives.
  */
 export type WorkspaceToRunner =
-  RunnerWelcome | RunnerConfirm | RunnerResend | RunnerCommand
+  | RunnerWelcome
+  | RunnerConfirm
+  | RunnerResend
+  | RunnerCommand
+  | RunnerServiceCommand

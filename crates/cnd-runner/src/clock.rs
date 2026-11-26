@@ -27,6 +27,10 @@ pub trait Clock: Send + Sync {
     async fn move_delay(&self) {
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
+    /// Wait for an independent service observation without changing other timers.
+    async fn service_delay(&self) {
+        tokio::time::sleep(Duration::from_secs(2)).await;
+    }
 }
 
 /// System time and Tokio's cancellable scheduler.

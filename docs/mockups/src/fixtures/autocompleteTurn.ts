@@ -4,9 +4,9 @@
  * opens pull request #482.
  */
 
+import { bullets, code, item, p } from './agentText'
 import type { ChatItem, ToolKind } from './conversations'
 import { changedFiles } from './files'
-import { bullets } from './listConversations'
 
 function tool(
   id: string,
@@ -26,7 +26,7 @@ export const autocompleteStart: readonly ChatItem[] = [
   {
     kind: 'agent',
     id: 'plan',
-    blocks: ["I'll start with the checkout form and the places proxy."],
+    blocks: [p("I'll start with the checkout form and the places proxy.")],
   },
   tool('read-form', 'read', 'src/app/checkout/AddressForm.tsx'),
   tool('read-proxy', 'read', 'src/app/api/places/route.ts'),
@@ -35,7 +35,11 @@ export const autocompleteStart: readonly ChatItem[] = [
     kind: 'agent',
     id: 'approach',
     blocks: [
-      "The proxy already returns predictions, so the work is in the form. I'll add a `useAddressAutocomplete` hook, show suggestions under the first address line, and fill the other fields when one is chosen.",
+      p(
+        "The proxy already returns predictions, so the work is in the form. I'll add a ",
+        code('useAddressAutocomplete'),
+        ' hook, show suggestions under the first address line, and fill the other fields when one is chosen.',
+      ),
     ],
   },
   tool(
@@ -68,13 +72,17 @@ const autocompleteEnd: readonly ChatItem[] = [
     kind: 'agent',
     id: 'done',
     blocks: [
-      'Done. Checkout now suggests addresses as you type.',
+      p('Done. Checkout now suggests addresses as you type.'),
       bullets(
-        'Choosing a suggestion fills the street, city, and postcode.',
-        'Manual entry still works when there is no match.',
-        'Removed the old postcode lookup, which the suggestions replace.',
-        'Unit tests cover `useAddressAutocomplete`, and the checkout end-to-end tests pass.',
-        'Opened pull request #482.',
+        item('Choosing a suggestion fills the street, city, and postcode.'),
+        item('Manual entry still works when there is no match.'),
+        item('Removed the old postcode lookup, which the suggestions replace.'),
+        item(
+          'Unit tests cover ',
+          code('useAddressAutocomplete'),
+          ', and the checkout end-to-end tests pass.',
+        ),
+        item('Opened pull request #482.'),
       ),
     ],
   },

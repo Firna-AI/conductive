@@ -47,6 +47,8 @@ export class OuterFakeRunner {
       /** A runner that accepts repository.move names its folder. */
       repositoryFolder?: string
       processStartId?: RunnerHello['processStartId']
+      loginKinds?: RunnerHello['loginKinds']
+      fileServer?: RunnerHello['fileServer']
     } = {},
   ) {
     this.streamId = options.streamId ?? 'outer-runner-stream'
@@ -83,6 +85,12 @@ export class OuterFakeRunner {
       ...(options.processStartId === undefined
         ? {}
         : { processStartId: options.processStartId }),
+      ...(options.loginKinds === undefined
+        ? {}
+        : { loginKinds: options.loginKinds }),
+      ...(options.fileServer === undefined
+        ? {}
+        : { fileServer: options.fileServer }),
     })
   }
 

@@ -2,7 +2,7 @@ import type { DeviceCommandRecord } from '../../shared/generated/DeviceCommandRe
 import type { ReactElement, ReactNode } from 'react'
 import { CircleAlert } from 'lucide-react'
 
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+import { Notice } from '../../ui/components/common/Notice'
 import type { TranscriptInsert } from '../../shared/transcript/transcript-entries'
 import { KeptParts, sameData, sameElement } from '../components/same-data'
 import type { ChatSnapshot, SessionState } from '../state/chat-snapshot'

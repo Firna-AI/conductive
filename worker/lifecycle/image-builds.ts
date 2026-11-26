@@ -1,4 +1,3 @@
-import { insertBuild } from './build-admission-data'
 import type { ImageBuild } from '../../src/shared/org-settings'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
@@ -8,9 +7,6 @@ import {
   userSuspended,
 } from '../data/user-access'
 import { orgProviderForAccount, providerForAccount } from '../sandbox/client'
-import { readOrgProviderAccount } from '../data/org-provider-account'
-import { latestSoftwareRelease } from './software-release'
-import { softwareVersion } from '../software-image/version'
 import type { SandboxProvider } from '../sandbox/provider'
 import { IMAGE_BUILD_TIME_LIMIT_MS, JobTimeLimit } from './job-time-limit'
 import {
@@ -24,31 +20,27 @@ import {
 } from './image-retry-data'
 import { readSourceJob } from './image-sources/source-data'
 import { imageSourceFailure } from './image-sources/materialize'
+import {
+  readSourceRun,
+  saveSourceRunFailure,
+  sourceRunFailure,
+} from './image-sources/run-data'
 import { advanceBuildStep } from './image-build-steps'
 import { cleanupBuildImageSources } from './image-sources/cleanup'
 import type { SourceCommandPort } from './image-sources/source-commands'
 import { requireOrgMember } from './access'
 import { jobSoftware, readBuildJob, runningBuild } from './build-data'
 import { cleanupBuild } from './build-execution'
-import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
-import { IMAGE_DAY_MS } from './image-schedule'
-import { readOrgImage } from './org-image-data'
+import type { ImageSoftwareArtifact } from './image-software'
+import { handleImageBuildFailure } from './image-build-failure'
+import { firstOrgAdmin, type SelectedRepository } from './settings-data'
+import type { RepositoryLocation } from './repository-locations'
+import { admitImageBuild } from './image-build-start'
 import {
-  failUnscheduledBuild,
-  handleImageBuildFailure,
-} from './image-build-failure'
-import {
-  firstOrgAdmin,
-  readImageSettings,
-  readRepositories,
-  selectedRepositories,
-  type SelectedRepository,
-} from './settings-data'
-import {
-  capturedRepositoryLocations,
-  repositoryLocations,
-  type RepositoryLocation,
-} from './repository-locations'
+  waitingImageBuild,
+  promoteWaitingImageBuild,
+} from './waiting-image-data'
+import { fenceSwitchBuild } from './provider-switch-control'
 
 interface ImageScheduler {
   schedule(
@@ -92,106 +84,39 @@ export async function startImageBuild(
   const { env, dependencies } = runtime
   await requireActiveOrg(env.DB, input.orgId)
   await requireOrgMember(env.DB, input.orgId, input.userId, true)
-  const providerAccount = await readOrgProviderAccount(env.DB, input.orgId)
-  const software = readImageSoftware(input.software)
   const existing = await runningBuild(env.DB, input.orgId)
-  if (existing) {
-    const job = await readBuildJob(env.DB, input.orgId, existing)
-    await runtime.scheduler.schedule(
-      input.orgId,
-      jobSoftware(job),
-      dependencies.now(),
-      existing,
-      job.providerAccount,
-    )
-    return existing
-  }
-  const settings = await readImageSettings(env.DB, input.orgId)
-  const image = await readOrgImage(env.DB, input.orgId, providerAccount)
-  if (input.kind === 'refresh' && !image?.imageName)
-    throw new HttpError(
-      409,
-      'image_required',
-      'Build the cloud computer image first.',
-    )
-  const previous = image?.imageBuildId
-    ? await readBuildJob(env.DB, input.orgId, image.imageBuildId)
-    : null
-  const previousRepositories = previous
-    ? readRepositories(JSON.parse(previous.repositoriesJson))
-    : []
-  const previousLocations = previous
-    ? capturedRepositoryLocations(
-        previous.repositoryLocationsJson,
-        previousRepositories,
+  const waiting = await waitingImageBuild(env.DB, input.orgId)
+  if (waiting) {
+    if (!existing)
+      await promoteWaitingImageBuild(env.DB, input.orgId, dependencies.now())
+    const active = await runningBuild(env.DB, input.orgId)
+    if (active) {
+      const job = await readBuildJob(env.DB, input.orgId, active)
+      await runtime.scheduler.schedule(
+        input.orgId,
+        jobSoftware(job),
+        dependencies.now(),
+        active,
+        job.providerAccount,
       )
-    : []
-  const repositories =
-    input.kind === 'refresh' && previous
-      ? previousRepositories
-      : await selectedRepositories(env.DB, input.orgId)
-  const locations =
-    input.kind === 'refresh' && previous
-      ? previousLocations
-      : repositoryLocations(repositories)
-  const id = dependencies.randomToken()
-  const now = dependencies.now()
-  try {
-    await insertBuild(env.DB, {
-      id,
-      orgId: input.orgId,
-      providerAccount,
-      previousProviderAccount: previous?.providerAccount ?? providerAccount,
-      userId: input.userId,
-      kind: input.kind,
-      settingsRevision:
-        input.kind === 'refresh' && previous
-          ? previous.settingsRevision
-          : settings.revision,
-      installScript: settings.installScript,
-      repositories,
-      repositoryLocations: locations,
-      previousRepositoryLocations: previousLocations,
-      software,
-      softwareVersion:
-        input.kind === 'build' && !image?.imageName
-          ? await softwareVersion(
-              await latestSoftwareRelease(env, dependencies.fetch),
-            )
-          : undefined,
-      previousImageName: image?.imageName ?? null,
-      now,
-      nextImageRefreshAt:
-        input.kind === 'refresh' && input.dailyRefresh
-          ? now + IMAGE_DAY_MS
-          : undefined,
-    })
-  } catch (error) {
-    const current = await runningBuild(env.DB, input.orgId)
-    if (!current) throw error
-    const job = await readBuildJob(env.DB, input.orgId, current)
+    }
+    return waiting.id
+  }
+  const executing = existing
+    ? await readBuildJob(env.DB, input.orgId, existing)
+    : null
+  if (executing && !executing.operatorSwitchId) {
+    const job = executing
     await runtime.scheduler.schedule(
       input.orgId,
       jobSoftware(job),
       dependencies.now(),
-      current,
+      job.buildId,
       job.providerAccount,
     )
-    return current
+    return job.buildId
   }
-  try {
-    await runtime.scheduler.schedule(
-      input.orgId,
-      software,
-      dependencies.now(),
-      id,
-      providerAccount,
-    )
-  } catch (error) {
-    await failUnscheduledBuild(runtime, id)
-    throw error
-  }
-  return id
+  return admitImageBuild(runtime, input, executing)
 }
 
 /** One durable alarm advances one job. Offsets and logs commit together in D1. */
@@ -201,22 +126,38 @@ export async function advanceImageBuild(
   buildId: string,
 ): Promise<boolean> {
   const { env, dependencies } = runtime
-  const job = await readBuildJob(env.DB, orgId, buildId)
+  const job = await fenceSwitchBuild(
+    runtime,
+    await readBuildJob(env.DB, orgId, buildId),
+  )
   let provider: SandboxProvider | undefined
   const recoveringAllocation = job.phase === 'allocating' && !job.sandboxId
   const firstAllocation = job.phase === 'create'
   const cleaningUp = job.phase === 'cleanup' || job.state !== 'running'
   const activeWork = !recoveringAllocation && !cleaningUp
   try {
+    if (job.waitingForSwitchId && job.state === 'running') {
+      await requireActiveOrg(env.DB, orgId)
+      if (job.startedByUserId)
+        await requireActiveUser(env.DB, job.startedByUserId, orgId)
+      return false
+    }
     const expired =
-      dependencies.now() >= job.startedAt + IMAGE_BUILD_TIME_LIMIT_MS
+      dependencies.now() >=
+      (job.executionStartedAt ?? job.startedAt) + IMAGE_BUILD_TIME_LIMIT_MS
     if (job.phase === 'sources' && job.state === 'running' && !expired) {
       const source = await readSourceJob(env.DB, buildId)
       if (source && (source.failed || source.phase === 'abort')) {
+        const run = await readSourceRun(env.DB, buildId)
+        const failure = sourceRunFailure(run)
+        if (run && run.failureStep === null && source.phase === 'revoke') {
+          failure.sourceStep = 'copy'
+          await saveSourceRunFailure(env.DB, buildId, failure)
+        }
         await clearImageRetryStatement(env.DB, buildId).run()
         if (!(await cleanupBuildImageSources(env, dependencies.fetch, buildId)))
           return false
-        throw imageSourceFailure()
+        throw imageSourceFailure(false, failure)
       }
     }
     if (activeWork) await requireActiveOrg(env.DB, orgId)

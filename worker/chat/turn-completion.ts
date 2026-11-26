@@ -4,6 +4,7 @@ import { continueUnanswered } from './continuation'
 import { firstStopRequester } from './stop-request'
 import type { ChatTransaction } from './store'
 import type { StoredTurn } from './types'
+import { readySessionWatches } from './session-watch-end'
 
 export type TurnEnd =
   | { state: 'stopped' }
@@ -51,29 +52,22 @@ export class TurnCompletion {
       end = { state: 'failed', retryMessageId, error }
       delete turn.loginFailure
     }
-    let following = turn.nextTurnId ?? null
-    if (end.state === 'finished' && !turn.closeAfterStop) {
-      const continuation = await continueUnanswered(
-        this.transaction,
-        turn,
-        end.randomId,
-      )
-      if (continuation) {
-        continuation.nextTurnId = following
-        await this.transaction.saveTurn(continuation)
-        if ((await this.transaction.newestTurn(this.session.id)) === turn.id)
-          await this.transaction.saveNewestTurn(
-            this.session.id,
-            continuation.id,
-          )
-        following = continuation.id
-      }
-    }
+    if (end.state === 'finished' && !turn.closeAfterStop)
+      await continueUnanswered(this.transaction, turn, end.randomId)
+    const following = turn.nextTurnId ?? null
     turn.state = end.state
     if (end.state === 'failed') turn.error = end.error
     turn.nextTurnId = null
     await this.removeCommands(turn.id)
+    await this.transaction.capabilityNotes.release(turn.sessionId, turn.id)
     await this.transaction.saveTurn(turn)
+    await this.transaction.queueFixes.end(
+      turn,
+      end.state,
+      occurredAt,
+      this.transaction.now,
+    )
+    await readySessionWatches(this.transaction, turn)
     if (this.session.activeTurnId === turn.id) {
       this.session.retryMessageId =
         end.state === 'failed' &&
@@ -96,7 +90,11 @@ export class TurnCompletion {
     })
   }
 
-  async stopped(turn: StoredTurn): Promise<void> {
+  async stopped(turn: StoredTurn, keepQueued?: () => string): Promise<void> {
+    const continuation =
+      keepQueued && !turn.closeAfterStop
+        ? await continueUnanswered(this.transaction, turn, keepQueued, 'queued')
+        : undefined
     if (!turn.loginFailure)
       await this.transaction.emit({
         type: 'turn.completed',
@@ -106,7 +104,11 @@ export class TurnCompletion {
         durationMs: 0,
         files: [],
         omittedFileCount: 0,
-        userMessageIds: turn.messageIds,
+        userMessageIds: continuation
+          ? turn.messageIds.filter(
+              (id) => !continuation.messageIds.includes(id),
+            )
+          : turn.messageIds,
       })
     await this.finish(turn, { state: 'stopped' })
   }

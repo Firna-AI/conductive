@@ -1,11 +1,10 @@
 import { useRef, useState, type ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import type { MenuPlacement } from '../../../docs/mockups/src/components/common/Menu'
+import type { MenuPlacement } from '../../ui/components/common/Menu'
 import { ownPress } from '../../app/pointer-drag'
 import { useMenuLayer } from './layers'
-import { MenuList } from './MenuList'
+import { OpenMenu } from './OpenMenu'
 import { useDismiss } from './Overlay'
-import { PopoverSurface } from './PopoverSurface'
 import { Sheet } from './Sheet'
 import { useViewport } from './viewport'
 import ui from './ui.module.css'
@@ -24,6 +23,11 @@ export type MenuAction = {
   mark?: ReactNode
   /** Muted text after the label, such as a time. */
   detail?: string
+  /**
+   * Muted words that follow the label in its line, such as the effort of a
+   * favourite after its model.
+   */
+  muted?: string
   /** A choice in a group: the menu marks the current one. */
   checked?: boolean
   tone?: 'danger'
@@ -31,14 +35,22 @@ export type MenuAction = {
 }
 
 /**
- * An item that shows choices: beside the menu at a point, or in place of
- * the menu in a phone sheet. The owner of the menu draws the choices.
+ * An item that shows choices: beside the menu, or in place of the menu in
+ * a phone sheet and in the phone layout. `MenuButton` draws its `entries`,
+ * as `OpenMenu` says. The owner of a menu at a point draws the choices.
  */
 export type MenuSubmenu = {
   kind: 'submenu'
   id: string
   label: string
   icon?: LucideIcon
+  /**
+   * Muted words that follow the label in its line, such as the current
+   * effort after Effort.
+   */
+  muted?: string
+  /** The choices that `MenuButton` shows for the item. */
+  entries?: readonly MenuRow[]
 }
 
 /**
@@ -53,13 +65,15 @@ export type MenuSwitch = {
   onToggle: () => void
 }
 
-export type MenuEntry =
+/** A row of a menu: each entry but an item that shows choices. */
+export type MenuRow =
   | MenuAction
-  | MenuSubmenu
   | MenuSwitch
   | { kind: 'label'; label: string }
   | { kind: 'note'; text: string }
   | { kind: 'divider' }
+
+export type MenuEntry = MenuRow | MenuSubmenu
 
 export interface MenuTriggerState {
   open: boolean
@@ -69,21 +83,13 @@ export interface MenuTriggerState {
 }
 
 /**
- * The menu keeps its own width and its own height limit, `max-height: 70dvh`
- * in its CSS. The surface then limits it only to the room beside its
- * trigger, and does not widen it to the width of the trigger.
- */
-const SURFACE_OPTIONS = {
-  anchorWidthAsMinimum: false,
-  maxHeight: Number.POSITIVE_INFINITY,
-}
-
-/**
  * A trigger and its menu. Desktop opens the menu beside the trigger, in the
  * top layer, so no box clips it. It opens on the side of its placement when
  * it fits there, otherwise on the side with more room. A phone opens it as a
- * sheet. A press outside or Escape closes it. The trigger and its menu keep
- * their own presses, so a press on them starts no drag of a row around them.
+ * sheet, or beside the trigger with `besideOnPhone`. A press outside or
+ * Escape closes it. An item with a submenu shows its choices as `OpenMenu`
+ * says. The trigger and its menu keep their own presses, so a press on them
+ * starts no drag of a row around them.
  */
 export function MenuButton(props: {
   label: string
@@ -101,50 +107,51 @@ export function MenuButton(props: {
    * closes it.
    */
   busy?: boolean
+  /**
+   * The phone layout also opens the menu beside the trigger, not as a
+   * sheet, as each model picker does (model favourites decision 5 B). The
+   * choices of an item then take the place of the menu.
+   */
+  besideOnPhone?: boolean
 }) {
   const viewport = useViewport()
   const [open, setOpen] = useState(false)
   const anchor = useRef<HTMLSpanElement>(null)
   const close = () => setOpen(false)
   const phone = viewport === 'phone'
+  const sheet = phone && props.besideOnPhone !== true
   const placement = props.placement ?? 'below-end'
   const busy = props.busy ?? false
-  useDismiss(open && !phone, anchor, close)
-  // The palette key closes a desktop menu, which always closes. A phone
-  // sheet holds the key.
-  useMenuLayer(open && !phone, () => {
+  useDismiss(open && !sheet, anchor, close)
+  // The palette key closes a menu beside its trigger, which always closes.
+  // A phone sheet holds the key.
+  useMenuLayer(open && !sheet, () => {
     close()
     return true
   })
   return (
     <span {...ownPress} className={props.className ?? ui.anchor} ref={anchor}>
       {props.trigger({ open, toggle: () => setOpen((value) => !value), busy })}
-      {open && !phone ? (
-        <PopoverSurface
-          align={placement.endsWith('end') ? 'end' : 'start'}
-          anchor={anchor}
-          className={ui.menuLayer}
-          options={SURFACE_OPTIONS}
-          side={placement.startsWith('above') ? 'above' : 'below'}
-        >
-          <MenuList
-            busy={busy}
-            close={close}
-            entries={props.entries}
-            label={props.label}
-            placement="anchored"
-            wide={props.wide}
-          />
-        </PopoverSurface>
+      {open && !sheet ? (
+        <OpenMenu
+          busy={busy}
+          close={close}
+          entries={props.entries}
+          inPlace={phone}
+          label={props.label}
+          place={{ anchor, placement }}
+          wide={props.wide}
+        />
       ) : null}
-      {open && phone ? (
+      {open && sheet ? (
         <Sheet close={close} title={props.sheetTitle ?? props.label}>
-          <MenuList
+          <OpenMenu
             busy={busy}
             close={close}
             entries={props.entries}
+            inPlace
             label={props.label}
-            placement="sheet"
+            place="sheet"
           />
         </Sheet>
       ) : null}

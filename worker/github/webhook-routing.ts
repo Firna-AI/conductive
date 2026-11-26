@@ -1,6 +1,11 @@
 import type { AutomationRunTrigger } from '../../src/shared/automations'
 import { HttpError, isRecord } from '../http'
+import { object } from './parsers'
 import type { ReachedRepository } from './repository-reach'
+import {
+  parseGitHubStackMembership,
+  type GitHubStackMembership,
+} from './stack-parsers'
 
 export interface GitHubPullRequestEvent {
   repositoryId: number
@@ -11,6 +16,8 @@ export interface GitHubPullRequestEvent {
   senderId: number
   authorLogin?: string
   senderLogin?: string
+  /** The GitHub merge time of a merged pull request, when the event has one. */
+  mergedAt?: number
   trigger: Extract<AutomationRunTrigger, { kind: 'pull-request' }>
 }
 
@@ -20,6 +27,11 @@ export interface WebhookRoute extends ReachedRepository {
   branches?: string[]
   push: boolean
   pullRequest?: GitHubPullRequestEvent
+  pullRequestChange?: {
+    number: number
+    stack?: GitHubStackMembership | null
+    baseChange?: { from: string; fromSha: string; to: string; toSha: string }
+  }
 }
 
 function invalid(): never {
@@ -50,6 +62,45 @@ function login(value: unknown): string | undefined {
   return isRecord(value) && typeof value.login === 'string'
     ? value.login
     : undefined
+}
+
+function pullRequestChange(
+  value: Record<string, unknown>,
+  action: string,
+  base: Record<string, unknown>,
+): WebhookRoute['pullRequestChange'] {
+  const changedBase =
+    action === 'edited' && isRecord(value.changes)
+      ? value.changes.base
+      : undefined
+  if (value.stack === undefined && changedBase === undefined) return undefined
+  const change: NonNullable<WebhookRoute['pullRequestChange']> = {
+    number: id({ id: value.number }),
+  }
+  try {
+    if (value.stack !== undefined)
+      change.stack =
+        value.stack === null ? null : parseGitHubStackMembership(value.stack)
+    if (changedBase !== undefined) {
+      const previous = object(changedBase)
+      change.baseChange = {
+        from: string(object(previous.ref).from),
+        fromSha: string(object(previous.sha).from),
+        to: string(base.ref),
+        toSha: string(base.sha),
+      }
+    }
+  } catch {
+    return invalid()
+  }
+  return change
+}
+
+/** A merge time that does not parse leaves the time to the caller. */
+function mergeTime(kind: string, value: unknown): { mergedAt?: number } {
+  if (kind !== 'merged' || typeof value !== 'string') return {}
+  const time = Date.parse(value)
+  return Number.isSafeInteger(time) ? { mergedAt: time } : {}
 }
 
 export function webhookRepository(
@@ -108,6 +159,12 @@ export function webhookRoute(
     const branch = string(head.ref)
     if (event !== 'pull_request') return { ...common, branch }
     const action = string(value.action)
+    const change = pullRequestChange(value, action, base)
+    const target = {
+      ...common,
+      branch,
+      ...(change && { pullRequestChange: change }),
+    }
     const merged = value.pull_request.merged
     const kind =
       action === 'opened'
@@ -117,11 +174,10 @@ export function webhookRoute(
           : action === 'closed' && merged === true
             ? 'merged'
             : null
-    if (kind === null) return { ...common, branch }
+    if (kind === null) return target
     if (typeof merged !== 'boolean') return invalid()
     return {
-      ...common,
-      branch,
+      ...target,
       pullRequest: {
         repositoryId,
         installationId,
@@ -131,6 +187,7 @@ export function webhookRoute(
         senderId: id(value.sender),
         authorLogin: login(value.pull_request.user),
         senderLogin: login(value.sender),
+        ...mergeTime(kind, value.pull_request.merged_at),
         trigger: {
           kind: 'pull-request',
           event: kind,

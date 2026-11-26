@@ -1,9 +1,10 @@
-import { readChatWorkspaceResponse } from './chat/workspace-response'
-import type {
-  WorkspaceCompositionEnv,
-  WorkspaceChatResolvers,
-} from './chat/workspace-integration'
-import { AgentSessionWorkspace } from './tools/workspace'
+import {
+  readChatWorkspaceResponse,
+  type WorkspaceReadRequest,
+} from './chat/workspace-response'
+import type { WorkspaceCompositionEnv } from './chat/workspace-integration'
+import type { WorkspaceChatResolvers } from './chat/workspace-resolvers'
+import { MergeQueueWorkspace } from './merge-queue/workspace'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ToolPreviewCall } from './tools/services'
 import { WorkspaceFeatures } from './features/workspace'
@@ -23,12 +24,12 @@ import type { WorkspaceContinue } from './lifecycle/continue'
 import type { WorkspaceRepositoryChange } from './lifecycle/repository-change'
 import { WorkspaceJobs } from './lifecycle/workspace-jobs'
 import { changeRestart, type RestartStep } from './lifecycle/software-restart'
+import { createAutomaticRestart } from './lifecycle/automatic-restart'
 import { resumeCreationCheckpoint } from './members/creation-checkpoint'
 import type { ConnectionScheduler } from './security/connection-access'
 import { WorkspaceAlarmRunner } from './features/workspace-alarm'
-import { retryAutomationReport } from './chat/automation-run'
 
-export class Workspace extends AgentSessionWorkspace {
+export class Workspace extends MergeQueueWorkspace {
   private readonly features: WorkspaceFeatures
   private readonly github: WorkspaceGitHub
   private readonly members: WorkspaceMembersReceiver
@@ -70,6 +71,7 @@ export class Workspace extends AgentSessionWorkspace {
       this.chat,
     )
     this.integration.onStopped((id) => this.features.revokeWorkspace(id, true))
+    this.integration.onStopped(this.chat.runner.services.stoppedHook)
     this.github = new WorkspaceGitHub(
       this.integration.storage,
       env,
@@ -77,6 +79,7 @@ export class Workspace extends AgentSessionWorkspace {
       this.chat,
       matches,
       this.integration.alarms,
+      this.integration.baseChanges,
     )
     this.members = new WorkspaceMembersReceiver(
       context.storage,
@@ -92,6 +95,13 @@ export class Workspace extends AgentSessionWorkspace {
       github: this.github,
       run: (operation) => this.run(operation),
     })
+    const restart = createAutomaticRestart({
+      ...this.integration,
+      env,
+      dependencies,
+      run: (work) => this.run(work),
+      refreshTerminal: (target) => this.features.refreshTerminal(target),
+    })
     this.alarmRunner = new WorkspaceAlarmRunner({
       context,
       env,
@@ -106,9 +116,10 @@ export class Workspace extends AgentSessionWorkspace {
       github: this.github,
       jobs: this.jobs,
       features: this.features,
-      lifecycle: () => this.alarmLifecycle(),
-      automationReport: () =>
-        retryAutomationReport(env.DB, this.chat.store, now),
+      lifecycle: (dispatch) =>
+        this.alarmLifecycle(dispatch && (() => restart(dispatch))),
+      chatStore: this.chat.store,
+      sessionWatches: () => this.sessionWatches.alarm(),
     })
   }
 
@@ -159,18 +170,13 @@ export class Workspace extends AgentSessionWorkspace {
     )
   }
 
-  readChatWorkspaceResponse(
-    orgId: string,
-    workspaceId: string,
-    origin: string,
-  ) {
-    return this.chat.runLifecycle(() =>
+  readChatWorkspaceResponse(...request: WorkspaceReadRequest) {
+    return this.chat.runLifecycle((turn) =>
       readChatWorkspaceResponse(
         this.env,
         this.chat.store,
-        orgId,
-        workspaceId,
-        origin,
+        turn,
+        request,
         () => this.controller.readLifecycle(),
         () => this.controller.readLifecycleStartLog(),
       ),
@@ -191,7 +197,7 @@ export class Workspace extends AgentSessionWorkspace {
   }
 
   alarm(): Promise<void> {
-    return this.alarmRunner.alarm()
+    return this.alarmWithQueue(() => this.alarmRunner.alarm())
   }
 
   protected settledAlarms(): Promise<void> {
@@ -215,7 +221,7 @@ export class Workspace extends AgentSessionWorkspace {
     origin: string,
   ) {
     return featureResult(() =>
-      this.run(async () => {
+      this.run(async (turn) => {
         await this.jobs.assertIdle()
         return archiveWorkspace(
           this.env,
@@ -228,6 +234,7 @@ export class Workspace extends AgentSessionWorkspace {
             archiveLifecycle: () =>
               this.controller.archiveLifecycle(workspaceId),
             reserveArchive: () => this.controller.reserveArchive(workspaceId),
+            outside: turn.outside,
           },
         )
       }),

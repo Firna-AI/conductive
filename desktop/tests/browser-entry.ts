@@ -1,4 +1,5 @@
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
 import { _electron } from '@playwright/test'
@@ -31,7 +32,7 @@ export async function withBrowserEntry(
   run: (entry: { page: Page; origin: string }) => Promise<void>,
 ): Promise<void> {
   await mkdir(evidence, { recursive: true })
-  const directory = await mkdtemp(resolve(evidence, `${name}-`))
+  const directory = await mkdtemp(resolve(tmpdir(), `conductive-${name}-`))
   const site = resolve(directory, 'site')
   const repository = resolve(desktop, '..')
   let server: PreviewServer | undefined

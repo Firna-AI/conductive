@@ -50,8 +50,9 @@ number names a dated record, as
 - A refresh keeps the folders and the variables of the org image.
 - A build can move a repository folder to a new name. The move keeps every
   file of the folder, also untracked files such as installed dependencies.
-- A rename of a repository on GitHub moves its folder at the build that the
-  rename starts, as
+- A rename of a repository on GitHub moves its folder at the next build.
+  This is the build that the rename starts, or the next build after a
+  failed build, as
   [Repository changes on GitHub](repository-changes-on-github.md#folders)
   says.
 - A workspace keeps the folders and the variables of the org image that it
@@ -83,13 +84,17 @@ number names a dated record, as
   exist. Reason: the user that runs the agents then owns both folders.
 - The runner does both before it reports the files of the workspace. So
   Changes lists no file of the folder that the repository does not track.
-- All files lists every file of the folder, also each file that Git
+- All files lists the files of the folder, also each file that Git
   ignores, such as an attached file. It shows no change mark on such a
   file. So `@` mentions can name these files too, as
   [File mentions](file-mentions.md) says. Reason: agents leave notes and
   screenshots there for the members, who then need no terminal to open
   them. A separate list for the folder beside All files was rejected,
   because it needs a second report and a second view for the same files.
+- The tree report keeps the entries of the folder within its limit, as
+  [Which entries stay](file-reports.md#which-entries-stay) says.
+- So in a large repository, All files and the list of `@` can leave out
+  some files of the folder.
 - The exclude file holds the rule once, also after many starts. The rule
   covers only the folder at the top of the repository. A `.context` folder
   deeper in the repository stays visible to Git.

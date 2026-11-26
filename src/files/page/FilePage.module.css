@@ -131,7 +131,7 @@
 }
 
 /*
- * The picture of an image file fills the box of the mockups' `ImageView`,
+ * The picture of an image file fills the box of the shared `ImageView`,
  * which keeps the proportions of the picture.
  */
 .picture {

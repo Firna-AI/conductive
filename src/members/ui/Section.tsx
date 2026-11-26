@@ -24,15 +24,6 @@ export function Section(props: {
   )
 }
 
-/** Preformatted text, such as a script, in a tinted block. */
-export function MonoBlock(props: { text: string; label?: string }) {
-  return (
-    <pre aria-label={props.label} className={styles.mono}>
-      {props.text}
-    </pre>
-  )
-}
-
 /** A line of body text in a section. */
 export function SectionText(props: { children: ReactNode; muted?: boolean }) {
   return (

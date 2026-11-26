@@ -17,7 +17,8 @@ import {
 } from '../../app/default-logins.test-support'
 import { loginPrivate, withSessions } from '../state/linked-kit'
 import { newSessionRecord } from '../state/test-kit'
-import { now, renderChat } from './render-kit'
+import { spokenChoices } from './model-picker-test-kit'
+import { renderChat, TestClock } from './render-kit'
 import { SessionChat } from './SessionChat'
 import { first, mountChat, second } from './tab-drag-test-kit'
 
@@ -57,13 +58,22 @@ function serverWith(role: OrgRole): FakeApiServer {
   return server
 }
 
-/** The models of the open picker of the composer, in their order. */
-async function pickedModels(): Promise<string[]> {
-  await press(byRole('button', 'Model and effort: Opus 5.5, High'))
-  const menu = byRole('menu', 'Model and effort')
+/** The labels of the models of the open menu `label`, in their order. */
+function modelsOf(label: string): string[] {
+  const menu = byRole('menu', label)
   return Array.from(menu.querySelectorAll('[role="menuitemradio"]')).flatMap(
     (item) => labels.filter((label) => item.textContent?.startsWith(label)),
   )
+}
+
+/**
+ * The models of the picker of the composer, in their order. Its menu lists
+ * the favourites of the account first, so the models are in All models.
+ */
+async function pickedModels(): Promise<string[]> {
+  await press(byRole('button', 'Model and effort: Opus 5.5, High'))
+  await press(byRole('menuitem', 'All models'))
+  return modelsOf('All models')
 }
 
 /** The models that the picker of the composer offers, in their order. */
@@ -73,13 +83,27 @@ async function offeredModels(server: FakeApiServer): Promise<string[]> {
 }
 
 describe('the models of the composer of a session', () => {
-  it("hide in the reader's own session each model that the reader's own endpoint does not list, and keep the current model of the session", async () => {
-    expect(await offeredModels(serverWith('admin'))).toEqual([
-      'Opus 5.5',
-      'Fable 5.1',
-      'GPT-6.1 Sol',
-      'GPT-6 Astra',
-    ])
+  it("hide in the reader's own session each model that the reader's own endpoint does not list, with each favourite on it, and keep the current model of the session", async () => {
+    await mountChat({
+      server: serverWith('admin'),
+      tabs: [first, second],
+      viewport: 'desktop',
+    })
+    await press(byRole('button', 'Model and effort: Opus 5.5, High'))
+    // The starting favourites of the account hold Sonnet 5.5 Medium too.
+    const favourites = spokenChoices().filter((words) =>
+      labels.some((label) => words.startsWith(label)),
+    )
+    await press(byRole('menuitem', 'All models'))
+    expect({ favourites, models: modelsOf('All models') }).toEqual({
+      favourites: [
+        'Opus 5.5 High',
+        'Opus 5.5 Max',
+        'GPT-6.1 Sol High New session',
+        'GPT-6 Astra Medium New session',
+      ],
+      models: ['Opus 5.5', 'Fable 5.1', 'GPT-6.1 Sol', 'GPT-6 Astra'],
+    })
   })
 
   it("are every model of the app in a session on another member's login", async () => {
@@ -133,13 +157,14 @@ describe('the models of the composer of a session', () => {
     })
     await rendered.chat.controller.select('started')
     const { container } = await mount(
-      <SessionChat
-        controller={rendered.chat.controller}
-        mobile={false}
-        now={now}
-        onConnectAgent={() => {}}
-        snapshot={rendered.chat.controller.getSnapshot()}
-      />,
+      <TestClock>
+        <SessionChat
+          controller={rendered.chat.controller}
+          mobile={false}
+          onConnectAgent={() => {}}
+          snapshot={rendered.chat.controller.getSnapshot()}
+        />
+      </TestClock>,
     )
     const label = Array.from(container.querySelectorAll('span'), (span) =>
       span.textContent?.trim(),

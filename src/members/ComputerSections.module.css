@@ -44,3 +44,87 @@
   font-size: var(--ui-text-sm);
   letter-spacing: 0.1em;
 }
+
+/*
+ * The saved skills repository and its trust choice: rows of a term and its
+ * value, in a box with a full outline, as the shared `DetailList` draws
+ * them.
+ */
+.details {
+  margin: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+}
+
+.detail {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 12px;
+}
+
+.detail + .detail {
+  border-top: 1px solid var(--ui-border);
+}
+
+.term {
+  flex-shrink: 0;
+  width: 92px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.detailValue {
+  min-width: 0;
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  overflow-wrap: anywhere;
+}
+
+/* What the saved trust choice does, as the hint of the switch of an admin. */
+.trustHint {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+/* The number of skills, then their names, then the note of a cut tree. */
+.skills {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* The style of the label of a Firna field, as in the tab of an admin. */
+.skillCount {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  font-weight: 700;
+  line-height: 18px;
+}
+
+/* The names wrap from line to line, each in a box with a full outline. */
+.skillList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skill {
+  min-width: 0;
+  padding: 2px 7px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-raised);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}

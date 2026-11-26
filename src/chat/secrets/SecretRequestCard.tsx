@@ -3,11 +3,11 @@ import { Ban, CircleCheck, CircleMinus, KeyRound, TimerOff } from 'lucide-react'
 import {
   notInOrg,
   secretRunWords,
-} from '../../../docs/mockups/src/components/chat/secretRunCopy'
-import styles from '../../../docs/mockups/src/components/chat/SecretRequest.module.css'
-import names from '../../../docs/mockups/src/components/chat/SecretRun.module.css'
-import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
-import { useTouch } from '../../../docs/mockups/src/components/common/touch'
+} from '../../ui/components/chat/secretRunCopy'
+import styles from '../../ui/components/chat/SecretRequest.module.css'
+import names from '../../ui/components/chat/SecretRun.module.css'
+import { StatusText } from '../../ui/components/common/StatusText'
+import { useTouch } from '../../ui/components/common/touch'
 import type {
   AnswerSecretRequest,
   SecretRequest,

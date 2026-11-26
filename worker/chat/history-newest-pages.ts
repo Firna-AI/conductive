@@ -1,69 +1,64 @@
-import { jsonBytes } from '../../src/shared/event-limits'
+import { historyEventBytes, type ShowHistoryEvent } from './history-page-event'
 import type { PageLimits } from './history-pages'
-import type { StoredWorkspaceEvent } from './history-storage'
-import { CHAT_EVENT_PREFIX, chatEventKey } from './storage-keys'
+import { historySessionKey, historySessionPrefix } from './history-session-keys'
+import {
+  listSessionHistory,
+  SESSION_BATCH_SIZE,
+} from './history-session-records'
 import type { ChatData } from './types'
 import type {
   NewestChatHistoryResponse,
   WorkspaceEventEnvelope,
 } from './workspace-events'
 
-const LIST_SIZE = 32
-
 /** Reads stored events backwards, but presents each page in event order. */
 export async function readNewestHistory(
   data: ChatData,
+  sessionId: string,
   before: number | undefined,
   through: number,
   limits: PageLimits,
-  shown: (
-    stored: StoredWorkspaceEvent,
-  ) => Promise<WorkspaceEventEnvelope | null>,
+  shown: ShowHistoryEvent,
 ): Promise<NewestChatHistoryResponse> {
   const events: WorkspaceEventEnvelope[] = []
   const scanLimit = Math.max(1, limits.scan)
   let end =
     before === undefined || before > through
-      ? `${chatEventKey(through)}\u0000`
-      : chatEventKey(before)
+      ? `${historySessionKey(sessionId, through)}\u0000`
+      : historySessionKey(sessionId, before)
   let last: number | undefined
   let scanned = 0
   let bytes = 0
   let more: boolean
   do {
-    const limit = Math.min(LIST_SIZE, scanLimit - scanned)
-    const records = [
-      ...(
-        await data.list<StoredWorkspaceEvent>({
-          prefix: CHAT_EVENT_PREFIX,
-          end,
-          reverse: true,
-          limit,
-        })
-      ).values(),
-    ]
+    const limit = Math.min(SESSION_BATCH_SIZE, scanLimit - scanned)
+    const records = await listSessionHistory(data, sessionId, {
+      end,
+      reverse: true,
+      limit,
+    })
     more = records.length === limit
-    for (const [index, stored] of records.entries()) {
-      last = stored.eventNumber
+    for (const [index, { eventNumber, stored }] of records.entries()) {
+      last = eventNumber
       scanned += 1
-      const envelope = await shown(stored)
-      if (envelope) {
-        events.push(envelope)
-        if (limits.bytes !== Infinity) bytes += jsonBytes(envelope)
+      const event = stored === undefined ? null : await shown(stored)
+      if (event) {
+        events.push(event.envelope)
+        if (limits.bytes !== Infinity) bytes += historyEventBytes(event)
       }
       if (bytes < limits.bytes) continue
       more ||= index < records.length - 1
       break
     }
     if (last === undefined) break
-    end = chatEventKey(last)
+    end = historySessionKey(sessionId, last)
   } while (more && scanned < scanLimit && bytes < limits.bytes)
   events.reverse()
   if (!more || last === undefined || last <= 1)
     return { events, throughEventNumber: through }
-  const earlier = await data.list<StoredWorkspaceEvent>({
-    prefix: CHAT_EVENT_PREFIX,
-    end: chatEventKey(last),
+  const earlier = await data.list<number>({
+    prefix: historySessionPrefix(sessionId),
+    end: historySessionKey(sessionId, last),
     reverse: true,
     limit: 1,
   })

@@ -18,6 +18,9 @@ import { GitHubReader } from '../github/client'
 import { readBranchWork, type BranchWork } from '../github/branch-work'
 import type { WorkspaceAlarms } from './alarms'
 import type { ReceiverStorage } from '../members/receiver-storage'
+import { freshGitHubUserToken } from '../security/github-tokens'
+import type { WorkspaceBaseChanges } from '../lifecycle/workspace-base'
+import { saveRepositoryDefaultChange } from '../lifecycle/repository-default-change'
 
 interface ScheduledRead {
   at: number
@@ -32,6 +35,7 @@ export class WorkspaceGitHub {
   private readonly chat: WorkspaceChat
   private readonly matches: (id: string) => boolean
   private readonly alarms: WorkspaceAlarms
+  private readonly baseChanges: WorkspaceBaseChanges
 
   constructor(
     storage: ReceiverStorage,
@@ -40,6 +44,7 @@ export class WorkspaceGitHub {
     chat: WorkspaceChat,
     matches: (id: string) => boolean,
     alarms: WorkspaceAlarms,
+    baseChanges: WorkspaceBaseChanges,
   ) {
     this.storage = storage
     this.env = env
@@ -47,9 +52,22 @@ export class WorkspaceGitHub {
     this.chat = chat
     this.matches = matches
     this.alarms = alarms
+    this.baseChanges = baseChanges
   }
 
   async refresh(workspace: GitHubWorkspace, signal: GitHubRefresh) {
+    if (signal.repositoryDefault) {
+      this.stateOf(workspace)
+      await saveRepositoryDefaultChange(
+        this.env.DB,
+        this.storage,
+        workspace,
+        signal.repositoryDefault,
+        this.dependencies.now(),
+      )
+      return null
+    }
+    const userId = signal.userId
     return refreshWorkspace(
       this.env.DB,
       workspace,
@@ -57,14 +75,17 @@ export class WorkspaceGitHub {
       this.stateOf(workspace),
       {
         ...this.dependencies,
-        token: installationTokenProvider(
-          {
-            ...this.env,
-            GITHUB_APP_PRIVATE_KEY: this.env.GITHUB_APP_PRIVATE_KEY ?? '',
-          },
-          this.dependencies.fetch,
-          this.dependencies.now,
-        ),
+        token:
+          signal.requireWritable && userId !== undefined
+            ? () => freshGitHubUserToken(this.env, userId, this.dependencies)
+            : installationTokenProvider(
+                {
+                  ...this.env,
+                  GITHUB_APP_PRIVATE_KEY: this.env.GITHUB_APP_PRIVATE_KEY ?? '',
+                },
+                this.dependencies.fetch,
+                this.dependencies.now,
+              ),
       },
     )
   }
@@ -141,6 +162,24 @@ export class WorkspaceGitHub {
     )
   }
 
+  /**
+   * The default branch of the repository of the workspace for Continue,
+   * read with the GitHub token of the member who pressed Continue, as
+   * Continue reads its merged pull request and asks for its base.
+   */
+  async memberDefaultBranch(
+    workspace: GitHubWorkspace,
+    userId: string,
+  ): Promise<string> {
+    return this.read(
+      workspace,
+      userId,
+      workspace,
+      (reader) => reader.defaultBranch(),
+      'member',
+    )
+  }
+
   /** The work of the branch that a repository change stops following. */
   async branchWork(
     workspace: GitHubWorkspace,
@@ -160,17 +199,21 @@ export class WorkspaceGitHub {
     userId: string,
     target: GitHubWorkspace,
     operation: (reader: GitHubReader) => Promise<T>,
+    access: 'member' | 'app' = 'app',
   ): Promise<T> {
     const authorize = () => authorizeMerge(this.env.DB, workspace, userId)
     await authorize()
-    const token = await installationTokenProvider(
-      {
-        ...this.env,
-        GITHUB_APP_PRIVATE_KEY: this.env.GITHUB_APP_PRIVATE_KEY ?? '',
-      },
-      this.dependencies.fetch,
-      this.dependencies.now,
-    )(target)
+    const token =
+      access === 'member'
+        ? await freshGitHubUserToken(this.env, userId, this.dependencies)
+        : await installationTokenProvider(
+            {
+              ...this.env,
+              GITHUB_APP_PRIVATE_KEY: this.env.GITHUB_APP_PRIVATE_KEY ?? '',
+            },
+            this.dependencies.fetch,
+            this.dependencies.now,
+          )(target)
     const result = await operation(
       new GitHubReader(
         {
@@ -201,6 +244,7 @@ export class WorkspaceGitHub {
   }
 
   async alarm(): Promise<void> {
+    await this.baseChanges.advance()
     const reads = await this.storage.list<ScheduledRead>({
       prefix: 'github-refresh:',
     })

@@ -49,7 +49,7 @@ screens.
   typed value and gives the choices back, with a notice. The card of a
   request mounts again when the request ends, so a typed value leaves the
   page with the choices.
-- The words come from `secretRunCopy.ts` of the mockups, and the line of
+- The words come from the shared `secretRunCopy.ts`, and the line of
   Save as secret from `secretNameCopy.ts`. The mockup words of a grant, of
   a late answer, and of an answered request take the fixture people of the
   mockups, so `secret-words.ts` writes them again for the members of the

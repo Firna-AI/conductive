@@ -1,19 +1,26 @@
 # Files screens
 
 The Files screens show the files of a workspace branch. All files is a
-tree of every file. Changes lists the files that the branch changes
-against the base branch, under the totals of the change. A file opens as a
+tree of the files, up to the limit of its report. Changes lists the files
+that the branch changes against the base branch, up to its limit, under
+the totals of the whole change. A file opens as a
 page with rendered Markdown or text with line numbers and syntax colours.
 An image file, which is a PNG, JPEG, GIF, or WebP file, opens as a
-picture. An HTML file opens its page in a frame from the files preview of
-the workspace. A changed file opens its unified diff, with the same syntax
-colours. The requirements are in
+picture, which zooms and expands. An HTML file opens its page in a frame
+from the files preview of the workspace. A changed file opens its unified
+diff, with the same syntax colours. The requirements are in
 [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
 and [HTML file preview](../../docs/protocol/html-file-preview.md).
 The visual spec is the `app/files` page of the
 [mockup catalogue](../../docs/mockups/README.md), `app/files/html` for the
-tab of an HTML file, and `app/chat/unavailable-files` for a tree that the
-cloud computer could not read.
+tab of an HTML file, `app/chat/unavailable-files` for a tree that the
+cloud computer could not read, and `app/files/limited` and
+`app/files/changes/limited` for lists whose reports leave out entries.
+
+`code/CodeField.tsx` shares the line numbers and the syntax colours of a
+file tab with other screens. `CodeField` is a field for code, and
+`CodeBlock` shows code to read. The Cloud computer tab uses them for the
+install script and the startup script.
 
 The screens render data from the Worker only. The workspace screen of the
 app shell mounts them, as
@@ -26,7 +33,8 @@ The files store keeps `ChangesResponse.unpushedCommits` and
 including updates that change only a count. `parseChanges` refuses a reply
 whose count is present but is not a whole number. An older runner can omit
 either count. The store keeps it absent, so callers can distinguish an
-unknown count from zero.
+unknown count from zero. The store keeps the omitted totals of a limited
+report the same way, as [Omitted totals](store.md#omitted-totals) says.
 
 ## Integration
 
@@ -69,14 +77,18 @@ const { store: files } = useWorkspaceStore(
 )
 ```
 
-The kept store reads the file routes with the `fetch` of the org's
-`ApiClient`, so the Mac app reads them from its own Worker, and a refusal
-of a suspended org marks the org. Its stream is
-the event source of the app, after the last event number of the store.
-When the connection drops, the stream opens again as
-[Data lifecycle](../app/README.md#data-lifecycle) says. So a return shows
-the lists at once, and the socket asks only for the events after the last
-complete point. Give `files` to the screens.
+The store reads the file routes with the `fetch` of the org's `ApiClient`.
+The Mac app reads from its own Worker. A refusal of a suspended org marks
+the org. A new store starts both list reads. When both give cutoffs, the
+stream starts after the smaller cutoff. A cutoff is the last workspace
+event that a read includes. As soon as either read gives no cutoff, the
+stream starts after event 0. See
+[The state of a new tab](../../docs/protocol/workspace-events.md#the-state-of-a-new-tab).
+
+A return to a kept store shows its lists at once. The socket starts after
+the last complete point of that store's stream. A dropped connection also
+resumes from its own progress. See
+[Data lifecycle](../app/README.md#data-lifecycle).
 
 [Store rules](store.md) gives the rules of the stream of the store, the
 open pages, the failed repairs of the lists, and a tree that the cloud
@@ -112,104 +124,9 @@ marks each line of the range, as
 [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
 says. A file chip of an answer with a line target opens such an address.
 
-The screens:
-
-- `FilesPanel` shows the All files, Changes, and Checks tabs and lists,
-  for the right column on desktop and the Files tab on a phone. The
-  `checks` prop takes the Checks list of the GitHub banner screens. The
-  `placeholder` prop replaces All files and Changes, for example with a
-  sandbox state. The `waiting` prop replaces only a list without a saved
-  copy, when its read fails with `file_unavailable`, or an unknown tree
-  under the unavailable mark. A read that runs still shows its load, and
-  any other failed read shows Try again. The workspace screen gives it the
-  wait of a sandbox that starts, so a resume shows the saved lists and the
-  first start of a new workspace shows the wait. Under the lists, the
-  panel shows one notice for each failed repair, in the order of the tabs, with its age. A saved tree that
-  the cloud computer could not read shows the notice of All files, with no
-  age. The notices show under each of the three tabs, and they have no
-  Dismiss. The `now` prop
-  gives the clock of the ages. Pass a stable function. The default is
-  `Date.now`. The `listKeys` prop gives the key of the command that opens
-  each list, as a tooltip and a name for `aria-keyshortcuts` of its tab.
-- The `rowMenu` prop of `FilesPanel` gives the items of the row menu of
-  each row of All files and Changes, in groups that a line parts, from the
-  real path, the kind, and the change of the row. The shell gives Add to
-  chat and Copy path, so the Files code holds no item and imports nothing
-  from the chat. Without the prop, no row has a menu. `useRowMenu` of the
-  lists opens the menu as
-  [File row menu](../../docs/protocol/file-row-menu.md) says, through
-  `PointMenu`, `Sheet`, `MenuList`, and `opensMenu` of the app shell and
-  `useLongPress` of the web app: a right click at the pointer, Shift and
-  F10 or the Menu key below the focused row, and a long press of a finger
-  in a sheet on a phone, else at the press. The row of the open menu keeps
-  the fill of a hover, and the focus goes back to it as the menu closes. A
-  press on an item gives the focus back to the row before the item runs,
-  so an item that moves the focus, such as Add to chat, finds it on the
-  row. A row whose label hides a secret value gets no item, so it opens no
-  menu, as [Labels of paths](labels.md) says. The menu shows only labels:
-  the name of the row titles it, and an item reads the real path only at
-  its press.
-- `FilePage` shows one file tab. Markdown starts rendered, and its view
-  switch navigates to the same tab with the other mode. The page knows an
-  image file by the name of its real path, as
-  [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
-  says. While the browser reads the size of a picture, the page shows that
-  the file opens. A changed picture stays on screen until the browser draws
-  or refuses the new one. Bytes that the browser cannot draw offer
-  Download, as a binary file does. An image file with no bytes shows that
-  it is empty.
-- `FilePage` shows the tab of an HTML file, a name that ends with `.html`
-  or `.htm` in any case, as [The page of an HTML file](html-page.md) says.
-- `DiffPage` shows the diff of one changed file.
-- The `placeholder` prop of `FilePage` and `DiffPage` replaces the content
-  of the page, for example with a sandbox state. The page then reads
-  nothing, and its header offers no Download. A diff keeps its changed
-  lines from Changes. With `keepShown`, a page that already shows its file
-  keeps it, with Copy, and so does the page of an HTML file that shows in
-  its frame. The placeholder shows only in place of a page with nothing to
-  show. When the placeholder goes, the page reads at once.
-- `FileTabItem` is the closable tab of a file or a diff, and
-  `LiftedFileTab` is the copy that a drag lifts.
-  [File tabs](file-tabs.md) gives their props, their names, the temporary
-  tab, and the double-click of the links and the rows.
-
-[The Markdown preview](markdown-preview.md#the-worker) gives the worker
-that parses the Markdown of a preview, and what the preview shows while
-it waits for the worker or when the worker fails.
-
-[The page of an HTML file](html-page.md) gives the tab of an HTML file:
-its views, the `htmlPreview` prop that the shell gives, and its read.
-
-Each screen takes `layout`: `desktop`, or `phone` with touch targets of at
-least 40 px. On a phone, a file page and a diff page link back to All
-files or Changes.
-
-Copy and Download take `targets`. Copy is off for a picture and for each
-other file that is not text. The default, `browserTargets`, copies
-the original text with the clipboard of the browser, with each byte order
-mark of the file. The view and the line count leave out one leading mark.
-Its Download reads the download route of the client, `downloadHref(path)`,
-with the fetch of the browser and the session cookie. It saves the file
-from memory only when the route sends it. When the route refuses the file,
-the header shows that the download didn't start. The development page and
-the tests inject `fetchedDownload` with the fetch of the fake API, because
-the fake API serves no route that the browser can read. Pass the same
-`targets` object on each render, because a new object starts new Copy and
-Download states. The shell passes targets over the services of the app:
-Copy uses their `copy`, and Download reads the route with the `fetch` of
-the app's `ApiClient`, so the Mac app reads the file from its own Worker.
-
-The shell supplies the design tokens as `--ui-*` CSS variables and the
-`@firna/ui` theme provider, as `docs/mockups/src/theme.ts` builds them.
-
-The links of the Markdown preview open through the link opener of the app
-shell, `useTextLinks` of `../shell/ui/text-links.tsx`, which the chat uses
-too. The preview asks it to open a local address as a web link. The
-workspace screen gives the opener the pages of the app, on desktop and on
-a phone, as
-[The chat of the workspace](../shell/workspace/screen-parts.md#the-chat-of-the-workspace)
-says. Outside that screen, as on the development page, each link opens a
-new tab.
+[The screens](screens.md) gives each screen and its props: the lists, the
+file page, the diff page, the tabs, the layout, Copy and Download, and
+the links of the Markdown preview.
 
 ### Kept scroll offsets
 
@@ -237,6 +154,30 @@ tests the hook, and `TabScroll.test.tsx` of the
 [workspace files](../shell/workspace/files/) tests the tabs of the
 workspace screen.
 
+### Select all in a file
+
+`CodeView` and `DiffView` draw their rows in `CodeBox` of
+`code/CodeBox.tsx`, a focusable region, so a press in the text gives it
+the focus. Its key handler turns Cmd+A or Ctrl+A into a selection of the
+box only. The browser would otherwise select the whole app. The line
+numbers cannot be selected, so a copy leaves them out.
+
+`CodeView` gives `CodeBox` the `copySource` of its text, from
+`code/code-selection.ts`: its lines, joined with line feeds, and the
+offset of the start of each line. Each row carries `data-copy-line`, the
+index of its line, and its text cell carries `data-copy-text`. A copy
+maps the two ends of each range of the selection to offsets in that
+text, and gives `copiedText`, the text between them. Only the rows of
+the two ends are read, so a copy costs the same in a long file. A browser
+can split one drag into several ranges, as Firefox does at each line
+number, so the copy joins every range. It keeps the empty lines, which
+the browser leaves out, and select all gives the whole text that the view
+shows. A caret, or a range that reaches out of the box, leaves the copy
+to the browser. The diff gives no source, so its copy stays the copy of
+the browser. `code/CodeBox.dom.test.tsx` tests select all, and
+`code/CodeCopy.dom.test.tsx` tests the copy, with the helpers of
+`code/code-box-test-kit.tsx`.
+
 ## Labels of paths
 
 [Labels of paths](labels.md) gives the label that each screen shows in
@@ -250,14 +191,18 @@ File content, Markdown, paths, and diffs are untrusted. The screens show
 them as React text only, apart from the picture of an image file. The
 page of an HTML file shows only in the frame that the shell gives, from
 the preview domain, so no script of the file runs on the app's site. The
-Markdown renderer builds React elements from its own parse: HTML in a
-file shows as text, a Markdown image shows its alt text, and only
-absolute `http`, `https`, and `mailto` links become links. A bare address
-in the text stays text. Quotes and lists nest at most 16 levels deep, and
-deeper content shows as text. The parse runs in the worker, off the
-thread of the page, so a long or crafted file cannot stop the page.
+Markdown renderer builds React elements from the parts that the shared
+parser gives, so no HTML of a file reaches the page.
+[Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
+gives the rule for HTML in a Markdown file, and for a line-break tag. A
+Markdown image shows its alt text, and no picture loads. Only absolute
+`http`, `https`, and `mailto` addresses become links. An image at an
+`http` or `https` address shows its alt text as a link. A bare address in
+the text stays text. Quotes and lists nest at most 16 levels deep, and
+deeper content shows as text. The parse runs in the worker, off the thread
+of the page, so a long or crafted file cannot stop the page.
 
-Each link of the preview has the look of the mockups' `TextLink`, and its
+Each link of the preview has the look of the shared `TextLink`, and its
 title gives its whole address. The link opener of the app shell opens
 it, as
 [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
@@ -270,6 +215,9 @@ says:
 - Unlike chat text, the preview keeps each link that its parse accepts. A
   `mailto` address, an address with a user name or a password, and an
   address of the app that names no page open a new tab.
+- A link that the preview does not open shows its label as text. The
+  parser makes no link of a script or a data address, such as
+  `javascript:`, so such a link shows as typed.
 
 A local address of a file, such as `http://localhost:3000`, opens a new
 tab too. It does not open the preview of its port, as a local address of
@@ -288,7 +236,7 @@ A file or a diff over the read limit shows the size and the limit that
 the backend sends, and the terminal as the way to open it. The download
 route reads a file with the same limit, so a file page offers Download
 only after a read that fits. A binary diff links to its file tab in place
-of Download.
+of Download, unless the diff deletes the file.
 
 ## Development
 
@@ -308,7 +256,8 @@ holds, its samples, and its controls.
 Run the tests with `npm run test -- src/files`. The `*.mounted.test.tsx`
 files mount the screens in happy-dom, with `mount-test-kit.ts`, as the
 GitHub banner tests do. The kit also starts a store, presses a control,
-and answers the Markdown worker with `parseMarkdown`.
+and answers the Markdown worker with `previewDocument`, the parse of the
+worker.
 `page/picture-test-kit.tsx` opens a file page with a given read. Its
 `fakeDecoder` draws or refuses each picture by hand, in place of the image
 decoder of the browser. These tests do not run that decoder.
@@ -318,104 +267,8 @@ checks in Node.
 
 ## Key code
 
-- `model/files-store.ts`: `WorkspaceFiles`, the live tree and changes of a
-  workspace with their failed repairs, and `versionOf`, which grows when an
-  event may change the file or the diff of a path.
-- `model/files-snapshot.ts`: `FilesSnapshot`, what the screens read from
-  the store, with the label of each read in `readLabels`.
-- `model/files-sync.ts`: the merge rules of the routes and the stream.
-- `model/failed-repairs.ts`: `repairsAfter`, the failed repairs of the
-  lists after one event of the stream.
-- `model/files-invalidation.ts`: `FilesInvalidation`, the changed paths and
-  the events without named paths of one message, applied to the versions
-  once.
-- `model/resource-loader.ts` and `model/follow-path.ts`: the read of one
-  file or diff, which drops stale replies and reads again after an event.
-- `api/files-client.ts`: `createFilesClient`, the file routes, with their
-  errors as `FilesError`, and the download address of a path.
-- `page/file-actions.ts`: Copy and Download, with `browserTargets`.
-  `page/fetched-download.ts` is the download that reads the route and
-  saves the file from memory, with the fetch of the browser or of the
-  fake API.
-- `api/parse-tree.ts`, `api/parse-changes.ts`, and `api/parse-events.ts`:
-  the parsers of the route bodies and the stream messages. A stream
-  envelope also keeps the failed repair of a file list.
-- `navigation.ts`: `FilesTarget`, `FilesNavigation`, and the tab types of
-  the workspace view.
-- `model/file-labels.ts`: `pathLabel`, `pageLabel`, and `tabLabel`, the
-  label that a screen shows for a real path, and `hidesSecret` and
-  `tabHidesSecret`, the shared check of a label that hides a secret value.
-- `panel/FilesPanel.tsx`, `page/FilePage.tsx`, `page/DiffPage.tsx`, and
-  `tabs/FileTabItem.tsx`: the screens.
-- `page/file-view.ts`: `fileView`, what a file page shows of one read:
-  the picture of an image file that holds bytes, with a `data:` address
-  of those bytes, or, for each other file, the text or the binary mark of
-  `fileText` in `model/file-text.ts`.
-- `page/picture-reads.ts`: `createPictureReads`, a picture reader for one
-  open chat, and its `ChatPictures` and `PictureRead` types. It shares
-  file reads, limits them to two at once, and keeps each path's result.
-  Its unit tests cover queue order, cached results, failures, and aborts.
-- `page/FileBody.tsx`: `FileContent`, the body of a file page. It draws
-  a picture through the mockups' `ImageView`, named by the file name of
-  the label of its path. `page/decode-picture.ts` gives `decodePicture`,
-  which loads a picture apart from the page to learn its size, or finds
-  that the browser cannot draw it.
-- `panel/useRowMenu.tsx`: `useRowMenu`, the row menu of a list, and its
-  drawing at a point or in a sheet. `panel/row-menu.ts` gives the types of
-  the `rowMenu` prop and the groups of its entries.
-- `panel/UnavailableLists.tsx`: the notices of the failed repairs under
-  the lists, with the mockups' `LostUpdateRow` and their ages, and the
-  notice of a saved tree that the cloud computer could not read.
-- `markdown/markdown-document.ts`: `parseMarkdown`, the whole parse of a
-  file: its blocks, then the inline content of each block.
-- `markdown/markdown-inline.ts`: `parseInline`, the inline content of one
-  block. `pairRuns` in `markdown/markdown-delimiters.ts` pairs its `*` and
-  `_` markers by the CommonMark rules. `nestParts` in
-  `markdown/markdown-nesting.ts` builds the nested content from the pairs.
-- `markdown/markdown-blocks.ts`: `parseBlocks`, the blocks of a file. It
-  reads each list with `readList` of `../markdown/list-items.ts`, the list
-  reader that the chat shares, and the line tests of
-  `../markdown/lines.ts`. [List parts](../chat/agent-text.md#list-parts)
-  gives the rules of the shared list code.
-  `src/markdown/headings.ts` holds its heading levels and the rules for
-  hash headings and underline headings.
-- `markdown/markdown-tables.ts`: `parseTable`, which reads one table of a
-  file and fills its short rows, and `TableBudget`, the empty cells that
-  the tables of one file may add. It reads each row with
-  `../markdown/table-rows.ts`, which also holds the shared table types.
-  [Table parts](../chat/agent-text.md#table-parts) gives the rules
-  of the shared table code.
-- `markdown/markdown-worker.ts` and `markdown/worker-parse.ts`: the module
-  worker that runs the parse, and its start from the view, which ends it.
-- `markdown/MarkdownView.tsx`: the safe renderer of a parsed document.
-  `parser` replaces the worker for a static render. It draws each table
-  through the shared `MarkdownTable` of the mockups, with the margin of
-  its `.table` class. Its headings take their look from the shared
-  `MarkdownHeadings.module.css` of the mockups, which chat answers use
-  too, and its own CSS sets only their margins.
-- `markdown/inline-render.tsx`: `inlineNodes`, the inline content of a
-  block as React elements. It draws each link with the mockups' `TextLink`
-  through the link opener of the app shell.
-- `code/`: the syntax colours and the code view. `code/file-kind.ts` gives
-  `fileKind`, the kind of a file by its name: Markdown, code, or another
-  file. A file is code when the code view gives it syntax colours. It also
-  gives `isMarkdown` and `isHtml`, the files whose tab has a Preview. An
-  HTML file keeps the kind and the icon of code.
-  `panel/file-icons.tsx` draws the icon of each kind through `EntryIcon` of
-  the mockups, the one icon map of All files, the tabs, the list of `@`,
-  and the file chips.
-- `page/html-preview.ts` and `page/HtmlPagePreview.tsx`: the
-  `htmlPreview` prop of `FilePage`, and the drawing of its views and of
-  Reload and Open.
-- `diff/`: the unified diff parser and view. `diff/highlight-diff.ts`
-  colours each diff line from the whole old or new file of the diff
-  reply, so a line inside a comment that opens above its hunk keeps its
-  colour. A line that does not match its file line takes its colours from
-  the diff text alone, side by side, and each hunk starts again in code.
-- `dev/`: the development page, its Vite config, its fixtures, its Copy
-  and Download targets, `RepairControls`, the controls of the failed
-  repairs and of a failed read, and `dev-unread.ts`, the stored state of
-  `?tree=`.
+[Files key code](key-code.md) names the files, the types, and the
+functions of the Files screens that a reader opens first.
 
 See [the shared contracts](../shared/README.md) for the file routes, the
 events, and the workspace view.

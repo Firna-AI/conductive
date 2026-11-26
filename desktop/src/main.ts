@@ -12,7 +12,7 @@ import {
   shell,
 } from 'electron'
 import electronUpdater from 'electron-updater'
-import { productName } from '../../docs/mockups/src/brand.js'
+import { productName } from '../../src/shared/brand.js'
 
 import {
   DESKTOP_ORIGIN,

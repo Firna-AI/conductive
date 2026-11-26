@@ -1,10 +1,10 @@
-import { X } from 'lucide-react'
-import { IconButton } from '../common/actions'
-import { classes } from '../common/classes'
+import { iconButton } from '../../entries/components/common/actions.mockup'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
-import { useTouch } from '../common/touch'
-import tabScroll from '../workspace/TabScroll.module.css'
-import styles from './PreviewTabs.module.css'
+import { useTouch } from '../../../../../src/ui/components/common/touch'
+import { instanceKey } from '../../instanceKey'
+import tabScroll from '../../../../../src/ui/components/workspace/TabScroll.module.css'
+import styles from '../../../../../src/ui/components/tools/PreviewTabs.module.css'
 
 export type PreviewTab = {
   /** The port and the cut name of the server, from `previewTabLabel`. */
@@ -49,7 +49,12 @@ export function PreviewTabs(props: {
             {tab.label}
           </ScreenLink>
           <span className={styles.close}>
-            <IconButton icon={X} label={`Close ${tab.label}`} quiet />
+            <iconButton.Component
+              icon="x"
+              label={`Close ${tab.label}`}
+              moklyInstance={`close-preview-${instanceKey(tab.label)}`}
+              quiet
+            />
           </span>
         </span>
       ))}

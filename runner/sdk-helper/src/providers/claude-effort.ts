@@ -1,4 +1,4 @@
-import type { Options } from '@anthropic-ai/claude-agent-sdk'
+import type { Options, Settings } from '@anthropic-ai/claude-agent-sdk'
 
 import type { AgentChoice } from '../generated/AgentChoice'
 import type { Effort } from '../generated/Effort'
@@ -48,9 +48,13 @@ export function claudeEffortSettings(effort: Effort): ClaudeEffortSettings {
  */
 export function claudeStart(
   choice: AgentChoice,
+  flagSettings: Settings = {},
 ): Pick<Options, 'effort' | 'thinking' | 'settings'> {
   const start = claudeStartOptions(choice.effort)
   // The start options set settings only as an object, never as a file path.
   const settings = typeof start.settings === 'object' ? start.settings : {}
-  return { ...start, settings: { ...settings, fastMode: choice.fast } }
+  return {
+    ...start,
+    settings: { ...settings, ...flagSettings, fastMode: choice.fast },
+  }
 }

@@ -7,7 +7,10 @@ import {
 
 it('isolates equal request IDs by workspace through approval, cancel, and completion', async () => {
   const test = sessionFixture()
-  test.session.receive({ type: 'command.request', request: test.command() })
+  test.session.receive({
+    type: 'command.request',
+    request: test.command(),
+  })
   test.session.receive({
     type: 'command.request',
     request: test.command({
@@ -112,7 +115,10 @@ it('rejects another pairing, another account, and a conflicting request without 
     request: test.command({ sender: { ...request.sender, id: 'user-two' } }),
   })
   test.session.receive({ type: 'command.request', request })
-  test.session.receive({ type: 'command.request', request: { ...request } })
+  test.session.receive({
+    type: 'command.request',
+    request: { ...request },
+  })
   test.session.receive({
     type: 'command.request',
     request: { ...request, command: 'conflicting command' },
@@ -127,7 +133,10 @@ it('reports a failed private permission write without executing or exposing its 
   test.files.write = () => {
     throw new Error('private secret in filesystem error')
   }
-  test.session.receive({ type: 'command.request', request: test.command() })
+  test.session.receive({
+    type: 'command.request',
+    request: test.command(),
+  })
   test.session.receive({
     type: 'command.approval',
     workspaceId: 'workspace-one',

@@ -7,6 +7,7 @@ import {
 } from '../../test-support/harness'
 import { createFilesHandler } from '../handlers'
 import { WorkspaceFiles } from '../workspace'
+import { standaloneFileLists } from './list-reads'
 import type { FilesStorageHarness } from './storage'
 
 let storageSequence = 0
@@ -48,13 +49,15 @@ export async function setupFilesHttp(
   ])
   let requestSequence = 0
   const storageName = `http-${++storageSequence}`
+  const storage = runtime.storage(storageName)
   const files = new WorkspaceFiles(
-    runtime.storage(storageName),
+    storage,
     () => `request-${++requestSequence}`,
   )
   const workspaceFiles = vi.fn(() => files)
   const handler = createFilesHandler({
     maxFileBytes,
+    fileLists: standaloneFileLists(workspaceFiles),
     workspaceFiles,
     repositoryRoot: () => '/home/user/repos/storefront',
     fetch: harness.boat.fetch,
@@ -72,6 +75,7 @@ export async function setupFilesHttp(
     org,
     workspaceId,
     files,
+    storage,
     evict: () => runtime.evict(storageName),
     handler,
     request,

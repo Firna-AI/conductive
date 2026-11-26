@@ -1,4 +1,6 @@
 import type { GitHubRepositoryValues } from './repository-read'
+import type { RepositoryChangeDependencies } from './repository-change'
+import { completeDelivery, recordDelivery, repositoryWorkspaces } from './data'
 import {
   REACHED_REPOSITORY_ROWS,
   reachedValues,
@@ -9,6 +11,7 @@ const SYNC_ATTEMPTS = 3
 
 interface SavedRow extends GitHubRepositoryValues {
   id: string
+  orgId: string
   installationId: number
 }
 
@@ -18,7 +21,7 @@ function savedRows(
 ): Promise<SavedRow[]> {
   return db
     .prepare(
-      `SELECT r.id, r.full_name AS fullName, r.default_branch AS defaultBranch,
+      `SELECT r.id, r.org_id AS orgId, r.full_name AS fullName, r.default_branch AS defaultBranch,
        r.installation_id AS installationId
        FROM repositories r WHERE ${REACHED_REPOSITORY_ROWS}`,
     )
@@ -33,6 +36,7 @@ async function compareAndSave(
   rows: readonly SavedRow[],
   values: GitHubRepositoryValues,
   installationId: number,
+  deliveryId: string | null,
 ): Promise<boolean> {
   if (rows.length === 0) return true
   const results = await db.batch(
@@ -40,7 +44,9 @@ async function compareAndSave(
       db
         .prepare(
           `UPDATE repositories SET full_name = ?, default_branch = ?, installation_id = ?
-           WHERE id = ? AND full_name = ? AND default_branch = ? AND installation_id = ?`,
+           WHERE id = ? AND full_name = ? AND default_branch = ? AND installation_id = ?
+           AND (? IS NULL OR EXISTS (SELECT 1 FROM github_webhook_deliveries d
+             WHERE d.delivery_id = ? AND d.processed_at IS NULL))`,
         )
         .bind(
           values.fullName,
@@ -50,6 +56,8 @@ async function compareAndSave(
           row.fullName,
           row.defaultBranch,
           row.installationId,
+          deliveryId,
+          deliveryId,
         ),
     ),
   )
@@ -73,18 +81,58 @@ export async function syncRepositoryValues(
   db: D1Database,
   repository: ReachedRepository,
   read: () => Promise<GitHubRepositoryValues>,
+  prepare?: RepositoryChangeDependencies['prepareDefaultBranchChange'],
+  now: () => number = Date.now,
 ): Promise<void> {
   for (let attempt = 0; attempt < SYNC_ATTEMPTS; attempt += 1) {
-    const rows = await savedRows(db, repository)
-    const values = await read()
-    if (!(await compareAndSave(db, rows, values, repository.installationId)))
-      continue
-    const confirmed = await read()
-    if (
-      confirmed.fullName === values.fullName &&
-      confirmed.defaultBranch === values.defaultBranch
-    )
-      return
+    const deliveryId = prepare
+      ? `repository-default:${crypto.randomUUID()}`
+      : null
+    if (deliveryId) await recordDelivery(db, deliveryId, now())
+    try {
+      const rows = await savedRows(db, repository)
+      const values = await read()
+      if (prepare && deliveryId)
+        for (const row of rows) {
+          if (row.defaultBranch === values.defaultBranch) continue
+          const workspaces = await repositoryWorkspaces(
+            db,
+            repository.repositoryId,
+            row.installationId,
+          )
+          for (const workspace of workspaces)
+            if (
+              workspace.orgId === row.orgId &&
+              workspace.defaultBranch === row.defaultBranch &&
+              workspace.fullName === row.fullName &&
+              workspace.baseBranch == null
+            )
+              await prepare(
+                workspace,
+                values,
+                repository.installationId,
+                deliveryId,
+              )
+        }
+      if (
+        !(await compareAndSave(
+          db,
+          rows,
+          values,
+          repository.installationId,
+          deliveryId,
+        ))
+      )
+        continue
+      const confirmed = await read()
+      if (
+        confirmed.fullName === values.fullName &&
+        confirmed.defaultBranch === values.defaultBranch
+      )
+        return
+    } finally {
+      if (deliveryId) await completeDelivery(db, deliveryId, now())
+    }
   }
   throw new Error('Repository values did not settle')
 }

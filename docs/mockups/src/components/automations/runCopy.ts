@@ -2,13 +2,16 @@ import { agents, type AgentKey } from '../../fixtures/agents'
 import type { PersonKey } from '../../fixtures/members'
 import type {
   FailedRun,
-  RunState,
   RunTrigger,
   SkipReason,
 } from '../../fixtures/automationRuns'
+import type { RunState } from '../../../../../src/ui/components/workspaces/activityStatus'
 import { paths } from '../../paths'
-import { activityPresentation } from '../workspaces/status'
-import { eventLabels, scheduleLabels } from './triggerCopy'
+import { activityPresentation } from '../../../../../src/ui/components/workspaces/status'
+import {
+  eventLabels,
+  scheduleLabels,
+} from '../../../../../src/ui/components/automations/triggerCopy'
 
 /** Each state of a run in words. A workspace state keeps its own words. */
 export const runStateLabels: Readonly<Record<RunState, string>> = {

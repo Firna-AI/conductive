@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 
-import { sourceRepository } from '../../docs/mockups/src/brand.ts'
+import { sourceRepository } from '../../src/shared/brand.ts'
 import { selectReleaseFiles } from './publish-assets.ts'
 
 const REPOSITORY = `${sourceRepository.owner}/${sourceRepository.name}`

@@ -1,4 +1,5 @@
 import type { WorkspaceChat } from '../chat/backend'
+import { SessionWatchRecords } from '../chat/session-watch-records'
 import type { WorkspaceFeatures } from '../features/workspace'
 import type { DurableLifecycleState } from '../lifecycle/durable-types'
 import type { ImageCoordinatorState } from '../lifecycle/image-timers'
@@ -160,6 +161,11 @@ export class WorkspaceMembersReceiver {
           await transaction.put('alarm:lifecycle:archive', this.now())
         if (await transaction.get<string>('lifecycle:cleanup'))
           await transaction.put('alarm:lifecycle', this.now() + 5_000)
+        const watchDue = await new SessionWatchRecords(transaction).due(
+          this.now(),
+        )
+        if (watchDue !== null)
+          await transaction.put('alarm:session-watches', this.now())
         await scheduleWorkspaceAlarm(transaction, { resumeRegular: true })
       },
     )

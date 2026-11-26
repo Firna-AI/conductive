@@ -4,12 +4,15 @@ import { thisMac, type MacCommandRequest } from '../../fixtures/mac'
 import { people } from '../../fixtures/members'
 import { orgs } from '../../fixtures/orgs'
 import { checkoutAutocomplete } from '../../fixtures/workspaces'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { CommandActions } from '../mac/CommandActions'
-import { useMacApp } from '../mac/MacApp'
-import type { Detail } from '../settings/DetailList'
-import { CommandLine, CommandStatus } from './MacCommand'
-import styles from './PendingCommand.module.css'
+import { useMacApp } from '../../../../../src/ui/components/mac/MacApp'
+import type { Detail } from '../../../../../src/ui/components/settings/DetailList'
+import {
+  commandLine,
+  commandStatus,
+} from '../../entries/components/chat/MacCommand.mockup'
+import styles from '../../../../../src/ui/components/chat/PendingCommand.module.css'
 
 /** A command on the Mac that waits for its answer. */
 type PendingItem = Extract<ChatItem, { kind: 'mac-command' }> & {
@@ -84,6 +87,8 @@ function RequestDetails(props: { request: MacCommandRequest; mac: boolean }) {
  * In that stack, the stack draws the outline of the card.
  */
 export function PendingCommand(props: {
+  /** The id of the chat item of the command. */
+  id: string
   request: MacCommandRequest
   open?: boolean
   inStack?: boolean
@@ -100,13 +105,20 @@ export function PendingCommand(props: {
       <div className={styles.head}>
         <Laptop aria-hidden className={styles.icon} size={14} />
         <span className={styles.command}>
-          <CommandLine command={request.command} />
+          <commandLine.Component
+            command={request.command}
+            moklyInstance="command-line"
+          />
         </span>
         <span className={classes(styles.end, props.open && styles.endDrawn)}>
           {mac ? (
-            <CommandActions choicesOpen={props.open} />
+            <CommandActions choicesOpen={props.open} id={props.id} />
           ) : (
-            <CommandStatus state="waiting" />
+            <commandStatus.Component
+              id={props.id}
+              moklyInstance="command-status"
+              state="waiting"
+            />
           )}
         </span>
       </div>

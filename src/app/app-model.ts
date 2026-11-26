@@ -14,6 +14,7 @@ import { ignore } from './api/parse'
 import { readGetStarted } from './api/read-core'
 import { readSession } from './api/read-waitlist'
 import { AccountModel } from './account-model'
+import { activeOrgSource } from './active-orgs'
 import type { ComposerFocusRequest } from './composer-focus'
 import { FeedbackModel } from './feedback-model'
 import { failedBoot, readShared, watchSession, type Boot } from './boot'
@@ -29,15 +30,16 @@ import { Store, type Readable } from './store'
 import { WaitlistModel } from './waitlist-model'
 
 /**
- * The data that every screen shares: the person signed in, their orgs, the
- * models, and the steps of Get started. It also keeps one `OrgModel` for
- * each org that the user opens.
+ * The shared app data and the steps of Get started. It keeps one
+ * `OrgModel` for each org that the user opens.
  */
 export class AppModel {
   readonly boot = new Store<Boot>({ state: 'loading' })
   private readonly orgList = new OrgList()
-  /** The orgs of the person in their own order, as `OrgList` says. */
+  /** The raw org list, including deleted orgs, in the order of `OrgList`. */
   readonly orgs: Readable<readonly OrgSummary[]> = this.orgList
+  /** The orgs that switchers use, in their saved order, without deleted orgs. */
+  readonly activeOrgs = activeOrgSource(this.orgs)
   /**
    * The orgs whose requests the API refused with `org_suspended`. Such a
    * refusal shows that the org is suspended, also while its summary is old.
@@ -46,9 +48,8 @@ export class AppModel {
    */
   readonly refusedOrgs = new Store<ReadonlySet<string>>(new Set())
   /**
-   * The org that the person opened last in this tab, also a deleted one.
-   * A page without an org works on it, as `keptOrg` says. The tab keeps it
-   * in memory only.
+   * The last org opened in this tab, including deleted orgs. `keptOrg`
+   * selects it only while it is active. The tab keeps it in memory.
    */
   readonly lastOrg = new Store<string | null>(null)
   /**
@@ -63,9 +64,8 @@ export class AppModel {
   readonly composerFocus = new Store<ComposerFocusRequest | null>(null)
   readonly models = new Store<readonly AgentModel[]>([])
   /**
-   * The steps of Get started as every screen shows them. Only the step of
-   * the GitHub App comes from the reply of the API. The others follow the
-   * org list and the account, as `setupSteps` says.
+   * The steps of Get started. The GitHub App step comes from the API. The
+   * other steps follow the active orgs and account, as `setupSteps` says.
    */
   readonly getStarted: Readable<GetStartedResponse | null>
   readonly account: AccountModel
@@ -91,7 +91,7 @@ export class AppModel {
     this.feedback = new FeedbackModel(this)
     this.getStarted = setupSteps({
       server: this.setupReply,
-      orgs: this.orgs,
+      orgs: this.activeOrgs,
       account: this.account.account,
     })
     this.invitations = new InvitationsModel(this)
@@ -103,8 +103,8 @@ export class AppModel {
   /**
    * A sign-out, or a sign-in of another person, ends the create requests
    * of every org that still run, so that their answers change nothing. It
-   * also forgets the GitHub access of the person. The last workspaces
-   * follow the person of each ready boot and each sign-out.
+   * also forgets the GitHub access and the branch lists of the person. The
+   * last workspaces follow the person of each ready boot and each sign-out.
    */
   private followPerson(): void {
     const boot = this.boot.get()

@@ -199,10 +199,22 @@ If you accepted an org invitation, your org is already open.
 
 1. Select **New workspace**.
 2. Choose the repository for your task.
-3. Choose a model for an agent available to you.
-4. Choose the effort in the same model menu.
-5. Describe your task in the message box.
-6. Select **Create** in the dialog, or **Send** on the page.
+3. Keep the default branch, or choose another starting branch.
+4. If you choose another branch, open the branch control again and choose its target under **Target**.
+5. Choose a favourite or a model in **All models** for an agent available to you.
+6. Adjust the effort and **Fast** in the same menu if needed.
+7. Describe your task in the message box.
+8. Select **Create** in the dialog, or **Send** on the page.
+
+The target is the branch where your work will merge.
+The starting branch is the target unless you choose the default branch instead.
+
+- [Choose a starting branch and target](/docs/workspaces#start-from-another-branch)
+
+A favourite sets the model, effort, and **Fast** together.
+With no favourites to show, choose a model in **All models**.
+
+- [Set your model favourites](/docs/sessions-and-chat#set-your-favourites)
 
 For a first task, you can use this message:
 
@@ -217,6 +229,7 @@ On a phone, it opens as a page with a **Send** button.
 To open the page on a computer too, change **Open New workspace in** under **Preferences** in **Account**.
 
 The first message creates the workspace, its branch, and its first session.
+The new branch starts from the latest commit of your selected branch.
 Conductive shows the start steps as it starts the workspace's cloud computer.
 Your accepted message waits until the agent can begin.
 You can send more messages while that computer starts.
@@ -232,7 +245,7 @@ If the create request itself fails, **New workspace** keeps your draft with **Tr
 
 Read the agent's answer in chat.
 Ask a follow-up in the same session when you need more detail.
-Open **Changes** to inspect any edits the agent makes.
+Open **Changes** to inspect the listed edits.
 
 - [Continue in sessions and chat](/docs/sessions-and-chat)
 - [Review files and changes](/docs/files-and-changes)

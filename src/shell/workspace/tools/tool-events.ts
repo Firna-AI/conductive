@@ -1,22 +1,16 @@
-import { choice, count, ParseError, text } from '../../../app/api/parse'
+import { ParseError } from '../../../app/api/parse'
+import type { StreamEnvelope } from '../../../app/api/read-events'
 import {
+  readFailedRepair,
   readPortsUpdated,
-  type StreamEnvelope,
-} from '../../../app/api/read-events'
+} from '../../../app/api/read-workspace-reports'
 import type { WorkspaceStream } from '../../../app/events'
-import type { RunnerEventRefused } from '../../../shared/chat-events'
 import type {
   WorkspaceEvent,
   WorkspaceEventEnvelope,
 } from '../../../shared/events'
 import { parseTerminalList } from '../../../terminal/terminalApi'
 import type { SubscribeWorkspaceEvents } from '../../../terminal/tool-parts/workspace'
-
-const reasons: readonly RunnerEventRefused['reason'][] = [
-  'too_large',
-  'invalid',
-  'turn_not_active',
-]
 
 /**
  * True for the marker of a failed repair of the list of listening ports.
@@ -33,26 +27,13 @@ function isFailedPortsRepair(envelope: StreamEnvelope): boolean {
   )
 }
 
-function readFailedPortsRepair(envelope: StreamEnvelope): RunnerEventRefused {
-  const { event } = envelope
-  return {
-    type: 'runner.event-refused',
-    streamId: text(event, 'streamId'),
-    runnerEventNumber: count(event, 'runnerEventNumber'),
-    runnerEventType: 'ports.updated',
-    reason: choice(event, 'reason', reasons),
-    sessionId: null,
-    turnId: null,
-    repairFailed: true,
-  }
-}
-
 /** The report of the listening ports, or its failed repair, or null. */
 function portsEvent(envelope: StreamEnvelope): WorkspaceEvent | null {
   try {
     if (envelope.type === 'ports.updated')
       return readPortsUpdated(envelope.event)
-    if (isFailedPortsRepair(envelope)) return readFailedPortsRepair(envelope)
+    if (isFailedPortsRepair(envelope))
+      return readFailedRepair(envelope.event, 'ports.updated')
     return null
   } catch (error) {
     // A report that the app can't read leaves the last one in place.
@@ -101,7 +82,7 @@ function byNumber(
 /**
  * The events that the tools of one workspace read, from the ordered stream
  * of its model, once and in order. It follows the stream from before the
- * first open, so it reads the stored history too. A tool that shows later
+ * first open, so it takes the seed or the stored history. A tool that shows later
  * gets the kept events first, in the order of their numbers, as its stored
  * history, then the live events. The kept events are each revoke, the
  * latest report of the listening ports, and the first failed repair of the
@@ -118,18 +99,29 @@ export class ToolEvents {
 
   /** Reads the stream. The result ends the reading. */
   follow(stream: WorkspaceStream): () => void {
-    return stream.subscribe((envelope) => {
-      const event = toolEvent(envelope)
-      if (!event) return
-      const typed: WorkspaceEventEnvelope = {
-        workspaceId: envelope.workspaceId,
-        eventNumber: envelope.eventNumber,
-        occurredAt: envelope.occurredAt,
-        event,
-      }
-      this.keep(typed)
-      for (const listener of [...this.listeners]) listener(typed)
-    })
+    return stream.subscribe(
+      (envelope) => {
+        const event = toolEvent(envelope)
+        if (!event) return
+        this.take({
+          workspaceId: envelope.workspaceId,
+          eventNumber: envelope.eventNumber,
+          occurredAt: envelope.occurredAt,
+          event,
+        })
+      },
+      undefined,
+      ({ ports, failures }, workspaceId) => {
+        if (ports) this.take({ workspaceId, ...ports })
+        const failure = failures['ports.updated']
+        if (failure) this.take({ workspaceId, ...failure })
+      },
+    )
+  }
+
+  private take(envelope: WorkspaceEventEnvelope): void {
+    this.keep(envelope)
+    for (const listener of [...this.listeners]) listener(envelope)
   }
 
   /** Keeps an event that a tool that shows later needs. */

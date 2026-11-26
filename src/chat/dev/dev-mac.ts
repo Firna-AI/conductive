@@ -18,6 +18,7 @@ import {
   type FakeMacScenario,
 } from '../../test-support/fixtures/devices'
 import { oneOf, record } from '../api/json'
+import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import type { DevBackend } from './dev-backend'
 import { changeMacSettings } from './dev-mac-settings'
 
@@ -42,6 +43,7 @@ export class DevMac {
   settings: DeviceSettings
   /** The pairing of the window with the current connection of the Mac. */
   pairing: DevicePairing = FAKE_PAIRING
+  readonly workspaceNames: ReadonlyMap<string, string | null>
   private readonly listeners = new Set<() => void>()
 
   constructor(
@@ -52,6 +54,12 @@ export class DevMac {
   ) {
     this.onMac = onMac
     this.outcome = outcome
+    const fixtures = workspaceFixtures()
+    this.workspaceNames = new Map(
+      [...fixtures.workspaces.workspaces, fixtures.created.workspace].map(
+        (workspace) => [workspace.id, workspace.name],
+      ),
+    )
     this.requests = [...fakeMacRequests(scenario)]
     const base = fakeMacSettings(now)
     const settings =
@@ -234,7 +242,20 @@ export async function handleMacWrite(
       .json()
       .then((value: unknown) => record(value))
   if (path === DEVICE_SETTINGS_PATH)
-    return changeMacSettings(backend.mac, await body(), () => publish(backend))
+    return changeMacSettings(
+      backend.mac,
+      await body(),
+      () => publish(backend),
+      (workspaceId) => {
+        for (const request of backend.mac.requests) {
+          if (
+            request.workspaceId === workspaceId &&
+            request.state === 'waiting'
+          )
+            answer(backend, request, 'allow-workspace-until-stop')
+        }
+      },
+    )
   const target = backend.mac.requests.find(
     (item) => path === deviceApprovalPath(orgId, workspaceId, item.requestKey),
   )

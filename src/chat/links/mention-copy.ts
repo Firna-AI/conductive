@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { COPYING_CLASS } from '../../../docs/mockups/src/components/chat/ChipCopyText'
+import { COPYING_CLASS } from '../../ui/components/chat/ChipCopyText'
 
 /**
  * The mark of a file chip, or of the chip of an attached file, in a sent
@@ -33,6 +33,14 @@ function holdWholeChips(range: Range): void {
   if (start) range.setStartBefore(start)
   const end = chipAt(range.endContainer)
   if (end) range.setEndAfter(end)
+}
+
+/**
+ * A copy of chat text runs: each chip shows only its copy text until the
+ * next animation frame, so the page does not show its own text now.
+ */
+export function copyRuns(): boolean {
+  return document.documentElement.classList.contains(COPYING_CLASS)
 }
 
 /**

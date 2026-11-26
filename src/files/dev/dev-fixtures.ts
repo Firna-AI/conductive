@@ -6,10 +6,13 @@ import { autocompleteHook } from '../../../docs/mockups/src/fixtures/fileContent
 import { filePaths, type FileTooLargeResponse } from '../../shared/files'
 import { decodeUtf8 } from '../../shared/utf8'
 import type { FakeApiServer } from '../../test-support/fake-api'
+import { fakeFileLists } from '../../test-support/fake-file-lists'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { toolFixtures } from '../../test-support/fixtures/tools'
+import { limitedFileLists } from '../../test-support/limited-file-lists'
 import { splitPath } from '../navigation'
 import * as samples from './dev-samples'
+import type { DevView } from './dev-view'
 import reportCss from './pages/report.css?raw'
 import reportHtml from './pages/report.html?raw'
 
@@ -126,12 +129,19 @@ function diffOf(
   }
 }
 
-const readmePatch = `@@ -12,3 +12,6 @@ ## Checkout
+const readmePatch = `@@ -23 +23,11 @@ ## Checkout
 -Checkout suggests addresses as you type.
-+Checkout suggests addresses as you type. Suggestions come from \`/api/places\`, which needs \`PLACES_API_KEY\`. Without the key, the form falls back to manual entry.
++Checkout suggests addresses as you type. Suggestions come from \`/api/places\`, which needs \`PLACES_API_KEY\`. Without the key, the form falls back to *manual entry*.
 +
-+## Tests
-+`
++![Suggestions under the address field](https://design.acme.example/forms/address/suggestions.png)
++
++- [x] Suggestions from the places API
++- [x] Manual entry without the key
++- [ ] Saved addresses for signed-in customers
++
++---
++
++## Tests`
 
 const extraEntries: readonly FileEntry[] = [
   {
@@ -159,7 +169,7 @@ const extraEntries: readonly FileEntry[] = [
 export function devTree(): FileTreeResponse {
   const tree = toolFixtures().files
   return {
-    revision: tree.revision,
+    ...tree,
     entries: [...tree.entries, ...extraEntries],
   }
 }
@@ -167,10 +177,27 @@ export function devTree(): FileTreeResponse {
 /**
  * Sets the development replies of the file routes on the fake server:
  * file texts, downloads, diffs, a binary file, a file over the read limit,
- * and a file whose read and download fail.
+ * and a file whose read and download fail. The limited lists of
+ * `?lists=limited` leave out `tsconfig.json`, whose file tab still reads it.
  */
-export function registerDevFiles(server: FakeApiServer): void {
-  server.json('GET', filePaths.tree(org, id), devTree())
+export function registerDevFiles(
+  server: FakeApiServer,
+  view?: Pick<DevView, 'scenario' | 'tree' | 'lists'>,
+): void {
+  if (view?.scenario !== 'live') {
+    const complete = { tree: devTree(), changes: toolFixtures().changes }
+    const lists =
+      view?.lists === 'limited' ? limitedFileLists(complete) : complete
+    fakeFileLists(
+      server,
+      server.events,
+      {
+        tree: view?.tree === 'none' ? null : lists.tree,
+        changes: lists.changes,
+      },
+      server.events.last(id),
+    )
+  }
   const encoder = new TextEncoder()
   for (const [path, text] of devTextFiles) {
     registerFile(server, path, encoder.encode(text))

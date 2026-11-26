@@ -1,0 +1,34 @@
+# A late Codex steer fails a finished turn
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-21, from branch `calummoore/workspace-capability-prompts-issue-2daj`, the "Outside the scope" list of its round 1 review.
+- **Location:** `runner/sdk-helper/src/providers/codex.ts:188`, the `turn/steer` request in `send`. `crates/cnd-runner/src/engine/actor.rs:186`, `command_failed`. `deliver` in `crates/cnd-runner/src/engine/provider.rs`.
+- **Reason:** The race is on `origin/main` for member messages, and the capability prompts branch handles it only for its own change notes.
+
+- **Terms:**
+  - **Runner:** the program in the cloud computer that starts agents and sends their events to the Worker.
+  - **Adapter:** the Codex provider of the sdk-helper, in `runner/sdk-helper/src/providers/codex.ts`. It talks to the Codex app server over JSON-RPC.
+  - **Steer:** the Codex app server request `turn/steer`. It adds input to the running Codex turn that its `expectedTurnId` names.
+  - **Turn generation:** a counter of the runner session. `finish` raises it, and the runner then drops each queued agent output of an older generation.
+- **Background:**
+  - A member message during a turn goes to the agent at once. `docs/protocol/messages-and-attachments.md` says that the agent reads it at its next tool call, or when the turn ends in a turn without tool calls.
+  - The adapter steers such a message into the Codex turn that its `activeTurn` names. It clears `activeTurn` only when it handles the `turn/completed` notification of Codex.
+  - Codex can end its turn before the adapter handles that notification. The steer then fails with the Codex error "no active turn to steer". The Codex 0.170.0 binary of the sdk-helper holds that text.
+  - The adapter restores its list of message IDs, then throws the error again. The helper then reports the send as failed.
+  - The runner waits for each helper reply before it handles queued agent output. `command_failed` in `crates/cnd-runner/src/engine/actor.rs` sees that the failed message belongs to the active turn, and it calls `finish` with a failure.
+  - `finish` raises the turn generation. So the runner drops the final answer and the normal end of the Codex turn, which wait in its queue.
+  - `deliver` in `crates/cnd-runner/src/engine/provider.rs` adds the message to the message list of the turn before the send. `turn.completed` reports that list, and the Worker treats each message in it as read.
+  - When a turn finishes, the Worker gives each message of that turn that no runner event acknowledged to a new turn. `continueUnanswered` in `worker/chat/continuation.ts` does this.
+- **Problem:** A member message that meets the end of a Codex turn fails that finished turn. The runner drops the final answer of the turn, and Codex never gets the message.
+- **Impact if no action:** The member sees a failed turn in place of finished work, without its final answer. A retry can repeat work that the turn already did.
+- **Root question:** How should a member message behave when the Codex turn that it steers has just ended?
+- **Options:**
+  - **A.** Change nothing. The race needs a member message between the end of a Codex turn and the moment that the adapter handles that end. Effort: Small.
+  - **B.** Treat the rejected steer as input that the turn did not take. The adapter reports "no active turn to steer" for a member message as an expired input, not as a failure. The runner keeps the turn, its final answer, and its normal end, and it takes the message out of the message list of the turn. The Worker then gives the message to a new turn when the turn finishes. Add a regression with an answer and an end that wait behind the rejected steer. Effort: Small.
+  - **C.** Return a typed outcome from each send of the helper: taken, expired, or failed. The runner keeps the turn on an expired input of each kind. It takes an expired message out of the message list of the turn. Only a real failure fails the turn. Add the same regression. Effort: Medium.
+- **Left out:** A new Codex turn at once inside the same runner turn mixes two Codex turns. The end of the first would then end the runner turn while the second runs. A second steer fails again, because the Codex turn is over. A rule that ignores each steer error can hide a real agent failure.
+- **Wider fix:** C. One typed outcome keeps each expired input out of the failure path, also for a later kind of input.
+- **Previous examples:** The capability prompts branch found the same race for its capability change notes on 2026-11-21. Its review chose to make a failed send of a change note non-fatal in the runner.
+- **Recommendation:** C. It removes the class, because no expired input can then fail a turn.
+- **Action:** fix after merge, apply C, because the race is on `origin/main` and outside the scope of the capability prompts branch.

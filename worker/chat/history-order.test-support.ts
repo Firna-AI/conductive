@@ -138,12 +138,17 @@ export async function orderedHistoryFixture() {
 }
 export async function historyPages(
   fixture: Awaited<ReturnType<typeof createRunnerLimitsFixture>>,
+  budgetBytes?: number,
 ) {
   const pages: ChatHistoryResponse[] = []
   let after = 0
   let through: number | undefined
   while (true) {
-    const page = await fixture.read((view) => view.history(after, through))
+    const scope =
+      budgetBytes === undefined ? undefined : { budget: { bytes: budgetBytes } }
+    const page = await fixture.read((view) =>
+      view.history(after, through, scope),
+    )
     pages.push(page)
     through = page.throughEventNumber
     if (!page.hasMore) return pages

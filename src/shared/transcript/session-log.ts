@@ -1,8 +1,8 @@
 import type { Session } from '../generated/Session'
 
 import type { ChatEnvelope } from './session-events'
-import { emptyTranscript, foldEvent, type Transcript } from './transcript'
-import { foldRecord } from './turn-records'
+import { emptyTranscript, type Transcript } from './transcript'
+import { TranscriptBatch } from './transcript-batch'
 
 /** A record of the session, and the event number whose state it holds. */
 export interface PlacedRecord {
@@ -122,32 +122,21 @@ export class SessionLog {
 
 /**
  * Folds entries in order, and notes the time of each item that an event
- * adds. The map of times is copied only when an event adds an item.
+ * adds. The map of times is copied once when a batch first adds an item.
  */
 function fold(
   start: Transcript,
   entries: readonly Entry[],
   known: ReadonlyMap<string, number>,
 ): { transcript: Transcript; times: ReadonlyMap<string, number> } {
-  let transcript = start
-  let times = known
-  let copy: Map<string, number> | null = null
+  const batch = new TranscriptBatch(start, known)
   for (const entry of entries) {
     if (entry.kind === 'record') {
-      transcript = foldRecord(transcript, entry.record.session)
+      batch.record(entry.record.session)
       continue
     }
     const { event, occurredAt, late } = entry.envelope
-    const next = foldEvent(transcript, event, occurredAt, late)
-    if (next.items.length > transcript.items.length) {
-      for (const item of next.items) {
-        if (times.has(item.id)) continue
-        copy ??= new Map(times)
-        copy.set(item.id, occurredAt)
-        times = copy
-      }
-    }
-    transcript = next
+    batch.event(event, occurredAt, late)
   }
-  return { transcript, times }
+  return batch.finish()
 }

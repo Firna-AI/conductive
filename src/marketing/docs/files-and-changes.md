@@ -15,7 +15,7 @@ Opening a file or a change starts the computer again.
 On a computer, the file lists sit beside the chat.
 On a phone, open the workspace's **Files** view.
 
-- **All files** shows the repository as a tree. With current cloud computer software, it also lists the files in `.context/`.
+- **All files** shows the repository as a tree. With current cloud computer software, the tree can include files in `.context/`.
 - **Changes** lists changes against the workspace's base branch.
 - **Checks** shows the pull request's GitHub checks.
 
@@ -34,6 +34,20 @@ File tools stay unavailable after removal.
 
 - [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 
+## Find files outside the lists
+
+With current cloud computer software, **All files** lists up to 50,000 files and folders in total.
+**Changes** lists up to 1,000 changed files.
+A notice about a limited list gives the number of files or folders left out.
+
+The **Changes** tab and the summary above the list show the number of changed files.
+The summary also shows totals for lines added and removed.
+These numbers cover all changed files when **Changes** has a notice about files left out.
+When that notice is absent, the numbers cover only the files in the list.
+
+To find files or review changes outside the lists, use **Terminal** or ask the agent.
+Older cloud computer software keeps full lists until its [automatic software update](/docs/cloud-computer#apply-setup-changes).
+
 ## Read a file
 
 1. Open **All files**.
@@ -45,6 +59,8 @@ Its title shows in italics.
 The next click on another file replaces it in the same place.
 This applies to **All files**, **Changes**, and file chips in chat.
 If a file already has a tab, a click shows that tab.
+Press **Escape** to close the temporary tab while it shows.
+Escape first closes an open menu or dialog, and it does nothing in the message field.
 
 On a phone, each file opens within **Files**.
 Use its back action to return to **All files**.
@@ -54,6 +70,10 @@ Markdown offers **Preview** for its rendered content and **Source** for its text
 An HTML file opens as a page, as [Preview an HTML file](#preview-an-html-file) says.
 PNG, JPEG, GIF, and WebP files show as pictures up to the 5 MiB read limit.
 A picture keeps its proportions and fits the view.
+To zoom, use the wheel, pinch, or use the zoom bar under the picture.
+Drag a zoomed picture to move it.
+Double-click the picture to zoom in, and double-click it again to fit it.
+On desktop, select **Expand** to show the picture in a large window.
 SVG files show their source as text.
 
 Other binary files offer **Download** so you can open them with another application.
@@ -83,6 +103,7 @@ For example, an agent can write a report as a web page in `.context/`.
 
 The page runs on a separate domain from Conductive, as a port preview does.
 Use **Reload** to load the page again.
+Use **Expand** to show the page in a large window over the whole app.
 Use **Open** to show the page in a new browser tab.
 In the Mac app, **Open** uses your default browser.
 
@@ -92,9 +113,20 @@ A chip with a line, such as `report.html:12`, opens **Source** with that line in
 A file whose path label hides a secret value shows only **Source**.
 
 The page loads other files of the repository by their addresses, such as `style.css`.
-An address that starts with `/` names a file from the top of the repository.
+An address that starts with `/` can name a file from the top of the repository.
+With current cloud computer software, the page can also load a file by its full path in the repository folder.
+The preview changes local `file:` addresses of files in the repository folder or the system font folders to addresses on the preview when it serves HTML, CSS, or SVG.
+If a script builds a local file address while the page runs, use a plain path.
 The page cannot load files whose names start with a dot, such as `.env`, or files in `.git`.
-Its scripts can read the other files of the repository and send them to another site.
+
+Outside the repository folder, the preview serves only font files under `/usr/share/fonts` and `/usr/local/share/fonts` on the cloud computer.
+It serves `.ttf`, `.otf`, `.woff`, and `.woff2` files there by their full paths.
+The preview adds a stylesheet for `.ttf` and `.otf` system fonts to HTML pages only.
+An HTML page can use these fonts by family name, such as `Nimbus Sans Narrow` when it is installed on the cloud computer.
+Generic families such as `sans-serif` use the browser's usual fonts.
+
+The page's scripts can read the files and the list of system fonts that the preview serves.
+They can send them to another site.
 
 The preview has no 5 MiB limit, but **Source** keeps it.
 It does not appear in **Preview** or in the previews that agents list.
@@ -181,15 +213,21 @@ Use a double-click to keep a temporary tab there.
 The diff shows syntax colours, as a file does.
 
 The base branch is the branch that the workspace's work targets.
-A workspace you create uses the repository's default branch.
+A workspace you create targets the branch you select in **New workspace**.
+You can choose the default branch as the target instead.
 A run for an opened or pushed pull request uses that pull request's head branch.
 A run for a merged pull request uses that pull request's base branch.
-After **Continue**, the workspace's base branch is the repository's latest default branch.
-After a repository change, it is the latest default branch of the new repository.
+After **Continue**, the base is the branch that the pull request merged into, if it still exists.
+Otherwise, the base is the repository's default branch.
+After a repository change, the base is the latest default branch of the new repository.
+A base that follows the default also follows a later rename of that default branch.
+While a workspace is queued, its base follows its pull request's target on GitHub.
+Outside the queue, if GitHub deletes the base branch, Conductive fetches the default branch into the cloud computer.
+The cloud computer uses the new base only after that fetch succeeds.
 The comparison starts at the common commit of the workspace branch and its base branch.
 Newer commits on the base branch therefore stay out of **Changes**.
 
-The list includes the branch's committed changes, uncommitted changes, and untracked files.
+The comparison includes the branch's committed changes, uncommitted changes, and untracked files.
 It covers the workspace branch's work, including work from other sessions.
 It is broader than the changed-file summary of one agent turn.
 
@@ -207,6 +245,8 @@ Use `git status` in **Terminal** to inspect it.
 Use the copy action in a file header to copy its text.
 Use **Download** to save its original bytes on your computer.
 The header confirms a copy with **Copied**.
+To select only the text of a file or a diff, click in it and press **Cmd+A**, or **Ctrl+A** on Windows and Linux.
+A copy of selected file text keeps its blank lines.
 
 If copying or downloading fails, the header asks you to try again.
 Read the file successfully before you try its download action.
@@ -219,6 +259,7 @@ Use **Terminal** or ask the agent to inspect a file that is too large.
 
 The file lists update as the workspace reports changes.
 If a fresh list is unavailable, a notice can appear beside older saved data.
+A notice about files or folders left out stays visible with the saved list.
 Before the first successful list, the view can show an unavailable state.
 
 An unavailable list does not prove that the repository is empty.

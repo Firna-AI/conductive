@@ -37,6 +37,14 @@ export function count(value: unknown): number {
   return value
 }
 
+/** Reads a whole, non-negative count in JavaScript's safe integer range. */
+export function safeCount(value: unknown): number {
+  const result = count(value)
+  if (!Number.isSafeInteger(result) || result < 0)
+    throw new UnreadableResponse('count')
+  return result
+}
+
 export function flag(value: unknown): boolean {
   if (typeof value !== 'boolean') throw new UnreadableResponse('flag')
   return value

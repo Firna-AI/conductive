@@ -20,6 +20,8 @@ each resume, together with the org's env vars:
 | `CONDUCTIVE_MACHINE_ORIGIN` | The origin of the machine hostname. |
 | `CONDUCTIVE_DEFAULT_BRANCH` | The workspace base branch, with the repository default as a fallback. |
 | `CONDUCTIVE_WORKSPACE_BRANCH` | The workspace branch that the app tracks, from the Worker's record of the workspace. |
+| `CONDUCTIVE_SKILLS_REPOSITORY` | The org's skills repository as `owner/name`. Always set, and empty when absent or invalid. Replaces an org env var of this name. |
+| `CONDUCTIVE_TRUSTED_SKILLS_REPOSITORY` | The matching trusted skills repository as lowercase `owner/name`. Always set, and empty when trust is absent, invalid, or names another source. Replaces an org env var of this name. |
 | `CONDUCTIVE_REPOSITORY_DIR` | The folder of the workspace's repository, from the folder map that the workspace captured. |
 | `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | The folder of each repository of the image, with one variable for each repository. |
 | `CONDUCTIVE_DISK_KEEPALIVE` | `1` in a disk retention restart, and `0` otherwise. |

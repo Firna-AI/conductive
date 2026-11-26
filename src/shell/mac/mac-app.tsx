@@ -5,7 +5,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react'
-import type { WindowMode } from '../../../docs/mockups/src/components/mac/MacApp'
+import type { WindowMode } from '../../ui/components/mac/MacApp'
 import { keptOrg } from '../../app/kept-org'
 import { useStore, type Readable } from '../../app/store'
 import type { OrgSummary } from '../../shared/orgs'
@@ -86,13 +86,14 @@ export function useMacBar(): string | undefined {
 
 /**
  * The org whose sidebar the account of the Mac app keeps, as `keptOrg`
- * says. A browser shows the account without a sidebar.
+ * says, among the orgs of `AppModel.activeOrgs`. A browser shows the
+ * account without a sidebar.
  */
-export function useKeptOrg(
-  orgs: readonly OrgSummary[],
-): OrgSummary | undefined {
+export function useKeptOrg(): OrgSummary | undefined {
   const chrome = useMacApp()
-  const last = useStore(useApp().lastOrg)
+  const app = useApp()
+  const orgs = useStore(app.activeOrgs)
+  const last = useStore(app.lastOrg)
   if (!chrome) return undefined
   return keptOrg(orgs, last)
 }

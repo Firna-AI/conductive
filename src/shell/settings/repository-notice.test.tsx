@@ -5,6 +5,7 @@ import { ManualDelay } from '../../app/test-kit'
 import {
   orgSettingsPaths,
   repositoryPath,
+  type BuildResponse,
   type BuildsResponse,
 } from '../../shared/org-settings'
 import { byRole } from '../../test-support/dom-queries'
@@ -83,7 +84,7 @@ describe('the repository notice on the Repositories tab of an admin', () => {
       ],
       failed: [
         {
-          text: 'acme/admin-dashboard is ready after a build succeeds The last build failed. Try again',
+          text: 'The last build failed acme/admin-dashboard is ready after a build succeeds. Try again',
           ...notice,
           danger: true,
           buttons: ['Try again'],
@@ -114,7 +115,7 @@ describe('the repository notice on the Repositories tab of an admin', () => {
     })
   })
 
-  test('an add reads the builds again, so the notice shows the build that the add started at once', async () => {
+  test('an add in an open edit points the notice to Done without a button, and Done shows the build that it starts', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
     // No timer and no return to the page reads the builds in this test.
@@ -128,16 +129,46 @@ describe('the repository notice on the Repositories tab of an admin', () => {
         item.id === 'admin-dashboard' ? { ...item, selected: true } : item,
       ),
     })
+    // As the Worker does, no build runs until the build start answers.
+    server.json('GET', orgSettingsPaths.builds(org), imageBuilds([], added))
+    let answer: () => void = () => undefined
     server.json(
-      'GET',
+      'POST',
       orgSettingsPaths.builds(org),
-      imageBuilds([running], added),
+      new Promise((resolve) => {
+        answer = () =>
+          resolve({ build: running, log: [] } satisfies BuildResponse)
+      }),
+      202,
     )
     click(byRole('button', 'Edit', view))
     click(byRole('button', 'Add acme/admin-dashboard', view))
     await settle()
-    expect({ before, after: noticesOf(view) }).toEqual({
+    const editing = noticesOf(view)
+    click(byRole('button', 'Done', view))
+    await settle()
+    const starting = noticesOf(view)
+    answer()
+    await settle()
+    expect(document.body.textContent).not.toContain('The build did not start')
+    expect({ before, editing, starting, after: noticesOf(view) }).toEqual({
       before: [],
+      editing: [
+        {
+          text: 'Select Done to add acme/admin-dashboard and start a build',
+          danger: false,
+          spinner: false,
+          buttons: [],
+        },
+      ],
+      starting: [
+        {
+          text: 'Select Done to add acme/admin-dashboard and start a build',
+          danger: false,
+          spinner: false,
+          buttons: [],
+        },
+      ],
       after: [
         {
           text: 'acme/admin-dashboard is ready after the build',
@@ -166,7 +197,7 @@ describe('the repository notice on the Repositories tab of an admin', () => {
       buttons: view.querySelectorAll('button').length,
     }).toEqual({
       text: expect.stringContaining(
-        'Only an admin can change them. acme/admin-dashboard is ready after a build succeeds The last build failed. An admin can try it again.',
+        'Only an admin can change them. The last build failed acme/admin-dashboard is ready after a build succeeds. An admin can try it again.',
       ) as unknown,
       buttons: 0,
     })

@@ -1,14 +1,12 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { offlineMessage } from '../components/common/LoadFailure'
-import { SuccessToast } from '../components/common/SuccessToast'
+import { successToast } from '../entries/components/common/SuccessToast.mockup'
 import {
   sendLimitBody,
   sentToastTitle,
-} from '../components/feedback/feedbackCopy'
-import {
-  FeedbackDialog,
-  type FeedbackProblem,
-} from '../components/feedback/FeedbackDialog'
+} from '../../../../src/ui/components/feedback/feedbackCopy'
+import { feedbackDialog } from '../entries/components/feedback/FeedbackDialog.mockup'
+import type { FeedbackProblem } from '../components/feedback/FeedbackDialog'
 import type { FeedbackReply } from '../components/feedback/FeedbackReply'
 import {
   feedbackMessage,
@@ -23,6 +21,7 @@ import {
   replyEmail,
 } from '../fixtures/feedback'
 import { paths } from '../paths'
+import { defined } from '../defined'
 import { WorkspaceListScreen } from './WorkspaceListScreen'
 
 export const feedbackSchema = {
@@ -129,10 +128,14 @@ export function FeedbackScreen(props: {
   const { state, viewport } = props
   const overlay =
     state.send === 'sent' ? (
-      <SuccessToast phone={viewport === 'mobile'} title={sentToastTitle} />
+      <successToast.Component
+        moklyInstance="feedback-sent"
+        phone={viewport === 'mobile'}
+        title={sentToastTitle}
+      />
     ) : (
-      <FeedbackDialog
-        problem={problemOf(state)}
+      <feedbackDialog.Component
+        moklyInstance="feedback-dialog"
         reply={replies[state.reply]}
         retryTo={paths.feedback}
         screenshots={screenshots[state.draft]}
@@ -140,6 +143,7 @@ export function FeedbackScreen(props: {
         sending={state.send === 'sending'}
         text={texts[state.draft]}
         viewport={viewport}
+        {...defined({ problem: problemOf(state) })}
       />
     )
   return (

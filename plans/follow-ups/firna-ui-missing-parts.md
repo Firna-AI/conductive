@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-05, from `calummoore/conductor-alternative-architecture`: Milestone 1 mockups, implementor item 14, Milestone 1a restyle, implementor item 4, and Milestone 1b redraw, implementor item 4.
-- **Location:** `docs/mockups/src/components/common/`, `docs/mockups/src/design/metrics.ts`, `docs/mockups/src/components/chat/ChipTextField.tsx`, `src/chat/components/chip-field/`, and the `futex-ai/ui` repository.
+- **Location:** `docs/mockups/src/components/common/`, `src/ui/design/metrics.ts`, `docs/mockups/src/components/chat/ChipTextField.tsx`, `src/chat/components/chip-field/`, and the `futex-ai/ui` repository.
 - **Reason:** The parts belong in another repository, `futex-ai/ui`, so this branch keeps local versions until the library ships them.
 
 - **Terms:**
@@ -19,7 +19,7 @@
   - control sizes that grow to 44 px touch targets on phones
   - a resize handle for side panels
   - a plain text field that holds chips in its text, such as a workspace link that shows as a chip with a state mark, a label, and a name. Each chip is one unit of the text: the caret steps over it, and Backspace and Delete remove it whole. The field keeps plain text, takes plain text from a paste, and has the line heights, the placeholder, and the growth from a least to a most number of lines of the plain text field. Added on 9 November 2026: the app builds it as a local part over the Lexical editor, `lexical` and `@lexical/react` 0.53.0, in `src/chat/components/chip-field/`. The mockups draw it with the pure part `docs/mockups/src/components/chat/ChipTextField.tsx`.
-  The mockups therefore keep local versions under `docs/mockups/src/components/common/`, and token CSS in `docs/mockups/src/design/`. The planned web app keeps them as local app components.
+  The mockups therefore keep local versions under `docs/mockups/src/components/common/`, and token CSS in `src/ui/design/`. The planned web app keeps them as local app components.
 - **Problem:** Every Firna app that needs these parts builds its own copy. The accounting mockups keep notices, tags, and page chrome local for the same reason.
 - **Impact if no action:** The copies drift apart in look and in accessibility.
 - **Root question:** Where do the parts that `@firna/ui` lacks live?

@@ -11,6 +11,7 @@ import { accessibleName } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { serveAccess, serveWork } from '../../../test-support/fake-bar'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
+import { MASKED_BASE } from '../../../test-support/fixtures/masked-paths'
 import {
   FAKE_FILE_PATH,
   toolFixtures,
@@ -33,19 +34,29 @@ import { socketsOf } from '../wiring-test-kit'
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const { org, workspace: id, session } = FAKE_IDS
-const mergeLatest =
-  'Fetch `origin/release/2026` and merge it into this branch. If the branch already has every commit of `origin/release/2026`, say so and stop. Otherwise resolve each conflict, run the tests, then commit and push.'
 const sends = (server: FakeApiServer) =>
   bodiesOf(server, 'POST', sessionPaths.messages(org, id, session), 0)
 
+/** The target of a pull request: its real name, and its label if any. */
+type Target = { baseBranch: string; displayBaseBranch?: string }
+
 /**
- * A pull request into `release/2026`, while the default branch of the
- * repository stays `main`, so a row that names `main` fails.
+ * A pull request into `release/2026` by default, while the default branch
+ * of the repository stays `main`, so a row that names `main` fails.
  */
-function serveReleaseTarget(server: FakeApiServer): void {
-  const { banner } = toolFixtures('ready-to-merge').banner
+function serveReleaseTarget(
+  server: FakeApiServer,
+  target: Target = { baseBranch: 'release/2026' },
+): void {
+  const {
+    banner: { banner },
+    checks,
+  } = toolFixtures('ready-to-merge')
   server.json('GET', githubPaths.banner(org, id), {
-    banner: { ...banner, baseBranch: 'release/2026' },
+    banner: { ...banner, ...target },
+  })
+  server.json('GET', githubPaths.stored(org, id), {
+    state: { banner: { ...banner, ...target }, checks },
   })
 }
 
@@ -73,22 +84,88 @@ async function searchMergeLatest(
 }
 
 describe('Merge latest in the palette', () => {
-  test('names the target branch, and sends its prompt to the session that the member saw last', async () => {
+  test.each([
+    {
+      target: 'the target branch',
+      reply: { baseBranch: 'release/2026' },
+      name: 'Merge latest release/2026',
+      prompt:
+        'Fetch `origin/release/2026` and merge it into this branch. If the branch already has every commit of `origin/release/2026`, say so and stop. Otherwise resolve each conflict, run the tests, then commit and push.',
+    },
+    {
+      target: 'the label of a target branch that holds a secret value',
+      reply: MASKED_BASE,
+      name: 'Merge latest release/[redacted]',
+      prompt:
+        'Fetch `origin/release/acme-7f3k` and merge it into this branch. If the branch already has every commit of `origin/release/acme-7f3k`, say so and stop. Otherwise resolve each conflict, run the tests, then commit and push.',
+    },
+  ])(
+    'names $target, and sends its prompt with the real name to the session that the member saw last',
+    async ({ reply, name, prompt }) => {
+      holdAnimationFrames()
+      const server = new FakeApiServer({ banner: 'ready-to-merge' })
+      serveWork(server, 'none')
+      serveReleaseTarget(server, reply)
+      const { rows } = await searchMergeLatest(server)
+      const names = rows.map(accessibleName)
+
+      const [row] = rows
+      if (row) click(row)
+      await settle()
+
+      expect({
+        names,
+        sends: (await sends(server)).map((body) => Object(body).text),
+      }).toEqual({ names: [name], sends: [prompt] })
+    },
+  )
+
+  test('asks for a rebase when the stored queue is newer than the palette row', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer({ banner: 'ready-to-merge' })
     serveWork(server, 'none')
     serveReleaseTarget(server)
     const { rows } = await searchMergeLatest(server)
-    const names = rows.map(accessibleName)
-
+    expect(rows.map(accessibleName)).toEqual(['Merge latest release/2026'])
+    server.json('GET', githubPaths.stored(org, id), {
+      state: null,
+      queue: {
+        place: 2,
+        count: 2,
+        belowPullNumber: 479,
+        trunk: 'main',
+        state: 'queued',
+        wait: null,
+        rebase: {
+          base: 'calummoore/apple-pay-secret123',
+          label: { text: 'calummoore/apple-pay-[redacted]' },
+          baseHead: 'b'.repeat(40),
+          oldBase: 'a'.repeat(40),
+        },
+      },
+    })
     const [row] = rows
     if (row) click(row)
     await settle()
-
-    expect({
-      names,
-      sends: (await sends(server)).map((body) => Object(body).text),
-    }).toEqual({ names: ['Merge latest release/2026'], sends: [mergeLatest] })
+    const [request] = await sends(server)
+    const text: unknown = Object(request).text
+    expect(text).toEqual(
+      expect.stringContaining(
+        `git rebase --onto ${'b'.repeat(40)} ${'a'.repeat(40)}`,
+      ),
+    )
+    expect(text).toEqual(
+      expect.stringContaining('git fetch origin refs/pull/479/head'),
+    )
+    expect(text).toEqual(
+      expect.stringContaining(
+        'git push --force-with-lease --force-if-includes',
+      ),
+    )
+    expect(text).toEqual(
+      expect.stringContaining('calummoore/apple-pay-[redacted]'),
+    )
+    expect(text).not.toEqual(expect.stringContaining('secret123'))
   })
 
   test('a send that fails shows the chat of the session, whose composer names the cause', async () => {

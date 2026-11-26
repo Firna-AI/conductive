@@ -2,12 +2,13 @@ import type { User } from '../../src/shared/api'
 import type {
   UpdateAutomationRequest,
   Automation,
+  AutomationCapabilities,
   AutomationInactiveReason,
 } from '../../src/shared/automations'
 import { modelChoice } from '../app-api/models'
 import { choice } from '../chat/inputs'
 import type { AppDependencies, AppEnv } from '../env'
-import { HttpError } from '../http'
+import { HttpError, isRecord } from '../http'
 import { resolveAutomationAuthors } from './author-filters'
 import { invalidAutomationInput } from './errors'
 import { automationRepository, automationSection } from './automation-data'
@@ -29,6 +30,12 @@ export async function prepareAutomation(
   const repositoryId = field('repositoryId', previous?.repositoryId)
   const sectionId = field('sectionId', previous?.sectionId)
   const active = field('active', previous?.active ?? true)
+  const capabilities = readCapabilities(
+    field(
+      'capabilities',
+      previous?.capabilities ?? { preapprovedSecretIds: [] },
+    ),
+  )
   if (
     typeof name !== 'string' ||
     typeof prompt !== 'string' ||
@@ -73,6 +80,7 @@ export async function prepareAutomation(
     sectionId: section,
     prompt,
     choice: selectedChoice,
+    capabilities,
     active,
     inactiveReason,
     failedRunsInARow:
@@ -83,6 +91,16 @@ export async function prepareAutomation(
     createdAt: previous?.createdAt ?? now,
     updatedAt: now,
   }
+}
+
+function readCapabilities(value: unknown): AutomationCapabilities {
+  if (!isRecord(value) || !Array.isArray(value.preapprovedSecretIds))
+    throw invalidAutomationInput()
+  const preapprovedSecretIds = value.preapprovedSecretIds.map((id: unknown) => {
+    if (typeof id !== 'string') throw invalidAutomationInput()
+    return id
+  })
+  return { preapprovedSecretIds: [...new Set(preapprovedSecretIds)] }
 }
 
 export async function requireAutomationRepository(

@@ -38,8 +38,12 @@ The Durable Object runs the gates itself.
   needs no running sandbox. So the tabs of a stopped or archived workspace
   stay open.
 - The Durable Object reads the first grant of a new tab before the
-  history read. It checks the grant again before it sends the history. A
-  tab without a valid grant gets no history and `404 workspace_not_found`.
+  history read. It checks the grant again before it answers the socket
+  upgrade. A tab without a valid grant gets no history and
+  `404 workspace_not_found`.
+- The Durable Object checks the grant again before each history page,
+  without a D1 read. A tab whose grant expires during its replay closes
+  and gets no further page.
 - Each event send checks the grant first, without a D1 read. A tab with
   an expired grant closes and gets no event.
 - Every 15 seconds, one D1 query refreshes the grants of all open tabs.
@@ -178,11 +182,22 @@ access logic, with the access scheduler that the test injects.
 - `RunnerConnectionStore` in
   [`runner-connection-store.ts`](runner-connection-store.ts) keeps the
   current physical connection in chunked raw records under
-  `native:runner:`. They hold the connection ID, the generation, the
-  workspace record with the token hash, the readiness, and the next check
-  time. They also hold the stream ID, the process-start ID, and the
-  protocol version of the runner's `hello`. They hold no agent login and
-  no turn token.
+  `native:runner:`. They hold the generation and the saved state of the
+  connection. They hold no agent login and no turn token.
+- The saved state is one value. It holds each field of the connection
+  that a wake must keep. Examples are the workspace record with its token
+  hash, the values of the runner's `hello`, the readiness, and the
+  `repository.move` of the connection.
+- Each save writes the whole value, and a restore reads the whole value
+  back. So each field lasts as long as the connection, also a field that
+  a later change adds. For example, a wake sends no second
+  `repository.move` on the connection.
+- Handles, such as the peer, stay outside the saved state. A field of the
+  current runner that stays in memory on purpose says so in its comment.
+- One reader reads each saved record. It gives its default to each field
+  that an older record lacks. A new field goes beside the stored fields,
+  and each stored name and value stays. So the previous Worker can still
+  read the record.
 - A restore retires a saved record whose version is not
   `RUNNER_PROTOCOL_VERSION`, or that has a stream but no version. It
   closes that socket, and nothing throws in the constructor of the

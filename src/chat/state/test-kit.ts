@@ -14,7 +14,10 @@ import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { record, text } from '../api/json'
 import { readDraft } from '../api/read-chat'
-import type { StreamTimers } from '../stream/workspace-stream'
+import type {
+  StreamTimers,
+  SubscribeToWorkspace,
+} from '../stream/workspace-stream'
 import { ChatController } from './controller'
 
 /**
@@ -125,6 +128,7 @@ export function chatFor(
      * own readers, such as two tabs, get the same events.
      */
     stream?: FakeWorkspaceEvents
+    subscribe?: SubscribeToWorkspace
     /**
      * Sends the raw parts of uploads. By default they go through the fetch
      * of the chat, with no progress, as `fetchFiles` says.
@@ -172,6 +176,7 @@ export function chatFor(
     ),
     subscribe: (_target, from, listener) => {
       after.push(from)
+      if (options.subscribe) return options.subscribe(_target, from, listener)
       return (options.stream ?? server.events).subscribe(from, (message) =>
         listener.message(message),
       )
@@ -267,10 +272,14 @@ export function shown(controller: ChatController, sessionId: string): string[] {
         return `failed: ${item.error.message}`
       case 'lost':
         return `lost: ${item.marker.runnerEventType} ${item.marker.reason}`
+      case 'capabilities-changed':
+        return `capabilities changed by ${item.member.githubLogin}: ${item.changes.map((change) => change.kind).join(', ')}`
       case 'continued':
         return `continued by ${item.member.githubLogin}: ${item.branch} from ${item.baseBranch}`
       case 'repository-changed':
         return `repository changed by ${item.member.githubLogin}: ${item.repository.fullName} on ${item.branch}`
+      case 'wake':
+        return `wake: ${item.notice.state} in ${item.notice.watchedSession.id}`
     }
   })
 }

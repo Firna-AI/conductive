@@ -37,8 +37,10 @@ function view(builds: BuildsResponse) {
       builds={builds}
       log={[]}
       now={now}
+      onRetrySkills={() => undefined}
       org={{ id: 'firna', name: 'Firna', role: 'member' }}
       settings={settings}
+      skills={{ status: 'loading' }}
       timeZone="UTC"
       viewport="desktop"
     />

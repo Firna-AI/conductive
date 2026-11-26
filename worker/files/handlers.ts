@@ -15,12 +15,14 @@ import type { FilesWorkspace } from './data'
 import { readBoatFile } from './boat'
 import { fileBytes } from './content'
 import { FileTooLargeError, fileUnavailable } from './errors'
+import type { FilesListRead, WorkspaceFileLists } from './list-reads'
 import { checkByteLimit, readFilePath } from './paths'
 import type { WorkspaceFilesPort } from './workspace'
 
 export interface FilesHandlerOptions {
   /** Required backend policy. Fixtures do not set the product limit. */
   maxFileBytes: number
+  fileLists: WorkspaceFileLists
   workspaceFiles: (
     workspace: FilesWorkspace,
   ) => WorkspaceFilesPort | Promise<WorkspaceFilesPort>
@@ -62,18 +64,20 @@ export function createFilesHandler(options: FilesHandlerOptions) {
       for (const secret of await runningOutputSecrets(env, workspace))
         output.add(secret)
       const text = (value: string) => output.text(value)
-      const files = await options.workspaceFiles(workspace)
       const paths = filePaths
       let response: Response
       if (url.pathname === paths.tree(context.org.id, workspaceId)) {
-        const tree = await files.tree()
-        if (!tree) throw fileUnavailable()
-        response = Response.json(filterTree(tree, text))
+        response = fileListResponse(
+          await options.fileLists.tree(workspaceId),
+          (tree) => filterTree(tree, text),
+        )
       } else if (url.pathname === paths.changes(context.org.id, workspaceId)) {
-        const changes = await files.changes()
-        if (!changes) throw fileUnavailable()
-        response = Response.json(filterChanges(changes, text))
+        response = fileListResponse(
+          await options.fileLists.changes(workspaceId),
+          (changes) => filterChanges(changes, text),
+        )
       } else {
+        const files = await options.workspaceFiles(workspace)
         const path = readFilePath(url.searchParams.get('path'))
         if (
           url.pathname ===
@@ -149,6 +153,15 @@ export function createFilesHandler(options: FilesHandlerOptions) {
       )
     }
   }
+}
+
+function fileListResponse<List extends object>(
+  { list, stateRead }: FilesListRead<List>,
+  filter: (list: List) => List,
+): Response {
+  if (list) return Response.json({ ...filter(list), stateRead })
+  const { status, code, message } = fileUnavailable()
+  return Response.json({ error: { code, message }, stateRead }, { status })
 }
 
 function downloadDisposition(path: string): string {

@@ -36,6 +36,14 @@ pub struct AgentCreateWorkspaceRequest {
     pub repository_id: String,
     /// first message.
     pub first_message: String,
+    /// Create the workspace branch from this branch. Omission uses the base or repository default.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub start_branch: Option<String>,
+    /// Pull request target and Changes comparison branch. Omission uses the start or repository default.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub base_branch: Option<String>,
     /// model.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
@@ -80,6 +88,10 @@ pub struct AgentCreateWorkspaceResponse {
     pub session_id: String,
     /// session link.
     pub session_link: String,
+    /// The saved initial turn, absent from replies of earlier Workers.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub turn_id: Option<String>,
     /// Notice about the section chosen for the workspace.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]

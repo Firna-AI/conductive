@@ -1,8 +1,8 @@
 import { useLayoutEffect, useSyncExternalStore, type ReactNode } from 'react'
 import { SharedUiThemeProvider } from '@firna/ui/theme'
 import { ToastProvider } from '@firna/ui/toast'
-import { themeFor, tokensCss } from '../../../docs/mockups/src/theme'
-import '../../../docs/mockups/src/render.css'
+import { themeFor, tokensCss } from '../../ui/theme'
+import '../../ui/render.css'
 
 export type ColorScheme = 'light' | 'dark'
 
@@ -33,7 +33,7 @@ export function ThemeRoot(props: {
 }) {
   const system = useSyncExternalStore(subscribe, systemScheme, darkScheme)
   const scheme = props.scheme ?? system
-  // The brand parts of the mockups, such as the lockup, read the scheme
+  // The shared brand parts, such as the lockup, read the scheme
   // from the style of the page root, where the mockup renderer puts it.
   useLayoutEffect(() => {
     document.documentElement.style.colorScheme = scheme

@@ -13,6 +13,7 @@ import type {
 import type { Sandbox, SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
 import { markTerminalRestoreEnded } from '../terminal/service'
+import { workspaceAutoStopSeconds } from './idle-stop'
 
 export interface WorkspaceActionContext {
   env: AppEnv
@@ -111,10 +112,11 @@ export async function extendWorkspaceDeadline(
   context: WorkspaceActionContext,
 ): Promise<LifecycleReconciliation> {
   const { provider, sandboxId } = await actionResources(context)
+  const autoStop = await workspaceAutoStopSeconds(context.env.DB)
   return reconcileReply(
     context,
     await replyOrCurrentState(provider, sandboxId, () =>
-      provider.setAutoStop(sandboxId, 1_800),
+      provider.setAutoStop(sandboxId, autoStop),
     ),
   )
 }

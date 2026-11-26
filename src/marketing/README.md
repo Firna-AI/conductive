@@ -48,12 +48,13 @@ The marketing mockups are the visual spec:
 [`DocsScreen.tsx`](../../docs/mockups/src/screens/DocsScreen.tsx),
 [`PricingScreen.tsx`](../../docs/mockups/src/screens/PricingScreen.tsx),
 and the parts in
-[`components/marketing/`](../../docs/mockups/src/components/marketing/) and
-[`components/pricing/`](../../docs/mockups/src/components/pricing/).
+[`components/marketing/`](../../docs/mockups/src/components/marketing/),
+[`components/pricing/`](../../docs/mockups/src/components/pricing/), and
+the shared [`src/ui/components/marketing/`](../ui/components/marketing/).
 The [brand folder](../../docs/brand/README.md) gives the logo files. The
 site uses the lockups and favicons from that folder unchanged. The header
-and the footer show the lockup 25 px high, from the `lockupHeight` token
-of the mockups, with its clear space of half that height. On a narrow
+and the footer show the lockup 25 px high, from the shared `lockupHeight`
+token, with its clear space of half that height. On a narrow
 phone, the lockup of the site shrinks to the space beside the links, so
 the page never scrolls sideways.
 
@@ -132,6 +133,11 @@ both legal pages in full. The legal pages are the Terms page in
 In the same change, update each sentence of the legal pages that restates
 the fact. A search for the old words is not enough, because a legal page
 can restate a fact in other words.
+
+A change to the Terms text gives a new Terms revision on its own, because
+`TERMS_VERSION` in [`src/shared/terms.ts`](../shared/terms.ts) is a digest
+of the text. In the same change, set the effective date at the top of the
+Terms to the date of the change.
 
 ## Public docs
 

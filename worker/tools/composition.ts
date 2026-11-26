@@ -46,7 +46,7 @@ export function productionAgentTools(
             .getByName(workspaceId)
             .getAgentSession(orgId, workspaceId, sessionId, env.APP_ORIGIN),
         ),
-      getMessage: async (orgId, workspaceId, sessionId, messageId) =>
+      getMessage: async (orgId, workspaceId, sessionId, messageId, input) =>
         requireFeatureResult(
           await workspaceBinding(env)
             .getByName(workspaceId)
@@ -56,6 +56,7 @@ export function productionAgentTools(
               sessionId,
               messageId,
               env.APP_ORIGIN,
+              input,
             ),
         ),
       manageSession: async (input) =>
@@ -78,6 +79,14 @@ export function productionAgentTools(
         ),
       callingTurn: (id, turnId) =>
         workspaceBinding(env).getByName(id).callingToolTurn(id, turnId),
+      callingWatchTurn: (id, turnId) =>
+        workspaceBinding(env).getByName(id).callingWatchTurn(id, turnId),
+      watchSession: async (input) =>
+        requireFeatureResult(
+          await workspaceBinding(env)
+            .getByName(input.workspaceId)
+            .watchAgentSession(input),
+        ),
       ownerDefaultChoice: async () => configuredDefaultChoice(env),
       createWorkspace: (input) =>
         createWorkspaceFromTool(env, dependencies, input),

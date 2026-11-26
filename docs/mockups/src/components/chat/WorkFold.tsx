@@ -1,11 +1,15 @@
 import type { PersonKey } from '../../fixtures/members'
 import type { WorkItem } from './groupItems'
-import { LostLine } from './LostLine'
-import { MacCommand } from './MacCommand'
-import { MessageLine } from './MessageLine'
+import { lostLine } from '../../entries/components/chat/LostLine.mockup'
+import { macCommand } from '../../entries/components/chat/MacCommand.mockup'
+import { messageLine } from '../../entries/components/chat/MessageLine.mockup'
 import { SecretRun } from './SecretRun'
-import { CallLine, FoldLine } from './ToolGroup'
-import styles from './ToolGroup.module.css'
+import {
+  callLine,
+  foldLine,
+} from '../../entries/components/chat/ToolGroup.mockup'
+import { instanceKey } from '../../instanceKey'
+import styles from '../../../../../src/ui/components/chat/ToolGroup.module.css'
 
 /**
  * How the mockups draw the folds of ended turns: closed, as each fold
@@ -18,23 +22,33 @@ export type FoldState = (typeof foldStates)[number]
 /** One step of an open fold, in the list style of an open run of tool calls. */
 function Step(props: { step: WorkItem; open: boolean; viewer: PersonKey }) {
   const { step } = props
+  const key = instanceKey(step.id)
   switch (step.kind) {
     case 'tool':
       return (
         <li className={styles.call}>
-          <CallLine call={step} />
+          <callLine.Component call={step} moklyInstance={`call-${key}`} />
         </li>
       )
     case 'agent':
       return (
         <li>
-          <MessageLine message={step} open={props.open} />
+          <messageLine.Component
+            message={step}
+            moklyInstance={`message-${key}`}
+            open={props.open}
+          />
         </li>
       )
     case 'mac-command':
       return (
         <li className={styles.card}>
-          <MacCommand request={step.request} state={step.state} />
+          <macCommand.Component
+            id={step.id}
+            moklyInstance={`command-${key}`}
+            request={step.request}
+            state={step.state}
+          />
         </li>
       )
     case 'secret-run':
@@ -46,7 +60,12 @@ function Step(props: { step: WorkItem; open: boolean; viewer: PersonKey }) {
     case 'lost':
       return (
         <li>
-          <LostLine align="start" reason={step.reason} what={step.what} />
+          <lostLine.Component
+            align="start"
+            moklyInstance={`lost-${key}`}
+            reason={step.reason}
+            what={step.what}
+          />
         </li>
       )
   }
@@ -73,7 +92,11 @@ export function WorkFold(props: {
   const openMessage = state === 'open-message' ? messages.at(-1) : undefined
   return (
     <details className={styles.group} open={state !== 'closed'}>
-      <FoldLine calls={calls} messages={messages.length} />
+      <foldLine.Component
+        calls={calls}
+        messages={messages.length}
+        moklyInstance="fold-line"
+      />
       <ul className={styles.calls}>
         {steps.map((step) => (
           <Step

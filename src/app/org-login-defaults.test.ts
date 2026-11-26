@@ -202,13 +202,13 @@ describe('the default logins of the account and the org logins of an org', () =>
       updatedAt: FAKE_TIME,
     })
     serveOrgRead(server, listAt(FAKE_TIME), { claude: 'own', codex: null })
-    await app.org(acme.id).agentLogins.save({
+    const save = app.org(acme.id).agentLogins.save({
       agent: 'claude',
       kind: 'api-key',
       secret: 'sk-ant-acme',
     })
     held.release('GET', ACCOUNT_PATHS.account)
-    await read
+    await Promise.all([read, save])
     expect({
       connected: app.account.login('claude').connected,
       login: newSessionLogin(account(app), acme.id, 'claude'),

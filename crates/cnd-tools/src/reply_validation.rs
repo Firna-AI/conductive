@@ -21,6 +21,16 @@ pub(crate) fn normalize_paths(value: &mut Value) {
     }
 }
 
+/// A Worker from before agent messages sends no `author`. Each message that
+/// it gives is a member message.
+pub(crate) fn mark_member_author(value: &mut Value) {
+    if let Some(message) = value.get_mut("message").and_then(Value::as_object_mut)
+        && !message.contains_key("author")
+    {
+        message.insert("author".into(), Value::String("member".into()));
+    }
+}
+
 fn normalize_choices(value: &mut Value) {
     match value {
         Value::Object(fields) => {

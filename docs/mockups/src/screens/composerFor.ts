@@ -1,7 +1,5 @@
 import type { Viewport } from '@mokly/mokly'
 import type { ComposerState } from '../components/chat/Composer'
-import type { MentionTree } from '../components/chat/FileMentionList'
-import { noFastChoice, type AgentChoice } from '../fixtures/agents'
 import {
   afterDropCaret,
   afterFolderDropCaret,
@@ -17,19 +15,21 @@ import {
   type Attachment,
 } from '../fixtures/attachments'
 import { barRunningConversations } from '../fixtures/barConversations'
+import { capabilityRunningConversations } from '../fixtures/capabilityConversations'
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
 import { unlistedChoice, unlistedLabels } from '../fixtures/endpointModels'
-import {
-  addedChipDraft,
-  mentionChipsDraft,
-  mentionDrafts,
-} from '../fixtures/fileMentions'
+import { favouriteLists } from '../fixtures/favourites'
+import { addedChipDraft, mentionChipsDraft } from '../fixtures/fileMentions'
 import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
 import { sessionLinkDraft } from '../fixtures/sessionLinkConversations'
+import { wakeRunningConversations } from '../fixtures/wakeConversations'
 import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { choiceOf } from './composerChoice'
+import { mentionListFor } from './mentionComposer'
 import { loginOwnerOf, otherStarter, sessionLoginFor } from './sessionStarter'
+import { skillChipFor, skillListFor } from './skillComposer'
 import { workspaceCapabilities } from './workspaceCapabilities'
 import { isNew, noMessages } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -69,6 +69,8 @@ const runningConversations = new Set([
   'secret-late-given',
   'secret-asked-again-allowed',
   'secret-stack-answered',
+  ...capabilityRunningConversations,
+  ...wakeRunningConversations,
 ])
 
 type ComposerKey = WorkspaceState['composer']
@@ -113,46 +115,26 @@ const sendsFiles = new Set<ComposerKey>(['attachments', 'too-large'])
 /** The states that draw the pointer over the icon of the first chip. */
 const pointerStates = new Set<ComposerKey>([
   'file-chip-pointer',
+  'skill-chip-pointer',
   'workspace-link-pointer',
   'attachment-pointer',
 ])
 
-/** The draft and the tree of each state that opens the list of `@`. */
-const mentionLists: Partial<
-  Record<ComposerKey, { draft: string; tree: MentionTree }>
-> = {
-  'mention-query': { draft: mentionDrafts.query, tree: 'latest' },
-  'mention-start': { draft: mentionDrafts.start, tree: 'latest' },
-  'mention-none': { draft: mentionDrafts.none, tree: 'latest' },
-  'mention-loading': { draft: mentionDrafts.query, tree: 'loading' },
-  'mention-unavailable': { draft: mentionDrafts.query, tree: 'unavailable' },
-}
-
 /**
- * The draft of a state with chips: file chips, the chip of Add to chat, a
- * workspace link, or two session links.
+ * The draft of a state with chips: file chips, a skill chip, the chip of
+ * Add to chat, a workspace link, or two session links.
  */
 function chipDraft(composer: ComposerKey): string | undefined {
   if (composer === 'file-chips' || composer === 'file-chip-pointer') {
     return mentionChipsDraft
   }
+  const skill = skillChipFor(composer)
+  if (skill) return skill
   if (composer === 'file-added') return addedChipDraft
   if (composer === 'session-link') return sessionLinkDraft
   const link =
     composer === 'workspace-link' || composer === 'workspace-link-pointer'
   return link ? workspaceLinkDraft : undefined
-}
-
-/** The model, the effort, and the speed of the next message of a state. */
-function choiceOf(state: WorkspaceState, workspace: Workspace): AgentChoice {
-  switch (state.modelChoice) {
-    case 'workspace':
-      return workspace.choice
-    case 'fast':
-      return { ...workspace.choice, fast: true }
-    case 'no-fast':
-      return noFastChoice
-  }
 }
 
 /** An agent turn runs on a ready sandbox. */
@@ -165,10 +147,12 @@ export function isRunning(state: WorkspaceState): boolean {
 /**
  * The composer of a workspace state: a steer message while a turn runs, or
  * a message with attached files, with the model picker open when the state
- * asks for it. A new session starts empty. In a session with messages,
- * the picker marks the models of the other agent as opening a new session.
- * In a session of the viewer on an own endpoint, it leaves out the models
- * that the model list of the endpoint does not name. Every picker on the
+ * asks for it, with the favourites of the state and All models open or
+ * closed. A new session starts empty. In a session with messages, the
+ * picker marks the models and favourites of the other agent as opening a
+ * new session. In a session of the viewer on an own endpoint, it leaves out
+ * the models that the model list of the endpoint does not name, and each
+ * favourite on one of them. Every picker on the
  * org login does the same with the list of the org endpoint (decision 3 A
  * of the org logins plan). After a turn that the endpoint did not serve,
  * the session keeps the model of that turn.
@@ -199,6 +183,7 @@ export function isRunning(state: WorkspaceState): boolean {
  * shows as a session chip in the same way. `@` opens the list of the
  * files and folders above the box, and a picked entry shows as a chip. Add
  * to chat of a row menu puts a chip at the end of the draft.
+ * `/` opens the list of skills there, and a picked skill shows as a chip.
  *
  * Each attached file is a chip at its place in the text. While files hover
  * over the box, the desktop shows the drop state with the drop caret in the
@@ -228,7 +213,8 @@ export function composerFor(
   const nextMessage = noLogin || linkedState || unlistedPicker
   const files = fresh ? undefined : composerFiles[state.composer]
   const drop = fresh ? undefined : dropDrafts[state.composer]
-  const mention = fresh ? undefined : mentionLists[state.composer]
+  const mention = fresh ? undefined : mentionListFor(state)
+  const skills = fresh ? undefined : skillListFor(state.composer)
   const chips = fresh ? undefined : chipDraft(state.composer)
   // After Add to chat, the field takes the focus on desktop only, so only
   // desktop draws the caret, after the chip and its space.
@@ -246,6 +232,7 @@ export function composerFor(
   else if (files) draft = attachmentDraft
   else if (!fresh && nextMessage) draft = followUpDraft
   else if (mention) draft = mention.draft
+  else if (skills) draft = skills.draft
   else if (chips) draft = chips
   else if (!fresh && state.composer === 'draft') {
     draft = isNew(state) ? savedCartsDraft : followUpDraft
@@ -263,6 +250,13 @@ export function composerFor(
     attachTo:
       files && state.composer === 'attachments' ? paths.attachments : undefined,
     picker: state.composer === 'picker' || unlistedPicker,
+    // The picker shows the saved favourites with All models closed unless
+    // told otherwise, so the props of the default state stay as they were.
+    favourites:
+      state.favourites === 'saved'
+        ? undefined
+        : favouriteLists[state.favourites],
+    allModels: state.allModels === 'open' ? true : undefined,
     // A session takes its agent at its first message.
     sessionAgent: noMessages(state) ? undefined : choice.agent,
     fastKey: true,
@@ -277,6 +271,7 @@ export function composerFor(
     blocked: needsLogin,
     sessionLogin: sessionLoginFor(opensLinked ? undefined : owner),
     mention: mention?.tree,
+    skills: skills?.source,
     drop:
       drop !== undefined &&
       state.composer === 'drop-over' &&

@@ -1,97 +1,107 @@
-import type { Viewport } from '@mokly/mokly'
-import { ChevronLeft, ExternalLink } from 'lucide-react'
-import { effortLabels } from '../../../../../src/shared/agents'
+import type { CSSProperties } from 'react'
 import type { AgentChoice, AgentKey } from '../../fixtures/agents'
-import { favourites, sameChoice } from '../../fixtures/favourites'
-import { Menu, type MenuEntry } from '../common/Menu'
-import type { Shortcut } from '../common/KeyChips'
-import { useShortcutHint } from '../common/ShortcutTip'
-import { effortEntries, modelEntries } from './pickers'
+import { menu } from '../../entries/components/common/Menu.mockup'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import type { Shortcut } from '../../../../../src/ui/components/common/KeyChips'
+import type { MenuPlacement } from '../../../../../src/ui/components/common/Menu'
+import { useTouch } from '../../../../../src/ui/components/common/touch'
+import {
+  divider,
+  effortChoices,
+  favouritesMenu,
+  modelEntries,
+  shownFavourites,
+} from './pickers'
 import styles from './FavouritesMenu.module.css'
 
-/** The words after the model of a favourite: its effort, and Fast if on. */
-function favouriteWords(choice: AgentChoice): string {
-  return `${effortLabels[choice.effort]}${choice.fast ? ' Fast' : ''}`
-}
+/** Where the model menu opens beside its picker. */
+export type PickerPlacement = Exclude<MenuPlacement, 'sheet'>
 
 /**
- * The rows of the menu: each favourite as the model, with its effort and
- * Fast in the muted colour, then All models, then the efforts of the
- * current model and the Fast switch, which change the current choice. The
- * menu marks the favourite that is the current choice. A favourite of the
- * other agent opens a new session, as a model of that agent does today.
- */
-function favouriteEntries(
-  choice: AgentChoice,
-  allModels: 'closed' | 'open',
-  sessionAgent?: AgentKey,
-  fastKey?: Shortcut,
-): MenuEntry[] {
-  return [
-    ...favourites.map((favourite): MenuEntry => {
-      const opensSession =
-        sessionAgent !== undefined && favourite.agent !== sessionAgent
-      return {
-        kind: 'item',
-        label: favourite.model,
-        muted: favouriteWords(favourite),
-        trailingIcon: opensSession ? ExternalLink : undefined,
-        trailingLabel: opensSession ? 'New session' : undefined,
-        checked: sameChoice(favourite, choice),
-      }
-    }),
-    { kind: 'divider' },
-    { kind: 'item', label: 'All models', submenu: allModels },
-    ...effortEntries(choice, fastKey),
-  ]
-}
-
-/**
- * The model menu with favourites, drawn open. `allModels` opens the
- * submenu of every model: beside the menu on a computer, and in place of
- * the menu on a phone, with Back at its top. `fastKey` marks the menu of
- * a session tab, where the key of Fast mode runs, so its Fast row shows
- * that key on desktop.
+ * The model menu of a picker, drawn open beside it, with the rows of
+ * `favouritesMenu`. `allModels` opens the submenu of every model, and
+ * `effort` opens the submenu of the efforts. A submenu shows beside the
+ * menu on a computer, level with its row, and in place of the menu on a
+ * phone, with Back at its top. A menu with no favourite to show starts
+ * with All models, so its submenu starts level with the top of the menu.
  */
 export function FavouritesMenu(props: {
   choice: AgentChoice
-  viewport: Viewport
+  favourites: readonly AgentChoice[]
+  placement: PickerPlacement
   allModels?: boolean
+  effort?: boolean
   sessionAgent?: AgentKey
-  fastKey?: boolean
+  hiddenModels?: readonly string[]
+  fastKey?: Shortcut
 }) {
-  const fastHint = useShortcutHint('fast-mode')
-  const models = modelEntries(props.choice, props.sessionAgent)
-  if (props.allModels && props.viewport === 'mobile') {
-    const back: MenuEntry = { kind: 'item', label: 'Back', icon: ChevronLeft }
+  const phone = useTouch()
+  const rows = shownFavourites(props.favourites, props.hiddenModels).length
+  const efforts = props.effort === true
+  const submenu = props.allModels === true || efforts
+  const label = efforts ? 'Effort' : 'All models'
+  const instance = efforts ? 'effort' : 'all-models'
+  const choices = efforts
+    ? effortChoices(props.choice)
+    : modelEntries(props.choice, props.sessionAgent, props.hiddenModels)
+  if (submenu && phone) {
+    const back: MenuEntryData = {
+      kind: 'item',
+      label: 'Back',
+      icon: 'chevron-left',
+    }
     return (
-      <Menu
-        entries={[back, { kind: 'divider' }, ...models]}
-        label="All models"
-        placement="above-start"
+      <menu.Component
+        entries={[back, divider, ...choices]}
+        label={label}
+        moklyInstance={instance}
+        placement={props.placement}
       />
     )
   }
-  const menu = (
-    <Menu
-      entries={favouriteEntries(
-        props.choice,
-        props.allModels ? 'open' : 'closed',
-        props.sessionAgent,
-        props.fastKey ? fastHint : undefined,
-      )}
-      label="Model and effort"
-      placement="point"
-    />
-  )
+  const entries = favouritesMenu(props.choice, {
+    favourites: props.favourites,
+    sessionAgent: props.sessionAgent,
+    hiddenModels: props.hiddenModels,
+    fastKey: props.fastKey,
+    allModels: props.allModels === true && !efforts,
+    effort: efforts,
+  })
+  if (!submenu) {
+    return (
+      <menu.Component
+        entries={entries}
+        label="Model and effort"
+        moklyInstance="model-menu"
+        placement={props.placement}
+      />
+    )
+  }
   return (
-    <div className={styles.pair}>
-      {menu}
-      {props.allModels ? (
-        <div className={styles.submenu}>
-          <Menu entries={models} label="All models" placement="point" />
-        </div>
-      ) : null}
+    <div
+      className={classes(styles.pair, styles[props.placement])}
+      style={
+        {
+          '--submenu-rows': rows + (efforts ? 1 : 0),
+          '--submenu-lines': (rows > 0 ? 1 : 0) + (efforts ? 1 : 0),
+        } as CSSProperties
+      }
+    >
+      <menu.Component
+        entries={entries}
+        label="Model and effort"
+        moklyInstance="model-menu"
+        placement="point"
+      />
+      <div className={styles.submenu}>
+        <menu.Component
+          entries={choices}
+          label={label}
+          moklyInstance={instance}
+          placement="point"
+        />
+      </div>
     </div>
   )
 }

@@ -188,6 +188,14 @@ A refusal before the answer starts returns its stable error code.
 Each check, also each Codex credential check, gets a new Durable Object stub from `runtime.workspace`, because [a stub can stay broken](https://developers.cloudflare.com/durable-objects/best-practices/error-handling/) after an error.
 A client disconnect also cancels the upstream.
 It adds no model filter, rate limit, or answer size limit.
+A Codex model answer of HTTP 429 with a `retry-after` over 600 seconds is the one exception.
+The wait is delay seconds or an IMF-fixdate, RFC 850, or asctime date, as Codex reads it.
+It reads the filtered `retry-after`, so a redacted login is no wait. A wrong weekday or a delay above the signed 64-bit range is no wait either.
+The gateway cancels that answer and returns its own 429 with error type `usage_limit_reached` and `resets_at`.
+It drops `retry-after` and `x-should-retry`, and keeps the other allowed headers.
+A reset after the year 9999 gets no `resets_at`, because Codex cannot show it.
+Codex then ends the turn and shows the reset time. A shorter or unreadable wait, and each Claude answer, pass unchanged.
+The [long waits](../../docs/protocol/model-gateway-long-waits.md) protocol doc states these requirements.
 A Worker warning records each check that throws and each request that the checks end.
 These warnings hold only the workspace ID and the error kind or end code.
 A late check logs only its fixed warning text.
@@ -230,6 +238,8 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [json-stack.ts](json-stack.ts): `JsonStack` stores compact container states without a separate depth limit.
 - [request-lifetime.ts](request-lifetime.ts): `GatewayRequestLifetime` owns the start check, the periodic checks, cancellation, warnings, and cleanup across every forwarding phase.
 - [stream.ts](stream.ts): answer forwarding under the request lifetime.
+- [codex-long-wait.ts](codex-long-wait.ts): `codexLongWait` turns a Codex 429 with a long `retry-after` into the error that ends the turn.
+- [retry-after.ts](retry-after.ts): `retryAfterSeconds` reads delay seconds and the three HTTP date forms.
 - [redact.ts](redact.ts): bounded carry bytes for credential removal from error bodies.
 - [errors.ts](errors.ts): stable gateway refusals in each provider's API shape.
 - [workspace.ts](workspace.ts): `WorkspaceTurnTokens.forRunningTurn` derives a stable token from the turn record.
@@ -280,6 +290,7 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [codex-task-owner.test.ts](codex-task-owner.test.ts): registered credential work commits after request cancellation, including renewal before expiry, recovery, and terminal failure writes.
 - [codex-terminal.test.ts](codex-terminal.test.ts): saved Account failure causes and protection for a newer sign-in.
 - [codex-refusal.test.ts](codex-refusal.test.ts): ChatGPT token refusals are 403 while API-key refusals stay 401.
+- [codex-long-wait.test.ts](codex-long-wait.test.ts): a long wait in each date form, on an own endpoint and a ChatGPT sign-in, ends the turn without the login; a reset after the year 9999 has no time; short, absent, unreadable, model list, and Claude waits pass unchanged.
 - [codex-stream.test.ts](codex-stream.test.ts): a 100,000,000-byte object, the shared 413, and refusal after an early answer.
 - [claude-client.test.ts](claude-client.test.ts): missing and partial Claude markers, refused before workspace access, a turn check, or an upstream call.
 - [claude-profile.test.ts](claude-profile.test.ts): bearer profile requests for both Claude login kinds, the upstream login header, the `anthropic-beta` result, unchanged body bytes, and a changed prefix.

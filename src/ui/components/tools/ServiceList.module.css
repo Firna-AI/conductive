@@ -1,0 +1,223 @@
+/* The services sit in the scroll of the port form, above its servers. */
+.section {
+  display: flex;
+  flex-direction: column;
+}
+
+/* The heading of a part of the tool, in the words of a menu group. */
+.heading {
+  margin: 0;
+  padding: 8px 8px 4px;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-label);
+  font-weight: 500;
+  letter-spacing: var(--ui-tracking-label);
+  text-transform: var(--ui-label-case);
+}
+
+.hint {
+  margin: 0;
+  padding: 0 8px 6px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+}
+
+/* The notice of a list that did not load spans the width of the rows. */
+.failure {
+  padding-bottom: 6px;
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * A service takes three lines: what runs, with its controls at the end,
+ * how it runs, and its ports. A row with an open menu keeps the fill of a
+ * hover, as a file row with an open menu does.
+ */
+.service {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 4px 6px 8px;
+  border-radius: var(--ui-radius-md);
+}
+
+.service:hover,
+.open {
+  background: var(--ui-soft);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: var(--ui-control-height);
+  white-space: nowrap;
+}
+
+/* The name, the label, and the folder, which give the row its tooltip. */
+.what {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.name {
+  flex-shrink: 0;
+  max-width: 45%;
+  overflow: hidden;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: 500;
+  text-overflow: ellipsis;
+}
+
+.label {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  text-overflow: ellipsis;
+}
+
+/*
+ * The right-to-left box puts the "…" of a folder that does not fit at its
+ * start, so its end stays, as in a server row.
+ */
+.folder {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ui-faint);
+  font-size: var(--ui-text-sm);
+  text-overflow: ellipsis;
+  direction: rtl;
+}
+
+/*
+ * Show log and the menu end the first line. They never shrink, so the
+ * name, the label, and the folder shorten first.
+ */
+.end {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+/* Every port of the service. A long list wraps to more lines. */
+.ports {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding-top: 3px;
+}
+
+/*
+ * A port is a small button in the type of the port column of a server. A
+ * phone raises it towards its touch size.
+ */
+.port {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: max(22px, calc(var(--ui-touch-min) - 10px));
+  padding: 0 7px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-md);
+  background: none;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.port:hover {
+  background: var(--ui-selected);
+}
+
+.port:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: 1px;
+}
+
+/* The port of the Preview tab that shows, as the current server row. */
+.current,
+.current:hover {
+  border-color: transparent;
+  background: var(--ui-selected);
+}
+
+.noPort {
+  color: var(--ui-faint);
+  font-size: var(--ui-text-xs);
+  line-height: 22px;
+}
+
+/* The menu opens below its button, at the end of the row. */
+.more {
+  display: flex;
+  position: relative;
+  flex-shrink: 0;
+  border-radius: var(--ui-radius-md);
+}
+
+.moreOpen {
+  background: var(--ui-selected);
+}
+
+/* The state, the time, and the start source, in the muted small type. */
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  white-space: nowrap;
+}
+
+.source::before {
+  margin-right: 6px;
+  color: var(--ui-faint);
+  content: '·';
+}
+
+.source {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  min-width: 0;
+  color: var(--ui-muted);
+  text-decoration: none;
+}
+
+a.source:hover .sourceText {
+  color: var(--ui-ink2);
+  text-decoration: underline;
+}
+
+.sourceIcon {
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.sourceText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

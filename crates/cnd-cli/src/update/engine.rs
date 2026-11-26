@@ -37,6 +37,12 @@ impl Engine {
         Ok(newest)
     }
 
+    /// Restore the previous release after a start without confirmation.
+    ///
+    /// When the previous installer fails, `current` goes back to the failed
+    /// release with its pending marker. `current` also selects the updater
+    /// of the next start, and an older previous release can hold an updater
+    /// that repairs no part.
     fn rollback(&self, state: State) -> Result<()> {
         let failed = state.pending.ok_or(Error::InvalidRelease)?;
         let previous = state.previous.ok_or(Error::NoPrevious)?;
@@ -44,10 +50,19 @@ impl Engine {
         self.store.transition(&State {
             current: Some(previous.clone()),
             previous: Some(previous.clone()),
-            pending: Some(failed),
+            pending: Some(failed.clone()),
         })?;
-        self.processes
-            .install_system(&self.store.version_path(&previous))?;
+        if let Err(error) = self
+            .processes
+            .install_system(&self.store.version_path(&previous))
+        {
+            self.store.transition(&State {
+                current: Some(failed.clone()),
+                previous: Some(previous),
+                pending: Some(failed),
+            })?;
+            return Err(error);
+        }
         self.store.transition(&State {
             current: Some(previous),
             ..State::default()
@@ -84,15 +99,21 @@ impl UpdateEngine for Engine {
         result
     }
 
-    fn apply(&self) -> Result<()> {
+    async fn apply(&self) -> Result<()> {
         let Some(_lock) = self.store.apply_lock()? else {
             return Ok(());
         };
         let state = self.store.state()?;
         if state.pending.is_some() {
+            if let Some(previous) = &state.previous {
+                self.restore_parts(previous).await;
+            }
             return self.rollback(state);
         }
         let newest = self.next_version(state.current.as_deref())?;
+        if let Some(version) = &newest {
+            self.restore_parts(version).await;
+        }
         if newest == state.current {
             return Ok(());
         }

@@ -73,3 +73,36 @@ it('accepts a command request whose workspace name is null', () => {
     request: { workspaceName: null },
   })
 })
+
+it('accepts a start only with a workspace ID and Worker name metadata', () => {
+  const start = {
+    type: 'settings.operation',
+    operationId: 'start',
+    operation: {
+      action: 'start-workspace-until-stop',
+      workspaceId: 'workspace-one',
+      workspaceName: null,
+    },
+  }
+  expect(workerMessage(JSON.stringify(start))).toEqual(start)
+  for (const changes of [
+    { workspaceId: undefined },
+    { workspaceId: '' },
+    { workspaceId: 7 },
+    { workspaceName: undefined },
+    { workspaceName: 7 },
+  ])
+    expect(
+      workerMessage(
+        JSON.stringify({
+          ...start,
+          operation: { ...start.operation, ...changes },
+        }),
+      ),
+    ).toBeUndefined()
+  const named = {
+    ...start,
+    operation: { ...start.operation, workspaceName: 'First' },
+  }
+  expect(workerMessage(JSON.stringify(named))).toEqual(named)
+})

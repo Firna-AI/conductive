@@ -1,5 +1,9 @@
-import { D1_ERROR_REASONS } from './d1-errors'
-import { mailDiagnosticFields } from './mail-diagnostics'
+import {
+  readGitHubStatus,
+  readImageSourceStep,
+} from './lifecycle/image-sources/failure'
+import { runnerWorkFields } from './warning-runner-work'
+import { continueEndWarningFields } from './warning-continue'
 import {
   ATTACHMENT_STEPS,
   RUNNER_MESSAGE_STAGES,
@@ -8,7 +12,7 @@ import {
   type WorkerWarning,
 } from './warning-types'
 import {
-  type ErrorSummary,
+  errorFields,
   warningProtocolVersion,
   warningTurnEndState,
 } from './warning-values'
@@ -36,6 +40,8 @@ export function warnWorker(warning: WorkerWarning): void {
 
 function warningFields(warning: WorkerWarning) {
   switch (warning.kind) {
+    case 'workspace_continue_ended':
+      return continueEndWarningFields(warning)
     case 'invitation_email_delivery_failed':
     case 'approval_email_delivery_failed':
     case 'feedback_email_delivery_failed':
@@ -59,6 +65,13 @@ function warningFields(warning: WorkerWarning) {
             ? 'The runner of a workspace connected.'
             : 'The runner of a workspace disconnected.',
         ...runnerFields(warning),
+      }
+    case 'runner_work_interrupted':
+      return {
+        kind: warning.kind,
+        message: 'The work of a runner message did not finish.',
+        ...runnerFields(warning),
+        ...runnerWorkFields(warning),
       }
     case 'turn_ended_without_stop_request':
       return {
@@ -171,6 +184,14 @@ function warningFields(warning: WorkerWarning) {
         message: 'An image build failed.',
         buildId: warning.buildId.text,
         phase: warning.phase,
+        sourceStep:
+          warning.phase === 'sources'
+            ? readImageSourceStep(warning.sourceStep)
+            : null,
+        githubStatus:
+          warning.phase === 'sources'
+            ? readGitHubStatus(warning.githubStatus)
+            : null,
         error: errorFields(warning.error),
       }
     case 'runner_message_failed':
@@ -252,36 +273,5 @@ function runnerFields(warning: RunnerWarningFields) {
     streamId: warning.streamId?.text ?? null,
     processStartId: warning.processStartId?.text ?? null,
     protocolVersion: warningProtocolVersion(warning.protocolVersion),
-  }
-}
-
-function errorFields(error: ErrorSummary): ErrorSummary {
-  switch (error.kind) {
-    case 'mail':
-      return { kind: 'mail', ...mailDiagnosticFields(error) }
-    case 'provider':
-      return {
-        kind: error.kind,
-        providerKind: error.providerKind,
-        status: error.status,
-        code: error.code,
-      }
-    case 'http':
-      return { kind: error.kind, status: error.status, code: error.code }
-    case 'command':
-      return {
-        kind: error.kind,
-        state: error.state,
-        exitCode: error.exitCode,
-        timedOut: error.timedOut,
-      }
-    case 'd1':
-      return {
-        kind: error.kind,
-        reason:
-          D1_ERROR_REASONS.find((reason) => reason === error.reason) ?? 'other',
-      }
-    default:
-      return { kind: error.kind }
   }
 }

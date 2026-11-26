@@ -15,6 +15,7 @@ import { NewSectionDialog } from './NewSectionDialog'
 import type { SectionActions } from './SectionHeader'
 import { SectionList } from './SectionList'
 import { useListActions } from './useListActions'
+import { useListQueue } from './useListQueue'
 import { useRowMenus } from './useRowMenus'
 import type { RowVariant } from './WorkspaceRow'
 
@@ -46,7 +47,8 @@ function useLocalCollapse(actions: SectionActions) {
 
 /**
  * The workspaces of an org in their sections, as the sidebar and the list
- * page show them, with the New section dialog while it is open. Each row has
+ * page show them, under the Merge queue group while a queue has entries,
+ * with the New section dialog while it is open. Each row has
  * the menu of the actions that `viewer` can use. `readOnly` shows them
  * without changes, for a suspended org, and each menu then holds only Copy
  * link. `offerActions` says that
@@ -83,14 +85,17 @@ export function OrgList(props: {
   const groups =
     sections.state === 'ready' && workspaces.state === 'ready'
       ? groupWorkspaces(sections.value, workspaces.value, listTime)
-      : { sections: [], archived: [] }
+      : { sections: [], queued: [], archived: [] }
+  const queue = useListQueue(org, valueOf(workspaces) ?? [], groups.queued)
   const { menus, archiveAction, restoreAction, running, layer } = useRowMenus({
     orgId: props.orgId,
     viewer: props.viewer,
     groups: groups.sections,
+    queued: groups.queued,
     archived: groups.archived,
     readOnly,
     move,
+    queue: queue.rows,
   })
   const failure = (error: ApiError) => (
     <LoadFailure
@@ -125,6 +130,7 @@ export function OrgList(props: {
         move={move}
         now={now}
         offersKeys={props.offerActions ?? false}
+        queue={queue.list}
         readOnly={readOnly}
         selectedId={props.selectedId}
         variant={props.variant}

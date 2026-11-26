@@ -5,7 +5,12 @@ import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
 import { Store } from '../../app/store'
 import type { ShortcutCommandId } from '../../shared/shortcut-commands'
-import { queryByLabel, queryByRole } from '../../test-support/dom-queries'
+import {
+  byLabel,
+  byRole,
+  queryByLabel,
+  queryByRole,
+} from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import {
@@ -15,8 +20,8 @@ import {
 import type { MacWindowState } from '../mac/mac-app'
 import { feedbackDialog, serveFeedback } from '../feedback/feedback-test-kit'
 import { placeOf, serverWith } from '../new-workspace/dialog-test-kit'
-import { openPaletteTab } from '../palette/palette-test-kit'
-import { press, settle } from '../test-mount'
+import { openPaletteTab, searchField } from '../palette/palette-test-kit'
+import { click, press, settle } from '../test-mount'
 import { pressHintKey } from './shortcut-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -50,7 +55,7 @@ describe('the keys of the commands of a page', () => {
         at: navigation.href(),
       },
     }).toEqual({
-      opened: { place: 'Acme · General', address: routes.account() },
+      opened: { place: 'General', address: routes.account() },
       shortcuts: { prevented: true, at: routes.accountTab('shortcuts') },
     })
     // The key of Send feedback opens the Feedback dialog over the tab.
@@ -82,8 +87,8 @@ describe('the keys of the commands of a page', () => {
     })
   })
 
-  test('the rail and its keys leave out a deleted org', async () => {
-    const { app, navigation } = await openPaletteTab(routes.account())
+  test('the rail and its keys leave out a deleted org, and the Switch to row of an org in the palette shows the key of its place in the rail', async () => {
+    const { app, navigation, view } = await openPaletteTab(routes.account())
     const acme = app.orgs.get().find((item) => item.id === org)
     if (!acme) throw new Error('The app has no Acme.')
     act(() => {
@@ -98,6 +103,27 @@ describe('the keys of the commands of a page', () => {
     expect({ prevented: key.defaultPrevented, at: navigation.href() }).toEqual({
       prevented: true,
       at: routes.org('futex'),
+    })
+    // The palette works on Futex, the org of the page. So its other org is
+    // Firna, the second org of the rail, after the deleted Acme in the list.
+    const tile = byRole('link', 'Firna', byLabel('Orgs', view))
+    pressHintKey(app, 'command-palette', document.body)
+    click(byRole('tab', 'Actions'))
+    const row = byRole('option', 'Switch to Firna')
+    const keys = {
+      tile: tile.getAttribute('aria-keyshortcuts'),
+      row: row.getAttribute('aria-keyshortcuts'),
+    }
+    press(searchField(), 'Escape')
+    await settle()
+    const second = pressHintKey(app, 'org-2', document.body)
+    await settle()
+    expect({
+      keys,
+      second: { prevented: second.defaultPrevented, at: navigation.href() },
+    }).toEqual({
+      keys: { tile: 'Alt+2', row: 'Alt+2' },
+      second: { prevented: true, at: routes.org('firna') },
     })
   })
 

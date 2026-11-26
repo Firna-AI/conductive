@@ -6,8 +6,8 @@ page and the command that captures them.
 
 Each product picture is a still image of a real screen of the mockups.
 One list defines every picture:
-[`marketingPictureList.ts`](../../docs/mockups/src/screens/marketingPictureList.ts),
-beside the marketing mockup. The marketing mockup, the site, and the
+[`marketingPictureList.ts`](../ui/screens/marketingPictureList.ts),
+in `src/ui/screens/`. The marketing mockup, the site, and the
 capture command all read it, so no copy of a picture can go stale. The
 list imports nothing, so the browser, the Worker, and Node can all import
 it. For each picture, it gives:
@@ -24,7 +24,7 @@ it. For each picture, it gives:
   excerpt, or a phone
 - the files: one file for each layout, or one file that both layouts share
 
-[`marketingPictureCaptures.ts`](../../docs/mockups/src/screens/marketingPictureCaptures.ts)
+[`marketingPictureCaptures.ts`](../ui/screens/marketingPictureCaptures.ts)
 beside the list gives the capture page of each picture, its captures, and
 the file name of each capture. It imports only the list, so Node can
 import it too.

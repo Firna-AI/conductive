@@ -1,8 +1,6 @@
-import { resumesAtOpen } from '../../src/app/first-start'
 import type { SecretRequest } from '../../src/shared/secret-requests'
+import { startAcceptedMessage } from '../lifecycle/accepted-message-start'
 import { workspaceRuntime } from '../lifecycle/runtime'
-import { workspaceResponse } from '../lifecycle/workspace-response'
-import { resumeWorkspace } from '../lifecycle/workspace-resume'
 import type { SecretRuntime } from './runtime'
 
 export async function deliverSecretNotice(
@@ -23,8 +21,10 @@ export async function deliverSecretNotice(
     return turn?.senderId ?? null
   })
   if (!senderId) return
-  const lifecycle = workspaceRuntime(runtime.env)
-  const detail = await workspaceResponse(lifecycle, orgId, request.workspaceId)
-  if (resumesAtOpen(detail))
-    await resumeWorkspace(lifecycle, orgId, request.workspaceId, senderId)
+  await startAcceptedMessage(
+    workspaceRuntime(runtime.env),
+    orgId,
+    request.workspaceId,
+    senderId,
+  )
 }

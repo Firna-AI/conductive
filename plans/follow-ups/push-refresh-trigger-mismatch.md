@@ -14,7 +14,7 @@
 - **Background:**
   - `docs/protocol/org-image.md` and `docs/architecture/flows.md` say that a push to the default branch of a chosen repository refreshes the org image.
   - `refreshImagesForPush` in `worker/lifecycle/image-timers.ts` refreshes only for a repository that the org image holds, as `worker/lifecycle/image-builds.md` says.
-  - Since 2026-11-10, an added repository starts its own build, and a refresh fetches only the repositories that the org image holds.
+  - Since 2026-11-10, an added repository starts its own build, and a refresh fetches only the repositories that the org image holds. Since 2026-11-18, that build starts at Done of the Repositories tab, not at each add.
 - **Problem:** In the code, a push to a waiting repository starts no refresh, and a push to a removed repository that the org image still holds starts one. The docs say the opposite for both cases.
 - **Impact if no action:** A review flags the mismatch again. A reader can expect a refresh from a push to a waiting repository.
 - **Root question:** Which pushes refresh the org image?

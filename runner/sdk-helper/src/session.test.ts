@@ -72,10 +72,11 @@ it('orders requests and preserves start options, events, results, and request ID
     ...h.options,
     backgroundNoteIds: new Set(['task:old', 'cron:new']),
   })
-  expect(agent.messages.map((input) => input.message.id)).toEqual([
-    'message-1',
-    'message-2',
-  ])
+  expect(
+    agent.messages.flatMap((input) =>
+      input.type === 'notice' ? [] : [input.message.id],
+    ),
+  ).toEqual(['message-1', 'message-2'])
   expect(agent.choices).toEqual([choice])
   expect(agent.interrupts).toBe(1)
   expect(h.output).toEqual([

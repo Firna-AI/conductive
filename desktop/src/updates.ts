@@ -1,4 +1,4 @@
-import { productName, sourceRepository } from '../../docs/mockups/src/brand.js'
+import { productName, sourceRepository } from '../../src/shared/brand.js'
 
 const UPDATE_FEED = {
   provider: 'github',

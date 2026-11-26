@@ -1,6 +1,7 @@
 import { ACCOUNT_PATHS } from '../../src/shared/account'
 import { API_PATHS } from '../../src/shared/api'
 import {
+  buildsAtAdd,
   orgSettingsPaths,
   REPOSITORY_POSITION_SUFFIX,
 } from '../../src/shared/org-settings'
@@ -17,6 +18,7 @@ import {
 } from './feature-repositories'
 import { featureSectionWrite } from './feature-sections'
 import { featureSettings } from './feature-settings'
+import { featureSkills } from './feature-skills'
 import { shellChildId } from './feature-shell-access'
 import { featureWorkspaceWrite } from './feature-workspaces'
 import { workspaceChildId } from './workspace-path'
@@ -50,6 +52,8 @@ export async function featureShellRoute(
     return createShellOrg(env, context, dependencies)
   if (!context.org) return null
   const orgId = context.org.id
+  if (path === orgSettingsPaths.skills(orgId) && request.method === 'GET')
+    return featureSkills(env, context, dependencies)
   const agentLogins = await orgAgentLoginsRoute(
     request,
     env,
@@ -92,7 +96,10 @@ export async function featureShellRoute(
       orgId,
       userId,
       repositoryId,
-      request.method === 'PUT',
+      {
+        selected: request.method === 'PUT',
+        build: buildsAtAdd(context.body),
+      },
       dependencies,
     )
   const sectionId = shellChildId(path, sectionsPath(orgId))

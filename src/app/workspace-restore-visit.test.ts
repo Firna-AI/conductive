@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { FAKE_TIME } from '../test-support/fixtures/core'
+import { emptyWorkspaceSeed } from '../test-support/fixtures/workspace-seed'
 import {
   archivedAt,
   paths,
@@ -9,6 +10,30 @@ import {
 } from './restore-test-kit'
 
 describe('Archive and Restore during the visits of the open workspace', () => {
+  test('a Restore during a seeded read keeps its floor over the read and a later replay', async () => {
+    const { server, held, workspace, replay, states, resumes } =
+      await stoppedWorkspace(4)
+    server.json('GET', paths.read, {
+      ...reply(archivedAt(FAKE_TIME + 1)),
+      eventNumber: 4,
+      seed: emptyWorkspaceSeed,
+    })
+    held.holdAnswer('GET', paths.read)
+    const opening = workspace.open()
+    await workspace.archive.archive()
+    await workspace.archive.restore()
+    held.release('GET', paths.read)
+    await opening
+    expect(workspace.stream.last.get()).toBe(4)
+    expect(states()).toEqual({ detail: 'stopped', row: 'stopped' })
+    expect(resumes()).toEqual([])
+
+    replay(archivedAt(FAKE_TIME + 1))
+    expect(states()).toEqual({ detail: 'stopped', row: 'stopped' })
+    expect(workspace.stream.last.get()).toBe(5)
+    workspace.close()
+  })
+
   test('a late Archive reply of an earlier visit, which the Restore of another member overtook, does not stop the Resume of the next open', async () => {
     const { server, held, workspace, updated, states, resumes } =
       await stoppedWorkspace()

@@ -10,6 +10,10 @@ import {
 } from '../../src/shared/files'
 import { RUNNER_EVENT_MAX_BYTES } from '../../src/shared/runner'
 import { jsonBytes } from '../../src/shared/event-limits'
+import {
+  SKILL_DESCRIPTION_REPORT_MAX_CHARACTERS,
+  SKILL_REPORT_MAX_SKILLS,
+} from '../../src/shared/skills'
 import { HttpError, isRecord } from '../http'
 import { invalidInput } from './inputs'
 
@@ -55,5 +59,15 @@ export function checkRunnerEventLimits(event: RunnerEvent): void {
       invalidInput()
   } else if (event.type === 'files.changed') {
     if (event.delta.changes.length > FILE_TREE_DELTA_MAX_CHANGES) tooLarge()
+  } else if (event.type === 'skills.updated') {
+    for (const skills of [event.claude, event.codex]) {
+      if (skills.length > SKILL_REPORT_MAX_SKILLS) tooLarge()
+      for (const skill of skills)
+        if (
+          Array.from(skill.description).length >
+          SKILL_DESCRIPTION_REPORT_MAX_CHARACTERS
+        )
+          tooLarge()
+    }
   }
 }

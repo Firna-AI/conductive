@@ -39,7 +39,7 @@ export async function receiveDeviceMessage(
         new HttpError(
           502,
           'settings_result_too_large',
-          'The Mac settings reply is too large.',
+          'The Mac settings reply is too large. Remove saved commands in This Mac, then try again.',
         ),
       )
       return

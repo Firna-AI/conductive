@@ -5,6 +5,8 @@ import { readUser } from '../data/users'
 import { runnerTokenAllowed } from '../data/workspace-token-access'
 import { randomToken } from '../security/crypto'
 import { readConnectionAccess } from '../security/connection-access'
+import { SecretRequestRecords } from '../secrets/request-records'
+import { readSessionCapabilities } from '../secrets/session-capabilities'
 import { resolveDefaultLogin } from './default-login'
 import { loginResolver } from './login-access'
 import {
@@ -14,7 +16,7 @@ import {
 import { readAutomaticTitleWorkspace } from './queries'
 import { titleModelBinding } from './title-model'
 import { readRunnerProtocolVersion } from './runner-version-data'
-import type { ChatDependencies } from './types'
+import type { ChatData, ChatDependencies } from './types'
 import { resolveMessageAttachments } from './attachment-claims'
 import { prepareMessageAttachments } from './attachment-copy'
 import { finishAttachmentCopies } from './attachment-transfer-cleanup'
@@ -32,6 +34,7 @@ import { readRunnerBranches, readRunnerRepository } from './branch-data'
 export function chatDependencies(
   env: AppEnv,
   workspaceId: () => string | null,
+  storage: ChatData,
   overrides: Partial<ChatDependencies> = {},
 ): ChatDependencies {
   return {
@@ -49,6 +52,13 @@ export function chatDependencies(
       )
     },
     readBranches: (id) => readRunnerBranches(env.DB, id),
+    readCapabilities: (id, sessionId) =>
+      readSessionCapabilities(
+        env.DB,
+        new SecretRequestRecords(storage),
+        id,
+        sessionId,
+      ),
     readRepository: (id) => readRunnerRepository(env.DB, id),
     readCommitAuthor: async (userId) => {
       const user = await readUser(env.DB, userId)

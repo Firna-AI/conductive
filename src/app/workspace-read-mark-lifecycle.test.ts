@@ -22,7 +22,10 @@ const workspaceId = FAKE_IDS.workspace
 const readPath = workspacePaths.read(orgId, workspaceId)
 
 function setup(state: WorkspaceState = 'unread') {
-  const server = new FakeApiServer({ workspaceState: state })
+  const server = new FakeApiServer({
+    workspaceState: state,
+    legacyWorkspaceRead: true,
+  })
   const held = new HeldRequests(server)
   const events = new RecordingEvents()
   const delay = new ManualDelay()

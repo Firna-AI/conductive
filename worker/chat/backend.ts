@@ -1,9 +1,6 @@
 import type { UserMessage } from '../../src/shared/generated/UserMessage'
 import type { RunnerFileCommand } from '../../src/shared/generated/RunnerFileCommand'
-import {
-  type WorkspaceEvent,
-  type WorkspaceEventEnvelope,
-} from './workspace-events'
+import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import type {
   ToolSessionAccess,
   ToolSessionWrite,
@@ -29,7 +26,7 @@ import { ChatWorkspaceBinding } from './workspace-binding'
 import type { ChatWorkspaceSummary } from './workspace-summary'
 import { ChatOperation } from './operation'
 import { RunnerChannel } from './runner-channel'
-import type { ChatStore, ChatTransaction } from './store'
+import type { ChatStore, ChatTransaction, QueuedWorkspaceRead } from './store'
 import type { QueueTurn } from './queue-turn'
 import { createWorkspaceChatStore } from './workspace-store'
 import { workspaceOperationRunner } from './workspace-operation'
@@ -99,8 +96,12 @@ export class WorkspaceChat {
     return this.operations.accept(first)
   }
 
-  async stopWorkspace(workspaceId: string): Promise<void> {
-    await this.operations.stop(workspaceId)
+  stopWorkspace(...input: Parameters<WorkspaceOperations['stop']>) {
+    return this.operations.stop(...input)
+  }
+
+  stopTurnsForRestart(workspaceId: string): Promise<void> {
+    return this.operations.stopTurnsForRestart(workspaceId)
   }
 
   commitWorkspaceEvent(
@@ -126,13 +127,14 @@ export class WorkspaceChat {
     this.binding = new ChatWorkspaceBinding(
       overrides.matchesObject ?? (() => true),
     )
-    this.dependencies = chatDependencies(env, () => this.binding.id, overrides)
+    const workspaceId = () => this.binding.id
+    this.dependencies = chatDependencies(env, workspaceId, storage, overrides)
     this.store = createWorkspaceChatStore(
       storage,
       env,
       this.dependencies,
       this.publish,
-      () => this.runner.connections.current,
+      () => this.runner.connections.current?.state ?? null,
     )
     this.authorizedWorkspaceOperation = workspaceOperationRunner(
       this.store,
@@ -164,7 +166,7 @@ export class WorkspaceChat {
       (events) => this.publish(events),
       (id, turnId, kind) => this.turnTokens.forRunningTurn(id, turnId, kind),
       (id) => this.binding.bind(id),
-      native,
+      { native, env, storage },
     )
     this.operations = new WorkspaceOperations({
       env,
@@ -173,7 +175,8 @@ export class WorkspaceChat {
       workspaceId: () => this.binding.id,
       bind: (id) => this.binding.bind(id),
       publish: (events) => this.publish(events),
-      closeRunner: () => this.runner.close(),
+      closeRunner: (id) => this.runner.stop(id),
+      closeRunnerAfterRestartFailure: () => this.closeRunner(),
       flushRunner: () => this.runner.flush(),
     })
   }
@@ -238,10 +241,10 @@ export class WorkspaceChat {
 
   readWorkspace<T>(
     workspaceId: string,
-    work: (view: ChatTransaction) => Promise<T>,
+    work: QueuedWorkspaceRead<T>,
   ): Promise<T> {
     this.binding.bind(workspaceId)
-    return this.store.run(() => this.store.read(workspaceId, work))
+    return this.store.readQueued(workspaceId, work)
   }
 
   /** Keep feature records, events, and publication in one serial task. */
@@ -274,11 +277,13 @@ export class WorkspaceChat {
     after: number,
     peer: BrowserPeer,
     socket?: WebSocket,
+    registered?: () => void,
   ): Promise<() => void> {
-    return this.browsers.subscribe(access, after, peer, socket)
+    return this.browsers.subscribe(access, after, peer, socket, registered)
   }
 
-  private operation(workspaceId: string): ChatOperation {
+  operation(workspaceId: string): ChatOperation {
+    this.binding.bind(workspaceId)
     return new ChatOperation(
       this.store,
       workspaceId,

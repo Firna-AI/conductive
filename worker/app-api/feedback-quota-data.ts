@@ -1,6 +1,5 @@
 import { FEEDBACK_SENDS_PER_HOUR } from '../../src/shared/feedback'
 import type { MailDeliveryOutcome } from '../mail-sender'
-import { warnWorker } from '../warnings'
 
 const HOUR = 3_600_000
 const DAY = 86_400_000
@@ -112,15 +111,11 @@ export async function cleanupFeedbackSends(
   db: D1Database,
   now: number,
 ): Promise<void> {
-  try {
-    await db
-      .prepare(
-        `DELETE FROM feedback_sends
-         WHERE first_attempt_at <= ? AND reserved_at <= ?`,
-      )
-      .bind(now - DAY, now - HOUR)
-      .run()
-  } catch {
-    warnWorker({ kind: 'feedback_send_cleanup_failed' })
-  }
+  await db
+    .prepare(
+      `DELETE FROM feedback_sends
+       WHERE first_attempt_at <= ? AND reserved_at <= ?`,
+    )
+    .bind(now - DAY, now - HOUR)
+    .run()
 }

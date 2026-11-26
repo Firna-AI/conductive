@@ -1,14 +1,15 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import type { AutomationRow } from '../../fixtures/automationRows'
 import { offAfterFailedRuns, repositoryOf } from '../../fixtures/automations'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
-import { StatusText, type StatusTone } from '../common/StatusText'
-import { PersonAvatar } from '../orgs/OrgTile'
-import { StatusGlyph } from '../workspaces/StatusGlyph'
+import type { StatusTone } from '../../../../../src/ui/components/common/StatusText'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
+import { personAvatar } from '../../entries/components/orgs/OrgTile.mockup'
+import { statusGlyph } from '../../entries/components/workspaces/StatusGlyph.mockup'
 import { runStateLabels } from './runCopy'
-import { triggersSummary } from './triggerCopy'
-import styles from './AutomationList.module.css'
+import { triggersSummary } from '../../../../../src/ui/components/automations/triggerCopy'
+import styles from '../../../../../src/ui/components/automations/AutomationList.module.css'
 
 /** The state of the last run and its time, or no run yet. */
 function LastRun(props: { row: AutomationRow }) {
@@ -19,7 +20,10 @@ function LastRun(props: { row: AutomationRow }) {
       className={styles.lastRun}
       title={`Last run: ${runStateLabels[run.state]}, ${run.when}`}
     >
-      <StatusGlyph status={run.state} />
+      <statusGlyph.Component
+        moklyInstance={`last-run-${props.row.automation.key}`}
+        status={run.state}
+      />
       <span className={styles.when}>{run.when}</span>
     </span>
   )
@@ -29,7 +33,11 @@ function Owner(props: { row: AutomationRow }) {
   const { owner } = props.row.automation
   return (
     <span className={styles.owner} title={`By ${owner.name}`}>
-      <PersonAvatar initials={owner.initials} size={18} />
+      <personAvatar.Component
+        initials={owner.initials}
+        moklyInstance={`owner-${props.row.automation.key}`}
+        size={18}
+      />
       <span className={styles.ownerName}>{owner.name}</span>
     </span>
   )
@@ -46,7 +54,11 @@ function State(props: { row: AutomationRow }) {
   if (failed) tone = 'danger'
   return (
     <span className={styles.state}>
-      <StatusText label={automation.active ? 'Active' : 'Off'} tone={tone} />
+      <statusText.Component
+        label={automation.active ? 'Active' : 'Off'}
+        moklyInstance={`state-${automation.key}`}
+        tone={tone}
+      />
       {failed ? <span className={styles.reason}>3 failed runs</span> : null}
     </span>
   )

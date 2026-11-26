@@ -146,6 +146,8 @@ describe('the actions of the bar', () => {
     ) => view('ready-to-merge', { outcome: { kind: 'merge-refused', reason } })
     const clash =
       'Continue stopped: the changed files clash with the latest main. The workspace stays on calummoore/checkout-autocomplete.'
+    // Any other stop shows the Worker's words, not the words of a clash.
+    const other = 'Continue could not finish.'
     const message = (bar: BarView) => [buttons(bar), bar.message]
     expect([
       message(refused('merge-moved-head')),
@@ -165,6 +167,11 @@ describe('the actions of the bar', () => {
       message(
         view('merged', {
           outcome: { kind: 'continue-failed', message: clash },
+        }),
+      ),
+      message(
+        view('merged', {
+          outcome: { kind: 'continue-failed', message: other },
         }),
       ),
       message(view('merged', { outcome: { kind: 'continuing' } })),
@@ -218,6 +225,7 @@ describe('the actions of the bar', () => {
         },
       ],
       [['continue', 'archive'], { text: clash, tone: 'danger', href: null }],
+      [['continue', 'archive'], { text: other, tone: 'danger', href: null }],
       [['continue:busy', 'archive:off'], null],
     ])
   })

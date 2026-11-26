@@ -1,25 +1,28 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { Plus, Repeat } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
-import { EmptyState } from '../components/common/EmptyState'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import { emptyState } from '../entries/components/common/EmptyState.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
+import {
+  appFrame,
+  mobileFrame,
+} from '../entries/components/layout/AppFrame.mockup'
 import { acmeRail } from '../components/layout/OrgRail'
-import { Page } from '../components/layout/Page'
-import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
+import { page as pagePart } from '../entries/components/layout/Page.mockup'
+import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import { AutomationList } from '../components/automations/AutomationList'
-import { SectionText } from '../components/settings/Section'
+import { sectionText } from '../entries/components/settings/Section.mockup'
 import {
   suspendedSections,
   workspaceSections,
 } from '../components/workspaces/sections'
-import { Sidebar } from '../components/workspaces/Sidebar'
+import { sidebar } from '../entries/components/workspaces/Sidebar.mockup'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import {
   automationRows,
   suspendedAutomationRows,
 } from '../fixtures/automationRows'
 import { paths } from '../paths'
+import { defined, plainData } from '../defined'
 
 export const automationsSchema = {
   type: 'object',
@@ -58,9 +61,13 @@ const suspendedLinks: Readonly<Record<string, string>> = {
 
 const newAutomation = (
   <ScreenLink asChild to={paths.newAutomation}>
-    <ActionButton icon={Plus} tone="primary">
+    <actionButton.Component
+      icon="plus"
+      moklyInstance="new-automation"
+      tone="primary"
+    >
       New automation
-    </ActionButton>
+    </actionButton.Component>
   </ScreenLink>
 )
 
@@ -79,25 +86,35 @@ export function AutomationsScreen(props: {
   const empty = props.state.list === 'empty' && !suspended
   const list = suspended ? paths.suspendedOrg : paths.shell
   const page = (
-    <Page
-      actions={empty || suspended ? undefined : newAutomation}
-      back={mobile ? { label: 'Workspaces', to: list } : undefined}
+    <pagePart.Component
       fill={empty}
+      {...defined({
+        actions: empty || suspended ? undefined : newAutomation,
+        back: mobile ? { label: 'Workspaces', to: list } : undefined,
+      })}
       subtitle={org.name}
       title="Automations"
       viewport={viewport}
     >
       {empty ? (
-        <EmptyState
+        <emptyState.Component
           action={newAutomation}
           body={automationWords}
-          icon={Repeat}
+          icon="repeat"
+          moklyInstance="no-automations"
           title={`Create the first automation in ${org.name}`}
         />
       ) : (
         <>
-          {suspended ? <SuspendedOrgNotice org={orgs[suspendedOrg]} /> : null}
-          <SectionText muted>{automationWords}</SectionText>
+          {suspended ? (
+            <suspendedOrgNotice.Component
+              moklyInstance="suspended-org-notice"
+              org={{ name: orgs[suspendedOrg].name }}
+            />
+          ) : null}
+          <sectionText.Component moklyInstance="automations-text" muted>
+            {automationWords}
+          </sectionText.Component>
           <AutomationList
             links={suspended ? suspendedLinks : automationLinks}
             rows={suspended ? suspendedAutomationRows : automationRows}
@@ -105,23 +122,26 @@ export function AutomationsScreen(props: {
           />
         </>
       )}
-    </Page>
+    </pagePart.Component>
   )
-  if (mobile) return <MobileFrame>{page}</MobileFrame>
+  if (mobile) return <mobileFrame.Component>{page}</mobileFrame.Component>
   return (
-    <AppFrame
-      rail={{ ...acmeRail, suspended: suspended ? suspendedOrg : undefined }}
+    <appFrame.Component
+      rail={{ ...acmeRail, ...(suspended ? { suspended: suspendedOrg } : {}) }}
       sidebar={
-        <Sidebar
+        <sidebar.Component
           current="automations"
+          moklyInstance="sidebar"
           org={org}
-          sections={suspended ? suspendedSections() : workspaceSections()}
+          sections={plainData(
+            suspended ? suspendedSections() : workspaceSections(),
+          )}
           suspended={suspended}
           viewer={{ person: 'cal', role: 'admin' }}
         />
       }
     >
       {page}
-    </AppFrame>
+    </appFrame.Component>
   )
 }

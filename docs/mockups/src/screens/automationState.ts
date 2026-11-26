@@ -26,6 +26,7 @@ export const automationStateSchema = {
     'dialog',
     'login',
     'modelMenu',
+    'capabilities',
   ],
   properties: {
     /** A new automation, a draft of one, or a saved automation of Acme. */
@@ -80,6 +81,12 @@ export const automationStateSchema = {
      * name (decision 3 A).
      */
     modelMenu: { enum: ['closed', 'open'] },
+    /**
+     * The Capabilities control of the prompt, which only the owner opens:
+     * closed, or open, above its icon on a computer and as a sheet on a
+     * phone (automation capabilities decision 1 A).
+     */
+    capabilities: { enum: ['closed', 'open'] },
   },
 } as const
 
@@ -97,6 +104,7 @@ export const ownerAutomation: AutomationState = {
   dialog: 'none',
   login: 'own',
   modelMenu: 'closed',
+  capabilities: 'closed',
 }
 
 /**

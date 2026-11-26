@@ -13,6 +13,7 @@ import { localSourceFixture } from './local-source-test-support'
 import { createGitHubImageSourceMaterializer } from './materialize'
 import { INSTALLATION_TOKEN } from './native-github-test-support'
 import { readSourceJob } from './source-data'
+import { openBuildStepStatement } from '../job-steps'
 
 const keys = generateKeyPairSync('rsa', { modulusLength: 2048 })
 const privateKey = keys.privateKey
@@ -39,7 +40,11 @@ it('redacts denied installation access before starting native Git', async () => 
   const fixture = await localSourceFixture(harness, privateKey)
   try {
     fixture.access.tokenFailure = true
-    await expect(fixture.finish()).rejects.toMatchObject(FAILURE)
+    await expect(fixture.finish()).rejects.toMatchObject({
+      ...FAILURE,
+      sourceStep: 'metadata_token',
+      githubStatus: 403,
+    })
     expect(
       fixture.access.requests.map((request) => [
         request.method,
@@ -86,7 +91,10 @@ it('refuses wrong orgs, stale captured metadata, and a different build before an
         repositories: [{ ...fixture.repository, ...change }],
       })),
     ])
-      await expect(materialize(input)).rejects.toMatchObject(FAILURE)
+      await expect(materialize(input)).rejects.toMatchObject({
+        ...FAILURE,
+        sourceStep: 'builder',
+      })
     await expect(
       createGitHubImageSourceMaterializer(
         { ...fixture.env, GITHUB_APP_PRIVATE_KEY: undefined },
@@ -97,6 +105,7 @@ it('refuses wrong orgs, stale captured metadata, and a different build before an
       code: 'image_sources_unavailable',
       message:
         'The repositories could not load. Ask the app operator to set the GitHub App private key.',
+      sourceStep: 'app_key',
     })
     expect(fixture.access.requests).toEqual([])
     expect(fixture.provider.commands).toEqual([])
@@ -110,7 +119,11 @@ it('revokes a failed native clone and keeps raw credential-bearing failures out 
   try {
     fixture.github.readFailure = 'denied'
     fixture.provider.reportedError = INSTALLATION_TOKEN
-    await expect(fixture.finish()).rejects.toMatchObject(FAILURE)
+    await expect(fixture.finish()).rejects.toMatchObject({
+      ...FAILURE,
+      sourceStep: 'copy',
+      githubStatus: null,
+    })
     expect(fixture.access.requests.map((request) => request.method)).toEqual([
       'POST',
       'GET',
@@ -134,7 +147,7 @@ it('revokes a failed native clone and keeps raw credential-bearing failures out 
       ).results,
     ).toEqual([
       { text: 'Updating the repositories.\n' },
-      { text: 'Repository copy complete: example/source-repository\n' },
+      { text: 'Repository copy failed: example/source-repository\n' },
     ])
     expect(fixture.provider.commands.join('\n')).not.toContain(
       INSTALLATION_TOKEN,
@@ -208,7 +221,11 @@ it('fails closed after an uncertain native start and revokes the retained token 
       (await readSourceJob(fixture.env.DB, fixture.input.buildId))?.phase,
     ).toBe('abort')
     expect(fixture.access.activeTokens).toEqual([`${INSTALLATION_TOKEN}_2`])
-    await expect(fixture.prepare()).rejects.toMatchObject(FAILURE)
+    await expect(fixture.prepare()).rejects.toMatchObject({
+      ...FAILURE,
+      sourceStep: 'interrupted',
+      githubStatus: null,
+    })
     expect(fixture.access.activeTokens).toEqual([])
     expect(fixture.provider.commands).toHaveLength(2)
     expect(fixture.access.events).not.toContain('finalize')
@@ -249,6 +266,32 @@ it('refuses a nonempty remote when its captured default branch is missing', asyn
     await expect(fixture.finish()).rejects.toMatchObject(FAILURE)
     expect(fixture.access.activeTokens).toEqual([])
     expect(fixture.provider.commands).toHaveLength(3)
+  } finally {
+    await fixture.dispose()
+  }
+})
+
+it('ends the boot step of a build when its first copy starts', async () => {
+  const fixture = await localSourceFixture(harness, privateKey)
+  try {
+    const db = fixture.env.DB
+    const id = fixture.input.buildId
+    await openBuildStepStatement(db, id, 'computer:boot', TEST_TIME - 1).run()
+    await fixture.finish()
+    const heading = await db
+      .prepare(
+        "SELECT occurred_at AS at FROM image_build_logs WHERE build_id = ? AND text = 'Updating the repositories.\n'",
+      )
+      .bind(id)
+      .first<{ at: number }>()
+    expect(
+      await db
+        .prepare(
+          "SELECT ended_at AS endedAt, outcome FROM job_steps WHERE job_id = ? AND step = 'computer:boot'",
+        )
+        .bind(id)
+        .first(),
+    ).toEqual({ endedAt: heading?.at, outcome: 'done' })
   } finally {
     await fixture.dispose()
   }

@@ -1,21 +1,42 @@
-import { ChevronRight, CircleAlert } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import type { Build } from '../../fixtures/computer'
-import { StatusText } from '../common/StatusText'
-import styles from './BuildSection.module.css'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
+import { instanceKey } from '../../instanceKey'
+import styles from '../../../../../src/ui/components/settings/BuildSection.module.css'
 
-/** The result of a build that ended: its length, and whether it failed. */
-export function BuildResult(props: { build: Build }) {
+/**
+ * A build as the data of its result: its time, its result, and its length,
+ * without the saved message of a failed build. A Mokly part takes only the
+ * fields of its schema.
+ */
+export function buildOf(build: Build): Build {
+  return { when: build.when, result: build.result, duration: build.duration }
+}
+
+/**
+ * The result of a build that ended: its length, and whether it failed.
+ * `id` names the result for Mokly, such as the time of its build.
+ */
+export function BuildResult(props: { build: Build; id: string }) {
   const { build } = props
+  const name = `result-${props.id}`
   if (build.result === 'failed') {
     return (
-      <StatusText
-        icon={CircleAlert}
+      <statusText.Component
+        icon="circle-alert"
         label={`Failed after ${build.duration}`}
+        moklyInstance={name}
         tone="danger"
       />
     )
   }
-  return <StatusText label={`Succeeded in ${build.duration}`} tone="success" />
+  return (
+    <statusText.Component
+      label={`Succeeded in ${build.duration}`}
+      moklyInstance={name}
+      tone="success"
+    />
+  )
 }
 
 /**
@@ -37,7 +58,13 @@ export function BuildHistory(props: {
         {props.builds.map((build, index) => (
           <li className={styles.build} key={index}>
             <span className={styles.when}>{build.when}</span>
-            <BuildResult build={build} />
+            {/* A build has no key: its time, result, and length name it. */}
+            <BuildResult
+              build={build}
+              id={instanceKey(
+                `${build.when} ${build.result} ${build.duration}`,
+              )}
+            />
           </li>
         ))}
       </ul>

@@ -1,5 +1,5 @@
 import { defineScreen } from '@mokly/mokly'
-import { productDomain } from '../../../../brand'
+import { productDomain } from '../../../../../../../src/shared/brand'
 import {
   DocsScreen,
   docsGuide,

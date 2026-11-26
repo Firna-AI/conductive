@@ -1,10 +1,11 @@
+import type { ArchivedComputerState } from '../../shared/generated/ArchivedComputerState'
 import type { Workspace } from '../../shared/generated/Workspace'
 import {
   replacesComposer,
   type ArchiveRestore,
   type SandboxNoticeState,
   type SandboxPanelState,
-} from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
+} from '../../ui/components/workspace/sandboxNoticeState'
 import type { ApiError } from '../../app/api/client'
 
 import type { SandboxState, WorkspaceContext } from './features'
@@ -106,8 +107,16 @@ export function sandboxView(input: {
   /** What an archived workspace offers, as `archivedRestore` says. */
   restore?: ArchiveRestore
   /**
+   * What the app knows of the cloud computer of an archived workspace,
+   * apart from Restore, as `archiveStage` reads it. A record of an older
+   * Worker has none. Without it, and with `unknown`, the notice keeps the
+   * words that it gave from Restore alone, until
+   * `plans/follow-ups/archived-computer-unknown-outcome.md` settles them.
+   */
+  computer?: ArchivedComputerState
+  /**
    * The archived workspace left the list: the clock of the page reached
-   * the end of its Restore, as `listEndOf` says, also without a kept cloud
+   * the end of its 14 days, as `archiveEnd` says, also without a kept cloud
    * computer.
    */
   removed?: boolean
@@ -136,6 +145,7 @@ export function sandboxView(input: {
               problem: 'archived',
               restore: input.restore,
               removed: input.removed,
+              computer: input.computer,
             }
           : { problem: sandbox })
   // The cases of `resumesAtOpen`: a stopped sandbox, and a later start that

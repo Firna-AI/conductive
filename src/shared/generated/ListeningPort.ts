@@ -16,4 +16,8 @@ export type ListeningPort = {
    * folder.
    */
   folder: string | null
+  /**
+   * Owning service identity, absent for old runners and unowned listeners.
+   */
+  serviceId?: string
 }

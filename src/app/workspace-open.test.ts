@@ -1,8 +1,9 @@
 import type { WorkspaceState } from '../shared/generated/WorkspaceState'
 import { expect, test } from 'vitest'
-import { workspacePaths } from '../shared/workspaces'
+import { workspacePath, workspacePaths } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
+import { emptyWorkspaceSeed } from '../test-support/fixtures/workspace-seed'
 import { workspaceFixtures } from '../test-support/fixtures/workspaces'
 import { ApiError } from './api/client'
 import { OrgModel } from './org-model'
@@ -17,6 +18,7 @@ import { WorkspaceModel } from './workspace-model'
 
 const orgId = FAKE_IDS.org
 const workspaceId = FAKE_IDS.workspace
+const detailPath = workspacePath(orgId, workspaceId)
 const resumePath = workspacePaths.resume(orgId, workspaceId)
 const refused = new ApiError(403, 'user_suspended', 'The owner is suspended.')
 const nextOwner = {
@@ -27,7 +29,10 @@ const nextOwner = {
 }
 
 function setup(state: WorkspaceState, initialError: ApiError) {
-  const server = new FakeApiServer({ workspaceState: state })
+  const server = new FakeApiServer({
+    workspaceState: state,
+    legacyWorkspaceRead: true,
+  })
   const held = new HeldRequests(server)
   const events = new RecordingEvents()
   let problem: ApiError | null = initialError
@@ -100,6 +105,7 @@ test('opens detail and history before a refused start, and scopes the refusal to
     value: { workspace: { name: 'Title from history', state: 'stopped' } },
   })
   expect(fixture.beforeStart()).toEqual({ state: 'ready', streams: 1 })
+  expect(events.opened.map((target) => target.afterEventNumber)).toEqual([0])
   expect(history).toEqual(['workspace.title'])
   held.release('POST', resumePath)
   await opening
@@ -127,6 +133,45 @@ test('opens detail and history before a refused start, and scopes the refusal to
     'workspace.updated',
   ])
   workspace.close()
+})
+
+test('closing during the read prevents its seed and socket and allows the next open', async () => {
+  const { held, events, workspace, server } = setup('ready', refused)
+  const seeded: number[] = []
+  const stop = workspace.stream.subscribe(
+    () => undefined,
+    undefined,
+    (seed) => seeded.push(seed.ports?.eventNumber ?? 0),
+  )
+  const read = (eventNumber: number) => ({
+    ...workspaceFixtures().detail,
+    eventNumber,
+    seed: {
+      ...emptyWorkspaceSeed,
+      ports: {
+        eventNumber,
+        occurredAt: FAKE_TIME,
+        event: { type: 'ports.updated', ports: [] },
+      },
+    },
+  })
+  server.json('GET', detailPath, read(4))
+  held.holdAnswer('GET', detailPath)
+  const opening = workspace.open()
+  workspace.close()
+  held.release('GET', detailPath)
+  await opening
+  expect(seeded).toEqual([])
+  expect(events.opened).toEqual([])
+  expect(workspace.stream.last.get()).toBe(0)
+  expect(workspace.detail.get()).toEqual({ state: 'loading' })
+
+  server.json('GET', detailPath, read(7))
+  await workspace.open()
+  expect(seeded).toEqual([7])
+  expect(events.opened.map((target) => target.afterEventNumber)).toEqual([7])
+  workspace.close()
+  stop()
 })
 
 test('a confirmed owner reply clears the refusal and keeps the current detail fields', async () => {

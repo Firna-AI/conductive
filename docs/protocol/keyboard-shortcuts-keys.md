@@ -1,10 +1,12 @@
 # Keyboard shortcuts: the keys
 
 This doc holds the requirements and the decisions in force for the keys of
-the keyboard shortcuts: the default keys, the keys of Windows and Linux,
-the keys that each browser keeps, and the keys that the app leaves to each
-browser. It belongs to [Keyboard shortcuts](keyboard-shortcuts.md), which
-gives the rules and the terms. A decision number names a dated record, as
+the keyboard shortcuts: the default keys, the second keys, the keys of
+Windows and Linux, and the keys chosen by hand. It belongs to
+[Keyboard shortcuts](keyboard-shortcuts.md), which gives the rules and the
+terms. [The keys of the browsers](keyboard-shortcuts-browser-keys.md)
+lists the keys that each browser keeps, and the keys that the app leaves
+to each browser. A decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A fast mode
 decision number names a decision of the change that adds
 [fast mode](fast-mode.md), as that doc says. A terminal tabs decision
@@ -32,6 +34,8 @@ Terminal tool, as [Terminal](terminal.md) says.
   - **Workspace label:** where the header of a workspace shows the label
     of its number, which is the Copy link button.
   - **Session tab:** where the shown tab of a workspace is a session.
+  - **Selection:** where a selection in the chat shows Explain, as
+    [The selection and Explain](explain.md#the-selection-and-explain) says.
   - **Mac app:** only the Mac app has the command.
 - A dash means that the command has no default key.
 - Switch to org 1 to 9 and Open workspace 1 to 9 stand for nine commands
@@ -72,6 +76,8 @@ Terminal tool, as [Terminal](terminal.md) says.
 | Workspace | Commit and push | ⇧⌘Y | Ctrl+Shift+Y | Pull request bar |
 | Workspace | Mark PR ready for review | – | – | Pull request bar |
 | Workspace | Merge PR | ⇧⌘M | Ctrl+Shift+M | Pull request bar |
+| Workspace | Add to merge queue | – | – | Palette |
+| Workspace | Remove from queue | – | – | Palette |
 | Workspace | Continue after merge | – | – | Pull request bar |
 | Workspace | Open PR on GitHub | ⇧⌘G | Ctrl+Shift+G | Pull request link |
 | Workspace | Go to All files | – | – | Palette |
@@ -90,11 +96,23 @@ Terminal tool, as [Terminal](terminal.md) says.
 | Chat | Stop the agent | ⌃⌘⌫ | Alt+Shift+S | Workspace |
 | Chat | Copy concise transcript | ⌥⌘C | Alt+Shift+C | Session tab |
 | Chat | Copy full transcript | – | – | Session tab |
+| Chat | Explain the selection | ⌥⌘E | Alt+Shift+E | Selection |
 
 - Fast mode has ⇧⌘E, the key of the Fast row of Conductor, and its twin
   Ctrl+Shift+E (fast mode decision 258). Reason: members who move from
   Conductor press that key. No key, a row of the palette, and a key that
   opens the model menu were rejected for that reason.
+- Explain the selection has ⌥⌘E and its twin Alt+Shift+E. Conductor has no
+  such command, but the user chose a keyboard start for Explain on
+  17 November 2026, as [The keyboard start](explain.md#the-keyboard-start)
+  says. Reason: E names Explain, and Fast mode has ⇧⌘E. Chrome, Edge, and
+  the Mac app have no action on these keys.
+- ⌘E and Ctrl+E were rejected. On a Mac, Chrome and Safari use the
+  selection for Find on ⌘E. On Windows and Linux, Chrome searches from its
+  address bar on Ctrl+E.
+- Risk: Firefox opens its Network Monitor on ⌥⌘E, and Safari empties its
+  caches on ⌥⌘E while its Develop menu shows. Where Explain shows, the app
+  takes the key.
 - New terminal has no default key. Reason: Conductor opens a terminal tab
   on ⌘T while its terminal has the focus, but ⌘T runs New session in this
   app. On Windows and Linux, no key reaches the app while the terminal has
@@ -218,46 +236,10 @@ On Windows and Linux:
 
 ## Keys that a tab keeps
 
-The table lists the default keys that each browser keeps in a normal tab.
-It does not list the keys that the app leaves to the browser anyway, as
-[Keys that the app leaves to the browser](#keys-that-the-app-leaves-to-the-browser)
-says. Every other default key reaches the page there.
-
-| Browser | Mac | Windows and Linux |
-| --- | --- | --- |
-| Chrome and Edge | ⌘N, ⌘T, ⇧⌘T, ⌘W, ⌃Tab, ⌃⇧Tab, ⇧⌘[, ⇧⌘], ⌥⌘←, ⌥⌘→ | Ctrl+N, Ctrl+T, Ctrl+Shift+T, Ctrl+W, Ctrl+Tab, Ctrl+Shift+Tab |
-| Firefox | ⌘N, ⌘T, ⌘W, ⌃Tab, ⌃⇧Tab, ⇧⌘[, ⇧⌘], ⌥⌘←, ⌥⌘→, ⌥⌘↑, ⌥⌘↓, ⇧⌘P | Ctrl+N, Ctrl+T, Ctrl+W, Ctrl+Tab, Ctrl+Shift+Tab, Ctrl+Shift+P |
-| Safari | ⌘N, ⌘T, ⇧⌘T, ⌘W, ⌃Tab, ⌃⇧Tab, ⇧⌘[, ⇧⌘] | – |
-
-- Chrome and Edge act on ⇧⌘T and Ctrl+Shift+T only while a closed tab of
-  the browser can open again. These keys count as kept, because the page
-  cannot tell when.
-- Firefox lets the page take ⇧⌘T and Ctrl+Shift+T.
+[Keys that a tab keeps](keyboard-shortcuts-browser-keys.md#keys-that-a-tab-keeps)
+lists the default keys that each browser keeps in a normal tab.
 
 ## Keys that the app leaves to the browser
 
-The table lists the keys that each browser uses on each system to select a
-tab or to open its address bar. In a normal tab, the app leaves them to the
-browser, as [Hosts](keyboard-shortcuts-hosts.md#hosts) says.
-
-| Browser | Mac | Windows | Linux |
-| --- | --- | --- | --- |
-| Chrome and Edge | ⌘1 to ⌘9, ⌘L | Ctrl+1 to Ctrl+9, Ctrl+L, Alt+D, F6 | Ctrl+1 to Ctrl+9, Alt+1 to Alt+9, Ctrl+L, Alt+D, F6 |
-| Firefox | ⌘1 to ⌘9, ⌘L | Ctrl+1 to Ctrl+9, Ctrl+L, Alt+D | Alt+1 to Alt+9, Ctrl+L, Alt+D |
-| Safari | ⌘1 to ⌘9, ⌘L | – | – |
-
-- In Chrome, Edge, and Firefox, the app also leaves to the browser the
-  keypad form of each digit key of the table. Examples are ⌘Num 1 on a Mac
-  and Alt+Num 1 on Linux. These browsers select a tab on a keypad digit
-  too. A keypad digit is a key of its own, as
-  [How a key matches](keyboard-shortcuts-matching.md#how-a-key-matches)
-  says.
-- In Safari, these keys are also kept keys. The Safari row lists only the
-  top-row digits.
-- [Windows and Linux](#windows-and-linux) says how Android and an unknown
-  system count.
-- An unknown browser leaves to the browser the keys of each supported
-  browser on its system.
-- Reason: a key that the app takes by mistake takes a feature of the
-  browser from the person. An unknown browser counts the kept keys in the
-  same way, as [Hosts](keyboard-shortcuts-hosts.md#hosts) says.
+[Keys that the app leaves to the browser](keyboard-shortcuts-browser-keys.md#keys-that-the-app-leaves-to-the-browser)
+lists the keys that the app leaves to each browser in a normal tab.

@@ -80,8 +80,8 @@ says.
   states what its sandbox can read.
 - A run that waits for the approval of the owner was rejected, because it
   needs a new run state.
-- [Risks that stay open](automations.md#risks-that-stay-open) states what this
-  rule does not stop.
+- [Risks that stay open](automation-risks.md#risks-that-stay-open) states
+  what this rule does not stop.
 
 ## Loops
 

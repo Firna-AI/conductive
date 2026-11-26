@@ -10,8 +10,10 @@ files of the image code.
 
 ## Build sandboxes
 
-- A build sandbox starts from the current org image. A first build uses a
+- An ordinary build sandbox starts from the current org image. A first build uses a
   matching ready software image, or a new default sandbox without one.
+  A hidden switch build uses the same first-build path on its target
+  account. It never starts from an older image of the org there.
   Its env holds only the folder variables.
 - Risk: a program with root access that an earlier install left in that
   image can read the clone token of a later copy. That token can only read
@@ -42,7 +44,9 @@ Suspended orgs get no disk retention restart, including after an owner change.
 
 `startImageBuild` in [`image-builds.ts`](image-builds.ts) records a build or
 refresh for an org admin and returns its ID. A request during a job gets
-its ID and schedules it again. Each alarm advances the job one step with
+its ID and schedules it again. During a hidden switch build, it records
+a waiting member build instead. [Provider switches](provider-switches.md)
+gives the queue, execution deadline, and input capture. Each alarm advances the job one step with
 `advanceBuildStep` in [`image-build-steps.ts`](image-build-steps.ts).
 Software and install commands run detached and stream their output.
 The software release includes the workspace CLI and MCP server.
@@ -59,8 +63,12 @@ an existing running build keeps that build running.
 
 `changeShellRepository` in
 [`feature-repositories.ts`](../app-api/feature-repositories.ts) starts a
-build after a save adds a repository. It uses the admin who added it,
-also after a failed build. A repeated save and a removal start no build.
+build after a save adds a repository, unless the save says
+`build: false`. The app sends that body, and Done of the Repositories tab
+then starts one build through the builds route. An add without the
+field, from an older copy of the app, builds at once. The build uses the
+admin who added the repository, also after a failed build. A repeated
+save and a removal start no build.
 A failed start keeps the saved choice and writes one fixed warning.
 
 `publishBuild` in [`build-admission-data.ts`](build-admission-data.ts)
@@ -75,8 +83,22 @@ The added build uses the first admin who is not suspended. A failed start
 keeps the published image and writes one fixed warning. A failed build
 starts no added build. A refresh after a failed build gets none either.
 
+A job that fails while the image coordinator advances it writes the
+`image_build_failed` warning, in `handleImageBuildFailure` of
+[`image-build-failure.ts`](image-build-failure.ts). Other paths that fail a
+build, such as a job that could not be scheduled, write none. When the job fails
+in the `sources` phase, the warning adds `sourceStep`, the fixed step of the
+repository load that failed, and `githubStatus`, the HTTP status of a GitHub
+reply that was not OK, or null. [`image-sources/failure.ts`](image-sources/failure.ts)
+gives the steps. A step that the code does not know gives `unknown`. The
+warning holds no token, no repository name, and no response text.
+
 `readBuildHistory` in [`build-data.ts`](build-data.ts) returns
-`BuildsResponse.changes` with the build history. `readBuildChanges` in
+`BuildsResponse.changes` with the build history. It excludes operator
+switch builds. A hidden published image points the member reply at the
+newest visible successful build. A normal published pointer stays unchanged.
+`readBuildSnapshot` excludes hidden rows from both its header and its log
+query, so direct reads and streams expose neither a hidden build nor its log. `readBuildChanges` in
 [`build-changes-data.ts`](build-changes-data.ts) compares the raw saved
 install script with the newest successful build's script in the requested
 provider account. Before that account's first image, it uses the newest
@@ -149,6 +171,31 @@ step saved.
   `withImageSourceCleanup(env, fetch, hooks)` from `image-sources/members.ts`,
   as the [source loader](repository-layout.md#the-source-loader) says.
 
+## Step records
+
+Each build and refresh writes the job step records of
+[Step timing](../../docs/protocol/step-timing.md#job-step-records).
+`buildPhaseStepStatements` in [`build-step-data.ts`](build-step-data.ts)
+maps each phase to its steps. Each statement commits in the D1 batch of the
+phase change that it measures: `beginBuildAllocation` and
+`completeBuildPhase` in [`build-phase-data.ts`](build-phase-data.ts),
+`failBuild` in [`build-data.ts`](build-data.ts), and `publishBuild` in
+[`build-admission-data.ts`](build-admission-data.ts).
+
+- `phase:allocating` and `computer:request` begin before the request for
+  the build sandbox.
+- `phase:sources` and `computer:boot` begin when the request returns. The
+  first copy heading, `Updating the repositories.`, ends `computer:boot` in
+  its own batch, because a copy command runs only on a ready sandbox. A
+  build without that heading ends it with the next phase.
+- `phase:software`, `phase:install`, `phase:snapshot`, and
+  `phase:publish` begin with their phases. Each new phase ends the open
+  steps.
+- The publish ends the last step with `done`, at the time of
+  `completed_at`. `failBuild` ends the open step with `failed`. Cleanup
+  gets no step.
+- A repeated phase change opens no second row and moves no begin.
+
 ## The software step
 
 `buildSoftwareCommand` in [`build-software.ts`](build-software.ts) composes
@@ -195,14 +242,20 @@ A daily refresh sets the saved daily deadline 24 hours after its start.
 [`org-image-refresh-data.ts`](org-image-refresh-data.ts) is true when the
 published image holds a repository name or default branch that differs from
 the saved one, and the newest build succeeded. `readImageSchedule` then makes
-the next alarm due at once, and `runImageAlarm` and `refreshImagesForPush`
-start a build in place of a refresh. So a build follows each job or failed
-start that leaves old values in the image. The check reads no GitHub data,
+the next alarm due at once, and `admitImageBuild` starts a build in place of
+each refresh, also one that an admin starts. So a build follows each job or
+failed start that leaves old values in the image.
+In every other case, a refresh captures the repositories of the published
+image with their saved name and default branch, read by repository ID in
+`repositoriesWithSavedValues` of [`settings-data.ts`](settings-data.ts). It
+keeps the folders of the image. So a refresh after a rename or a move works
+also while the newest build failed, and the next build moves the folder. A
+switch build captures its repositories the same way. The check reads no GitHub data,
 so it cannot find a change whose webhook never saved it.
 `wakeImagesForRepositoryChange` in
 [`repository-change-builds.ts`](repository-change-builds.ts) wakes the
 coordinator of each such org after the GitHub webhook receiver saves a
-repository change. Its discovery reads the image of each org's fixed account.
+repository change. Its discovery reads the image of each org's current account.
 It calls `scheduleIdleImage` in [`image-schedule.ts`](image-schedule.ts),
 which reads that account and schedules from the saved job and refresh deadlines.
 It reads the software release only when an org needs a wake.
@@ -212,8 +265,9 @@ states the rules.
 Both refreshes start with the first admin who is not suspended, from
 `firstActiveOrgAdmin` in [`settings-data.ts`](settings-data.ts). An org
 without such an admin gets neither refresh. Its push uses no part of the
-30-minute limit, a recorded push refresh stays pending, and the image
-coordinator sets no new alarm.
+30-minute limit, and a recorded push refresh stays pending. Without a
+waiting switch, the image coordinator sets no new alarm. A waiting switch
+keeps its eligibility alarm.
 [Operator actions](../../docs/protocol/operator-actions.md#starts-stops-and-builds)
 states the rule.
 
@@ -227,6 +281,8 @@ states the rule.
   `BuildsResponse.changes`. It reads the script reference and the published
   image's repositories for one provider account. The repository read uses
   the same source as creation admission.
+- [`image-build-start.ts`](image-build-start.ts): new build input capture and guarded admission.
+- [Provider switches](provider-switches.md#key-code): switch admission, waits, cancellation, and publication.
 - [`image-builds.ts`](image-builds.ts): `startImageBuild` and
   `advanceImageBuild`, which removes the command journals before a snapshot.
 - [`first-image-build.ts`](first-image-build.ts): `startAddedImageBuild`,

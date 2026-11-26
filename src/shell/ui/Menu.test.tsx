@@ -13,13 +13,17 @@ const entries: readonly MenuEntry[] = [
   { kind: 'item', label: 'Delete section', onSelect: () => undefined },
 ]
 
-/** Opens the menu of a section, and reports the focus and the page behind it. */
-async function openMenu(viewport: Viewport) {
+/**
+ * Opens the menu of a section, and reports the focus and the page behind it.
+ * With `besideOnPhone`, the menu opens as a model picker opens its menu.
+ */
+async function openMenu(viewport: Viewport, besideOnPhone = false) {
   const app = await startedApp(new FakeApiServer())
   const view = mountScreen(
     app,
     <OverlayHost>
       <MenuButton
+        besideOnPhone={besideOnPhone}
         entries={entries}
         label="Checkout menu"
         trigger={(state) => (
@@ -53,19 +57,22 @@ async function openMenu(viewport: Viewport) {
 }
 
 describe('menus', () => {
-  test('a desktop menu keeps the page behind it active, and a phone menu holds it until the focus is back on the trigger', async () => {
+  test('a desktop menu keeps the page behind it active, a phone menu is a sheet that holds it until the focus is back on the trigger, and the menu of a model picker opens beside its trigger on a phone too', async () => {
+    const beside = {
+      opened: { focus: 'Rename', behind: false },
+      closed: { behind: false, trigger: true },
+    }
     expect({
       desktop: await openMenu('desktop'),
       phone: await openMenu('phone'),
+      phoneBeside: await openMenu('phone', true),
     }).toEqual({
-      desktop: {
-        opened: { focus: 'Rename', behind: false },
-        closed: { behind: false, trigger: true },
-      },
+      desktop: beside,
       phone: {
         opened: { focus: 'Rename', behind: true },
         closed: { behind: false, trigger: true },
       },
+      phoneBeside: beside,
     })
   })
 })

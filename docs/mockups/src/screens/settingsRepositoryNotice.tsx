@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react'
-import { Hammer, RotateCw } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
-import type { BuildState } from '../components/settings/BuildSection'
-import type { RepositoryWait } from '../components/settings/repositoryChangeCopy'
-import { RepositoryNotice } from '../components/settings/RepositoryNotice'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import { buildRuns, type BuildState } from '../components/settings/BuildSection'
+import type { RepositoryWait } from '../../../../src/ui/components/settings/repositoryChangeCopy'
+import { repositoryNotice } from '../entries/components/settings/RepositoryNotice.mockup'
 import { changedNames } from '../fixtures/repositories'
-import type { OrgSettingsState } from './OrgSettingsScreen'
+import type { OrgSettingsState } from './orgSettingsState'
 import type { SettingsOrg } from './settingsOrgs'
+import { defined } from '../defined'
 
 /**
  * How the repository changes wait, from the builds of the org. The first
@@ -17,8 +17,10 @@ function waitOf(build: BuildState, added: boolean): RepositoryWait {
   switch (build) {
     case 'failed':
     case 'time-limit':
+    case 'ended':
       return 'failed'
     case 'building':
+    case 'waiting':
       return added ? 'building' : 'waiting'
     case 'ready':
     case 'none':
@@ -35,19 +37,24 @@ function adminAction(wait: RepositoryWait, build: BuildState): ReactNode {
   switch (wait) {
     case 'failed':
       return (
-        <ActionButton icon={RotateCw} tone="primary">
+        <actionButton.Component
+          icon="rotate-cw"
+          moklyInstance="repository-retry-build"
+          tone="primary"
+        >
           Try again
-        </ActionButton>
+        </actionButton.Component>
       )
     case 'waiting':
       return (
-        <ActionButton
-          disabled={build === 'building'}
-          icon={Hammer}
+        <actionButton.Component
+          disabled={buildRuns(build)}
+          icon="hammer"
+          moklyInstance="repository-build-computer"
           tone="primary"
         >
           Build computer
-        </ActionButton>
+        </actionButton.Component>
       )
     case 'building':
       return undefined
@@ -75,12 +82,15 @@ export function settingsRepositoryNotice(
   const editable =
     admin && state.org === 'active' && state.tab === 'repositories'
   return (
-    <RepositoryNotice
-      action={editable ? adminAction(wait, state.build) : undefined}
+    <repositoryNotice.Component
       added={added}
       admin={admin}
+      moklyInstance="repository-notice"
       removed={removed}
       wait={wait}
+      {...defined({
+        action: editable ? adminAction(wait, state.build) : undefined,
+      })}
     />
   )
 }
