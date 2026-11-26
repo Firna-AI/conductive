@@ -1,6 +1,6 @@
 # Needs input at the composer
 
-Status: Active. On branch `calummoore/finding-old-actions-oc8k`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `calummoore/needs-input-at-the-composer-milestones-3-j8a8`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 A workspace shows needs input while a Mac command request or a secret
 request of the workspace is open (decision 68). A request whose tool call
@@ -478,6 +478,8 @@ Depends on: 3
       Previous, and Next, and the keyboard. Use
       `docs/mockups/src/components/chat/RequestStack.module.css`, the words
       of `requestStackCopy.ts`, and the `stacked` class of each card.
+      Move each of these mockup modules that the app then imports into
+      `src/ui/components/`, as `src/ui/README.md` says.
 - [ ] Keep the card on top when a request joins or leaves the stack,
       except when this view cannot answer that card, and move the focus
       after Previous, Next, and an answer, as "The stack of requests"
@@ -486,7 +488,7 @@ Depends on: 3
       the same set of secrets, with `askedTimes` of `secretRunCopy.ts`.
       Give Deny the outcome of decision 3.
 - [ ] Delete `.requests` and its fade from
-      `docs/mockups/src/components/chat/ChatPane.module.css` when the app
+      `src/ui/components/chat/ChatPane.module.css` when the app
       draws the stack. Only the list region of the app uses them.
 - [ ] Update the tests in `src/chat/secrets/secret-requests.test.tsx` and
       `src/chat/secrets/answer-request.test.tsx`: a late request shows above
