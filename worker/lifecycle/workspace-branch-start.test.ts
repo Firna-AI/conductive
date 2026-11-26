@@ -18,7 +18,10 @@ it('creates the branch that took the title before the branch step, and keeps it 
     let titled = false
     // The title comes while the sandbox runs its first command.
     boat.beforeCommand = async (command) => {
-      if (titled || lifecycleCommandBody(command).includes('checkout -b'))
+      if (
+        titled ||
+        lifecycleCommandBody(command).includes('checkout --no-track -b')
+      )
         return
       titled = true
       const row = await db
@@ -52,8 +55,8 @@ it('creates the branch that took the title before the branch step, and keeps it 
     expect(stored?.placeholder).toBe(0)
     const branchCommand = boat.commands
       .map(lifecycleCommandBody)
-      .find((body) => body.includes('checkout -b'))
-    expect(branchCommand).toContain(`git checkout -b '${branch}'`)
+      .find((body) => body.includes('checkout --no-track -b'))
+    expect(branchCommand).toContain(`git checkout --no-track -b '${branch}'`)
   } finally {
     await fixture.dispose()
   }
@@ -66,7 +69,10 @@ it('puts back the city when a later name has no letter or digit', async () => {
     const db = runtime.env.DB
     let renamed = false
     boat.beforeCommand = async (command) => {
-      if (renamed || lifecycleCommandBody(command).includes('checkout -b'))
+      if (
+        renamed ||
+        lifecycleCommandBody(command).includes('checkout --no-track -b')
+      )
         return
       renamed = true
       const row = await db
