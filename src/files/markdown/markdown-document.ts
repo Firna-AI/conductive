@@ -1,4 +1,5 @@
 import type { TableCells } from '../../markdown/table-rows'
+import type { Token } from '../code/highlight'
 
 /** The six heading levels of Markdown. */
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
@@ -11,11 +12,21 @@ export type MdInline =
   | { kind: 'link'; href: string; children: MdInline[] }
   | { kind: 'break' }
 
-/** One block of a Markdown file, with its parsed inline content. */
+/**
+ * One block of a Markdown file, with its parsed inline content. A code
+ * block keeps its fence label, and `lines` holds the coloured tokens of
+ * each line of its text when the label names a language, or null for
+ * plain text.
+ */
 export type MdBlock =
   | { kind: 'heading'; level: HeadingLevel; text: MdInline[] }
   | { kind: 'paragraph'; text: MdInline[] }
-  | { kind: 'code'; text: string; label: string | null }
+  | {
+      kind: 'code'
+      text: string
+      label: string | null
+      lines: Token[][] | null
+    }
   | { kind: 'quote'; blocks: MdBlock[] }
   | { kind: 'list'; ordered: boolean; start: number; items: MdListItem[] }
   | { kind: 'rule' }

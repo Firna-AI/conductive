@@ -111,8 +111,8 @@ React.
 - Each view gives the blocks an `AgentDrawing`, from `agentDrawing.ts`
   beside them. Its `text` draws an inline tree at its `TextPlace`: in a
   message line or not, and with pictures or not. Its `code` draws a code
-  block of an answer with the colours of its label, and the drawing gives
-  an open message line the same colours. Its `ShowsWords` draws a heading
+  block of an answer with the colours of its label. `LineBlocks` gives an
+  open message line the same colours with `FenceText`. Its `ShowsWords` draws a heading
   only while the text of the heading shows words where it draws.
 - `answerDrawing` in `components/answer-drawing.tsx` gives the drawing of
   the app for one message: `AnswerText`, `CodeBlock`, and `useShowsWords`,

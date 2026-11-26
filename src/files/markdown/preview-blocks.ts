@@ -1,5 +1,6 @@
 import { fenceLabel } from '../../markdown/fence-label'
 import { maxDepth, parseMarkdownTokens } from '../../markdown/parser'
+import { fenceLines } from '../code/fence-lines'
 import { readTaskBox } from '../../markdown/task-boxes'
 import {
   closeOf,
@@ -130,15 +131,12 @@ function block(read: PreviewRead, depth: number, quotes: number): MdBlock[] {
       read.index += 1
       return [{ kind: 'rule' }]
     case 'fence':
-    case 'code_block':
+    case 'code_block': {
       read.index += 1
-      return [
-        {
-          kind: 'code',
-          text: token.content.replace(/\n$/u, ''),
-          label: token.type === 'fence' ? fenceLabel(token.info) : null,
-        },
-      ]
+      const text = token.content.replace(/\n$/u, '')
+      const label = token.type === 'fence' ? fenceLabel(token.info) : null
+      return [{ kind: 'code', text, label, lines: fenceLines(text, label) }]
+    }
     case 'table_open': {
       const { tokens, lines, budget } = read
       const table = previewTable(tokens, read.index, lines, quotes, budget)

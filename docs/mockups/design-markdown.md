@@ -240,18 +240,13 @@ its colours.
 - The colours are spans inside the one `pre` of the block, with the line
   feeds of its text, so the block keeps its text as written, and Copy code
   copies that text.
-- `CodeBlockText` in `src/components/common/` draws the text of a block
-  for `CodeBlock` of the chat and for `MarkdownView` of the file preview.
-  The blocks of the app keep no fence label, so the fixtures stand for the
-  label of a block with a file name, such as `example.rs` for `rust`.
-  `codeBlockNames` in `src/fixtures/codeBlockConversations.ts` names each
-  labelled block of a chat fixture, and a code block of a Markdown fixture
-  holds its name.
+- `FenceText` and `CodeText` of the app, in `src/files/code/CodeText.tsx`,
+  draw the text of a block for `CodeBlock` of the chat and for
+  `MarkdownView` of the file preview. A code block of a fixture holds its
+  fence label, such as `rust`, as the blocks of the app do.
 - An open message line in the work of a turn shows its code blocks in
   colour too, and a closed line shows a code block as plain text in the
-  line, from design call 2 of the code colours plan. The mockups do not
-  draw this case, because `LineBlocks` draws the code block of a line as
-  plain text.
+  line, as the shared `LineBlocks` draws them.
 
 ## In the work of a turn
 

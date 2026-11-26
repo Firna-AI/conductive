@@ -1,3 +1,4 @@
+import { codeAnswer, codePlan } from './dev-code-answers'
 import type { DevOptions } from './dev-options'
 import { devShots } from './dev-pictures'
 import { longAnswer, proseAnswer, prosePlan } from './dev-prose-answers'
@@ -123,7 +124,8 @@ const plan = ['I will read ', 'the files that this touches first.']
  * line in the folded work holds a heading. With the prose answer, the plan
  * holds a quote, a rule, strikethrough, and a line break. With the pictures
  * answer, the plan holds a screenshot, so its closed message line shows the
- * link, and the open line shows the picture.
+ * link, and the open line shows the picture. With the code answer, the plan
+ * holds a Rust block, so the open line shows it in colour.
  */
 export const devScripts: Readonly<Record<DevOptions['answer'], DevScript>> = {
   text: {
@@ -149,4 +151,5 @@ export const devScripts: Readonly<Record<DevOptions['answer'], DevScript>> = {
     ],
     answer: pictures,
   },
+  code: { plan: codePlan, answer: codeAnswer },
 }

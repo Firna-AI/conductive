@@ -17,11 +17,11 @@ export type MarkdownBlock =
       kind: 'code'
       text: string
       /**
-       * A file name that stands for the fence label of the block, such as
-       * `example.ts` for ```ts. Its language gives the colours of a file
-       * tab. A block without a label has no name.
+       * The fence label of the block, in lower case, such as `ts` for
+       * ```ts. A label that names a language gives the colours of a file
+       * tab of that language. A block without a label has none.
        */
-      name?: string
+      label?: string
     }
   | ({ kind: 'table' } & TableCells<string>)
   | { kind: 'quote'; blocks: readonly MarkdownBlock[] }
@@ -82,7 +82,7 @@ export const readme: readonly MarkdownBlock[] = [
     text: 'Checkout suggests addresses as you type. Suggestions come from `/api/places`, which needs `PLACES_API_KEY`. Without the key, the form falls back to *manual entry*.',
   },
   { kind: 'p', text: 'A form reads the suggestions with the hook:' },
-  { kind: 'code', name: 'example.ts', text: hookUse },
+  { kind: 'code', label: 'ts', text: hookUse },
   {
     kind: 'p',
     text: '![Suggestions under the address field](https://design.acme.example/forms/address/suggestions.png)',

@@ -109,6 +109,11 @@ first. Each path is relative to `src/files/`, the folder of this guide.
 - `page/html-preview.ts` and `page/HtmlPagePreview.tsx`: the
   `htmlPreview` prop of `FilePage`, and the drawing of its views and of
   Reload and Open.
+- `code/fence-languages.ts` gives the language of a fence label, and
+  `code/fence-lines.ts` colours the lines of a code block from it.
+  `code/CodeText.tsx` draws them: `CodeText` draws lines that the
+  Markdown worker coloured, and `FenceText` colours and draws the code
+  blocks of the chat.
 - `diff/`: the unified diff parser and view. `diff/highlight-diff.ts`
   colours each diff line from the whole old or new file of the diff
   reply, so a line inside a comment that opens above its hunk keeps its

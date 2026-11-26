@@ -27,8 +27,12 @@ export interface TextPlace {
 export interface AgentDrawing {
   /** Draws the inline text of a block at its place. */
   text: (text: InlineText, place: TextPlace) => ReactNode
-  /** Draws a code block of an answer, with its text as the agent wrote it. */
-  code: (text: string) => ReactNode
+  /**
+   * Draws a code block of an answer, with its text as the agent wrote it,
+   * in the colours of its fence label, or plain when `label` names no
+   * language, as `FenceText` of `src/files/code/` draws it.
+   */
+  code: (text: string, label: string | null) => ReactNode
   /** Draws a table through its registration when it has a stable name. */
   table?: (table: TextTable) => ReactNode
   /**

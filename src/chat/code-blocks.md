@@ -26,8 +26,10 @@ with its label.
   with the result. Outside a provider, a code block has no button. The
   size of the button comes from the control sizes, so the block keeps room
   for the 40 px button on a phone.
-- In an open message line, `LineBlocks` draws each code block through the
-  drawing too, in the colours of an answer, with no button. A closed line
+- In an open message line, `LineBlocks` draws each code block with
+  `FenceText` of `src/files/code/CodeText.tsx`, in the colours of an
+  answer, with no `<pre>` and no button, because the line is a
+  `<summary>`. A closed line
   draws the text of the block with no colours, as
   [Chat message lines](../../docs/protocol/chat-message-lines.md) says.
   [Message lines](message-lines.md) gives the rest of the code of a line.

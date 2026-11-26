@@ -129,9 +129,18 @@ function diffOf(
   }
 }
 
-const readmePatch = `@@ -23 +23,11 @@ ## Checkout
+const readmePatch = `@@ -23 +23,20 @@ ## Checkout
 -Checkout suggests addresses as you type.
 +Checkout suggests addresses as you type. Suggestions come from \`/api/places\`, which needs \`PLACES_API_KEY\`. Without the key, the form falls back to *manual entry*.
++
++A form reads the suggestions with the hook:
++
++\`\`\`ts
++import { useAddressAutocomplete } from '@/app/checkout/useAddressAutocomplete'
++
++// Lookups start at the third character.
++const { suggestions, loading } = useAddressAutocomplete(line1)
++\`\`\`
 +
 +![Suggestions under the address field](https://design.acme.example/forms/address/suggestions.png)
 +

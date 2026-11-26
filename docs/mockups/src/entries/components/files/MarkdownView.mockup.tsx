@@ -14,8 +14,8 @@ const textBlock = {
 } as const
 
 /**
- * A code block of a Markdown file. `name` is the file name that stands for
- * its fence label, as `MarkdownBlock` says.
+ * A code block of a Markdown file. `label` is its fence label in lower
+ * case, as `MarkdownBlock` says.
  */
 const codeBlock = {
   type: 'object',
@@ -24,7 +24,7 @@ const codeBlock = {
   properties: {
     kind: { const: 'code' },
     text: { type: 'string' },
-    name: { type: 'string' },
+    label: { type: 'string' },
   },
 } as const
 

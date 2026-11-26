@@ -1,9 +1,9 @@
 import type { MarkdownBlock } from '../../fixtures/fileContents'
+import { FenceText } from '../../../../../src/files/code/CodeText'
 import { classes } from '../../../../../src/ui/components/common/classes'
 import headingStyles from '../../../../../src/ui/components/common/MarkdownHeadings.module.css'
 import prose from '../../../../../src/ui/components/common/MarkdownProse.module.css'
 import { markdownTable } from '../../entries/components/common/MarkdownTable.mockup'
-import { CodeBlockText, codeLanguage } from '../common/CodeBlockText'
 import { taskText } from '../common/markdownTasks'
 import { TaskBox } from '../../../../../src/ui/components/common/TaskBox'
 import { PreviewText } from './PreviewText'
@@ -59,10 +59,7 @@ function Block(props: { block: MarkdownBlock }) {
     case 'code':
       return (
         <pre className={styles.block}>
-          <CodeBlockText
-            language={codeLanguage(block.name)}
-            text={block.text}
-          />
+          <FenceText label={block.label ?? null} text={block.text} />
         </pre>
       )
     case 'table':

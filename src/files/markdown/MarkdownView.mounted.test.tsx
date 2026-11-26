@@ -2,6 +2,7 @@
 
 import { StrictMode } from 'react'
 import { expect, it, vi } from 'vitest'
+import codeStyles from '../code/code.module.css'
 import { fakeWorkers, mountRoot, press } from '../mount-test-kit'
 import { previewDocument } from './preview-blocks'
 import { MarkdownView } from './MarkdownView'
@@ -88,6 +89,32 @@ it('parses each text in its own module worker, and ends each worker that the vie
   expect(workers.live()).toHaveLength(1)
   view.unmount()
   expect(workers.live()).toHaveLength(0)
+})
+
+it('draws the lines that the worker coloured for a block whose fence label names a language, and keeps a block without a label plain', () => {
+  const code = 'fn main() {\n\tlet greeting = "hi";\n}'
+  const workers = fakeWorkers()
+  const view = mountRoot()
+  view.render(
+    <MarkdownView
+      text={['```Rust', code, '```', '', '```', 'cargo run', '```'].join('\n')}
+    />,
+  )
+  workers.live()[0].answer()
+  const [coloured, plain] = view.container.querySelectorAll('pre')
+  const keywords = Array.from(
+    coloured?.querySelectorAll(`.${codeStyles.keyword}`) ?? [],
+    (element) => element.textContent,
+  )
+  expect({
+    keywords,
+    coloured: coloured?.textContent,
+    plain: { elements: plain?.children.length, text: plain?.textContent },
+  }).toEqual({
+    keywords: ['fn', 'let'],
+    coloured: code,
+    plain: { elements: 0, text: 'cargo run' },
+  })
 })
 
 it('shows the file error with Try again when no worker can parse the text, and Try again parses it in a new worker', () => {

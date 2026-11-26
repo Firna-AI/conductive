@@ -181,22 +181,27 @@ Tags: ui
 
 Depends on: 3
 
-- [ ] Add `CodeText` in `src/files/code/`, by design call 15.
-- [ ] Draw the chat `CodeBlock` with coloured lines, through `AgentDrawing`
+- [x] Add `CodeText` in `src/files/code/`, by design call 15.
+- [x] Draw the chat `CodeBlock` with coloured lines, through `AgentDrawing`
       and `answerDrawing`.
-- [ ] Make `LineBlocks` draw the code blocks of an open message line
+- [x] Make `LineBlocks` draw the code blocks of an open message line
       through the drawing too, so an open line shows the colours of an
       answer. A closed line stays plain.
-- [ ] Colour the code blocks of `MarkdownView`, with the tokens from the
+- [x] Colour the code blocks of `MarkdownView`, with the tokens from the
       parse worker.
-- [ ] Move each consumer of `Replaced ways` to the fence label: the
+- [x] Move each consumer of `Replaced ways` to the fence label: the
       mockup block schema in `chatBlockSchemas.ts`, the `codeBlock`
       fixture builder, the fixtures, the code block entry, and the mockup
       `MarkdownView`. Delete `codeBlockNames`, `codeLanguage`, and
       `CodeBlockText`, and use `CodeText`.
-- [ ] Test that Copy code and Explain read the exact text.
-- [ ] Check a labelled Rust block in the browser, in an answer, in an
+- [x] Test that Copy code and Explain read the exact text.
+- [x] Check a labelled Rust block in the browser, in an answer, in an
       open message line, and in the file preview. Save the screenshots under `.context/code-colours/`.
+
+Evidence: `.context/code-colours/reports/m4-*` and
+`.context/code-colours/screenshots/m4-*.png`. Design call 19: `LineBlocks`
+draws open-line code with `FenceText`, not with `drawing.code`, because a
+`<summary>` can hold no `<pre>` and no Copy code button.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

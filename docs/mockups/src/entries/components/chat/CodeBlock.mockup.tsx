@@ -1,6 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
 import { CodeBlock } from '../../../components/chat/CodeBlock'
-import { codeLanguage } from '../../../components/common/CodeBlockText'
 import { sessionExample } from '../../../fixtures/codeBlockConversations'
 
 /**
@@ -23,17 +22,17 @@ export const codeBlock = defineComponent({
     properties: {
       text: { type: 'string' },
       /**
-       * A file name that stands for the fence label of the block, such as
-       * `example.rs` for ```rust. Its language gives the colours.
+       * The fence label of the block, in lower case, such as `rust` for
+       * ```rust. A block without a label has none.
        */
-      name: { type: 'string' },
+      label: { type: 'string' },
     },
   } as const,
   props: {
     text: 'npx playwright screenshot --device="iPhone 13" http://localhost:3000/checkout .context/shots/after.png',
   },
   render: (props) => (
-    <CodeBlock language={codeLanguage(props.name)} text={props.text} />
+    <CodeBlock label={props.label ?? null} text={props.text} />
   ),
   variants: [
     {
@@ -41,7 +40,7 @@ export const codeBlock = defineComponent({
       title: 'Rust',
       description:
         'A code block with the fence label rust: the example of a session from the guide of the places API. Its keywords, types, string, number, and comments show the colours of a Rust file tab, and the comments are in italics.',
-      props: { name: 'example.rs', text: sessionExample },
+      props: { label: 'rust', text: sessionExample },
     },
   ],
 })
