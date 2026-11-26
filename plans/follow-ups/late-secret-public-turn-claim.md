@@ -2,7 +2,7 @@
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
-- **Added:** 2026-11-20, from the watch-session public documentation audit. Found again on 2026-11-26 by branch `calummoore/needs-input-at-the-composer-milestones-3-j8a8`, outside the scope of its review round 1.
+- **Added:** 2026-11-20, from the watch-session public documentation audit. Found again on 2026-11-26 by branch `calummoore/needs-input-at-the-composer-milestones-3-j8a8`, outside the scope of its review rounds 1 and 2.
 - **Location:** `src/marketing/terms-org.ts:123`.
 - **Reason:** The Terms sentence is on `main`, and neither the watch change nor the needs-input change alters the late-answer rule.
 
@@ -23,6 +23,8 @@
 - **Left out:** Removing the feature description loses useful information. A new runtime check cannot correct inaccurate public words. These two approaches cover wording alignment and a changed product contract.
 - **Wider fix:** None. The documentation skill already requires full legal and public-guide reads when protocol facts change.
 - **Previous examples:** `plans/follow-ups/late-secret-answer-sender-line.md` records a separate mismatch about the notice's sender prefix.
-- **Related:** The sender-prefix item concerns the same feature, but its answer does not settle this public turn claim.
+- **Related:**
+  - The sender-prefix item concerns the same feature, but its answer does not settle this public turn claim.
+  - `plans/follow-ups/late-answer-line-claims-new-turn.md` holds the same claim of a new turn in the app: the line under a late request after its Allow says "You answered, and a new turn told the agent.", also when the notice joined a running turn. One branch can fix both texts. This item still needs its own Terms revision and effective date.
 - **Recommendation:** A. It describes the existing protocol and runtime without changing the product behavior.
 - **Action:** fix after merge, apply A, because the Terms sentence is on `main`, and no change that found it alters the late-answer rule.

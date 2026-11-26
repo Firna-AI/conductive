@@ -38,7 +38,7 @@ says.
   on a request.
 - **Temporary value:** a value that a member types for a name that the org
   has no secret for, as
-  [Temporary values](secret-requests.md#temporary-values) says.
+  [Temporary values](secret-temporary-values.md#temporary-values) says.
 - **Request:** the question that a run asks for the names that no grant
   covers. A member answers it.
 

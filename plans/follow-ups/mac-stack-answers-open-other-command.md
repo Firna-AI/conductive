@@ -1,0 +1,40 @@
+# Mac stack answers open another command's result
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-26, from branch `calummoore/needs-input-at-the-composer-milestones-3-j8a8`, review finding 87 of round 2 and its finding check.
+- **Location:** `docs/mockups/src/screens/stackWalks.ts:92` (`macRequestsWalk`), `docs/mockups/src/components/chat/RequestStack.tsx:92` (`StackCard`), `docs/mockups/src/components/mac/CommandActions.tsx:19` and `:104`, `docs/mockups/src/fixtures/macConversations.ts:106`, and `docs/mockups/src/entries/app/chat/menu-placement/index.mockup.tsx:37`.
+- **Reason:** The recommended option removes answer links that the mockups on `main` draw, so the user chooses before anyone changes them.
+
+- **Source:** Review.
+- **Category:** Mockup.
+- **Terms:**
+  - **Request stack:** the cards above the composer that show the open requests of a session, one card at a time, with a place such as "2 of 4", Previous, and Next. The catalogue draws a separate page for each place of the card on top.
+  - **Walk:** a shared definition in `docs/mockups/src/screens/walks.ts` that names the pages of one example and the links between them, so that each link keeps the open requests of the example. `docs/mockups/src/screens/stackWalks.ts` holds the walks of the stacks.
+  - **Generic result links:** the fixed answer links of a Mac command card in `docs/mockups/src/components/mac/CommandActions.tsx`. Deny opens `app/mac-commands/denied`. Allow and Always allow open `app/mac-commands/done`. Allow all commands for 15 minutes opens `mac-app/commands/allow-all`, and Allow all commands until I stop opens `mac-app/commands/allow-until-stop`. Each of these pages draws one request, for the command `npm run test:safari -- checkout`.
+  - **Drawn menu:** the menu beside Allow, drawn open, because a mockup page runs no script. `DrawnChoices` in `CommandActions.tsx` draws it with the generic result links.
+- **Background:**
+  - `mac-app/requests` draws four Mac commands that wait in a stack in the Mac app: a long script that runs each checkout test file in Safari, `sw_vers`, a command that reads the Safari version, and `git status --short`. Its `next`, `third`, and `last` pages put each other card on top.
+  - A walk can name the answers of its stack. Then each answer that it does not name draws no link, so no answer drops the other open requests. The walks of the secret stacks, of `app/secret-requests/several/mac-command`, and of `mac-app/command-and-secret` do this.
+  - `macRequestsWalk` names no answers. A card of a walk without named answers keeps its own result links, as the `answers` field in `walks.ts` and `StackCard` in `RequestStack.tsx` say. For a Mac command, those are the generic result links.
+  - `app/chat/menu-placement/allow` draws the same four commands in the Mac app, with the drawn menu of the long script open. The drawn menu always gives the generic result links.
+  - On 26 November 2026, a design call of the needs-input change kept the result links of the four commands of `mac-app/requests`. `docs/mockups/screens.md` (the rule of the answers of a walk) and `docs/mockups/mac-app.md` record it. Options A, D, and E reverse that call.
+  - On `main` before that change, one page of `mac-app/requests` drew all four cards, with the same generic result links. The change moved them to the pages of the stack.
+- **Problem:** On `mac-app/requests/next`, Deny of `sw_vers` opens `app/mac-commands/denied`, which shows the Safari checkout test as denied. Allow, Always allow, and the two choices that allow all commands open pages where that Safari command ran. The drawn menu on `app/chat/menu-placement/allow` opens the same pages. Each of these pages drops the other three open requests.
+- **Screenshot:** In the Mac mockup, follow Deny from `mac-app/requests/next`, and mark the Safari test command in the chat that opens. That chat shows `npm run test:safari -- checkout` as denied, and no other open request.
+- **Impact if no action:** The visual spec shows the result of another command than the one that the member answered, and it loses the rest of the stack. A reviewer or an implementer can copy a wrong flow from it.
+- **Root question:** What should an answer of a card in a stack of several requests open, so that it never shows the result of another command and never drops the other open requests?
+- **Options:**
+  - **A.** Draw no answer links on the four cards of `mac-app/requests`, and keep its walk as a walk through the cards only. It gives up the result links that the design call kept. The drawn menu on `app/chat/menu-placement/allow` keeps the generic result links. Effort: Small.
+  - **B.** Give each of the four commands its own result pages for Deny and Allow, each with the other three requests still open. Select the page by the request ID. The fixtures and the link table must stay in step. Always allow and the drawn menu still open the results of the Safari checkout test. Effort: Medium.
+  - **C.** A walk of a stack of several cards must name the answer pages of its cards, or declare that it shows only the steps. Derive each result page from the original commands and the chosen answer. Keep the generic result links for an example with one command. To keep every link, each card needs a result page for each of its five answers: Deny, Allow, Always allow, and the two choices that allow all commands. Effort: Large.
+  - **D.** One walk path for the Mac stack. Add two or three new chats, in which one answer leads on with the other requests still open. Every other answer draws no link. It shows one Mac result in a stack, and it removes the other answer links that `main` draws. Effort: Medium.
+  - **E.** The shared stack owns the default. A card keeps its own answer links only when it is the one card of its stack and no walk names its answers. Each other card draws only the links that its walk names. The drawn menu follows its card. It changes `RequestStack.tsx`, `walkLinks.ts`, `walks.ts`, `stackWalks.ts`, `docs/mockups/screens.md`, and `docs/mockups/mac-app.md`. It removes answer links that `main` draws on `mac-app/requests` and on `app/chat/menu-placement/allow`. Effort: Small.
+- **Left out:** A new name for each result page, because the page still shows the wrong command and drops the other requests. Changing nothing, because the visual spec then keeps a wrong result.
+- **Wider fix:** E. The stack itself sets the default, so a later stack of several cards cannot inherit the result of a single card.
+- **Previous examples:** `plans/follow-ups/mockup-link-state-check.md` records seven earlier cases of catalogue links that dropped open requests or reset an example. In one of them, answer links of the secret stacks dropped the other open requests, and the needs-input change fixed them by hand.
+- **Related:**
+  - `plans/follow-ups/mockup-link-state-check.md` holds the check that would report an answer link that drops open requests. That check needs its own user decision, and its answer does not choose the links of this item.
+  - `plans/follow-ups/mac-long-limit-answer-links.md` holds the same class on a page with one card, `mac-app/commands/long-limit`. E keeps the links of that card, so that item needs its own fix. Its wider fix, one table of result pages for each Mac command, can also give C its result pages.
+- **Recommendation:** E. It is the smallest change that stops each card of a stack of several from opening the result of another command, and each later stack gets the same default. When the user wants each link kept, C for all five answers of each card keeps them, and D can add one Mac result to the stack.
+- **Action:** ask the user, because E removes answer links that the mockups on `main` draw, and C, which keeps them, is Large.

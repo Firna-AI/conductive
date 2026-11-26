@@ -467,8 +467,10 @@ The docs agent's calls of 26 November 2026, in milestone 3:
 - The tab mark rule states the result, not the read of every session.
 - "Stays in the chat" in `docs/architecture/flows.md` and
   `docs/protocol/secrets.md` stays, because the stack is part of the chat.
-- The split of `secret-requests.md`, now 299 lines, stays with its
-  follow-up item `protocol-state-doc-length.md`.
+- The split of `secret-requests.md` waited for its follow-up item. Review
+  finding 92 of 26 November 2026 replaced this call: the change moves
+  "Temporary values" and "Mixed requests" to
+  `docs/protocol/secret-temporary-values.md`.
 
 ## Milestone 1: Mockups
 
@@ -748,10 +750,10 @@ Depends on: 8
 
 Depends on: 9
 
-- [ ] Finding 91 B: the Secret requests page links to the rule of the Mac
+- [x] Finding 91 B: the Secret requests page links to the rule of the Mac
       notification.
-- [ ] Finding 92 D: split `docs/protocol/secret-requests.md`.
-- [ ] Record the follow-up items of review round 2.
+- [x] Finding 92 D: split `docs/protocol/secret-requests.md`.
+- [x] Record the follow-up items of review round 2.
 
 ## Post-merge follow-up (non-blocking)
 

@@ -35,6 +35,8 @@
 - **Left out:** A unit test per page, because it covers only the pages that someone remembers.
 - **Wider fix:** B, after the case table of `plans/follow-ups/saved-list-links-keep-notice.md` removes the existing resets. D adds the steps, which have no link to compare.
 - **Previous examples:** The seven cases above. Commit `216ed6791` fixed masked back links by hand.
-- **Related:** `plans/follow-ups/saved-list-links-keep-notice.md`, `plans/follow-ups/standard-example-check-status.md`, `plans/follow-ups/masked-paths-list-links-reset.md`, and `plans/follow-ups/explain-parent-tab-resets.md` hold the existing resets. This check does not fix them.
+- **Related:**
+  - `plans/follow-ups/saved-list-links-keep-notice.md`, `plans/follow-ups/standard-example-check-status.md`, `plans/follow-ups/masked-paths-list-links-reset.md`, and `plans/follow-ups/explain-parent-tab-resets.md` hold the existing resets. This check does not fix them.
+  - `plans/follow-ups/mac-stack-answers-open-other-command.md` holds one more case, which review round 2 of the needs-input change found: the answer links of the Mac stack on `mac-app/requests` open the results of another command and drop the other open requests. This check would report it, but it does not choose those links, and that item needs its own answer.
 - **Recommendation:** C first, then B once the existing resets are fixed. A warning finds new cases at no gate cost. D is not needed while each stack example builds its pages and its steps from its own card count.
 - **Action:** ask the user, because B adds a new gate, and C and D add new checks, and the user decides each new gate or check.
