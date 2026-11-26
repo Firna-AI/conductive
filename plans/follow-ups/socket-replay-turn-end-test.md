@@ -1,0 +1,31 @@
+# No socket test resends a stored turn end
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-26, from branch `calummoore/sidebar-indicator-not-showing-4fri`, review finding 3.
+- **Location:** `worker/chat/browser-subscription.ts:92-114`, `worker/chat/browser-subscription.test.ts`, `worker/chat/events.test.ts:51`.
+- **Reason:** The gap was already on `origin/main`, and the branch that found it changed only a browser test, not the Worker.
+
+- **Source:** Review. **Category:** Test.
+- **Terms:**
+  - **Workspace socket:** The WebSocket that a browser tab opens to the Worker to get the chat events of one workspace.
+  - **Replay:** The stored events that the Worker sends first on a new socket, after the event number that the tab gives. The tab gives the number of the last event that it applied.
+  - **Kept chat:** The chat that a browser tab keeps in memory for a workspace while the member visits another page. When the member comes back, the chat opens the socket again after its last event number.
+  - **Turn end:** The `turn.completed` or `turn.failed` event. It ends the "Working" row of a session, and a finished turn shows its duration and changed files.
+- **Background:**
+  - The Worker sends the replay in `replay()` in `worker/chat/browser-subscription.ts`. It reads each page with `view.history(after, through, { budget })` and sends each page as it is, with no filter on the event type.
+  - `worker/chat/history-order.test.ts` reads history pages with the same `view.history` method. Its second page starts after event 32 and holds a stored `turn.completed`. The test checks for the turn end row. So the read step has a test.
+  - The browser side has a test too: `src/chat/state/kept-chat-return.test.ts` hides a kept chat, stores a turn end and a session update, shows the chat again, and checks that the turn end row shows and the session no longer names the turn. It uses the fake event store in `src/test-support/fake-events.ts`, not the Worker.
+  - No Worker test sends a stored turn end over a socket that opens after a nonzero event number. The nearest tests: `worker/chat/browser-subscription.test.ts` reconnects after a nonzero number with `workspace.title` events only. `worker/chat/events.test.ts:51` reconnects at event 2 and gets a `session.updated`. `worker/chat/integration/forwarding.test.ts:172` opens at event 1 with an empty history. `worker/chat/integration/runner-forwarding.test.ts:182` sees `turn.completed` only as a live event.
+  - A review probe changed `replay()` to drop `turn.completed` from the pages when `after > 0`. All 1,375 tests in 401 files under `worker/chat`, `worker/files`, and `src/chat` still passed.
+- **Problem:** A change in the socket step that loses a stored turn end after a reconnect passes every test.
+- **Impact if no action:** Such a change would leave a returning tab with a "Working" row and no turn end row for a turn that ended while the tab was away. The risk is small today, because the socket step does not look at the event type.
+- **Root question:** How do the tests prove that a tab that opens its socket again gets each turn end that the Worker stored while the tab was away?
+- **Options:**
+  - **A.** Add a Worker test beside `worker/chat/events.test.ts:51`. Open a tab socket, close it, finish a turn, then open the socket after the saved event number. Assert that the history holds the `turn.completed` and then the `session.updated` that clears the active turn, each once. Effort: Medium.
+  - **B.** Run `src/chat/state/kept-chat-return.test.ts` against a local Worker with real storage and a WebSocket, in place of the fake event store. This checks the whole return path in one test. Effort: Medium.
+  - **C.** Give the integration tests a shared event source that the Worker backs, for each test that checks a stored replay. Use it in a mounted test of a workspace return. Effort: Large.
+- **Left out:** Storing the events through the fake while the chat is hidden. The fake would still build the replay, so it would not test the Worker.
+- **Wider fix:** C. It removes the separate replay code of the fake from the tests that need real storage. An earlier fix, commit `3c4082b96`, corrected a case where the fake stored events in another order than the Worker.
+- **Recommendation:** A. It tests the socket step at the lowest level with the existing Worker fixtures. C gives wider protection for later replay tests.
+- **Action:** fix after merge, apply A.

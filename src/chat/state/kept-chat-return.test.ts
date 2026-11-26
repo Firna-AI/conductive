@@ -12,10 +12,20 @@ it('shows the turn end and no running turn when it ended while the kept chat was
   const shownTurn = () =>
     chat.controller.getSnapshot().sessionStates[sessionId]?.transcript.turn ??
     null
+  const record = () =>
+    chat.controller
+      .getSnapshot()
+      .sessions.find((item) => item.id === sessionId) ?? null
+  const activeTurn = () => ({
+    activeTurnId: record()?.activeTurnId ?? null,
+    activeTurnStartedAt: record()?.activeTurnStartedAt ?? null,
+  })
   expect(shownTurn()?.turnId).toBe(turnId)
-  const session = chat.controller
-    .getSnapshot()
-    .sessions.find((item) => item.id === sessionId)
+  expect(activeTurn()).toEqual({
+    activeTurnId: turnId,
+    activeTurnStartedAt: FAKE_TIME,
+  })
+  const session = record()
   if (!session) throw new Error('The running session is not open.')
 
   chat.controller.hide()
@@ -45,6 +55,10 @@ it('shows the turn end and no running turn when it ended while the kept chat was
   chat.controller.show()
 
   expect(shownTurn()).toBeNull()
+  expect(activeTurn()).toEqual({
+    activeTurnId: null,
+    activeTurnStartedAt: null,
+  })
   const ends = (
     chat.controller.getSnapshot().sessionStates[sessionId]?.transcript.items ??
     []
