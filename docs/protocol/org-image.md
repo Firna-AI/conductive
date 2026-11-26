@@ -50,11 +50,13 @@ request keeps the record.
 - A Build computer or a Try again during a switch build waits until that
   build ends (switch decision 2 D). Its time limit counts from then, as
   [What members see](switch-account.md#what-members-see) says.
-- A Build computer or a Try again during a refresh saves a request on the
-  refresh. The build starts when the refresh ends, also after a failed
+- A Build computer, a Try again, or a Done after an add during a refresh
+  saves a request on the refresh, as
+  [Added repositories](org-image-repositories.md#added-repositories) says
+  for Done. The build starts when the refresh ends, also after a failed
   refresh (refresh-build decision 1 B). Reason: a refresh does not run the
   install script, so the click must not end with the refresh.
-- The last admin who selects it during the refresh is the starter of that
+- The last admin who asks during the refresh is the starter of that
   build. When that admin can no longer start a build, the request starts
   none. The added build of the refresh, if it has one, then still starts.
 - A refresh with a request starts one build. That build also takes in

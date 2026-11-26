@@ -62,7 +62,8 @@ Select **Remove** to confirm, or **Cancel** to keep the repository.
 The removal saves at once and starts no build.
 
 Selecting **Done** after you add repositories starts one build automatically, so you can add many repositories first.
-If a build or refresh is running, one more build usually starts after it succeeds.
+If a build is running, one more build usually starts after it succeeds.
+If a refresh is running, the build starts when the refresh ends.
 When the repository notice offers **Try again**, the last build failed, and the repository waits for it.
 Select **Try again** to build it.
 A newly added repository goes at the end of the order.

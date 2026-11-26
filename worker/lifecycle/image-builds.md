@@ -83,7 +83,7 @@ The added build uses the first admin who is not suspended. A failed start
 keeps the published image and writes one fixed warning. A failed build
 starts no added build. A refresh after a failed build gets none either.
 
-Build computer and Try again pass `requested: true` to `startImageBuild`.
+Build computer, Try again, and Done pass `requested: true` to `startImageBuild`.
 During a refresh, `requestBuildAfterRefresh` in
 [`build-request.ts`](build-request.ts) saves the admin in
 `image_build_jobs.requested_build_user_id`, only while the refresh runs.

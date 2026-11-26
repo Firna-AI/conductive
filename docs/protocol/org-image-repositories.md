@@ -61,7 +61,12 @@ adds Remove to the row menu of a chosen repository, as
   no Cancel. Reason: leaving the edit already drops its changes.
 - An add from an older copy of the app, which has no Done step, still
   starts a build at once. Reason: older copies of the app keep working.
-- While a job runs, Done starts no second job.
+- While a build runs, Done starts no second job.
+- During a refresh, Done after an add saves a request, as Build computer
+  does. The build starts when the refresh ends, also after a failed build
+  or a failed refresh (refresh-build decision 7 A). Reason: Done of an
+  admin asks for a build, as Try again does, so the add does not wait for
+  a second click.
 - When a job succeeds, and the repositories of that job lack a chosen
   repository, the app starts one added build by itself (decision 240). It
   does so only when the newest build succeeded. A switch build gets none,
@@ -71,11 +76,11 @@ adds Remove to the row menu of a chosen repository, as
 - A failed build gets no added build. A refresh after a failed build gets
   none either. Reason: the app starts no build by itself after a failed
   build (decision 12), and Try again builds the current choice.
-- So an add during a refresh after a failed build waits for Try again.
+- So an add during a refresh after a failed build gets no added build.
+  Its Done saves a request instead, as the rule above says.
 - A job gets at most one added build. So an add during the first good
   build gets one added build, not two.
-- A refresh with a request of Build computer starts one build, which
-  takes in the adds, as [The org image](org-image.md#the-org-image) says.
+- A refresh with a request starts one build, which takes in the adds, as [The org image](org-image.md#the-org-image) says.
 - The added build runs for an admin who is not suspended, as the added
   build of [The first build](org-image.md#the-first-build) does.
 - A build at each add was replaced (decision 295). Reason: a burst of

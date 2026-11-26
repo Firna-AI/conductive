@@ -174,9 +174,9 @@ export interface ImageBuild {
   storageTotalBytes: number | null
   storageFreeBytes: number | null
   /**
-   * True on a running refresh during which an admin selected Build
-   * computer. The build starts when the refresh ends. Older Workers leave
-   * it out.
+   * True on a running refresh during which an admin asked for a build,
+   * with Build computer, Try again, or Done after an add. The build starts
+   * when the refresh ends. Older Workers leave it out.
    */
   buildRequested?: boolean
 }

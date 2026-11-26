@@ -53,6 +53,34 @@ Cal chose C on 26 November 2026.
     build starts when this refresh ends."
 - **Reason:** Admins then see what runs and what comes next.
 
+### Decision 7: Done after an add during a refresh
+
+Cal chose A on 26 November 2026, from finding 7 of review round 1.
+
+- **Root question:** What should Done after an add during a refresh lead
+  to?
+- **Options:**
+  - **A.** Keep the request: Done saves it, as Try again does. Update the
+    protocol docs, the guide, and the design call.
+  - **B.** Done sends a field that tells the Worker to save no request.
+  - **C.** Only Build computer and Try again send a field that asks for a
+    request.
+- **Reason:** Done is an admin's request for a build, so the add does not
+  wait for a second click.
+
+### Decision 15: a request from the Repositories tab
+
+Cal chose A on 26 November 2026, from finding 15 of review round 2.
+
+- **Root question:** How does an admin who asks for a build from the
+  Repositories tab during a refresh learn that a build follows?
+- **Options:**
+  - **A.** Change nothing. The Cloud computer tab shows the line.
+  - **B.** A toast on the Repositories tab.
+  - **C.** A line in the repository notice, from one helper that the build
+    card uses too.
+- **Reason:** Cal chose to keep the line on the Cloud computer tab only.
+
 ## Open decisions
 
 The options check of 26 November 2026 found three points that need Cal.
@@ -66,18 +94,6 @@ Its report is in `.context/build-after-refresh/options-check.md`.
   click too. A push refresh becomes such a build when the image holds old
   values. Recommended: apply decision 1 to every running job that is not a
   switch build and holds older settings.
-- **Decision 7:** from review round 1. Done of the Repositories tab calls
-  the same builds route as Build computer, so Done after an add during a
-  refresh now saves a request too. The design call below and the rule of
-  [Org image repositories](../docs/protocol/org-image-repositories.md)
-  that such an add after a failed build waits for Try again disagree with
-  the code. Recommended: keep the request for Done and update the protocol
-  doc, the guide, and the design call.
-- **Decision 15:** from review round 2. Try again and Build computer in
-  the repository notice of the Repositories tab also save a request
-  during a refresh, but that tab does not change. Recommended: the notice
-  says "A build starts when this refresh ends." while a running refresh
-  has a request, from one helper that the build card uses too.
 - **Decision 5:** The added build follows only a successful job.
   Recommended: show "A build starts if this refresh succeeds." for that
   case, and keep "A build starts when this refresh ends." for a request.
@@ -95,10 +111,9 @@ Design calls of the agent, 26 November 2026:
   running builds, the switch builds, and the history assume one running
   row that does not wait for a switch. So that way touches many more
   queries for the same result.
-- **Only Build computer and Try again mark.** These are the
-  `POST /api/orgs/<id>/builds` route. Done of the Repositories tab keeps
-  its rule, "While a job runs, Done starts no second job", because the
-  added build already takes in its adds. My call.
+- **Build computer, Try again, and Done mark.** All three use the
+  `POST /api/orgs/<id>/builds` route. Decision 7 A keeps the request for
+  Done.
 - **The mark holds only while the refresh runs.** The `UPDATE` requires the
   refresh to be in the state `running` and without an operator switch.
   When it matches no row, the refresh has just ended, and the click starts
