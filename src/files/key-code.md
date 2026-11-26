@@ -110,7 +110,8 @@ first. Each path is relative to `src/files/`, the folder of this guide.
   `htmlPreview` prop of `FilePage`, and the drawing of its views and of
   Reload and Open.
 - `code/fence-languages.ts` gives the language of a fence label, and
-  `code/fence-lines.ts` colours the lines of a code block from it.
+  `code/fence-lines.ts` colours the lines of a code block from it, up to
+  `maxColouredLength`.
   `code/CodeText.tsx` draws them: `CodeText` draws lines that the
   Markdown worker coloured, and `FenceText` colours and draws the code
   blocks of the chat.

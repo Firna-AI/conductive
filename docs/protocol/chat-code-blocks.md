@@ -56,6 +56,12 @@ parser, as [Chat Markdown](chat-markdown.md) says.
   These labels are `text`, `txt`, `plain`, `plaintext`, `console`,
   `output`, `log`, and `none`.
 - Reason: wrong colours are worse than none.
+- A code block longer than 200,000 characters shows plain text, also with
+  a fence label that names a language (code colours decision 7 B,
+  26 November 2026). Reason: a huge or crafted block would give millions
+  of coloured parts and stop the chat or the preview for seconds. A
+  block of that length as plain text stays one part. Drawing only the
+  lines on the screen was rejected for now, because it costs much more.
 - A `diff` or `patch` block shows plain text. Reason: the colours of the
   lines of a diff are a new look, which a later proposal can add.
 - Inline code shows plain text, because it has no fence label.

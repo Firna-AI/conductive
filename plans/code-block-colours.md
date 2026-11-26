@@ -42,6 +42,13 @@ report is in `.context/code-colours/brainstorm.md`.
   share of coloured blocks. Only new sessions get it, because a session
   keeps its saved instructions.
 
+- **Code colours, decision 7: B**, 26 November 2026. A code block longer
+  than 200,000 characters shows plain text, in the chat and in the
+  preview. Alternatives: A, no limit, where a crafted 5 MiB block sent
+  5,079,009 coloured parts to the page in 2,224 ms. C, drawing only the
+  lines on the screen, Large. Reason: the limit keeps the views
+  responsive with little code.
+
 ## Design calls
 
 My calls of 26 November 2026. Each fails the decision test, because a
