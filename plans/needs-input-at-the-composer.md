@@ -717,6 +717,42 @@ Depends on: 6 (review round 1)
 - [x] Record a follow-up item for each deferred finding, each split-off or
       blocked wider fix, and each problem outside the scope.
 
+## Milestone 10: Mockup fixes of review round 2
+
+Tags: mockup
+
+Depends on: 7
+
+- [ ] Finding 90 D: a covered card without a notice shows the short
+      line of the app, "You answered.". Only the newest request of
+      `askedThreeTimes` claims the new turn.
+- [ ] Split `docs/mockups/design-secrets.md` and `docs/mockups/README.md`,
+      which this branch takes past 300 lines (finding 92).
+- [ ] Run `npm run mockups:check`.
+
+## Milestone 11: UI fixes of review round 2
+
+Tags: ui
+
+Depends on: 8
+
+- [ ] Finding 86 B: a newer ask for the same secrets keeps the card, its
+      typed values, its focus, and its sheet.
+- [ ] Finding 88 D: one place for the composer in each chat footer takes
+      the focus when no card is left, also under the stopped bar.
+- [ ] Finding 89 D: the release-read test covers each order of the reply
+      and the events of a grouped Allow.
+- [ ] Run the targeted tests, the typecheck, lint, and format check.
+
+## Milestone 12: Docs fixes of review round 2
+
+Depends on: 9
+
+- [ ] Finding 91 B: the Secret requests page links to the rule of the Mac
+      notification.
+- [ ] Finding 92 D: split `docs/protocol/secret-requests.md`.
+- [ ] Record the follow-up items of review round 2.
+
 ## Post-merge follow-up (non-blocking)
 
 - [ ] On `conductive.build`, let a secret request turn late in a long
