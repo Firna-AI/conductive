@@ -88,6 +88,14 @@ requirement settles it or it has a clearly best option.
 16. The pull request description lists the visible mockup changes. The
     Mokly Changes view marks about 600 screens as changed, because every
     chat screen now loads `code.module.css`. Mockup finding 5 A.
+17. White space or a comma ends a fence label, so `rust,ignore` names
+    Rust. A label names a language by its name or by its file extension,
+    such as `typescript` or `ts`. Reason: Rust docs write `rust,ignore`,
+    and agents use both forms.
+18. The code block rules move to a new protocol page,
+    [Chat code blocks](../docs/protocol/chat-code-blocks.md), and the
+    drawing notes to `src/chat/code-blocks.md`. Reason: both source docs
+    would pass 300 lines.
 
 Replaced ways:
 
@@ -101,7 +109,8 @@ Replaced ways:
 
 Contract owners:
 
-- [Chat Markdown](../docs/protocol/chat-markdown.md).
+- [Chat Markdown](../docs/protocol/chat-markdown.md) and
+  [Chat code blocks](../docs/protocol/chat-code-blocks.md).
 - [Agent instructions](../docs/protocol/agent-instructions.md).
 - The [Agent text doc](../src/chat/agent-text.md) and the
   [Files README](../src/files/README.md).
@@ -137,30 +146,32 @@ Evidence: `.context/code-colours/reports/m1-*.log` and
 
 Depends on: 1
 
-- [ ] `docs/protocol/chat-markdown.md`: replace "A code block shows its
+- [x] `docs/protocol/chat-markdown.md`: replace "A code block shows its
       text with no formatting" with the colour rules of decision 1 and
       design calls 2 to 6.
-- [ ] `docs/protocol/agent-instructions.md`: add the fence label sentence
+- [x] `docs/protocol/agent-instructions.md`: add the fence label sentence
       of decision 2.
-- [ ] Update `src/chat/agent-text.md`, `src/files/README.md`, and
+- [x] Update `src/chat/agent-text.md`, `src/files/README.md`, and
       `src/files/markdown-preview.md`.
-- [ ] Add the sentence of design call 12 to the public guide. Read each
+- [x] Add the sentence of design call 12 to the public guide. Read each
       public guide and both legal pages in full, and update each sentence
       that restates a changed fact.
+
+Evidence: `.context/code-colours/reports/m2-links.log`.
 
 ## Milestone 3: Fence labels and the colourer
 
 Depends on: 1. It changes no file of Milestone 2, so the two run in
 parallel.
 
-- [ ] Add a shared fence label reader in `src/markdown/` and a label
+- [x] Add a shared fence label reader in `src/markdown/` and a label
       table beside `src/files/code/languages.ts`, with tests.
-- [ ] Keep the label on the `code` blocks of `agent-blocks.ts` and
+- [x] Keep the label on the `code` blocks of `agent-blocks.ts` and
       `preview-blocks.ts`, with tests.
-- [ ] Fix Rust lifetimes in `highlight.ts`, with a regression test.
-- [ ] Give Rust its own family in `languages.ts`, by design call 14, with
+- [x] Fix Rust lifetimes in `highlight.ts`, with a regression test.
+- [x] Give Rust its own family in `languages.ts`, by design call 14, with
       a test.
-- [ ] Add the fence label sentence to
+- [x] Add the fence label sentence to
       `crates/cnd-runner/src/engine/instructions.rs`, with its test. Run
       the Rust checks.
 
