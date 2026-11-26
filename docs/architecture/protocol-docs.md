@@ -183,8 +183,11 @@ This page lists each protocol doc and what it covers.
   - [Keyboard shortcuts: the hosts](../protocol/keyboard-shortcuts-hosts.md)
   - [Keyboard shortcuts: matching a press](../protocol/keyboard-shortcuts-matching.md)
   - [Keyboard shortcuts: the settings tab](../protocol/keyboard-shortcuts-tab.md)
-- [Account stats](../protocol/account-stats.md): the Stats tab of the
-  Account page, its counts of the person signed in, and its reads.
+- [Settings](../protocol/settings.md): the one place for Account settings
+  and the org settings, as a dialog on a desktop and as screens on a
+  phone, with its addresses and its ways in.
+- [Account stats](../protocol/account-stats.md): the Stats tab of
+  Account settings, its counts of the person signed in, and its reads.
 - [Org image](../protocol/org-image.md): the org image, its builds and its
   refreshes, and the first build of a new org.
   - [Repository changes of the org image](../protocol/org-image-repositories.md):

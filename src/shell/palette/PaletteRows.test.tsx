@@ -223,9 +223,9 @@ describe('the rows of the command palette', () => {
     })
   })
 
-  test('the Account page works on the org that the tab opened last, and a change of the address closes the palette', async () => {
+  test('a page without an org works on the org that the tab opened last, and a change of the address closes the palette', async () => {
     const { navigation } = await openPaletteTab(routes.org('futex'))
-    act(() => navigation.push(routes.account()))
+    act(() => navigation.push('/not-a-page'))
     await settle()
     pressCommand('command-palette', 'other', document.body)
     click(byRole('tab', 'Settings'))

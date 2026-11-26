@@ -49,7 +49,7 @@ open. Its pull request keeps them after the merge.
   A Codex save can make a second read, as
   [The address of a Codex save](#the-address-of-a-codex-save) says. The
   Worker makes no other call to the endpoint.
-- The owner of a personal endpoint presses Refresh on the account page.
+- The owner of a personal endpoint presses Refresh on the Agents tab of Account settings.
   For an org endpoint, an admin presses Refresh on the Agents tab of the
   org settings.
 - A read fails when it gets no model list that the app can read, such as
@@ -70,7 +70,7 @@ open. Its pull request keeps them after the merge.
   on that model. The favourite stays saved. Preferences shows it greyed
   only for a personal endpoint of the member, as
   [Hidden favourites](model-favourites.md#hidden-favourites) says.
-- The account page names each model of the app that the list does not
+- The Agents tab of Account settings names each model of the app that the list does not
   name, with its model ID and the time when the Worker read that list. For
   an org endpoint, the Agents tab names them to an admin in the same way.
 - Reason: a model that the endpoint does not serve fails in its turn. A
@@ -85,7 +85,7 @@ open. Its pull request keeps them after the merge.
   endpoint that refuses it fails each such turn on the login, as
   [The requests of the agents](fast-mode.md#the-requests-of-the-agents)
   says.
-- When a save or a Refresh reads no model list, the account page shows a
+- When a save or a Refresh reads no model list, the Agents tab shows a
   warning under the login, with Refresh (Codex base decision 1). The
   warning says "Conductive couldn't read the model list of this endpoint.
   Check the address and the key."
@@ -102,14 +102,14 @@ open. Its pull request keeps them after the merge.
 - Risk: such an endpoint still shows the warning after each save and each
   Refresh, although its turns work.
 - Cost: a key that stops working after the save shows no warning on the
-  account page. Its turns fail with their own cause.
+  Agents tab. Its turns fail with their own cause.
 
 ## The key and the address
 
 - The key and the full address are write-only, as the other logins are.
   The browser gets back only the host of the address, with its port when
-  the port is not the default. The account page shows that host with the
-  login. The Agents tab of the org settings shows the host of an org
+  the port is not the default. The Agents tab of Account settings shows that host
+  with the login. The Agents tab of the org settings shows the host of an org
   endpoint in the same way.
 - The app stores the key and the address encrypted. It keeps only the host
   and the port in plain text, so that it can show them. Reason: the path or
@@ -202,7 +202,7 @@ open. Its pull request keeps them after the merge.
 - Risk: an endpoint can list its models at the typed address, but serve
   the Responses API only under `/v1`. It then gets no second read and no
   warning, and its turns fail with HTTP 404.
-- After a save that added `/v1`, the account page shows a note under the
+- After a save that added `/v1`, the Agents tab shows a note under the
   Codex login: "Conductive added /v1 to the address, because the endpoint
   lists its models there." Reason: the account shows only the host, so
   the owner must learn that the saved address differs from the typed one.
@@ -217,7 +217,7 @@ open. Its pull request keeps them after the merge.
   Reason: an owner who connects an agent there needs them as much.
 - For an org endpoint, the Agents tab of the org settings shows the
   warning, with Refresh, and the note to an admin. It shows them as the
-  account page shows them to the owner. A member who is not an admin sees
+  Agents tab of Account settings shows them to the owner. A member who is not an admin sees
   neither.
   Reason: each rule of an own endpoint holds for an org endpoint, and only
   an admin sees the model list and Refresh of an org endpoint.

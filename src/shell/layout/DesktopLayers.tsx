@@ -4,6 +4,7 @@ import frame from '../../ui/components/layout/AppFrame.module.css'
 import { FeedbackLayer } from '../feedback/FeedbackLayer'
 import { NewWorkspaceHost } from '../new-workspace/NewWorkspaceHost'
 import { PaletteLayer } from '../palette/PaletteLayer'
+import { SettingsLayer } from '../settings/SettingsDialog'
 import { OverlayHost } from '../ui/Overlay'
 import { useScreenFocus } from '../ui/screen-focus'
 import layout from './layout.module.css'
@@ -25,8 +26,9 @@ function MainArea(props: { children: ReactNode }) {
 
 /**
  * The layers and the main area that every desktop frame shares: sheets and
- * dialogs, the New workspace dialog, the command palette, and the Feedback
- * dialog that it opens, each over the whole frame. `leading` comes before
+ * dialogs, the New workspace dialog, the command palette, the Feedback
+ * dialog that it opens, and the Settings dialog of a settings address, each
+ * over the whole frame. `leading` comes before
  * the main area, such as the rail and the sidebar, or the strip of the
  * window controls. So New workspace opens as the user chose on each desktop
  * page, and each main area can take the focus after a move. A phone has no
@@ -43,6 +45,7 @@ export function DesktopLayers(props: {
         <MainArea>{props.children}</MainArea>
         <PaletteLayer />
         <FeedbackLayer />
+        <SettingsLayer />
       </NewWorkspaceHost>
     </OverlayHost>
   )

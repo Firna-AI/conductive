@@ -117,7 +117,7 @@ In a browser or on another Mac, the request is read-only and comes after any sec
 
 ## Change saved permissions
 
-Open **Account** in the Mac app, then the **This Mac** tab.
+Open **Settings** in the Mac app, then **This Mac** under **Account**.
 It shows the Mac's name and **Available** or **Not available**.
 
 - Under **Always allowed**, use **Remove** to make that command ask again.

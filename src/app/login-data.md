@@ -172,7 +172,7 @@ says what the screens show.
   with the model lists of `?modelList`.
 - `endpoint-models.ts`: the one rule of the model lists of own endpoints.
   `unlistedModels` gives the app models that the last list of a login does
-  not name, for the account page. `offeredModels` gives the models that a
+  not name, for the Agents tab of Account settings. `offeredModels` gives the models that a
   picker offers, with the list of each agent. Every picker calls it, as
   [Screens](screens.md) says. `loginModels` and `newSessionModels` of
   `default-logins.ts` give it the list of the login that a message runs

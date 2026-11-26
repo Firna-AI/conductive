@@ -7,9 +7,9 @@ import { expandedPreviewCopy } from '../../../ui/components/tools/previewCopy'
 import { IconButton } from '../../ui/actions'
 import { useModalLayer } from '../../ui/layers'
 import { trapTab } from '../../ui/Sheet'
+import { useEscapeLayer } from '../../ui/escape-layer'
 import {
   focusableSelector,
-  useEscapeLayer,
   useLayerFocus,
   type Focusable,
 } from '../../ui/Overlay'

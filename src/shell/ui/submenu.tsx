@@ -8,7 +8,7 @@ import {
   type RefObject,
 } from 'react'
 import { placeChoices } from './menu-place'
-import { useEscapeLayer } from './Overlay'
+import { useEscapeLayer } from './escape-layer'
 import ui from './ui.module.css'
 
 /** The open submenu of a menu, and how it opened. */

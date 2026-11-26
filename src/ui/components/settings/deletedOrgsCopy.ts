@@ -1,5 +1,5 @@
 /**
- * The words of the Deleted orgs section of the Account page. The page of
+ * The words of the Deleted orgs section of Account settings. The page of
  * the app and its mockup share them.
  */
 export const deletedOrgsCopy = {

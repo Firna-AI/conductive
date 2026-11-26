@@ -54,7 +54,7 @@ it('refuses a configured preview endpoint before runner dispatch with the accoun
       error: {
         code: 'agent_login_required',
         message:
-          "Octocat's Claude login needs a public https:// endpoint with a host name. Update the login on the account page.",
+          "Octocat's Claude login needs a public https:// endpoint with a host name. Update the login in Account settings.",
       },
       retryMessageId: 'preview-message',
       durationMs: 0,

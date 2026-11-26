@@ -4,7 +4,6 @@ import { noop } from '../../../../../src/ui/noop'
 import { paths } from '../../paths'
 import type { OrgColor } from '../../../../../src/ui/design/orgColors'
 import { actionButton } from '../../entries/components/common/actions.mockup'
-import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 import { detailList } from '../../entries/components/settings/DetailList.mockup'
@@ -34,40 +33,6 @@ export const suspendedSettingsLinks: Readonly<Record<SettingsTab, string>> = {
   agents: paths.suspendedAgents,
   secrets: paths.suspendedSecrets,
   members: paths.suspendedMembers,
-}
-
-/**
- * The parts of the org settings, as tabs that link to each part. Every
- * person of the org sees the same tabs. Agents, with the org logins of
- * decision 1 B of the org logins plan, follows Cloud computer. `wrap` puts the tabs on two lines,
- * for a phone, where they do not fit on one.
- */
-export function SettingsTabs(props: {
-  tab: SettingsTab
-  wrap?: boolean
-  links?: Readonly<Record<SettingsTab, string>>
-}) {
-  const links = props.links ?? settingsLinks
-  const tabs = [
-    { label: 'General', tab: 'general' },
-    { label: 'Repositories', tab: 'repositories' },
-    { label: 'Cloud computer', tab: 'computer' },
-    { label: 'Agents', tab: 'agents' },
-    { label: 'Secrets', tab: 'secrets' },
-    { label: 'Members', tab: 'members' },
-  ] satisfies readonly { label: string; tab: SettingsTab }[]
-  return (
-    <linkTabs.Component
-      label="Org settings"
-      moklyInstance="settings-tabs"
-      tabs={tabs.map((item) => ({
-        label: item.label,
-        to: links[item.tab],
-        selected: props.tab === item.tab,
-      }))}
-      {...defined({ wrap: props.wrap })}
-    />
-  )
 }
 
 /** The name of an org and the initials that the rail shows. */

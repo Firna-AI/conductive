@@ -1,23 +1,23 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { CircleAlert } from 'lucide-react'
 import { EmptyState } from '../ui/components/common/EmptyState'
 import { inFirstRun } from '../app/get-started'
 import { startPage } from '../app/last-workspaces'
-import { useNavigation, useRoute } from '../app/navigation'
+import { useHref, useNavigation, useRoute } from '../app/navigation'
 import { routes, type Route } from '../app/router'
+import { isSettingsRoute } from '../app/settings-route'
 import { useStore } from '../app/store'
 import type { User } from '../shared/api'
-import { AccountScreen } from './account/AccountScreen'
 import { SignInScreen } from './auth/SignInScreen'
 import { useApp } from './context'
 import { InvitationsScreen } from './invitations/InvitationsScreen'
 import { Alone, Loading } from './layout/Alone'
 import { PhoneFrame } from './layout/frames'
-import { Sidebar } from './list/Sidebar'
-import { useKeptOrg } from './mac/mac-app'
 import { GetStartedScreen } from './onboarding/GetStartedScreen'
 import { OperatorRoutes } from './operator/OperatorRoutes'
 import { CreateOrgScreen } from './orgs/CreateOrgScreen'
+import { SettingsSlotProvider } from './settings/SettingsDialog'
+import { useSettingsView, type PageRoute } from './settings/settings-view'
 import { NotAvailable, OrgRoutes, RailFrame } from './OrgRoutes'
 import { useShortcutOffer } from './shortcuts/shortcut-context'
 import { ActionButton } from './ui/actions'
@@ -75,48 +75,15 @@ function Home(props: { user: User }) {
   )
 }
 
-type AccountRoute = Extract<Route, { screen: 'account' }>
-
-/** The account. The Mac app keeps the sidebar of an org beside it. */
-function Account(props: { route: AccountRoute; user: User }) {
-  const phone = useViewport() === 'phone'
-  const org = useKeptOrg()
-  const page = (
-    <AccountScreen
-      connect={props.route.connect}
-      tab={props.route.tab}
-      user={props.user}
-    />
-  )
-  if (phone) return <PhoneFrame>{page}</PhoneFrame>
-  return (
-    <RailFrame
-      current="account"
-      sidebar={
-        org ? <Sidebar current={null} org={org} user={props.user} /> : undefined
-      }
-      user={props.user}
-    >
-      {page}
-    </RailFrame>
-  )
-}
-
-/**
- * The screen of the address in the signed-in app. Its key of the Account
- * page works on each page, as the Account link of the rail and of the org
- * switcher of a phone does.
- */
-function Signed(props: { route: Route; user: User }) {
+/** The screen of an address that is not one of Settings. */
+function Screen(props: { route: PageRoute; user: User }) {
   const { route, user } = props
   const phone = useViewport() === 'phone'
-  const open = useOpenPage()
-  useShortcutOffer('account-page', () => open(routes.account()))
-  const inRail = (page: ReactNode, current: 'account' | null) =>
+  const inRail = (page: ReactNode) =>
     phone ? (
       <PhoneFrame>{page}</PhoneFrame>
     ) : (
-      <RailFrame current={current} user={user}>
+      <RailFrame current={null} user={user}>
         {page}
       </RailFrame>
     )
@@ -124,9 +91,7 @@ function Signed(props: { route: Route; user: User }) {
     case 'home':
       return <Home user={user} />
     case 'get-started':
-      return inRail(<GetStartedScreen user={user} />, null)
-    case 'account':
-      return <Account route={route} user={user} />
+      return inRail(<GetStartedScreen user={user} />)
     case 'create-org':
       return (
         <Alone>
@@ -138,10 +103,44 @@ function Signed(props: { route: Route; user: User }) {
     case 'join':
       return <Joined />
     case 'not-found':
-      return inRail(<NotAvailable title="This page is not available" />, null)
+      return inRail(<NotAvailable title="This page is not available" />)
     default:
       return <OrgRoutes route={route} user={user} />
   }
+}
+
+/**
+ * The last page that the tab showed, other than Settings, which a
+ * desktop shows below the Settings dialog. `/` and a join link only
+ * redirect, so they are no page below.
+ */
+function useBelow(route: Route): string | null {
+  const href = useHref()
+  const [below, setBelow] = useState<string | null>(null)
+  const page =
+    !isSettingsRoute(route) &&
+    route.screen !== 'home' &&
+    route.screen !== 'join'
+  if (page && below !== href) setBelow(href)
+  return page ? href : below
+}
+
+/**
+ * The screen of the address in the signed-in app. Its key of Settings
+ * works on each page, as the Account link of the rail does.
+ */
+function Signed(props: { route: Route; user: User }) {
+  const { route, user } = props
+  const open = useOpenPage()
+  const below = useBelow(route)
+  useShortcutOffer('account-page', () => open(routes.account()))
+  const view = useSettingsView(route, below, user)
+  if (view.kind === 'screen') return view.screen
+  return (
+    <SettingsSlotProvider dialog={view.dialog}>
+      <Screen route={view.route} user={user} />
+    </SettingsSlotProvider>
+  )
 }
 
 /**

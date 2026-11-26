@@ -255,6 +255,8 @@
   "docs/mockups/src/components/settings/Section.module.css": "src/ui/components/settings/Section.module.css",
   "docs/mockups/src/components/settings/Section.tsx": "src/ui/components/settings/Section.tsx",
   "docs/mockups/src/components/settings/SettingSwitch.tsx": "src/ui/components/settings/SettingSwitch.tsx",
+  "docs/mockups/src/components/settings/SettingsDialog.module.css": "src/ui/components/settings/SettingsDialog.module.css",
+  "docs/mockups/src/components/settings/SettingsNav.module.css": "src/ui/components/settings/SettingsNav.module.css",
   "docs/mockups/src/components/settings/ShortcutsSections.module.css": "src/ui/components/settings/ShortcutsSections.module.css",
   "docs/mockups/src/components/settings/SkillList.module.css": "src/ui/components/settings/SkillList.module.css",
   "docs/mockups/src/components/settings/SkillList.tsx": "src/ui/components/settings/SkillList.tsx",

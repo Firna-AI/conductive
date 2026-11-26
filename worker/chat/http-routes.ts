@@ -19,6 +19,7 @@ import type { ChatDependencies } from './types'
 import type { WorkspaceLinkContext } from '../data/workspace-link'
 import { presentWorkspaceHistory } from './workspace-events'
 import { explainSession } from './explain-session'
+import { warnActiveTurnMismatches } from './active-turn-check'
 import { prepareWorkspaceEventLabels } from './workspace-labels'
 
 export function afterNumber(url: URL): number {
@@ -66,10 +67,11 @@ export async function chatRoute(
   }
   if (suffix === '/sessions') {
     if (request.method === 'GET') {
-      const { sessions, eventNumber } = await operation.read(async (view) => ({
-        sessions: await view.sessions(),
-        eventNumber: view.eventNumber,
-      }))
+      const { sessions, eventNumber } = await operation.read(async (view) => {
+        const sessions = await view.sessions()
+        await warnActiveTurnMismatches(view, presentation.workspaceId, sessions)
+        return { sessions, eventNumber: view.eventNumber }
+      })
       return Response.json({
         eventNumber,
         sessions: sessions

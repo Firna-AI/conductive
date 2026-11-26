@@ -1,0 +1,100 @@
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* The heading of a group, in the style of the section headings of the sidebar. */
+.heading {
+  overflow: hidden;
+  margin: 0;
+  padding: 0 10px 4px;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-label);
+  font-weight: 500;
+  letter-spacing: var(--ui-tracking-label);
+  text-overflow: ellipsis;
+  text-transform: var(--ui-label-case);
+  white-space: nowrap;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: var(--ui-row-height);
+  min-height: var(--ui-touch-min);
+  padding: 0 10px;
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+  text-decoration: none;
+}
+
+.row:hover {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+}
+
+.selected,
+.selected:hover {
+  background: var(--ui-selected);
+  color: var(--ui-ink);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.label {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.end {
+  flex-shrink: 0;
+  color: var(--ui-faint);
+}
+
+/* On a phone each group is a list with dividers, and each row is 44 px high. */
+.touch {
+  gap: 20px;
+}
+
+.touch .rows {
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-bar);
+}
+
+.touch .rows > li + li {
+  border-top: 1px solid var(--ui-border);
+}
+
+.touch .row {
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 0;
+}

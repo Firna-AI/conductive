@@ -4,80 +4,12 @@ import {
   LeaveOrgSection,
   OrgDetailsSection,
   OrgNameFields,
-  SettingsTabs,
-  suspendedSettingsLinks,
-  type SettingsTab,
 } from '../../../components/settings/OrgSections'
 import { ORG_COLORS } from '../../../../../../src/ui/design/orgColors'
 import { orgs } from '../../../fixtures/orgs'
 import { readOnlyCauseSchema } from './computerSchemas'
 
 const acme = orgs.acme
-
-/** The tabs of the org settings, as `SettingsTab` lists them. */
-const settingsTabKeys = [
-  'general',
-  'repositories',
-  'computer',
-  'agents',
-  'secrets',
-  'members',
-] as const satisfies readonly SettingsTab[]
-
-/** A page of the catalogue. */
-const pageSchema = { type: 'string', minLength: 1 } as const
-
-/** The tabs of the org settings, registered with Mokly. */
-export const settingsTabs = defineComponent({
-  slug: 'settings-tabs',
-  title: 'Settings tabs',
-  description:
-    'The parts of the org settings as tabs that link to each part: General, Repositories, Cloud computer, Agents, Secrets, and Members. Every person of the org sees the same tabs. On a phone, the tabs wrap to two lines. Its own page shows General.',
-  relatedDocs: ['docs/mockups/catalogue.md'],
-  propSchema: {
-    type: 'object',
-    additionalProperties: false,
-    required: ['tab'],
-    properties: {
-      tab: { enum: settingsTabKeys },
-      /** The tabs wrap to two lines, for a phone. */
-      wrap: { type: 'boolean' },
-      /** The page of each tab, when it is not the page of Acme. */
-      links: {
-        type: 'object',
-        additionalProperties: false,
-        required: settingsTabKeys,
-        properties: {
-          general: pageSchema,
-          repositories: pageSchema,
-          computer: pageSchema,
-          agents: pageSchema,
-          secrets: pageSchema,
-          members: pageSchema,
-        },
-      },
-    },
-  } as const,
-  props: { tab: 'general' },
-  render: (props) => (
-    <SettingsTabs links={props.links} tab={props.tab} wrap={props.wrap} />
-  ),
-  variants: [
-    {
-      slug: 'wrap',
-      title: 'On a phone',
-      description: 'The tabs on two lines, with Members shown.',
-      props: { tab: 'members', wrap: true },
-    },
-    {
-      slug: 'suspended',
-      title: 'Suspended org',
-      description:
-        'The tabs of a suspended org, which link to its read-only pages.',
-      props: { tab: 'computer', links: suspendedSettingsLinks },
-    },
-  ],
-})
 
 /** The name and the initials of an org, registered with Mokly. */
 export const orgNameFields = defineComponent({

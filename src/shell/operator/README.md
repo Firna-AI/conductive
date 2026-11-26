@@ -224,7 +224,7 @@ year than the last day has its year there.
   serves the sample orgs, users, people who wait, and codes of the
   mockups. Suspend, Lift, Approve, New code, Disable, the pause, and the
   waitlist switch change them until the page loads again. The waitlist and
-  the Account page of the dev fake read the same codes, pause, and switch.
+  Account settings of the dev fake read the same codes, pause, and switch.
   The approval email of Sam Okafor does not go at once, and Kenji
   Watanabe has no verified email.
 - Add `&waitlist=off` to start with the waitlist off, by the operator of

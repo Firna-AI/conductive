@@ -96,8 +96,8 @@ Select **Start from** followed by the default branch's name, or choose another b
 On a computer, a new account opens the dialog.
 Older accounts keep the page.
 
-1. Open **Account**.
-2. Open **Preferences**.
+1. Open **Settings**.
+2. Select **Preferences** under **Account**.
 3. Find **New workspaces**.
 4. Set **Open New workspace in** to **Page** or **Dialog**.
 

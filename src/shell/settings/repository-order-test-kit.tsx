@@ -6,7 +6,7 @@ import { repositoryFixtures } from '../../test-support/fixtures/repositories'
 import { click, mountScreen, settle } from '../test-mount'
 import { startedApp, type ScreenOptions } from '../test-render'
 import { OverlayHost } from '../ui/Overlay'
-import { OrgSettingsScreen } from './OrgSettingsScreen'
+import { OrgTabContent } from './OrgTabContent'
 
 export const { org } = FAKE_IDS
 export const { repositories } = repositoryFixtures(org).repositories
@@ -29,7 +29,7 @@ export async function repositoriesTab(
   const view = mountScreen(
     app,
     <OverlayHost>
-      <OrgSettingsScreen org={acme} tab="repositories" user={boot.user} />
+      <OrgTabContent org={acme} tab="repositories" user={boot.user} />
     </OverlayHost>,
     screen,
   )

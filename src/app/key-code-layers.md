@@ -18,8 +18,8 @@ the folder of this page.
   between the list mark and the name. `commands.ts` holds the labels, the search words, and
   `actionCommands`, the command of the keys of each action. Each command
   row names its command in `CommandRow.command`. The Account group of the
-  Settings tab lists `accountSettingIds` in the order of the Account page
-  of `../shell/account/AccountScreen.tsx`, tab by tab, so This Mac follows
+  Settings tab lists `accountSettingIds` in the order of Account settings
+  in `../shell/account/AccountTabContent.tsx`, tab by tab, so This Mac follows
   Sign-in in the Mac app. A section that the page adds or moves takes the
   same place in that list. The group ends with Keyboard shortcuts, which
   opens that tab. `feedbackRow` in `palette-rows.ts` is the row of Send

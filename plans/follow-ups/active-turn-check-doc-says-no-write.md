@@ -1,0 +1,31 @@
+# The active turn check doc says it writes nothing
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-26, from branch `calummoore/sidebar-indicator-not-showing-4fri`, review finding 4.
+- **Location:** `worker/chat/active-turn-check.ts:36-50`, `worker/chat/chat-transaction.ts:124-127`, `worker/chat/workspace-summary.ts:85-140`, `docs/protocol/runner-warnings.md` section "Active turns that do not run".
+- **Reason:** The review found it after the two fix rounds of its branch, and the write already happens on other reads on `main`.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Active turn:** the turn that a chat session names in its stored record as the one that runs or waits. The chat shows "Working" while the session names a started turn.
+  - **Running list:** the IDs of the turns that the workspace summary counts as running. The summary is the Worker's saved record `chat:v1:workspace-summary` in the workspace object. The sidebar shows a workspace as working when this list is not empty, and the idle stop does not stop a workspace while a turn on it runs.
+  - **Active turn check:** the check in `worker/chat/active-turn-check.ts` that the session list route `GET .../sessions` runs. It writes the log warning `session_active_turn_not_running` for each session whose active turn does not count as running, and `active_turn_check_failed` when the check throws.
+- **Background:**
+  - The active turn check reads the running list through `ChatTransaction.runningTurnIds()`, which calls the summary loader `WorkspaceSummaryProjection.recovery()`.
+  - The loader saves the summary once per workspace when the summary is absent, or when it lacks `lastTurnEndedAt` or `title`, an older format. The save keeps the stored `activeTurns` and only adds the missing fields.
+  - The same save already runs on `main` at the first sidebar list read (`readChatWorkspaceSummary`), at the first workspace open (`readChatWorkspaceResponse`), and at the first saved turn or event.
+  - The protocol section "Active turns that do not run" says "The warning changes no record and no reply". The comment of `warnActiveTurnMismatches` says "It reads committed records and changes none."
+- **Problem:** The active turn check can make the one-time summary save, so the doc sentence and the comment are not true. No evidence is lost, because the save keeps the running list.
+- **Impact if no action:** A reader of the protocol believes the check never writes. A later change can rely on that and be wrong.
+- **Root question:** Can the active turn check take part in the one-time summary upgrade that the list and open reads already do, and what must the protocol then say?
+- **Options:**
+  - **A.** Add a read-only method on `WorkspaceSummaryProjection`, such as `peekActiveTurns()`. It reads the saved running IDs, or derives them in memory with the same filter as `initialize()` when no current summary is saved. The check uses it, and it skips the read when no session has an active turn. Effort: Small.
+  - **B.** Keep the code. Narrow the protocol sentence and the comment: the check changes no session, no turn, and no reply, and it can complete the one-time summary upgrade that the list and open reads already do. Effort: Small.
+  - **C.** Make the summary loader in a `store.read` view compute in memory and skip the save, with a flag on `WorkspaceSummaryProjection`. It covers this check and the workspace open read. The open read save is on `main` today, so this option may need approval. Effort: Medium.
+- **Left out:** Running the check in the background still saves. A read-only storage interface for all diagnostics protects no named reader, because the other read saves are the intended lazy upgrade.
+- **Wider fix:** C.
+- **Previous examples:** Commit `0660702f1` split history index work into batches so that the chat queue could run between them.
+- **Related:** `plans/follow-ups/active-turn-warning-reason-overstates-idle.md` edits the same comment and protocol section. Make both edits together. `plans/follow-ups/active-turn-check-running-list-route-test.md` must save a full current summary in its test, so that A does not change what it tests.
+- **Recommendation:** A. It makes the new sentence true with a small change. B is equal in cost if the user prefers to narrow the sentence.
+- **Action:** fix after merge, apply A, because the review found it after the two fix rounds of its branch.
