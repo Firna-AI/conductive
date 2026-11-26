@@ -121,6 +121,10 @@ export class ChatTransaction extends ChatRecords {
   workspaceReadState() {
     return this.readState.read()
   }
+  /** The turns that the workspace summary counts as running. */
+  async runningTurnIds(): Promise<readonly string[]> {
+    return (await this.summary.recovery()).activeTurnIds
+  }
   async lifecycleRecovery() {
     const { activeTurnIds, lastTurnEndedAt, title } =
       await this.summary.recovery()

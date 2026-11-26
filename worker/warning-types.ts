@@ -15,8 +15,11 @@ import type {
 import type { GatewayCheckErrorKind } from './model-gateway/check-error'
 import type { GatewayRefusal } from './model-gateway/errors'
 import type { UnexpectedErrorFields } from './unexpected-error'
+import type { ActiveTurnWarning } from './warning-active-turn'
 
 export const SIMPLE_WARNINGS = {
+  active_turn_check_failed:
+    'The active turn check of a session list did not finish. The list was sent without it.',
   capability_notes_failed: 'Capability notes could not be kept.',
   capability_notes_unavailable:
     'The workspace object is unavailable. The capability route uses the direct save path.',
@@ -196,6 +199,7 @@ export type WorkerWarning =
       error: ErrorSummary
     }
   | { kind: keyof typeof SIMPLE_WARNINGS }
+  | ActiveTurnWarning
   | {
       kind:
         | 'invitation_email_delivery_failed'

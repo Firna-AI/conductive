@@ -4,6 +4,7 @@ import {
 } from './lifecycle/image-sources/failure'
 import { runnerWorkFields } from './warning-runner-work'
 import { continueEndWarningFields } from './warning-continue'
+import { activeTurnWarningFields } from './warning-active-turn'
 import {
   ATTACHMENT_STEPS,
   RUNNER_MESSAGE_STAGES,
@@ -42,6 +43,8 @@ function warningFields(warning: WorkerWarning) {
   switch (warning.kind) {
     case 'workspace_continue_ended':
       return continueEndWarningFields(warning)
+    case 'session_active_turn_not_running':
+      return activeTurnWarningFields(warning)
     case 'invitation_email_delivery_failed':
     case 'approval_email_delivery_failed':
     case 'feedback_email_delivery_failed':

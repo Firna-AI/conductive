@@ -15,9 +15,12 @@ explicitly, because a typed caller can still supply extra fields.
 | `runner_disconnected` | When the runner connection ends | `workspaceId`, `connectionId`, `streamId`, `processStartId`, `protocolVersion` |
 | `runner_work_interrupted` | At the first runner work after a new start of the workspace object, when an earlier object left the record of runner work that did not end | `workspaceId`, `connectionId`, `streamId`, `processStartId`, `protocolVersion`, `work`, `stage`, `eventType`, `eventNumber`, `size` |
 | `turn_ended_without_stop_request` | After the commit that stores a turn end with no Stop request | `workspaceId`, `turnId`, `state`, `connectionId`, `streamId`, `processStartId`, `protocolVersion` |
+| `session_active_turn_not_running` | At each read of the session list, for each session whose active turn does not count as running | `workspaceId`, `sessionId`, `turnId`, `reason`, `turnState`, `startedAt` |
+| `active_turn_check_failed` | When that check fails. The session list still goes out | None |
 
 - `message` is a fixed text for each kind.
 - `state` is `finished`, `stopped`, or `failed`.
+- `reason` is `missing`, `ended`, `queued_started`, or `not_in_running_list`. `turnState` is the stored state of the turn, or `missing`. `startedAt` is the start time of the turn in Unix milliseconds, or null. [`active-turn-check.ts`](active-turn-check.ts) holds the rule, and [`worker/warning-active-turn.ts`](../warning-active-turn.ts) selects the fields.
 - `connectionId` is `ActiveRunner.state.id`, the ID that the workspace
   gives the runner connection. A turn end takes the connection that is
   current at its commit, not the connection that got the turn.
@@ -31,7 +34,7 @@ explicitly, because a typed caller can still supply extra fields.
   `protocolVersion`. A hello without `processStartId`, such as from an
   older runner, and a saved record without it also give a null
   `processStartId`.
-- `workspaceId`, `connectionId`, and `turnId` must pass
+- `workspaceId`, `sessionId`, `connectionId`, and `turnId` must pass
   `WarningId.checked`. `streamId` and `processStartId` must pass
   `WarningStreamId.checked`, a UUID check. An ID that fails its check shows
   as `unknown`. `protocolVersion` must be a positive safe integer, or it

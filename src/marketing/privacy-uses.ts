@@ -204,12 +204,17 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         the work that starts in the first 30 seconds after the program
         connects. It keeps the note while the work runs, and after a
         restart until the program connects again.
-        These records include the workspace ID and any available turn,
-        connection, and event stream IDs, and communication protocol version.
-        When available, they also include a random ID for each start of that
-        program. The team uses these logs to investigate connection problems,
-        program restarts, and interrupted agent work. These logs hold no tokens,
-        secret values, message text, file contents, or connection close reasons.
+        When a member's app reads the sessions of a workspace,
+        ${productName} also records each session whose active turn the service
+        does not count as running. That record holds the stored state of the
+        turn, the reason, and the start time of the turn.
+        These records include the workspace ID and any available session,
+        turn, connection, and event stream IDs, and communication protocol
+        version. When available, they also include a random ID for each start
+        of that program. The team uses these logs to investigate connection
+        problems, program restarts, interrupted agent work, and turns that show
+        as working after they end. These logs hold no tokens, secret values,
+        message text, file contents, or connection close reasons.
         ${productName} also records when each step of a cloud computer
         build and of a workspace start begins and ends, with the IDs of the
         org, the workspace, and the build or the start, and the time of its calls to
