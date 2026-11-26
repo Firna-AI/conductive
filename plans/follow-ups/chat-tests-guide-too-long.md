@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-26, from branch `calummoore/needs-input-at-the-composer-milestones-3-j8a8`, the guide part of review finding 92 of round 2. That branch applied the protocol part of the finding: it moved two sections of `docs/protocol/secret-requests.md` to a linked page.
-- **Location:** `src/chat/tests.md`.
+- **Location:** `src/chat/tests.md` (593 lines), and `src/chat/key-code.md`, the key-code guide of the chat, which is at the 300-line limit. The same change could not list its new file `src/chat/components/composer-place.tsx` there, so only `src/chat/README.md` names it. Split both guides into linked pages by area.
 - **Reason:** A restructure of the whole guide is Medium work and outside the purpose of the change that found it, which only added three entries.
 
 - **Source:** Review.
