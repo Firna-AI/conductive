@@ -27,7 +27,7 @@ it('keeps admission separate and chains create exits with the same step order, t
   await start.actor.advance(TEST_TIME + 2_000)
   expect(await start.job()).toMatchObject({ phase: 'branch', processId: 2 })
   expect(lifecycleCommandBody(fixture.boat.commands.at(-1) ?? '')).toContain(
-    'git checkout -b',
+    'git checkout --no-track -b',
   )
   await start.actor.advance(TEST_TIME + 3_000)
   expect(await start.job()).toMatchObject({ phase: 'startup', processId: 3 })

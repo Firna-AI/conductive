@@ -165,3 +165,47 @@ it.each(['start', 'base'] as const)(
     }
   },
 )
+
+it('branches from a start branch with no upstream, so a plain push cannot reach the start branch', async () => {
+  const fixture = backend()
+  const h = await defaultBranchFixture(fixture)
+  try {
+    const main = await h.createRemoteCommit()
+    await h.createRemoteCommit('refs/heads/feature/picked', { parent: main })
+    const row = await readWorkspace(
+      fixture.runtime.env.DB,
+      fixture.org.id,
+      h.auth.workspaceId,
+    )
+    const saved = await fixture.starts.get(row.id)?.job()
+    if (!saved || saved.kind !== 'create' || saved.phase !== 'fetch')
+      throw new Error('Missing fetch job')
+    const job = {
+      ...saved,
+      startBranch: 'feature/picked',
+      baseBranch: 'main',
+      repositoryLocations: [
+        {
+          repositoryId: row.repositoryId,
+          variable: 'CONDUCTIVE_REPOSITORY_REPOSITORY_DIR',
+          directory: h.directory,
+        },
+      ],
+    }
+    for (const phase of ['fetch', 'branch'] as const) {
+      const result = await h.execute(
+        workspacePhaseCommand(row, { ...job, phase }, null),
+      )
+      expect(result.exitCode, result.stderr).toBe(0)
+    }
+    expect(
+      await h.git(
+        'for-each-ref',
+        '--format=%(upstream)',
+        `refs/heads/${row.branch}`,
+      ),
+    ).toBe('\n')
+  } finally {
+    await h.dispose()
+  }
+})
