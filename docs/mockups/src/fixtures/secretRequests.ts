@@ -97,7 +97,11 @@ export type SecretRunItem = {
   grant?: SecretGrant
   /** The member who denied the request. */
   deniedBy?: PersonKey
-  /** How a late Allow reached the agent, as `LateDelivery` says. */
+  /**
+   * How a late Allow reached the agent, as `LateDelivery` says. A late
+   * Allow without it got no line of its own, such as an older request that
+   * the Allow of a newer one covers, so its line names only who answered.
+   */
   delivery?: LateDelivery
   /**
    * The answer of a temporary request as the card draws it: whether a

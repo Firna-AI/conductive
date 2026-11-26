@@ -124,7 +124,7 @@ Preferences.
     from decision 151. The card of a run with secrets folds in the same way.
     A late request for secrets is not work. It waits in the stack above
     the composer, and after its answer it stays at its place, unfolded, as
-    [secrets and Capabilities](design-secrets.md) gives.
+    [secret requests and results](design-secret-requests.md) gives.
   - The open fold lists its steps in order, in the indented list of an
     open run of tool calls: the call line that `ToolGroup` shares, a
     message as its first words on one line, the Mac command card, and the

@@ -3,7 +3,8 @@
 This page belongs to [the catalogue](catalogue.md). It gives the pages of
 the secrets of an org and of the Capabilities control, from the secrets
 decisions of 13 November 2026. [The design](design-secrets.md) gives their
-parts.
+parts, and [secret requests and results](design-secret-requests.md) gives
+the parts of the requests in the chat.
 
 `app/org-settings/secrets` shows the Secrets tab of Acme as Cal, an admin,
 sees it. Its child pages:
@@ -135,7 +136,8 @@ of its session. Its child pages:
     the agent for the same secret, with "Asked 3 times". Its `denied`
     variant has the three requests at their places after one Deny. Its
     `allowed` variant has them after one Allow, with one line of the app
-    and one new turn.
+    and one new turn. Only the newest request says that a new turn told
+    the agent, and the two older requests say only who answered.
   - `mac-command` has a late request for a secret on top of a command on
     the Mac, in a browser, which cannot answer the command. So the late
     request comes first, though the call of the command waits. Its `next`

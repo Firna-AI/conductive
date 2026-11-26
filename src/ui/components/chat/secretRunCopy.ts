@@ -126,9 +126,13 @@ export function lateAllowedLabel(grant: SecretGrant): string {
 /**
  * What followed the answer of a late request: a turn that told the agent,
  * nothing until the next message, because that turn cannot run, or a Deny,
- * which sends nothing (secrets decision 10 B).
+ * which sends nothing (secrets decision 10 B). `answered` says only who
+ * answered. One answer sends at most one line for each session, so an
+ * older request that the Allow of a newer one covers in its session gets
+ * no line of its own. A view that does not know what followed an answer
+ * says the same.
  */
-export type LateOutcome = 'turn' | 'next-message' | 'denied'
+export type LateOutcome = 'turn' | 'next-message' | 'denied' | 'answered'
 
 /**
  * The line of a late request after its answer. `who` starts the sentence:
@@ -143,6 +147,8 @@ export function lateAnswerNote(who: string, outcome: LateOutcome): string {
       return `${who} answered. The agent learns of it at the next message.`
     case 'denied':
       return `${who} denied it.`
+    case 'answered':
+      return `${who} answered.`
   }
 }
 

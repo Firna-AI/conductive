@@ -108,11 +108,14 @@ function lateTurn(
 
 /**
  * The three turns in which the agent asked for PROD_DATABASE_URL: the
- * count, the count by country, and the cities. Each request is in `state`.
+ * count, the count by country, and the cities. Each request is in `state`,
+ * with `extra`. `newest` adds to the request of the cities, the newest,
+ * whose card shows.
  */
 function askedThreeTimes(
   state: SecretRunItem['state'],
   extra: Partial<SecretRunItem> = {},
+  newest: Partial<SecretRunItem> = {},
 ): ChatItem[] {
   return [
     ...lateTurn(
@@ -130,7 +133,7 @@ function askedThreeTimes(
     ...lateTurn(
       'third',
       byCityAsk,
-      run(byCityRequest, state, extra),
+      run(byCityRequest, state, { ...extra, ...newest }),
       waitsByCity,
     ),
   ]
@@ -264,14 +267,16 @@ export function secretStackConversations(
       ...askedThreeTimes('late-denied', { deniedBy: 'cal' }),
     ],
     // One Allow settles the three requests and sends one line, which
-    // starts one turn.
+    // starts one turn. The line goes with the newest request, whose card
+    // Cal answered, so the two older requests say only who answered.
     'secret-asked-again-allowed': [
       ...history,
-      ...askedThreeTimes('late-allowed', {
-        grant: allowedByCal,
-        delivery: { kind: 'turn' },
-      }),
-      answerLine(replicaRequest, allowedByCal),
+      ...askedThreeTimes(
+        'late-allowed',
+        { grant: allowedByCal },
+        { delivery: { kind: 'turn' } },
+      ),
+      answerLine(byCityRequest, allowedByCal),
       working('6s'),
     ],
     'mac-waiting-secret': onMac([...history, ...lateCount], 'waiting', [

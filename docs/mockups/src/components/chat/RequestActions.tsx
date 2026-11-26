@@ -165,7 +165,9 @@ function answeredBy(item: SecretRunItem): PersonKey | undefined {
  * the sender of the turn that asked (secrets decision 10 B). When that
  * turn cannot run, the line says when the agent learns of the answer: at
  * the next message, or when the login of the session is connected again,
- * by its starter or, for the org login, by an admin.
+ * by its starter or, for the org login, by an admin. A late Allow without
+ * a delivery got no line of its own, such as an older request that the
+ * Allow of a newer one covers, so its line says only who answered.
  */
 export function endLine(
   item: SecretRunItem,
@@ -178,7 +180,8 @@ export function endLine(
   if (by === undefined) return undefined
   const who = whoOf(by, viewer).subject
   if (item.state === 'late-denied') return lateAnswerNote(who, 'denied')
-  const delivery = item.delivery ?? { kind: 'turn' }
+  const { delivery } = item
+  if (!delivery) return lateAnswerNote(who, 'answered')
   if (delivery.kind !== 'reconnect') return lateAnswerNote(who, delivery.kind)
   const { login } = delivery
   const owner: SessionLoginOwner =

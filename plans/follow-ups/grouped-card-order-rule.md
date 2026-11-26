@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-26, from branch `calummoore/needs-input-at-the-composer-milestones-3-j8a8`, review round 1, finding 2 and its repeat, finding 81.
-- **Location:** `docs/protocol/request-stack.md:113`, the place of a card in "Requests for the same secrets". `src/ui/components/chat/requestStackOrder.ts:52`, `stackEntries`, with its comment at line 38. `src/chat/components/request-stack.test.ts:112`, the test of a card whose newest request waits. `docs/mockups/design-secrets.md:226`.
+- **Location:** `docs/protocol/request-stack.md:113`, the place of a card in "Requests for the same secrets". `src/ui/components/chat/requestStackOrder.ts:52`, `stackEntries`, with its comment at line 38. `src/chat/components/request-stack.test.ts:112`, the test of a card whose newest request waits. `docs/mockups/design-secret-requests.md:99`.
 - **Reason:** The recommended option changes a protocol requirement, and no user decision covers that change.
 
 - **Terms:**
@@ -28,7 +28,7 @@
 - **Options:**
   - **A.** Keep the rule in force. Form the cards as today, then sort them again: by the waiting state of the newest request of each card, then by the place of its oldest request. Keep the cards that this view can answer first. Add the three requests of the example to the order test. Effort: Small.
   - **B.** Keep the rule in force. Form the cards in time order first, and keep the place of the oldest request on each card. Then apply the waiting rule and the answer rule to whole cards in `stackEntries`. Add the three requests of the example to the order test. Effort: Small.
-  - **C.** Keep the code, and change the rule to match it. A grouped card goes with the waiting cards while any of its requests waits, at the place of its oldest waiting request. Otherwise it takes the place of its oldest request. Update `docs/protocol/request-stack.md:113`, `docs/mockups/design-secrets.md:226`, and the comment of `stackEntries`. As for each change of a protocol fact, read both legal pages and each public guide in full for a sentence that restates the place. Add the three requests of the example to `src/chat/components/request-stack.test.ts`, so that a change of the order fails a test. Effort: Medium.
+  - **C.** Keep the code, and change the rule to match it. A grouped card goes with the waiting cards while any of its requests waits, at the place of its oldest waiting request. Otherwise it takes the place of its oldest request. Update `docs/protocol/request-stack.md:113`, `docs/mockups/design-secret-requests.md:99`, and the comment of `stackEntries`. As for each change of a protocol fact, read both legal pages and each public guide in full for a sentence that restates the place. Add the three requests of the example to `src/chat/components/request-stack.test.ts`, so that a change of the order fails a test. Effort: Medium.
 - **Left out:** A place from the newest request of a card, because each new ask of the agent would then move its card. Separate order functions for the app and the mockups, because the examples could then disagree with the app.
 - **Wider fix:** B, if the user keeps the rule in force. The shared function then gives each card its place before it sorts the cards. With C, no wider fix is needed, because one function already orders the app and the mockups.
 - **Previous examples:** None found.

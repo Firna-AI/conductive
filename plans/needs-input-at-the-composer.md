@@ -459,6 +459,13 @@ round 2). They extend the calls above on the focus and on typed values:
   name that still asks for one. Reason: the member does not type a value
   again because the agent asked again.
 
+The UI agent's calls of 26 November 2026, in milestone 10: a covered
+card whose request got no notice ends with the shared words "You
+answered.", as in the app. Only the newest request of a card that took
+the Allow claims the new turn, because the Worker sends the one notice
+with that request. A late Allow in the mockups with no `delivery` shows
+the short line.
+
 ### Calls of the protocol docs
 
 The docs agent's calls of 26 November 2026, in milestone 3:
@@ -738,12 +745,12 @@ Tags: mockup
 
 Depends on: 7
 
-- [ ] Finding 90 D: a covered card without a notice shows the short
+- [x] Finding 90 D: a covered card without a notice shows the short
       line of the app, "You answered.". Only the newest request of
       `askedThreeTimes` claims the new turn.
-- [ ] Split `docs/mockups/design-secrets.md` and `docs/mockups/README.md`,
+- [x] Split `docs/mockups/design-secrets.md` and `docs/mockups/README.md`,
       which this branch takes past 300 lines (finding 92).
-- [ ] Run `npm run mockups:check`.
+- [x] Run `npm run mockups:check`.
 
 ## Milestone 11: UI fixes of review round 2
 

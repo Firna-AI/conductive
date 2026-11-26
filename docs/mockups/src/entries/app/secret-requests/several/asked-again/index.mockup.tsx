@@ -33,9 +33,9 @@ export const askedAgain = defineScreen({
       {
         title: 'Allowed',
         description:
-          'Cal pressed Allow for this session, and the one Allow allowed the three requests. Each request takes its place in its own turn, with Allowed for this session, and its line says that he answered and that a new turn told the agent. One line of the app says that he allowed PROD_DATABASE_URL for this session, and it starts one new turn.',
+          'Cal pressed Allow for this session, and the one Allow allowed the three requests. Each request takes its place in its own turn, with Allowed for this session. One line of the app says that he allowed PROD_DATABASE_URL for this session, and it starts one new turn. That line goes with the newest request, for the cities, so only the line of that request says that he answered and that a new turn told the agent. The lines of the two older requests say only that he answered.',
         rationale:
-          'Under the rule of covered requests, an Allow also allows each other open request that its grant covers, and one answer sends at most one line for each session.',
+          'Under the rule of covered requests, an Allow also allows each other open request that its grant covers, and one answer sends at most one line for each session. A covered request names the member who answered, and only the request that sent the line names the new turn, as the app shows.',
       },
     ]),
   ],
