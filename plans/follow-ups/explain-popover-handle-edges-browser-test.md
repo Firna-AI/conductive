@@ -1,0 +1,58 @@
+# Tests miss where the popover handles draw
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from branch `calummoore/resize-popup-kd67`, review round 2, finding 9.
+- **Location:** `src/chat/explain/PopoverResize.dom.test.tsx:108`, the mounted test whose name says that the handles "lie on its free edges". `src/chat/explain/PopoverResize.tsx:13-30`, the maps `edgeClasses` and `cornerClasses`, which lines 50 and 72 apply. `src/chat/explain/popover-edges.test.ts:118-123`, the table test of `popoverLayout`. `src/chat/explain/popover-place.ts:96` and `:125-132`, `settleFrames` and the settle loop of `usePopoverLayout`. `desktop/tests/`, where the new spec goes.
+- **Reason:** CI runs Electron specs only on Mac runners, and the Linux computer of the review lacked `xvfb-run`, which the spec runner needs on Linux.
+
+- **Terms:**
+  - **Explain popover:** the panel that `src/chat/explain/ExplainPopover.tsx` draws by its mark, the highlight of an explained quote in the workspace chat.
+  - **Free edge:** an edge of the panel away from its mark, which a handle moves.
+  - **Mounted test:** a Vitest test that mounts the React app in happy-dom, which lays out nothing, such as `src/chat/explain/PopoverResize.dom.test.tsx`.
+  - **Electron spec:** a Playwright test under `desktop/tests/` that drives the app in Electron, a real Chromium browser that lays out the page.
+  - **Settle frames:** the next animation frames, up to `settleFrames` in `src/chat/explain/popover-place.ts`, in which `usePopoverLayout` measures again until the layout stops changing.
+- **Background:**
+  - On a computer, the member resizes the popover with a handle on each free edge and a corner between them. On 24 November 2026, the user chose these handles, built on one shared handle hook. The protocol names this choice popover resize decision 1 J.
+  - `docs/protocol/explain-popover.md`, under "The size on a computer", says: "On a computer, the member drags a free edge of the popover to change its size. A drag of the corner between the two free edges changes both."
+  - Below the mark, the bottom edge is free, and above it the top edge. At the start of the mark, the right edge is free, and at the end the left edge.
+  - So a panel above and at the end of its mark needs handles on its top and left edges. Its corner handle is then at the top left.
+  - `popoverLayout` in `src/chat/explain/popover-edges.ts` finds the free edges from the boxes of the panel, the mark, and the app frame that holds the panel. `PopoverResize` in `src/chat/explain/PopoverResize.tsx` maps them to the CSS classes of the handles.
+  - The CSS in `src/ui/components/explain/ExplainPopover.module.css` puts each class on its edge. For example, `.edgeLeft` has `left: 0`, and `.cornerTopLeft` has `top: 0` and `left: 0`.
+  - After a resize of the window, the page lays its columns out again one frame later, with no event for the popover. The settle frames then find the free edges again.
+  - A browser check during the change that added the handles found them on the old edges after a window resize. The settle frames fixed that.
+  - `src/chat/explain/ExplainPopover.tsx` calls `refresh` when the pointer or the focus comes into the panel. `refresh` also finds the free edges again.
+  - `desktop/tests/chat-menu-clipping.spec.ts` builds the chat development page from `src/chat/dev/`, serves it, and opens it in an Electron window of 1440 px by 900 px.
+  - The chat development page serves Explain, as `src/chat/dev/README.md` says. So a spec can open a popover there.
+  - `desktop/tests/window-controls.spec.ts` resizes the window with `BrowserWindow.getAllWindows()[0].setContentSize` inside `electron.evaluate`. It then polls `innerWidth` until the new width shows.
+  - `npm --prefix desktop run test:electron` runs the specs through `desktop/scripts/smoke.ts`, which needs `xvfb-run` on Linux.
+  - In CI, only `.github/workflows/desktop-mac-checks.yml` runs the specs, on the runners `blacksmith-6vcpu-macos-15` and `macos-15-intel`. The Desktop workflow, `.github/workflows/desktop-ci.yml`, calls it.
+- **Problem:** The mounted test whose name says that the handles "lie on its free edges" checks only that they come after the follow-up field. The table test checks only `popoverLayout`. A change that hard-codes the edge classes to bottom and right passes both, and no test covers the settle frames.
+- **Evidence:**
+  - At commit `99e872eee`, no test under `src/`, `desktop/tests/`, or `docs/mockups/` names `edgeTop`, `edgeBottom`, `edgeLeft`, `edgeRight`, a corner class, `edgeClasses`, or `cornerClasses`.
+  - The mounted test of the keys has a name that starts "moves each free edge in the direction of its arrow". It lays out a panel above and at the end of its mark.
+  - That test checks the values of the handles and the directions of the keys.
+  - `usePopoverResize` in `src/chat/explain/usePopoverResize.ts` takes those directions from the layout, not from the classes. So that test also passes with the classes hard-coded.
+  - No test in `src/chat/explain/` names `settleFrames`, `requestAnimationFrame`, or `ResizeObserver`. happy-dom lays out nothing, so a mounted test cannot see a layout that changes one frame later.
+- **Impact if no action:** The test suite can pass while a member must grab the wrong edge to resize the panel. A change that drops the settle frames can bring back handles on the old edges after a window resize, and no test fails.
+- **Root question:** How can a test prove that the controls appear on the edges they move?
+- **Options:**
+  - **A.** Extend the mounted test of the keys to check the top and left classes of its panel above and at the end of its mark. It checks the choice of the classes in a test without layout. Effort: Small.
+  - **B.** Add one browser case in the desktop chat. Compare the drawn handles with the top and left edges of a panel above and at the end of its mark. Prove that the case fails with bottom and right hard-coded. Effort: Medium.
+  - **C.** Mount the real panel with a test mark and a test app frame in a browser component fixture. This adds fixture code, and it covers less of the workspace. Effort: Medium.
+  - **D.** Make B wider, in one Electron spec under `desktop/tests/`, built like `desktop/tests/chat-menu-clipping.spec.ts`. Effort: Medium.
+    - Open a popover above and at the end of its mark. Check that the height and width handles lie on the top and left edges of the panel.
+    - Drag the corner from the top left of the panel, up and to the left. Check that the values of both edge handles grow.
+    - Resize the window with `setContentSize`, as `desktop/tests/window-controls.spec.ts` does. Move no pointer into the panel, and keep the focus out of it.
+    - Check that the handles then move to the new edges of the panel with no input.
+    - Prove that the spec fails when the edge classes are hard-coded to bottom and right. Prove that it fails when the settle frames are removed.
+    - Rename the mounted test so that its name says what it checks. It checks that the handles come after the follow-up field, and that the sheet of a phone has none.
+  - **E.** Check the classes of the panel above and at the end of its mark in a mounted test, also the class of the corner. It asserts CSS class names, so a wrong rule in the CSS still passes. It does not cover the settle frames. Effort: Small.
+- **Left out:** Another test of `popoverLayout`. That calculation can return the right edges while the handles draw elsewhere.
+- **Wider fix:** None. The shared `testing` skill already puts layout checks in browser specs, and it asks each check to prove that it fails for a named break.
+- **Previous examples:** Commit `664462e43` of 18 November 2026 added `desktop/tests/chat-menu-clipping.spec.ts`. That spec checks the boxes of a chat menu in a container that clips it. The browser check that found the handles on the old edges, above, met the same class.
+- **Related:**
+  - `plans/follow-ups/explain-popover-side-change-reverses-keys.md`: the same code. There, the handles keep the old edges after the panel changes sides with no input. The spec of option D here can hold its browser check.
+  - `plans/follow-ups/explain-popover-equal-width-side.md`: the same code. There, the grip of the width handle draws on the wrong edge when the panel is exactly as wide as its mark.
+- **Recommendation:** D. It checks the drawn edges, the corner, and the settle frames in a real browser, and it proves that it fails for each named break.
+- **Action:** fix after merge, apply D, because D needs a new Electron spec that runs only on the Mac runners, and its effort is Medium.

@@ -10,6 +10,8 @@ import {
   expandLabel,
 } from '../../../../../src/ui/components/explain/explainCopy'
 import styles from '../../../../../src/ui/components/explain/ExplainPopover.module.css'
+import { popoverSizeStyle } from '../../../../../src/ui/components/explain/popoverSize'
+import { PopoverResize, type ResizedPanel } from './PopoverResize'
 
 /**
  * The height of the sheet of a phone: half the screen, as it opens, or the
@@ -42,21 +44,26 @@ function Header(props: { quote: string; expandTo?: string; closeTo?: string }) {
 /**
  * The popover of an explanation, drawn open. On a computer it is a small
  * panel by its mark: below the mark, or above it when the screen has more
- * room there, with a fixed width and a highest height. On a phone it is a
- * sheet at half the height of the screen, which a drag of its handle takes
- * to full height. The parent chat stays live around it, so no dim lies
- * over the app. `children` is the chat of the explanation without its
- * written prompt, with the follow-up field at its foot. Expand shows the
- * tab of the explanation, and the close button leaves the mark with the
- * state of the explanation.
+ * room there, with a width and a highest height. Handles on its free edges
+ * change its size. On a phone it is a sheet at half the height of the
+ * screen, which a drag of its handle takes to full height. The parent chat
+ * stays live around it, so no dim lies over the app. `children` is the
+ * chat of the explanation without its written prompt, with the follow-up
+ * field at its foot. Expand shows the tab of the explanation, and the
+ * close button leaves the mark with the state of the explanation.
  */
 export function ExplainPopover(props: {
   /** The title of the explanation, which names the popover. */
   title: string
   quote: string
   viewport: Viewport
-  /** The height of the sheet of a phone. A computer has one height. */
+  /** The height of the sheet of a phone. */
   height?: SheetHeight
+  /**
+   * The size that the member chose with the handles of a computer, and the
+   * handle that holds the focus. Without it the panel has its default size.
+   */
+  resized?: ResizedPanel
   /** The screen that Expand shows, when the mockups draw it. */
   expandTo?: string
   /** The screen that the close button shows, when the mockups draw it. */
@@ -85,10 +92,17 @@ export function ExplainPopover(props: {
       </section>
     )
   }
+  const { resized } = props
   return (
-    <section aria-label={props.title} className={styles.panel} role="dialog">
+    <section
+      aria-label={props.title}
+      className={classes(styles.panel, resized && styles.fixedHeight)}
+      role="dialog"
+      style={popoverSizeStyle(resized)}
+    >
       {header}
       {body}
+      <PopoverResize resized={resized} />
     </section>
   )
 }

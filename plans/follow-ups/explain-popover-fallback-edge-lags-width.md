@@ -1,0 +1,69 @@
+# Fallback placement lags behind a width change
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from branch `calummoore/resize-popup-kd67`, review round 2, finding 7.
+- **Location:** `src/chat/explain/popover-place.ts:43-66`, `placePanel`, which writes only `left`, from the width of the panel, at lines 57-63. `src/chat/explain/popover-place.ts:69-73`, `unplace`, which clears `maxHeight`, `left`, `top`, and `bottom`. `src/chat/explain/popover-place.ts:119-149`, the layout effect of `usePopoverLayout` and its resize observer. `src/chat/explain/usePopoverResize.ts:86-95`, where the width reaches the panel as `--explain-width`, and `:102-116`, `start()`. `src/chat/explain/PopoverResize.dom.test.tsx:203-233`, the mounted test of the fallback path. `src/chat/explain/README.md:103-107` and `:190-192`, the sentences on `placePanel`.
+- **Reason:** Only a browser without CSS anchor positioning takes the fallback path, and the Mac app never does, so the bug is rare.
+
+- **Terms:**
+  - **Explain popover:** the panel that `src/chat/explain/ExplainPopover.tsx` draws by the marked text in the workspace chat, with the chat of an explanation.
+  - **Mark:** the lasting highlight of an explained quote in the parent chat, with a box that the popover keeps to.
+  - **CSS anchor positioning:** the CSS that keeps the panel at the box of its mark, and moves it to another side where it does not fit.
+  - **Fallback path:** `placePanel` in `src/chat/explain/popover-place.ts`, which places the panel from the boxes in a browser without CSS anchor positioning.
+  - **Fixed edge:** the side edge of the panel at its mark, which stays in place while the width handle moves the other side edge, the free edge.
+- **Background:**
+  - On a computer, the member resizes the popover with handles on its free edges. On 24 November 2026, the user chose these handles, built on one shared handle hook. The protocol names this choice popover resize decision 1 J.
+  - `docs/protocol/explain-popover.md` says: "The panel starts at the start of the mark. Where it would then pass the end of the window, it ends at the end of the mark instead."
+  - Under "The size on a computer", it says: "A move of the width, by a drag or by a key, never moves the panel to the other side of the mark."
+  - The same section caps a chosen width at the window, because "a wider panel passes the end of the window and hides Close."
+  - At the start of its mark, the left edge of the panel is the fixed edge. At the end of its mark, the right edge is the fixed edge, and the width handle moves the left edge.
+  - `usePopoverResize` in `src/chat/explain/usePopoverResize.ts` gives the panel its width as the CSS custom property `--explain-width`. The width reaches the panel in a React render.
+  - `anchorsInCss` in `src/chat/explain/popover-place.ts` tests for CSS anchor positioning with `CSS.supports`. Only without it does `usePopoverResize` pass a place to `usePopoverLayout`, which then runs `placePanel`.
+  - `placePanel` writes `left`, `top` or `bottom`, and `maxHeight` on the panel. It writes no `right`.
+  - At the end of the mark, `left` is `mark.right - width`, from the width that the panel has when `placePanel` runs. A clamp keeps the panel 6 px inside both side edges of the app frame, the box that holds the panel.
+  - At the start of the mark, `left` is `mark.left`. It does not depend on the width, so that side has no lag.
+  - `usePopoverLayout` in `src/chat/explain/popover-place.ts` runs `placePanel` in a layout effect. The effect runs again when the side or the height changes, before the browser paints.
+  - The resize observer of `usePopoverLayout` asks for an animation frame, and runs `placePanel` in that frame. The hook waits for that frame on purpose, so that no callback of a resize observer changes the layout.
+  - `start()` in `usePopoverResize.ts` sets the side that the panel keeps, at the press of a drag or at a key step of the width. After that, a change of the width alone changes neither the side nor the height.
+  - `start()` also runs `placePanel`, through `measure`, at the start of each key step and each drag. That run comes before the size changes, so it uses the old width.
+  - A browser runs resize observers after layout, just before it paints. An animation frame that an observer asks for runs only in the next frame.
+  - The Mac app runs Electron 44.10.2, whose Chromium has CSS anchor positioning. So the Mac app never takes the fallback path.
+- **Problem:** Once the side is set, each change of the width alone reaches the panel before `placePanel` writes a new `left`. So at the end of the mark, the new width paints with the old `left`, and the fixed edge leaves the mark. The next frame puts it back.
+- **Evidence:**
+  - A read of the code at commit `99e872eee` shows the order above. Nobody reproduced the lag in a browser yet.
+  - An example: the app frame is 1000 px wide from x = 0, and the mark goes from x = 750 to x = 850. From the start of the mark, a 400 px panel passes the end of the app frame. So it ends at the end of the mark, from x = 450 to x = 850.
+  - A change of the width to 650 px in one move keeps `left` at 450 px until the next placement. The right edge then stands at x = 1100, 250 px past the end of the mark. The next placement moves the left edge to x = 200.
+  - A press of a drag sets the side before the first move. So each move of a drag paints first with the `left` of the move before.
+  - A key step lags the same way for one frame. An earlier key step or drag sets the side. End then grows the panel of the example from 400 px to 720 px, the top of the range.
+  - For that frame, the right edge stands at x = 1170, which is 170 px past the end of the app frame. Close, at the top right of the panel, passes the end of the app frame too.
+  - A drag of the corner that changes the height runs the layout effect again, so it places the panel before the paint. A sideways drag of the corner changes no height, so it lags too.
+  - The mounted test of the fallback path passes. Its name is "in a browser without anchor positioning, keeps the panel to the chosen height and keeps it at the end of its mark as it narrows".
+  - Home in that test changes the side and the width in the same step.
+  - In that test, the change of the side runs the layout effect again, which places the panel with the new width. The test checks no second change of the width.
+  - A browser check needs a browser without CSS anchor positioning, or a forced `placePanel`. The browser check of the change that added the handles forced it. It would capture a grow of the left edge, and box the moved right edge or the cut Close button.
+- **Impact if no action:** In a browser without CSS anchor positioning, the fixed edge jumps off the mark at each move, and the free edge lags behind the pointer. Close can pass the edge of the app frame during a drag or after End.
+- **Root question:** How can the panel keep its fixed edge at the mark in every painted frame without CSS anchor positioning, whatever changes the width?
+- **Options:**
+  - **A.** Run `placePanel` when a changed width reaches the panel, before the browser paints, for example in a layout effect that follows the shown width. It still measures the new width at each move. Effort: Small.
+  - **B.** Make `placePanel` write a `right` inset at the end of the mark and a `left` inset at its start. The width then changes with no move of the fixed edge, also before any measure. Effort: Small.
+    - Each placement clears the inset that it does not use. The panel has a set width, so a `left` that stays from the start side wins over a new `right`.
+    - `unplace` must clear `right` too. The class `unanchored` of `src/chat/explain/explain.module.css` places a panel with no shown mark with `right: 16px`, and an inline `right` overrides it.
+    - Keep the current bounds. The clamp keeps the panel 6 px inside both side edges of the app frame.
+    - The mounted test above changes the side and the width in the same step. Extend it to check a second change of the width before the next frame.
+    - Update the sentences on `placePanel` in `src/chat/explain/README.md`.
+  - **C.** Make the fallback path compute one layout result with the width and the place, and apply both in the same render. This moves the fallback geometry out of its current observer. Effort: Medium.
+- **Left out:**
+  - Another scheduled measure, such as one more animation frame. The panel can still paint with its old inset before the callback runs.
+  - Remove `placePanel`. A browser without CSS anchor positioning then shows the panel away from its mark. The protocol says that the popover is "a panel by the mark".
+  - Remove the width handle in such browsers. The protocol gives every computer the handles on the free edges, by popover resize decision 1 J, so this breaks a requirement that stays.
+  - The polyfill `@oddbird/css-anchor-positioning`. Its README lists `position-try-order` as not supported, and the CSS of the panel uses `position-try-order: most-height`.
+  - The same README lists anchors or targets that the page adds after the polyfill runs as not supported. React adds the panel when a popover opens.
+- **Wider fix:** B. The inset of the fixed edge does not depend on the width, so no change of the width can move that edge.
+- **Previous examples:** The change that added the resize handles met the same class. A browser check found the handles on the old edges after a resize of the window. The page had laid its columns out again one frame later. The fix measures again in the next frames until the layout settles, as `settleFrames` in `src/chat/explain/popover-place.ts` says.
+- **Related:**
+  - `plans/follow-ups/explain-popover-placement-paths-flip-apart.md`: the same code. Its option A changes the fit tests and the clamp of `placePanel`. Option B here changes the inset that `placePanel` writes, so one branch can make both changes.
+  - `plans/follow-ups/explain-popover-equal-width-side.md`: the same code. Its option C decides the side once and gives it to both placement paths. Option B here then writes the inset of that side.
+  - `plans/follow-ups/explain-popover-side-change-reverses-keys.md`: the same code. Its option C uses one calculation to place the panel and to give the handles their directions, so it changes `placePanel` too.
+- **Recommendation:** B. It keeps the fixed edge at the mark in every frame, with no measure after each change of the width.
+- **Action:** fix after merge, apply B, because the lag needs a browser without CSS anchor positioning and a panel at the end of its mark.

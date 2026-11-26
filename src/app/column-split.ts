@@ -1,7 +1,8 @@
 import { filesShare } from '../ui/components/layout/ResizeHandle'
-import { panelDrag, type PanelDrag, type PanelMove } from './panel-drag'
+import type { PanelDrag, PanelMove } from './panel-drag'
 import type { KeyValueStorage } from './services'
-import { Store } from './store'
+import type { Readable } from './store'
+import { StoredSize } from './stored-size'
 
 const storageKey = 'conductive.files-share'
 
@@ -11,31 +12,25 @@ function inRange(share: number): number {
   return Math.min(filesShare.max, Math.max(filesShare.min, rounded))
 }
 
-function readShare(storage: KeyValueStorage | null): number | null {
-  let stored: string | null
-  try {
-    stored = storage?.getItem(storageKey) ?? null
-  } catch {
-    return null
-  }
-  if (stored === null || !/^\d+(\.\d+)?$/.test(stored)) return null
-  return inRange(Number(stored))
+/** Reads a share in percent, which comes back in its range. */
+function readShare(stored: string): number | null {
+  return /^\d+(\.\d+)?$/.test(stored) ? inRange(Number(stored)) : null
 }
 
 /**
  * The split of the right column between the file lists and the tools panel.
  * The share is the part of the file lists in percent, so the split keeps
  * its place when the window changes height. The browser keeps it as it
- * keeps the panel widths. `null` means that the user has not chosen a
- * share, so the layout's own applies.
+ * keeps the panel widths, through `StoredSize`. `null` means that the user
+ * has not chosen a share, so the layout's own applies.
  */
 export class ColumnSplit {
-  readonly share: Store<number | null>
-  private readonly storage: KeyValueStorage | null
+  readonly share: Readable<number | null>
+  private readonly stored: StoredSize
 
   constructor(storage: KeyValueStorage | null) {
-    this.storage = storage
-    this.share = new Store(readShare(storage))
+    this.stored = new StoredSize(storage, storageKey, readShare)
+    this.share = this.stored.chosen
   }
 
   /** The share now: the user's, or the default. */
@@ -51,28 +46,11 @@ export class ColumnSplit {
 
   /** One step of the keys. A step that ends at `from` changes and stores nothing. */
   step(from: number, move: PanelMove): void {
-    const share = this.next(from, move)
-    if (share !== inRange(from)) this.keep(share)
+    this.stored.step(inRange(from), this.next(from, move))
   }
 
   /** One drag from `from`. `by` of each move is in percent. */
   drag(from: number): PanelDrag {
-    return panelDrag({
-      start: inRange(from),
-      before: this.share.get(),
-      next: (by) => this.next(from, { by }),
-      put: (share) => this.share.set(share),
-      keep: (share) => this.keep(share),
-    })
-  }
-
-  /** Shows a share, and keeps it in the browser for the next page load. */
-  private keep(share: number): void {
-    this.share.set(share)
-    try {
-      this.storage?.setItem(storageKey, String(share))
-    } catch {
-      // The share still applies while the page stays open.
-    }
+    return this.stored.drag(inRange(from), (by) => this.next(from, { by }))
   }
 }

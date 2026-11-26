@@ -180,8 +180,16 @@ Each path is relative to `src/app/`, the folder of this page.
   `default-logins.ts`: `newSessionLogin`, the login of a new session of
   the person in an org, from the default logins that the server names,
   and the readers of those default logins for the screens.
-- `panels.ts`: `PanelLayout`, the widths of the panels, whether the right
-  column shows, and `next`, the one rule of their steps.
+- `panels.ts`: `PanelLayout`, the widths of the panels, the split of the
+  right column (`column-split.ts`), the size of the Explain popovers
+  (`explain-size.ts`), and whether the sidebar and the right column show.
+  `stored-size.ts`: `StoredSize`, one size that the user chooses with a
+  handle and that the browser keeps, which each of them uses.
+  `panel-drag.ts`: `moveInRange`, the one rule of the steps of the
+  columns and of the popover, and `panelDrag`, the rule of one drag. Each
+  caller of `moveInRange` gives where Home and End go when its panel
+  shows outside its range: the columns keep the width that shows, and
+  the popover goes to the ends of its range, up to the room by its mark.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and
   its waiting writes, and the errors that prove that the value no longer
   exists. `refresh.ts`: `Refresher`, the shared reads of a part while

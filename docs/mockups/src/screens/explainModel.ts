@@ -26,8 +26,17 @@ export function parentShows(state: WorkspaceState): boolean {
 
 /** The popover of the explanation of Cal lies open over the parent chat. */
 export function popoverOpen(state: WorkspaceState): boolean {
-  const open = state.explainOpen
-  return parentShows(state) && (open === 'popover' || open === 'popover-full')
+  switch (state.explainOpen) {
+    case 'popover':
+    case 'popover-full':
+    case 'popover-resized':
+      return parentShows(state)
+    case 'none':
+    case 'select':
+    case 'select-message':
+    case 'menu':
+      return false
+  }
 }
 
 /** The turn of the session runs, also while it waits for a member. */
