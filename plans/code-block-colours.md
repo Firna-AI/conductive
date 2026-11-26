@@ -95,7 +95,9 @@ block in colour, and a block without a label in plain text.
 
 - [ ] Give the mockup `CodeBlock` in
       `docs/mockups/src/components/chat/CodeBlock.tsx` a language, and
-      draw its lines with the shared token spans.
+      draw its lines with the shared token spans. Until Milestone 3 adds
+      the fence label table, the mockups find the family with the
+      existing `languageOf` and a file name, such as `example.rs`.
 - [ ] Add a labelled Rust block and a plain block to the chat code block
       entry and to a chat conversation fixture.
 - [ ] Colour the labelled code blocks of the mockup `MarkdownView`.
@@ -120,7 +122,8 @@ Depends on: 1
 
 ## Milestone 3: Fence labels and the colourer
 
-Depends on: 2
+Depends on: 1. It changes no file of Milestone 2, so the two run in
+parallel.
 
 - [ ] Add a shared fence label reader in `src/markdown/` and a label
       table beside `src/files/code/languages.ts`, with tests.
@@ -141,6 +144,8 @@ Depends on: 3
       and `answerDrawing`, also in open message lines.
 - [ ] Colour the code blocks of `MarkdownView`, with the tokens from the
       parse worker.
+- [ ] Make the mockups read the fence label with the label table of
+      Milestone 3, in place of a file name.
 - [ ] Test that Copy code and Explain read the exact text.
 - [ ] Check a labelled Rust block in the browser, in the chat and in the
       file preview. Save the screenshots under `.context/code-colours/`.
