@@ -146,6 +146,9 @@ it('waits for a running turn, then sends one ordinary queuer turn in a new sessi
     if (sent.state !== 'sent') throw new Error('The fix was not sent.')
     const created = await f.restackSession()
     expect([old.id, newest.id, closed.id]).not.toContain(created.id)
+    const sessionIds = async () =>
+      (await f.sessions()).map(({ id }) => id).sort()
+    const beforeRetry = await sessionIds()
     expect(await runner.waitForTurn(sent.turnId)).toMatchObject({
       sessionId: created.id,
       message: { id: pending.messageId, choice, sender: { id: 'member' } },
@@ -154,6 +157,7 @@ it('waits for a running turn, then sends one ordinary queuer turn in a new sessi
       ok: true,
       value: { kind: 'accepted', turnId: sent.turnId },
     })
+    expect(await sessionIds()).toEqual(beforeRetry)
     expect(await f.messages(newest.id)).toEqual([])
     expect(await f.messages(created.id)).toMatchObject([
       {
@@ -207,9 +211,10 @@ it('waits for a running turn, then sends one ordinary queuer turn in a new sessi
   }
 })
 
-it('sends with no open session and waits for a usable queuer login without opening a session', async () => {
+it('waits for a usable queuer login, also beside a shared session login, then sends in a new session', async () => {
   const pending = await f.start()
   const showLogin = await hideAgentLogin(f.db, 'member')
+  let shared: Awaited<ReturnType<typeof f.session>>
   try {
     await f.queue.advanceStartAlarm()
     expect(await f.bar()).toMatchObject({
@@ -217,6 +222,14 @@ it('sends with no open session and waits for a usable queuer login without openi
       wait: 'agent-login',
     })
     expect(await f.sessions()).toEqual([])
+    shared = await f.session()
+    await f.queue.advanceStartAlarm()
+    expect(await f.bar()).toMatchObject({
+      state: 'waiting',
+      wait: 'agent-login',
+    })
+    expect((await f.sessions()).map(({ id }) => id)).toEqual([shared.id])
+    expect(await f.messages(shared.id)).toEqual([])
   } finally {
     await showLogin()
   }
@@ -226,7 +239,9 @@ it('sends with no open session and waits for a usable queuer login without openi
     messageId: pending.messageId,
   })
   const target = await f.restackSession()
+  expect(target.id).not.toBe(shared.id)
   expect(target.login).toEqual({ type: 'personal', userId: 'member' })
+  expect(await f.messages(shared.id)).toEqual([])
   expect(await f.messages(target.id)).toMatchObject([
     { id: pending.messageId, sender: { id: 'member' } },
   ])

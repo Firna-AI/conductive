@@ -50,6 +50,9 @@ org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 - An automation run starts the first session of its workspace in the name of
   the automation owner, as
   [A run acts as its owner](automation-runs.md#a-run-acts-as-its-owner) says.
+- The merge queue starts a new session for each restack turn in the name
+  of the member who added the pull request, as
+  [Restack turns](merge-queue-stack.md#restack-turns) says.
 - The session record names its starter in `startedBy`, and its login in
   `login`: a member or the org. A stored session with messages but no
   login runs on the personal login of its starter. A session without a

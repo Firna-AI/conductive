@@ -31,11 +31,12 @@ export const mergeProblems = ['token-failed', 'merge-refused'] as const
 export type MergeProblem = (typeof mergeProblems)[number]
 
 /**
- * What holds a message that the queue sends as the queuer, such as the one
- * turn for a conflict of a move (decision 321 A): a turn that runs in a
- * session of the workspace, no agent login of the session for the queuer,
- * or no open session. The entry waits in its place, and the line under its
- * bar names the reason.
+ * The waits that the bar can show for a message that the queue sends as
+ * the queuer, such as the one restack turn for a conflict of a move. The
+ * restack protocol, `docs/protocol/merge-queue-stack.md`, gives the
+ * conditions that produce them. Only entries that an older Worker saved
+ * hold `open-session`. The entry waits in its place, and the line under
+ * its bar names the reason.
  */
 export const turnWaits = ['active-turn', 'agent-login', 'open-session'] as const
 
