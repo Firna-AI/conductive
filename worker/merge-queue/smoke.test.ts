@@ -118,6 +118,11 @@ it('joins three workspaces, re-orders their GitHub stack, and merges the ready l
     expect(await f.messages(OUTER_WORKSPACE)).toEqual([])
     expect(await f.messages(OTHER_WORKSPACE)).toEqual([])
     await pushedFix(4, reorderedParallel, PARALLEL)
+    const parallelRestacks = await f.messages(PARALLEL)
+    expect(parallelRestacks).toHaveLength(2)
+    expect(
+      new Set(parallelRestacks.map(({ sessionId }) => sessionId)).size,
+    ).toBe(2)
     expect((await f.messages(OUTER_WORKSPACE)).map(({ text }) => text)).toEqual(
       [
         expect.stringContaining(

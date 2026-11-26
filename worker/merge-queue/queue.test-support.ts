@@ -80,6 +80,17 @@ export async function queueFixture(bundle: string, privateKey?: string) {
       GITHUB_WEBHOOK_SECRET: QUEUE_WEBHOOK_SECRET,
       OPERATOR_GITHUB_IDS: '103',
       CONDUCTIVE_DEFAULT_CHOICE: JSON.stringify(CLAUDE),
+      // A Fast-capable model, so that a restack test can show Fast off.
+      CONDUCTIVE_MODELS: JSON.stringify([
+        { ...CLAUDE, label: 'Claude', efforts: ['high'] },
+        {
+          agent: 'claude',
+          model: 'test-claude-new',
+          label: 'Claude new',
+          efforts: ['medium'],
+          fast: true,
+        },
+      ]),
     },
     outbound: (request, fallback) => {
       const path = new URL(request.url).pathname
