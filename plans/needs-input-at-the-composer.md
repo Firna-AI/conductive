@@ -413,6 +413,21 @@ card and the call above on the late line in a full region.
   `docs/protocol/request-stack.md` defines an open request. The UI agent's
   call of 26 November 2026.
 
+### Calls of review round 1
+
+The UI agent's calls of 26 November 2026, in milestone 8:
+
+- After the Allow of a card, only the older open requests of the same
+  session and set of secrets settle. A newer one does not, because the
+  agent can ask again after the grant ends.
+- After an Allow from this window, the read that releases the settling
+  requests waits for the reply, because the Worker replies after it
+  allowed each covered request. After an Allow from another view, the
+  read goes at once.
+- While the history of a session loads or failed, an answered request
+  shows nowhere until a row of its turn loads. With the whole history, a
+  record with no row still follows the last row.
+
 ### Calls of the protocol docs
 
 The docs agent's calls of 26 November 2026, in milestone 3:
@@ -661,19 +676,19 @@ Tags: ui
 
 Depends on: 6 (review round 1)
 
-- [ ] Finding 1 D: a card leaves at once after its Allow. Its older
+- [x] Finding 1 D: a card leaves at once after its Allow. Its older
       requests settle out of the stack until their own events, and one
       list read releases the rest.
-- [ ] Finding 3 A: the focus rescue of the stack runs as a passive effect,
+- [x] Finding 3 A: the focus rescue of the stack runs as a passive effect,
       so the focus reaches the card on top or the composer after the value
       sheet closes.
-- [ ] Finding 4 B: an answered request shows nowhere until a row of its
+- [x] Finding 4 B: an answered request shows nowhere until a row of its
       turn loads.
-- [ ] Finding 6 C: the grouped Deny test covers a failed hidden Deny and a
+- [x] Finding 6 C: the grouped Deny test covers a failed hidden Deny and a
       second press.
-- [ ] Finding 7 C: one list of the offered Mac scenarios for both
+- [x] Finding 7 C: one list of the offered Mac scenarios for both
       development pages.
-- [ ] Run the targeted tests, the typecheck, lint, and format check.
+- [x] Run the targeted tests, the typecheck, lint, and format check.
 
 ## Milestone 9: Docs fixes of review round 1
 

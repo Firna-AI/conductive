@@ -338,7 +338,7 @@ Replies, timers, and `waitFor` go on.
 - `fixtures/workspaces.ts` maps workspace and session samples, and `senderSnapshot` copies the identity of a person as a session starter. Its list ends with the removed workspace of `fixtures/removed-workspace.ts`, Postcode lookup for the shipping and billing forms of the mockups, whose 14 days ended a week before `FAKE_TIME`. The fake API sends it in the list, as the Worker does, and the workspace list leaves it out.
 - `fixtures/tools.ts` maps file, GitHub, and tool samples. `FAKE_GITHUB_HEAD_SHA` is the head commit of each fake pull request.
 - `fixtures/terminal.ts` builds the initial terminal state and individual socket paths.
-- `fixtures/devices.ts` maps the Mac command samples of the mockups: requests in each state, the pairing, and the Mac settings.
+- `fixtures/devices.ts` maps the Mac command samples of the mockups: requests in each state, the pairing, and the Mac settings. `OFFERED_MAC_SCENARIOS` lists the samples that the development pages offer. The tests can also use `other-session`, a request of another session.
 - `fake-device-routes.ts` records the Mac command, pairing, answer, and Mac settings replies.
 
 See [the shared contracts](../shared/README.md) and

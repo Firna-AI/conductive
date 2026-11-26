@@ -9,8 +9,8 @@ import type { WorkspaceTarget } from '../api/client'
 import { list, record, type Reader } from '../api/json'
 import { showNotice, type ChatContext } from '../state/context'
 import { readRequest } from './read-secret-events'
+import { isOpen, releasable, withReleased } from './secret-open'
 import {
-  isOpen,
   withAnswer,
   withRequestRead,
   withRequestReply,
@@ -54,14 +54,15 @@ export function createSecretApi(client: ApiClient) {
 
 export type SecretApi = ReturnType<typeof createSecretApi>
 
+/** A change that keeps the secrets keeps the snapshot, so nothing draws again. */
 function update(
   context: ChatContext,
   change: (secrets: SecretsSnapshot) => SecretsSnapshot,
 ): void {
-  context.store.update((snapshot) => ({
-    ...snapshot,
-    secrets: change(snapshot.secrets),
-  }))
+  context.store.update((snapshot) => {
+    const secrets = change(snapshot.secrets)
+    return secrets === snapshot.secrets ? snapshot : { ...snapshot, secrets }
+  })
 }
 
 /**
@@ -70,24 +71,27 @@ function update(
  * mark. The history of a session holds only its own requests. The chat
  * reads them after the stream starts and after each reconnect, and the
  * events of the stream follow. The read merges as `withRequestRead` says,
- * so a late reply never takes back a newer state. A failed read changes
- * nothing: the chat keeps the requests that it knows, and the next
- * reconnect reads again.
+ * so a late reply never takes back a newer state. It also releases each
+ * request that settled when it started, as `releasable` says, so a request
+ * that its own event did not end shows again. A failed read releases them
+ * too, so no open request stays hidden. It changes nothing else: the chat
+ * keeps the requests that it knows, and the next reconnect reads again.
  */
 export async function readSecretRequests(context: ChatContext): Promise<void> {
   if (!context.live()) return
+  const released = releasable(context.store.get().secrets)
   let requests: readonly SecretRequest[]
   try {
     requests = await context.secrets.requests(context.target)
   } catch {
+    if (context.live())
+      update(context, (current) => withReleased(current, released))
     return
   }
   if (!context.live()) return
-  // A read that changes nothing keeps the snapshot, so nothing draws again.
-  context.store.update((snapshot) => {
-    const secrets = withRequestRead(snapshot.secrets, requests)
-    return secrets === snapshot.secrets ? snapshot : { ...snapshot, secrets }
-  })
+  update(context, (current) =>
+    withReleased(withRequestRead(current, requests), released),
+  )
 }
 
 /** Whether a member can answer a request now: it is open, and no answer runs. */

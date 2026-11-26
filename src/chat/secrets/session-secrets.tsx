@@ -10,7 +10,7 @@ import { KeptParts, sameData, sameElement } from '../components/same-data'
 import type { ChatSnapshot, SessionState } from '../state/chat-snapshot'
 import { loginReader } from '../state/session-login'
 import { LateAnswerLine } from './LateAnswerLine'
-import { isOpen } from './secret-snapshot'
+import { isOpen, waitsForAnswer } from './secret-open'
 import { keptLoginOwner, lateAnswerParts } from './secret-words'
 import { SecretRequestCard } from './SecretRequestCard'
 import { SecretRunCard } from './SecretRunCard'
@@ -37,17 +37,39 @@ const cards = new KeptParts<ReactElement<object>>(sameElement)
 const placedCards = new KeptParts<TranscriptInsert<ReactNode>>(sameData)
 
 /**
+ * The records that take their places now. While the history of the session
+ * loads, or after an earlier page of it failed, a record waits for a row of
+ * its own turn, because `placeCommands` puts a record whose turn has no row
+ * after the last row, which can belong to a newer turn.
+ */
+function placeable(
+  records: readonly SecretRecord[],
+  state: SessionState,
+): readonly SecretRecord[] {
+  if (state.hydration === 'ready') return records
+  const turns = new Set(
+    state.transcript.items.flatMap((item) =>
+      'turnId' in item ? [item.turnId] : [],
+    ),
+  )
+  return records.filter((record) => turns.has(record.turnId))
+}
+
+/**
  * The secret requests, runs, and late answers of the shown session, as the
- * events of the workspace give them. Each open request, whose tool call
- * waits or that is late, waits in the stack just above the composer, as
- * `waiting` gives it. Each other request is a card at its place in its
- * turn, and a request that became late never folds with the work of its
- * turn. A request that a member allowed in time shows once, as its run. A
- * request that a member denied in time shows as a denied run. Each run
- * folds with its turn, and the line of a late answer stays in view. The
- * order follows the copy of the session: the time of each record, then its
- * first event. `choices` says that the chat takes answers. `onDeny` denies
- * each request of a card that hides older requests for the same secrets.
+ * events of the workspace give them. Each request shows in one place. Each
+ * open request, whose tool call waits or that is late, waits in the stack
+ * just above the composer, as `waiting` gives it, unless it settles, as
+ * `waitsForAnswer` says: then it shows nowhere until its own event or a
+ * read. Each other request is a card at its place in its turn, or nowhere
+ * until a row of its turn loads, as `placeable` says. A request that became
+ * late never folds with the work of its turn. A request that a member
+ * allowed in time shows once, as its run. A request that a member denied in
+ * time shows as a denied run. Each run folds with its turn, and the line of
+ * a late answer stays in view. The order follows the copy of the session:
+ * the time of each record, then its first event. `choices` says that the
+ * chat takes answers. `onDeny` denies each request of a card that hides
+ * older requests for the same secrets.
  */
 export function sessionSecrets(
   snapshot: ChatSnapshot,
@@ -92,7 +114,7 @@ export function sessionSecrets(
     ({ request }) => request.sessionId === sessionId,
   )
   const waiting = waitingSecrets(
-    own.filter(({ request }) => isOpen(request)),
+    own.filter(({ request }) => waitsForAnswer(snapshot.secrets, request)),
     { viewerId, org, login, answers, ...props },
   )
   const records: SecretRecord[] = [
@@ -155,7 +177,11 @@ export function sessionSecrets(
         }
       }),
   ].sort((a, b) => a.createdAt - b.createdAt || a.number - b.number)
-  const placed = placeCommands(state.transcript.items, state.times, records)
+  const placed = placeCommands(
+    state.transcript.items,
+    state.times,
+    placeable(records, state),
+  )
   return {
     waiting,
     inserts: placed.map(({ request: record, after }) =>

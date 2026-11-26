@@ -3,6 +3,7 @@ import type {
   SecretWorkspaceEvent,
 } from '../../shared/secret-requests'
 import type { StreamEnvelope } from '../api/read-workspace'
+import { isOpen, withSettling } from './secret-open'
 
 type RunEvent = Extract<SecretWorkspaceEvent, { type: 'secrets.run' }>
 type NoticeEvent = Extract<SecretWorkspaceEvent, { type: 'secrets.notice' }>
@@ -14,7 +15,7 @@ type NoticeEvent = Extract<SecretWorkspaceEvent, { type: 'secrets.notice' }>
  * event gave yet. The first number orders requests that were made at the
  * same time.
  */
-interface KnownRequest {
+export interface KnownRequest {
   request: SecretRequest
   number: number | null
   firstNumber: number | null
@@ -41,6 +42,11 @@ export interface SecretsSnapshot {
   runs: Readonly<Record<string, KnownEvent<RunEvent>>>
   notices: Readonly<Record<string, KnownEvent<NoticeEvent>>>
   answers: Readonly<Record<string, AnswerKind>>
+  /**
+   * The open requests that settle, as `withSettling` says, each with the ID
+   * of the request whose Allow covers it.
+   */
+  settling: Readonly<Record<string, string>>
 }
 
 export const initialSecrets: SecretsSnapshot = {
@@ -48,6 +54,7 @@ export const initialSecrets: SecretsSnapshot = {
   runs: {},
   notices: {},
   answers: {},
+  settling: {},
 }
 
 /**
@@ -74,15 +81,15 @@ function withRequestEvent(
     firstNumber: Math.min(known?.firstNumber ?? number, number),
     replied: newer ? false : known.replied,
   }
-  return { ...secrets, requests: { ...secrets.requests, [request.id]: next } }
+  return withSettling(
+    { ...secrets, requests: { ...secrets.requests, [request.id]: next } },
+    request.id,
+    known !== undefined && isOpen(known.request),
+  )
 }
 
-/**
- * A state of a request from a reply, such as the answer of this window. It
- * shows when it is newer than the shown state, by `updatedAt`. Otherwise
- * the event of the answer shows it, by its event number.
- */
-export function withRequestReply(
+/** The state of a reply, as `withRequestReply` says, with no new marks. */
+function withReplyState(
   secrets: SecretsSnapshot,
   request: SecretRequest,
 ): SecretsSnapshot {
@@ -98,13 +105,32 @@ export function withRequestReply(
 }
 
 /**
+ * A state of a request from the reply of an answer of this window. It shows
+ * when it is newer than the shown state, by `updatedAt`. Otherwise the event
+ * of the answer shows it, by its event number. An Allow marks the requests
+ * that it settles, as `withSettling` says.
+ */
+export function withRequestReply(
+  secrets: SecretsSnapshot,
+  request: SecretRequest,
+): SecretsSnapshot {
+  const known = secrets.requests[request.id]
+  return withSettling(
+    withReplyState(secrets, request),
+    request.id,
+    known !== undefined && isOpen(known.request),
+  )
+}
+
+/**
  * The requests of a read of every request of the workspace. A read has no
  * event number, so each of its states shows as a reply does: only when it
  * is newer than the shown state, by `updatedAt`. So a read that an event
  * overtook never takes back the newer state of that event. The read adds
  * each open request of any session, and the newer state of each request
  * that the chat knows. An ended request that the chat does not know waits
- * for the history of its session, which places it in its turn.
+ * for the history of its session, which places it in its turn. A read marks
+ * no request as settling, because it holds the state of each request.
  */
 export function withRequestRead(
   secrets: SecretsSnapshot,
@@ -113,7 +139,7 @@ export function withRequestRead(
   return requests.reduce(
     (next, request) =>
       isOpen(request) || Object.hasOwn(next.requests, request.id)
-        ? withRequestReply(next, request)
+        ? withSettling(withReplyState(next, request), request.id, false)
         : next,
     secrets,
   )
@@ -148,11 +174,6 @@ export function withSecretEvents(
     }
   }
   return next
-}
-
-/** A member can answer a request while it waits, also after its call ended. */
-export function isOpen(request: SecretRequest): boolean {
-  return request.state === 'waiting' || request.state === 'late'
 }
 
 /** Marks or clears the answer of this window for a request. */

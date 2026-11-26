@@ -187,7 +187,13 @@ too.
   or a menu of a card. When the part that holds it leaves, such as a card
   after its answer, the focus moves to the card on top, or to the field of
   the composer when no card is left. So an answer in another view never
-  takes the focus from the composer.
+  takes the focus from the composer. That move is an effect, so it comes
+  after the cleanups of the parts that left: the value sheet of a phone
+  keeps the page inert until its cleanup. The stack holds the focus until
+  a target takes it.
+- A card leaves at once after its Allow. The requests that it hid settle
+  out of the stack until their own events, and one read of the list gives
+  back the rest, as [the secret requests](secrets/README.md) say.
 - Each session starts its own stack. The card on top starts at its top,
   and a value typed into a card leaves the page with the card when another
   card shows.
@@ -197,7 +203,8 @@ too.
   `waitsForMember` of `state/open-requests.ts`, says whether a session
   holds one, for its tab and for the mark of its explanation. A Mac
   command that waits counts in every view, also in a browser, which cannot
-  answer it. The history of a session holds only its own secret requests,
+  answer it. A secret request that settles counts in no view. The history
+  of a session holds only its own secret requests,
   so the chat also reads those of every session, at the start and after
   each reconnect, as [the secret requests](secrets/README.md) say. The
   read of the Mac commands already holds those of the whole workspace.

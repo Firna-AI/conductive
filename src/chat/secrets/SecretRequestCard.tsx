@@ -14,7 +14,8 @@ import type {
 } from '../../shared/secret-requests'
 import { Answers, PhoneAnswers, ValueSheet } from './RequestAnswers'
 import { RequestEnd, RequestFacts, requestNames } from './RequestParts'
-import { isOpen, type AnswerKind } from './secret-snapshot'
+import { isOpen } from './secret-open'
+import type { AnswerKind } from './secret-snapshot'
 import { missingNames } from '../../shared/secret-late-answer'
 import { endLine, type RecoveryLogin } from './secret-words'
 import {

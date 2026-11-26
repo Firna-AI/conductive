@@ -1,5 +1,6 @@
 import { createChatApi, type WorkspaceTarget } from '../api/client'
 import type { SessionReads } from '../links/session-reads'
+import { watchSettling } from '../secrets/settling-reads'
 import { browserTimers } from '../stream/workspace-stream'
 import {
   initialSnapshot,
@@ -89,7 +90,8 @@ export class ChatRuns {
 
   /**
    * Loads the chat, then opens its stream. From now on, each session that
-   * becomes the shown session loads its history.
+   * becomes the shown session loads its history, and the requests that an
+   * Allow settles get their read, as `watchSettling` says.
    */
   readonly start = (): Promise<void> => {
     this.stop()
@@ -100,7 +102,12 @@ export class ChatRuns {
     // The values of the app replace the reset ones at once, then follow it.
     this.store.update(() => (sources ? withSources(fresh, sources) : fresh))
     this.unfollow = sources ? followSources(this.store, sources) : null
-    this.unwatch = watchShownSession(this.context)
+    const unwatchShown = watchShownSession(this.context)
+    const unwatchSettling = watchSettling(this.context)
+    this.unwatch = () => {
+      unwatchShown()
+      unwatchSettling()
+    }
     this.unlist = this.workspaceList.watch()
     return loadChat(this.context)
   }

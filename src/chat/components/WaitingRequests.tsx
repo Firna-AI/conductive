@@ -1,4 +1,10 @@
-import { useLayoutEffect, useRef, useState, type FocusEvent } from 'react'
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type FocusEvent,
+} from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { requestStackWords } from '../../ui/components/chat/requestStackCopy'
 import { RequestStackFrame } from '../../ui/components/chat/RequestStackFrame'
@@ -53,7 +59,10 @@ function focusLost(): boolean {
  * the focus, such as a card after its answer, takes the focus with it: the
  * focus then moves to the card on top, so a screen reader reads it and the
  * next Tab reaches its first action. With no card left, `focusComposer`
- * puts the focus in the field of the composer.
+ * puts the focus in the field of the composer. This rescue is an effect, so
+ * it comes after the cleanups of the parts that left. A value sheet keeps
+ * the page inert until its cleanup, and its own focus return can go to a
+ * button that is off. The stack holds the focus until a target takes it.
  */
 export function WaitingRequests(props: {
   items: readonly WaitingItem[]
@@ -74,10 +83,16 @@ export function WaitingRequests(props: {
     const moved = step.current
     step.current = null
     if (moved !== null) (moved === 'next' ? next : previous).current?.focus()
+  })
+  useEffect(() => {
     if (!inside.current || !focusLost()) return
-    inside.current = false
-    if (card.current) card.current.focus()
-    else focusComposer?.()
+    if (card.current) {
+      // A card that takes the focus keeps the stack the holder, by `onFocus`.
+      card.current.focus()
+      return
+    }
+    focusComposer?.()
+    if (!focusComposer || !focusLost()) inside.current = false
   })
   const at = Math.max(
     cards.findIndex((item) => item.key === place.top),

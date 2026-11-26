@@ -386,8 +386,10 @@ so its default applies.
 - `mac=<scenario>`: the Mac commands of `checkout-autocomplete`, with the
   values of the `mac` option of the
   [chat development page](../chat/dev/README.md#options), such as
-  `waiting`. The app runs in a browser, so a command that waits shows its
-  state only, after the secret requests in the stack above the composer.
+  `waiting`. Both pages read the one list `OFFERED_MAC_SCENARIOS` of
+  `src/test-support/fixtures/devices.ts`. The app runs in a browser, so a
+  command that waits shows its state only, after the secret requests in
+  the stack above the composer.
 - `banner=<state>`: its GitHub banner, such as `merged`. Its list mark
   shows the GitHub state of that bar.
 - `paths=masked`: two files whose real paths hold a fake secret value,
