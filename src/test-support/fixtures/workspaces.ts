@@ -217,6 +217,8 @@ export function workspaceFixtures(
     branch: 'calummoore/lisbon-7k2q',
     sectionId: 'general',
     state: 'starting',
+    // The first message waits for the start, as the Worker reads it.
+    messageWaiting: true,
     github: null,
     createdAt: FAKE_TIME,
     updatedAt: FAKE_TIME,

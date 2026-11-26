@@ -9,9 +9,41 @@ import { TerminalFocus } from '../workspace/tools/terminal-focus'
 import { ToolEvents } from '../workspace/tools/tool-events'
 import { WorkspaceHeader } from '../workspace/WorkspaceHeader'
 import { WorkspaceSkills } from '../workspace/workspace-skills'
+import markStyles from '../../ui/components/workspaces/WorkspaceMark.module.css'
 import { OrgList } from './OrgList'
 
+/**
+ * How many cells of the list mark before the name of a row run the light.
+ * The mark comes just before the name in its row.
+ */
+function chasingCells(html: string, name: string): number {
+  const at = html.indexOf(name)
+  expect(at).toBeGreaterThan(-1)
+  const mark = html.lastIndexOf(markStyles.mark, at)
+  return html.slice(mark, at).split(markStyles.chase).length - 1
+}
+
 describe('workspace states', () => {
+  test('the list mark of a start runs its light only while a message waits', async () => {
+    const app = await startedApp(
+      new FakeApiServer({ workspaceState: 'starting' }),
+    )
+    await app.org(FAKE_IDS.org).reload('list')
+    const html = renderScreen(
+      app,
+      <OrgList
+        orgId={FAKE_IDS.org}
+        selectedId={null}
+        variant="sidebar"
+        viewer={fakeUser}
+      />,
+    )
+    // The fixture of this new workspace holds a waiting first message.
+    expect(chasingCells(html, 'Dark mode for emails')).toBe(8)
+    // The open workspace resumes, and no message waits.
+    expect(chasingCells(html, 'Checkout address autocomplete')).toBe(0)
+  })
+
   test('a workspace that needs input says it in its row after the GitHub state of its bar, and in its header without that state, and its cloud computer is ready', async () => {
     const app = await startedApp(
       new FakeApiServer({ workspaceState: 'input', banner: 'checks-failed' }),

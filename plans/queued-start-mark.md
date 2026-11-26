@@ -114,11 +114,11 @@ Depends on: every other milestone
       fixed. Items 1 and 4 are follow-up items
       `plans/follow-ups/new-workspace-waiting-gap.md` and
       `plans/follow-ups/starting-read-double-call.md`.
-- [ ] Review the complete local diff against `origin/main` with the
-      `implementation-review` skill after the push. Report the findings,
-      then apply the fix rule: fix the `fix now` findings, record
-      follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+- [x] Review round 2 found six Low findings. Items 7, 8, 9, 10 (a list
+      test), and 11 are fixed. Item 6 and the type change of item 10 are
+      follow-up items `plans/follow-ups/waiting-answer-one-turn.md` and
+      `plans/follow-ups/mark-inputs-required.md`. Two problems outside
+      the scope are `plans/follow-ups/registered-parts-over-page-limit.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the

@@ -10,10 +10,9 @@ import { activityStatuses, githubSchema } from './workspaceSchemas'
  * `WorkspaceMark`, because the wrapper renders only inside Mokly.
  *
  * A changed CSS rule goes to the mark only when it matches on the pages of
- * the mark: its own props and its variants. So these pages show the five
- * tones that almost every list shows, the chase, the pulse, the still
- * light of running checks, and a start with and without a waiting
- * message. The amber tone and an archived mark
+ * the mark: its own props and its variants. So these five pages show the
+ * five tones that almost every list shows, and the chase, the pulse, and
+ * the still light of running checks. The amber tone and an archived mark
  * have no page, so a change to their rules gives each screen that shows
  * them its own row.
  */
@@ -21,7 +20,7 @@ export const workspaceMark = defineComponent({
   slug: 'workspace-mark',
   title: 'Workspace mark',
   description:
-    'The list mark of a workspace in the list, the command palette, and the workspace chips: the GitHub state of its pull request in the tone of its pull request bar, a light that runs around the ring while the agent works, a message waits for the workspace to start, or the checks run, and a pulse while the agent needs input. Its own page shows a merged pull request of a stopped workspace, the mark of almost every list.',
+    'The list mark of a workspace in the list, the command palette, and the workspace chips: the GitHub state of its pull request in the tone of its pull request bar, a light that runs around the ring while the agent works, a message waits for the workspace to start, or the checks run, and a pulse while the agent needs input. Its own page shows a merged pull request of a stopped workspace, the mark of almost every list. A start that no message waits on shows the same still mark as a stopped workspace.',
   relatedDocs: ['docs/mockups/design-marks.md'],
   propSchema: {
     type: 'object',
@@ -66,22 +65,8 @@ export const workspaceMark = defineComponent({
       slug: 'working',
       title: 'Agent working',
       description:
-        'An agent that works on a branch without a GitHub state: a dim grey mark with a light that runs around the ring.',
+        'An agent that works on a branch without a GitHub state: a dim grey mark with a light that runs around the ring. A start with a waiting message shows the same mark.',
       props: { github: null, status: 'working' },
-    },
-    {
-      slug: 'starting-with-message',
-      title: 'Starting with a message',
-      description:
-        'A message that waits for the cloud computer to start: a dim grey mark with a light that runs around the ring, as for a working agent.',
-      props: { github: null, status: 'starting', messageWaiting: true },
-    },
-    {
-      slug: 'starting',
-      title: 'Starting',
-      description:
-        'A start that no message waits on, such as after a member opened a stopped workspace: a still mark in the tone of its pull request bar.',
-      props: { github: 'ready-to-merge', status: 'starting' },
     },
   ],
 })
