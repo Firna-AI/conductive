@@ -20,13 +20,13 @@ import styles from './MenuPlacementScreen.module.css'
 export type PlacedMenu = 'model' | 'history' | 'allow'
 
 /**
- * A draft in the composer, and four commands that wait in the stack above
- * it. The long script on top scrolls inside its card, which fades where it
- * cuts the command.
+ * A draft in the composer, and a long script that waits above it. The
+ * script scrolls inside its card, which fades where it cuts the command. A
+ * browser shows its state only, so the card has no menu of its own.
  */
 const modelState: WorkspaceState = {
   ...readyWorkspace,
-  conversation: 'mac-waiting-many',
+  conversation: 'mac-waiting-script',
   composer: 'draft',
 }
 
@@ -42,8 +42,9 @@ const historyState: WorkspaceState = {
 }
 
 /**
- * The same four commands in the Mac app, with the other ways to allow of the
- * first request open.
+ * Four commands in the Mac app, with the other ways to allow of the first
+ * request open. Previous and Next open the pages of `mac-app/requests`, the
+ * walk of the same stack.
  */
 const allowState: MacAppState = {
   window: 'window',
@@ -120,8 +121,8 @@ function HistoryMenuScreen(props: { viewport: Viewport }) {
 
 /**
  * A menu beside its button over a box that clips or scrolls: the model menu
- * of the composer over the stack of the requests, the session history below
- * a full tab row, or the other ways to allow of a request in the Mac app.
+ * of the composer over a request above it, the session history below a
+ * full tab row, or the other ways to allow of a request in the Mac app.
  * The app opens each one above every box of the page, so no box cuts it. A
  * view runs no script, so the screen draws the open menu above the page, and
  * CSS places it at its button. The stack of the requests draws the other

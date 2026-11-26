@@ -205,15 +205,23 @@ one.
   whenever such a card exists. Only the Mac app on the Mac that got a
   command answers it, so a browser puts the command after the requests
   for secrets, as `app/secret-requests/several/mac-command` shows. The
-  Mac app on that Mac answers both, so its stack keeps the order, as the
-  `with-secret` variant of `mac-app/requests` shows. `answersHere` in
+  Mac app on that Mac answers both, so its stack keeps the order, as
+  `mac-app/command-and-secret` shows. `answersHere` in
   `components/chat/requests.ts` is the test of the view.
 - With more than one card, the place of the card on top, such as
   "1 of 3", then Previous and Next sit above the stack, at its end.
   Previous is off on the first card, and Next on the last. The keyboard
   reaches them before the actions of the card, and the place is a polite
   live region. One card shows no place, no buttons, and no edges.
-  `requestStackCopy.ts` of the shared UI holds the words.
+  `requestStackCopy.ts` of the shared UI holds the words. Previous and
+  Next are the registered Icon button, with the chevrons.
+- Each stack of more than one card is a walk of the catalogue, from
+  `screens/stackWalks.ts`: a page for each place, one for each card, and
+  the answers that lead on through the same example, as the
+  [README](README.md#how-a-screen-is-built) gives. Each answer that the
+  walk does not take draws no link, so no answer drops the other
+  requests. `app/secret-requests/several/answered` follows the walk of
+  `waiting-and-late` to the end of its stack.
 - The stack keeps its height limit of 40% of the window, also on a phone.
   The stack draws the outline of the card on top, so a long card scrolls
   inside it, and an edge that cuts the card fades. The card takes its
@@ -222,8 +230,11 @@ one.
   the same set of secrets, so one card stands for them, as the user asked
   on 20 November 2026. The card says how often the agent asked, such as
   "Asked 3 times", after the names, from `askedTimes`, as
-  `app/secret-requests/several/asked-again` shows. It takes the place of
-  the oldest request that it holds, so a new ask does not move it. Its
+  `app/secret-requests/several/asked-again` shows. The names and the count
+  are one row that wraps, so a count that does not fit starts the next
+  line at the start of the names, with no indent. The card takes the
+  place of the oldest request that it holds, so a new ask does not move
+  it. Its
   Allow covers each of them, and its Deny ends each of them, from
   needs-input decision 3 B. The card is one place in the stack, whatever
   it hides.

@@ -1,6 +1,7 @@
 import { defineScreen } from '@mokly/mokly'
 import { ReducedMotion } from '../../../../../components/common/ReducedMotion'
 import { WorkspaceScreen } from '../../../../../screens/WorkspaceScreen'
+import { otherTabWalk } from '../../../../../screens/tabWalks'
 import {
   readyWorkspace,
   workspaceStateSchema,
@@ -14,12 +15,7 @@ export const needsInputReducedMotion = defineScreen({
     'The tab takes the list mark, so it takes its still form too: a middle column lit in blue, which keeps the state visible without motion. The browser setting chooses the form, so the app needs no setting of its own.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
-  props: {
-    ...readyWorkspace,
-    tab: 'later-session',
-    conversation: 'second-session',
-    otherRequest: 'first-session',
-  },
+  props: { ...readyWorkspace, ...otherTabWalk.states.second.props },
   render: (props, context) => (
     <ReducedMotion>
       <WorkspaceScreen state={props} viewport={context.viewport} />

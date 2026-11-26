@@ -123,7 +123,8 @@ export function WorkspaceScreen(props: {
     />
   )
   // A phone and an archived workspace show only the session tabs.
-  const tabs = tabsFor(state, workspace, isRunning(state)).filter(
+  const view = mac === undefined ? 'browser' : 'mac'
+  const tabs = tabsFor(state, workspace, isRunning(state), view).filter(
     (tab) => tab.kind === 'session' || (!archived && viewport === 'desktop'),
   )
   const row = tabRowOf(state, tabs, viewport, readOnly)

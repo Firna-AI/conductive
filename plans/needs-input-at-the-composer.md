@@ -428,6 +428,24 @@ The UI agent's calls of 26 November 2026, in milestone 8:
   shows nowhere until a row of its turn loads. With the whole history, a
   record with no row still follows the last row.
 
+The UI agent's calls of 26 November 2026, in milestone 7:
+
+- One shared definition, `Walk` in `docs/mockups/src/screens/walks.ts`,
+  gives the step links, the answer links, and the tab links of each
+  example. An answer that a walk does not take draws no link.
+- The walk of three requests denies the preview deploy. An Allow of a late
+  request while a turn runs would add its line to that running turn, which
+  the mockups do not draw.
+- `several/mac-command` and `mac-app/command-and-secret` only step
+  through their cards. The four commands of `mac-app/requests` keep their
+  own result links.
+- Outside the walks, no tab links while a session tab shows the
+  needs-input mark, because each generic page would drop the open request.
+- When an explanation tab shows, the first session tab no longer takes its
+  needs-input mark or its spinner.
+- `app/chat/menu-placement` shows the long script alone, in the chat
+  `mac-waiting-script`, so it draws no stack without pages.
+
 ### Calls of the protocol docs
 
 The docs agent's calls of 26 November 2026, in milestone 3:
@@ -653,22 +671,22 @@ Depends on: 6 (review round 1)
 The review found defects in the mockups of milestones 1 and 2. Each TODO
 names its finding in the findings file of the branch.
 
-- [ ] Finding 84 C: a mockup chat runs while the sandbox is ready and its
+- [x] Finding 84 C: a mockup chat runs while the sandbox is ready and its
       last item is the Working line. Delete the hand-kept running lists.
       Capture the Mac marketing pictures again. Delete the two follow-up
       items about Stop on the waiting Mac command.
-- [ ] Finding 41 D: one walk for each stack example, from shared example
+- [x] Finding 41 D: one walk for each stack example, from shared example
       definitions. Answer controls outside the walk draw no link. Fix the
       late card of `several/mac-command` and the command of
       `mac-app/requests/with-secret` too.
-- [ ] Finding 42 C: the position pages and the step links come from the
+- [x] Finding 42 C: the position pages and the step links come from the
       card count of each fixture. Fix `app/chat/menu-placement` too.
-- [ ] Finding 43 B, or C when its conditions do not hold: each marked tab
+- [x] Finding 43 B, or C when its conditions do not hold: each marked tab
       keeps the open requests. Fix the code tab too.
-- [ ] Finding 44 A: the stack buttons use the registered Icon button.
-- [ ] Lay out the names and "Asked 3 times" as one wrapping row, so the
+- [x] Finding 44 A: the stack buttons use the registered Icon button.
+- [x] Lay out the names and "Asked 3 times" as one wrapping row, so the
       count does not wrap to an indented line at 460 to 640 px.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
 
 ## Milestone 8: UI fixes of review round 1
 

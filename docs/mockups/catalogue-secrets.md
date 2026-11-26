@@ -122,9 +122,15 @@ of its session. Its child pages:
     newest, the edges of the two older late requests behind it, and
     "1 of 3" with Previous and Next. Its `next` and `last` variants have
     the second and the third card on top. On a phone, the second card
-    scrolls inside its outline. Its `answered` variant has the stack after
-    an Allow of the card on top: the run of that request in the chat, and
-    "1 of 2".
+    scrolls inside its outline.
+  - `answered` goes on through the same stack, one answer at a time. It has
+    the stack after an Allow of the card on top: the run of that request
+    in the chat, and "1 of 2". Its `next` variant has the second card on
+    top. Its `one-left` variant has the request for MAPBOX_TOKEN alone,
+    after the turn of the count ended and Cal denied the preview deploy.
+    Its `value` variant has a typed value, and on a phone the sheet that
+    Give a value opens. Its `done` variant has no request left, and the
+    new turn of the late value.
   - `asked-again` has a late request that hides the two older requests of
     the agent for the same secret, with "Asked 3 times". Its `denied`
     variant has the three requests at their places after one Deny. Its
@@ -133,9 +139,17 @@ of its session. Its child pages:
   - `mac-command` has a late request for a secret on top of a command on
     the Mac, in a browser, which cannot answer the command. So the late
     request comes first, though the call of the command waits. Its `next`
-    variant has the command on top, with its state only. The
-    `with-secret` variant of `mac-app/requests` has the same requests in
-    the Mac app, which answers both, so the command is on top there.
+    variant has the command on top, with its state only.
+    `mac-app/command-and-secret` has the same requests in the Mac app,
+    which answers both, so the command is on top there.
+
+  These pages are walks: each page of a place has the links of Previous
+  and Next, and each answer opens the next page of its example. The walk
+  of `waiting-and-late` and `answered` takes Allow of the count, Deny of
+  the preview deploy, Give a value and Allow of MAPBOX_TOKEN. The walks of
+  `mac-command` and `mac-app/command-and-secret` move through the stack
+  only. Each answer that a walk does not take draws no link, so no answer
+  drops the other requests.
 - `temporary` has a request for MAPBOX_TOKEN, which Acme does not have,
   with no value yet. A phone shows Deny and Give a value. Its child pages:
   - `value` has a typed value and 15 minutes, and on a phone the sheet
@@ -178,4 +192,7 @@ of Priya, to the run of the new turn for Cal.
 
 `app/tabs/needs-input` has the late request in the first session while
 the second session shows, so the tab of the first session shows the
-needs-input mark. [The catalogue](catalogue.md) gives its child pages.
+needs-input mark. The tab of the first session opens
+`app/secret-requests/late`, which keeps the request, and the tab of the
+second session there comes back.
+[The catalogue](catalogue.md) gives its child pages.

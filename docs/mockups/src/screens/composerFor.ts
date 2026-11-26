@@ -14,15 +14,12 @@ import {
   uploadingAttachments,
   type Attachment,
 } from '../fixtures/attachments'
-import { barRunningConversations } from '../fixtures/barConversations'
-import { capabilityRunningConversations } from '../fixtures/capabilityConversations'
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
 import { unlistedChoice, unlistedLabels } from '../fixtures/endpointModels'
 import { favouriteLists } from '../fixtures/favourites'
 import { addedChipDraft, mentionChipsDraft } from '../fixtures/fileMentions'
 import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
 import { sessionLinkDraft } from '../fixtures/sessionLinkConversations'
-import { wakeRunningConversations } from '../fixtures/wakeConversations'
 import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -31,47 +28,9 @@ import { mentionListFor } from './mentionComposer'
 import { loginOwnerOf, otherStarter, sessionLoginFor } from './sessionStarter'
 import { skillChipFor, skillListFor } from './skillComposer'
 import { workspaceCapabilities } from './workspaceCapabilities'
+import { openWorkspace } from './workspaceRun'
 import { isNew, noMessages } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
-
-const runningConversations = new Set([
-  'running',
-  'steer',
-  'first-turn',
-  'output-left-out-running',
-  'background-waiting',
-  'linked',
-  'sent-files',
-  'sent-files-listed',
-  'link-sent',
-  'chat-links-sent',
-  ...barRunningConversations,
-  'sent-by',
-  'sent-by-other',
-  'secret-waiting',
-  'secret-waiting-two',
-  'secret-waiting-late',
-  'secret-running',
-  'secret-done',
-  'secret-denied',
-  'secret-pre-approved',
-  'secret-value',
-  'secret-late-ran',
-  'secret-temporary',
-  'secret-temporary-value',
-  'secret-temporary-workspace',
-  'secret-temporary-saved',
-  'secret-waiting-mixed',
-  'secret-waiting-mixed-value',
-  'secret-invalid-name',
-  'secret-mixed-invalid-name',
-  'secret-late-allowed',
-  'secret-late-given',
-  'secret-asked-again-allowed',
-  'secret-stack-answered',
-  ...capabilityRunningConversations,
-  ...wakeRunningConversations,
-])
 
 type ComposerKey = WorkspaceState['composer']
 
@@ -137,11 +96,14 @@ function chipDraft(composer: ComposerKey): string | undefined {
   return link ? workspaceLinkDraft : undefined
 }
 
-/** An agent turn runs on a ready sandbox. */
+/**
+ * An agent turn runs on a ready sandbox: the chat of the screen ends with
+ * the Working line of its turn. So the chat, the composer, the tab, and the
+ * header read one fact, and no list of chats can miss one.
+ */
 export function isRunning(state: WorkspaceState): boolean {
-  return (
-    state.sandbox === 'ready' && runningConversations.has(state.conversation)
-  )
+  if (state.sandbox !== 'ready') return false
+  return openWorkspace(state).items.at(-1)?.kind === 'working'
 }
 
 /**

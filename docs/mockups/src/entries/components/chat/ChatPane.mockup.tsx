@@ -45,13 +45,30 @@ const propSchema = {
     pictures: { enum: pictureReads },
     /** The reader reads higher up, so the button to the bottom shows. */
     scrolledUp: { type: 'boolean' },
-    /** The card on top of the request stack, and the page of each card. */
+    /**
+     * The card on top of the request stack, and in a walk the page of each
+     * card and of each answer that keeps the example.
+     */
     stack: {
       type: 'object',
       additionalProperties: false,
       properties: {
         place: { type: 'integer', minimum: 1 },
         pages: { type: 'array', items: { type: 'string', minLength: 1 } },
+        answers: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['request'],
+            properties: {
+              request: { type: 'string', minLength: 1 },
+              allow: { type: 'string', minLength: 1 },
+              deny: { type: 'string', minLength: 1 },
+              value: { type: 'string', minLength: 1 },
+            },
+          },
+        },
       },
     },
   },

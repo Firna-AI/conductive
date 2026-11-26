@@ -30,7 +30,7 @@ how a screen is built, and links to the other pages.
 | `app/org-settings`  | General with Delete org, the colour of the org in the rail, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, a build that waits for another update and a build that it stopped, the skills repository with its trust switch, list, and notices, Agents with the org logins, Secrets with Reveal for an admin and the view of a member, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, wakes from watched turns, open work, tables in replies, lists and task lists in replies, headings in replies, quotes, rules, and emphasis in replies, links in chat text, Explain on chat text, lost data, lost updates, unread files, the time limit of background work, a fast turn at standard speed, and menus that show whole over a box that scrolls |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat, and an older one that a workspace with Mac access off refused |
-| `app/secret-requests` | A request for secrets above the composer, two secrets, a mixed request, the stack of several requests, with a card that hides the repeated asks for one secret and a Mac command after a secret request in a browser, a temporary request with its sheet on a phone, the results in the chat, and a late request above the composer, with its answer or its end in the chat |
+| `app/secret-requests` | A request for secrets above the composer, two secrets, a mixed request, the stack of several requests and its answers one at a time, with a card that hides the repeated asks for one secret and a Mac command after a secret request in a browser, a temporary request with its sheet on a phone, the results in the chat, and a late request above the composer, with its answer or its end in the chat |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/repository-change` | The repository menu of the header, the question before a change, the change that runs, a change that stopped, and the workspace after it |
@@ -157,9 +157,11 @@ variants, as [org logins](catalogue-org-logins.md) gives.
 `menu`, and `rename` show the row after a move, a full row, the tab
 menu, and the rename field. Its child page `needs-input` shows the
 needs-input mark on the tab of the first session, which holds a late
-request while the second session shows. Its child pages show the mark on
-a tab whose turn runs, in place of the spinner, and the marks of the
-screen with reduced motion.
+request while the second session shows. Its child pages show the code
+file with the same mark, the mark on a tab whose turn runs, in place of
+the spinner, and the marks of the screen with reduced motion. Each tab of
+`needs-input` and of its `file` child page opens the screen of that tab
+with the same open request.
 
 [Org logins](catalogue-org-logins.md) gives `app/org-settings/agents` and
 its child pages, and the states of the account, Get started, the composer,

@@ -1,6 +1,8 @@
 import { defineScreen } from '@mokly/mokly'
 import { MacAppScreen } from '../../../screens/MacAppScreen'
 import { macAppSchema } from '../../../screens/macAppState'
+import { macRequestsWalk } from '../../../screens/stackWalks'
+import { placeVariants } from '../../../screens/walkPages'
 
 export const macRequests = defineScreen({
   title: 'Many requests',
@@ -22,22 +24,21 @@ export const macRequests = defineScreen({
     shownRequest: 1,
   },
   render: (props) => <MacAppScreen state={props} />,
-  variants: [
+  variants: placeVariants(macRequestsWalk, 'start', [
     {
-      slug: 'next',
       title: 'The next request',
       description:
         'After Next, sw_vers is on top: a short command, with the time limit, Details, Deny, and Allow. The place says "2 of 4", and Previous and Next are both on.',
-      props: { shownRequest: 2 },
     },
     {
-      slug: 'with-secret',
-      title: 'With a secret request',
+      title: 'The third request',
       description:
-        'Nobody answered PROD_DATABASE_URL in time, so its request turned late. Then Cal asked for the checkout test in Safari. The command on this Mac is on top of the stack, with Deny and Allow, because its call waits. "1 of 2" and the edge of the late request say that one more request waits behind it.',
-      rationale:
-        'Cal chose option B of decision 4 of the needs-input change on 22 November 2026: the cards that this view cannot answer go after the cards that it can answer. The Mac app on this Mac answers the command and the request for the secret, so the stack keeps its order. A browser cannot answer the command, so it puts the late request on top and the command second, as app/secret-requests/several/mac-command shows.',
-      props: { command: 'with-secret' },
+        'After Next again, the command that reads the Safari version is on top, with Deny and Allow. The place says "3 of 4", and Previous and Next are both on.',
     },
-  ],
+    {
+      title: 'The last request',
+      description:
+        'After Next once more, git status --short is on top, with Deny and Allow. The place says "4 of 4", Next is off, and the edges of two other cards still show.',
+    },
+  ]),
 })

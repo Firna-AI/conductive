@@ -52,6 +52,10 @@ const withoutSafari: ChatItem = {
   ],
 }
 
+/** The message that asks to find the checkout test that hangs in Safari. */
+const askHang =
+  'One checkout test hangs in Safari on my Mac. Find out which one.'
+
 /**
  * The finished turn, then a message that needs four commands on the Mac.
  * The first is a long script, and every request waits for its answer.
@@ -59,11 +63,7 @@ const withoutSafari: ChatItem = {
 function manyOnMac(history: readonly ChatItem[]): readonly ChatItem[] {
   return [
     ...history,
-    {
-      kind: 'user',
-      id: 'ask-hang',
-      text: 'One checkout test hangs in Safari on my Mac. Find out which one.',
-    },
+    { kind: 'user', id: 'ask-hang', text: askHang },
     {
       kind: 'agent',
       id: 'plan-hang',
@@ -85,8 +85,9 @@ function manyOnMac(history: readonly ChatItem[]): readonly ChatItem[] {
 
 /**
  * The chats of a command on the Mac of the sender (decision 62), after the
- * finished turn of `history`: it waits for approval, for the checkout test
- * or for the whole suite, it was denied, it ran, or the Mac is not there.
+ * finished turn of `history`: it waits for approval, for the checkout test,
+ * for the whole suite, or for the long script that runs each checkout test
+ * file, it was denied, it ran, or the Mac is not there.
  * Or the workspace refused it, because Mac access was off, as an older
  * chat keeps it from before Mac access decision 7.
  */
@@ -97,6 +98,10 @@ export function macConversations(history: readonly ChatItem[]) {
     'mac-waiting-suite': onMac(history, 'waiting', [working], {
       text: 'Run all the Safari tests on my Mac before we merge.',
       request: safariSuite,
+    }),
+    'mac-waiting-script': onMac(history, 'waiting', [working], {
+      text: askHang,
+      request: safariByFile,
     }),
     'mac-denied': onMac(history, 'denied', [withoutSafari]),
     'mac-done': onMac(history, 'done', [

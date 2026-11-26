@@ -1,5 +1,6 @@
 import { defineScreen } from '@mokly/mokly'
 import { WorkspaceScreen } from '../../../../screens/WorkspaceScreen'
+import { otherTabWalk } from '../../../../screens/tabWalks'
 import {
   readyWorkspace,
   workspaceStateSchema,
@@ -13,7 +14,7 @@ export const lateRequest = defineScreen({
     'Each request of a tool call waits at most 90 seconds, because Claude stops a shell command after 2 minutes by default. The result of the call tells the agent that the request stays open. A request whose turn ends while the call waits becomes a late request in the same way. Decision 68 keeps needs input while any request waits. The user chose option A of decision 1 of the needs-input change on 20 November 2026: a late request stays above the composer until a member answers it or it ends, so a member finds it also when its turn is far up a long chat. Design calls of 20 November 2026: the card keeps its full form, because a member must see the command before the answer. It shows no age, because its line says that the agent stopped waiting. It brings back no Stop, because Stop follows the running turn. The answers are child pages, so this page shows only its canonical screen.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
-  props: { ...readyWorkspace, conversation: 'secret-late' },
+  props: { ...readyWorkspace, ...otherTabWalk.states.first.props },
   useCasePaths: ['user-flows/secret-request'],
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />

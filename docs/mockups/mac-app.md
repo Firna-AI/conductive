@@ -63,11 +63,15 @@ The parts and styles that the app shares live in
   through the stack. The stack takes at most 40% of the window, so a long
   command scrolls inside its card, and an edge that cuts the command
   fades. `mac-app/requests` draws four requests with a long script on top.
-  Its `next` variant has the second card on top, and its `with-secret`
-  variant has a command on top of a late request for a secret. The Mac app
-  answers both, so the command whose call waits stays first. A browser
+  Its `next`, `third`, and `last` variants have each other card on top,
+  and each command keeps the links of its own results.
+  `mac-app/command-and-secret` has a command on top of a late request for
+  a secret, and its `next` variant has the late request on top. The Mac
+  app answers both, so the command whose call waits stays first. A browser
   cannot answer the command, so it puts the command after the requests
-  for secrets, from needs-input decision 4 B. A view cannot open a
+  for secrets, from needs-input decision 4 B. That walk moves through the
+  stack only, so its answers draw no link and never drop the other
+  request. A view cannot open a
   popover, so the stack draws an open menu with `DrawnChoices` outside its
   card, at the actions of its request, and the card keeps its bound.
 - Each change of the Mac's settings shows its result until the next change

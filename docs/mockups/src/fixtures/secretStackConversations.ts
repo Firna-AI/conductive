@@ -8,6 +8,7 @@ import {
   call,
   compareAsk,
   countAsk,
+  counted,
   outlived,
   previewAsk,
   run,
@@ -19,6 +20,7 @@ import {
   mapboxRequest,
   previewRequest,
   replicaRequest,
+  type MemberGrant,
   type SecretRequest,
   type SecretRunItem,
 } from './secretRequests'
@@ -27,6 +29,9 @@ import {
 export const secretStackConversationKeys = [
   'secret-waiting-late',
   'secret-stack-answered',
+  'secret-stack-one-left',
+  'secret-stack-value',
+  'secret-stack-done',
   'secret-asked-again',
   'secret-asked-again-denied',
   'secret-asked-again-allowed',
@@ -160,13 +165,57 @@ function twoLateThenCount(
   ]
 }
 
+/** The value of MAPBOX_TOKEN that Cal gives for 15 minutes. */
+const mapboxForMinutes: MemberGrant = {
+  kind: 'value',
+  lifetime: 'minutes',
+  by: 'cal',
+}
+
+/** The count that Cal allowed in time: its run, the answer, and its end. */
+const countEnded: readonly ChatItem[] = [
+  ...countAsk,
+  call(replicaRequest, 'done', 'secret-call-count'),
+  {
+    ...run(replicaRequest, 'allowed', { grant: allowedByCal }),
+    id: 'secret-run-count',
+  },
+  counted,
+  { kind: 'turn-end', id: 'turn-end-count', duration: '52s', files: [] },
+]
+
+/**
+ * The preview deploy, whose late request Cal denied after the turn of the
+ * count ended, the Mapbox comparison, whose late request is `mapbox`, and
+ * the count.
+ */
+function previewDenied(mapbox: SecretRunItem): ChatItem[] {
+  return [
+    ...lateTurn(
+      'preview',
+      previewAsk,
+      run(previewRequest, 'late-denied', { deniedBy: 'cal' }),
+      waitsForPreview,
+    ),
+    ...lateTurn('mapbox', compareAsk, mapbox, waitsForMapbox),
+    ...countEnded,
+  ]
+}
+
+/** The late request for MAPBOX_TOKEN, with a value typed or not. */
+function lateMapbox(typed: boolean): SecretRunItem {
+  return run(mapboxRequest, 'late', { draft: { typed, lifetime: 'minutes' } })
+}
+
 /**
  * The chats of the stack of requests above the composer, after the
  * finished turn of `history`. Three requests wait: a request whose tool
  * call waits, and two older late requests, then the two late requests
- * after an Allow of the first. The agent asked three times for
- * PROD_DATABASE_URL, and each request is late, then denied, or allowed
- * with one answer. A command on the Mac waits with an older late request.
+ * after an Allow of the first. Then the request for MAPBOX_TOKEN is the
+ * one left, with no value, then with a value, and then the late value
+ * starts a turn. The agent asked three times for PROD_DATABASE_URL, and
+ * each request is late, then denied, or allowed with one answer. A command
+ * on the Mac waits with an older late request.
  */
 export function secretStackConversations(
   history: readonly ChatItem[],
@@ -192,6 +241,22 @@ export function secretStackConversations(
       ...history,
       ...twoLateThenCount('allowed', { grant: allowedByCal }),
       working('31s'),
+    ],
+    // The count ran, and its turn ended. Then Cal denied the preview
+    // deploy, so the late request for MAPBOX_TOKEN is the one card left.
+    'secret-stack-one-left': [...history, ...previewDenied(lateMapbox(false))],
+    'secret-stack-value': [...history, ...previewDenied(lateMapbox(true))],
+    // Cal gave the value late, so a line of the app starts a new turn.
+    'secret-stack-done': [
+      ...history,
+      ...previewDenied(
+        run(mapboxRequest, 'late-allowed', {
+          grant: mapboxForMinutes,
+          delivery: { kind: 'turn' },
+        }),
+      ),
+      answerLine(mapboxRequest, mapboxForMinutes),
+      working('4s'),
     ],
     'secret-asked-again': [...history, ...askedThreeTimes('late')],
     'secret-asked-again-denied': [

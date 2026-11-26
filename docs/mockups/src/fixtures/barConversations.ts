@@ -55,19 +55,6 @@ export const barConversationKeys = [
 
 type BarConversationKey = (typeof barConversationKeys)[number]
 
-/** The transcripts in which a turn runs. */
-export const barRunningConversations: readonly BarConversationKey[] = [
-  'sent-fix-checks',
-  'sent-create-pull-request',
-  'sent-commit-and-push',
-  'sent-push',
-  'sent-resolve-conflicts',
-  'sent-address-review',
-  'sent-restack',
-  'sent-rebase-conflicts',
-  'after-merge-running',
-]
-
 /**
  * The message that an agent action sends, as a message of the member who
  * clicked, and the turn that it starts. `text` takes the place of the

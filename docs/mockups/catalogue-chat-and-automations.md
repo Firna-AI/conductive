@@ -140,12 +140,18 @@ pages:
   Its `overlap` variant has a mark inside another mark, with a deeper fill
   where they overlap. Its `menu` variant has the menu of both explanations,
   which is a sheet on a phone. Its `stale` variant has a mark whose text no
-  longer matches, so the mark covers the whole answer.
+  longer matches, so the mark covers the whole answer. On its canonical
+  screen, the tab of the explanation that waits shows the needs-input
+  mark. That tab opens the `waiting` variant of `app/chat/explain/tab`,
+  whose tab of the parent session comes back.
 - `app/chat/explain/closed` has the popover of an explanation whose tab is
   closed: its chat to read, and the notice that a follow-up or Expand
   reopens it.
 - `app/chat/explain/tab` has the explanation in its tab after Expand, with
-  the written prompt as its first message.
+  the written prompt as its first message. Its `waiting` variant has the
+  tab while the follow-up waits for a member: the request above the
+  composer of the tab, and the needs-input mark on the tab. Its chat is
+  the chat of the popover that waits.
 - `app/chat/explain/read-only` has an archived workspace: the marks stay,
   and a selection shows no Explain. Its `popover` variant has the popover
   to read, with no follow-up field.
@@ -205,11 +211,12 @@ does, as `app/fast-mode/trigger` shows.
 
 `app/chat/menu-placement` draws menus that show whole over a box that
 scrolls. Its canonical screen has the model menu, with the favourites
-first, over the stack of requests above the composer. Its `history`
-variant has the session history beside a full tab row. Its `allow`
-variant has More ways to allow of the card on top of a stack of four
-requests in the Mac app. The app opens these menus in the top layer, so
-no box cuts them.
+first, over a long script that waits above the composer and scrolls
+inside its card. Its `history` variant has the session history beside a
+full tab row. Its `allow` variant has More ways to allow of the card on
+top of a stack of four requests in the Mac app, whose Previous and Next
+open the pages of `mac-app/requests`. The app opens these menus in the
+top layer, so no box cuts them.
 
 `app/automations` lists the automations of Acme, which the Automations link below
 New workspace opens. Its child pages:

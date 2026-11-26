@@ -1,5 +1,6 @@
 import { defineScreen } from '@mokly/mokly'
 import { WorkspaceScreen } from '../../../../../screens/WorkspaceScreen'
+import { explainWaitsWalk } from '../../../../../screens/tabWalks'
 import {
   readyWorkspace,
   workspaceStateSchema,
@@ -8,17 +9,12 @@ import {
 export const explainMarks = defineScreen({
   title: 'Marks',
   description:
-    'The parent chat after four explanations, with no popover open. Each quote keeps a mark: the soft amber fill of marked lines, with the state of its explanation at its end. The explanation of Cal about the manual entry waits for a member to allow a run with a secret, so its mark shows the Needs input mark of the header. The explanation of "Removed the old postcode lookup" runs, so its mark shows the spinner of a session tab. The explanation of a phrase in the first message of Cal has its answer, so its mark shows the icon of Explain. The explanation of "checkout end-to-end tests" failed, so its mark shows the alert of a failed turn. The header shows Needs input. Each open explanation has its tab at the end of the row. The pointer over a mark shows the title of its explanation, and a press opens its popover.',
+    'The parent chat after four explanations, with no popover open. Each quote keeps a mark: the soft amber fill of marked lines, with the state of its explanation at its end. The explanation of Cal about the manual entry waits for a member to allow a run with a secret, so its mark shows the Needs input mark of the header. The explanation of "Removed the old postcode lookup" runs, so its mark shows the spinner of a session tab. The explanation of a phrase in the first message of Cal has its answer, so its mark shows the icon of Explain. The explanation of "checkout end-to-end tests" failed, so its mark shows the alert of a failed turn. The header shows Needs input. Each open explanation has its tab at the end of the row, and the tab of the explanation of Cal shows the needs-input mark. A press on that tab shows its chat with the request, as the waiting state of app/chat/explain/tab shows. The pointer over a mark shows the title of its explanation, and a press opens its popover.',
   rationale:
     'Every member sees the marks, because the members share the sessions. The anchor of an explanation lives on its session record, so each tab finds the marks with no new event. The user chose A of mark life on 17 November 2026: a mark never goes away, and a press on it always opens the popover of its explanation. Each state has its own shape, so no state depends on colour alone. A mark inside a folded part of a turn shows when the fold opens.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
-  props: {
-    ...readyWorkspace,
-    banner: 'checks-running',
-    explainMarks: 'states',
-    explainSession: 'waiting',
-  },
+  props: { ...readyWorkspace, ...explainWaitsWalk.states.marks.props },
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />
   ),

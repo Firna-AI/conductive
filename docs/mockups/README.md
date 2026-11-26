@@ -203,16 +203,42 @@ as [`src/ui/components/chat/`](../../src/ui/components/chat/).
   holds the merge queue of the open workspace, and
   `src/screens/queueStates.tsx` the merge queues of the list, from the
   queues of `src/screens/queueSpecs.ts`.
+- A turn runs on a screen while its sandbox is ready and the last item of
+  its chat is the Working line, as `isRunning` of
+  `src/screens/composerFor.ts` says. The composer then shows Stop and the
+  text that steers the turn, the tab of the session shows its spinner, and
+  the header says that the agent works. So the chat and the composer
+  cannot disagree, and no list of chats can leave one out.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from
   `src/components/common/`, which renders Mokly's `MockLink`. A Firna control
   becomes a link through `ScreenLink asChild`. Tabs are links, so each view
   has its own path. A link to a page outside the app reads its address from
-  `useOutsideHref`. Previous and Next of the stack of requests above the
-  composer link to the page of each card on top, which
-  `src/screens/requestStackPages.ts` lists for each chat. The
-  `shownRequest` state of the workspace screen picks the card on top.
+  `useOutsideHref`.
+- A walk ties the screens of one example together, so that each link keeps
+  the open requests of the example. `Walk` in `src/screens/walks.ts` gives
+  the states of an example, the page of each, and where its controls lead.
+  `src/screens/stackWalks.ts` holds the walks of the stacks of requests
+  above the composer, and `src/screens/tabWalks.ts` the examples whose tabs
+  keep an open request. A screen draws the state whose props its state
+  holds, in its view: a browser or the Mac app.
+  - Previous and Next of a stack open the page of each place of the stack
+    of the state, one for each card of its chat, in the order of the shared
+    stack. The `shownRequest` state picks the card on top, and
+    `src/screens/walkPages.ts` makes the saved state of each place, so a
+    page and a link exist for each card.
+  - An answer of a card opens the state that the walk names. In a walk
+    that names the answers of its stack, each other answer draws no link,
+    so no answer drops the other requests. Without such names, each card
+    keeps the links of its own results, as the commands of
+    `mac-app/requests` do.
+  - In a walk that names tabs, each tab opens the state that it names, and
+    each other tab draws no link. Outside such a walk, while a session tab
+    shows the needs-input mark, no tab links, because its page would drop
+    the open request.
+  - `src/screens/walkLinks.ts` gives these links to the chat, the value
+    sheet, and the tab row.
 - While the lists of a workspace are limited, `WorkspaceScreen` gives
   `ScreenLink` the table of `src/limitedListPaths.ts` through `LinkPages`,
   from `src/screens/workspaceLinks.tsx`. The table maps All files, Changes,

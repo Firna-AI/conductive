@@ -14,7 +14,7 @@ import { orgs, suspendedOrg } from '../fixtures/orgs'
 import type { Workspace } from '../fixtures/workspaces'
 import { composerFor } from './composerFor'
 import { composerNotice } from './composerNotice'
-import { stackPagesOf } from './requestStackPages'
+import { stackViewOf } from './walkLinks'
 import { startingLogFor } from './workspaceParts'
 import { sandboxNotice } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
@@ -23,8 +23,10 @@ import { noMessages } from './workspaceTabs'
 /**
  * The chat of an open workspace: the transcript, the request stack, and the
  * composer, with the workspaces of the screen for its chips. A new session
- * shows its empty state in place of the transcript. The workspace screen
- * imports this module first so the styles of the chat load first.
+ * shows its empty state in place of the transcript. The stack takes the
+ * links of the walk of the screen, as `stackViewOf` gives them. The
+ * workspace screen imports this module first so the styles of the chat load
+ * first.
  */
 export function WorkspaceChat(props: {
   state: WorkspaceState
@@ -37,11 +39,7 @@ export function WorkspaceChat(props: {
 }) {
   const { state, workspace, viewport } = props
   const mac = useMacApp()
-  const pages = stackPagesOf(state.conversation, mac !== undefined)
-  const stack =
-    state.shownRequest > 1 || pages
-      ? { place: state.shownRequest, pages }
-      : undefined
+  const stack = stackViewOf(state, mac ? 'mac' : 'browser')
   const items = noMessages(state) ? [] : chatItemsFor(props.items, state.paths)
   const problem = sandboxNotice(state)
   const starting = startingLogFor(state)

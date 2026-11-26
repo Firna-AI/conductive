@@ -28,6 +28,7 @@ export const conversationKeys = [
   'mac-waiting',
   'mac-waiting-many',
   'mac-waiting-suite',
+  'mac-waiting-script',
   'mac-denied',
   'mac-done',
   'mac-unavailable',

@@ -16,7 +16,7 @@ import { composer as composerPart } from '../../entries/components/chat/Composer
 import { composerData } from '../../entries/components/chat/capabilitiesSlot'
 import type { ComposerState } from './Composer'
 import { groupItems } from './groupItems'
-import { RequestStack } from './RequestStack'
+import { RequestStack, type StackAnswer } from './RequestStack'
 import { isPendingRequest, shownPlace, stackReader } from './requests'
 import { stackEntries } from '../../../../../src/ui/components/chat/requestStackOrder'
 import { toolGroup } from '../../entries/components/chat/ToolGroup.mockup'
@@ -28,10 +28,15 @@ import { ToBottomButton } from '../../../../../src/ui/components/chat/ToBottomBu
 import styles from '../../../../../src/ui/components/chat/ChatPane.module.css'
 
 /**
- * The place of the card on top of the stack of requests, and the page of
- * each place, which Previous and Next open.
+ * The place of the card on top of the stack of requests, and, in a walk of
+ * the catalogue, the page of each place, which Previous and Next open, and
+ * the page of each answer that keeps the example.
  */
-export type StackView = { place?: number; pages?: readonly string[] }
+export type StackView = {
+  place?: number
+  pages?: readonly string[]
+  answers?: readonly StackAnswer[]
+}
 
 /**
  * The chat transcript, with the composer or a sandbox bar under it. While
@@ -90,7 +95,10 @@ export function ChatPane(props: {
    * while the cloud computer runs. Without reads, each shows as its link.
    */
   pictures?: PictureRead
-  /** The card on top of the stack of requests, and the page of each place. */
+  /**
+   * The card on top of the stack of requests, and in a walk the page of
+   * each place and of each answer.
+   */
   stack?: StackView
   /** The reader reads higher up, so the button to the bottom shows. */
   scrolledUp?: boolean
@@ -189,6 +197,7 @@ export function ChatPane(props: {
           <ToBottomButton onPress={noop} />
         ) : null}
         <RequestStack
+          answers={props.stack?.answers}
           choicesOpen={mac?.choicesOpen}
           entries={requests}
           pages={props.stack?.pages}
