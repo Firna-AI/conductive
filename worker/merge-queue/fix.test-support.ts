@@ -1,6 +1,9 @@
 import { expect } from 'vitest'
 
-import { readSessionResponse } from '../../src/chat/api/read-responses'
+import {
+  readSessionResponse,
+  readSessions,
+} from '../../src/chat/api/read-responses'
 import { readNewestStoredEvents } from '../../src/chat/api/read-workspace'
 import { chatHistoryPath } from '../../src/shared/events'
 import { sessionPaths, sessionsPath } from '../../src/shared/sessions'
@@ -55,12 +58,30 @@ export async function fixFixture(bundle: string) {
       expect(response.status).toBe(201)
       return readSessionResponse(await response.json()).session
     }
+    const sessions = async () =>
+      readSessions(
+        await (
+          await f.request(sessionsPath(OUTER_ORG, OUTER_WORKSPACE))
+        ).json(),
+      ).sessions
+    /** The one session that the queuer started for the restack. */
+    const restackSession = async () => {
+      const started = (await sessions()).filter(
+        ({ startedBy }) => startedBy?.id === 'member',
+      )
+      expect(started).toHaveLength(1)
+      const [found] = started
+      if (!found) throw new Error('The restack session is missing.')
+      return found
+    }
     return {
       ...f,
       queue,
       start,
       post,
       session,
+      sessions,
+      restackSession,
       stop: (sessionId: string, turnId: string) =>
         post(sessionPaths.interrupt(OUTER_ORG, OUTER_WORKSPACE, sessionId), {
           turnId,

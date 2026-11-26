@@ -91,7 +91,8 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         must still belong to the org and have GitHub write access to the
         repository.
         The queue sends agent turns as the member who added the pull
-        request. The turn uses the session's agent login.`,
+        request. Each such turn runs in a new session that this member
+        starts, on this member's default agent login.`,
       text`Each personal login has a setting that lets other members use
         it in the sessions that you start on it. For a Claude
         subscription or a ChatGPT sign-in, the setting starts off. For an API key or an own

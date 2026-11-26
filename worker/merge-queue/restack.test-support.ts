@@ -3,11 +3,7 @@ import { expect } from 'vitest'
 import { chatHistoryPath } from '../../src/shared/events'
 import { sessionPaths, sessionsPath } from '../../src/shared/sessions'
 import { readNewestStoredEvents } from '../../src/chat/api/read-workspace'
-import {
-  readSessionResponse,
-  readSessions,
-} from '../../src/chat/api/read-responses'
-import { CLAUDE } from '../chat/harness.test-support'
+import { readSessions } from '../../src/chat/api/read-responses'
 import { OUTER_ORG } from '../chat/integration/outer-seed.test-support'
 import { requireFeatureResult } from '../features/result'
 import { HEAD_SHA, passedRun } from '../github/fake-pull'
@@ -26,6 +22,9 @@ export async function restackFixture(
       method: 'POST',
       body: JSON.stringify(value),
     })
+  const workspaceSessions = async (id: string) =>
+    readSessions(await (await f.request(sessionsPath(OUTER_ORG, id))).json())
+      .sessions
   const webhook = async (event: string, delivery: string, payload: unknown) => {
     expect((await queueWebhook(f, event, delivery, payload)).status).toBe(204)
   }
@@ -95,37 +94,44 @@ export async function restackFixture(
         sha: f.api.pulls[number].headRefOid,
         branches: [{ name: f.api.pulls[number].headRefName }],
       }),
-    session: async (id: string) => {
+    ready: async (id: string) => {
       await f.db
         .prepare("UPDATE workspaces SET state = 'ready' WHERE id = ?")
         .bind(id)
         .run()
-      const response = await post(sessionsPath(OUTER_ORG, id), {
-        choice: CLAUDE,
-      })
-      expect(response.status).toBe(201)
-      return readSessionResponse(await response.json()).session.id
     },
-    messages: async (id: string, sessionId: string) => {
-      const response = await f.request(
-        chatHistoryPath(OUTER_ORG, id, sessionId),
+    /** The messages of each session of the workspace, oldest session first. */
+    messages: async (id: string) => {
+      const sessions = (await workspaceSessions(id)).toSorted(
+        (a, b) => a.createdAt - b.createdAt,
       )
-      expect(response.status).toBe(200)
-      return readNewestStoredEvents(await response.json()).envelopes.flatMap(
-        ({ event }) =>
+      const pages = await Promise.all(
+        sessions.map(async ({ id: sessionId }) => {
+          const response = await f.request(
+            chatHistoryPath(OUTER_ORG, id, sessionId),
+          )
+          expect(response.status).toBe(200)
+          return readNewestStoredEvents(await response.json()).envelopes
+        }),
+      )
+      return pages
+        .flat()
+        .flatMap(({ event }) =>
           event?.type === 'message.accepted' ? [event.message] : [],
-      )
+        )
     },
-    endFix: async (id: string, sessionId: string) => {
-      const response = await f.request(sessionsPath(OUTER_ORG, id))
-      const turnId = readSessions(await response.json()).sessions.find(
-        (item) => item.id === sessionId,
-      )?.activeTurnId
-      if (!turnId) throw new Error('The queue did not send a fix turn.')
+    /** Stop the one running restack turn of the workspace. */
+    endFix: async (id: string) => {
+      const running = (await workspaceSessions(id)).filter(
+        ({ activeTurnId }) => activeTurnId !== null,
+      )
+      const [session] = running
+      if (running.length !== 1 || !session?.activeTurnId)
+        throw new Error('The queue did not send one fix turn.')
       expect(
         (
-          await post(sessionPaths.interrupt(OUTER_ORG, id, sessionId), {
-            turnId,
+          await post(sessionPaths.interrupt(OUTER_ORG, id, session.id), {
+            turnId: session.activeTurnId,
           })
         ).status,
       ).toBe(200)

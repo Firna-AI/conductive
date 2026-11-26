@@ -111,17 +111,24 @@ says.
 
 ## Restack turns
 
-- The queue sends each restack turn as a message of the queuer, to the
-  newest open session of the workspace (decision 314). The message follows
-  each rule of a message, and the chat shows it as a message of the
-  queuer.
+- The queue sends each restack turn as a message of the queuer
+  (decision 314), in a new session of the workspace (decision 523). The
+  queuer starts that session. The message follows each rule of a message,
+  and the chat shows it as a message of the queuer.
+- Reason: the restack then has its own chat, apart from the chats about
+  other work in the workspace. The newest open session was rejected
+  (decision 523), because the restack prompt and its turn then mix into a
+  chat about other work, and a workspace with no open session waits.
+- The new session uses the default model and effort of the queuer, with
+  Fast off, as a session that `create_session` starts.
+- The turn runs on the default agent login of the queuer, as a new session
+  of the queuer does. While the queuer has no usable agent login, the
+  entry waits, and the bar names the wait.
 - The queue sends it only while no session of the workspace runs a turn.
-  Reason: a message during a turn joins that turn, and pushes as the sender
-  of that turn.
+  Reason: the restack rewrites the branch in the files of the cloud
+  computer, which each session of the workspace shares.
 - A restack turn starts a stopped cloud computer, as a message from the
   agent tools does, as [The resume](stop-and-resume.md#the-resume) says.
-- The turn runs on the agent login of its session, as each message does,
-  not on a quota of the queuer.
 - The sync after GitHub rewrites the branch of a queued workspace can also
   send a restack turn, as
   [The base of a queued workspace](base-branches.md#the-base-of-a-queued-workspace)

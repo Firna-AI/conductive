@@ -1,5 +1,6 @@
 import { restackPrompt } from '../../src/ui/components/workspace/barCopy'
 import type { User } from '../../src/shared/api'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import type { MergeQueueBranchLabel } from '../../src/shared/generated/MergeQueueBranchLabel'
 import { queueId } from '../merge-queue/contracts'
 import { queueChanged } from '../merge-queue/errors'
@@ -9,22 +10,15 @@ import type {
 } from '../merge-queue/fix-contracts'
 import { acceptMessage } from './messages'
 import type { ChatOperation } from './operation'
+import { SessionLogins } from './session-login'
+import { createSession } from './sessions'
 import type { ChatTransaction } from './store'
 import type { ChatDependencies } from './types'
 
-async function fixSession(view: ChatTransaction) {
-  const sessions = await view.sessions()
-  if (sessions.some((session) => session.activeTurnId !== null))
-    return { kind: 'waiting', wait: 'active-turn' } as const
-  const newest = sessions
-    .filter((session) => session.closedAt === null)
-    .sort(
-      (a, b) =>
-        b.createdAt - a.createdAt || (a.id < b.id ? 1 : a.id > b.id ? -1 : 0),
-    )[0]
-  return newest
-    ? ({ kind: 'session', session: newest } as const)
-    : ({ kind: 'waiting', wait: 'open-session' } as const)
+async function activeTurn(view: ChatTransaction): Promise<boolean> {
+  return (await view.sessions()).some(
+    (session) => session.activeTurnId !== null,
+  )
 }
 
 async function accepted(
@@ -37,12 +31,17 @@ async function accepted(
   return { kind: 'accepted', turnId: turn.id, queued: turn.state === 'queued' }
 }
 
-/** The caller holds the workspace sequence through the admission. */
+/**
+ * Send the restack prompt as a message of the queuer, in a new session of
+ * the queuer. The caller holds the workspace sequence through the
+ * admission.
+ */
 export async function acceptQueueFix(
   operation: ChatOperation,
   fix: QueueFixRequest,
   authorize: () => Promise<User>,
   baseLabel: () => Promise<MergeQueueBranchLabel>,
+  defaultChoice: (userId: string) => Promise<AgentChoice>,
   dependencies: ChatDependencies,
 ): Promise<QueueFixAdmission> {
   const { messageId, scope, entry, restack } = fix
@@ -54,26 +53,33 @@ export async function acceptQueueFix(
     if (queueId(receipt) !== queueId(scope)) throw queueChanged()
     return operation.read((view) => accepted(view, messageId))
   }
-  const target = await operation.read(fixSession)
-  if (target.kind === 'waiting') return target
-  const { login, owner } = await operation.logins.observe(
-    target.session.id,
-    undefined,
+  if (await operation.read(activeTurn))
+    return { kind: 'waiting', wait: 'active-turn' }
+  // Fast mode stays off, as in a session that `create_session` starts.
+  const choice = dependencies.normalizeChoice({
+    ...(await defaultChoice(user.id)),
+    fast: false,
+  })
+  const resolved = await SessionLogins.resolve(
+    dependencies,
     user.id,
+    choice.agent,
   )
-  if (!login || !owner) return { kind: 'waiting', wait: 'agent-login' }
+  if (!resolved) return { kind: 'waiting', wait: 'agent-login' }
   const label = restack.sync ? undefined : await baseLabel()
   return operation.change(async (transaction) => {
-    const current = await fixSession(transaction)
-    if (current.kind === 'waiting') return current
-    if (current.session.id !== target.session.id) return { kind: 'deferred' }
+    if (await activeTurn(transaction))
+      return { kind: 'waiting', wait: 'active-turn' }
     const sender = await authorize()
-    const session = current.session
-    if (!session.login) {
-      session.login = owner
-      delete session.defaultLogin
-      await transaction.saveSession(session)
-    }
+    const session = await createSession(
+      transaction,
+      choice,
+      dependencies.randomId(),
+      sender,
+      dependencies,
+      null,
+      resolved.owner,
+    )
     await acceptMessage(
       transaction,
       session.id,
@@ -87,7 +93,7 @@ export async function acceptQueueFix(
           sync: restack.sync,
           label,
         }),
-        choice: session.choice,
+        choice,
         attachmentIds: [],
       },
       sender,

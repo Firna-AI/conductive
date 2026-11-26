@@ -104,8 +104,9 @@ A caller gives the queue an ID for one restack and the commits that the
 prompt needs. The coordinator saves the request and runs it on its alarm.
 It uses the same message ID on each attempt. Before it sends, it checks
 the entry and the queuer's current access. It retries a wait for a turn,
-an open session, an agent login, or a GitHub sign-in without a deadline.
-The workspace saves the message with its receipt, then the normal
+an agent login of the queuer, or a GitHub sign-in without a deadline.
+The workspace saves the message with its receipt, in a new session of
+the queuer, then the normal
 accepted-message path resumes the cloud computer when necessary.
 
 The workspace reports the final state of the turn from its own alarm.

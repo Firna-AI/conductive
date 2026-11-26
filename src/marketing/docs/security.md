@@ -44,7 +44,7 @@ A wake that joins a running turn keeps that turn's sender.
 | Merge from the pull request bar | The GitHub account of the member who selects Merge |
 | Automatic merge from the queue | The GitHub account of the member who added the last pull request that the queue asks GitHub to merge |
 | Cleanup of the queue's GitHub stack | The creator's GitHub account, then the member whose action caused the entry to leave, then the workspace owner |
-| Agent message sent by the merge queue | The member who added the pull request, under the session's login rules |
+| Agent message sent by the merge queue | The member who added the pull request, in a new session on that member's default login |
 | Ready for review from the pull request bar | The GitHub account of the member who selects Ready for review |
 | Mark a draft ready when adding it to the queue | The GitHub account of the member who adds it |
 | Continue's repository fetch | The GitHub account of the member who selects Continue |

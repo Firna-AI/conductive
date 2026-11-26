@@ -13,7 +13,7 @@ import {
   TOP_HEAD,
   TRUNK_HEAD,
 } from './merge.test-support'
-import { PARALLEL, queueBundle } from './queue.test-support'
+import { hideAgentLogin, PARALLEL, queueBundle } from './queue.test-support'
 import { restackFixture } from './restack.test-support'
 
 let bundle: string
@@ -65,8 +65,8 @@ it('uses the last trunk-facing pull when the trunk is renamed during a re-order'
 it('merges the ready bottom after a re-order and refuses a move ahead of it', async () => {
   const f = await restackFixture(bundle)
   try {
-    const oldBottom = await f.session(OUTER_WORKSPACE)
-    const newBottom = await f.session(PARALLEL)
+    await f.ready(OUTER_WORKSPACE)
+    await f.ready(PARALLEL)
     expect((await f.change('POST', PARALLEL)).status).toBe(204)
     await f.queue.advanceStartAlarm()
     f.api.requests = []
@@ -81,25 +81,21 @@ it('merges the ready bottom after a re-order and refuses a move ahead of it', as
     expect(f.steps().map(({ url }) => new URL(url).pathname)).toEqual([
       '/repos/Codertocat/Hello-World/stacks/1/unstack',
     ])
-    expect(
-      (await f.messages(PARALLEL, newBottom)).map(({ text }) => text),
-    ).toEqual([
+    expect((await f.messages(PARALLEL)).map(({ text }) => text)).toEqual([
       expect.stringContaining(`git rebase --onto ${TRUNK_HEAD} ${HEAD_SHA}`),
     ])
-    expect(await f.messages(OUTER_WORKSPACE, oldBottom)).toEqual([])
+    expect(await f.messages(OUTER_WORKSPACE)).toEqual([])
 
     const firstHead = 'c'.repeat(40)
     f.api.pulls[4].headRefOid = firstHead
     f.api.branches.set('refs/heads/parallel', firstHead)
     f.api.mergeBases.set(`${TRUNK_HEAD}...${firstHead}`, TRUNK_HEAD)
     f.api.mergeBases.set(`${HEAD_SHA}...${firstHead}`, TRUNK_HEAD)
-    await f.endFix(PARALLEL, newBottom)
+    await f.endFix(PARALLEL)
     await f.queue.advanceStartAlarm()
-    expect(
-      (await f.messages(OUTER_WORKSPACE, oldBottom)).map(({ text }) => text),
-    ).toEqual([
-      expect.stringContaining(`git rebase --onto ${firstHead} ${TRUNK_HEAD}`),
-    ])
+    expect((await f.messages(OUTER_WORKSPACE)).map(({ text }) => text)).toEqual(
+      [expect.stringContaining(`git rebase --onto ${firstHead} ${TRUNK_HEAD}`)],
+    )
     expect(await readQueue(f.db, f.scope)).toMatchObject({
       githubStackNumber: null,
       reordering: 1,
@@ -150,6 +146,7 @@ it.each(['automatically', 'on a click'])(
           },
         ])
 
+      await hideAgentLogin(f.db, 'owner')
       await f.queue.advanceStartAlarm()
       expect(await readQueue(f.db, f.scope)).toMatchObject({
         githubStackNumber: 2,
@@ -157,7 +154,7 @@ it.each(['automatically', 'on a click'])(
       })
       expect((await f.entries()).at(-1)).toMatchObject({
         pullNumber: 3,
-        wait: 'open-session',
+        wait: 'agent-login',
       })
       if (mode === 'on a click') {
         expect(await (await f.bar(PARALLEL)).json()).toMatchObject({

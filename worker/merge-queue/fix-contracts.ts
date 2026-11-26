@@ -26,7 +26,8 @@ export interface QueueFixRequest {
   messageId: string
 }
 
-export type QueueFixWait = 'active-turn' | 'agent-login' | 'open-session'
+/** The queue no longer sets `open-session`, but older entries can hold it. */
+export type QueueFixWait = 'active-turn' | 'agent-login'
 
 export type QueueFixAdmission =
   | { kind: 'waiting'; wait: QueueFixWait }

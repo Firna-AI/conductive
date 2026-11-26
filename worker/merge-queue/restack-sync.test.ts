@@ -25,7 +25,7 @@ it('carries local work onto the rewritten GitHub branch with the old GitHub head
   const f = await restackFixture(bundle, 'stack')
   try {
     const id = OTHER_WORKSPACE
-    const session = await f.session(id)
+    await f.ready(id)
     const sandbox = 'bx_queue_sync_local'
     await f.db
       .prepare('UPDATE workspaces SET sandbox_id = ? WHERE id = ?')
@@ -46,7 +46,7 @@ it('carries local work onto the rewritten GitHub branch with the old GitHub head
     f.api.mergeBases.set(`${TRUNK_HEAD}...${rewritten}`, TRUNK_HEAD)
     f.api.mergeBases.set(`${HEAD_SHA}...${rewritten}`, TRUNK_HEAD)
     await f.queue.advanceStartAlarm()
-    const messages = await f.messages(id, session)
+    const messages = await f.messages(id)
     expect(messages).toMatchObject([{ sender: { id: 'member' } }])
     expect(messages[0].text).toContain(
       `git rebase --onto ${rewritten} ${TOP_HEAD}`,

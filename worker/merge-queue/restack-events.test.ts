@@ -6,7 +6,7 @@ import {
 } from '../chat/integration/outer-seed.test-support'
 import { HEAD_SHA, passedRun } from '../github/fake-pull'
 import { PARALLEL_HEAD, TOP_HEAD, TRUNK_HEAD } from './merge.test-support'
-import { PARALLEL, queueBundle } from './queue.test-support'
+import { hideAgentLogin, PARALLEL, queueBundle } from './queue.test-support'
 import { restackFixture } from './restack.test-support'
 
 let bundle: string
@@ -17,8 +17,8 @@ beforeAll(async () => {
 it('restacks from the trunk upward after an outside merge and a lower push', async () => {
   const f = await restackFixture(bundle)
   try {
-    const bottom = await f.session(OUTER_WORKSPACE)
-    const upper = await f.session(PARALLEL)
+    await f.ready(OUTER_WORKSPACE)
+    await f.ready(PARALLEL)
     expect((await f.change('POST', PARALLEL)).status).toBe(204)
     await f.queue.advanceStartAlarm()
     const trunk = '5'.repeat(40)
@@ -27,12 +27,10 @@ it('restacks from the trunk upward after an outside merge and a lower push', asy
     f.api.mergeBases.set(`${trunk}...${HEAD_SHA}`, TRUNK_HEAD)
     await f.push('outside-merge', 'main', TRUNK_HEAD, trunk)
     await f.queue.advanceStartAlarm()
-    expect(
-      (await f.messages(OUTER_WORKSPACE, bottom)).map(({ text }) => text),
-    ).toEqual([
-      expect.stringContaining(`git rebase --onto ${trunk} ${TRUNK_HEAD}`),
-    ])
-    expect(await f.messages(PARALLEL, upper)).toEqual([])
+    expect((await f.messages(OUTER_WORKSPACE)).map(({ text }) => text)).toEqual(
+      [expect.stringContaining(`git rebase --onto ${trunk} ${TRUNK_HEAD}`)],
+    )
+    expect(await f.messages(PARALLEL)).toEqual([])
     const githubPosts = f.api.requests.filter(
       (r) => r.method === 'POST' && new URL(r.url).pathname === '/graphql',
     )
@@ -48,10 +46,10 @@ it('restacks from the trunk upward after an outside merge and a lower push', asy
     f.api.checks.set(lower, [{ ...passedRun, conclusion: 'FAILURE' }])
     await f.push('lower-fix-push', 'changes', HEAD_SHA, lower)
     await f.queue.advanceStartAlarm()
-    expect(await f.messages(PARALLEL, upper)).toEqual([])
-    await f.endFix(OUTER_WORKSPACE, bottom)
+    expect(await f.messages(PARALLEL)).toEqual([])
+    await f.endFix(OUTER_WORKSPACE)
     await f.queue.advanceStartAlarm()
-    const messages = await f.messages(PARALLEL, upper)
+    const messages = await f.messages(PARALLEL)
     expect(messages.map(({ text }) => text)).toEqual([
       expect.stringContaining(`git rebase --onto ${lower} ${HEAD_SHA}`),
     ])
@@ -64,22 +62,25 @@ it('restacks from the trunk upward after an outside merge and a lower push', asy
 it('replaces an unsent upper turn when the trunk changes first', async () => {
   const f = await restackFixture(bundle)
   try {
-    const bottom = await f.session(OUTER_WORKSPACE)
+    await f.ready(OUTER_WORKSPACE)
     f.api.mergeBases.set(`${HEAD_SHA}...${PARALLEL_HEAD}`, TRUNK_HEAD)
+    const showLogin = await hideAgentLogin(f.db, 'owner')
     expect((await f.change('POST', PARALLEL)).status).toBe(204)
     await f.queue.advanceStartAlarm()
     expect(await f.entries()).toMatchObject([
       { pullNumber: 2 },
-      { wait: 'open-session' },
+      { wait: 'agent-login' },
     ])
+    expect(await f.messages(PARALLEL)).toEqual([])
+    await showLogin()
     const outside = '5'.repeat(40)
     f.api.branches.set('refs/heads/main', outside)
     f.api.mergeBases.set(`${outside}...${HEAD_SHA}`, TRUNK_HEAD)
     await f.push('trunk-changed-first', 'main', TRUNK_HEAD, outside)
     await f.queue.advanceStartAlarm()
-    expect(
-      (await f.messages(OUTER_WORKSPACE, bottom)).map(({ text }) => text),
-    ).toEqual([expect.stringContaining(`\`FETCH_HEAD\` is at \`${outside}`)])
+    expect((await f.messages(OUTER_WORKSPACE)).map(({ text }) => text)).toEqual(
+      [expect.stringContaining(`\`FETCH_HEAD\` is at \`${outside}`)],
+    )
     expect(await f.entries()).toMatchObject([
       { state: 'restacking' },
       { wait: 'lower-layer' },
@@ -97,18 +98,20 @@ it('drops the removed layer’s commits before rebuilding the stack', async () =
     f.api.pulls[3].baseRefName = 'main'
     f.api.mergeBases.set(`${PARALLEL_HEAD}...${TOP_HEAD}`, PARALLEL_HEAD)
     expect((await f.change('POST', OTHER_WORKSPACE)).status).toBe(204)
-    const session = await f.session(OTHER_WORKSPACE)
+    await f.ready(OTHER_WORKSPACE)
     await f.queue.advanceStartAlarm()
     f.api.requests = []
     expect((await f.change('DELETE', PARALLEL)).status).toBe(204)
     await f.queue.advanceStartAlarm()
     expect(await f.base(PARALLEL)).toBeNull()
     expect(await f.base(OTHER_WORKSPACE)).toBe('changes')
-    expect(
-      (await f.messages(OTHER_WORKSPACE, session)).map(({ text }) => text),
-    ).toEqual([
-      expect.stringContaining(`git rebase --onto ${HEAD_SHA} ${PARALLEL_HEAD}`),
-    ])
+    expect((await f.messages(OTHER_WORKSPACE)).map(({ text }) => text)).toEqual(
+      [
+        expect.stringContaining(
+          `git rebase --onto ${HEAD_SHA} ${PARALLEL_HEAD}`,
+        ),
+      ],
+    )
     expect(f.steps().map(({ url }) => new URL(url).pathname)).toEqual([
       '/repos/Codertocat/Hello-World/pulls/4',
       '/repos/Codertocat/Hello-World/stacks/1/unstack',
@@ -119,7 +122,7 @@ it('drops the removed layer’s commits before rebuilding the stack', async () =
     f.api.branches.set('refs/heads/layer-two', moved)
     f.api.mergeBases.set(`${HEAD_SHA}...${moved}`, HEAD_SHA)
     f.api.mergeBases.set(`${PARALLEL_HEAD}...${moved}`, HEAD_SHA)
-    await f.endFix(OTHER_WORKSPACE, session)
+    await f.endFix(OTHER_WORKSPACE)
     await f.queue.advanceStartAlarm()
     expect(f.steps().map(({ url }) => new URL(url).pathname)).toEqual([
       '/repos/Codertocat/Hello-World/pulls/4',

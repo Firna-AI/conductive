@@ -213,7 +213,7 @@ Use **Fix checks** or **Address review** to ask the agent to help.
 The queue waits while the workspace has work that has not been pushed.
 It checks again after a local change is discarded, and when it could not check local work earlier.
 
-If the queue's rebase hits a conflict, it starts one agent turn as the member who added the pull request.
+If the queue's rebase hits a conflict, it starts one agent turn as the member who added the pull request, in a new session.
 If the conflict remains, select **Resolve conflicts** or remove the pull request from the queue.
 
 Before the merge starts, use **Remove from queue** under the bar or in the row or header menu.
