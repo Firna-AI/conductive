@@ -21,5 +21,6 @@
 - **Left out:** A version field in each save. It adds a contract for one optional field.
 - **Wider fix:** None found beyond B. Main already uses the same rule for Preview tabs.
 - **Previous examples:** The Preview tabs of PR #421.
+- **Related:** `plans/follow-ups/older-app-save-moves-preview-tabs.md` covers the same kind of save for the kept Preview tabs, which can move by one place. No options conflict.
 - **Recommendation:** B. It follows main's rule for older copies at a small cost.
 - **Action:** ask the user, because B adds a rule at the saved view boundary that no requirement states.

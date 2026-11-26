@@ -56,7 +56,7 @@ ${start}
 if git show-ref --verify --quiet ${shellQuote(`refs/heads/${row.branch}`)}; then
   git checkout ${shellQuote(row.branch)}
 else
-  git checkout -b ${shellQuote(row.branch)} "$conductive_start"
+  git checkout --no-track -b ${shellQuote(row.branch)} "$conductive_start"
 fi
 git config ${shellQuote(`branch.${row.branch}.gh-merge-base`)} ${shellQuote(job.baseBranch ?? job.defaultBranch)}`
 }

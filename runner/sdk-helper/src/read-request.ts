@@ -1,13 +1,22 @@
 import { isSkillsRepository } from '../../../src/shared/skill-folders'
 import type { HelperOptions } from './generated/HelperOptions'
 import type { HelperRequest } from './generated/HelperRequest'
+import type { HelperSkillSource } from './generated/HelperSkillSource'
 import type { HelperCredential } from './generated/HelperCredential'
 import type { OrgSkills } from './generated/OrgSkills'
 import type { ProviderInput } from './generated/ProviderInput'
 import type { RunnerBranches } from './generated/RunnerBranches'
 import type { RunnerRepository } from './generated/RunnerRepository'
 import type { RunnerNoticeLine } from './generated/RunnerNoticeLine'
-import { array, boolean, nullable, object, oneOf, string } from './parse'
+import {
+  array,
+  boolean,
+  integer,
+  nullable,
+  object,
+  oneOf,
+  string,
+} from './parse'
 import {
   parseChoice,
   parseCredential,
@@ -60,6 +69,23 @@ function orgSkills(value: unknown): OrgSkills | null {
       ? {}
       : { directory: nullable(input.directory) }),
   }
+}
+
+function skillSource(value: unknown): HelperSkillSource {
+  const input = object(value)
+  if (input.type === 'file') return { type: 'file', path: string(input.path) }
+  if (input.type === 'org') {
+    const skills = orgSkills(input.orgSkills)
+    if (skills?.directory)
+      return {
+        type: 'org',
+        repository: string(input.repository),
+        orgSkills: skills,
+        agent: oneOf(input.agent, ['claude', 'codex']),
+        name: string(input.name),
+      }
+  }
+  throw new Error('The helper skill source is invalid.')
 }
 
 function options(value: unknown): HelperOptions {
@@ -175,6 +201,13 @@ export function readRequest(value: unknown): HelperRequest {
         ...(input.orgSkills === undefined
           ? {}
           : { orgSkills: orgSkills(input.orgSkills) }),
+      }
+    case 'skill.read':
+      return {
+        type: 'skill.read',
+        requestId,
+        maxBytes: integer(input.maxBytes),
+        source: skillSource(input.source),
       }
     case 'model':
       return { type: 'model', requestId, choice: parseChoice(input.choice) }

@@ -1,3 +1,4 @@
+import { activeOrgPredicate } from '../data/org-access'
 import { sandboxAccessPredicate } from '../data/sandbox-access'
 import type { PreviewRecord } from '../previews/store'
 
@@ -6,6 +7,10 @@ interface ConnectionSessionIdentity {
   userId: string
   orgId: string
   workspaceId: string
+}
+
+type WorkspaceReadIdentity = ConnectionSessionIdentity & {
+  kind: 'workspace-read'
 }
 
 export interface SandboxConnectionIdentity extends ConnectionSessionIdentity {
@@ -58,7 +63,7 @@ const GRANT_MS = 30_000
 /** One snapshot checks every connection. A delayed read cannot extend its grant. */
 export async function readConnectionAccess(
   db: Pick<D1Database, 'prepare'>,
-  identities: readonly ConnectionIdentity[],
+  identities: readonly (ConnectionIdentity | WorkspaceReadIdentity)[],
   now: number,
 ): Promise<readonly ConnectionGrant[]> {
   const { results } = await db
@@ -91,6 +96,9 @@ export async function readConnectionAccess(
      LEFT JOIN preview_hostnames p ON p.id = requested.previewId
        AND p.hostname = requested.hostname AND p.workspace_id = w.id AND p.org_id = o.id
      WHERE requested.kind = 'workspace' OR (
+       requested.kind = 'workspace-read' AND w.archived_at IS NULL AND w.state != 'archived'
+       AND ${activeOrgPredicate('o')}
+     ) OR (
        requested.kind = 'sandbox' AND w.sandbox_id = requested.sandboxId
        AND w.provider_account = requested.providerAccount
        AND ${sandboxAccessPredicate}

@@ -23,14 +23,14 @@ says.
   [The switch](switch-account.md#the-switch) says.
 - A deleted org leaves the org rail at once. Its other members cannot
   open it.
-- For 7 days, the General tab of the Account page lists the deleted org
+- For 7 days, Account › General in [Settings](settings.md) lists the deleted org
   for its admins, with Restore. The section shows only while the user has
   a deleted org.
 - The address of a deleted org still opens its page, and that page also
   offers Restore. So an old link to the org is not a dead end.
 - Reason: the faded tiles of deleted orgs stayed in the way after a
   delete, as the user said on 12 November 2026. A faded tile in the rail
-  was the earlier rule. A new tab of the Account page was rejected,
+  was the earlier rule. A new tab of Account settings was rejected,
   because it is empty on most days.
 - Delete org then opens the next org that is not deleted, else Get
   started. Its question says that an admin restores the org from Account
@@ -39,15 +39,15 @@ says.
   So the app opens Get started, as for a new person, and its org step
   offers Create org.
 - While the person has a deleted org, Get started also lists it before
-  its steps, with Restore, as the Account page does. Restore there opens
+  its steps, with Restore, as Account settings do. Restore there opens
   the org. Without a deleted org, Get started shows no such list.
 - Reason: a phone shows Get started without the rail, so it has no other
-  way to the Account page. The user chose this on 13 November 2026.
+  way to Account settings. The user chose this on 13 November 2026.
   Opening the page of a deleted org, as before, was rejected, because a
   person who wants a new org then meets the deleted org first. A link to
-  the Account page on the phone layout of Get started was rejected,
+  Account settings on the phone layout of Get started was rejected,
   because Restore then sits one page away from where the person lands.
-- A suspended deleted org offers no Restore, in the Account page or on
+- A suspended deleted org offers no Restore, in Account settings or on
   its page, because a suspended org refuses a restore.
 - Restore brings the org back as it was. Its workspaces start again when
   they open. A workspace whose owner is suspended does not start, as

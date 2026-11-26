@@ -12,7 +12,7 @@ import { focusLost, useLostFocus } from './lost-focus'
 import type { MenuEntry } from './Menu'
 import { MenuList } from './MenuList'
 import { placeChoices, placeMenu, type MenuAnchor } from './menu-place'
-import { useEscapeLayer } from './Overlay'
+import { useEscapeLayer } from './escape-layer'
 import { choiceToFocus } from './submenu'
 import ui from './ui.module.css'
 

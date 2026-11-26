@@ -3,16 +3,20 @@
 This page belongs to [Screens](screens.md). It describes the account,
 agent login forms, and model lists in the web app.
 
+- Settings holds the account and the settings of the current org, as
+  [Settings](../../docs/protocol/settings.md) says. `useSettingsView` in
+  `../shell/settings/settings-view.tsx` shows a settings address: a desktop
+  keeps the last page of the tab mounted, with `SettingsDialog` over it,
+  and a phone shows the list at `/settings` and each tab as a screen.
 - The account has five tabs, General, Agents, Preferences, Keyboard
-  shortcuts, and Stats, as the org settings have. Each tab is a link with its own
-  address. General holds the sign-in, GitHub, and the invite
+  shortcuts, and Stats, as `AccountTabContent` draws them. Each tab is a
+  link with its own address. General holds the sign-in, GitHub, and the invite
   code. Agents, at `/account/agents`, holds the logins of Claude and
   Codex. The `?connect=` address of an agent opens its Connect form on
   Agents. An older `/account?connect=` link opens Agents too. Preferences holds the
   [Favourites section](../../docs/protocol/model-favourites.md#the-favourites-section),
   then the New workspaces section: Model and effort, and
   [the choice of how New workspace opens](../../docs/protocol/create-a-workspace.md#the-preference).
-  On a phone, a tab that does not fit moves to a second line.
 - `FavouritesSection` in `../shell/account/` lists the favourites of the
   account in the order of the model menu. Each row has a handle, the shell
   `ModelPicker`, and ×.

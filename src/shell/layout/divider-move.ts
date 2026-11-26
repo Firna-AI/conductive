@@ -1,4 +1,4 @@
-import type { PanelMove } from '../../app/panels'
+import type { PanelMove } from '../../app/panel-drag'
 import type { DividerKey } from '../../app/shortcuts/navigation'
 
 /** The step of an arrow key, and of an arrow key with Shift, in px. */

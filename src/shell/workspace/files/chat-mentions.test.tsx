@@ -16,9 +16,10 @@ it('offers one kept picture reader only while the sandbox runs', async () => {
     .spyOn(files.client, 'readFile')
     .mockResolvedValue(pictureReply('shot.png'))
   const navigation = testNavigation()
+  const skillTabs = { open: () => undefined, href: () => '' }
   let current: ChatMentions | undefined
   function Probe(props: { context: Parameters<typeof useMentions>[0] }) {
-    const mentions = useMentions(props.context, files, navigation)
+    const mentions = useMentions(props.context, files, navigation, skillTabs)
     useEffect(() => {
       current = mentions
     }, [mentions])

@@ -1,5 +1,8 @@
 import { useContext, useMemo } from 'react'
-import type { ChatMentions } from '../../../chat/mentions/MentionsContext'
+import type {
+  ChatMentions,
+  SkillTabs,
+} from '../../../chat/mentions/MentionsContext'
 import type { WorkspaceFiles } from '../../../files/model/files-store'
 import {
   createPictureReads,
@@ -42,12 +45,14 @@ function chipTarget(entry: FileEntry, lines?: LineRange): FilesTarget {
  * The files that the composer lists after `@`, the skills that it lists
  * after `/`, and the pages of the chips. A file opens as a press in All
  * files opens it. A folder shows All files with the folder open, in the
- * right column on desktop, which then shows.
+ * right column on desktop, which then shows. A skill opens its skill tab
+ * through `skillTabs`.
  */
 export function useMentions(
   context: MentionsWorkspace,
   files: WorkspaceFiles | null,
   navigation: FilesNavigation,
+  skillTabs: SkillTabs,
 ): ChatMentions | undefined {
   const panels = useContext(PanelContext)
   const phone = context.viewport === 'phone'
@@ -64,6 +69,7 @@ export function useMentions(
     return {
       files,
       skills,
+      skillTabs,
       pictures,
       openFile: (path, lines) =>
         navigation.navigate(
@@ -77,5 +83,5 @@ export function useMentions(
       },
       href: (entry, lines) => navigation.href(chipTarget(entry, lines), lines),
     }
-  }, [files, skills, navigation, panels, phone, pictures])
+  }, [files, skills, skillTabs, navigation, panels, phone, pictures])
 }

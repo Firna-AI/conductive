@@ -115,7 +115,7 @@ A browser or another Mac can show the request without those approval choices.
 
 ## Change saved permissions
 
-Open **Account** in the Mac app, then the **This Mac** tab.
+Open **Settings** in the Mac app, then **This Mac** under **Account**.
 It shows the Mac's name and **Available** or **Not available**.
 
 - Under **Always allowed**, use **Remove** to make that command ask again.

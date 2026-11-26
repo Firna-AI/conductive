@@ -2,7 +2,7 @@
 
 This doc holds the requirements and the decisions in force for the
 preference that chooses how New workspace opens, as the page or as the
-dialog. It covers the tabs of the Account page, the New workspaces
+dialog. It covers the tabs of Account settings, the New workspaces
 section, the save of the choice, and its default. It belongs to
 [Create a workspace](create-a-workspace.md), which covers the rest of New
 workspace, the create, the branch, and a failed first start. The terms are
@@ -10,9 +10,9 @@ those of the [architecture doc](../architecture.md#terms). A decision
 number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
 
-## The Account page
+## Account settings
 
-- The Account page has five tabs, General, Agents, Preferences, Keyboard
+- [Account settings](settings.md) have five tabs, General, Agents, Preferences, Keyboard
   shortcuts, and Stats, each with its own address. Agents holds the logins
   of Claude and Codex (the user asked on 13 November 2026). General holds
   the other sections of the account.
@@ -41,7 +41,7 @@ number names a dated record, as
   closer to it.
 - The choice belongs to the account. So it applies in each browser and in
   the Mac app.
-- Reason: a setting of the Account page that holds in one browser only
+- Reason: a setting of Account settings that holds in one browser only
   would surprise the user. A choice in the storage of the browser was
   rejected for that reason.
 - Without a saved choice, such as for a new account, New workspace opens

@@ -7,9 +7,10 @@ import {
 } from 'react'
 import type { FileEntry } from '../../shared/generated/FileEntry'
 import type { LineRange } from '../../shared/line-target'
+import type { SkillIdentity } from '../../shared/skills'
 import type { ChatPictures } from '../../files/page/picture-reads'
 import { mentionable } from './mention-rows'
-import type { SkillsStore } from './mention-skills'
+import type { MentionSkills, SkillsStore } from './mention-skills'
 
 /**
  * What the chat reads of the kept files of the workspace: the store of the
@@ -36,6 +37,17 @@ interface MentionFiles {
   getSnapshot: () => MentionFilesSnapshot
 }
 
+/** The skill tabs that a press on a skill chip opens. */
+export interface SkillTabs {
+  /**
+   * Opens the skill tab of a skill, as a press on a skill chip does: in the
+   * temporary tab when the skill has no tab, as `Temporary tabs` says.
+   */
+  open: (skill: SkillIdentity) => void
+  /** The address of the skill tab of a skill, for a link. */
+  href: (skill: SkillIdentity) => string
+}
+
 /**
  * The files and folders that the composer of a workspace chat can mention,
  * the skills that it can name after `/`, and what a press on a chip does.
@@ -46,6 +58,11 @@ export interface ChatMentions {
   files: MentionFiles
   /** The latest skill lists of the workspace, as `MentionSkills` says. */
   skills: SkillsStore
+  /**
+   * The skill tabs that a press on a skill chip opens. Without them, a
+   * skill chip opens nothing.
+   */
+  skillTabs?: SkillTabs
   /** Reads pictures only while the sandbox runs. Never starts or resumes it. */
   pictures?: ChatPictures
   /**
@@ -175,6 +192,18 @@ export function useFilesMentionTree(
 export function useMentionTree(follows = true): MentionTree | null {
   const mentions = useChatMentions()
   return useFilesMentionTree(follows ? (mentions?.files ?? null) : null)
+}
+
+/**
+ * The skill lists that the chat follows now, or null without mentions. A
+ * reader that `follows` nothing, such as an answer, gets null and follows
+ * no change.
+ */
+export function useMentionSkills(follows = true): MentionSkills | null {
+  const mentions = useChatMentions()
+  const skills = follows ? (mentions?.skills ?? null) : null
+  const read = useCallback(() => skills?.getSnapshot() ?? null, [skills])
+  return useSyncExternalStore(skills?.subscribe ?? followNothing, read, read)
 }
 
 /**

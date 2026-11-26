@@ -16,7 +16,8 @@ import { defined } from '../../defined'
  * Any other draft shows in the plain text field. Both fields show at least
  * `lines` lines, and they grow up to `maxLines`. `pointer` draws the
  * pointer over the icon of the first chip, as a view cannot hover, and
- * `caret` draws the caret at that index of the text.
+ * `namePointer` over the name of the first chip, a skill chip. `caret`
+ * draws the caret at that index of the text.
  */
 export function MessageField(props: {
   text: string
@@ -25,6 +26,7 @@ export function MessageField(props: {
   maxLines: number
   files?: readonly Attachment[]
   pointer?: boolean
+  namePointer?: boolean
   caret?: number
 }) {
   const { field } = useControlSizes()
@@ -44,6 +46,7 @@ export function MessageField(props: {
             caret: props.caret,
             files: props.files,
             pointer: props.pointer,
+            namePointer: props.namePointer,
           })}
         />
       </chipTextField.Component>

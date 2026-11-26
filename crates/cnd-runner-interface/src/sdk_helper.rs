@@ -3,13 +3,14 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-use crate::agents::AgentChoice;
+use crate::agents::{Agent, AgentChoice};
 use crate::provider_events::ProviderEvent;
+use crate::runner_skills::SkillReadOutcome;
 use crate::sdk_helper_options::{HelperOptions, OrgSkills, ProviderInput};
 use crate::skills::{HelperSkillLists, SkillInput};
 use crate::wire::ReadonlyVec;
 
-/// One runner request. Scans receive a skills result; other requests receive a response or error.
+/// One runner request. Scans and skill reads have their own results.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(
     tag = "type",
@@ -72,6 +73,43 @@ pub enum HelperRequest {
         #[ts(optional = nullable)]
         org_skills: Option<OrgSkills>,
     },
+    /// Read one skill without starting an agent session.
+    #[serde(rename = "skill.read")]
+    SkillRead {
+        /// Private request identity.
+        request_id: String,
+        /// Maximum bytes to return.
+        #[ts(type = "number")]
+        max_bytes: u64,
+        /// Private lookup data supplied by the runner.
+        source: HelperSkillSource,
+    },
+}
+
+/// Read a discovered file or select the org skill from a leased copy.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(
+    tag = "type",
+    rename_all = "lowercase",
+    rename_all_fields = "camelCase"
+)]
+pub enum HelperSkillSource {
+    /// File path from this agent's latest scan.
+    File {
+        /// The path stays on the private helper pipe.
+        path: String,
+    },
+    /// Org skill selected again in the current copy.
+    Org {
+        /// Workspace repository, for skill precedence.
+        repository: String,
+        /// Configured source, trust, and leased copy.
+        org_skills: OrgSkills,
+        /// Agent whose skill is requested.
+        agent: Agent,
+        /// Name from that agent's skills list.
+        name: String,
+    },
 }
 
 /// Result of a model change.
@@ -95,6 +133,14 @@ pub enum HelperOutput {
         request_id: String,
         /// Full discovered lists, including private paths.
         skills: HelperSkillLists,
+    },
+    /// Text or public error from a private skill read.
+    #[serde(rename = "skill.read.result")]
+    SkillRead {
+        /// Matching private request identity.
+        request_id: String,
+        /// Read outcome.
+        result: SkillReadOutcome,
     },
     /// A request finished.
     #[serde(rename = "response")]

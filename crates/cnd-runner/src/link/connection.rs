@@ -160,6 +160,7 @@ impl RunnerLink for SavedRunnerLink {
             stream_id: self.store.snapshot().await.stream_id,
             process_start_id: Some(self.process_start_id.clone()),
             file_server: self.file_server.then_some(true),
+            skill_reads: Some(true),
             login_kinds: Some(vec![
                 RunnerLoginKind::Claude {
                     kind: LoginKind::Token,

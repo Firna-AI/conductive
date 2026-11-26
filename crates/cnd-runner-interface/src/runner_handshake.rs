@@ -9,6 +9,7 @@ use crate::runner_commands::RunnerCommand;
 use crate::runner_credentials::RunnerLoginKind;
 use crate::runner_files::RunnerFileResponse;
 use crate::runner_repository::RunnerRepositoryMoveRefused;
+use crate::runner_skills::RunnerSkillResult;
 use crate::services::transport::{RunnerServiceCommand, RunnerServiceMessage};
 use crate::wire::ReadonlyVec;
 
@@ -22,6 +23,8 @@ pub enum RunnerToWorkspace {
     RunnerEventEnvelope(RunnerEventEnvelope),
     /// RunnerFileResponse.
     RunnerFileResponse(RunnerFileResponse),
+    /// Skill read result outside the numbered outbox.
+    RunnerSkillResult(RunnerSkillResult),
     /// RunnerRepositoryMoveRefused.
     RunnerRepositoryMoveRefused(RunnerRepositoryMoveRefused),
     /// Optional private services traffic. Never retained in the numbered outbox.
@@ -70,6 +73,10 @@ pub enum RunnerHello {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         file_server: Option<bool>,
+        /// This runner answers skill reads.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        skill_reads: Option<bool>,
         /// This runner can deliver app notes and acknowledge the lines read.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]

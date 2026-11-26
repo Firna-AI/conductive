@@ -8,7 +8,9 @@ page with rendered Markdown or text with line numbers and syntax colours.
 An image file, which is a PNG, JPEG, GIF, or WebP file, opens as a
 picture, which zooms and expands. An HTML file opens its page in a frame
 from the files preview of the workspace. A changed file opens its unified
-diff, with the same syntax colours. The requirements are in
+diff, with the same syntax colours. A skill tab shows the text of one
+skill with the parts of a file page, as [The screens](screens.md) says.
+The requirements are in
 [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
 and [HTML file preview](../../docs/protocol/html-file-preview.md).
 The visual spec is the `app/files` page of the
@@ -130,8 +132,8 @@ the links of the Markdown preview.
 
 ### Kept scroll offsets
 
-Each file and diff tab of the centre keeps its scroll offset, down and
-sideways, while another tab or workspace shows, as
+Each file, diff, and skill tab of the centre keeps its scroll offset, down
+and sideways, while another tab or workspace shows, as
 [The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row) says.
 `WorkspaceFiles.scrollPlaces` holds the offsets, by tab and view, for as
 long as the app keeps the store. The desktop tab page gives the shown tab
@@ -148,7 +150,7 @@ only a new key of the aim scrolls again, so a change of the file keeps the
 place of the reader. The hook is the one owner of the scroll of its box.
 The offsets live in a `TabPlaces` store of the web app, in
 `src/app/tab-places.ts`, and the chat files of the workspace screen give it
-each list of the file and diff tabs through `useFollowTabs`.
+each list of the file, diff, and skill tabs through `useFollowTabs`.
 `ui/kept-scroll.dom.test.tsx`
 tests the hook, and `TabScroll.test.tsx` of the
 [workspace files](../shell/workspace/files/) tests the tabs of the

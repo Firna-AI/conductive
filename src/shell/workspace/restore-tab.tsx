@@ -6,10 +6,11 @@ import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import type { WorkspaceContext } from './features'
 import { filesHref } from './files/files-address'
 import { saveView, useSavedView, useViewKnown } from './saved-view'
+import { skillHref } from './skills/skill-address'
 import { replaceWithoutVisit } from './tab-visits'
 import { previewPortHref } from './tools/tool-address'
 
-/** The address of a file, diff, or Preview tab, or null for a session. */
+/** The address of a file, diff, Preview, or skill tab, or null for a session. */
 function tabHref(
   orgId: string,
   workspaceId: string,
@@ -26,6 +27,8 @@ function tabHref(
       return filesHref(orgId, workspaceId, { kind: 'diff', path: tab.path })
     case 'preview':
       return previewPortHref(orgId, workspaceId, tab.port)
+    case 'skill':
+      return skillHref(orgId, workspaceId, tab)
     case 'session':
       return null
   }
@@ -93,8 +96,9 @@ export function useTabRestore(): TabRestore {
 }
 
 /**
- * The view with the shown session as the active tab, when a file, diff, or
- * Preview tab was active. The same view otherwise, so nothing saves.
+ * The view with the shown session as the active tab, when a file, diff,
+ * Preview, or skill tab was active. The same view otherwise, so nothing
+ * saves.
  */
 function showingChat(
   view: WorkspaceView,
@@ -110,8 +114,8 @@ function showingChat(
 /**
  * Saves the shown session as the active tab at each move of the address
  * to the workspace alone, such as a move back from a tab, while a file,
- * diff, or Preview tab is active. The chat shows there, so a later return
- * shows the chat again.
+ * diff, Preview, or skill tab is active. The chat shows there, so a later
+ * return shows the chat again.
  */
 function useChatAtBareAddress(context: WorkspaceContext, shows: boolean): void {
   const navigation = useNavigation()
@@ -132,14 +136,14 @@ function useChatAtBareAddress(context: WorkspaceContext, shows: boolean): void {
 /**
  * Shows the saved active tab again when the screen opens at the address of
  * the workspace alone, as a click on its row in the list does. So a return
- * shows the file, diff, or Preview tab that showed when the user left. The
- * address of that tab takes the place of the arrival address, and counts as
- * the address of the first show, so it starts no Resume. It decides once,
- * when the chat first knows the view. An address that names a view or a
- * session, a move of the address before then, a session that was active, a
- * phone, and an archived workspace keep the address. A later move to the
- * address of the workspace alone makes the shown session active, as
- * `useChatAtBareAddress` says.
+ * shows the file, diff, Preview, or skill tab that showed when the user
+ * left. The address of that tab takes the place of the arrival address, and
+ * counts as the address of the first show, so it starts no Resume. It
+ * decides once, when the chat first knows the view. An address that names
+ * a view or a session, a move of the address before then, a session that
+ * was active, a phone, and an archived workspace keep the address. A later
+ * move to the address of the workspace alone makes the shown session
+ * active, as `useChatAtBareAddress` says.
  */
 export function RestoreShownTab(props: {
   context: WorkspaceContext

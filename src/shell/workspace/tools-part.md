@@ -14,9 +14,11 @@ The shell gives its own Terminal and Preview tools, with the
 tools.
 
 - While the sandbox does not run, the tools show its state: starting,
-  stopped, failed, or refused. On desktop the panel keeps its tabs around
-  the state. A phone shows the state on the tool page. No tool mounts then,
-  so no tool reads its route or opens the terminal.
+  stopped, failed, or refused. While a Resume of the visit runs, such as
+  after a press on Resume, that state is the wait of a start, with no
+  Resume, until its reply. On desktop the panel keeps its tabs around the
+  state. A phone shows the state on the tool page. No tool mounts then, so
+  no tool reads its route or opens the terminal.
 - A `tools` part of the host shows only while the sandbox runs. The shell
   shows the state of the sandbox in its place.
 
@@ -157,7 +159,8 @@ tabs, the page in place of the chat, and the kept pages.
 - A click on a session tab while a Preview tab shows goes back to the chat,
   as for a file tab.
 - A visit that opens a Preview tab resumes a stopped sandbox, as
-  `ResumeOnTabOpen` does for a file tab.
+  `ResumeOnTabOpen` does for a file tab. Until the reply of that Resume,
+  the tab shows the wait of a start, with no Resume.
 - An archived workspace and a phone show no Preview tab.
 
 ## New terminal

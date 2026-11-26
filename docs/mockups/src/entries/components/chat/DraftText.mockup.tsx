@@ -19,7 +19,7 @@ export const draftText = defineComponent({
   slug: 'draft-text',
   title: 'Draft text',
   description:
-    'The draft of a message box as plain text, with each attached file, each link to a workspace of the org or to one of its sessions, and each mention of a file or a folder as a chip. A chip is one unit of the text, which the caret steps over and Backspace removes whole. Each chip starts with the cell of its icon, which a pointer turns into a × that removes it. Its own page shows a draft with two attached files.',
+    'The draft of a message box as plain text, with each attached file, each link to a workspace of the org or to one of its sessions, and each mention of a file or a folder, and each skill as a chip. A chip is one unit of the text, which the caret steps over and Backspace removes whole. Each chip starts with the cell of its icon, which a pointer turns into a × that removes it. A press on the name of a skill chip opens the skill. Its own page shows a draft with two attached files.',
   relatedDocs: ['docs/mockups/catalogue-attachments-and-files.md'],
   propSchema: {
     type: 'object',
@@ -32,6 +32,8 @@ export const draftText = defineComponent({
       files: { type: 'array', items: attachmentSchema },
       /** The pointer over the icon of the first chip. */
       pointer: { type: 'boolean' },
+      /** The pointer over the name of the first chip, a skill chip. */
+      namePointer: { type: 'boolean' },
       /** The caret at this index of the text. */
       caret: { type: 'integer', minimum: 0 },
     },
@@ -41,6 +43,7 @@ export const draftText = defineComponent({
     <DraftText
       caret={props.caret}
       files={props.files}
+      namePointer={props.namePointer}
       pointer={props.pointer}
       text={props.text}
     />

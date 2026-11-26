@@ -145,6 +145,9 @@ that doc says.
   working. No filter in the Worker hides a part of these tokens.
 - A start log hides each exact copy of a secret value and of the workspace
   token before a browser gets it.
+- The Worker hides the secret values, the workspace token, and the turn
+  tokens in the text of a skill tab before a browser gets it, as
+  [The read](skill-tabs.md#the-read) says.
 - The app does not hide the value of an env var that is not secret. So
   each reader of the chat or of a start log can see such a value.
 - Reason: the admin knows which values are secrets. A length rule, where
@@ -153,7 +156,8 @@ that doc says.
   short, common values, such as `1`, in ordinary text.
 - Risk: the app hides only exact copies of a secret value. A changed or
   encoded value still shows. File content, diff content, and the terminal
-  hide no value.
+  hide no value. So the file tab of the `SKILL.md` of a repository skill
+  can show a value that its skill tab hides.
   The mark does not keep a value from the agent or from a member with a
   terminal, because each sandbox gets the env vars of its org.
 - Risk: the runner does not hide secret values. So its saved events on the
@@ -161,7 +165,7 @@ that doc says.
 
 ## Agent logins
 
-- Each user connects their personal logins on the account page. An admin
+- Each user connects their personal logins in Account settings. An admin
   connects the org logins of an org on the Agents tab of the org settings,
   as [Org logins](org-logins.md) says.
 - A user connects Claude with a subscription token from
@@ -170,7 +174,7 @@ that doc says.
   [Own endpoint logins](own-endpoint-logins.md) says.
 - A user connects Codex with a device code sign-in to their ChatGPT plan,
   or with an OpenAI API key (decision 175).
-- The account page starts the device code sign-in. It shows the code,
+- The Agents tab of Account settings starts the device code sign-in. It shows the code,
   the OpenAI verification page, and the expiry. A code expires after 15 minutes.
 - The Worker alone holds the pending device state, encrypted for that
   signed-in user. A poll reports waiting, connected, expired, or failed

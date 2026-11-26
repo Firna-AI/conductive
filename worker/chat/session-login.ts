@@ -245,6 +245,6 @@ function invalidEndpointMessage(
   const action =
     session.login?.type === 'org'
       ? 'Ask an admin to update the login on the Agents tab of the org settings.'
-      : 'Update the login on the account page.'
+      : 'Update the login in Account settings.'
   return `${owner} ${agent} login needs a public https:// endpoint with a host name. ${action}`
 }

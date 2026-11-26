@@ -13,6 +13,7 @@ import { createPortal } from 'react-dom'
 import { useModalLayer as useOpenModalLayer, type LayerOwner } from './layers'
 import { useLostFocus } from './lost-focus'
 import { usePressOutside } from './press-outside'
+import { useEscapeLayer } from './escape-layer'
 import { requestScreenFocus } from './screen-focus'
 import styles from './ui.module.css'
 
@@ -73,9 +74,6 @@ export function Overlay(props: { children: ReactNode }) {
   return host ? createPortal(props.children, host) : null
 }
 
-/** The open layers that Escape can close, the newest last. */
-const escapeLayers: object[] = []
-
 /**
  * Closes an open layer when an element outside `inside` takes the focus,
  * such as at Tab from the last control of the layer. A focus that goes to
@@ -102,34 +100,6 @@ function useFocusOutside(
     document.addEventListener('focusin', onFocus, true)
     return () => document.removeEventListener('focusin', onFocus, true)
   }, [open, inside])
-}
-
-/**
- * Closes an open layer on Escape. Escape counts in the capture phase,
- * because a text field stops its key events. Escape closes only the newest
- * open layer, such as a menu in a dialog, or the choices of a menu before
- * the menu.
- */
-export function useEscapeLayer(open: boolean, close: () => void): void {
-  const closeRef = useRef(close)
-  useEffect(() => {
-    closeRef.current = close
-  })
-  useEffect(() => {
-    if (!open) return
-    const layer = {}
-    escapeLayers.push(layer)
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || escapeLayers.at(-1) !== layer) return
-      event.stopPropagation()
-      closeRef.current()
-    }
-    document.addEventListener('keydown', onKey, true)
-    return () => {
-      escapeLayers.splice(escapeLayers.indexOf(layer), 1)
-      document.removeEventListener('keydown', onKey, true)
-    }
-  }, [open])
 }
 
 /**
@@ -180,7 +150,7 @@ function openingFocus(
 /**
  * Moves the focus into a layer as it opens: to `initial`, else to its
  * element with `data-autofocus`, else to the first one that can take the
- * focus. While the layer shows, a render that takes away the part with the
+ * focus. An `initial` that takes no focus counts as none. While the layer shows, a render that takes away the part with the
  * focus gives the focus back to that same part, as `useLostFocus` says.
  * When the layer closes, the focus goes back to the element that
  * had it, unless the user moved it elsewhere. `returnFocus` gives it to the
@@ -233,6 +203,12 @@ export function useLayerFocus(
         : null
     const release = modal ? holdModal() : null
     openingFocus(node, initial)?.focus()
+    // A first target that took no focus leaves it to the marked element,
+    // then to the first control, then to the layer.
+    const inLayer =
+      document.activeElement instanceof Node &&
+      node?.contains(document.activeElement) === true
+    if (!inLayer) openingFocus(node, undefined)?.focus()
     return () => {
       release?.()
       const active = document.activeElement

@@ -2,37 +2,54 @@
 
 This doc holds the requirements and the decisions in force for the
 temporary tab of a workspace. It covers what opens the temporary tab, how
-it shows, what keeps it, what closes it, and its mark in the saved view. It belongs to
+it shows, what keeps it, what closes it, and its mark in the saved view.
+It also covers the skill tabs in the saved view. It belongs to
 [Files and changes](workspace-tools.md#files-and-changes).
 [The tab row](agents-and-sessions.md#the-tab-row) states its place in the
 row, its tab menu, and its moves. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says. The [mockup catalogue](../mockups/catalogue-attachments-and-files.md)
-draws the temporary tab at `app/files/temporary`.
+says. A skill tab decision number, such as skill tab decision 2, names a
+decision of the change that adds the [skill tabs](skill-tabs.md). The
+[mockup catalogue](../mockups/catalogue-attachments-and-files.md)
+draws the temporary tab at `app/files/temporary`. Its
+[skill pages](../mockups/catalogue-workspace-tools.md) draw a temporary
+skill tab at `app/skill-mentions/tab/temporary`.
 
 ## Terms
 
-- **Temporary tab:** the one file or diff tab of the tab row that the next
-  press on another file or diff replaces.
-- **Kept tab:** a file or diff tab that is not temporary. It stays until
-  the user closes it.
+- **Look:** a press that opens a page to read it, such as a file, a diff,
+  or a skill. A press that opens a session or the page of a port is not a
+  look.
+- **Temporary tab:** the one tab of the tab row that the next look at
+  another file, diff, or skill replaces.
+- **Kept tab:** a file, diff, or skill tab that is not temporary. It stays
+  until the user closes it.
 - **Saved view:** what one member sees in one workspace: the open tabs in
   their order, the shown tab, the file list, and the tool. The Worker
   saves it.
 
-## Open a file or a diff
+## Open a file, a diff, or a skill
 
 - The tab row of the centre column holds at most one temporary tab
-  (decision 284 B). Only a file or diff tab can be temporary.
-- A press on a file or a diff without a tab opens it in the temporary tab.
-  It replaces the file or the diff that the temporary tab showed. The
-  temporary tab then shows.
+  (decision 284 B). Only a tab that a look opens can be temporary: a file,
+  diff, or skill tab (skill tab decision 2 A).
+- Reason: a press on a skill chip is a quick look, as a press on a file
+  chip is. One temporary tab that all looks share keeps the row shortest.
+  The rule covers each tab that a look opens, not a fixed list of kinds,
+  so a later kind of such a tab needs no new rule.
+- A kept tab for each skill was rejected, because the row then fills up. A
+  second temporary tab for skills only was rejected. The row could then
+  hold two temporary tabs, and Escape and Keep open would have to act on
+  the one that shows (skill tab decision 2).
+- A press on a file, a diff, or a skill without a tab opens it in the
+  temporary tab. It replaces the file, the diff, or the skill that the
+  temporary tab showed. The temporary tab then shows.
 - When the row has no temporary tab, the press opens a new one.
   [The tab row](agents-and-sessions.md#the-tab-row) states where a new
   temporary tab opens, and that a replaced one keeps its place.
-- A press on a file or a diff that has a tab shows that tab. The temporary
-  tab stays as it is.
+- A press on a file, a diff, or a skill that has a tab shows that tab. The
+  temporary tab stays as it is.
 - Reason: the files that the user only looks at then take at most one tab,
   and no tab that the user chose closes. VS Code, Zed, and JetBrains work
   in this way, so most developers know it. The user chose this on
@@ -50,10 +67,13 @@ draws the temporary tab at `app/files/temporary`.
 - A press that only selects a file, with a double-click that opens it, was
   rejected. Each look at a file would then need a double-click, and it
   would still leave a tab.
-- The rule holds for each press in the app that opens a file or a diff:
+- The rule holds for each press in the app that opens a file, a diff, or
+  a skill:
   - a row of All files or Changes
   - a file chip in the message field or in a sent message, as
     [File mentions](file-mentions.md#chips-of-files-and-folders) says
+  - a skill chip in the message field or in a sent message, as
+    [Skill chips](skill-mentions.md#skill-chips) says
   - the chip of an attached file in a sent message
   - the chip of a file that a finished turn changed, which opens the diff
     of that file
@@ -61,13 +81,13 @@ draws the temporary tab at `app/files/temporary`.
 - Enter on a focused file row is a press too.
 - Reason: each press follows one rule. A chip already opens its file as a
   press in All files does.
-- An address that names a file or a diff without a tab also opens it in
-  the temporary tab. This holds for Back, Forward, a reload, a pasted
-  address, and a link that opens in a new browser tab.
-- Reason: a visit by address is a look at the file too.
-- On a phone, a press also opens the file or the diff in the temporary
-  tab. So the presses on a phone add at most one tab to the row. A phone
-  has no way to keep a file tab.
+- An address that names a file, a diff, or a skill without a tab also
+  opens it in the temporary tab. This holds for Back, Forward, a reload, a
+  pasted address, and a link that opens in a new browser tab.
+- Reason: a visit by address is a look at the page too.
+- On a phone, a press also opens the file, the diff, or the skill in the
+  temporary tab. So the presses on a phone add at most one tab to the row.
+  A phone has no way to keep such a tab.
 - Reason: a phone row shows only the session tabs. So the files that a
   member opens on a phone do not fill the tab row on a computer.
 - No setting turns the temporary tab off. Reason: the user asked for this
@@ -88,7 +108,8 @@ draws the temporary tab at `app/files/temporary`.
 - A double-click on the temporary tab makes it a kept tab. A double-click
   on a row of All files or Changes keeps the tab that the row opens.
 - A kept tab stays in its place, and its title turns upright. The next
-  press on a file or a diff without a tab then opens a new temporary tab.
+  press on a file, a diff, or a skill without a tab then opens a new
+  temporary tab.
 - Nothing new shows on the tab for a keep (decision 285 A). Reason: the
   user asked for the double-click, so the italic title stays the only mark
   of the tab.
@@ -119,8 +140,8 @@ draws the temporary tab at `app/files/temporary`.
 - A move of the temporary tab to another place also keeps it, as
   [The tab row](agents-and-sessions.md#the-tab-row) says.
 - Nothing else keeps the tab. A switch between Preview and Source of a
-  Markdown or an HTML file keeps the state of the tab, temporary or kept.
-  Copy, Download, and a scroll keep no tab.
+  Markdown file, an HTML file, or a skill keeps the state of the tab,
+  temporary or kept. Copy, Download, and a scroll keep no tab.
 - A keep after a time, or when the user comes back to the tab, was
   rejected. Each long look at a file would then leave a kept tab.
 - A read-only workspace, such as an archived workspace or a workspace of a
@@ -153,7 +174,8 @@ draws the temporary tab at `app/files/temporary`.
 - Escape closes no kept tab, and no temporary tab that does not show.
   Reason: a kept tab is a tab that the user chose, and a tab that does not
   show is not the tab that the user looks at.
-- A phone row shows no file tabs, so Escape closes no tab on a phone.
+- A phone row shows only the session tabs, so Escape closes no tab on a
+  phone.
 
 ## The saved view
 
@@ -163,7 +185,26 @@ draws the temporary tab at `app/files/temporary`.
   second window would then turn the temporary tab into a kept tab.
 - A saved view without a mark has no temporary tab, so each of its tabs is
   kept.
-- The Worker reads a mark that is not valid, or that names no open file or
-  diff tab, as no mark. It refuses no saved view because of its mark.
+- The Worker reads a mark that is not valid, or that names no open tab of
+  its kind, as no mark. It refuses no saved view because of its mark.
 - Reason: a mark that does not fit then costs only the mark, not the saved
   view.
+- The saved view keeps the skill tabs in fields of their own, in the view
+  route and in the view that the Worker stores. `skillTabs` gives the
+  agent, the name, and the place in the row of each skill tab.
+  `activeSkill` gives the shown skill tab, and `temporarySkill` the
+  temporary skill tab. `tabs`, `activeTab`, and `temporaryTab` never hold
+  a skill tab.
+- Reason: an older copy of the app, such as an older Mac app, refuses a
+  view whose tabs hold a kind that it does not know. The previous Worker
+  refuses a whole stored view for the same reason. So skill tabs in
+  `tabs` of the stored view, as Preview tabs are, were rejected.
+- A save without `skillTabs` comes from an older copy of the app. The
+  Worker keeps the skill tabs that are stored when it applies the save.
+- When such a save names a temporary file or diff, the Worker closes the
+  stored temporary skill tab. Reason: the row holds at most one temporary
+  tab (decision 284 B).
+- The stored skill positions count the other tabs from the last save
+  that included `skillTabs`. When a repository change or an older app
+  save closes other tabs, the skills keep their order relative to the
+  tabs that stay open.

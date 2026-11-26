@@ -28,15 +28,16 @@ vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const { org, workspace } = FAKE_IDS
 
+/** An address that names no org, whose page works on the first org. */
+const noOrgPage = '/not-a-page'
+
 describe('the keys of the commands of a page', () => {
-  test('a command that the palette lists runs from its key as its row does, also on the Account page', async () => {
+  test('a command that the palette lists runs from its key as its row does, also on a page without an org, and Settings then holds the keys', async () => {
     holdAnimationFrames()
     const server = serverWith('dialog')
     serveFeedback(server)
-    const { app, navigation } = await openPaletteTab(routes.account(), {
-      server,
-    })
-    // The Account page works on Acme, the first org, as the palette does.
+    const { app, navigation } = await openPaletteTab(noOrgPage, { server })
+    // The page works on Acme, the first org, as the palette does.
     pressHintKey(app, 'new-workspace', document.body)
     await settle()
     const dialog = queryByRole('dialog', 'New workspace')
@@ -45,35 +46,42 @@ describe('the keys of the commands of a page', () => {
       address: navigation.href(),
     }
     if (dialog) press(dialog, 'Escape')
+    await settle()
+    // The key of Send feedback opens the Feedback dialog over the page.
+    const feedback = pressHintKey(app, 'send-feedback', document.body)
+    await settle()
+    const sent = {
+      prevented: feedback.defaultPrevented,
+      dialog: feedbackDialog() !== null,
+    }
+    const shown = feedbackDialog()
+    if (shown) press(shown, 'Escape')
+    await settle()
     // The Keyboard shortcuts row of the Settings tab opens the tab.
     const shortcuts = pressHintKey(app, 'keyboard-shortcuts', document.body)
     await settle()
-    expect({
-      opened,
-      shortcuts: {
-        prevented: shortcuts.defaultPrevented,
-        at: navigation.href(),
-      },
-    }).toEqual({
-      opened: { place: 'General', address: routes.account() },
-      shortcuts: { prevented: true, at: routes.accountTab('shortcuts') },
-    })
-    // The key of Send feedback opens the Feedback dialog over the tab.
-    const feedback = pressHintKey(app, 'send-feedback', document.body)
+    const inSettings = {
+      prevented: shortcuts.defaultPrevented,
+      at: navigation.href(),
+    }
+    // Settings holds the keys, so the key of an org runs nothing over it.
+    const orgKey = pressHintKey(app, 'org-2', document.body)
     await settle()
     expect({
-      prevented: feedback.defaultPrevented,
-      dialog: feedbackDialog() !== null,
-      at: navigation.href(),
+      opened,
+      sent,
+      inSettings,
+      orgKey: { prevented: orgKey.defaultPrevented, at: navigation.href() },
     }).toEqual({
-      prevented: true,
-      dialog: true,
-      at: routes.accountTab('shortcuts'),
+      opened: { place: 'General', address: noOrgPage },
+      sent: { prevented: true, dialog: true },
+      inSettings: { prevented: true, at: routes.accountTab('shortcuts') },
+      orgKey: { prevented: false, at: routes.accountTab('shortcuts') },
     })
   })
 
   test('the rail opens the org at the place of each key, also the org that the palette works on', async () => {
-    const { app, navigation } = await openPaletteTab(routes.account())
+    const { app, navigation } = await openPaletteTab(noOrgPage)
     const step = async (command: ShortcutCommandId) => {
       const key = pressHintKey(app, command, document.body)
       await settle()
@@ -88,7 +96,7 @@ describe('the keys of the commands of a page', () => {
   })
 
   test('the rail and its keys leave out a deleted org, and the Switch to row of an org in the palette shows the key of its place in the rail', async () => {
-    const { app, navigation, view } = await openPaletteTab(routes.account())
+    const { app, navigation, view } = await openPaletteTab(noOrgPage)
     const acme = app.orgs.get().find((item) => item.id === org)
     if (!acme) throw new Error('The app has no Acme.')
     act(() => {
@@ -145,7 +153,7 @@ describe('the keys of the commands of a page', () => {
     })
   })
 
-  test('the right column toggle, Workspace list, and Account page run from their keys', async () => {
+  test('the right column toggle, Workspace list, and Settings run from their keys', async () => {
     holdAnimationFrames()
     const { app, view, navigation } = await openPaletteTab(
       routes.workspace(org, workspace),

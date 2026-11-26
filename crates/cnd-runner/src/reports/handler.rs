@@ -10,7 +10,6 @@ use cnd_runner_interface::runner::{RunnerEvent, RunnerReady};
 use cnd_runner_interface::runner_commands::{
     RunnerCommand, RunnerControlCommand, RunnerReportKind, RunnerReportRefresh,
 };
-use cnd_runner_interface::runner_handshake::RunnerToWorkspace;
 use futures_util::future::BoxFuture;
 use tokio::task::JoinHandle;
 
@@ -38,7 +37,7 @@ pub struct ReportDependencies {
     pub skills: Option<Arc<dyn SkillReports>>,
     /// Event output policy shared with the turn owner.
     pub emitter: Arc<dyn EventEmitter>,
-    /// Saved connection for unnumbered file replies and retained report replay.
+    /// Saved connection for unnumbered replies and retained report replay.
     pub link: Arc<dyn RunnerLink>,
     /// Loaded durable event state.
     pub store: Arc<dyn EventStore>,
@@ -187,22 +186,10 @@ impl CommandHandler for ReportCommandHandler {
         let job = match command {
             RunnerCommand::RunnerControlCommand(RunnerControlCommand::RunnerFileCommand(
                 command,
-            )) => tokio::spawn(async move {
-                let response = dependencies.files.request(command).await;
-                let response = dependencies.filter.response(response);
-                let result = match response {
-                    Ok(response) => {
-                        dependencies
-                            .link
-                            .reply(RunnerToWorkspace::RunnerFileResponse(response))
-                            .await
-                    }
-                    Err(error) => Err(error),
-                };
-                if result.is_err() {
-                    tracing::warn!("The runner command could not finish.");
-                }
-            }),
+            )) => tokio::spawn(dependencies.reply_file(command)),
+            RunnerCommand::RunnerControlCommand(RunnerControlCommand::RunnerReadSkill(command)) => {
+                tokio::spawn(dependencies.reply_skill(command))
+            }
             RunnerCommand::RunnerControlCommand(RunnerControlCommand::RunnerReportRefresh(
                 RunnerReportRefresh::ReportRefresh { command_id, kind },
             )) => {

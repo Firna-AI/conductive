@@ -3,6 +3,7 @@ import type { HelperModelResult } from './HelperModelResult.js'
 import type { HelperSkillLists } from './HelperSkillLists.js'
 import type { ProviderEvent } from './ProviderEvent.js'
 import type { ReadonlyVec } from './ReadonlyVec.js'
+import type { SkillReadOutcome } from './SkillReadOutcome.js'
 
 /**
  * Output written by the helper. No diagnostic includes request bytes.
@@ -18,6 +19,17 @@ export type HelperOutput =
        * Full discovered lists, including private paths.
        */
       skills: HelperSkillLists
+    }
+  | {
+      type: 'skill.read.result'
+      /**
+       * Matching private request identity.
+       */
+      requestId: string
+      /**
+       * Read outcome.
+       */
+      result: SkillReadOutcome
     }
   | {
       type: 'response'

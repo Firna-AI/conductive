@@ -80,6 +80,12 @@ export function ChatPane(props: {
    */
   fold?: FoldState
   /**
+   * The chat starts at its top, as the popover of an explanation shows the
+   * top of the answer of an ended turn. A view runs no script, so the line
+   * of the fold over the answer shows too.
+   */
+  fromTop?: boolean
+  /**
    * The reads of the pictures of the answers. The chat reads pictures only
    * while the cloud computer runs. Without reads, each shows as its link.
    */
@@ -126,7 +132,7 @@ export function ChatPane(props: {
         <div
           className={classes(
             styles.scroll,
-            fold !== 'closed' && styles.fromTop,
+            (fold !== 'closed' || props.fromTop) && styles.fromTop,
           )}
           data-mokly-scroll="chat-transcript"
         >

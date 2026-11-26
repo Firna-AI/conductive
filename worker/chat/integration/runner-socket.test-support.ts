@@ -49,6 +49,7 @@ export class OuterFakeRunner {
       processStartId?: RunnerHello['processStartId']
       loginKinds?: RunnerHello['loginKinds']
       fileServer?: RunnerHello['fileServer']
+      skillReads?: RunnerHello['skillReads']
     } = {},
   ) {
     this.streamId = options.streamId ?? 'outer-runner-stream'
@@ -91,6 +92,9 @@ export class OuterFakeRunner {
       ...(options.fileServer === undefined
         ? {}
         : { fileServer: options.fileServer }),
+      ...(options.skillReads === undefined
+        ? {}
+        : { skillReads: options.skillReads }),
     })
   }
 

@@ -2,6 +2,7 @@ import { act, useState } from 'react'
 import { Store } from '../../../app/store'
 import type { Agent } from '../../../shared/generated/Agent'
 import type { FileEntry } from '../../../shared/generated/FileEntry'
+import type { SkillIdentity } from '../../../shared/skills'
 import { accessibleName, byRole } from '../../../test-support/dom-queries'
 import { filesAfterHistory, startFiles } from '../../../files/files-test-kit'
 import type { FakeApiServer } from '../../../test-support/fake-api'
@@ -118,11 +119,16 @@ export async function mountMentionField(
   const files = options.files ?? fake
   const opened: string[] = []
   const shown: string[] = []
+  const openedSkills: SkillIdentity[] = []
   const counts = { sends: 0 }
   const skills = options.skills ?? new FakeSkills()
   const mentions: ChatMentions = {
     files,
     skills,
+    skillTabs: {
+      open: (skill) => openedSkills.push(skill),
+      href: (skill) => `/skills/${skill.agent}/${skill.name}`,
+    },
     openFile: (path) => opened.push(path),
     showFolder: (path) => shown.push(path),
     href: (item) => `/files/${item.path}`,
@@ -169,6 +175,8 @@ export async function mountMentionField(
     files,
     opened,
     shown,
+    /** The skills whose tab a press on the name of a skill chip opened. */
+    openedSkills,
     sends: () => counts.sends,
     draft: () => container.querySelector('output')?.textContent,
     /** The list sits in the host above the box, or null while it is closed. */

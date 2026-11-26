@@ -24,7 +24,7 @@ import {
 import { holdAnimationFrames, press, waitFor } from '../../test-support/mount'
 import { mountScreen } from '../test-mount'
 import { startedApp, textOf } from '../test-render'
-import { AccountScreen } from './AccountScreen'
+import { AccountTabContent } from './AccountTabContent'
 
 /** The services of a test, such as a `ManualDelay` or a held fetch. */
 type Overrides = Parameters<typeof startedApp>[1]
@@ -121,7 +121,7 @@ export async function openAccount(
   const app = await startedApp(server, services)
   const view = mountScreen(
     app,
-    <AccountScreen connect={connect} tab="agents" user={fakeUser} />,
+    <AccountTabContent connect={connect} tab="agents" user={fakeUser} />,
   )
   return { app, view }
 }

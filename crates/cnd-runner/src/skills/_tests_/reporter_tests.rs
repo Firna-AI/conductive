@@ -36,6 +36,7 @@ fn entry(name: &str, description: &str) -> SkillEntry {
             manual_only: None,
         },
         path: format!("/skills/{name}/SKILL.md"),
+        org: None,
     }
 }
 

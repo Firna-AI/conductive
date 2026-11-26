@@ -327,7 +327,7 @@ The shared builder refuses every IPv4 and IPv6 address, the product domain, and 
 Dispatch still decrypts and checks the full saved address before it sends a turn.
 `session-login.ts` treats a refused endpoint as an unusable login for linked-session admission and dispatch.
 Its failed-turn cause requires a public HTTPS endpoint with a host name and names the owner and agent.
-A personal endpoint cause points to the account page.
+A personal endpoint cause points to Account settings.
 An org endpoint cause points to the Agents tab of the org settings.
 Runner delivery maps a valid endpoint to an API-key turn-token credential.
 `runner-gateway-command.ts` adds `promptCacheTtl: '1h'` only for a Claude own endpoint turn.

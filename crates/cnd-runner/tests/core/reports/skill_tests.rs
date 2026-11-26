@@ -8,9 +8,11 @@ use cnd_runner::error::Result;
 use cnd_runner::reports::prepare::UnfilteredReports;
 use cnd_runner::skills::boundary::{SkillReports, SkillScanner};
 use cnd_runner::skills::reporter::SkillReporter;
+use cnd_runner_interface::agents::Agent;
 use cnd_runner_interface::runner::{RunnerEvent, RunnerReady};
 use cnd_runner_interface::runner_commands::RunnerReportKind;
 use cnd_runner_interface::runner_handshake::RunnerEventEnvelope;
+use cnd_runner_interface::runner_skills::SkillReadOutcome;
 use cnd_runner_interface::skills::{AgentSkill, HelperSkillLists, RunnerSkillsUpdated, SkillEntry};
 
 use crate::support::fixture::{self, Fixture};
@@ -29,10 +31,15 @@ impl SkillScanner for Scanner {
                     manual_only: Some(true),
                 },
                 path: "/private/plans/SKILL.md".into(),
+                org: None,
             }],
             codex: vec![],
         })
     }
+    async fn read(&self, _: Agent, _: SkillEntry, _: u64) -> SkillReadOutcome {
+        unreachable!("report-only scanner")
+    }
+
     async fn close(&self) {}
 }
 

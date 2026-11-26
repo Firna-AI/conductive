@@ -17,6 +17,7 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
+import { settingsGroup, settingsTab } from '../settings/settings-test-kit'
 import { Shell } from '../Shell'
 import { click, mountScreen, settle } from '../test-mount'
 import { textOf } from '../test-render'
@@ -65,8 +66,8 @@ async function mountStats(server: FakeApiServer, held?: HeldRequests) {
     </NavigationContext.Provider>,
   )
   await settle()
-  const main = () => textOf(view.querySelector('main')?.innerHTML ?? '')
-  return { view, main }
+  const tab = () => textOf(settingsTab('Stats').innerHTML)
+  return { view, tab }
 }
 
 /** The requests of the Stats tab that reached the fake API. */
@@ -80,17 +81,9 @@ describe('the Stats tab of the account', () => {
   test('follows Keyboard shortcuts, and shows the totals, the workspaces by state with Removed apart from Archived, and the 30-day totals', async () => {
     const server = new FakeApiServer()
     server.json('GET', ACCOUNT_PATHS.stats, stats)
-    const { view } = await mountStats(server)
-    const tabs = Array.from(
-      view.querySelectorAll('nav[aria-label="Account"] a'),
-      (link) => ({
-        label: link.textContent,
-        current: link.getAttribute('aria-current') === 'page',
-      }),
-    )
+    await mountStats(server)
     expect({
-      tabs: tabs.map((tab) => tab.label),
-      current: tabs.filter((tab) => tab.current).map((tab) => tab.label),
+      account: settingsGroup('Account'),
       totals: textOf(byRole('region', 'Totals').innerHTML),
       states: textOf(byRole('list', 'Workspaces by state').innerHTML),
       workspaceDays:
@@ -98,8 +91,16 @@ describe('the Stats tab of the account', () => {
       runDays: queryByText('60 in the last 30 days, by UTC day.') !== null,
       reads: statsReads(server),
     }).toEqual({
-      tabs: ['General', 'Agents', 'Preferences', 'Keyboard shortcuts', 'Stats'],
-      current: ['Stats'],
+      account: {
+        rows: [
+          'General',
+          'Agents',
+          'Preferences',
+          'Keyboard shortcuts',
+          'Stats',
+        ],
+        open: ['Stats'],
+      },
       totals:
         'Workspaces 1,240 +7 in 7 days Running now 3 Automations 4 Orgs 2',
       states:
@@ -114,8 +115,8 @@ describe('the Stats tab of the account', () => {
     const server = new FakeApiServer()
     const held = new HeldRequests(server)
     held.hold('GET', ACCOUNT_PATHS.stats)
-    const { main } = await mountStats(server, held)
-    const loading = main()
+    const { tab } = await mountStats(server, held)
+    const loading = tab()
     server.json(
       'GET',
       ACCOUNT_PATHS.stats,
@@ -124,7 +125,7 @@ describe('the Stats tab of the account', () => {
     )
     held.release('GET', ACCOUNT_PATHS.stats)
     await settle()
-    const failed = main()
+    const failed = tab()
     server.json('GET', ACCOUNT_PATHS.stats, stats)
     click(byRole('button', 'Try again'))
     await settle()
@@ -134,10 +135,8 @@ describe('the Stats tab of the account', () => {
       retried: queryByRole('region', 'Totals') !== null,
       reads: statsReads(server),
     }).toEqual({
-      loading:
-        'Account @calummoore General Agents Preferences Keyboard shortcuts Stats Workspaces New workspaces Automation runs',
-      failed:
-        'Account @calummoore General Agents Preferences Keyboard shortcuts Stats Your stats could not load Try again',
+      loading: 'Workspaces New workspaces Automation runs',
+      failed: 'Your stats could not load Try again',
       retried: true,
       reads: 2,
     })

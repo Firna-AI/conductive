@@ -19,6 +19,7 @@ export interface RunnerConnectionState {
   /** The move of this connection. A new connection starts without one. */
   repositoryMove?: RepositoryMoveState
   fileServer?: boolean
+  skillReads?: boolean
   /** True when the runner announced change notes in its hello. */
   capabilityNotices?: boolean
   services?: boolean

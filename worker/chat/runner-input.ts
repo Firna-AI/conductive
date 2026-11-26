@@ -1,6 +1,7 @@
 import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
 import type { RunnerHello } from '../../src/shared/generated/RunnerHello'
 import type { RunnerLoginKind } from '../../src/shared/generated/RunnerLoginKind'
+import type { RunnerSkillResult } from '../../src/shared/generated/RunnerSkillResult'
 import { RUNNER_SUPPORTED_LOGIN_KINDS } from '../../src/shared/runner'
 import { warningProcessStartId } from '../warning-values'
 import { warnWorker } from '../warnings'
@@ -46,7 +47,8 @@ export function parseRunnerTransport(
   | IncomingRunnerEnvelope
   | IncomingRepositoryMoveRefused
   | { type: 'file.read.result'; value: unknown }
-  | { type: 'file.diff.result'; value: unknown } {
+  | { type: 'file.diff.result'; value: unknown }
+  | { type: RunnerSkillResult['type']; value: unknown } {
   const input = record(value)
   if (input.type === 'hello') {
     const protocolVersion = counter(input.protocolVersion)
@@ -63,6 +65,7 @@ export function parseRunnerTransport(
         ? { completeToolDetails: true }
         : {}),
       ...(input.fileServer === true ? { fileServer: true } : {}),
+      ...(input.skillReads === true ? { skillReads: true } : {}),
       ...(input.capabilityNotices === true ? { capabilityNotices: true } : {}),
       ...(input.addsRepositoryFolder === true
         ? { addsRepositoryFolder: true }
@@ -85,7 +88,11 @@ export function parseRunnerTransport(
           ? input.reason
           : 'other',
     }
-  if (input.type === 'file.read.result' || input.type === 'file.diff.result') {
+  if (
+    input.type === 'file.read.result' ||
+    input.type === 'file.diff.result' ||
+    input.type === 'skill.read.result'
+  ) {
     return { type: input.type, value }
   }
   if (input.type !== 'event') return invalidInput()

@@ -64,8 +64,8 @@ const copyPath: TabMenuItem = {
  * transcript copies, and the moves. A file or diff tab has Copy path and
  * the moves, and the temporary tab leads with Keep open. A tab whose label
  * can hide a secret value leaves out Copy path (decision 2 A of the file
- * row menu change). Every tab ends with Close other tabs and Close tabs to
- * the right.
+ * row menu change). A skill tab has no path, so it leaves out Copy path.
+ * Every tab ends with Close other tabs and Close tabs to the right.
  */
 function groupsOf(
   tab: WorkspaceTab,
@@ -88,7 +88,8 @@ function groupsOf(
       closes,
     ]
   }
-  const file = [tab.hidesPath ? [] : [copyPath], moves, closes]
+  const copy = tab.hidesPath === true || tab.kind === 'skill' ? [] : [copyPath]
+  const file = [copy, moves, closes]
   return tab.temporary ? [[keepOpen], ...file] : file
 }
 
@@ -99,12 +100,13 @@ function groupsOf(
  * copies the link of the session, the concise copy, with each fold of the
  * chat closed, and the full copy, with every fold open. The temporary tab
  * leads with Keep open. A file or diff tab has Copy path, which copies the
- * path of its file. Every tab moves one place left or right. As in a
- * browser, Close other tabs closes every tab but it, and Close tabs to the
- * right closes every tab after it. A move or a close that the place of the
- * tab rules out keeps its place, off. A read-only workspace leaves out each
- * item that changes the workspace, so a session tab keeps only its copy
- * items, and a file or diff tab keeps only Copy path.
+ * path of its file, and a skill tab has none. Every tab moves one place
+ * left or right. As in a browser, Close other tabs closes every tab but
+ * it, and Close tabs to the right closes every tab after it. A move or a
+ * close that the place of the tab rules out keeps its place, off. A
+ * read-only workspace leaves out each item that changes the workspace, so
+ * a session tab keeps only its copy items, and a file or diff tab keeps
+ * only Copy path.
  */
 export function tabMenuOf(
   tabs: readonly WorkspaceTab[],

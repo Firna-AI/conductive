@@ -143,7 +143,7 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         only after a member allows it.`,
       text`Endpoint models: ${productName} reads the endpoint's model list
         with its key when you or an admin save the login or select Refresh. For a
-        personal login, you use Refresh on your account page. For an org
+        personal login, you use Refresh in your Account settings. For an org
         login, an admin uses Refresh on the Agents tab of the org settings.
         When you or an admin save a Codex endpoint whose address gives no
         model list, it can read the list a second time, at that address with
@@ -202,8 +202,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         value or the output of the command.`,
       text`Your code: your repositories and files live in the cloud
         computers that ${productName} runs for your org. ${productName}
-        reads a file or a diff when you open it, and a picture that an
-        agent answer shows, to show it to you. The
+        reads a file, a diff, or the text of a skill when you open it, and
+        a picture that an agent answer shows, to show it to you. The
         agents send their model requests through ${productName} to
         Anthropic, OpenAI, or the chosen endpoint.
         Agent settings in the repository can send them to another address
@@ -236,7 +236,7 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         reads a merged pull request from GitHub for a workspace, and when
         GitHub sends the event of the merge, also for an archived workspace.
         The records are for the counts of merged pull requests on the Stats
-        tab of your account page.`,
+        tab of your Account settings.`,
       text`Feedback: your message and any screenshots help the team answer
         questions, find problems, and improve ${productName}. Each message
         includes your ${productName} user ID, GitHub user ID and login, the
@@ -258,7 +258,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         workspace page that you opened in each org. The address holds the
         IDs of the org, the workspace, and the session, the preview, the
         port of a preview, or the terminal. It can also hold the name of a
-        tool and the path of an open file. A switch to the org opens that
+        tool, the path of an open file, or the agent and the name of an
+        open skill. A switch to the org opens that
         page again. The addresses stay in your browser, also after you sign
         out, until you clear its saved data.`,
     ),

@@ -3,7 +3,7 @@ import { defineUseCase } from '@mokly/mokly'
 export const useASkill = defineUseCase({
   title: 'Use a skill',
   description:
-    'The user asks the agent to run a skill of the repository with `/`, and sends the message with the skill chip.',
+    'The user asks the agent to run a skill of the repository with `/`, and sends the message with the skill chip. Then the user opens the skill from the chip, to read the text that the agent reads.',
   relatedDocs: [],
   steps: [
     {
@@ -23,6 +23,18 @@ export const useASkill = defineUseCase({
       title: 'Send',
       description:
         'The sent message shows the skill chip. The agent gets the skill in its own form, runs it, and writes the plan.',
+    },
+    {
+      screenPath: 'app/skill-mentions/chips/sent-pointer',
+      title: 'Point at the chip',
+      description:
+        'The pointer is over the skill chip of the sent message, which takes the fill of a hover.',
+    },
+    {
+      screenPath: 'app/skill-mentions/tab',
+      title: 'Open the skill',
+      description:
+        'A press on the chip opens the skill in the temporary tab, at the end of the row. The tab shows the name and the description of the skill, and its Markdown body in Preview.',
     },
   ],
 })

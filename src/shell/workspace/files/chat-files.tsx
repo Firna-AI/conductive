@@ -3,6 +3,7 @@ import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
 import type { RenderedTab, TabDraw } from '../../../chat/components/tab-row'
 import type { ChatMentions } from '../../../chat/mentions/MentionsContext'
+import { tabKey } from '../../../chat/state/tab-order'
 import { tabHidesSecret, tabLabel } from '../../../files/model/file-labels'
 import { scrollTabKey } from '../../../files/ui/kept-scroll'
 import { useFollowTabs } from '../../../app/tab-places'
@@ -17,6 +18,7 @@ import { usePageEscape } from '../../shortcuts/page-escape'
 import { useShortcutOffer } from '../../shortcuts/shortcut-context'
 import type { WorkspaceContext } from '../features'
 import { useSavedView } from '../saved-view'
+import { skillTabsOf, useSkillNavigation } from '../skills/skill-navigation'
 import { useCopyPath } from './copy-path'
 import { useMentions } from './chat-mentions'
 import { filesPlace, tabOf } from './files-address'
@@ -137,9 +139,10 @@ export interface ChatFiles {
  * chat. The chat reads the kept files for the list of `@` and the file
  * chips, also on a phone before a visit to Files: `KeptConnections` of the
  * screen keeps them connected. It reads the skill lists of the workspace
- * for the list of `/` and the skill chips. A file or diff tab that leaves
- * the saved view, such as one that the user closed, forgets its kept scroll
- * offset. An archived workspace has no files and no skills.
+ * for the list of `/` and the skill chips, and a press on a skill chip
+ * opens its skill tab. A file, diff, or skill tab that leaves the saved
+ * view, such as one that the user closed, forgets its kept scroll offset.
+ * An archived workspace has no files and no skills.
  */
 export function useChatFiles(
   context: WorkspaceContext,
@@ -155,9 +158,15 @@ export function useChatFiles(
   const files = useKeptFilesWhile(context, !archived)
   useFollowTabs(
     files?.scrollPlaces ?? null,
-    view ? filesTabsOf(view).map(scrollTabKey) : null,
+    view
+      ? [
+          ...filesTabsOf(view).map(scrollTabKey),
+          ...skillTabsOf(view).map(tabKey),
+        ]
+      : null,
   )
-  const mentions = useMentions(context, files, navigation)
+  const skillTabs = useSkillNavigation(context)
+  const mentions = useMentions(context, files, navigation, skillTabs)
   const copyPath = useCopyPath(context.org.id)
   if (archived) return {}
   const renderTab = (tab: FilesTab): RenderedTab => {

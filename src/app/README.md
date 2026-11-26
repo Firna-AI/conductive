@@ -18,7 +18,8 @@ pull request bar, and the owner picker. A host can give its own parts, as
 - [The development fake](dev-fake.md) gives the query options of the dev
   wiring in `dev/`, such as `?operator=1`. It also covers its fake routes:
   the uploads and their copies, Create org, feedback, the operator
-  section, the waitlist, the automations, and the workspace numbers.
+  section, the waitlist, the automations, the skill reads, and the
+  workspace numbers.
 - The workspace screen shows the real chat over the dev fake. The fake
   sends no chat event, so a sent message stays pending, and a new session
   adds no tab. It answers each chat write with a recorded reply and
@@ -162,10 +163,13 @@ the Help row of the palette opens.
   Secrets tab: an admin gets the value of one secret of the org, which the
   Worker records. Only the row of that secret shows it, until Hide, another
   reveal, a Replace of its value, or its Delete.
-- The browser keeps only the panel sizes (`panels.ts` and
-  `column-split.ts`) and the last workspaces (`last-workspaces.ts`). The
-  panel sizes are the widths of the sidebar and the right column, and the
-  split of the right column. The last workspaces hold the address of the
+- The browser keeps only the panel sizes (`panels.ts`,
+  `column-split.ts`, and `explain-size.ts`, each through `StoredSize` of
+  `stored-size.ts`) and the last workspaces (`last-workspaces.ts`). The
+  panel sizes are the widths of the sidebar and the right column, the
+  split of the right column, and the size of the Explain popover. A step
+  or a drag of a panel size that ends where it started stores nothing.
+  The last workspaces hold the address of the
   last workspace page that the person opened in each org, under a key of
   the person. A browser that refuses its storage keeps them until the page
   closes.

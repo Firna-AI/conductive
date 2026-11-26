@@ -23,6 +23,7 @@ export const RUNNER_MESSAGE_STAGES = [
   'parse',
   'hello',
   'file_result',
+  'skill_result',
   'event',
   'after_commit',
 ] as const
@@ -34,6 +35,7 @@ export const RUNNER_WORK_KINDS = [
   'hello',
   'event',
   'file_result',
+  'skill_result',
   'move_refused',
   'flush',
 ] as const

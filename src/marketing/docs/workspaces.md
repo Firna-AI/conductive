@@ -96,8 +96,8 @@ Select **Start from** followed by the default branch's name, or choose another b
 On a computer, a new account opens the dialog.
 Older accounts keep the page.
 
-1. Open **Account**.
-2. Open **Preferences**.
+1. Open **Settings**.
+2. Select **Preferences** under **Account**.
 3. Find **New workspaces**.
 4. Set **Open New workspace in** to **Page** or **Dialog**.
 
@@ -296,9 +296,9 @@ The stop ends every service and discards its saved command, settings, and logs.
 Start needed services again after **Resume**.
 
 Open a stopped workspace to start its computer again.
-If it stops while the workspace is open, select **Resume**, or open a file or a change.
+If it stops while the workspace is open, select **Resume**, or open a file, a change, or a skill.
 The history remains readable while the computer starts.
-A file or change that you open then waits for the computer, then opens.
+A file, change, or skill that you open then waits for the computer, then opens.
 One that already shows stays.
 
 A message from an agent tool also starts a stopped workspace's computer.

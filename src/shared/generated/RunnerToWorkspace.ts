@@ -4,6 +4,7 @@ import type { RunnerFileResponse } from './RunnerFileResponse.js'
 import type { RunnerHello } from './RunnerHello.js'
 import type { RunnerRepositoryMoveRefused } from './RunnerRepositoryMoveRefused.js'
 import type { RunnerServiceMessage } from './RunnerServiceMessage.js'
+import type { RunnerSkillResult } from './RunnerSkillResult.js'
 
 /**
  * RunnerToWorkspace wire alternatives.
@@ -12,5 +13,6 @@ export type RunnerToWorkspace =
   | RunnerHello
   | RunnerEventEnvelope
   | RunnerFileResponse
+  | RunnerSkillResult
   | RunnerRepositoryMoveRefused
   | RunnerServiceMessage

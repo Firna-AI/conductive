@@ -114,15 +114,37 @@ function Finish(props: { build: FirstBuildState; person: GetStartedPerson }) {
  * repositories, creates an org, and connects Claude or Codex. The rail shows
  * the org once it exists. While the person has a deleted org, the Deleted
  * orgs list with Restore comes before the steps, because a phone has no
- * other way from this page to the Account page.
+ * other way from this page to Settings.
  */
 export function GetStartedScreen(props: {
   state: GetStartedState
   viewport: Viewport
 }) {
+  const { step } = props.state
+  const person = people[props.state.person]
+  const page = <GetStartedPage state={props.state} viewport={props.viewport} />
+  if (props.viewport === 'mobile')
+    return <mobileFrame.Component>{page}</mobileFrame.Component>
+  const setupOrg = orgs[setupOrgOf[props.state.person].key]
+  const rail: RailState = {
+    orgs: isPast(step, 'org') ? [setupOrg] : [],
+    firstRun: step === 'install',
+    person,
+  }
+  return <appFrame.Component rail={rail}>{page}</appFrame.Component>
+}
+
+/**
+ * The page of Get started, without its frame, such as the page below
+ * Settings in the first run.
+ */
+export function GetStartedPage(props: {
+  state: GetStartedState
+  viewport: Viewport
+}) {
   const { step, agent, firstBuild } = props.state
   const person = people[props.state.person]
-  const page = (
+  return (
     <pagePart.Component
       subtitle={`@${person.login}`}
       title={copy.title}
@@ -165,13 +187,4 @@ export function GetStartedScreen(props: {
       ) : null}
     </pagePart.Component>
   )
-  if (props.viewport === 'mobile')
-    return <mobileFrame.Component>{page}</mobileFrame.Component>
-  const setupOrg = orgs[setupOrgOf[props.state.person].key]
-  const rail: RailState = {
-    orgs: isPast(step, 'org') ? [setupOrg] : [],
-    firstRun: step === 'install',
-    person,
-  }
-  return <appFrame.Component rail={rail}>{page}</appFrame.Component>
 }

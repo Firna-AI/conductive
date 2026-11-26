@@ -9,7 +9,11 @@ import {
   type SkillFiles,
 } from './skill-files'
 import { listOrgSkills } from './skill-org'
-import { readClaudeSkill, readCodexSkill } from './skill-read'
+import {
+  readableCodexSkills,
+  readClaudeSkill,
+  readCodexSkill,
+} from './skill-read'
 
 const CODEX_SKILLS_REASK_MS = 30_000
 
@@ -59,12 +63,13 @@ export class SkillScanner {
     await this.scanClaude(warn)
     await this.scanCodex(reload, warn)
     await this.scanOrg(orgSkills, warn)
+    const codex = await readableCodexSkills(this.codex.found, warn)
     for (const message of warnings)
       if (!this.warned.has(message)) this.context.warn(message)
     this.warned = new Set(warnings)
     return {
       claude: [...this.claude.found, ...this.org.claude],
-      codex: [...this.codex.found, ...this.org.codex],
+      codex: [...codex, ...this.org.codex],
     }
   }
 

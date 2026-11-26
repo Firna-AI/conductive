@@ -1,0 +1,42 @@
+# Revoked skill reads return different refusals
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 3, finding 115.
+- **Location:** `worker/skills/handler.ts:59-74` (the access check of the skill route, with the refusal at `:73`), `worker/skills/handler.ts:39` (`gate`), `:42` (`filesWorkspace`), and `:81-91` (the catch), `worker/security/gate.ts:57-82` (`sessionGate`) and `:84-107` (`gateAccess`), `worker/files/access.ts:8-24` (`filesWorkspace`), `worker/security/connection-access.ts:64-113` (`readConnectionAccess`), `worker/features/skill-reads.test.ts:153-199`.
+- **Reason:** The case needs a sign-out or a suspension during one skill read, and the reply already holds no text.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Admission checks:** the checks of a new request to the skill route. `gate` checks the sign-in, the account, and the membership. `filesWorkspace` checks the workspace and the state of the org.
+  - **Access recheck:** the `authorize` callback of the skill route. It runs right before the read goes to the runner, and again before the reply goes to the browser. It reads one grant with `readConnectionAccess`.
+- **Background:**
+  - On 25 November 2026, Cal chose two access checks for each skill read (skill tab decision 4 B). The Worker checks the access of the member right before the send, and again before the reply.
+  - "The read" in `docs/protocol/skill-tabs.md:82-86` says: "A member who loses access meanwhile gets the reply of a member without access, and no text."
+  - The access recheck fails in one query for each lost access, such as an ended session, a suspended account, a removed member, or a suspended org. A deleted org and an archived workspace fail it too (`connection-access.ts:64-113`).
+  - For each such failure, the route throws HTTP 404 `workspace_not_found` (`handler.ts:73`).
+  - A new request gets these replies from the admission checks:
+    - After a sign-out, or with a suspended account: 401 `sign_in_required`, from `sessionGate` (`gate.ts:73-79`). `sessionUser` gives no user for an ended session or a suspended account.
+    - In a suspended org: 403 `org_suspended`, from `requireActiveOrg` in `filesWorkspace` (`access.ts:22`). The gate lets a GET in a suspended org pass.
+    - For a removed member: 404 `org_not_found` from `gateAccess`. The catch of the route turns it into 404 `workspace_not_found` (`handler.ts:82-85`).
+    - For an archived workspace: 404 `workspace_not_found`, from `filesWorkspace`.
+  - The skill tab reads through the org API client of the app (`src/shell/workspace/skills/SkillTabPage.tsx:55`). That client acts on two of these codes. `sign_in_required` shows the sign-in (`watchSession` in `src/app/boot.ts:58-73`). `org_suspended` makes the org read-only (`src/app/org-model.ts:44-46`).
+  - The service logs route already gives the refusal of a new request after its final check. It runs `sessionGate` and `workspaceTarget` again before the reply (`worker/services/handler.ts:102-103`).
+- **Problem:** A sign-out, a suspension of the account, or a suspension of the org during a skill read gives 404 `workspace_not_found`. A new request of that member gets 401 `sign_in_required` or 403 `org_suspended`. So the refusal is not the reply of a member without access, which "The read" requires.
+- **Impact if no action:** The skill tab shows "This skill didn't open" with Try again, in place of the sign-in or the read-only org. The app learns of the sign-out or the suspension only at its next request. No text leaks.
+- **Root question:** How does a skill read that loses access answer with the same refusal as a new request?
+- **Options:**
+  - **A.** After a failed access recheck, run the admission checks again in the route.
+    - In the `authorize` callback of `worker/skills/handler.ts`, when the grant is missing or ended, call `gate(request, env, now())` and `filesWorkspace(env, context, workspaceId)` again. Each throws the refusal of a new request.
+    - When both pass, throw 404 `workspace_not_found` as today. The catch of the route already turns `org_not_found` into `workspace_not_found`.
+    - Add tests beside "withholds a skill reply after the requesting member loses access" in `worker/features/skill-reads.test.ts`.
+    - Cover a sign-out, a suspended account, and a suspended org during the read. Each reply equals the reply of a new request, with no text. Keep the case of the removed member.
+    - Effort: Small.
+  - **B.** Give the route one access policy for the admission and both rechecks. One query names the cause of each refusal. Cost: a second copy of the rules of `gate` and `filesWorkspace`, which must stay equal to them for every other route. Effort: Medium.
+  - **C.** Give every lost access one refusal, and change "The read" in `docs/protocol/skill-tabs.md` to name it. Cost: a change of a requirement, which the user decides. The app still does not learn of a sign-out or a suspension from the reply. Effort: Medium.
+- **Left out:** Change nothing. The refusal then breaks the rule of "The read" in `docs/protocol/skill-tabs.md:82-86`.
+- **Wider fix:** A. The admission checks then give every refusal of the route, also after a recheck, so no checkpoint answers in other words. B gives the same result with a second copy of those rules.
+- **Previous examples:** Commit `cc6a38f09` gave the service logs route a final access check that runs the admission checks again (`worker/services/handler.ts:102-103`).
+- **Related:** `plans/follow-ups/file-reads-after-access-ends.md`. Its option B moves the file and diff reads onto the shared read operation of the skill reads. Their recheck then needs the same rerun of the admission checks. Do it in the same branch, or after this item. No options conflict.
+- **Recommendation:** A. It reuses the checks that already give each refusal, in one file, as the service logs route does.
+- **Action:** fix after merge, apply A, because the case is rare, and the reply already holds no text.

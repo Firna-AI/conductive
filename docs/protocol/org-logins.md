@@ -66,7 +66,7 @@ as [Tokens and secrets](tokens-and-secrets.md) says.
   its switch "Use for every member" (org login decision 1 B). Reason: an
   org login reaches the sessions of every member, as the env vars reach
   the sandboxes of every member (decision 57).
-- The form of the tab is the form of the account page with fewer options.
+- The form of the tab is the form of the Agents tab of Account settings with fewer options.
   It offers only API key and Own endpoint, and it has no share switch.
   Reason: the user asked for a copy of the account form with fewer
   options.
@@ -150,7 +150,7 @@ as [Tokens and secrets](tokens-and-secrets.md) says.
   each agent. The org settings read names it for that org. The screens
   show that value, and they do not work it out. Reason: the same rule then
   decides the screens and the sessions.
-- Under each agent, the account page names each org whose org login is
+- Under each agent, the Agents tab of Account settings names each org whose org login is
   the default login of the member. An example is "Your new sessions in
   Acme use Acme's login." The page names such an org also under a
   personal login, while the switch of that org is on.

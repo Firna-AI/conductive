@@ -28,7 +28,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 24 November 2026.`,
+  accepted it. Effective date: 26 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -235,7 +235,7 @@ export const termsDocument: LegalDocument = {
           cloud computers of the org at once. It deletes the org after 7
           days, unless an admin restores it.`,
         paragraph`You can stop using ${productName} at any time. You can
-          remove personal agent logins on your account page. An admin can
+          remove personal agent logins in Account settings. An admin can
           remove org logins on the Agents tab of the org settings. To request
           account deletion, write to ${mailLink(legalAddress)}. Stopping
           use or removing a login does not delete an org or its chat

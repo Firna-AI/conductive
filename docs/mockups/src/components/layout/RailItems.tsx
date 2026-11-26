@@ -43,7 +43,7 @@ export function RailLink(props: {
 
 /**
  * An org of the rail that the operator suspended. A deleted org has no
- * tile: the Account page lists it, with Restore.
+ * tile: Account settings list it, with Restore.
  */
 export type OrgState = 'suspended'
 

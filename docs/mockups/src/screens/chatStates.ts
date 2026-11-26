@@ -25,6 +25,13 @@
  * A phone row shows no Preview tab, so a phone shows the page on its
  * Preview page. `explanation` shows the tab of the explanation of Cal
  * after Expand, at the end of the row.
+ *
+ * `skill` shows the skill tab of `plans`, which a press on its chip opens
+ * (skill tab decision 1 B), in Preview, and `skill-source` in Source. The
+ * other `skill-` states show a notice in place of its text: the read that
+ * runs, a skill that the list no longer holds, a text over the read limit,
+ * older cloud computer software, and a read that failed, with Try again. A
+ * phone shows the skill in Files.
  */
 export const tabStates = [
   'session',
@@ -49,25 +56,38 @@ export const tabStates = [
   'preview',
   'preview-behind',
   'explanation',
+  'skill',
+  'skill-source',
+  'skill-loading',
+  'skill-gone',
+  'skill-too-large',
+  'skill-older-software',
+  'skill-failed',
 ] as const
 
 /**
- * The temporary tab, from decisions 284 to 287: the one file or diff tab
- * that the next press on a file or a diff replaces. Its title shows in
- * italics. With `none`, every tab is kept. `opened` draws the file or the
- * diff of `tab` in the temporary tab, at the end of the row. `replaced`
- * draws it in the place of the file that the temporary tab held, before
- * the tab of a new session that opened after that file. `kept` draws the
- * file that the temporary tab held, which a double-click kept, then the
- * file of `tab` in a new temporary tab at the end of the row. A session or
- * the code file in `tab` draws no temporary tab, and a phone row shows no
- * file tabs.
+ * The temporary tab, from decisions 284 to 287: the one tab that the next
+ * press on a file, a diff, or a skill replaces (skill tab decision 2 A).
+ * Its title shows in italics. With `none`, every tab is kept. `opened`
+ * draws the file, the diff, or the skill of `tab` in the temporary tab, at
+ * the end of the row. `replaced` draws it in the place of the file that
+ * the temporary tab held, before the tab of a new session that opened
+ * after that file. `kept` draws the file that the temporary tab held,
+ * which a double-click kept, then the file of `tab` in a new temporary tab
+ * at the end of the row. `skill-kept` does the same with the skill tab of
+ * `plans` as the kept tab. `skill-shown` draws that row after a return to
+ * the kept skill tab of `plans` in `tab`: the skill shows and stays kept,
+ * and README.md stays the temporary tab after it. A session or the code
+ * file in `tab` draws no temporary tab, and a phone row shows no file or
+ * skill tabs.
  */
 export const temporaryTabStates = [
   'none',
   'opened',
   'replaced',
   'kept',
+  'skill-kept',
+  'skill-shown',
 ] as const
 
 /**
@@ -95,6 +115,8 @@ export const temporaryTabStates = [
  * there. The `-pointer` states draw the pointer over the icon of the first
  * chip of the text, where a × takes the place of the icon. A phone has no
  * pointer, so it shows the × at the end of each chip instead.
+ * `skill-chip-name` draws the pointer over the name of the skill chip,
+ * which a press opens in the skill tab, so the name is underlined.
  *
  * The `drop` states draw a drop of files on the box: a screenshot that
  * hovers over it with the drop caret in the text, the screenshot at that
@@ -154,6 +176,7 @@ export const composerStates = [
   'skill-none',
   'skill-chip',
   'skill-chip-pointer',
+  'skill-chip-name',
   'workspace-link-pointer',
   'attachment-pointer',
   'drop-over',

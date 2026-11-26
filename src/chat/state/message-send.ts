@@ -32,6 +32,7 @@ export async function postMessage(
     text: request.text,
     attachments,
     state: 'queued',
+    choice: request.choice,
   })
   try {
     const target = takeReply(

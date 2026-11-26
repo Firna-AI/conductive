@@ -142,7 +142,9 @@ for a reader at the bottom, for a read row that folded away, and for a
 session that kept no place, the read row of a session whose sent message
 still waits, a send after a switch of session tabs, and the bottom of a
 session that the user closed and opened again. `components/reading-place-test-kit.tsx` holds
-the long turn and the layout of both files.
+the long turn and the layout of both files. Its `layOutChat` also takes the
+label of another chat and the height of each row, as the popover tests of
+a long answer use it.
 `components/TabDrag.dom.test.tsx` mounts the chat with the real
 `FileTabItem` of the Files screens and drags tabs with pointer events over
 boxes that `components/tab-drag-test-kit.tsx` gives them. The file tab of
@@ -306,9 +308,10 @@ for `/` alone, shows the skills of the agent of a newly chosen model, and
 offers a manual-only Claude skill only when `/` starts the text.
 `components/chip-field/SkillChips.dom.test.tsx` restores skill chips of
 either agent from a draft, keeps a skill text with more after it as text,
-removes a chip with its × and with Backspace, copies and pastes a chip,
-follows skill lists that load later, and keeps a chip after a change of
-the model.
+opens the skill tab of the agent of the composer, else of the other agent,
+with a press on the name that takes no focus, removes a chip with its ×
+and with Backspace, copies and pastes a chip, follows skill lists that
+load later, and keeps a chip after a change of the model.
 `components/chip-field/FileChips.dom.test.tsx` restores file chips from a
 draft, opens a file and a folder, removes a chip with its ×, also as the
 first change, pastes a mention, and follows the tree.
@@ -361,9 +364,10 @@ read the draft that the owner keeps.
 `mentions/mention-rows.test.ts` orders the rows of the list.
 `mentions/skill-rows.test.ts` orders and limits the rows of the list of
 `/`. `links/SkillLink.dom.test.tsx` shows a skill chip in a sent message
-for a skill of either agent, keeps other skill texts and code as text,
-copies the skill text of a chip, and keeps each skill text as text
-without a list.
+for a skill of either agent, as a link to its skill tab, keeps other skill
+texts and code as text, opens the skill of the agent of the message, else
+of the other agent, with the title of the same skill, copies the skill
+text of a chip, and keeps each skill text as text without a list.
 `../shared/attachment-mentions.test.ts` finds the attached file of a file
 mention, and leaves a folder mention and other mentions alone. It puts the
 original names in place of those mentions, and checks for words outside

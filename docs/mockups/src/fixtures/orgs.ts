@@ -96,7 +96,7 @@ export const deletedOrg = {
 } as const satisfies { org: OrgKey; deletes: string }
 
 /**
- * The deleted org that the Account page lists for its admin: Acme Labs,
+ * The deleted org that Account settings list for its admin: Acme Labs,
  * which the rail no longer shows.
  */
 export const accountDeletedOrg = {

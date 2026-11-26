@@ -36,7 +36,7 @@ state what they do.
   lists the owners. `PaletteKeys` in each frame offers each command that
   the palette lists, also while the palette is closed, with the action of
   its row. So a key and its row do the same thing, also on a page without
-  an org, such as the Account page. A key that would do nothing, such as
+  an org, such as Get started. A key that would do nothing, such as
   Next tab with one tab, is not offered, so it goes on to the browser.
 - The org rail offers Switch to org 1 to 9 while it shows, for each org by
   its place from the top, as its tile opens the org. So the key also opens

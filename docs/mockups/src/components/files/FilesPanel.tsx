@@ -121,6 +121,8 @@ function withOpenFolder(
  * counts the whole change. While `only` filters the changes, the rows are
  * no longer the list of the large branch, so its totals and its notice of
  * Changes stay out, and the tab counts the rows.
+ * `markdownTo` is the page that the row of README.md in All files leads to,
+ * when it differs from its plain preview, such as with a kept skill tab.
  */
 export function FilesPanel(props: {
   view: FileList
@@ -134,6 +136,7 @@ export function FilesPanel(props: {
   checksTop?: ReactNode
   only?: readonly string[]
   menu?: FileRowMenu
+  markdownTo?: string
 }) {
   const { view, open, only } = props
   const limited = props.lists === 'limited' ? limitedLists : undefined
@@ -191,7 +194,11 @@ export function FilesPanel(props: {
           <fileTree.Component
             entries={tree}
             moklyInstance="file-tree"
-            {...defined({ menu: props.menu, open: treeOpen })}
+            {...defined({
+              markdownTo: props.markdownTo,
+              menu: props.menu,
+              open: treeOpen,
+            })}
           />
         </div>
       ) : null}

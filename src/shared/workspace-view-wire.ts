@@ -3,17 +3,16 @@ import type { WorkspaceTab, WorkspaceView } from './workspace-view'
 /** A Preview tab as the view route carries it: its port and its place. */
 export interface PreviewTabPlace {
   port: number
-  /** The index of the tab in the whole tab row, from 0. */
+  /** The index in the tab row before skill tabs are added, from 0. */
   place: number
 }
 
 /**
  * The saved view as the view route sends and takes it. Older copies of the
- * app, such as an older Mac app, read `tabs` and `activeTab` alone and
- * refuse a tab kind that they do not know. So these fields hold no Preview
- * tab. `previewTabs` and `activePreview` carry the Preview tabs, and older
- * copies ignore them. A save without `previewTabs` comes from an older copy,
- * and the Worker keeps the stored Preview tabs then.
+ * app can read `tabs` and `activeTab` with the kinds they know. The fields
+ * `previewTabs` and `activePreview` carry Preview tabs. The skill fields
+ * of `WorkspaceView` carry skill tabs. When a save omits either tab list,
+ * the Worker keeps the stored tabs of that kind.
  */
 export interface WorkspaceViewWire extends Omit<
   WorkspaceView,
@@ -60,16 +59,8 @@ function terminalOf(view: Pick<WorkspaceView, 'terminal'>): {
  * keeps the stored Preview tabs.
  */
 export function viewReply(view: WorkspaceView): WorkspaceViewWire {
-  const wire = viewToWire(view)
-  if ((wire.previewTabs ?? []).length > 0) return wire
-  return {
-    tabs: wire.tabs,
-    activeTab: wire.activeTab,
-    temporaryTab: wire.temporaryTab,
-    fileList: wire.fileList,
-    tool: wire.tool,
-    ...terminalOf(wire),
-  }
+  const { previewTabs, activePreview, ...base } = viewToWire(view)
+  return previewTabs?.length ? { ...base, previewTabs, activePreview } : base
 }
 
 /**
@@ -103,6 +94,13 @@ export function viewFromWire(
     tabs,
     activeTab,
     temporaryTab: base.temporaryTab,
+    ...(base.skillTabs === undefined
+      ? {}
+      : {
+          skillTabs: base.skillTabs,
+          activeSkill: base.activeSkill ?? null,
+          temporarySkill: base.temporarySkill ?? null,
+        }),
     fileList: base.fileList,
     tool: base.tool,
     ...terminalOf(base),

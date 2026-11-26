@@ -16,13 +16,17 @@ Its export command writes their TypeScript into `src/generated/`.
 Import each generated type directly. Never edit generated files.
 
 Requests start an agent, send input, change model, interrupt, close, warm the
-Claude binary, or scan skills. A scanner helper stays separate from agent
+Claude binary, scan skills, or read a skill. A scanner helper stays separate from agent
 helpers. It returns metadata and private skill paths. Rust filters and
 bounds that data before it saves a workspace report. Each agent send can
 carry the latest private Codex skill paths.
 Request IDs match response or error messages.
 Agent events stream while a request waits. Result message lists retain their exact IDs and order.
 Background note updates carry the work IDs that the active turn already named.
+
+A `skill.read` request takes a private scanned path or a leased org copy.
+The helper selects the named org skill in that copy and gives the safe
+view for the selected agent. The byte limit is at most 1 MiB.
 
 Close cancels pending setup. It sends SIGTERM to each agent process.
 After five seconds, a process that still runs gets SIGKILL.
