@@ -169,7 +169,7 @@ line of the build that follows it.
       head "Refreshing · <time>".
 - [x] Add a running refresh state with the line "A build starts when this
       refresh ends."
-- [ ] Run `npm run mockups:check`. Smoke-test the changed entries.
+- [x] Run `npm run mockups:check`. Smoke-test the changed entries.
 - [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
 
@@ -231,7 +231,10 @@ Depends on: 1, 3
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and `npm run check`.
+- [x] Run the targeted tests and `npm run check`. The gate of 26 November
+      2026 passed, except two known timeouts under machine load that pass
+      alone: `image-build-recovery.test.ts` and `image-lease-builds.test.ts`.
+      Log: `.context/build-after-refresh/gate.log`.
 - [x] Review round 1 found findings 6 to 13. Their checks confirmed all
       eight. Fixed: 6 (a new build clears the requests), 9 (five
       regression tests), 10, 11, 12, and 13. Deferred: 6 C into
@@ -243,7 +246,7 @@ Depends on: every other milestone
       an app test of the click), 16 (the protocol reason), and 17 (a second
       admin in each request test). Deferred: 14 C into
       `plans/follow-ups/build-start-request-flag.md`. Open: 15.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
