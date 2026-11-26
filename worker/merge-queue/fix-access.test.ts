@@ -53,7 +53,6 @@ it.each([
     change: () => f.api.deniedTokens.add(MEMBER_TOKEN),
   },
 ])('leaves without sending a message when the $cause', async ({ change }) => {
-  const target = await f.session()
   await f.start()
   await change()
   await f.queue.advanceStartAlarm()
@@ -61,11 +60,11 @@ it.each([
   const messages = [...featureState(await f.control('state')).keys()].filter(
     (key) => key.startsWith(chatKey('message', '')),
   )
-  expect(messages, target.id).toEqual([])
+  expect(messages).toEqual([])
+  expect(await f.sessions()).toEqual([])
 })
 
 it('waits after a failed token refresh and still sends as the queuer after sign-in', async () => {
-  const session = await f.session()
   await f.start()
   const now = await f.queue.testAlarmTime()
   await saveGitHubTokens(
@@ -82,7 +81,7 @@ it('waits after a failed token refresh and still sends as the queuer after sign-
   f.github.tokenStatus = 401
   await f.queue.advanceStartAlarm()
   expect(await f.bar()).toMatchObject({ state: 'waiting', wait: 'token' })
-  expect(await f.messages(session.id)).toEqual([])
+  expect(await f.sessions()).toEqual([])
   expect(f.github.requests.map(({ url }) => new URL(url).pathname)).toContain(
     '/login/oauth/access_token',
   )
@@ -99,13 +98,12 @@ it('waits after a failed token refresh and still sends as the queuer after sign-
   )
   await f.queue.advanceStartAlarm()
   expect(await f.start()).toMatchObject({ state: 'sent' })
-  expect(await f.messages(session.id)).toMatchObject([
+  expect(await f.messages((await f.restackSession()).id)).toMatchObject([
     { sender: { id: 'member' } },
   ])
 })
 
 it('resumes the stopped cloud computer as the queuer after saving the message', async () => {
-  const session = await f.session()
   const actor = f.actor()
   const now = await actor.testAlarmTime()
   await f.db
@@ -132,7 +130,7 @@ it('resumes the stopped cloud computer as the queuer after saving the message', 
   })
   const pending = await f.start()
   await f.queue.advanceStartAlarm()
-  expect(await f.messages(session.id)).toMatchObject([
+  expect(await f.messages((await f.restackSession()).id)).toMatchObject([
     { id: pending.messageId, sender: { id: 'member' } },
   ])
   expect(
@@ -150,7 +148,6 @@ it('resumes the stopped cloud computer as the queuer after saving the message', 
 })
 
 it('does not admit a stale request after the workspace rejoins the queue', async () => {
-  const target = await f.session()
   const pending = await f.start()
   expect((await f.change('DELETE', OUTER_WORKSPACE)).status).toBe(204)
   expect(
@@ -176,5 +173,5 @@ it('does not admit a stale request after the workspace rejoins the queue', async
   expect(await f.entries()).toMatchObject([
     { workspaceId: OUTER_WORKSPACE, state: 'queued', wait: null },
   ])
-  expect(await f.messages(target.id)).toEqual([])
+  expect(await f.sessions()).toEqual([])
 })

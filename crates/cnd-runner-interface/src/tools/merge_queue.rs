@@ -41,9 +41,12 @@ pub enum MergeQueueWait {
     Token,
     /// A turn in the workspace must end before the queue sends its message.
     ActiveTurn,
-    /// The newest open session needs a login that the queuer can use.
+    /// The queuer needs a usable agent login for the new session of the
+    /// queue message.
     AgentLogin,
-    /// The workspace needs an open session for the queue message.
+    /// The workspace needs an open session for the queue message. The queue
+    /// no longer sets it, because each queue message opens a new session,
+    /// but an entry that an older Worker saved can still hold it.
     OpenSession,
     /// GitHub refused the merge.
     MergeRefused,

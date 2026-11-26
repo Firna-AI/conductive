@@ -21,7 +21,7 @@ it('waits for the queuer push before setting a base, creating a stack, and addin
   try {
     await f.queue.advanceStartAlarm()
     expect(f.steps()).toEqual([])
-    const session = await f.session(PARALLEL)
+    await f.ready(PARALLEL)
     f.api.mergeBases.set(`${HEAD_SHA}...${PARALLEL_HEAD}`, TRUNK_HEAD)
     expect(
       (await f.change('POST', PARALLEL, { cookie: f.cookies.memberCookie }))
@@ -31,7 +31,7 @@ it('waits for the queuer push before setting a base, creating a stack, and addin
     await f.queue.advanceStartAlarm()
     expect(f.steps()).toEqual([])
     expect(await f.base(PARALLEL)).toBe('changes')
-    const messages = await f.messages(PARALLEL, session)
+    const messages = await f.messages(PARALLEL)
     expect(messages).toMatchObject([{ sender: { id: 'member' } }])
     expect(messages[0].text).toContain(`\`FETCH_HEAD\` is at \`${HEAD_SHA}`)
     expect(messages[0].text).toContain('git fetch origin refs/pull/2/head')
@@ -45,7 +45,7 @@ it('waits for the queuer push before setting a base, creating a stack, and addin
     f.api.branches.set('refs/heads/parallel', rebased)
     f.api.mergeBases.set(`${HEAD_SHA}...${rebased}`, HEAD_SHA)
     f.api.mergeBases.set(`${TRUNK_HEAD}...${rebased}`, TRUNK_HEAD)
-    await f.endFix(PARALLEL, session)
+    await f.endFix(PARALLEL)
     await f.queue.advanceStartAlarm()
     const steps = f.steps()
     expect(steps.map(({ method }) => method)).toEqual(['PATCH', 'POST'])
@@ -88,15 +88,15 @@ it('waits for the queuer push before setting a base, creating a stack, and addin
 it('stays in place after one failed turn and leaves on a repeated independent base edit', async () => {
   const f = await restackFixture(bundle)
   try {
-    const session = await f.session(PARALLEL)
+    await f.ready(PARALLEL)
     f.api.mergeBases.set(`${HEAD_SHA}...${PARALLEL_HEAD}`, TRUNK_HEAD)
     expect((await f.change('POST', PARALLEL)).status).toBe(204)
     await f.queue.advanceStartAlarm()
-    await f.endFix(PARALLEL, session)
+    await f.endFix(PARALLEL)
     await f.queue.advanceStartAlarm()
     await f.wake()
     await f.queue.advanceStartAlarm()
-    expect(await f.messages(PARALLEL, session)).toHaveLength(1)
+    expect(await f.messages(PARALLEL)).toHaveLength(1)
     expect(await f.entries()).toMatchObject([
       { pullNumber: 2 },
       { pullNumber: 4, place: 2, state: 'waiting', wait: 'rebase' },

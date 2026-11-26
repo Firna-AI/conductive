@@ -1,3 +1,4 @@
+import { configuredDefaultChoice } from '../app-api/models'
 import { featureResult } from '../features/result'
 import type { GitHubWorkspace } from '../github/contracts'
 import { githubBranchLabels } from '../github/output'
@@ -6,6 +7,7 @@ import { pendingWorkspaceChange } from '../lifecycle/repository-change-types'
 import { saveQueueBaseChange } from '../lifecycle/queue-base-change'
 import { syncQueueHead } from '../lifecycle/queue-head-sync'
 import { CapabilityWorkspace } from '../secrets/capability-workspace'
+import { ownerPreference } from '../tools/store'
 import { QueueCoordinator } from './coordinator'
 import type { QueueLeave, QueueMemberAction, QueueScope } from './contracts'
 import { queueFixSender } from './fix-access'
@@ -76,6 +78,9 @@ export class MergeQueueWorkspace extends CapabilityWorkspace {
             })
             return labels.branch(fix.restack.base)
           },
+          async (userId) =>
+            (await ownerPreference(this.env.DB, userId)) ??
+            configuredDefaultChoice(this.env),
         )
       })
     })

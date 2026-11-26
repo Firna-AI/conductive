@@ -36,7 +36,7 @@ it('merges the bottom of a stack made after Add and holds a separate unit until 
     f.api.checks.set(HEAD_SHA, [passedRun])
     f.api.mergeBases.set(`${HEAD_SHA}...${PARALLEL_HEAD}`, TRUNK_HEAD)
     expect((await f.change('POST', PARALLEL)).status).toBe(204)
-    const session = await f.session(PARALLEL)
+    await f.ready(PARALLEL)
     const before = f.steps().length
     await f.queue.advanceStartAlarm()
     expect(f.writes().map(({ url }) => new URL(url).pathname)).toEqual([
@@ -49,7 +49,7 @@ it('merges the bottom of a stack made after Add and holds a separate unit until 
       githubStackNumber: null,
     })
     expect(f.api.pulls[4].baseRefName).toBe('main')
-    expect(await f.messages(PARALLEL, session)).toEqual([])
+    expect(await f.messages(PARALLEL)).toEqual([])
 
     const newTrunk = '5'.repeat(40)
     f.api.branches.set('refs/heads/main', newTrunk)
@@ -60,7 +60,7 @@ it('merges the bottom of a stack made after Add and holds a separate unit until 
       { number: 2, workspaceId: OUTER_WORKSPACE },
     ])
     expect(f.writes()).toHaveLength(1)
-    const [restack] = await f.messages(PARALLEL, session)
+    const [restack] = await f.messages(PARALLEL)
     expect(restack?.text).toContain(
       `git rebase --onto ${newTrunk} ${TRUNK_HEAD}`,
     )
@@ -71,7 +71,7 @@ it('merges the bottom of a stack made after Add and holds a separate unit until 
     f.api.mergeBases.set(`${newTrunk}...${newHead}`, newTrunk)
     f.api.mergeBases.set(`${TRUNK_HEAD}...${newHead}`, TRUNK_HEAD)
     f.api.mergeBases.set(`${TRUNK_HEAD}...${newTrunk}`, TRUNK_HEAD)
-    await f.endFix(PARALLEL, session)
+    await f.endFix(PARALLEL)
     await f.queue.advanceStartAlarm()
     expect(f.writes().map(({ url }) => new URL(url).pathname)).toEqual([
       '/repos/Codertocat/Hello-World/pulls/2/merge-async',

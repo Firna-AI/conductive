@@ -13,6 +13,7 @@ import {
   OUTER_SECTION,
   OUTER_WORKSPACE,
 } from '../chat/integration/outer-seed.test-support'
+import { CLAUDE } from '../chat/harness.test-support'
 import { featureFixture } from '../features/fixture.test-support'
 import { repositoryPull } from '../github/fake-pull'
 import { RepositoryGitHub } from '../github/fake-repository'
@@ -78,6 +79,7 @@ export async function queueFixture(bundle: string, privateKey?: string) {
       GITHUB_APP_PRIVATE_KEY: privateKey,
       GITHUB_WEBHOOK_SECRET: QUEUE_WEBHOOK_SECRET,
       OPERATOR_GITHUB_IDS: '103',
+      CONDUCTIVE_DEFAULT_CHOICE: JSON.stringify(CLAUDE),
     },
     outbound: (request, fallback) => {
       const path = new URL(request.url).pathname
@@ -230,4 +232,23 @@ export function queueWebhook(
       },
     },
   )
+}
+
+/**
+ * Hide the Claude login of a member, so that each restack message that the
+ * member queued waits for an agent login. The returned function shows the
+ * login again.
+ */
+export async function hideAgentLogin(db: D1Database, userId: string) {
+  const move = (from: string, to: string) =>
+    db
+      .prepare(
+        'UPDATE agent_logins SET agent = ? WHERE user_id = ? AND agent = ?',
+      )
+      .bind(to, userId, from)
+      .run()
+  await move('claude', 'codex')
+  return async () => {
+    await move('codex', 'claude')
+  }
 }

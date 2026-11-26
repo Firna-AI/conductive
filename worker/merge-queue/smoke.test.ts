@@ -64,14 +64,13 @@ it('joins three workspaces, re-orders their GitHub stack, and merges the ready l
     f.api.checks.set(HEAD_SHA, [pending])
     f.api.pulls[3].baseRefName = 'main'
     f.api.checks.set(TOP_HEAD, [pending])
-    const first = await f.session(OUTER_WORKSPACE)
-    const second = await f.session(PARALLEL)
-    const third = await f.session(OTHER_WORKSPACE)
+    await f.ready(OUTER_WORKSPACE)
+    await f.ready(PARALLEL)
+    await f.ready(OTHER_WORKSPACE)
     const pushedFix = async (
       number: number,
       head: string,
       workspaceId: string,
-      session: string,
     ) => {
       const pull = f.api.pulls[number]
       const previous = pull.headRefOid
@@ -79,7 +78,7 @@ it('joins three workspaces, re-orders their GitHub stack, and merges the ready l
       f.api.branches.set(`refs/heads/${pull.headRefName}`, head)
       f.api.checks.set(head, [pending])
       await f.push(`smoke-push-${head[0]}`, pull.headRefName, previous, head)
-      await f.endFix(workspaceId, session)
+      await f.endFix(workspaceId)
       await f.queue.advanceStartAlarm()
     }
     const order = async () =>
@@ -88,12 +87,10 @@ it('joins three workspaces, re-orders their GitHub stack, and merges the ready l
     expect(await order()).toEqual([2])
     expect((await f.change('POST', PARALLEL)).status).toBe(204)
     await f.queue.advanceStartAlarm()
-    expect(
-      (await f.messages(PARALLEL, second)).map(({ text }) => text),
-    ).toEqual([
+    expect((await f.messages(PARALLEL)).map(({ text }) => text)).toEqual([
       expect.stringContaining(`git rebase --onto ${HEAD_SHA} ${TRUNK_HEAD}`),
     ])
-    await pushedFix(4, joinedParallel, PARALLEL, second)
+    await pushedFix(4, joinedParallel, PARALLEL)
     expect((await f.change('POST', OTHER_WORKSPACE)).status).toBe(204)
     await f.queue.advanceStartAlarm()
     expect(await order()).toEqual([2, 4, 3])
@@ -118,26 +115,26 @@ it('joins three workspaces, re-orders their GitHub stack, and merges the ready l
     expect(new URL(f.steps()[beforeReorder].url).pathname).toBe(
       '/repos/Codertocat/Hello-World/stacks/1/unstack',
     )
-    expect(await f.messages(OUTER_WORKSPACE, first)).toEqual([])
-    expect(await f.messages(OTHER_WORKSPACE, third)).toEqual([])
-    await pushedFix(4, reorderedParallel, PARALLEL, second)
-    expect(
-      (await f.messages(OUTER_WORKSPACE, first)).map(({ text }) => text),
-    ).toEqual([
-      expect.stringContaining(
-        `git rebase --onto ${reorderedParallel} ${TRUNK_HEAD}`,
-      ),
-    ])
-    expect(await f.messages(OTHER_WORKSPACE, third)).toEqual([])
-    await pushedFix(2, reorderedChanges, OUTER_WORKSPACE, first)
-    expect(
-      (await f.messages(OTHER_WORKSPACE, third)).map(({ text }) => text),
-    ).toEqual([
-      expect.stringContaining(
-        `git rebase --onto ${reorderedChanges} ${joinedParallel}`,
-      ),
-    ])
-    await pushedFix(3, reorderedTop, OTHER_WORKSPACE, third)
+    expect(await f.messages(OUTER_WORKSPACE)).toEqual([])
+    expect(await f.messages(OTHER_WORKSPACE)).toEqual([])
+    await pushedFix(4, reorderedParallel, PARALLEL)
+    expect((await f.messages(OUTER_WORKSPACE)).map(({ text }) => text)).toEqual(
+      [
+        expect.stringContaining(
+          `git rebase --onto ${reorderedParallel} ${TRUNK_HEAD}`,
+        ),
+      ],
+    )
+    expect(await f.messages(OTHER_WORKSPACE)).toEqual([])
+    await pushedFix(2, reorderedChanges, OUTER_WORKSPACE)
+    expect((await f.messages(OTHER_WORKSPACE)).map(({ text }) => text)).toEqual(
+      [
+        expect.stringContaining(
+          `git rebase --onto ${reorderedChanges} ${joinedParallel}`,
+        ),
+      ],
+    )
+    await pushedFix(3, reorderedTop, OTHER_WORKSPACE)
     expect(await readQueue(f.db, f.scope)).toMatchObject({
       githubStackNumber: 2,
       reordering: 0,
@@ -156,7 +153,7 @@ it('joins three workspaces, re-orders their GitHub stack, and merges the ready l
       banner: { state: 'checks-failed' },
       queue: { place: 3, count: 3, wait: 'checks' },
     })
-    expect((await f.messages(OTHER_WORKSPACE, third)).length).toBe(1)
+    expect((await f.messages(OTHER_WORKSPACE)).length).toBe(1)
     expect(f.writes()).toEqual([])
 
     f.api.checks.set(reorderedParallel, [passedRun])

@@ -149,9 +149,9 @@ If you leave or change the branch before the failure arrives, your chosen page s
 The cause waits in that session's message box, also if you return before the failure arrives.
 
 If the merge queue needs an agent to rebase a branch, it waits for all running turns in the workspace to end.
-When no turn runs, it sends one message to the newest open session.
-The member who added the pull request is the sender.
-The session's login rules apply.
+When no turn runs, it starts a new session and sends one message there.
+The member who added the pull request starts the session and is the sender.
+The session uses that member's default model and agent login, with **Fast** off.
 
 - [Choose a pull request action](/docs/pull-requests#read-the-pull-request-state)
 - [Use the merge queue](/docs/pull-requests#merge-queue)

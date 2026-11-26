@@ -1,7 +1,6 @@
 import { afterEach, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import { readSessions } from '../../src/chat/api/read-responses'
-import { sessionPaths, sessionsPath } from '../../src/shared/sessions'
+import { sessionPaths } from '../../src/shared/sessions'
 import { closeSockets } from '../chat/adapter-sockets.test-support'
 import { CLAUDE } from '../chat/harness.test-support'
 import { record, string } from '../chat/inputs'
@@ -19,7 +18,7 @@ import { orgEnvironmentContext } from '../lifecycle/settings-data'
 import { recordRunningEnvironment } from '../lifecycle/start-environment'
 import { encrypt } from '../security/crypto'
 import { fixFixture } from './fix.test-support'
-import { queueBundle } from './queue.test-support'
+import { hideAgentLogin, queueBundle } from './queue.test-support'
 
 let bundle: string
 let f: Awaited<ReturnType<typeof fixFixture>>
@@ -44,10 +43,9 @@ it('stores the masked restack label and uses a numbered pull request ref', async
       f.env.BOAT_KEY_ENCRYPTION_KEY,
     ),
   )
-  const session = await f.session()
   await f.start({ base: `release-${secret}`, basePullNumber: 4 })
   await f.queue.advanceStartAlarm()
-  const [message] = await f.messages(session.id)
+  const [message] = await f.messages((await f.restackSession()).id)
   expect(message?.text).not.toContain(secret)
   expect(message?.text).toContain('release-[redacted]')
   expect(message?.text).toContain('git fetch origin refs/pull/4/head')
@@ -64,7 +62,7 @@ async function confirm(runner: OuterFakeRunner, eventNumber: number) {
   }
 }
 
-it('waits for an older running session and sends one ordinary queuer turn to the newest open session', async () => {
+it('waits for a running turn, then sends one ordinary queuer turn in a new session', async () => {
   const old = await f.session()
   const actor = f.actor()
   const choice = {
@@ -72,7 +70,15 @@ it('waits for an older running session and sends one ordinary queuer turn to the
     model: 'test-claude-new',
     effort: 'medium' as const,
   }
-  const newest = { ...old, id: 'newest', choice, createdAt: old.createdAt + 1 }
+  await f.db
+    .prepare(
+      `INSERT INTO user_preferences
+       (user_id, default_agent, default_model, default_effort, default_fast, updated_at)
+       VALUES ('member', 'claude', ?, ?, 1, 1)`,
+    )
+    .bind(choice.model, choice.effort)
+    .run()
+  const newest = { ...old, id: 'newest', createdAt: old.createdAt + 1 }
   const closed = {
     ...old,
     id: 'closed',
@@ -138,18 +144,21 @@ it('waits for an older running session and sends one ordinary queuer turn to the
     const sent = await f.start()
     expect(sent.state).toBe('sent')
     if (sent.state !== 'sent') throw new Error('The fix was not sent.')
+    const created = await f.restackSession()
+    expect([old.id, newest.id, closed.id]).not.toContain(created.id)
     expect(await runner.waitForTurn(sent.turnId)).toMatchObject({
-      sessionId: newest.id,
+      sessionId: created.id,
       message: { id: pending.messageId, choice, sender: { id: 'member' } },
     })
     expect(await actor.writeMergeQueueFix(pending)).toMatchObject({
       ok: true,
       value: { kind: 'accepted', turnId: sent.turnId },
     })
-    expect(await f.messages(newest.id)).toMatchObject([
+    expect(await f.messages(newest.id)).toEqual([])
+    expect(await f.messages(created.id)).toMatchObject([
       {
         id: pending.messageId,
-        sessionId: newest.id,
+        sessionId: created.id,
         sender: { id: 'member' },
         choice,
         text: [
@@ -161,26 +170,24 @@ it('waits for an older running session and sends one ordinary queuer turn to the
         ].join(' '),
       },
     ])
-    const current = readSessions(
-      await (await f.request(sessionsPath(OUTER_ORG, OUTER_WORKSPACE))).json(),
-    )
-    expect(current.sessions.find(({ id }) => id === newest.id)).toMatchObject({
+    expect(created).toMatchObject({
       choice,
-      login: { type: 'personal', userId: 'owner' },
+      closedAt: null,
+      login: { type: 'personal', userId: 'member' },
     })
     const fixStarted = runner.emit({
       type: 'turn.started',
-      sessionId: newest.id,
+      sessionId: created.id,
       turnId: sent.turnId,
       senderId: 'member',
       choice,
-      startedAt: newest.createdAt,
+      startedAt: created.createdAt,
       messageIds: [pending.messageId],
     })
     await confirm(runner, fixStarted.eventNumber)
     const fixFinished = runner.emit({
       type: 'turn.completed',
-      sessionId: newest.id,
+      sessionId: created.id,
       turnId: sent.turnId,
       state: 'finished',
       durationMs: 1,
@@ -200,44 +207,38 @@ it('waits for an older running session and sends one ordinary queuer turn to the
   }
 })
 
-it('waits for an open session and a usable login without opening a linked session', async () => {
+it('sends with no open session and waits for a usable queuer login without opening a session', async () => {
   const pending = await f.start()
-  await f.queue.advanceStartAlarm()
-  expect(await f.bar()).toMatchObject({
-    state: 'waiting',
-    wait: 'open-session',
-  })
-  await f.db
-    .prepare("UPDATE agent_logins SET no_reuse = 1 WHERE user_id = 'owner'")
-    .run()
-  const target = await f.session()
-  await f.queue.advanceStartAlarm()
-  expect(await f.bar()).toMatchObject({ state: 'waiting', wait: 'agent-login' })
-  expect(await f.messages(target.id)).toEqual([])
-  const body = readSessions(
-    await (await f.request(sessionsPath(OUTER_ORG, OUTER_WORKSPACE))).json(),
-  )
-  expect(body.sessions.map(({ id }) => id)).toEqual([target.id])
-  await f.db
-    .prepare("UPDATE agent_logins SET no_reuse = 0 WHERE user_id = 'owner'")
-    .run()
+  const showLogin = await hideAgentLogin(f.db, 'member')
+  try {
+    await f.queue.advanceStartAlarm()
+    expect(await f.bar()).toMatchObject({
+      state: 'waiting',
+      wait: 'agent-login',
+    })
+    expect(await f.sessions()).toEqual([])
+  } finally {
+    await showLogin()
+  }
   await f.queue.advanceStartAlarm()
   expect(await f.start()).toMatchObject({
     state: 'sent',
     messageId: pending.messageId,
   })
+  const target = await f.restackSession()
+  expect(target.login).toEqual({ type: 'personal', userId: 'member' })
   expect(await f.messages(target.id)).toMatchObject([
     { id: pending.messageId, sender: { id: 'member' } },
   ])
 })
 
 it('keeps the report after a failure and delivers it after workspace eviction', async () => {
-  const target = await f.session()
   await f.start()
   await f.queue.advanceStartAlarm()
   const sent = await f.start()
   expect(sent.state).toBe('sent')
   if (sent.state !== 'sent') throw new Error('The fix was not sent.')
+  const target = await f.restackSession()
   expect((await f.stop(target.id, sent.turnId)).status).toBe(200)
   await f.db.exec(
     'ALTER TABLE merge_queue_entries RENAME TO hidden_merge_queue_entries',
