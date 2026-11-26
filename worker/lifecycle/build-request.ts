@@ -60,6 +60,26 @@ export async function takeBuildRequest(
   return cleared.meta.changes === 1 ? row.userId : null
 }
 
+/**
+ * A new build that is no switch build takes in each saved request of the
+ * org, so a refresh that ends after it starts no second build. It runs in
+ * the batch that inserts the build, and only when that insert did.
+ */
+export function clearBuildRequestsStatement(
+  db: D1Database,
+  orgId: string,
+  buildId: string,
+): D1PreparedStatement {
+  return db
+    .prepare(
+      `UPDATE image_build_jobs SET requested_build_user_id = NULL
+       WHERE requested_build_user_id IS NOT NULL
+         AND build_id IN (SELECT id FROM image_builds WHERE org_id = ?)
+         AND EXISTS (SELECT 1 FROM image_builds WHERE id = ?)`,
+    )
+    .bind(orgId, buildId)
+}
+
 /** The SQL value of a build row: 1 when a running refresh has a request. */
 export function buildRequestedColumn(build: string): string {
   return `(SELECT 1 FROM image_build_jobs j WHERE j.build_id = ${build}.id

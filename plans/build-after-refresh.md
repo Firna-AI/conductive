@@ -66,6 +66,13 @@ Its report is in `.context/build-after-refresh/options-check.md`.
   click too. A push refresh becomes such a build when the image holds old
   values. Recommended: apply decision 1 to every running job that is not a
   switch build and holds older settings.
+- **Decision 7:** from review round 1. Done of the Repositories tab calls
+  the same builds route as Build computer, so Done after an add during a
+  refresh now saves a request too. The design call below and the rule of
+  [Org image repositories](../docs/protocol/org-image-repositories.md)
+  that such an add after a failed build waits for Try again disagree with
+  the code. Recommended: keep the request for Done and update the protocol
+  doc, the guide, and the design call.
 - **Decision 5:** The added build follows only a successful job.
   Recommended: show "A build starts if this refresh succeeds." for that
   case, and keep "A build starts when this refresh ends." for a request.
@@ -99,6 +106,11 @@ Design calls of the agent, 26 November 2026:
   `cleanupBuild`, and the failure path without a provider in
   `worker/lifecycle/image-build-failure.ts`, which skips `cleanupBuild`.
   The options check found the second place.
+- **A new build clears each request of the org.** A build that is not a
+  switch build clears each saved request in the batch that inserts it. My
+  call, 26 November 2026, from finding 6 of review round 1. Reason: a
+  click after a refresh ends and before its cleanup ends starts a build at
+  once, and the request must not start a second one.
 - **A job admitted in between gets the mark.** A push or daily refresh can
   start after the end and before the cleanup. The requested start then goes
   through the same marking path, so it marks that new refresh and is not
@@ -215,6 +227,13 @@ Depends on: 1, 3
 Depends on: every other milestone
 
 - [ ] Run the targeted tests and `npm run check`.
+- [x] Review round 1 found findings 6 to 13. Their checks confirmed all
+      eight. Fixed: 6 (a new build clears the requests), 9 (five
+      regression tests), 10, 11, 12, and 13. Deferred: 6 C into
+      `plans/follow-ups/added-build-can-be-lost.md`, 8 into
+      `plans/follow-ups/requested-build-start-race.md`, and 12 B into
+      `plans/follow-ups/build-card-shared-part.md`. Open: 7. This change
+      closes `plans/follow-ups/build-during-refresh-starts-nothing.md`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,

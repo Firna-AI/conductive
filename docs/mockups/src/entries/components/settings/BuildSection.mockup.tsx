@@ -25,7 +25,7 @@ export const buildSection = defineComponent({
       readOnly: { type: 'boolean' },
       /** A saved change waits for a build, so the history stays closed. */
       changeWaits: { type: 'boolean' },
-      /** A refresh that runs after a good build. */
+      /** A refresh that runs, after a good build or a failed build. */
       refresh: { enum: ['running', 'requested'] },
     },
   } as const,
@@ -67,6 +67,13 @@ export const buildSection = defineComponent({
       description:
         'A failed build: its saved message above the end of its log, Try again, and the good build that workspaces still start from.',
       props: { state: 'failed' },
+    },
+    {
+      slug: 'failed-requested',
+      title: 'Failed, build requested',
+      description:
+        'A failed build while a refresh runs, after an admin selected Try again. The card keeps the failed build, and a build starts when the refresh ends.',
+      props: { state: 'failed', refresh: 'requested' },
     },
     {
       slug: 'none',

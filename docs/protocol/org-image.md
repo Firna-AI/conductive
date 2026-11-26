@@ -16,7 +16,9 @@ decision number names a decision of the change that adds E2B as the second
 says. A switch decision number names a decision of the change that adds
 [Switch account](switch-account.md), as that doc says. A storage decision
 number names a decision of the change that shows the free storage of a
-build.
+build. A refresh-build decision number names a decision of the change that
+saves Build computer during a refresh, from 26 November 2026. Its pull
+request keeps the record.
 
 ## The org image
 

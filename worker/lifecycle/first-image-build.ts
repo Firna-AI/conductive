@@ -40,7 +40,7 @@ async function startRequestedBuild(
   }
 }
 
-export async function startAddedImageBuild(
+async function startAddedImageBuild(
   runtime: ImageRuntime,
   job: BuildJob,
 ): Promise<void> {

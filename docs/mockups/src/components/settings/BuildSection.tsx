@@ -9,7 +9,7 @@ import {
   type FailedBuild,
 } from '../../fixtures/computer'
 import type { TerminalLine } from '../../fixtures/terminal'
-import { actionButton } from '../../entries/components/common/actions.mockup'
+import { HeadAction } from './BuildHeadAction'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
 import { terminalView } from '../../entries/components/tools/TerminalView.mockup'
 import {
@@ -93,52 +93,6 @@ function Log(props: { lines: readonly TerminalLine[]; live: boolean }) {
   )
 }
 
-/** The action of the build head. A member who is not an admin gets none. */
-function HeadAction(props: { state: BuildState; readOnly: boolean }) {
-  if (props.readOnly) return null
-  switch (props.state) {
-    case 'building':
-    case 'waiting':
-      return (
-        <actionButton.Component
-          disabled
-          icon="hammer"
-          moklyInstance="build-action"
-        >
-          Build computer
-        </actionButton.Component>
-      )
-    case 'failed':
-    case 'time-limit':
-    case 'ended':
-      return (
-        <actionButton.Component
-          icon="rotate-cw"
-          moklyInstance="build-action"
-          tone="primary"
-        >
-          Try again
-        </actionButton.Component>
-      )
-    case 'none':
-      return (
-        <actionButton.Component
-          icon="hammer"
-          moklyInstance="build-action"
-          tone="primary"
-        >
-          Build computer
-        </actionButton.Component>
-      )
-    case 'ready':
-      return (
-        <actionButton.Component icon="hammer" moklyInstance="build-action">
-          Build computer
-        </actionButton.Component>
-      )
-  }
-}
-
 function Head(props: {
   state: BuildState
   builds: OrgBuilds
@@ -193,6 +147,15 @@ function buildingNote(lastGood: Build | undefined): string {
   return `${from} ${buildLimit}`
 }
 
+/** The note of a refresh during which an admin selected Build computer. */
+function RequestedNote() {
+  return (
+    <sectionText.Component moklyInstance="requested-build-note">
+      A build starts when this refresh ends.
+    </sectionText.Component>
+  )
+}
+
 /**
  * The log and the notes of a build that runs or failed. A build that runs
  * names its time limit. A failed build shows the message that the app
@@ -205,14 +168,9 @@ function Body(props: {
   refresh?: RunningRefresh
 }) {
   const { state, builds } = props
-  if (state === 'ready' && props.refresh === 'requested') {
-    return (
-      <div className={styles.body}>
-        <sectionText.Component moklyInstance="requested-build-note">
-          A build starts when this refresh ends.
-        </sectionText.Component>
-      </div>
-    )
+  const requested = props.refresh === 'requested' ? <RequestedNote /> : null
+  if (state === 'ready') {
+    return requested ? <div className={styles.body}>{requested}</div> : null
   }
   if (state === 'none') {
     return (
@@ -243,6 +201,7 @@ function Body(props: {
         {failed.error}
       </sectionText.Component>
       <Log lines={builds.logs[log]} live={false} />
+      {requested}
       {builds.lastGood ? (
         <sectionText.Component moklyInstance="last-good-note" muted>
           {`Workspaces still start from the build of ${builds.lastGood.when}.`}
@@ -268,7 +227,10 @@ export function BuildSection(props: {
    * a build, so the history stays closed.
    */
   changeWaits?: boolean
-  /** A refresh that runs after a good build, in the state `ready`. */
+  /**
+   * A refresh that runs. After a good build, in the state `ready`, the head
+   * shows it. After a failed build, only the note of a request shows.
+   */
   refresh?: RunningRefresh
 }) {
   const { state, builds } = props
