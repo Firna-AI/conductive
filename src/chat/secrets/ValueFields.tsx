@@ -22,6 +22,23 @@ export interface ValueDraft {
 /** A new draft: no value, for 15 minutes, as the mockups start it. */
 export const emptyDraft: ValueDraft = { values: {}, lifetime: '15-minutes' }
 
+/**
+ * The draft with the values of `names` only, the names that still ask for a
+ * value. A newer request for the same secrets keeps the draft of its card,
+ * but the org can have a secret for one of its names by then.
+ */
+export function draftFor(
+  draft: ValueDraft,
+  names: readonly string[],
+): ValueDraft {
+  const kept = Object.entries(draft.values).filter(([name]) =>
+    names.includes(name),
+  )
+  return kept.length === Object.keys(draft.values).length
+    ? draft
+    : { ...draft, values: Object.fromEntries(kept) }
+}
+
 /** Allow waits until each name that the org does not have has a value. */
 export function draftReady(request: SecretRequest, draft: ValueDraft): boolean {
   return missingNames(request).every(

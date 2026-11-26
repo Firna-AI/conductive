@@ -1,0 +1,35 @@
+# Focus drops to the page after Resume
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-26, from branch `calummoore/needs-input-at-the-composer-milestones-3-j8a8`, outside the scope of review finding 88 of round 2, from its finding check.
+- **Location:** `src/shell/workspace/ChatArea.tsx:159` (`sandboxBar`), `src/shell/workspace/sandbox-view.ts:159` (the bar of `sandboxView`), and `src/shell/workspace/SandboxNotice.tsx:111` (`SandboxBar` and its action button).
+- **Reason:** The bar and Resume are on `main`, and the needs-input change does not touch them.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Stopped bar:** the bar that takes the place of the composer while the cloud computer of the open workspace is stopped. It offers Resume. After a failed start, the same place shows a bar with Try again.
+  - **Lost focus:** the browser moves the keyboard focus to the page body when a render removes the focused control.
+- **Background:**
+  - `docs/protocol/stop-and-resume.md` says: "When a sandbox stops while its workspace is open, the tab shows the stopped state with Resume (decision 11)." It also says: "While the sandbox is stopped, the chat history shows, and the stopped state takes the place of the composer."
+  - Resume and Try again run the resume of the workspace, from `useAction(() => model.resume(), ...)` at `src/shell/workspace/WorkspaceScreen.tsx:89`.
+  - When the start begins, `sandboxView` gives no bar while the sandbox starts, so `ChatArea` draws the composer in its place. After a failed first start, the composer stays under the bar, and only the bar leaves.
+  - So the button of the bar leaves the page while it has the focus, and the focus goes to the page body. No code gives the focus back. No test checks the focus after Resume.
+  - On a phone, the app opens no keyboard on its own, as `useComposerFocus` in `ChatArea.tsx` says.
+  - No protocol doc says where the focus goes after Resume. `docs/protocol/request-stack.md` says where the focus goes when the last card of the request stack leaves, in the same footer.
+  - `src/shell/ui/lost-focus.ts` has `useLostFocus` for open layers, such as a menu. `plans/follow-ups/list-rows-lose-focus-on-removal.md` proposes a region form of it for lists on a page.
+- **Problem:** After a press of Resume or Try again with the keyboard, the focus lands on the page body. A keyboard user must tab from the top of the page to reach the composer, and a screen reader announces no new place.
+- **Impact if no action:** Keyboard and screen reader users lose their place each time that they resume a stopped cloud computer.
+- **Root question:** Where does the keyboard focus go when the bar that holds it leaves the place of the composer?
+- **Options:**
+  - **A.** In the chat footer, when the bar leaves while it holds the focus, give the focus to the message field on a computer. On a phone, give it to the footer, so that no keyboard opens. Add a test of a keyboard Resume. Effort: Small.
+  - **B.** Build the region form of lost focus that `plans/follow-ups/list-rows-lose-focus-on-removal.md` proposes as its option B. Make the chat footer such a region, with the message field as its target, or the footer on a phone. Add the same test. Effort: Medium.
+- **Left out:** A bar that stays until the start ends, because it changes what the chat shows during a start. The main area of the screen as the target, as `plans/follow-ups/focus-after-navigation.md` proposes for a move of the app, because no move happens here, and the member returns to the composer. Changing nothing, because the focus then stays lost.
+- **Wider fix:** B. One rule then gives the focus back in each region whose control leaves, with a target that its owner names.
+- **Previous examples:** Commit `1be509bef` (#631) added `useLostFocus` for menu actions that leave. `plans/follow-ups/list-rows-lose-focus-on-removal.md` records the same failure for two lists on a page.
+- **Related:**
+  - `plans/follow-ups/list-rows-lose-focus-on-removal.md` shares the wider fix, the region form of lost focus. One branch can build it for both items.
+  - `plans/follow-ups/focus-after-navigation.md` holds the focus after a move of the app. Its answer does not settle this item.
+- **Recommendation:** B. It fixes the footer with the rule that the lists need too. A is the smaller fix while the region rule does not exist.
+- **Action:** fix after merge, apply B, because the bar and Resume are on `main`, and the needs-input change does not touch them.

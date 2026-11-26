@@ -67,7 +67,7 @@ export interface ChatContext {
   readonly owned: boolean
   /** The routes of Mac commands, and the number of their latest read. */
   readonly devices: DeviceChannel
-  /** The route of the answers to secret requests. */
+  /** The routes of secret requests: their list, and the answers. */
   readonly secrets: SecretApi
   /**
    * The one read of the sessions of each other workspace that a session

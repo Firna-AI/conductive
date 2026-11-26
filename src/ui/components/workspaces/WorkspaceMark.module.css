@@ -129,3 +129,17 @@
     opacity: 1;
   }
 }
+
+/*
+ * The same still marks in a mockup of reduced motion, which `ReducedMotion`
+ * in `components/common/` draws, because a view cannot set the setting of
+ * the browser. The app never sets the attribute.
+ */
+[data-motion='reduced'] .chase,
+[data-motion='reduced'] .pulse {
+  animation: none;
+}
+
+[data-motion='reduced'] .litWhenStill {
+  opacity: 1;
+}

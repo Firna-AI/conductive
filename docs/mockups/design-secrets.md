@@ -3,11 +3,12 @@
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
 Secrets tab of the org settings, the Capabilities control of New workspace,
-of a workspace, and of an automation, the requests and results of the
-secrets in the chat, and the note of a change of the capabilities. They
-come from the secrets decisions of 13 November 2026, the automation
-capabilities decisions of 18 November 2026, and the capability prompts
-decisions of 20 November 2026.
+of a workspace, and of an automation, and the note of a change of the
+capabilities. They come from the secrets decisions of 13 November 2026,
+the automation capabilities decisions of 18 November 2026, and the
+capability prompts decisions of 20 November 2026. Its linked page
+[Secret requests and results](design-secret-requests.md) gives the
+requests and results of the secrets in the chat.
 [Secrets and Capabilities](catalogue-secrets.md) lists their pages.
 
 A secret is a named value of an org: its name, its description, its
@@ -143,76 +144,11 @@ one.
 
 ## Requests and results in the chat
 
-- `SecretRequest` in `src/components/chat/` draws a request: the key icon,
-  the names of the secrets, each description, the reason of the agent, and
-  the command that the agent says it will run, never a value. The run call
-  sends the command, and nothing checks that the agent runs it, so
-  `ClaimedCommand` shows it under that label. A request for one secret
-  shows its description under the name. A request for several shows each
-  name with its description.
-- The tool call line of the agent stands beside each request and each run,
-  as the runner sends it: one line with its target, the call of
-  `conductive secrets run`, and its state.
-- While the tool call waits, the request waits just above the composer, in
-  the region of the requests of Mac commands, from
-  `components/chat/requests.ts`. A secret of the org offers Deny and Allow
-  for this session at the end of the names. A name that the org does not
-  have says so, and `ValueAnswer` asks for the value and how long it
-  lasts: 15 minutes, This workspace, or Save as secret, with a line that
-  says what the chosen one does. Save gives the new secret the reason of
-  the agent as its description. Deny and Allow follow the choices, and
-  Allow stays off until each value is typed. `RequestActions` holds the
-  actions.
-- Save as secret is off when a name that the org does not have holds
-  characters other than letters, digits, and underscores. A line under the
-  choices says what Save as secret needs. One choice covers every value,
-  so one such name turns it off for the whole answer. 15 minutes and This
-  workspace stay.
-- A phone keeps a request for a value short: the card shows Deny and Give
-  a value, which opens a sheet with each value field, the choice of how
-  long the values last, and Allow. The `value-sheet` overlay of the
-  workspace draws the sheet, from `screens/requestSheets.tsx`.
-- A request can name secrets of the org and names that the org does not
-  have. Each secret of the org then gets the approval of the session, each
-  missing name gets its own field, named after it, and one choice of how
-  long covers every value. A line says that Allow also allows the secrets
-  of the org for this session.
-- After the time limit, or when the turn ends, the request stays at its
-  place in the chat with the same choices, and a line says that the agent
-  stopped waiting and that Allow tells it in a new turn. It never folds
-  with the work of its turn. After an answer, it shows the answer at the
-  end of its names, and its line says who answered and what followed.
-- A late Allow starts a turn that acts for the sender of the turn that
-  asked, under the login rules of that sender. `LateAnswerLine` draws the
-  line of the app that starts it, such as "Priya Raman allowed
-  PROD_DATABASE_URL for this session". It is not a message of the member
-  who answered. The agent gets the same sentence with the name of that
-  member, from `lateAnswerWords`, and never a value. When that turn cannot
-  run, the app sends nothing. When the starter does not share the login
-  with that sender, the line of the request says that the agent learns of
-  the answer at the next message. When the login of the session is gone,
-  the line names the action that gets the agent going again: a connect of
-  that login. For a personal login, and for an older session whose record
-  names no login, the starter connects it, such as "The agent learns of it
-  when Cal connects Claude again". For the org login, an admin connects
-  it, such as "The agent learns of it when an admin connects Acme's Claude
-  login again".
-- An Archive of the workspace, or a suspension of its org, ends each open
-  request as Not answered, with no choices, and Needs input ends. Its line
-  says what ended it.
-- The header and the workspace list show Needs input while a request waits
-  above the composer or in the chat.
-- `SecretRun` draws a run with secrets at its place in the chat, with the
-  card of a Mac command: the names, Allowed or Denied, the command that the
-  agent says it will run, and what let it run. The Worker gets no output
-  and no time of the command, so the card shows neither. The tool call line
-  beside it says whether the command runs or ran. A denied run says who
-  denied it and that the command did not run. When its turn ends, the card
-  folds with the work of the turn.
-- A Mac command that a workspace refused while its Mac access was off,
-  before agents could always ask (Mac access decision 7), keeps its card
-  with "Mac access off" and the reason.
-- `secretRunCopy.ts` holds the words of the requests and the results.
+[Secret requests and results](design-secret-requests.md) gives the
+requests and the results of the secrets in the chat: the card of a
+request, the late request, the stack of the open requests above the
+composer, the line of a late Allow, and the run with secrets at its
+place.
 
 ## A change of the capabilities in the chat
 

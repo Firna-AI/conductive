@@ -1,0 +1,36 @@
+# The late answer line claims a new turn
+
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-26, from branch `calummoore/needs-input-at-the-composer-milestones-3-j8a8`, outside the scope of review finding 90 of round 2, from its finding check.
+- **Location:** `src/ui/components/chat/secretRunCopy.ts:144` (the `'turn'` case of `lateAnswerNote`), `src/chat/secrets/secret-words.ts:168` (`endLine`), `worker/chat/secret-notice.ts:121`, and `worker/chat/turn-lifecycle.ts:28`.
+- **Reason:** The line is on `main` since 17 November 2026, and the needs-input change does not change what a late answer does.
+
+- **Source:** Review.
+- **Category:** UX wording.
+- **Terms:**
+  - **Late request:** a secret request whose tool call stopped waiting, after 90 seconds or at the end of its turn. It stays open until a member answers it or it ends.
+  - **Notice:** the line of the app that tells the asking agent of a late Allow. The Worker adds it to the session as a message.
+  - **End line:** the line under a late request after its answer. It says who answered and what followed.
+- **Background:**
+  - `docs/protocol/secret-late-answers.md`, "Late answers", says that the line of the app starts a turn in the session that asked. When a turn of that session runs at the time of the answer, the line joins that turn, as a message does, and that turn keeps its sender.
+  - The Worker does this in `acceptSecretNotice` of `worker/chat/secret-notice.ts`. It picks the turn with `TurnLifecycle.select`, which returns the running turn when that turn is not stopping and has no next turn (`worker/chat/turn-lifecycle.ts:28`). Otherwise it makes a new turn. It returns `{ state: 'sent', turnId }` in both cases (`worker/chat/secret-notice.ts:121`).
+  - `endLine` in `src/chat/secrets/secret-words.ts` gives the end line. For a notice in the state `sent`, it gives `lateAnswerNote(who, 'turn')`, which says "You answered, and a new turn told the agent." The mockups take the same words from `src/ui/components/chat/secretRunCopy.ts`.
+  - The notice of a request holds only its state and the ID of its turn, as `SecretRequest` in `src/shared/secret-requests.ts` says. It does not say whether that turn started with the notice.
+  - No protocol doc gives the words of the end line. `docs/protocol/secret-late-answers.md:33` gives the words of the late line before the answer: "A line on it says that the agent stopped waiting, and that Allow tells the agent in a new turn." This item does not change those words.
+  - A test in `src/chat/secrets/secret-requests.test.tsx` and one in `src/chat/secrets/answer-request.test.tsx` check the words of the end line. `docs/mockups/design-secret-requests.md` and the descriptions of four pages under `app/secret-requests` quote them. The mockups draw no late Allow while a turn runs.
+- **Problem:** When the notice joins a running turn, the end line still says that a new turn told the agent.
+- **Impact if no action:** Each member who reads the line learns that a new turn started, while the agent got the notice in the turn that was already running.
+- **Root question:** How should the end line of a late Allow say what the notice did, when the notice can start a turn or join one?
+- **Options:**
+  - **A.** Use words that hold in both cases for a notice in the state `sent`, such as "You answered, and the app told the agent." Change only those words in `lateAnswerNote`, then the two tests and the quotes of the mockups. Effort: Small.
+  - **B.** Tell the two cases apart in the app. When the turn of the notice starts with the notice message, keep "a new turn told the agent". Otherwise say that the app told the agent in its running turn. Until that turn loads, use the words of A. It adds a fact to the line. Effort: Medium.
+  - **C.** The Worker records whether the notice started or joined its turn, in the notice of the request, and the app picks the words from it. It changes a shared type and the stored requests, with a compatible path for older records and older apps. Effort: Medium.
+- **Left out:** A rule that each late Allow starts a new turn, because it breaks the requirement that the line joins a running turn. `plans/follow-ups/late-secret-public-turn-claim.md` weighs that rule for the Terms as its option B.
+- **Wider fix:** None. The app and the mockups already take these words from one function, so one change fixes both.
+- **Previous examples:** `plans/follow-ups/late-secret-public-turn-claim.md` records the same claim of a new turn in the Terms.
+- **Related:**
+  - `plans/follow-ups/late-secret-public-turn-claim.md` holds the same claim in the Terms. One branch can fix both texts, but a change of the Terms also needs a new Terms revision and its effective date.
+  - `plans/follow-ups/late-answer-copy-has-two-sources.md` holds a cleanup of the same late-answer words.
+- **Recommendation:** A. Its words are right in each case, it needs no new data, and the chat already shows where the agent got the notice.
+- **Action:** fix after merge, apply A, because the line is on `main` since 17 November 2026, and the needs-input change does not change what a late answer does.

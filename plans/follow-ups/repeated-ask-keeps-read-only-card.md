@@ -1,0 +1,35 @@
+# A repeated ask leaves a read-only card on top
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-26, from branch `calummoore/needs-input-at-the-composer-milestones-3-j8a8`, review round 1, finding 82, with the wider fix and the new problem that its check found.
+- **Location:** `src/chat/components/request-stack.ts:105`, `placeAfter`, and line 89, `nextCard`. `src/chat/components/request-stack.test.ts:149`, the test of a new card on top of a read-only card. `src/chat/README.md:181`. `docs/protocol/request-stack.md:69` and `:75`.
+- **Reason:** The case needs an agent that asks again for the same secrets while its own Mac command call blocks it, so its likelihood is Rare, and its severity is Low.
+
+- **Terms:**
+  - **Request stack:** the cards above the composer of a session that show its open requests. Only the card on top shows, and Previous and Next move to the other cards.
+  - **Read-only card:** a card whose request this view cannot answer, so it shows no choices. In a browser, and in the Mac app on another Mac, each Mac command request is read-only.
+  - **Grouped card:** one card for the open secret requests of a session for the same set of secrets. It shows the newest of them, and it keeps one key while requests join it.
+- **Background:**
+  - The stack puts the cards that this view can answer before the read-only cards. The user chose this on 22 November 2026. Reason: the card on top is then one that the member can answer, whenever such a card exists.
+  - A member can still press Next to read a read-only card.
+  - `docs/protocol/request-stack.md:75` says: "When this view cannot answer the card on top, a new request that it can answer becomes the card on top."
+  - `docs/protocol/request-stack.md:69` says: "The stack starts with the first card of the order on top. An answer shows the next card."
+  - `placeAfter` keeps the card on top by its key. It treats a card as new when its key was not in the last order of the stack. A grouped card keeps its key `secrets:<set>` while a newer request for the same set joins it.
+  - When the card on top leaves, `nextCard` shows the card after it in the last order, else the card before it. It does not check whether this view can answer that card.
+  - A Mac command call blocks its agent while its request waits (`crates/cnd-tools/src/client.rs:129`). So only parallel work of the same turn can ask again for secrets while a Mac command waits.
+  - A second case has the same result. In a browser, the stack holds secret card S1, secret card S2, and Mac command card M. The member presses Next to S2 and answers it. `nextCard` then shows M, a read-only card, while S1 still waits. This meets the letter of "An answer shows the next card", so only a change of that rule fixes it.
+- **Problem:** In a browser, a member moves to a read-only Mac command card. The agent then asks again for the same secrets as an open secret card, so the new request joins that card under the same key. `placeAfter` sees no new card, and the read-only card stays on top.
+- **Impact if no action:** The member must move back through the stack to find the new request.
+- **Root question:** How does a new request reach a member who reads a card that this view cannot answer?
+- **Options:**
+  - **A.** Track the IDs of the open requests apart from the keys of the cards. When this view cannot answer the card on top, show the card that holds a newly arrived request that this view can answer. Add the repeated ask to the test at `src/chat/components/request-stack.test.ts:149`, which today sends a request for another set of secrets. Change "a new card" to "a new request" in `src/chat/README.md:181`. Effort: Small.
+  - **B.** Narrow the rule to cards that are new. A repeated ask then keeps the read-only card that the member chose to read. This changes the protocol rule, so the user decides. Effort: Small.
+  - **C.** A, and also: when the card on top leaves, show the next card that this view can answer, first after it, then before it. This also fixes the second case. It changes "An answer shows the next card" in `docs/protocol/request-stack.md:69`, so the user decides. Effort: Medium.
+  - **D.** Keep the read-only card on top. Mark the step button and announce the new ask. This needs new words, a mockup, and a protocol rule. Effort: Medium.
+- **Left out:** A move to the first card that this view can answer at each change of the stack, because it takes the member away from a card that they chose to read. Only the arrival of a request or of a card fits the goal.
+- **Wider fix:** C. It keeps a card with choices on top whenever one exists, also after an answer. It changes a protocol rule, so it waits for the user. A branch that applies A asks the user about C before it deletes this item.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/grouped-card-order-rule.md` asks where a grouped card goes in the order of the stack. The two fixes touch the same code and do not conflict.
+- **Recommendation:** A. It keeps the moves of the member, and it shows each new request when the card on top has no choices.
+- **Action:** fix after merge, apply A, because the likelihood is Rare and the severity is Low.

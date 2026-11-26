@@ -8,16 +8,15 @@ import {
   startedSession,
   workspaceSessions,
 } from '../fixtures/sessions'
-import { answerShot } from '../fixtures/answerFiles'
-import { screenshotCopy } from '../fixtures/attachments'
-import { detectedServers, openPort, openPorts } from '../fixtures/previews'
-import { previewTabLabel } from '../../../../src/ui/components/tools/previewCopy'
-import { branchPictures, splitPath } from '../fixtures/files'
+import { splitPath } from '../fixtures/files'
 import { maskedDiffPath } from '../fixtures/maskedFiles'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { explainTabs } from './explainModel'
-import { htmlTab } from './workspaceFileTab'
+import { tabLinks } from './walkLinks'
+import type { WalkView } from './walks'
+import { htmlTab, pictureTab, previewTabs } from './workspaceFileTab'
+import { chatWaits, tabNeedsInput } from './workspaceRequests'
 import { skillTab } from './workspaceSkillTab'
 import type { WorkspaceState } from './workspaceState'
 import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
@@ -46,11 +45,12 @@ function oneSession(state: WorkspaceState): boolean {
 /**
  * The states after the second session sent a message to the first session
  * and to Saved carts. Each session tab then leads to the chat of its session
- * at that time.
+ * at that time. The second session shows at another time too, while the
+ * first session holds a request.
  */
 function sessionLinkStates(state: WorkspaceState): boolean {
   return (
-    state.tab === 'later-session' ||
+    (state.tab === 'later-session' && state.otherRequest === 'none') ||
     state.conversation === 'sent-by' ||
     state.composer === 'session-link'
   )
@@ -87,57 +87,8 @@ export function workspaceName(
 }
 
 /**
- * The tab of an image file that the state opens: a picture of the branch,
- * an image whose bytes the browser cannot draw, the copy of an attached
- * screenshot, or the screenshot of the agent. A picture takes the icon that
- * All files gives each other file. A read of the copy names it by its file
- * name, because no list names it.
- */
-function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
-  const tab = (key: string, path: string, to: string): WorkspaceTab => ({
-    key,
-    kind: 'file',
-    title: splitPath(path).name,
-    to,
-    selected: true,
-  })
-  switch (state.tab) {
-    case 'image':
-      return tab('image', branchPictures.picture, paths.image)
-    case 'image-not-drawn':
-      return tab('image', branchPictures.damaged, paths.imageNotDrawn)
-    case 'attachment':
-      return tab('copy', screenshotCopy.path, paths.attachmentOpen)
-    case 'screenshot':
-      return tab('screenshot', answerShot, paths.imageFromAnswer)
-    default:
-      return undefined
-  }
-}
-
-/**
- * The Preview tabs of the row, while the state keeps them (decision 291):
- * one tab for each port, ports 3000 and 6006, opened after the code file.
- * Each shows the label of its port, as the list of the tool names it. The
- * tab of port 3000 shows in `preview`.
- */
-function previewTabs(state: WorkspaceState): WorkspaceTab[] {
-  if (state.tab !== 'preview' && state.tab !== 'preview-behind') return []
-  return openPorts.map((port) => {
-    const server = detectedServers.find((each) => each.port === port)
-    return {
-      key: `preview:${port}`,
-      kind: 'preview',
-      title: previewTabLabel(port, server),
-      to: paths.preview,
-      selected: state.tab === 'preview' && port === openPort,
-    }
-  })
-}
-
-/**
  * The tabs of the centre column: the sessions, the code file that stays
- * open, and the file, the diff, or the new session that the state opens.
+ * open, and the file, diff, skill, or new session that the state opens.
  * Each new tab opens at the end of the row, as the linked session does. A
  * full row holds more sessions and files before the tab that the state
  * opens, and a move puts the code file between the two sessions. A tab
@@ -155,16 +106,31 @@ function previewTabs(state: WorkspaceState): WorkspaceTab[] {
  * README.md after the kept skill tab of `plans` leads to the screen of
  * that row, as `readmeBesideKeptSkill` says. The Preview tabs show after
  * the code file. The tabs of the open explanations come last, as
- * `explainTabs` says.
+ * `explainTabs` says. A session tab shows the needs-input mark while it
+ * holds an open request. While the tab of an explanation shows, its chat
+ * is the open chat, so no tab of the other sessions takes its request or
+ * its spinner. Last, `tabLinks` gives each tab the page of the walk of the
+ * screen in `view`, so a tab keeps the open requests.
  */
 export function tabsFor(
   state: WorkspaceState,
   workspace: Workspace,
   running = false,
+  view: WalkView = 'browser',
 ): WorkspaceTab[] {
   if (oneSession(state)) {
     const title = workspaceName(state, workspace)
-    return [{ key: 'session', kind: 'session', title, selected: true, running }]
+    const needsInput = chatWaits(state) || undefined
+    return [
+      {
+        key: 'session',
+        kind: 'session',
+        title,
+        selected: true,
+        running,
+        needsInput,
+      },
+    ]
   }
   const [first, second] = workspaceSessions
   const linked =
@@ -270,18 +236,27 @@ export function tabsFor(
       selected: true,
     })
   }
+  // The session of the open chat, and the session whose agent works. The
+  // chat of a shown explanation belongs to its own tab, after these.
+  const chat =
+    state.tab === 'explanation'
+      ? undefined
+      : (tabs.find(
+          (tab) =>
+            tab.kind === 'session' &&
+            tab.selected &&
+            tab.key !== newSession.key,
+        ) ?? tabs[0])
   const background = state.conversation === 'session-links'
-  const active =
-    (background ? tabs[0] : undefined) ??
-    tabs.find(
-      (tab) =>
-        tab.kind === 'session' && tab.selected && tab.key !== newSession.key,
-    ) ??
-    tabs[0]
+  const active = background ? tabs[0] : chat
   const states = tabs.map((tab) => ({
     ...tab,
     running: tab === active && (running || background),
+    needsInput:
+      (tab.kind === 'session' && tabNeedsInput(state, tab.key, tab === chat)) ||
+      undefined,
   }))
   const row = state.tabRow === 'moved' ? withCodeMoved(states) : states
-  return withTemporaryTab(state, [...row, ...explainTabs(state)])
+  const all = withTemporaryTab(state, [...row, ...explainTabs(state)])
+  return tabLinks(state, view, all)
 }

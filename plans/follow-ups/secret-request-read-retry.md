@@ -1,0 +1,36 @@
+# A failed request read waits for a reconnect
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-26, from branch `calummoore/needs-input-at-the-composer-milestones-3-j8a8`, review round 1, finding 5, with the missing test that its check found.
+- **Location:** `src/chat/secrets/secret-actions.ts:80`, `readSecretRequests`. `src/chat/state/controller-context.ts:114`, the read after a completed replay. `src/chat/state/load.ts:117`, the read at the start. `src/chat/secrets/secret-reads.test.ts`. `src/chat/secrets/README.md:18`.
+- **Reason:** The problem needs a failed read of the secret requests, so its likelihood is Rare, and its severity is not High.
+
+- **Terms:**
+  - **Read of the secret requests:** `GET .../secret-requests` of the Worker. It lists the secret requests of every session of the workspace.
+  - **Replay:** the stored workspace events that the chat applies each time its event stream connects, before the live events.
+  - **Needs-input mark:** the blue mark that replaces the icon of a session tab while its session holds an open request, as "The needs-input mark" in `docs/protocol/tab-row.md` says.
+- **Background:**
+  - The history of a session holds only its own secret requests, and the chat loads the history of the shown session only. So the chat also reads the secret requests of every session of the workspace. Then each session tab with an open request shows the needs-input mark.
+  - The mark of an Explain session works the same way: the Explain mark shows Needs input while a request of its session waits.
+  - `load.ts` reads once after the stream starts, beside the read of the Mac commands. `controller-context.ts` reads again after each completed replay except the first. A flag `connected` turns true at the first completed replay, because the start read covers the first connect.
+  - When its read fails, `readSecretRequests` changes nothing and shows no notice. Its comment and `src/chat/secrets/README.md` say that the next reconnect reads again.
+  - The stream connects again after 1 second, then twice as long after each failure, up to 15 seconds (`src/chat/stream/workspace-stream.ts:235`). `context.delay` runs a timer in the chat.
+  - The events of the stream still bring each change of a request. A request that is older than the start of the stream comes only from the read, or from the history of its session.
+  - Other code can call `readSecretRequests` too. Check each caller before the retry changes its behaviour.
+  - A probe failed the start read and dropped the first connection before its replay completed. It saw one read and no request after the first recovered connection. It saw two reads and the request after the next reconnect.
+- **Problem:** When the start read fails, the chat reads again only at the next reconnect, and a stable connection never brings one. When the first connection also drops before its replay completes, the first working reconnect skips the read too. `src/chat/secrets/secret-reads.test.ts` has no test of a failed read.
+- **Impact if no action:** The tab of another session, or an Explain mark, can hide an open request until another reconnect, a reload, or a visit to that session.
+- **Root question:** When the read fails, how does the chat still learn the open requests of every session, so that each tab mark and each Explain mark shows?
+- **Options:**
+  - **A.** After the first completed replay, read again when the start read failed or still runs. A slow start can then send a second read. Effort: Small.
+  - **B.** Let the stream tell each caller when a reconnect completes its replay, with no count of completed replays. Read after each such reconnect, also when no earlier replay completed. Test a drop before the first history message. Effort: Small.
+  - **C.** When the read fails, `readSecretRequests` schedules one more read through `context.delay`, with the backoff of the stream: 1 second, doubled after each failure, up to 15 seconds. The retries stop at a read that works, at the stop of the chat, and at an `ApiError` with a 4xx status. One retry runs at a time. The reads after each later connect stay. Update the rule in `src/chat/secrets/README.md` and the comment of `readSecretRequests`. Add the missing test: the first read fails, and the tab of another session shows the mark after the timer. Effort: Small.
+  - **D.** Read after each completed replay, also the first. Remove the read of `load.ts` and the `connected` flag. The first marks then wait for the whole first replay, which can be long. Effort: Small.
+  - **E.** The Worker adds the open secret requests of every session to the workspace read, so one read gives the workspace and its requests. This changes the workspace read, a boundary of the Worker. Effort: Large.
+- **Left out:** A notice of a failed read, because the events still come, and the mark only points to a request that the stack of its own session shows.
+- **Wider fix:** E. It removes the separate read, so no failure of that read can hide a request. It changes a boundary of the Worker, so the user decides it.
+- **Previous examples:** Commit `4fdb5bc7d` repaired a similar missed read, when the Files view dropped a reply during gap recovery.
+- **Related:** None.
+- **Recommendation:** C. One retry with the backoff of the stream covers every failed read, also on a stable connection, and the stream needs no change.
+- **Action:** fix after merge, apply C, because the likelihood is Rare and the severity is not High.

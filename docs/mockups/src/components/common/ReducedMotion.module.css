@@ -1,0 +1,4 @@
+/* The wrapper of a screen with reduced motion draws no box of its own. */
+.wrapper {
+  display: contents;
+}

@@ -39,8 +39,8 @@ them after the merge.
 - The Worker refuses a new name with any other character, also from an
   older app. It then creates no secret.
 - [The Secrets tab](secrets.md#the-secrets-tab) and
-  [Temporary values](secret-requests.md#temporary-values) say what Add
-  secret and Save as secret show for such a name.
+  [Temporary values](secret-temporary-values.md#temporary-values) say what
+  Add secret and Save as secret show for such a name.
 - The rule applies only when a secret is created. The list, runs, grants,
   Reveal, Replace, a change of description, and Delete take each existing
   name as it is.

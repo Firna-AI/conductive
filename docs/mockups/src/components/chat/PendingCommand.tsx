@@ -83,13 +83,15 @@ function RequestDetails(props: { request: MacCommandRequest; mac: boolean }) {
  * the time limit, and Details. The Mac app of the sender shows Deny and
  * Allow. A browser shows the state only, because only the Mac app can
  * allow a command on the Mac. `open` draws the other ways to allow open:
- * the chat draws them outside the region of the requests, at its actions.
+ * the stack of the requests draws them outside the card, at its actions.
+ * In that stack, the stack draws the outline of the card.
  */
 export function PendingCommand(props: {
   /** The id of the chat item of the command. */
   id: string
   request: MacCommandRequest
   open?: boolean
+  inStack?: boolean
 }) {
   const mac = useMacApp()
   const { request } = props
@@ -98,7 +100,7 @@ export function PendingCommand(props: {
       aria-label={
         mac ? 'Run a command on this Mac?' : `Command on ${thisMac.name}`
       }
-      className={styles.pending}
+      className={classes(styles.pending, props.inStack && styles.stacked)}
     >
       <div className={styles.head}>
         <Laptop aria-hidden className={styles.icon} size={14} />

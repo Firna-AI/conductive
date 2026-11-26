@@ -1,29 +1,42 @@
 # Mockup links keep losing their example state
 
-- **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-23, from branch `calummoore/object-memory-runner-report-limits-0m1g`, option E of review finding 11 of round 4.
-- **Location:** `package.json` (the `mockups:check` script) and `docs/mockups/src/components/common/ScreenLink.tsx`.
+- **Added:** 2026-11-23, from branch `calummoore/object-memory-runner-report-limits-0m1g`, option E of review finding 11 of round 4. Widened on 2026-11-26 by branch `calummoore/needs-input-at-the-composer-milestones-3-j8a8`, from the blocked wider fixes of review findings 41, 42, and 43 of round 1: the request stack and the marked session tabs.
+- **Location:** `package.json` (the `mockups:check` script) and `docs/mockups/src/components/common/ScreenLink.tsx`. The links of the request stack in `docs/mockups/src/components/chat/RequestStack.tsx` and `docs/mockups/src/components/chat/RequestActions.tsx`. The tab links in `docs/mockups/src/screens/workspaceTabs.ts` and `docs/mockups/src/screens/explainModel.ts`.
 - **Reason:** The fix is a new check in the mockup gate, and a new gate needs the user's approval.
 
-- **Severity:** Low. **Effort:** Medium.
 - **Source:** Review.
 - **Category:** Mockup.
-- **Location:** See the header.
 - **Terms:**
-  - **Example:** A group of catalogue pages that draw one workspace in one state, such as the large branch with limited lists, the masked paths, or a saved list.
-  - **Example state:** The workspace props that a page of the example shares: `lists`, `tree`, `lostUpdate`, `paths`, and `banner`.
-- **Background:** Each catalogue page draws one fixed state. A link opens a fixed page. When a link leads to a page of another example, the reader sees the workspace change after one press.
-- **Problem:** The class came back four times in one change: file links that reset limited lists (fixed on 23 November 2026), a saved list that turns current (`plans/follow-ups/saved-list-links-keep-notice.md`), a pull request status that changes between linked pages (fixed for the large branch, open on `main` in `plans/follow-ups/standard-example-check-status.md`), and masked rows that disappear (`plans/follow-ups/masked-paths-list-links-reset.md`). Each time, a review found it by hand.
-- **Impact if no action:** Reviews keep finding these resets one by one.
-- **Root question:** How can the catalogue catch a link that moves the reader to another example?
+  - **Example:** A group of catalogue pages that draw one workspace in one state, such as the large branch with limited lists, the masked paths, a saved list, or a stack of open requests.
+  - **Example state:** The workspace props that a page of the example shares: `lists`, `tree`, `lostUpdate`, `paths`, and `banner`. It also holds the open requests that the page draws: the cards of the request stack, and the session tabs with the needs-input mark.
+  - **Request stack:** The cards above the composer that show the open requests of a session, one card at a time, with Previous and Next. The catalogue draws a separate page for each place of the card on top.
+  - **Needs-input mark:** The blue mark that replaces the icon of a session tab while its session holds an open request.
+  - **Step:** Previous or Next of a request stack.
+- **Background:**
+  - Each catalogue page draws one fixed state. A link opens a fixed page. When a link leads to a page of another example, the reader sees the workspace change after one press.
+  - An answer on a stack card ends that request and each request that the answer settles. Its link must lead to a page that still draws each other open request.
+  - A step that looks live must lead to the page of the next or the previous card.
+  - The class came back four times in one change: file links that reset limited lists (fixed on 23 November 2026), a saved list that turns current (`plans/follow-ups/saved-list-links-keep-notice.md`), a pull request status that changes between linked pages (fixed for the large branch, open on `main` in `plans/follow-ups/standard-example-check-status.md`), and masked rows that disappear (`plans/follow-ups/masked-paths-list-links-reset.md`).
+  - On 26 November 2026, the review of the needs-input change found it three more times, for the open requests:
+    - Answer links dropped the other open requests. On `app/secret-requests/several/waiting-and-late`, Allow for this session on the first card opened a page with no open requests. On a phone, Give a value on the third card opened the page of that request alone. The late card of `app/secret-requests/several/mac-command` and the command of the `with-secret` view of `mac-app/requests` also left their example.
+    - Steps looked live and had no page. On `mac-app/requests/next`, the place said "2 of 4", and Next did nothing. The mixed Mac stack, the browser stack after Allow, and `app/chat/menu-placement` with "1 of 4" had the same dead Next.
+    - Tab links dropped the open requests. The marked tab on `app/chat/explain/marks` opened the answered explanation with no request. On `app/tabs/needs-input`, the file tab and the rows of Changes opened pages without the mark of the first session. The late-request page that the marked tab opens had no link back to the second session.
+  - That change fixes these cases by hand, except the rows of Changes and All files on `app/tabs/needs-input`. Those rows still open file pages without the mark of the first session, because only a link table for the rows (option D) or this check (option B) reaches them. `plans/follow-ups/explain-parent-tab-resets.md` holds one more reset that it found on `main`.
+- **Problem:** The class came back seven times in two changes, and each time a review found it by hand. No check finds a link that leaves its example, or a step that looks live with no page.
+- **Impact if no action:** Reviews keep finding these resets one by one, and a dead step hides the cards after it.
+- **Root question:** How can the catalogue catch a control that does not keep the reader in its example?
 - **Options:**
   - **A.** Keep finding them in review. Effort: Small.
-  - **B.** Add a link-state report to `npm run mockups:check`. For each link from a workspace page to a file page, compare the example state of the source page and the target page. Read the props from Mokly's records in `mokly-static/mokly-viewer/entries/`, and the targets from the built views. Fail on each link that changes the state, except the links on an allowlist. Fix or allow the resets that are already on `main`. Effort: Medium.
+  - **B.** Add a link-state report to `npm run mockups:check`. For each link from a workspace page to a file page, compare the example state of the source page and the target page. Also check each answer link, each step, and each tab link: its target must draw the same open requests, less the requests that an answer settles. Read the props from Mokly's records in `mokly-static/mokly-viewer/entries/`, and the targets from the built views. Fail on each link that changes the state, except the links on an allowlist. Fix or allow the resets that are already on `main`. Effort: Medium.
   - **C.** Report the same links as a warning that does not fail the build. Effort: Medium.
+  - **D.** Fail the build when a stack draws a step that is on but has no page. A stack that draws no page for its cards then turns its steps off, or carries a marker that the check allows. Effort: Small.
 - **Left out:** A unit test per page, because it covers only the pages that someone remembers.
-- **Wider fix:** B, after the case table of `plans/follow-ups/saved-list-links-keep-notice.md` removes the existing resets.
-- **Previous examples:** The four cases above. Commit `216ed6791` fixed masked back links by hand.
-- **Related:** `plans/follow-ups/saved-list-links-keep-notice.md`, `plans/follow-ups/standard-example-check-status.md`, and `plans/follow-ups/masked-paths-list-links-reset.md` hold the existing resets. This check does not fix them.
-- **Recommendation:** C first, then B once the existing resets are fixed. A warning finds new cases at no gate cost.
-- **Action:** ask the user, because B adds a new gate and C adds a new check, and the user decides each new gate or check.
+- **Wider fix:** B, after the case table of `plans/follow-ups/saved-list-links-keep-notice.md` removes the existing resets. D adds the steps, which have no link to compare.
+- **Previous examples:** The seven cases above. Commit `216ed6791` fixed masked back links by hand.
+- **Related:**
+  - `plans/follow-ups/saved-list-links-keep-notice.md`, `plans/follow-ups/standard-example-check-status.md`, `plans/follow-ups/masked-paths-list-links-reset.md`, and `plans/follow-ups/explain-parent-tab-resets.md` hold the existing resets. This check does not fix them.
+  - `plans/follow-ups/mac-stack-answers-open-other-command.md` holds one more case, which review round 2 of the needs-input change found: the answer links of the Mac stack on `mac-app/requests` open the results of another command and drop the other open requests. This check would report it, but it does not choose those links, and that item needs its own answer.
+- **Recommendation:** C first, then B once the existing resets are fixed. A warning finds new cases at no gate cost. D is not needed while each stack example builds its pages and its steps from its own card count.
+- **Action:** ask the user, because B adds a new gate, and C and D add new checks, and the user decides each new gate or check.

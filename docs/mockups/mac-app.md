@@ -55,14 +55,26 @@ The parts and styles that the app shares live in
   the time left and Stop, so Stop keeps its place at the end of the bar.
   Each button of the bar links to the page of its result.
   A grant until Stop shows Until you stop and Stop, with no Extend or Keep.
-- The requests that wait share one region above the composer, from
-  `ChatPane.module.css`, with the requests for secrets, as
-  [secrets and Capabilities](design-secrets.md) gives. It takes at most 40% of the window, so a long
-  command or many requests scroll inside it, and an edge that cuts a
-  request fades. `mac-app/requests` draws four requests with a long script.
-  A view cannot open a popover, so the chat draws an open menu with
-  `DrawnChoices` outside the region, at the actions of its request, and the
-  region keeps its bound.
+- The requests that wait share one stack above the composer, from
+  `RequestStack` in `src/components/chat/`, which draws the shared
+  `RequestStackFrame`, with the requests for secrets, as
+  [secret requests and results](design-secret-requests.md) gives. One
+  card shows at a time, and a place such as "1 of 4" with Previous and
+  Next moves
+  through the stack. The stack takes at most 40% of the window, so a long
+  command scrolls inside its card, and an edge that cuts the command
+  fades. `mac-app/requests` draws four requests with a long script on top.
+  Its `next`, `third`, and `last` variants have each other card on top,
+  and each command keeps the links of its own results.
+  `mac-app/command-and-secret` has a command on top of a late request for
+  a secret, and its `next` variant has the late request on top. The Mac
+  app answers both, so the command whose call waits stays first. A browser
+  cannot answer the command, so it puts the command after the requests
+  for secrets, from needs-input decision 4 B. That walk moves through the
+  stack only, so its answers draw no link and never drop the other
+  request. A view cannot open a
+  popover, so the stack draws an open menu with `DrawnChoices` outside its
+  card, at the actions of its request, and the card keeps its bound.
 - Each change of the Mac's settings shows its result until the next change
   of the same control: done, done but not saved, or failed, from
   `ChangeOutcome` in

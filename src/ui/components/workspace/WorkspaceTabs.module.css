@@ -76,6 +76,15 @@
 }
 
 /*
+ * The needs-input mark takes the 13 px of the chat icon, so the title does
+ * not move when the mark comes or goes. Its 12 px grid stays at the start,
+ * on whole pixels.
+ */
+.needsInput {
+  width: 13px;
+}
+
+/*
  * The row owns the limits of its tabs: one line of the height of a control,
  * and a title of at most 168 px that ends with an ellipsis, so that one long
  * title cannot fill the row. The lifted copy is not a tab of the row.

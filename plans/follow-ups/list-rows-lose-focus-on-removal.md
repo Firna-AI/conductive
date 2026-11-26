@@ -23,5 +23,6 @@
 - **Left out:** A list with one tab stop and arrow keys between rows: it changes the Tab order and the Alt with Up or Down moves of the ordered lists.
 - **Wider fix:** B. One rule then serves each list.
 - **Previous examples:** Commit `1be509bef`, "fix(menus): recover focus when menu actions leave", added `useLostFocus` for open layers, for the same class of defect.
+- **Related:** `plans/follow-ups/resume-bar-drops-focus.md` holds the same class in the chat footer: the stopped bar leaves while its Resume button has the focus. Its wider fix is option B here, with the chat footer as a region, so one branch can build the rule for both items.
 - **Recommendation:** B. It fixes both lists on `main` and keeps one rule for every later list.
 - **Action:** fix after merge, apply B, because the change that found it fixed its own list, and the other two lists are outside its scope.

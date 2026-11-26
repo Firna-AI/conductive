@@ -146,14 +146,19 @@ export const explanationChats = {
 } as const satisfies Record<string, readonly ChatItem[]>
 
 /** The keys of the chats of explanations, for the workspace state. */
-export const explanationConversationKeys = ['explanation'] as const
+export const explanationConversationKeys = [
+  'explanation',
+  'explanation-waiting',
+] as const
 
 /**
- * The chat of the explanation of `count` after its answer, which shows in
- * its tab, with the written prompt as its first message.
+ * The chats of the explanation of `count` that show in its tab, with the
+ * written prompt as their first message: after its answer, and while its
+ * follow-up waits for a member, as the popover shows it too.
  */
 export const explanationConversations = {
   explanation: answered,
+  'explanation-waiting': explanationChats.waiting,
 } as const satisfies Record<
   (typeof explanationConversationKeys)[number],
   readonly ChatItem[]

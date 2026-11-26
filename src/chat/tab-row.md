@@ -1,11 +1,11 @@
 # The tab row
 
-This guide belongs to [the chat](README.md). It gives the rules of the one
-order of the session, file, diff, Preview, and skill tabs, the mark of the
-temporary tab
-and the moves that keep it, the drag, the tab menu with Keep open, Copy
-path, Close other tabs, and Close tabs to the right, and the scroll of the
-row, and the reader's place that each tab keeps.
+This guide belongs to [the chat](README.md). It gives the shared order of
+the session, file, diff, Preview, and skill tabs. It covers the mark of
+the temporary tab, the moves that keep it, and the needs-input mark of a
+session tab. It gives the drag, the scroll of the row, and the reader's
+place that each tab keeps. It also gives the tab menu with Keep open,
+Copy path, Close other tabs, and Close tabs to the right.
 [The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row) states
 the requirements.
 
@@ -62,6 +62,23 @@ the requirements.
   Move right all move through it. A move that changes no place gives the
   same view, so it saves nothing and the mark stays. A move of another tab
   keeps the mark too, also when it changes the index of the temporary tab.
+- A session tab shows the needs-input mark in place of its icon while its
+  session holds an open request: a Mac command that waits, or a secret
+  request that waits or is late. A secret request that settles after the
+  Allow of its card does not count, as
+  [the secret requests](secrets/README.md) say. Each tab shows the mark,
+  also the shown tab, as
+  [The needs-input mark](../../docs/protocol/tab-row.md#the-needs-input-mark)
+  says. `rowOf` reads the marks of each session from `SessionMarks`, which
+  `sessionMarks` gives from the chat: its running turn, and
+  `waitsForMember` of `state/open-requests.ts`. The shared
+  `SessionTabIcon` draws the mark of `WorkspaceMark` in the 13 px of the
+  chat icon, so the title does not move. The mark wins over the spinner,
+  and its name, "Needs input", comes before the title. The lifted copy of a
+  drag draws the same icon and title as the tab, through `TabFace` of
+  `components/SessionTab.tsx`. The mark ends with the change of the chat
+  that ends or settles the last open request of the session, such as the
+  reply of an answer or the event of an answer in another view.
 - The tab row draws the tabs in the row order and moves them by drag and
   drop, on the shared `usePointerDrag` of [the web app](../app/README.md).
   A mouse drags a tab after a move of more than 4 px. A finger lifts a tab

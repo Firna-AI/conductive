@@ -5,6 +5,7 @@ import type { BannerState } from '../../shared/github'
 import type { GetStartedStep } from '../../shared/onboarding'
 import { WORKSPACE_STATES } from '../../shared/workspace-read'
 import type { FakeApiOptions } from '../../test-support/fake-api'
+import { OFFERED_MAC_SCENARIOS } from '../../test-support/fixtures/devices'
 import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { getStartedOrder } from '../get-started'
 import type { DevUploadMode } from './attachment-routes'
@@ -203,6 +204,9 @@ export function readDevOptions(search: string): DevOptions {
       banner: pick(params, 'banner', BANNERS),
       paths: pick(params, 'paths', PATHS),
       subWorkspaces: params.get('subWorkspaces') === '1',
+      // The app runs in a browser, so a Mac command that waits shows its
+      // state only.
+      macCommands: pick(params, 'mac', OFFERED_MAC_SCENARIOS),
     },
     archivedComputer:
       pick(params, 'archivedComputer', ARCHIVED_COMPUTER_STATES) ?? null,

@@ -3,7 +3,8 @@
 This page belongs to [the catalogue](catalogue.md). It gives the pages of
 the secrets of an org and of the Capabilities control, from the secrets
 decisions of 13 November 2026. [The design](design-secrets.md) gives their
-parts.
+parts, and [secret requests and results](design-secret-requests.md) gives
+the parts of the requests in the chat.
 
 `app/org-settings/secrets` shows the Secrets tab of Acme as Cal, an admin,
 sees it. Its child pages:
@@ -111,11 +112,46 @@ and the hint of a pull request trigger follows. The `member` and `admin`
 child pages of `app/automations/automation` have the same line, read-only.
 
 `app/secret-requests` has a request for PROD_DATABASE_URL just above the
-composer, while the tool call waits. Its child pages:
+composer, while the tool call waits, and the needs-input mark on the tab
+of its session. Its child pages:
 
-- `several` has a request for two secrets. Its `mixed` variant has a
-  secret of Acme and a name that Acme does not have in one card, and its
-  `mixed-value` variant has the same card with a value.
+- `several` has a request for two secrets. Its child pages:
+  - `mixed` has a secret of Acme and a name that Acme does not have in one
+    card, and `mixed-value` has the same card with a value.
+  - `waiting-and-late` has three requests in the stack above the
+    composer: the request whose call waits on top, though it is the
+    newest, the edges of the two older late requests behind it, and
+    "1 of 3" with Previous and Next. Its `next` and `last` variants have
+    the second and the third card on top. On a phone, the second card
+    scrolls inside its outline.
+  - `answered` goes on through the same stack, one answer at a time. It has
+    the stack after an Allow of the card on top: the run of that request
+    in the chat, and "1 of 2". Its `next` variant has the second card on
+    top. Its `one-left` variant has the request for MAPBOX_TOKEN alone,
+    after the turn of the count ended and Cal denied the preview deploy.
+    Its `value` variant has a typed value, and on a phone the sheet that
+    Give a value opens. Its `done` variant has no request left, and the
+    new turn of the late value.
+  - `asked-again` has a late request that hides the two older requests of
+    the agent for the same secret, with "Asked 3 times". Its `denied`
+    variant has the three requests at their places after one Deny. Its
+    `allowed` variant has them after one Allow, with one line of the app
+    and one new turn. Only the newest request says that a new turn told
+    the agent, and the two older requests say only who answered.
+  - `mac-command` has a late request for a secret on top of a command on
+    the Mac, in a browser, which cannot answer the command. So the late
+    request comes first, though the call of the command waits. Its `next`
+    variant has the command on top, with its state only.
+    `mac-app/command-and-secret` has the same requests in the Mac app,
+    which answers both, so the command is on top there.
+
+  These pages are walks: each page of a place has the links of Previous
+  and Next, and each answer opens the next page of its example. The walk
+  of `waiting-and-late` and `answered` takes Allow of the count, Deny of
+  the preview deploy, Give a value and Allow of MAPBOX_TOKEN. The walks of
+  `mac-command` and `mac-app/command-and-secret` move through the stack
+  only. Each answer that a walk does not take draws no link, so no answer
+  drops the other requests.
 - `temporary` has a request for MAPBOX_TOKEN, which Acme does not have,
   with no value yet. A phone shows Deny and Give a value. Its child pages:
   - `value` has a typed value and 15 minutes, and on a phone the sheet
@@ -124,16 +160,19 @@ composer, while the tool call waits. Its child pages:
     name with spaces, so Save as secret is off. Its `mixed-invalid-name`
     variant adds that name to a mixed request, and Save as secret is off
     for every value.
-  - `late` has the request after the turn ended, with no value yet. Its
-    `value` variant has the value that Priya types later, and its `given`
-    variant has her answer for this workspace and the line of the app that
+  - `late` has the late request above the composer after the turn ended,
+    with no value yet. Its `value` variant has the value that Priya types
+    later, and its `given` variant has her answer for this workspace, with
+    the request at its place in its turn, and the line of the app that
     names her.
 - `results` has the run after Allow for this session: its card, with no
   output, and the tool call line of the agent beside it. Its variants have
   the run while it runs, a denied request, a pre-approved secret, and a
   value for 15 minutes.
-- `late` has the request that nobody answered in time, in the chat after
-  its turn. Its child pages:
+- `late` has the request that nobody answered in time. It waits just above
+  the composer after its turn ended, with its late line and its choices.
+  Its child pages have the request at its place in its turn after its
+  answer or its end:
   - `answered` has the late Allow of Priya, the line of the app that names
     her, and the new turn for Cal. Its `ran` variant has the run of that
     turn. Its `fallback` variant has a late Allow whose turn cannot run,
@@ -150,5 +189,12 @@ composer, while the tool call waits. Its child pages:
 - `in-work` has the run in the open fold of its ended turn.
 
 `user-flows/secret-request` goes from the request above the composer,
-through the late request in the chat and the late Allow of Priya, to the
-run of the new turn for Cal.
+through the late request that stays above the composer and the late Allow
+of Priya, to the run of the new turn for Cal.
+
+`app/tabs/needs-input` has the late request in the first session while
+the second session shows, so the tab of the first session shows the
+needs-input mark. The tab of the first session opens
+`app/secret-requests/late`, which keeps the request, and the tab of the
+second session there comes back.
+[The catalogue](catalogue.md) gives its child pages.

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
 import { modelLabel } from '../../shared/agents'
 
@@ -22,9 +22,11 @@ import {
   sessionLoginOf,
 } from '../state/session-login'
 import { ChatPane } from './ChatPane'
+import type { FieldHandle } from './chip-field/focus-plugins'
 import { placeMemory } from './chat-place'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
 import { Composer } from './Composer'
+import { ComposerPlace, useComposerPlace } from './composer-place'
 import type { ComposerFocus } from './composer-requests'
 import { sandboxParts, useSessionParts, type ChatHost } from './session-parts'
 import {
@@ -66,7 +68,8 @@ function useDraftFiles(controller: ChatController, draftId: string) {
  * The chat of the open session: its history, with the start steps while the
  * sandbox starts, and under it the notices and the composer, or the bar that
  * takes the composer's place while the sandbox does not run. After a failed
- * first start, the bar sits above the composer, which stays. The status of
+ * first start, the bar sits above the composer, which stays. The place of
+ * the composer holds both, as `useComposerPlace` says. The status of
  * the stored history comes from its load alone, so content never hides a
  * failed load. The composer names the login of another member, or the org
  * login, that a message spends. A linked session starts with a link to the
@@ -109,6 +112,8 @@ export function SessionChat(props: SessionChatProps) {
   )
   const status = historyStatus(state)
   const content = showsContent(state, starting !== null)
+  const field = useRef<FieldHandle>(null)
+  const { place: composerPlace, focus: focusComposer } = useComposerPlace(field)
   const parts = useSessionParts({
     snapshot,
     controller,
@@ -116,6 +121,7 @@ export function SessionChat(props: SessionChatProps) {
     session,
     state,
     readOnly,
+    focusComposer,
   })
   const reader = loginReader(snapshot)
   const login = session ? sessionLoginOf(session, reader) : null
@@ -169,42 +175,45 @@ export function SessionChat(props: SessionChatProps) {
       ) : null}
       {readOnly ? null : props.host?.notice}
       {parts.waiting}
-      {sandboxBar}
-      {phoneExplain}
-      {!down && session && snapshot.load.state === 'ready' ? (
-        <Composer
-          blocked={block !== null}
-          choice={session.choice}
-          draft={state.draft}
-          favourites={snapshot.account?.favourites}
-          files={files}
-          focus={props.composerFocus}
-          login={loginLabelOf(login)}
-          mention={mention?.sessionId === session.id ? mention : null}
-          models={composerModels(
-            login,
-            reader,
-            snapshot.models,
-            session.choice,
-          )}
-          onAttach={(picked, refusals) =>
-            controller.attachFiles(session.id, picked, refusals)
-          }
-          onChangeText={(text) => controller.setDraft(session.id, text)}
-          onChooseModel={(choice) =>
-            void controller.chooseModel(session.id, choice)
-          }
-          onMentionTaken={controller.takeMention}
-          onSend={() => void controller.send(session.id)}
-          onStop={() => void controller.interrupt(session.id)}
-          running={state.transcript.turn !== null}
-          sending={state.draft.sending}
-          sessionAgent={hasMessages(state) ? session.choice.agent : undefined}
-          startsSession={linked}
-          stopping={state.stopping}
-          tools={props.host?.tools}
-        />
-      ) : null}
+      <ComposerPlace ref={composerPlace}>
+        {sandboxBar}
+        {phoneExplain}
+        {!down && session && snapshot.load.state === 'ready' ? (
+          <Composer
+            blocked={block !== null}
+            choice={session.choice}
+            draft={state.draft}
+            favourites={snapshot.account?.favourites}
+            fieldRef={field}
+            files={files}
+            focus={props.composerFocus}
+            login={loginLabelOf(login)}
+            mention={mention?.sessionId === session.id ? mention : null}
+            models={composerModels(
+              login,
+              reader,
+              snapshot.models,
+              session.choice,
+            )}
+            onAttach={(picked, refusals) =>
+              controller.attachFiles(session.id, picked, refusals)
+            }
+            onChangeText={(text) => controller.setDraft(session.id, text)}
+            onChooseModel={(choice) =>
+              void controller.chooseModel(session.id, choice)
+            }
+            onMentionTaken={controller.takeMention}
+            onSend={() => void controller.send(session.id)}
+            onStop={() => void controller.interrupt(session.id)}
+            running={state.transcript.turn !== null}
+            sending={state.draft.sending}
+            sessionAgent={hasMessages(state) ? session.choice.agent : undefined}
+            startsSession={linked}
+            stopping={state.stopping}
+            tools={props.host?.tools}
+          />
+        ) : null}
+      </ComposerPlace>
     </>
   )
   return (

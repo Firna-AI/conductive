@@ -39,10 +39,6 @@ export const capabilityConversationKeys = [
 
 type CapabilityConversationKey = (typeof capabilityConversationKeys)[number]
 
-/** The chats in which a turn runs. */
-export const capabilityRunningConversations: readonly CapabilityConversationKey[] =
-  ['capabilities-changed', 'capabilities-changed-idle']
-
 /** The note of one write of a member. */
 function changed(
   by: PersonKey,

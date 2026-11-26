@@ -11,6 +11,7 @@ import {
   countAsk,
   counted,
   outlived,
+  previewAsk,
   run,
   waitsForReplica,
   working,
@@ -96,15 +97,7 @@ export function secretConversations(
     ],
     'secret-waiting-two': [
       ...history,
-      {
-        kind: 'user',
-        id: 'ask-preview',
-        text: 'Deploy a preview that reads the production replica, so I can try the suggestions on real addresses.',
-      },
-      agent(
-        'plan-preview',
-        "I'll deploy a preview with the production replica as its database.",
-      ),
+      ...previewAsk,
       call(previewRequest, 'running'),
       run(previewRequest, 'waiting'),
       working('19s'),

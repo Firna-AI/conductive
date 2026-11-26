@@ -45,6 +45,32 @@ const propSchema = {
     pictures: { enum: pictureReads },
     /** The reader reads higher up, so the button to the bottom shows. */
     scrolledUp: { type: 'boolean' },
+    /**
+     * The card on top of the request stack, and in a walk the page of each
+     * card and of each answer that keeps the example.
+     */
+    stack: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        place: { type: 'integer', minimum: 1 },
+        pages: { type: 'array', items: { type: 'string', minLength: 1 } },
+        answers: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['request'],
+            properties: {
+              request: { type: 'string', minLength: 1 },
+              allow: { type: 'string', minLength: 1 },
+              deny: { type: 'string', minLength: 1 },
+              value: { type: 'string', minLength: 1 },
+            },
+          },
+        },
+      },
+    },
   },
 } as const
 
@@ -66,7 +92,7 @@ export const chatPane = defineComponent<typeof propSchema, typeof slots, Props>(
     slug: 'chat-pane',
     title: 'Chat pane',
     description:
-      'The chat transcript, with the composer or a sandbox bar under it. When a turn ends, the work before each of its answers folds into one line. While the sandbox starts, its steps show at the end of the transcript. The commands that wait for approval on a Mac and the requests for secrets while their tool calls wait stay in view just above the composer. A request that outlived its tool call stays at its place, as a late request. An empty chat shows the content that the screen supplies. Its own page shows the finished turn of Checkout address autocomplete.',
+      'The chat transcript, with the composer or a sandbox bar under it. When a turn ends, the work before each of its answers folds into one line. While the sandbox starts, its steps show at the end of the transcript. Open Mac commands and secret requests, including late requests, stay in a stack above the composer. They return to the transcript after an answer or when they end. An empty chat shows the content that the screen supplies. Its own page shows the finished turn of Checkout address autocomplete.',
     relatedDocs: ['docs/mockups/design-chat.md'],
     propSchema,
     slots,
@@ -85,6 +111,7 @@ export const chatPane = defineComponent<typeof propSchema, typeof slots, Props>(
         pictures={props.pictures}
         problem={props.problem}
         scrolledUp={props.scrolledUp}
+        stack={props.stack}
         starting={props.starting}
         viewer={props.viewer}
         viewport={props.viewport ?? context.viewport}

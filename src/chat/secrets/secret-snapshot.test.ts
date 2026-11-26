@@ -3,12 +3,14 @@ import type { SecretRequest } from '../../shared/secret-requests'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import {
   asks,
+  late,
   priya,
   request,
 } from '../../test-support/fixtures/secret-requests'
 import type { StreamEnvelope } from '../api/read-workspace'
 import {
   initialSecrets,
+  withRequestRead,
   withRequestReply,
   withSecretEvents,
 } from './secret-snapshot'
@@ -91,6 +93,52 @@ describe('the secret requests of the chat', () => {
         firstNumber: 40,
         replied: false,
       },
+    })
+  })
+
+  test('take from a read each open request and each newer state of a known request, and never an older state or an ended request that the chat does not know', () => {
+    // Priya denied this request, and the chat has the event of her answer.
+    const answered = request('answered', asks.vercel, FAKE_TIME)
+    const answeredLate = { ...answered, ...late(FAKE_TIME + 90_000) }
+    const answeredDenied = {
+      ...answeredLate,
+      state: 'denied' as const,
+      answeredBy: priya,
+      updatedAt: FAKE_TIME + 120_000,
+    }
+    // A late request of another session, which no event of the chat holds.
+    const other = request('other', asks.mapbox, FAKE_TIME, {
+      ...late(FAKE_TIME + 90_000),
+      sessionId: 'debounce',
+    })
+    // An ended request that no event of the chat holds.
+    const ended = request('ended', asks.places, FAKE_TIME, {
+      state: 'denied',
+      answeredBy: priya,
+      updatedAt: FAKE_TIME + 120_000,
+    })
+    const known = withSecretEvents(initialSecrets, [
+      envelope(asked, 12),
+      envelope(answeredDenied, 42),
+    ])
+    // The read has the newer, ended state of `asked`, and the older state
+    // of `answered`.
+    const read = withRequestRead(known, [denied, answeredLate, other, ended])
+    expect({
+      asked: read.requests.asked,
+      answered: read.requests.answered,
+      other: read.requests.other,
+      ended: read.requests.ended,
+    }).toEqual({
+      asked: { request: denied, number: 12, firstNumber: 12, replied: true },
+      answered: {
+        request: answeredDenied,
+        number: 42,
+        firstNumber: 42,
+        replied: false,
+      },
+      other: { request: other, number: null, firstNumber: null, replied: true },
+      ended: undefined,
     })
   })
 })

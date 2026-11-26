@@ -92,8 +92,8 @@ Text that steers its agent can make it ask for a command on the owner's Mac.
 A command that the owner always allowed then runs without asking.
 A merge queue turn can ask for a command on the Mac of the member who added the pull request.
 
-When a command needs approval, its request appears above the session's message box.
-It shows the exact command and time limit.
+When a command needs approval, its card appears in the request stack above the session's message box.
+The card shows the exact command and time limit.
 Open **Details** to inspect the folder, reason, workspace, and sender.
 
 The command runs with your Mac user's permissions in the requested folder.
@@ -111,7 +111,9 @@ The arrow beside **Allow** opens the last three choices.
 Permission until you stop also ends when you quit the Mac app or sign out.
 **Always allow** covers the command text in any requested folder.
 Only the Mac that received the request can approve it.
-A browser or another Mac can show the request without those approval choices.
+In a browser or on another Mac, the request is read-only and comes after any secret requests in the stack.
+
+- [Find and answer requests](/docs/sessions-and-chat#find-and-answer-requests)
 
 ## Change saved permissions
 

@@ -122,11 +122,14 @@ const savedCartsWork: readonly ChatItem[] = [
 
 /**
  * The chats of the sessions that a message from an agent tool reaches, and
- * the chat of the session that sent it. `history` is the finished turn of
- * the first session of Checkout address autocomplete.
+ * the chat of the session that sent it, before and after it sent. `history`
+ * is the finished turn of the first session of Checkout address
+ * autocomplete.
  */
 export function sessionLinkConversations(history: readonly ChatItem[]) {
   return {
+    /** The second session after its first turn, which sent nothing. */
+    'second-session': debounceTurn,
     'sent-by': [
       ...history,
       { kind: 'user', id: 'sent-by', text: toAutocomplete },

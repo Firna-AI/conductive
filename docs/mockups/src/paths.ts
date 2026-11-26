@@ -284,6 +284,7 @@ export const paths = {
   secretResults: 'app/secret-requests/results',
   secretDenied: 'app/secret-requests/results/denied',
   secretValue: 'app/secret-requests/results/value',
+  secretLate: 'app/secret-requests/late',
   secretLateAllowed: 'app/secret-requests/late/answered',
   secretLateDenied: 'app/secret-requests/late/denied',
   secretTemporaryValue: 'app/secret-requests/temporary/value',

@@ -122,7 +122,7 @@ While it shows, Escape closes it. Its variants:
 
 A phone row shows no file tabs, so the phone views of these pages show the
 file as a page of the Files tab. `app/tabs` names the page in the text of
-its tab menu and of its drag.
+its drag, and `app/tabs/menu` in the text of the tab menu.
 
 `app/files/menu` draws the menu of a row of All files and Changes, from
 decisions 1 to 4 of the file row menu change. Its canonical screen has the

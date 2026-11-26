@@ -4,8 +4,9 @@ import { isLateRequest } from './requests'
 /**
  * The work of a turn: its agent messages and its tool calls, with the Mac
  * command cards, the cards of runs with secrets, and the lost lines among
- * them. A late request is not work, so it stays at its place. The note of
- * a capability change is not work either, also in a turn.
+ * them. A late request waits above the composer. After its answer or end,
+ * it shows at its place in the transcript, unfolded. A capability change
+ * also stays unfolded, including during a turn.
  */
 export type WorkItem = Extract<
   ChatItem,

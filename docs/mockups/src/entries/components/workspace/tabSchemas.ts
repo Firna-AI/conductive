@@ -27,6 +27,8 @@ export const workspaceTabSchema = {
     selected: { type: 'boolean' },
     /** A session whose agent works: a spinner takes the place of its icon. */
     running: { type: 'boolean' },
+    /** An open request gives the session tab a needs-input mark. */
+    needsInput: { type: 'boolean' },
     /** The temporary tab, whose title shows in italics. */
     temporary: { type: 'boolean' },
     /** The label of the file can hide a secret value: no Copy path. */

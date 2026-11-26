@@ -280,6 +280,13 @@ status says, and no tab menu opens.
 wheel turns.
 `components/SessionTabs.test.tsx` renders the tab of a session with no
 title and its rename field.
+`components/NeedsInputMark.dom.test.tsx` mounts the chat and reads the
+icon of each tab of the row with `tabIcons` of the tab row kit. The tab of
+another session shows the needs-input mark while its late request is
+open, and the mark ends with the event of an answer in another view. The
+shown tab of a running turn shows the mark in place of the spinner, and
+the spinner comes back after the answer. A Mac command that waits marks
+the tab of its session in a browser, which cannot answer it.
 `components/chip-field/ChipTextField.test.tsx` pastes workspace links,
 steps over a chip, removes it with Backspace and Delete, restores a draft,
 copies, follows the list, and checks a field that takes no change. It
@@ -567,6 +574,21 @@ order, also after the late copy of the first part.
 
 The tests of the secret requests are in the
 [README of the secret requests](secrets/README.md#tests).
+
+`components/request-stack.test.ts` checks the order of the stack of the
+open requests: the calls that wait first, then the late requests, one card
+for each set of secrets in the place of its oldest request, and the cards
+that the view cannot answer last. It also checks the card on top when a
+request joins or leaves, when the card on top leaves, and when a request
+that the view can answer joins a card that it cannot answer, and the
+showing of the card on top, which a request that carries over keeps.
+`components/WaitingRequests.dom.test.tsx` mounts the chat with a stack: it
+moves through it with Previous and Next, keeps the card on top while a
+request joins and leaves, and moves the focus after a move to an end and
+after an answer, to the next card and then to the composer. While the
+sandbox is stopped, the last answer moves the focus to the place of the
+composer with the stopped bar, and the composer takes it when the sandbox
+starts.
 
 `components/ReadOnlyChat.dom.test.tsx` checks the read-only behavior of both hosts.
 A right click and Shift and F10 open a tab menu with only the copy items, with no line.

@@ -31,7 +31,7 @@ how a screen is built, and links to the other pages.
 | `app/settings`      | The list of the tabs of Settings on a phone, in an Account group and an org group. A desktop opens Account › General in the Settings dialog |
 | `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, wakes from watched turns, open work, tables in replies, lists and task lists in replies, headings in replies, quotes, rules, and emphasis in replies, links in chat text, Explain on chat text, lost data, lost updates, unread files, the time limit of background work, a fast turn at standard speed, and menus that show whole over a box that scrolls |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat, and an older one that a workspace with Mac access off refused |
-| `app/secret-requests` | A request for secrets above the composer, two secrets, a mixed request, a temporary request with its sheet on a phone, the results in the chat, and a request that outlived its tool call or ended with no answer |
+| `app/secret-requests` | A request for secrets above the composer, two secrets, a mixed request, the stack of several requests and its answers one at a time, with a card that hides the repeated asks for one secret and a Mac command after a secret request in a browser, a temporary request with its sheet on a phone, the results in the chat, and a late request above the composer, with its answer or its end in the chat |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/repository-change` | The repository menu of the header, the question before a change, the change that runs, a change that stopped, and the workspace after it |
@@ -46,7 +46,7 @@ how a screen is built, and links to the other pages.
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, a file that a limited list leaves out, the file chips of the composer and of a sent message, and the file chips and the screenshot picture of an answer |
 | `app/skill-mentions` | The list of `/` with a query, then the list without one, its other states, the skill chip of the composer and of a sent message with the press that opens it, and the skill tab with its Source view, its temporary tab and the return to a kept skill, its notices with a failed read, the start of a stopped cloud computer, and a stopped tab without text |
 | `app/files`         | All files, Changes with its summary, a file, Markdown, diff, image, and HTML tab, the temporary tab that the next press replaces, the file tab at a line, the menu of a row with Add to chat and Copy path, and the lists of a large branch with the notices of what they leave out, also beside an open file |
-| `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
+| `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, the rename field, and the needs-input mark of a session tab |
 | `app/transcripts`   | Copy a transcript from the tab menu: the toast after a copy, a failed copy, and the menu of an archived workspace |
 | `app/tools`         | The terminal tabs and their states, a link in the terminal under the pointer and a size that another viewer set, then the Preview tool with its detected servers, the Preview tabs of the centre row, and its failed list repair, the services of the Preview tool with their states, menu, Stop, Restart, results, and log, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden; the hidden sidebar, and its workspace list as a popover of the org tile |
@@ -59,7 +59,7 @@ with child folders shows only its canonical screen, as `marketing`, `marketing/d
 `app/orgs/new`, `app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/composer`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/new-workspace/start-branch`,
 `app/new-workspace/start-branch/missing`, `app/model-favourites`, `app/model-favourites/preferences`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/org-settings/cloud-computer/skills`, `app/org-settings/agents`, `app/org-settings/secrets`, `app/secret-requests`, `app/secret-requests/temporary`, `app/secret-requests/late`, `app/capabilities`, `app/capabilities/changed`, `app/operator`, `app/operator/org`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/operator/providers`, `app/banner`, `app/banner/merge-queue`, `app/chat`, `app/chat/tables`, `app/chat/explain`, `app/chat/explain/popover`, `app/archive`, `app/workspace-links`, `app/automations`, `app/automations/automation`,
+`app/org-settings/cloud-computer`, `app/org-settings/cloud-computer/skills`, `app/org-settings/agents`, `app/org-settings/secrets`, `app/secret-requests`, `app/secret-requests/several`, `app/secret-requests/temporary`, `app/secret-requests/late`, `app/tabs`, `app/tabs/needs-input`, `app/capabilities`, `app/capabilities/changed`, `app/operator`, `app/operator/org`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/operator/providers`, `app/banner`, `app/banner/merge-queue`, `app/chat`, `app/chat/tables`, `app/chat/explain`, `app/chat/explain/popover`, `app/archive`, `app/workspace-links`, `app/automations`, `app/automations/automation`,
 `app/automations/triggers`, `app/orgs/suspended/automations`, `app/orgs/suspended/settings`, `app/file-mentions`, `app/file-mentions/answers`, `app/skill-mentions`, `app/skill-mentions/tab`, `app/attachments`, `app/files`, `app/files/changes`, `app/files/menu`, `app/tools`, `app/tools/services`, `app/account/shortcuts`, `mac-app/capabilities`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
@@ -71,7 +71,9 @@ from `app/archive/deleted`, and its `deleting` variant moved from
 `app/new-workspace/dialog`, `app/org-settings/cloud-computer`,
 `app/org-settings/cloud-computer/skills`,
 `app/operator/user/access`, `app/archive`, `app/command-palette/search`, `app/attachments`,
-`app/composer`, `app/capabilities`, `app/model-favourites`, `app/model-favourites/preferences`, `app/files`, and `app/chat/tables` moved into their own folders and kept their paths. Each page
+`app/composer`, `app/capabilities`, `app/model-favourites`,
+`app/model-favourites/preferences`, `app/files`, `app/tabs`, and
+`app/chat/tables` moved into their own folders and kept their paths. Each page
 shows only its canonical screen. `app/sign-in/get-started` moved into its
 own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
@@ -151,6 +153,16 @@ other states are child pages: `picker` has the open model picker,
 that starts a new session, because Cal keeps his login for his own
 messages. `org-login` has a session on the org login of Acme, with its
 variants, as [org logins](catalogue-org-logins.md) gives.
+
+`app/tabs` shows the drag of a tab. Its child pages `moved`, `full`,
+`menu`, and `rename` show the row after a move, a full row, the tab
+menu, and the rename field. Its child page `needs-input` shows the
+needs-input mark on the tab of the first session, which holds a late
+request while the second session shows. Its child pages show the code
+file with the same mark, the mark on a tab whose turn runs, in place of
+the spinner, and the marks of the screen with reduced motion. Each tab of
+`needs-input` and of its `file` child page opens the screen of that tab
+with the same open request.
 
 [Org logins](catalogue-org-logins.md) gives `app/org-settings/agents` and
 its child pages, and the states of the account, Get started, the composer,

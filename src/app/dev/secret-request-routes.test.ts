@@ -129,4 +129,33 @@ describe('the secret requests of the dev fake', () => {
       idle: true,
     })
   })
+
+  test('an Allow of the newest of three late requests for the same secret allows the two older ones too, as the Worker does, with one line of the app', async () => {
+    const fake = setup('?secrets=asked-again')
+    const reply = await fake.api.send(
+      'POST',
+      secretAnswerPath(org, workspace, 'dev-asked-3'),
+      { kind: 'allow' },
+      readSecretRequestResponse,
+    )
+    const { requests } = await fake.api.get(
+      secretRequestsPath(org, workspace),
+      readSecretRequestsResponse,
+    )
+    expect({
+      answer: reply.request.state,
+      requests: requests.map((item) => [item.id, item.state, item.answeredBy]),
+      lines: fake.sent().filter((event) => event.type === 'secrets.notice'),
+      idle: fake.state() === fake.idle,
+    }).toEqual({
+      answer: 'allowed',
+      requests: [
+        ['dev-asked-1', 'allowed', fake.member],
+        ['dev-asked-2', 'allowed', fake.member],
+        ['dev-asked-3', 'allowed', fake.member],
+      ],
+      lines: [expect.objectContaining({ requestId: 'dev-asked-3' })],
+      idle: true,
+    })
+  })
 })

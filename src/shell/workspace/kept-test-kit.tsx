@@ -12,6 +12,7 @@ import { githubPaths } from '../../shared/github'
 import { membersPath } from '../../shared/members'
 import { readView } from '../../chat/api/read-view'
 import { previewsPath } from '../../shared/previews'
+import { secretRequestsPath } from '../../shared/secret-requests'
 import { servicePaths } from '../../shared/services'
 import {
   workspaceViewPath,
@@ -99,12 +100,15 @@ export function chatRequests(server: FakeApiServer, from: number): string[] {
  * their list again, because no event announces a preview that opened while
  * away. The kept services read their list again too, because a return
  * starts a new running period, which never shows the list of an earlier
- * one. The chat and the files read nothing again. The parts read on their
+ * one. The chat reads the secret requests of every session again, because
+ * a return is a reconnect, and the tab of a session marks a request that
+ * opened while away. The files read nothing again. The parts read on their
  * own, so the order in which they read is not fixed.
  */
 export const returnReads = [
   `GET ${terminalPaths.connection(org, id)}`,
   `GET ${previewsPath(org, id)}`,
+  `GET ${secretRequestsPath(org, id)}`,
   `GET ${servicePaths.catalogue(org, id)}`,
   `GET ${githubPaths.banner(org, id)}`,
   `GET ${githubPaths.checks(org, id)}`,

@@ -1,35 +1,33 @@
-# Secret requests and workspace life docs too long
+# The workspace life doc is too long
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-20, from branch `calummoore/follow-up-a-waiting-request-hides-nj94`, in the docs work for the follow-up item "A waiting request hides Starting from the app".
-- **Location:** `docs/protocol/secret-requests.md`, the sections "Temporary values" at line 189 and "Mixed requests" at line 230. `docs/protocol/workspace-life.md`, the section "Removed workspaces" at line 209. `docs/architecture/protocol-docs.md:53-58` and `docs/architecture/protocol-docs-workspaces.md:46-48`, the index entries of the two docs.
-- **Reason:** The branch that found it adds one rule to each doc and keeps a narrow scope, and the split moves sections that the branch does not change.
+- **Added:** 2026-11-20, from branch `calummoore/follow-up-a-waiting-request-hides-nj94`, in the docs work for the follow-up item "A waiting request hides Starting from the app". On 2026-11-26, branch `calummoore/needs-input-at-the-composer-milestones-3-j8a8` merged into it the item `plans/follow-ups/secret-requests-doc-length.md`, which proposed the same move of the secret requests doc. That item came on 2026-11-20 from branch `calummoore/workspace-capability-prompts-issue-2daj`, finding 3 of the Milestone 2 report of the capability prompts work. Later on 2026-11-26, the same needs-input branch made the move of the secret requests doc, for finding 92 of its review round 2, and narrowed this item to `docs/protocol/workspace-life.md`.
+- **Location:** `docs/protocol/workspace-life.md`, the section "Removed workspaces" at line 214. `docs/architecture/protocol-docs-workspaces.md:46-48`, the index entry of the doc.
+- **Reason:** Each branch that touched the doc kept a narrow scope, and the split moves a section that those branches did not change.
 
 - **Terms:**
   - **Protocol doc:** a doc under `docs/protocol/` that holds the requirements and the decisions in force for one area of the product.
   - **Protocol docs index:** `docs/architecture/protocol-docs.md` and its child pages, such as `docs/architecture/protocol-docs-workspaces.md`. They list each protocol doc and its linked pages.
   - **Stub section:** a short section that keeps the heading of a moved section and links to its new page, so that each old link to that heading still works.
-  - **Temporary value:** a value that a member types into a secret request for a name that the org has no secret for. It lasts 15 minutes or until the workspace is archived.
   - **Removed workspace:** an archived workspace whose 14 days of Restore ended. It leaves the workspace list, and only a direct link opens its read-only chat.
 - **Background:**
-  - The `documentation` skill says: "Keep each doc short, about 250 lines. When you touch a doc that passes the target, split it into linked pages in the same change."
-  - On 2026-11-20, the rule that Starting shows over needs input touched both docs. `docs/protocol/secret-requests.md` went from 282 to 291 lines. `docs/protocol/workspace-life.md` went from 286 to 288 lines.
-  - That branch split neither doc, because the orchestrator of that work kept its scope to the rule.
-  - Each doc already moved parts to linked pages, and it keeps a stub section for each part. `secret-requests.md` has stubs for "Late requests" and "Late answers", which link to `docs/protocol/secret-late-answers.md`. `workspace-life.md` has stubs for "Create a workspace", "Stop and resume", "Restart the software", and "Continue".
-  - In `secret-requests.md`, "Temporary values" runs from line 189 to line 229, and "Mixed requests" from line 230 to line 240. Together they hold 52 lines on one topic: the values that a member types into a request.
-  - Two docs link to `secret-requests.md#temporary-values`: `docs/protocol/secrets.md:40` and `docs/protocol/secret-variables.md:42`. No file links to `secret-requests.md#mixed-requests`.
-  - In `workspace-life.md`, "Removed workspaces" runs from line 209 to line 281. Its 73 lines hold one topic: an archived workspace after the end of its Restore, with decisions 518 to 522.
-  - 17 files outside `workspace-life.md` link to `workspace-life.md#removed-workspaces`: 11 in `docs/`, 4 in `src/`, 1 in `worker/`, and 1 in `tools/`. The doc itself links to it at lines 147 and 197.
-  - "Removed workspaces" links to `#archive` of its own doc at lines 216 and 267. Its five other links name other pages in `docs/protocol/`, so they still work from a new page in the same folder.
-- **Problem:** Both docs pass the length target by about 40 lines. The touch on 2026-11-20 split neither doc.
-- **Impact if no action:** Readers and reviewers read long docs to find one rule. Each later change that touches either doc meets the split rule again.
-- **Root question:** How do the two docs get back to about 250 lines without a change of any requirement?
+  - The `documentation` skill says: "Keep each doc short, about 250 lines. When you touch a doc that passes the target, split it into linked pages in the same change." The always-on rules split a file only after 300 lines.
+  - `docs/protocol/workspace-life.md` had 286 lines before 2026-11-20. The rule that Starting shows over needs input (#581, 2026-11-20) brought it to 288 lines, and later changes to 296. It has 296 lines on 2026-11-26.
+  - None of these branches split the doc. Each kept its scope to its own rule.
+  - The doc already moved parts to linked pages, and it keeps a stub section for each part: "Create a workspace", "Stop and resume", "Restart the software", and "Continue".
+  - "Removed workspaces" runs from line 214 to line 286. Its 73 lines hold one topic: an archived workspace after the end of its Restore, with decisions 518, 519, 520, and 522.
+  - 17 files outside `workspace-life.md` link to `workspace-life.md#removed-workspaces`: 11 in `docs/`, 4 in `src/`, 1 in `worker/`, and 1 in `tools/`. The doc itself links to it at lines 147 and 202.
+  - "Removed workspaces" links to `#archive` of its own doc at lines 222 and 273. Its five other links name other pages in `docs/protocol/`, so they still work from a new page in the same folder.
+  - "Start steps" runs from line 26 to line 53, and "Time limits of builds and starts" from line 54 to line 83. Seven files outside `plans/` link to these two anchors.
+- **Problem:** The doc passes the length target by about 45 lines, and no branch that touched it split it.
+- **Impact if no action:** Readers and reviewers read a long doc to find one rule. Each later change that touches the doc meets the split rule again, and a few more lines take it past the limit of 300 lines.
+- **Root question:** How does the workspace life doc get back to about 250 lines without a change of any requirement?
 - **Options:**
-  - **A.** Move "Temporary values" and "Mixed requests" of `secret-requests.md` to a new page, such as `docs/protocol/secret-temporary-values.md`. Move "Removed workspaces" of `workspace-life.md` to a new page, such as `docs/protocol/removed-workspaces.md`. Give each new page the opening paragraph of a protocol doc, with a link to its parent doc. Keep a stub section with each old heading, so every old link still works. In the moved text, change the two `#archive` links to `workspace-life.md#archive`. Add each new page to the protocol docs index under its parent doc. `secret-requests.md` then has about 249 lines, and `workspace-life.md` about 220. Effort: Small.
-  - **B.** Move other sections in the same way: "What the chat shows" and "The exact-copy filter" of `secret-requests.md`, and "Start steps" with "Time limits of builds and starts" of `workspace-life.md`. Eight links reach the first two anchors, and seven files link to the other two. Effort: Small.
-- **Left out:** Shortening the text in place, because each sentence holds a requirement or its reason, and the always-on rules forbid compacting text to meet a limit. Changing nothing, because it breaks the length rule. A move without stub sections, because each old link would then need a change in the same commit.
+  - **A.** Move "Removed workspaces" to a new page, such as `docs/protocol/removed-workspaces.md`. Give the new page the opening paragraph of a protocol doc, with a link to `workspace-life.md`. Keep a stub section with the old heading, so every old link still works. In the moved text, change the two `#archive` links to `workspace-life.md#archive`. Add the new page to the protocol docs index under its parent doc, and update the list of topics in the opening paragraph of `workspace-life.md`. The doc then has about 228 lines. Effort: Small.
+  - **B.** Move "Start steps" with "Time limits of builds and starts" in the same way. Seven files link to these two anchors, so more links need a stub section or an update. Effort: Small.
+- **Left out:** Shortening the text in place, because each sentence holds a requirement or its reason, and the always-on rules forbid compacting text to meet a limit. Changing nothing, because it breaks the length rule. A move without a stub section, because each old link would then need a change in the same commit.
 - **Wider fix:** None. The length rule of the `documentation` skill is already in force. A length check for Markdown would be a new gate, and only the user can add one.
-- **Previous examples:** Commit `4ff3a95a2` moved the late requests of `secret-requests.md` to `docs/protocol/secret-late-answers.md`. Commit `eaf5e458f` added `docs/protocol/stop-and-resume.md`, and commit `6c93671fd` added `docs/protocol/restart-the-software.md`. `workspace-life.md` keeps a stub section for each. `plans/follow-ups/github-banner-doc-length.md` and `plans/follow-ups/agent-instructions-doc-length.md` record the same problem for two other protocol docs.
-- **Recommendation:** A. Each move takes one self-contained topic, and the stub sections keep every old link working with no other edit.
-- **Action:** fix after merge, apply A, because the split changes no requirement and the branch that found it kept a narrow scope.
+- **Previous examples:** On 2026-11-26, branch `calummoore/needs-input-at-the-composer-milestones-3-j8a8` moved "Temporary values" and "Mixed requests" of `docs/protocol/secret-requests.md` to `docs/protocol/secret-temporary-values.md`, with a stub section for each. Commit `4ff3a95a2` (#453) split `secret-requests.md` once before. It moved the late requests and the late answers to `docs/protocol/secret-late-answers.md`, with stub sections, and it added `docs/protocol/secret-variables.md` for the variable names. Commit `eaf5e458f` added `docs/protocol/stop-and-resume.md`, and commit `6c93671fd` added `docs/protocol/restart-the-software.md`. `workspace-life.md` keeps a stub section for each. Commit `aa1f344ee` (#660) split `docs/protocol/agent-instructions.md` in the same way, with the new page `docs/protocol/agent-instructions-changes.md`. `plans/follow-ups/github-banner-doc-length.md` records the same problem for another protocol doc.
+- **Recommendation:** A. The move takes one self-contained topic, and the stub section keeps every old link working with no other edit.
+- **Action:** fix after merge, apply A, because the split changes no requirement, and each branch that touched the doc kept a narrow scope.

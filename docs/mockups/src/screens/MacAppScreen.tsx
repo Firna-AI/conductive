@@ -26,6 +26,7 @@ const conversations = {
   choices: 'mac-waiting',
   many: 'mac-waiting-many',
   'many-choices': 'mac-waiting-many',
+  'with-secret': 'mac-waiting-secret',
   notification: 'mac-waiting',
   'allow-all': 'mac-done',
   'allow-until-stop': 'mac-done',
@@ -72,6 +73,7 @@ function pageFor(state: MacAppState): ReactNode {
             composer,
             palette: state.palette,
             sidebar: state.sidebar ?? 'shown',
+            shownRequest: state.shownRequest ?? readyWorkspace.shownRequest,
           }}
           viewport="desktop"
         />

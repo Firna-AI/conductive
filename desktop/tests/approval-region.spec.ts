@@ -51,16 +51,17 @@ async function edges(locator: Locator) {
 }
 
 /**
- * Presses a key that scrolls the region, then waits for the end of that
- * scroll. Chromium animates a keyboard scroll. The page shows the end
- * offset before the animation ends, and `scrollend` comes after that end.
- * A press in this gap changes only the target of the old animation. The end
- * of the old animation then drops that target, so the press does not
- * scroll. The wait for `scrollend` keeps two key scrolls from overlapping.
+ * Presses a key that scrolls the card on top of the stack, then waits for
+ * the end of that scroll. Chromium animates a keyboard scroll. The page
+ * shows the end offset before the animation ends, and `scrollend` comes
+ * after that end. A press in this gap changes only the target of the old
+ * animation. The end of the old animation then drops that target, so the
+ * press does not scroll. The wait for `scrollend` keeps two key scrolls
+ * from overlapping.
  */
-async function scrollWithKey(region: Locator, key: 'PageDown' | 'Home') {
+async function scrollWithKey(card: Locator, key: 'PageDown' | 'Home') {
   // The listener starts before the press, so it cannot miss the end.
-  const scroll = await region.evaluateHandle((node) => {
+  const scroll = await card.evaluateHandle((node) => {
     const state = { ended: false }
     node.addEventListener(
       'scrollend',
@@ -71,16 +72,16 @@ async function scrollWithKey(region: Locator, key: 'PageDown' | 'Home') {
     )
     return state
   })
-  await region.page().keyboard.press(key)
+  await card.page().keyboard.press(key)
   await expect
     .poll(() => scroll.evaluate((state) => state.ended), {
-      message: `The region ends the scroll of ${key}`,
+      message: `The card ends the scroll of ${key}`,
     })
     .toBe(true)
   await scroll.dispose()
 }
 
-test('the Mac app keeps many waiting commands above a reachable composer, scrolls a long one from the keyboard, and opens Allow over the region', async () => {
+test('the Mac app keeps many waiting commands in a stack above a reachable composer, scrolls a long one inside its card from the keyboard, moves to the next card, and opens Allow over the stack', async () => {
   const evidence = resolve(repository, '.context/boat-native-remote-workspaces')
   await mkdir(evidence, { recursive: true })
   const profile = await mkdtemp(resolve(evidence, 'approval-profile-'))
@@ -106,10 +107,18 @@ test('the Mac app keeps many waiting commands above a reachable composer, scroll
     const region = page.getByRole('group', {
       name: 'Requests that wait for an answer',
     })
+    // The stack shows one card at a time, with the place of the four.
     const waiting = region.getByRole('region', {
       name: 'Run a command on this Mac?',
     })
-    await expect(waiting).toHaveCount(4)
+    await expect(waiting).toHaveCount(1)
+    await expect(region.getByText('1 of 4', { exact: true })).toBeVisible()
+    await expect(
+      region.getByRole('button', { name: 'Previous request' }),
+    ).toBeDisabled()
+    // The card scrolls inside the outline of the stack: the parent of the
+    // part that takes the focus of the card on top.
+    const card = region.locator('div[tabindex="-1"]').locator('xpath=..')
     const composer = page.getByRole('textbox', { name: 'Message' })
     await expect(composer).toBeInViewport({ ratio: 1 })
     // A press reaches the composer: no request covers it.
@@ -121,8 +130,8 @@ test('the Mac app keeps many waiting commands above a reachable composer, scroll
     expect(bounds.bottom).toBeLessThanOrEqual(typing.top)
     expect(typing.bottom).toBeLessThanOrEqual(chat.bottom)
 
-    // The oldest request comes first, and it runs the long script, which
-    // starts in view and ends past the edge of the region.
+    // The oldest request is on top, and it runs the long script, which
+    // starts in view and ends past the edge of the stack.
     const first = waiting.first()
     const script = first
       .getByRole('code')
@@ -133,16 +142,29 @@ test('the Mac app keeps many waiting commands above a reachable composer, scroll
     for (let press = 0; press < 20; press += 1) {
       const before = await edges(script)
       if (before.bottom <= bounds.bottom) break
-      await scrollWithKey(region, 'PageDown')
+      await scrollWithKey(card, 'PageDown')
       await expect
         .poll(async () => (await edges(script)).top)
         .toBeLessThan(before.top)
     }
     expect((await edges(script)).bottom).toBeLessThanOrEqual(bounds.bottom)
-    await scrollWithKey(region, 'Home')
+    await scrollWithKey(card, 'Home')
     await expect
       .poll(async () => (await edges(script)).top)
       .toBeGreaterThan(bounds.top)
+
+    // Next shows the next command, and Previous comes back to the long
+    // script. The first card turns Previous off, so Next takes the focus.
+    await region.getByRole('button', { name: 'Next request' }).click()
+    await expect(region.getByText('2 of 4', { exact: true })).toBeVisible()
+    await expect(
+      waiting.getByRole('code').filter({ hasText: 'sw_vers' }),
+    ).toBeInViewport()
+    await region.getByRole('button', { name: 'Previous request' }).click()
+    await expect(region.getByText('1 of 4', { exact: true })).toBeVisible()
+    await expect(
+      region.getByRole('button', { name: 'Next request' }),
+    ).toBeFocused()
 
     const arrow = first.getByRole('button', { name: 'More ways to allow' })
     await arrow.click()

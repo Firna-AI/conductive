@@ -29,20 +29,19 @@ describe('Mac commands in the chat', () => {
     )
     expect(shown).toContain('Workspace Untitled, in Acme')
   })
-  it('gives each waiting request Deny and Allow only in the Mac app on the Mac that got it', async () => {
+  it('gives a waiting request Deny and Allow only in the Mac app on the Mac that got it', async () => {
+    // The stack shows one card at a time: the oldest request, with the
+    // place of two cards. The stack tests move to the second card.
     const mac = await renderChat({
       conversation: 'running',
       macCommands: 'several',
       onMac: true,
     })
     expect(count(mac.markup(), 'aria-label="Run a command on this Mac?"')).toBe(
-      2,
+      1,
     )
     expect(mac.text()).toContain(
-      `${ask} Deny Allow This Mac · up to 60 seconds Details`,
-    )
-    expect(mac.text()).toContain(
-      '$ sw_vers Deny Allow This Mac · up to 60 seconds',
+      `1 of 2 ${ask} Deny Allow This Mac · up to 60 seconds Details`,
     )
 
     const browser = await renderChat({

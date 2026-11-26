@@ -6,7 +6,7 @@ import { orgs } from '../../fixtures/orgs'
 import type { SecretRunItem } from '../../fixtures/secretRequests'
 import { paths } from '../../paths'
 import { ActionButton } from '../../../../../src/ui/components/common/actions'
-import { ScreenLink } from '../common/ScreenLink'
+import { Linked } from '../common/ScreenLink'
 import { StatusText } from '../../../../../src/ui/components/common/StatusText'
 import { asksValue } from './requests'
 import { whoOf } from './SecretRun'
@@ -18,6 +18,13 @@ import {
   secretRunWords,
   type SessionLoginOwner,
 } from '../../../../../src/ui/components/chat/secretRunCopy'
+
+/**
+ * The pages that the answers of a card open in a walk of the catalogue,
+ * which keeps the other open requests of its example. An answer without a
+ * page draws no link there.
+ */
+export type AnswerLinks = { allow?: string; deny?: string; value?: string }
 
 /** Whether a request names a secret of the org too. */
 function namesStored(item: SecretRunItem): boolean {
@@ -43,46 +50,59 @@ function valuePath(item: SecretRunItem): string {
   return namesStored(item) ? paths.secretMixedValue : paths.secretTemporaryValue
 }
 
-/** Deny, which leads to the denied result. */
-function DenyButton(props: { item: SecretRunItem }) {
-  const late = props.item.state === 'late'
+/** The result that Deny leads to. */
+function denyPath(item: SecretRunItem): string {
+  return item.state === 'late' ? paths.secretLateDenied : paths.secretDenied
+}
+
+/**
+ * Deny, which leads to the denied result, or in a walk to the page that
+ * the walk gives.
+ */
+function DenyButton(props: { item: SecretRunItem; links?: AnswerLinks }) {
+  const { links } = props
   return (
-    <ScreenLink asChild to={late ? paths.secretLateDenied : paths.secretDenied}>
+    <Linked to={links ? links.deny : denyPath(props.item)}>
       <ActionButton>{secretRunWords.deny}</ActionButton>
-    </ScreenLink>
+    </Linked>
   )
 }
 
 /**
  * Allow. A secret of the org is allowed for the session, and a value for
  * the time that its choice gives. Allow of a value waits for each value.
+ * In a walk, it leads to the page that the walk gives.
  */
-export function AllowButton(props: { item: SecretRunItem; label: string }) {
-  const { item } = props
+export function AllowButton(props: {
+  item: SecretRunItem
+  label: string
+  links?: AnswerLinks
+}) {
+  const { item, links } = props
   const typed = !asksValue(item) || item.draft?.typed === true
-  const to = typed ? allowPath(item) : undefined
-  const button = (
-    <ActionButton disabled={!typed} tone="primary">
-      {props.label}
-    </ActionButton>
-  )
-  if (to === undefined) return button
+  const result = links ? links.allow : allowPath(item)
   return (
-    <ScreenLink asChild to={to}>
-      {button}
-    </ScreenLink>
+    <Linked to={typed ? result : undefined}>
+      <ActionButton disabled={!typed} tone="primary">
+        {props.label}
+      </ActionButton>
+    </Linked>
   )
 }
 
-/** Deny and Allow, as a computer shows them, and for a secret of the org. */
-export function Answers(props: { item: SecretRunItem }) {
+/**
+ * Deny and Allow, as a computer shows them, and for a secret of the org.
+ * `links` gives the pages of a walk.
+ */
+export function Answers(props: { item: SecretRunItem; links?: AnswerLinks }) {
   const value = asksValue(props.item)
   return (
     <>
-      <DenyButton item={props.item} />
+      <DenyButton item={props.item} links={props.links} />
       <AllowButton
         item={props.item}
         label={value ? secretRunWords.allow : secretRunWords.allowSession}
+        links={props.links}
       />
     </>
   )
@@ -93,13 +113,17 @@ export function Answers(props: { item: SecretRunItem }) {
  * of the mockups). Give a value opens a sheet with each value, the choice
  * of how long they last, and Allow.
  */
-export function PhoneAnswers(props: { item: SecretRunItem }) {
+export function PhoneAnswers(props: {
+  item: SecretRunItem
+  links?: AnswerLinks
+}) {
+  const { links } = props
   return (
     <>
-      <DenyButton item={props.item} />
-      <ScreenLink asChild to={valuePath(props.item)}>
+      <DenyButton item={props.item} links={links} />
+      <Linked to={links ? links.value : valuePath(props.item)}>
         <ActionButton tone="primary">{secretRunWords.giveValue}</ActionButton>
-      </ScreenLink>
+      </Linked>
     </>
   )
 }
@@ -141,7 +165,9 @@ function answeredBy(item: SecretRunItem): PersonKey | undefined {
  * the sender of the turn that asked (secrets decision 10 B). When that
  * turn cannot run, the line says when the agent learns of the answer: at
  * the next message, or when the login of the session is connected again,
- * by its starter or, for the org login, by an admin.
+ * by its starter or, for the org login, by an admin. A late Allow without
+ * a delivery got no line of its own, such as an older request that the
+ * Allow of a newer one covers, so its line says only who answered.
  */
 export function endLine(
   item: SecretRunItem,
@@ -154,7 +180,8 @@ export function endLine(
   if (by === undefined) return undefined
   const who = whoOf(by, viewer).subject
   if (item.state === 'late-denied') return lateAnswerNote(who, 'denied')
-  const delivery = item.delivery ?? { kind: 'turn' }
+  const { delivery } = item
+  if (!delivery) return lateAnswerNote(who, 'answered')
   if (delivery.kind !== 'reconnect') return lateAnswerNote(who, delivery.kind)
   const { login } = delivery
   const owner: SessionLoginOwner =

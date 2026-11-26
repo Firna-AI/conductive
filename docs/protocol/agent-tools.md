@@ -213,21 +213,23 @@ a choice of that person covers the command, as
 - Reason: the person at that Mac decides what runs on it. A browser or
   another Mac cannot allow a command there.
 - The web app in a browser and the Mac app on any other Mac show the
-  request without choices.
+  request without choices. There the request comes after each request
+  that the view can answer, as [The order](request-stack.md#the-order)
+  says.
 - The Worker never allows a command by itself. The Mac app on that Mac
   decides, from the answer of its user or from a choice that its user
   made there, as [The choices](desktop-commands.md#the-choices) says.
 
 ### What the chat shows
 
-- While a request waits, it shows as a compact message just above the
-  composer of its session (decision 62). The message shows the exact
-  command, the Mac, and the time limit as a small label.
+- While a request waits, it shows as a compact message in the
+  [request stack](request-stack.md) just above the composer of its session
+  (decision 62). The message shows the exact command, the Mac, and the
+  time limit as a small label.
 - Details opens the folder, the reason, the workspace, and the sender.
 - A longer time limit shows its reason without a click.
-- The user can scroll through long commands and all waiting requests with
-  the keyboard. The composer stays reachable, and the Allow menu stays
-  visible outside the region that scrolls.
+- The Allow menu stays visible outside the part of the stack that
+  scrolls.
 - While a request waits, its workspace shows needs input, as
   [Workspace states](workspace-life.md#workspace-states) says
   (decision 68). The workspace keeps needs input while any of its
@@ -237,8 +239,6 @@ a choice of that person covers the command, as
 - After its result, the command shows at its place in the chat: denied,
   done with its output, or Mac not available. A request that kept the
   result Mac access off shows it with its reason.
-- The [requests of secrets](secret-requests.md#the-request) wait in the
-  same place above the composer.
 - When its turn ends, the result folds with the work of the turn, at its
   place, as [The work of a turn](chat-and-events.md#the-work-of-a-turn)
   says (decision 151). A result that stays in view between two folds was

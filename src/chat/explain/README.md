@@ -77,7 +77,8 @@ for the screens.
   `markRegions`: the text of each mark that the message shows, and the
   whole message for each mark that covers it, except in a message line.
 - The state of a mark comes from the record of its explanation and the
-  requests that wait: Needs input while a request waits, a spinner while a
+  requests that wait: Needs input while a request waits for a member, also
+  a late secret request, a spinner while a
   turn runs or waits for the cloud computer, the alert while the newest
   turn failed, and the icon of Explain otherwise. A read-only workspace
   shows only an ended turn or a failure.

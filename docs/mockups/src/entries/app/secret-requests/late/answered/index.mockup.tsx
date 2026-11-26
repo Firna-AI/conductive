@@ -10,7 +10,7 @@ const flow = ['user-flows/secret-request']
 export const lateAllowed = defineScreen({
   title: 'Allowed later',
   description:
-    'Priya opened the workspace later and allowed the request of Cal. Cal sees the widget say Allowed for this session, and its line says that Priya answered and that a new turn told the agent. A line of the app follows at the end of the chat: "Priya Raman allowed PROD_DATABASE_URL for this session." It is not a message of Priya. The new turn runs for Cal.',
+    'Priya opened the workspace later and allowed the request of Cal. The answer moved the widget from above the composer to its place in its turn, unfolded. Cal sees the widget say Allowed for this session, and its line says that Priya answered and that a new turn told the agent. A line of the app follows at the end of the chat: "Priya Raman allowed PROD_DATABASE_URL for this session." It is not a message of Priya. The new turn runs for Cal, so the tab of the session shows the spinner in place of the needs-input mark.',
   rationale:
     'Secrets decision 10 B: a late answer starts a turn that acts for the sender of the turn that asked, under the login rules of that sender. So the answer of any member reaches the agent on the login that the asking turn used. The chat and the text that the agent gets name the member who answered, and never a value.',
   relatedDocs: [],

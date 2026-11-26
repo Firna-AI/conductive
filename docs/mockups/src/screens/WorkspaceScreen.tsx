@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { workspaceChat } from './workspaceChat'
+import { WorkspaceChat } from './workspaceChat'
 import { ChatWorkspaces } from '../components/chat/chatWorkspaces'
 import {
   appFrame,
@@ -9,7 +9,6 @@ import {
 import { acmeRail } from '../components/layout/OrgRail'
 import { useMacApp } from '../../../../src/ui/components/mac/MacApp'
 import { ChatMarks } from '../components/explain/chatMarks'
-import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import { checksActions } from '../entries/components/workspace/BarActions.mockup'
 import { WorkspaceMobile } from './workspaceMobile'
 import { pullRequestBar } from '../entries/components/workspace/PullRequestBar.mockup'
@@ -18,13 +17,11 @@ import { workspaceBody } from '../entries/components/workspace/WorkspaceBody.moc
 import { workspaceHeader } from '../entries/components/workspace/WorkspaceHeader.mockup'
 import { workspaceTabs } from '../entries/components/workspace/WorkspaceTabs.mockup'
 import { defined, plainData } from '../defined'
-import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
-import { orgs, suspendedOrg } from '../fixtures/orgs'
+import { suspendedOrg } from '../fixtures/orgs'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
-import { composerFor, isRunning } from './composerFor'
-import { composerNotice } from './composerNotice'
+import { isRunning } from './composerFor'
 import { centreOf } from './workspaceCentre'
 import { placeLostUpdate } from './lostUpdates'
 import { resizedColumns } from './layoutState'
@@ -37,16 +34,14 @@ import {
   filesContent,
   toolContent,
 } from '../entries/components/screens/workspaceParts.mockup'
-import { startingLogFor } from './workspaceParts'
 import { workspaceSidebar } from './workspaceSidebar'
 // The toasts lay first in the old module of the overlays, so their styles
 // keep their place before the styles of the dialogs.
 import { copyToast, workspaceToast } from './workspaceToasts'
 import { workspaceOverlay, workspacePalette } from './workspaceOverlays'
-import { sandboxNotice } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
-import { historyFor, noMessages, tabsFor } from './workspaceTabs'
+import { historyFor, tabsFor } from './workspaceTabs'
 import { WorkspaceLinks } from './workspaceLinks'
 import styles from '../../../../src/ui/screens/WorkspaceScreen.module.css'
 
@@ -72,7 +67,7 @@ export function WorkspaceScreen(props: {
   shortcuts?: ShortcutChanges
   picker?: ReactNode
 }) {
-  const { viewport, picker: pickerPart } = props
+  const { viewport } = props
   const mac = useMacApp()
   const {
     state,
@@ -89,35 +84,19 @@ export function WorkspaceScreen(props: {
     bar,
   } = workspaceOpen(props.state)
   const admin = state.viewer === 'admin'
-  const problem = sandboxNotice(state)
-  const empty = noMessages(state)
   const rightHidden = state.rightColumn === 'hidden'
   const rows = chatWorkspacesOf(state, { workspace, status })
   const chat = (
     <ChatMarks marks={chatMarksOf(state)}>
-      {workspaceChat({
-        rows,
-        workspace,
-        items: empty ? [] : chatItemsFor(open.items, state.paths),
-        composer: { ...composerFor(state, workspace, viewport), pickerPart },
-        // An archived workspace keeps its archived bar, so the notice of a
-        // suspended org shows above it.
-        notice:
-          archived && suspended ? (
-            <suspendedOrgNotice.Component
-              moklyInstance="suspended-org-notice"
-              org={{ name: orgs[suspendedOrg].name }}
-            />
-          ) : (
-            composerNotice(state, workspace)
-          ),
-        pictures: state.sandbox === 'ready' ? state.pictures : undefined,
-        problem,
-        starting: startingLogFor(state),
-        fold: state.fold,
-        viewer,
-        viewport,
-      })}
+      <WorkspaceChat
+        items={open.items}
+        picker={props.picker}
+        rows={rows}
+        state={state}
+        viewer={viewer}
+        viewport={viewport}
+        workspace={workspace}
+      />
     </ChatMarks>
   )
   const headerBar = (
@@ -144,7 +123,8 @@ export function WorkspaceScreen(props: {
     />
   )
   // A phone and an archived workspace show only the session tabs.
-  const tabs = tabsFor(state, workspace, isRunning(state)).filter(
+  const view = mac === undefined ? 'browser' : 'mac'
+  const tabs = tabsFor(state, workspace, isRunning(state), view).filter(
     (tab) => tab.kind === 'session' || (!archived && viewport === 'desktop'),
   )
   const row = tabRowOf(state, tabs, viewport, readOnly)

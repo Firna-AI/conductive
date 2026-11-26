@@ -1,20 +1,22 @@
 // @vitest-environment happy-dom
 
+import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
-import { secretAnswerPath } from '../../shared/secret-requests'
+import type { SecretRequest } from '../../shared/secret-requests'
 import {
   byRole,
   queryByRole,
   queryByText,
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { FAKE_TIME } from '../../test-support/fixtures/core'
 import {
   asks,
   cal,
   request,
   second,
 } from '../../test-support/fixtures/secret-requests'
+import { secretTurn } from '../../test-support/fixtures/secret-turn'
 import {
   MOUNTED_TEST_TIMEOUT,
   press,
@@ -26,33 +28,46 @@ import {
   mountChat,
   second as debounce,
 } from '../components/tab-drag-test-kit'
-import { storeEvents } from './secret-test-kit'
+import {
+  answerPathOf,
+  answersSent,
+  cardsOf,
+  lateRequest,
+  stackName,
+  storeEvents,
+  textsOf,
+  updated,
+} from './secret-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
-const region = 'Requests that wait for an answer'
+/** The secret turn of the fixtures starts here, and its work runs after. */
+const start = FAKE_TIME + 20 * second
+const inWork = start + 300
 
-/** Whether the button with this name, in the region of requests, is off. */
+/** Whether the button with this name, in the stack of requests, is off. */
 function isOff(name: string): boolean {
-  const button = byRole('button', name, byRole('group', region))
+  const button = byRole('button', name, byRole('group', stackName))
   return button instanceof HTMLButtonElement && button.disabled
+}
+
+/** A request after Cal gave its value for this workspace, a second later. */
+function allowedFor(item: SecretRequest): SecretRequest {
+  return {
+    ...item,
+    state: 'allowed',
+    answeredBy: cal,
+    lifetime: 'workspace',
+    updatedAt: item.updatedAt + second,
+  }
 }
 
 describe('the answer to a secret request', () => {
   test('a request for a value keeps Allow off until the value is typed, shows a failed answer with the choices and the value kept, and sends the values with how long they last', async () => {
     const server = new FakeApiServer({ conversation: 'running' })
     const asked = request('asked', asks.mapbox, FAKE_TIME + 8 * second)
-    storeEvents(server, [
-      [
-        {
-          type: 'secrets.request.updated',
-          sessionId: FAKE_IDS.session,
-          request: asked,
-        },
-        asked.updatedAt,
-      ],
-    ])
-    const path = secretAnswerPath(FAKE_IDS.org, FAKE_IDS.workspace, asked.id)
+    storeEvents(server, [updated(asked)])
+    const path = answerPathOf(asked)
     server.json(
       'POST',
       path,
@@ -70,7 +85,7 @@ describe('the answer to a secret request', () => {
     await typeText(field, 'pk.mapbox-value')
     await press(byRole('radio', 'This workspace'))
     const typed = isOff('Allow')
-    await press(byRole('button', 'Allow', byRole('group', region)))
+    await press(byRole('button', 'Allow', byRole('group', stackName)))
     await waitFor(() => queryByText('The answer was not sent'), 'the notice')
     expect({
       empty,
@@ -94,8 +109,8 @@ describe('the answer to a secret request', () => {
         updatedAt: asked.updatedAt + second,
       },
     })
-    await press(byRole('button', 'Allow', byRole('group', region)))
-    await waitFor(() => queryByRole('group', region) === null, 'the answer')
+    await press(byRole('button', 'Allow', byRole('group', stackName)))
+    await waitFor(() => queryByRole('group', stackName) === null, 'the answer')
     const sent = server.requests.filter(
       (item) => item.method === 'POST' && new URL(item.url).pathname === path,
     )
@@ -108,5 +123,84 @@ describe('the answer to a secret request', () => {
       answer,
       answer,
     ])
+  })
+
+  test('a newer request for the same secret keeps the typed value, how long it lasts, and the focus in the field, and Allow sends them to the newer request', async () => {
+    const server = new FakeApiServer({ conversation: 'running' })
+    const asked = request('asked', asks.mapbox, FAKE_TIME + 8 * second)
+    const again = request('again', asks.mapbox, FAKE_TIME + 9 * second, {
+      reason: 'Check the suggestions of the geocoding API again.',
+    })
+    storeEvents(server, [updated(asked)])
+    server.handle('POST', answerPathOf(again), async () => {
+      // The Worker allows the older request that the grant covers, with its
+      // own event, before it replies.
+      storeEvents(server, [updated(allowedFor(asked))])
+      return Response.json({ request: allowedFor(again) })
+    })
+    await mountChat({ server, tabs: [first, debounce], viewport: 'desktop' })
+    await press(byRole('radio', 'This workspace'))
+    const field = byRole('textbox', 'Value of MAPBOX_TOKEN')
+    await typeText(field, 'pk.mapbox-value')
+    await act(async () => storeEvents(server, [updated(again)]))
+    await waitFor(() => queryByText(again.reason), 'the newer request')
+    const shown = byRole('textbox', 'Value of MAPBOX_TOKEN')
+    expect({
+      sameField: shown === field,
+      focused: document.activeElement === field,
+      value: shown instanceof HTMLInputElement ? shown.value : null,
+      lifetime: byRole('radio', 'This workspace').getAttribute('aria-checked'),
+    }).toEqual({
+      sameField: true,
+      focused: true,
+      value: 'pk.mapbox-value',
+      lifetime: 'true',
+    })
+    await press(byRole('button', 'Allow', byRole('group', stackName)))
+    await waitFor(() => queryByRole('group', stackName) === null, 'the answer')
+    expect(await answersSent(server)).toEqual([
+      {
+        path: answerPathOf(again),
+        body: {
+          kind: 'values',
+          lifetime: 'workspace',
+          values: { MAPBOX_TOKEN: 'pk.mapbox-value' },
+        },
+      },
+    ])
+  })
+
+  test('an Allow of a late request moves it from the stack above the composer to its place in its turn, where it stays unfolded with its answer', async () => {
+    const server = new FakeApiServer()
+    const open = lateRequest('late', inWork, asks.database.reason)
+    storeEvents(server, secretTurn(start, [updated(open)]))
+    server.json('POST', answerPathOf(open), {
+      request: {
+        ...open,
+        state: 'allowed',
+        answeredBy: cal,
+        updatedAt: open.updatedAt + second,
+        notice: { state: 'sent', turnId: 'turn-answer-late' },
+      },
+    })
+    await mountChat({ server, tabs: [first, debounce], viewport: 'desktop' })
+    const before = cardsOf(document)
+    await press(
+      byRole('button', 'Allow for this session', byRole('group', stackName)),
+    )
+    await waitFor(() => queryByRole('group', stackName) === null, 'the answer')
+    expect({
+      before,
+      after: cardsOf(document),
+      card: textsOf('Request for PROD_DATABASE_URL'),
+    }).toEqual({
+      before: ['Request for PROD_DATABASE_URL (above the composer)'],
+      after: ['Request for PROD_DATABASE_URL'],
+      card: [
+        expect.stringMatching(
+          /^PROD_DATABASE_URL Allowed for this session .* You answered, and a new turn told the agent\.$/,
+        ),
+      ],
+    })
   })
 })

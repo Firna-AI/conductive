@@ -324,6 +324,26 @@ A close through the tools that stops a turn uses the same stop line.
 The agent's earlier work folds into a line when a turn ends.
 Select that line to inspect its messages and tool calls.
 The answer stays visible beside it.
+A late secret request moves to its place in the turn after a member answers it or the request ends.
+It stays visible when the work of that turn folds.
+
+## Find and answer requests
+
+A blue, pulsing needs-input mark replaces the session tab's icon while a request is open.
+The mark shows on the selected tab too, including while the agent works.
+With reduced motion, the mark stays still.
+
+Open a marked session tab to find its requests in the stack above the message box.
+The stack shows one request card at a time.
+When more than one card waits, use **Previous** and **Next** to move through the stack.
+The count shows your place in the stack, such as **1 of 3**.
+
+The stack puts requests you can answer before the other requests.
+In each group, it shows requests the agent still waits for before late requests.
+Waiting requests and late requests each go from oldest to newest.
+
+- [Understand secret requests](/docs/security#understand-secrets)
+- [Review a Mac command request](/docs/mac-app#review-a-mac-command-request)
 
 ## Read replies and tables
 
@@ -485,7 +505,7 @@ Any member who can send in a session can change its model, effort, and **Fast** 
 That choice applies to every member's messages on the session's login.
 
 GitHub operations follow the person whose message started the running turn.
-After a late answer to a secret request, the new turn follows the person whose message started the turn that asked.
+A new turn from a late answer to a secret request follows the person whose message started the turn that asked.
 Commits name that person as both author and committer.
 In a workspace with older cloud computer software, agent commits name the workspace owner.
 Mac command requests go to that same person's connected Mac.

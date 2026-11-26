@@ -5,6 +5,7 @@
     "waitlist",
     "commands",
     "requests",
+    "command-and-secret",
     "stop",
     "extend",
     "capabilities",

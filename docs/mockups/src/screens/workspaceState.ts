@@ -33,6 +33,11 @@ import {
 import { listsStateProperties } from './listsState'
 import { overlayStates } from './overlayStates'
 import {
+  requestStateDefaults,
+  requestStateKeys,
+  requestStateProperties,
+} from './requestState'
+import {
   rowMenuStateDefaults,
   rowMenuStateKeys,
   rowMenuStateProperties,
@@ -61,6 +66,7 @@ export const workspaceStateSchema = {
     'sandbox',
     'startError',
     'conversation',
+    ...requestStateKeys,
     'fold',
     'pictures',
     'banner',
@@ -112,6 +118,7 @@ export const workspaceStateSchema = {
      */
     startError: { enum: startErrorKeys },
     conversation: { enum: conversationKeys },
+    ...requestStateProperties,
     /**
      * The fold of the work of each ended turn: closed, as it starts, open,
      * or open with its last message line open too. A view runs no script,
@@ -239,6 +246,7 @@ export const readyWorkspace: WorkspaceState = {
   sandbox: 'ready',
   startError: 'failed',
   conversation: 'history',
+  ...requestStateDefaults,
   fold: 'closed',
   pictures: 'shown',
   banner: 'ready-to-merge',

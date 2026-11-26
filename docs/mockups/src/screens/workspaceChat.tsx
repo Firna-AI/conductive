@@ -1,74 +1,89 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
+import { useMacApp } from '../../../../src/ui/components/mac/MacApp'
+import { ChatWorkspaces, type ChatRow } from '../components/chat/chatWorkspaces'
+import { defined, plainData } from '../defined'
 import { chatPane } from '../entries/components/chat/ChatPane.mockup'
 import { composerData } from '../entries/components/chat/capabilitiesSlot'
-import { ChatWorkspaces, type ChatRow } from '../components/chat/chatWorkspaces'
 import { emptyState } from '../entries/components/common/EmptyState.mockup'
-import type { PictureRead } from '../components/chat/chatPictures'
-import type { ComposerState } from '../components/chat/Composer'
-import type { FoldState } from '../components/chat/WorkFold'
-import type { BarNotice } from '../components/workspace/SandboxNotice'
-import { defined, plainData } from '../defined'
+import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import type { ChatItem } from '../fixtures/conversations'
+import { chatItemsFor } from '../fixtures/maskedFiles'
 import type { PersonKey } from '../fixtures/members'
-import type { StartingLog } from '../fixtures/starting'
+import { orgs, suspendedOrg } from '../fixtures/orgs'
 import type { Workspace } from '../fixtures/workspaces'
+import { composerFor } from './composerFor'
+import { composerNotice } from './composerNotice'
+import { stackViewOf } from './walkLinks'
+import { startingLogFor } from './workspaceParts'
+import { sandboxNotice } from './workspaceSandbox'
+import type { WorkspaceState } from './workspaceState'
+import { noMessages } from './workspaceTabs'
 
 /**
- * The parts of the chat of an open workspace, as the workspace screen
- * works them out from its state.
+ * The chat of an open workspace: the transcript, the request stack, and the
+ * composer, with the workspaces of the screen for its chips. A new session
+ * shows its empty state in place of the transcript. The stack takes the
+ * links of the walk of the screen, as `stackViewOf` gives them. The
+ * workspace screen imports this module first so the styles of the chat load
+ * first.
  */
-type WorkspaceChatParts = {
-  /** The workspaces of the screen, which the chips of the chat find. */
-  rows: readonly ChatRow[]
+export function WorkspaceChat(props: {
+  state: WorkspaceState
   workspace: Workspace
   items: readonly ChatItem[]
-  composer: ComposerState
-  /** A message above the composer, such as a notice of the org. */
-  notice: ReactNode
-  problem: BarNotice | undefined
-  /** The reads of the pictures of the answers, while the computer runs. */
-  pictures: PictureRead | undefined
-  starting: StartingLog | undefined
-  fold: FoldState
+  rows: readonly ChatRow[]
+  picker?: ReactNode
   viewer: PersonKey
   viewport: Viewport
-}
-
-/**
- * The chat of an open workspace: the transcript and the composer, with the
- * workspaces of the screen for its chips. A new session shows its empty
- * state in place of the transcript. The screen imports this module where
- * it imported the chat before, so the styles of the chat load first.
- */
-export function workspaceChat(parts: WorkspaceChatParts): ReactNode {
+}) {
+  const { state, workspace, viewport } = props
+  const mac = useMacApp()
+  const stack = stackViewOf(state, mac ? 'mac' : 'browser')
+  const items = noMessages(state) ? [] : chatItemsFor(props.items, state.paths)
+  const problem = sandboxNotice(state)
+  const starting = startingLogFor(state)
+  // A suspended org's notice stays above the bar of an archived workspace.
+  const notice =
+    state.sandbox === 'archived' && state.org === 'suspended' ? (
+      <suspendedOrgNotice.Component
+        moklyInstance="suspended-org-notice"
+        org={{ name: orgs[suspendedOrg].name }}
+      />
+    ) : (
+      composerNotice(state, workspace)
+    )
   // The open Capabilities control and a picker in place of the model
   // picker are not data, so they go in slots.
-  const box = composerData(parts.composer)
+  const box = composerData({
+    ...composerFor(state, workspace, viewport),
+    pickerPart: props.picker,
+  })
   return (
-    <ChatWorkspaces rows={parts.rows}>
+    <ChatWorkspaces rows={props.rows}>
       <chatPane.Component
         composer={plainData(box.composer)}
         empty={
           <emptyState.Component
-            body={`The agent works on ${parts.workspace.branch}, on the same cloud computer as the other sessions.`}
+            body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
             icon="message-square-plus"
             moklyInstance="new-session-empty"
             title="New session"
           />
         }
-        fold={parts.fold}
-        items={plainData(parts.items)}
+        fold={state.fold}
+        items={plainData(items)}
         moklyInstance="chat"
-        viewer={parts.viewer}
-        viewport={parts.viewport}
+        viewer={props.viewer}
+        viewport={viewport}
         {...defined({
           capabilitiesPanel: box.capabilitiesPanel,
           pickerPart: box.pickerPart,
-          notice: parts.notice,
-          pictures: parts.pictures,
-          problem: parts.problem && plainData(parts.problem),
-          starting: parts.starting && plainData(parts.starting),
+          notice,
+          pictures: state.sandbox === 'ready' ? state.pictures : undefined,
+          problem: problem && plainData(problem),
+          stack: stack && plainData(stack),
+          starting: starting && plainData(starting),
         })}
       />
     </ChatWorkspaces>

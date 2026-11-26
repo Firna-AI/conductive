@@ -9,9 +9,11 @@ with Copy link.
 
 - `WorkspaceMark` in
   [`src/ui/components/workspaces/`](../../src/ui/components/workspaces/)
-  draws the list mark of a
-  workspace, which the list, the rows of the command palette, and the
-  workspace and session chips show. It is a 3 × 3 dot-matrix square in one colour for
+  draws the list mark of a workspace, which the list, the rows of the
+  command palette, and the workspace and session chips show. Its
+  needs-input form also marks a session tab that holds an open request,
+  as [the workspace](design-workspace.md) gives. The mark is a 3 × 3
+  dot-matrix square in one colour for
   the GitHub state of the pull request, in the tone of the pull request
   bar: rose when checks failed, the success green when the pull request is
   ready to merge, the `listMerged` purple after the merge, and amber for a
@@ -27,7 +29,12 @@ with Copy link.
   the ring or the blue middle column stays lit, and the other cells stay
   dim. A workspace that starts keeps the lit ring of a working agent. A
   mark whose checks run while the agent does not work stays fully lit
-  without motion.
+  without motion. The app reads the browser's motion preference. The
+  mockup part `ReducedMotion` in
+  `src/components/common/` marks a screen with `data-motion="reduced"`.
+  Under it, the marks of `WorkspaceMark` and `StatusGlyph` take the same
+  still forms as with reduced motion, as
+  `app/tabs/needs-input/reduced-motion` shows.
   `listMarkLabel` in `status.ts` beside it gives the words that screen
   readers hear, such as "Checks failed, Working". The mark imports no
   fixture value, so the app uses it too.

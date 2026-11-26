@@ -68,6 +68,26 @@ export function focused(): string | null {
   return active && active !== document.body ? accessibleName(active) : null
 }
 
+/**
+ * The icon of each tab of the row, after its title, as a screen reader names
+ * it: "Needs input" for the needs-input mark, "Working" for the spinner,
+ * and "chat" for the chat icon, which has no name. `root` can be a page that
+ * is not in the document, such as rendered markup.
+ */
+export function tabIcons(root: ParentNode = document): string[] {
+  const row = root.querySelector('nav[aria-label="Sessions and files"]')
+  return Array.from(row?.querySelectorAll('li') ?? [], (item) => {
+    const named = (name: string) =>
+      item.querySelector(`[aria-label="${name}"]`) !== null
+    const icon = named('Needs input')
+      ? 'Needs input'
+      : named('Working')
+        ? 'Working'
+        : 'chat'
+    return `${item.textContent}: ${icon}`
+  })
+}
+
 /** The list of the tab row, which scrolls sideways. */
 export function tabList(): HTMLElement {
   const list = byLabel('Sessions and files').querySelector('ul')

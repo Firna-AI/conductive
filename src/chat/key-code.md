@@ -28,10 +28,10 @@ is relative to `src/chat/`, the folder of this guide.
   and the writer sends nothing.
 - `components/SessionTabs.tsx`: the tab row, with the session tabs of
   `components/SessionTab.tsx` and the tabs of `renderTab`.
-  `components/tab-row.ts`: `RenderTab`, `TabDraw`, and `rowOf`, the tabs of
-  the row in the saved order with their titles. `components/tab-keys.ts`:
-  `useTabKeys`, the keys of the row, and the copy keys of the shown
-  session.
+  `components/tab-row.ts`: `RenderTab`, `TabDraw`, `rowOf`, the tabs of the
+  row in the saved order with their titles and marks, and `sessionMarks`.
+  `components/tab-keys.ts`: `useTabKeys`, the keys of the row, and the copy
+  keys of the shown session.
 - `components/useTabDrag.ts`: the drag of the tab row: the drop place, the
   move, and the status. `components/TabDragParts.tsx`: the drop line and
   the lifted tab.
@@ -286,8 +286,13 @@ is relative to `src/chat/`, the folder of this guide.
   a late answer. Their [README](secrets/README.md) names their key code.
 - `explain/`: Explain, the marks of explanations, and the popover. Its
   [README](explain/README.md) names its key code.
-- `components/WaitingRequests.tsx`: the region just above the composer of
-  the Mac commands and the secret requests that wait, the oldest first.
+- `components/WaitingRequests.tsx`: the stack just above the composer of
+  the open Mac commands and secret requests, with Previous, Next, and the
+  moves of the focus. `components/request-stack.ts` holds `WaitingItem`,
+  `stackCards`, the order of its cards, `placeAfter`, the card on top
+  after a change, and `showingAfter`, how long its parts last. The shared
+  `RequestStackFrame` and `stackEntries` of `../ui/components/chat/` draw
+  and order the stack of the app and of the mockups.
 - `dev/`: the development page, its fake writes, its scripted agent, its
   Mac, the `loss` scenario in `dev/dev-loss.ts`, and the `starter` option
   in `dev/dev-logins.ts`. `dev/dev-answers.ts` holds the plans and the

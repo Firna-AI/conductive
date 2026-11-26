@@ -24,23 +24,33 @@ export const FAKE_PAIRING: DevicePairing = {
   connectionId: 'connection-1',
 }
 
-/** The Mac commands that a fake workspace can hold. */
+/**
+ * The Mac commands that the development pages offer, as the `mac` option of
+ * the app and of the chat page names them, the default first.
+ */
+export const OFFERED_MAC_SCENARIOS = [
+  'none',
+  'waiting',
+  'longer',
+  'several',
+  'many',
+  'running',
+  'denied',
+  'done',
+  'exit-code',
+  'cut',
+  'timed-out',
+  'failed',
+  'unavailable',
+  'literal',
+] as const
+
+/**
+ * The Mac commands that a fake workspace can hold: the offered ones, and a
+ * request of another session, which only the tests use.
+ */
 export type FakeMacScenario =
-  | 'none'
-  | 'waiting'
-  | 'longer'
-  | 'several'
-  | 'many'
-  | 'running'
-  | 'denied'
-  | 'done'
-  | 'exit-code'
-  | 'cut'
-  | 'timed-out'
-  | 'failed'
-  | 'unavailable'
-  | 'other-session'
-  | 'literal'
+  (typeof OFFERED_MAC_SCENARIOS)[number] | 'other-session'
 
 /**
  * Commands that only a literal display shows as they are: a comment, then a

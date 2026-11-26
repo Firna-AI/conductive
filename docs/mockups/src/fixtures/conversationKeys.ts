@@ -1,6 +1,7 @@
 import { barConversationKeys } from './barConversations'
 import { capabilityConversationKeys } from './capabilityConversations'
 import { secretConversationKeys } from './secretConversations'
+import { secretStackConversationKeys } from './secretStackConversations'
 import { secretValueConversationKeys } from './secretValueConversations'
 import { explanationConversationKeys } from './explanationChats'
 import { wakeConversationKeys } from './wakeConversations'
@@ -27,6 +28,7 @@ export const conversationKeys = [
   'mac-waiting',
   'mac-waiting-many',
   'mac-waiting-suite',
+  'mac-waiting-script',
   'mac-denied',
   'mac-done',
   'mac-unavailable',
@@ -54,6 +56,7 @@ export const conversationKeys = [
   'other-org-link',
   'sent-by',
   'sent-by-other',
+  'second-session',
   'session-links',
   'steered',
   'mac-in-work',
@@ -88,6 +91,7 @@ export const conversationKeys = [
   ...barConversationKeys,
   ...secretConversationKeys,
   ...secretValueConversationKeys,
+  ...secretStackConversationKeys,
   ...capabilityConversationKeys,
   ...explanationConversationKeys,
   ...wakeConversationKeys,

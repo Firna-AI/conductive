@@ -97,3 +97,14 @@
     animation: none;
   }
 }
+
+/*
+ * The same still marks in a mockup of reduced motion, which `ReducedMotion`
+ * in `components/common/` draws, because a view cannot set the setting of
+ * the browser. The app never sets the attribute.
+ */
+[data-motion='reduced'] .working .on,
+[data-motion='reduced'] .starting .on,
+[data-motion='reduced'] .input .on {
+  animation: none;
+}

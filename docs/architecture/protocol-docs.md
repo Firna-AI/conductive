@@ -56,10 +56,12 @@ This page lists each protocol doc and what it covers.
         environment, conflicting variable names, and older tools.
       - [Secret requests](../protocol/secret-requests.md): the calls that
         list the secrets and run a command with secrets, the requests and
-        their time limit, temporary values, and what the chat shows.
+        their time limit, and what the chat shows.
         - [Late secret requests](../protocol/secret-late-answers.md): the
           requests after the wait of their tool call ends, and their late
           answers.
+        - [Secret requests: temporary values](../protocol/secret-temporary-values.md):
+          the values that a member types into a request, and mixed requests.
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
     - [Preview grants](../protocol/preview-grants.md): the launch address
       of a preview, its one-use grant, the authorizer, the browser launch,

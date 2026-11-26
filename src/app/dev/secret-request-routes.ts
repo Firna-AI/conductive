@@ -1,4 +1,3 @@
-import type { SecretRunGrant } from '../../shared/generated/SecretRunGrant'
 import type { MessageSender } from '../../shared/generated/MessageSender'
 import { SECRET_NAME_ERROR, validSecretName } from '../../shared/secret-names'
 import {
@@ -23,6 +22,7 @@ import {
   type Params,
   type Route,
 } from './router'
+import { grantsOf, settleCovered } from './secret-allow'
 import {
   followOpenRequests,
   orgSecretsOf,
@@ -46,20 +46,6 @@ function readAnswer(body: unknown): {
     lifetime: choice(fields, 'lifetime', LIFETIMES),
     values: record(fields.values, 'values'),
   }
-}
-
-/** The grant that an Allow gives each name of a request, as a run names it. */
-function grantsOf(request: SecretRequest): SecretRunGrant[] {
-  return request.secrets.map((secret) => {
-    if (secret.secretId !== null || request.lifetime === 'save') {
-      return { name: secret.name, grant: 'session' }
-    }
-    return {
-      name: secret.name,
-      grant:
-        request.lifetime === 'workspace' ? 'workspace-value' : '15-minutes',
-    }
-  })
 }
 
 /** The text that the Worker gives the agent for a late Allow. */
@@ -111,7 +97,8 @@ function keepValues(
  * members: the list with the values of the workspace, the answer of a
  * member, and the removal of a value. An Allow in time sends the run of the
  * request. A late Allow sends the line that tells the agent, in a new turn.
- * The fake keeps no value of a request and runs no command.
+ * An Allow also allows each other open request that its grant covers. The
+ * fake keeps no value of a request and runs no command.
  */
 export function secretRequestRoutes(backend: DevBackend): Route[] {
   const scope = (params: Params) => {
@@ -202,6 +189,7 @@ export function secretRequestRoutes(backend: DevBackend): Route[] {
           sessionId,
           request,
         })
+        if (answer.kind !== 'deny') settleCovered(backend, store, request)
         followOpenRequests(
           backend,
           requireOrg(backend.state, params.org),

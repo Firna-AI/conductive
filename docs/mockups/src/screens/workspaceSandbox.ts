@@ -1,5 +1,4 @@
 import type { ArchivedComputerState } from '../../../../src/shared/generated/ArchivedComputerState'
-import { waitsForAnswer } from '../components/chat/requests'
 import type {
   BarNotice,
   PanelNotice,
@@ -21,6 +20,7 @@ import type { OpenableWorkspace } from '../fixtures/workspaces'
 import type { ActivityStatus } from '../../../../src/ui/components/workspaces/activityStatus'
 import { isRunning } from './composerFor'
 import { explainActivity } from './explainModel'
+import { needsInput } from './workspaceRequests'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
@@ -47,7 +47,7 @@ export function activityOf(state: WorkspaceState): ActivityStatus {
   // After Restart the workspace starts until the agents are back.
   if (state.overlay === 'restarting') return 'starting'
   if (state.overlay === 'restart-update-failed') return 'starting'
-  if (conversations[state.conversation].some(waitsForAnswer)) return 'input'
+  if (needsInput(state)) return 'input'
   const explain = explainActivity(state)
   if (explain === 'input') return 'input'
   const works = isRunning(state) || otherSessionWorks.has(state.conversation)

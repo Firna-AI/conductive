@@ -5,7 +5,6 @@ import type { PersonKey } from '../../fixtures/members'
 import type { StartingLog } from '../../fixtures/starting'
 import { defined, plainData } from '../../defined'
 import { classes } from '../../../../../src/ui/components/common/classes'
-import { DrawnChoices } from '../mac/CommandActions'
 import { useMacApp } from '../../../../../src/ui/components/mac/MacApp'
 import { sandboxBar } from '../../entries/components/workspace/SandboxNotice.mockup'
 import type { BarNotice } from '../workspace/SandboxNotice'
@@ -17,11 +16,9 @@ import { composer as composerPart } from '../../entries/components/chat/Composer
 import { composerData } from '../../entries/components/chat/capabilitiesSlot'
 import type { ComposerState } from './Composer'
 import { groupItems } from './groupItems'
-import { isPendingCommand } from './PendingCommand'
-import { pendingCommand } from '../../entries/components/chat/PendingCommand.mockup'
-import { isPendingRequest } from './requests'
-import { SecretRequest } from './SecretRequest'
-import { secretRunWords } from '../../../../../src/ui/components/chat/secretRunCopy'
+import { RequestStack, type StackAnswer } from './RequestStack'
+import { isPendingRequest, shownPlace, stackReader } from './requests'
+import { stackEntries } from '../../../../../src/ui/components/chat/requestStackOrder'
 import { toolGroup } from '../../entries/components/chat/ToolGroup.mockup'
 import type { FoldState } from './WorkFold'
 import { workFold } from '../../entries/components/chat/WorkFold.mockup'
@@ -31,18 +28,32 @@ import { ToBottomButton } from '../../../../../src/ui/components/chat/ToBottomBu
 import styles from '../../../../../src/ui/components/chat/ChatPane.module.css'
 
 /**
+ * The place of the card on top of the stack of requests, and, in a walk of
+ * the catalogue, the page of each place, which Previous and Next open, and
+ * the page of each answer that keeps the example.
+ */
+export type StackView = {
+  place?: number
+  pages?: readonly string[]
+  answers?: readonly StackAnswer[]
+}
+
+/**
  * The chat transcript, with the composer or a sandbox bar under it. While
  * the sandbox starts, its steps show at the end of the transcript. An empty
  * transcript shows `empty` instead. When a turn ends, the work before each
  * of its answers folds into one line. The commands that wait for approval
- * on a Mac, and the requests for secrets while their tool calls wait, leave
- * the transcript and stay in view just above the composer, in a region
- * that scrolls when they need more room. Once answered, a command or a run
- * shows at its place in the transcript. A request that outlived its tool
- * call stays at its place, as a late request. A small chat, such as the
- * popover of an explanation, is `compact`, and its `field` takes the place
- * of the composer. While the reader reads higher up, a round button above
- * the right end of the footer shows the bottom of the chat.
+ * on a Mac, the requests for secrets while their tool calls wait, and the
+ * late requests for secrets that wait for a member leave the transcript.
+ * They stay in view just above the composer, as a stack that shows one card
+ * at a time: the requests whose calls wait first, then the late requests.
+ * The commands that this view cannot answer, as in a browser, go after the
+ * requests that it can answer. Once answered, or ended with no answer, a
+ * command or a run shows at its place in the transcript.
+ * A small chat, such as the popover of an explanation, is `compact`, and
+ * its `field` takes the place of the composer. While the reader reads
+ * higher up, a round button above the right end of the footer shows the
+ * bottom of the chat.
  */
 export function ChatPane(props: {
   items: readonly ChatItem[]
@@ -90,14 +101,21 @@ export function ChatPane(props: {
    * while the cloud computer runs. Without reads, each shows as its link.
    */
   pictures?: PictureRead
+  /**
+   * The card on top of the stack of requests, and in a walk the page of
+   * each place and of each answer.
+   */
+  stack?: StackView
   /** The reader reads higher up, so the button to the bottom shows. */
   scrolledUp?: boolean
 }) {
   const mac = useMacApp()
   const empty = props.items.length === 0 && !props.starting
   const composer = !props.problem || !replacesComposer(props.problem)
-  const pending = props.items.filter(isPendingRequest)
-  const commands = pending.filter(isPendingCommand)
+  const requests = stackEntries(
+    props.items.filter(isPendingRequest),
+    stackReader(mac !== undefined),
+  )
   const transcript = props.items.filter((item) => !isPendingRequest(item))
   const entries = groupItems(transcript).filter(
     (entry) => entry.kind !== 'item' || entry.item.id !== props.hide,
@@ -184,36 +202,14 @@ export function ChatPane(props: {
         {props.scrolledUp && !(empty && props.empty) ? (
           <ToBottomButton onPress={noop} />
         ) : null}
-        {pending.length > 0 ? (
-          <div
-            aria-label={secretRunWords.region}
-            className={styles.requests}
-            role="group"
-          >
-            {pending.map((item) => {
-              if (item.kind === 'secret-run') {
-                return (
-                  <SecretRequest
-                    item={item}
-                    key={item.id}
-                    viewer={props.viewer}
-                  />
-                )
-              }
-              if (!isPendingCommand(item)) return null
-              return (
-                <pendingCommand.Component
-                  id={item.id}
-                  key={item.id}
-                  moklyInstance={`pending-${instanceKey(item.id)}`}
-                  open={mac?.choicesOpen === true && item === commands[0]}
-                  request={item.request}
-                />
-              )
-            })}
-          </div>
-        ) : null}
-        {mac?.choicesOpen && commands.length > 0 ? <DrawnChoices /> : null}
+        <RequestStack
+          answers={props.stack?.answers}
+          choicesOpen={mac?.choicesOpen}
+          entries={requests}
+          pages={props.stack?.pages}
+          place={shownPlace(requests.length, props.stack?.place)}
+          viewer={props.viewer}
+        />
         {props.notice}
         {props.problem ? (
           <sandboxBar.Component

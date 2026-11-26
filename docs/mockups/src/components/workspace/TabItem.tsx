@@ -18,6 +18,7 @@ import a11y from '../../../../../src/ui/components/common/a11y.module.css'
 import { classes } from '../../../../../src/ui/components/common/classes'
 import { renameField } from '../../entries/components/workspace/RenameField.mockup'
 import { sessionTabIcon } from '../../entries/components/workspace/SessionTabIcon.mockup'
+import { defined } from '../../defined'
 import tabDrag from '../../../../../src/ui/components/workspace/TabDrag.module.css'
 import styles from '../../../../../src/ui/components/workspace/WorkspaceTabs.module.css'
 
@@ -46,6 +47,12 @@ export type WorkspaceTab = {
   to?: string
   selected: boolean
   running?: boolean
+  /**
+   * The session of the tab holds an open request, so its tab shows the
+   * needs-input mark in place of its icon or its spinner (needs-input
+   * decision 2 B).
+   */
+  needsInput?: boolean
   /**
    * The temporary tab, from decision 284: the next press on a file, a diff,
    * or a skill replaces it (skill tab decision 2 A). Only its title
@@ -92,6 +99,7 @@ function TabContent(props: { tab: WorkspaceTab }) {
         <sessionTabIcon.Component
           moklyInstance="session-icon"
           running={tab.running ?? false}
+          {...defined({ needsInput: tab.needsInput })}
         />
       ) : (
         <Icon aria-hidden className={styles.icon} size={13} />

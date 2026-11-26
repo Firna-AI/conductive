@@ -43,14 +43,6 @@ export const wakeConversationKeys = [
 
 type WakeConversationKey = (typeof wakeConversationKeys)[number]
 
-/** The chats of wakes whose turn in this session still runs. */
-export const wakeRunningConversations: readonly WakeConversationKey[] = [
-  'wake-finished',
-  'wake-stopped',
-  'wake-other-workspace',
-  'wake-during-turn',
-]
-
 const { debounce } = autocompleteSessions
 
 function done(id: string, target: string, detail?: string): ChatItem {

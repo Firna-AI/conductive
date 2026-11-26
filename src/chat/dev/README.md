@@ -63,6 +63,10 @@ The address chooses the state. The first value of each option is the default:
 | `answer` | `text`, `tables` (each scripted turn answers with three tables: the resources of the machine, bundle sizes with a short row, and a wide table of test runs), `headings` (each scripted turn writes its plan under a heading, and answers with a review under headings at levels 2 to 4), `prose` (each scripted turn answers with quotes, a rule, emphasis, strikethrough, line breaks, and a bold label whose pair comes in the next part, and its plan holds a quote, a rule, strikethrough, and a line break), `long` (each scripted turn answers with about 100 KiB of Markdown in one part, then ten short parts), `tasks` (each scripted turn writes a plan of two open tasks, and answers with two done tasks and an open task with a note under it), `pictures` (each scripted turn writes a plan with a screenshot, and answers with two screenshots side by side, a link and an image that stay links, and an image in a table cell) |
 | `skills` | `listed` (Claude has the skills of the mockups, and Codex has two of them and one of its own), `loading` (no report yet), `unavailable`, `none` (a repository without skills) |
 
+The values of `mac` come from `OFFERED_MAC_SCENARIOS` of
+`src/test-support/fixtures/devices.ts`. The fake of the app reads the same
+list for its `mac` option, so both pages offer the same Mac commands.
+
 ## What the page does
 
 The desktop page keeps the mockup's columns, so the chat column is 718 px wide

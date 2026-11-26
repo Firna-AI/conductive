@@ -2,6 +2,11 @@
 import { act } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { queryByRole, queryByText } from '../../test-support/dom-queries'
+import {
+  asks,
+  late,
+  request,
+} from '../../test-support/fixtures/secret-requests'
 import { MOUNTED_TEST_TIMEOUT, waitFor } from '../../test-support/mount'
 import { mountChat } from './explain-test-kit'
 import {
@@ -51,5 +56,35 @@ describe('the chat of the popover of an explanation', () => {
       vi.advanceTimersByTime(1_000)
     })
     expect(elapsed.textContent).toBe('1m 5s')
+  })
+
+  it('shows a late request of the explanation in the stack above its follow-up field, as a tab does', async () => {
+    const { events } = explained('explain-1', quote)
+    const asked = request('explain-late', asks.database, explanationStart, {
+      ...late(explanationStart + 90_000),
+      sessionId: 'explain-1',
+      turnId: 'turn-explain-1',
+    })
+    await mountChat({
+      stored: [
+        ...events,
+        {
+          type: 'secrets.request.updated',
+          sessionId: 'explain-1',
+          request: asked,
+        },
+      ],
+    })
+    const popover = await openFromMark(title, 'Needs input')
+    const stack = await waitFor(
+      () => queryByRole('group', 'Requests that wait for an answer', popover),
+      'the stack of the popover',
+    )
+    expect({
+      card: stack
+        .querySelector('section[aria-label]')
+        ?.getAttribute('aria-label'),
+      field: queryByRole('textbox', 'Follow-up', popover) !== null,
+    }).toEqual({ card: 'Request for PROD_DATABASE_URL', field: true })
   })
 })

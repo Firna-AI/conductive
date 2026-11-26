@@ -119,8 +119,8 @@ export function explainActivity(
  * The tabs of the open explanations, at the end of the row in the order
  * that they opened, as each new tab opens there. The parent tab stays the
  * shown tab. An explanation whose tab is closed has none, and the tab of
- * one that runs shows the spinner. `explanation` shows the tab of Cal after
- * Expand.
+ * one that runs shows the spinner or the needs-input mark while a request
+ * waits. `explanation` shows the tab of Cal after Expand.
  */
 export function explainTabs(state: WorkspaceState): WorkspaceTab[] {
   const shown = state.tab === 'explanation'
@@ -138,6 +138,7 @@ export function explainTabs(state: WorkspaceState): WorkspaceTab[] {
     to: explanation === count ? explainPaths.tab : undefined,
     selected: shown && explanation === count,
     running: explainRuns(session),
+    needsInput: session === 'waiting' || undefined,
   }))
 }
 

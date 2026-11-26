@@ -134,6 +134,11 @@ holds how an agent action of the pull request bar sends its fixed prompt.
 [The scroll of the chat](chat-scroll.md) states the row that stays in
 view, the scroll after a send, and the place that each tab keeps.
 
+### The request stack
+
+[The request stack](request-stack.md) states where the open requests of a
+session show, above its composer, and how a member moves through them.
+
 ### The work of a turn
 
 - While a turn runs, each agent message shows in full. Each run of tool
@@ -160,8 +165,8 @@ view, the scroll after a send, and the place that each tab keeps.
 - Reason: the turn stays as short as in Conductor. A command result or a
   line of a refused event that stays in view between two folds was rejected.
 - A late secret request is not part of that work, and it never folds.
-  Reason: it still waits for a member, as
-  [Late requests](secret-requests.md#late-requests) says.
+  While it is open, it waits in the [request stack](request-stack.md), as
+  [Late requests](secret-late-answers.md#late-requests) says.
 - A message that a member sends during a turn stays in view. It starts a
   new part of the turn, with its own answer and its own fold.
 - A wake line stays in view too, and it never folds. It starts a new part

@@ -36,7 +36,8 @@ const LinkTable = createContext<PageTable>(new Map())
 /**
  * Turns the links of the screens inside it into plain content, for a
  * picture of a screen, such as on the marketing site. A visitor who sees the
- * picture stays on the page.
+ * picture stays on the page. A stack of requests uses it too, for a command
+ * whose answers its walk does not name.
  */
 export function StillLinks(props: { children: ReactNode }) {
   return <LiveLinks.Provider value={false}>{props.children}</LiveLinks.Provider>

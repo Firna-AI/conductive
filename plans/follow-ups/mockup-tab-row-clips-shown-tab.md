@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-13, from the mockup milestone of the temporary file tabs change on branch `calummoore/oslo-k1ce`.
-- **Location:** `docs/mockups/src/components/workspace/WorkspaceTabs.tsx`, the `endInView` rule near line 118, and `src/ui/components/workspace/TabScroll.module.css`, the `scrolledToEnd` class.
+- **Location:** `docs/mockups/src/components/workspace/WorkspaceTabs.tsx`, the `endInView` rule near line 134, and `src/ui/components/workspace/TabScroll.module.css`, the `scrolledToEnd` class.
 - **Reason:** The fix changes the shared mockup tab row, so it changes the narrow view of many pages that the temporary tab change does not touch.
 
 - **Source:** Implementation.
@@ -24,6 +24,6 @@
   - A static alignment in the CSS modules that the app shares, because the app scrolls that row with script, and the alignment would block that scroll.
   - Shorter fixture titles, because other pages share the fixtures, and the shown tab still clips.
 - **Wider fix:** B. It fixes the class for every page with a long row.
-- **Previous examples:** The `full` variant of `app/tabs` and the phone rename row already draw a row scrolled to its end with `scrolledToEnd`.
+- **Previous examples:** The child page `app/tabs/full` and the phone rename row already draw a row scrolled to its end with `scrolledToEnd`.
 - **Recommendation:** B. It makes the mockups match the scroll rule of the tab row at every frame width.
 - **Action:** fix after merge, apply B, because the fix changes the narrow view of many pages outside the temporary tab change.

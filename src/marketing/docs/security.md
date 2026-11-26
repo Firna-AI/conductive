@@ -321,9 +321,18 @@ To see the approvals of another session, open that session.
 **Capabilities** hides an approval while the secret is for **All agents** or pre-approved.
 The approval stays, and it shows again when that ends.
 
-A request waits 90 seconds for an answer.
-After that, it stays in the chat, and a later **Allow** tells the agent in a new turn.
-An **Allow** also allows each other open request of the same secrets that its approval covers, so you answer once.
+The agent waits up to 90 seconds for an answer, or until its turn ends.
+The request stays in the stack above the message box until a member answers it or it ends.
+Look for **Needs input** on the workspace and a blue mark on the session tab.
+When the request is late, the card says that the agent stopped waiting.
+A late **Allow** can notify the agent in the same session.
+The notice joins a running turn or starts a new one.
+
+When a session has several open requests for the same set of secrets, one card shows the newest request.
+The card shows how many times the agent asked, such as **Asked 3 times**.
+**Allow** covers each request on that card.
+It also covers any other open request when the new approval covers every secret in it.
+**Deny** ends each request on the card.
 
 While a command runs with a secret, its value is on the cloud computer.
 Programs and members with terminal access can read it then.
@@ -334,6 +343,7 @@ Pictures in agent replies do not hide values.
 Changed or encoded values can still appear, also to the agent and its model provider.
 
 - [Add secrets for agents](/docs/cloud-computer#add-secrets-for-agents)
+- [Find and answer requests](/docs/sessions-and-chat#find-and-answer-requests)
 
 ## Choose secrets for automation runs
 

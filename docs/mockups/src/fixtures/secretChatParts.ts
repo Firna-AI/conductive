@@ -60,6 +60,19 @@ export const countAsk: readonly ChatItem[] = [
   ),
 ]
 
+/** Cal asks for a preview deploy that needs two secrets of Acme. */
+export const previewAsk: readonly ChatItem[] = [
+  {
+    kind: 'user',
+    id: 'ask-preview',
+    text: 'Deploy a preview that reads the production replica, so I can try the suggestions on real addresses.',
+  },
+  agent(
+    'plan-preview',
+    "I'll deploy a preview with the production replica as its database.",
+  ),
+]
+
 /** Cal asks for a comparison that needs a token that Acme does not have. */
 export const compareAsk: readonly ChatItem[] = [
   {
@@ -98,8 +111,9 @@ const lateEnd: ChatItem = {
 
 /**
  * The turn of a request that nobody answered in time: its tool call ended
- * without a run, the agent says what it waits for, and its turn ends. The
- * widget stays at its place.
+ * without a run, the agent says what it waits for, and its turn ends.
+ * While it waits for a member, the widget shows above the composer. After
+ * its answer, or after it ended, it shows at this place.
  */
 export function outlived(
   ask: readonly ChatItem[],

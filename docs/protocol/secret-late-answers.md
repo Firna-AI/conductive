@@ -12,16 +12,35 @@ requests at `app/secret-requests/late`.
 A decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A secrets
 decision number names a decision of the change that adds
-[secrets](secrets.md), as that doc says.
+[secrets](secrets.md), as that doc says. A needs-input decision names a
+decision of the change that keeps each open request above the composer,
+as [The request stack](request-stack.md) says.
 
 ## Late requests
 
-- A late request leaves the composer. It stays at its place in the chat,
-  with the choices of its card.
+- A late request stays in the [request stack](request-stack.md) of its
+  session until a member answers it or it ends (needs-input decision 1 A).
+  It keeps the choices of its card.
+- Reason: each open request then waits at the composer with its choices.
+  So a member finds the request that the workspace waits for, also in a
+  long chat.
+- A late request that leaves the composer for its place in its turn was
+  rejected, because a member must then scroll up to find it. A line above
+  the composer that scrolls to the request was rejected, because the
+  member then answers far up the chat and scrolls back.
+- A list of the open requests under Needs input in the workspace header
+  was rejected, because it adds a place away from the composer.
 - A line on it says that the agent stopped waiting, and that Allow tells
   the agent in a new turn.
-- A late request never folds into the work of its turn. Reason: it still
-  waits for a member.
+- In the stack, it keeps the full form of its card. Reason: a member must
+  see the command before the answer.
+- It shows no age. Reason: a request shows no time limit, and its line
+  already says that the agent stopped waiting.
+- It brings back no Stop, because Stop follows the running turn.
+- After its answer or its end, it leaves the stack at once and takes its
+  place in its turn. A request that gets its answer in time does the same.
+- At its place, a late request never folds into the work of its turn, so
+  its answer and its line stay in view.
 
 ## Late answers
 

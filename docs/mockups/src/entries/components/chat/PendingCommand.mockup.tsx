@@ -24,11 +24,18 @@ export const pendingCommand = defineComponent({
       request: macCommandRequestSchema,
       /** The other ways to allow are open, in the Mac app. */
       open: { type: 'boolean' },
+      /** The request stack draws the outline of the card. */
+      inStack: { type: 'boolean' },
     },
   } as const,
   props: { id: 'safari-test', request: safariTest },
   render: (props) => (
-    <PendingCommand id={props.id} open={props.open} request={props.request} />
+    <PendingCommand
+      id={props.id}
+      inStack={props.inStack}
+      open={props.open}
+      request={props.request}
+    />
   ),
   variants: [
     {

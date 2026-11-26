@@ -172,7 +172,7 @@ export function endLine(
   if (notice?.state === 'not-sent' && login) {
     return reconnectNote(who, login.owner, login.agent)
   }
-  return `${who} answered.`
+  return lateAnswerNote(who, 'answered')
 }
 
 /** The note of a request that a member denied in time. */

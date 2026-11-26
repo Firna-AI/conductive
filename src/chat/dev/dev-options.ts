@@ -1,7 +1,10 @@
 import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
 import type { OrgRole } from '../../shared/api'
 
-import type { FakeMacScenario } from '../../test-support/fixtures/devices'
+import {
+  OFFERED_MAC_SCENARIOS,
+  type FakeMacScenario,
+} from '../../test-support/fixtures/devices'
 import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 
 /** The state that the development page draws, read from its address. */
@@ -97,22 +100,7 @@ export const choices = {
   viewport: ['desktop', 'mobile'],
   scheme: ['dark', 'light'],
   clock: ['running', 'frozen'],
-  mac: [
-    'none',
-    'waiting',
-    'longer',
-    'several',
-    'many',
-    'running',
-    'denied',
-    'done',
-    'exit-code',
-    'cut',
-    'timed-out',
-    'failed',
-    'unavailable',
-    'literal',
-  ],
+  mac: OFFERED_MAC_SCENARIOS,
   app: ['browser', 'mac'],
   change: ['done', 'done-not-saved', 'failed'],
   page: ['chat', 'this-mac'],
