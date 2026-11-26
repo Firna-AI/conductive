@@ -23,7 +23,7 @@ API calls use `credentials: include`, so Chromium sends the HttpOnly desktop ses
 File uploads go to the same origin in parts. Each part is one raw `XMLHttpRequest` `PUT` with credentials and no other header than `Content-Type`, so it sends the same cookie and reports its progress.
 Workspace sockets use the same Worker origin.
 `AppServices.appOrigin` and the paths that `leave` opens, such as sign-in, use it too.
-The join links of the Account page and of the operator section start with that origin, so they name the deployment that owns their codes.
+The join links of Account settings and of the operator section start with that origin, so they name the deployment that owns their codes.
 Chat and file preview links to a page of the app at that origin open the page in the window.
 The renderer keeps its normal `fetch` function and has no OS bridge.
 

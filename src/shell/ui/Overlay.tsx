@@ -74,7 +74,6 @@ export function Overlay(props: { children: ReactNode }) {
   return host ? createPortal(props.children, host) : null
 }
 
-
 /**
  * Closes an open layer when an element outside `inside` takes the focus,
  * such as at Tab from the last control of the layer. A focus that goes to

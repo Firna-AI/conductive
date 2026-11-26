@@ -288,21 +288,6 @@ export function parseRoute(pathname: string, search: string): Route {
   return { screen: 'not-found' }
 }
 
-/** A route of Settings: a tab of the account or of an org, or the list. */
-export type SettingsRoute = Extract<
-  Route,
-  { screen: 'account' | 'settings' | 'settings-list' }
->
-
-/** Whether a route shows Settings. */
-export function isSettingsRoute(route: Route): route is SettingsRoute {
-  return (
-    route.screen === 'account' ||
-    route.screen === 'settings' ||
-    route.screen === 'settings-list'
-  )
-}
-
 /** The org that a screen belongs to, such as the org of the command palette. */
 export function routeOrgId(route: Route): string | null {
   return 'orgId' in route ? route.orgId : null

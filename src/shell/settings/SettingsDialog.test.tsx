@@ -28,6 +28,7 @@ const orgRows = [
   'General',
   'Repositories',
   'Cloud computer',
+  'Agents',
   'Secrets',
   'Members',
 ]

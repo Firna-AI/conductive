@@ -72,7 +72,7 @@ describe('Settings and the layers around it', () => {
     await settle()
     expect({ inOrg, futex, address: navigation.href() }).toEqual({
       inOrg: { same: true, below: 'Get started' },
-      futex: 5,
+      futex: 6,
       address: routes.getStarted(),
     })
   })

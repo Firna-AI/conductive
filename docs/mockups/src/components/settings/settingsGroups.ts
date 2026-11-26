@@ -14,10 +14,13 @@ import {
 } from 'lucide-react'
 import type { ShortcutHost } from '../../fixtures/shortcutHosts'
 import { paths } from '../../paths'
-import type { AccountTab } from './AccountSections'
 import { settingsLinks, type SettingsTab } from './OrgSections'
 import { shortcutPages } from './shortcutPages'
 import type { SettingsNavGroup } from './SettingsNav'
+
+/** The tabs of Account settings. */
+type AccountTab =
+  'general' | 'agents' | 'preferences' | 'shortcuts' | 'stats' | 'this-mac'
 
 /** The tab of Settings that shows: a tab of the account or of the org. */
 export type SettingsPlace =
@@ -40,6 +43,7 @@ const orgTabs: readonly TabInfo<SettingsTab>[] = [
   { tab: 'general', label: 'General', icon: Building2 },
   { tab: 'repositories', label: 'Repositories', icon: FolderGit2 },
   { tab: 'computer', label: 'Cloud computer', icon: Cloud },
+  { tab: 'agents', label: 'Agents', icon: Bot },
   { tab: 'secrets', label: 'Secrets', icon: KeyRound },
   { tab: 'members', label: 'Members', icon: Users },
 ]

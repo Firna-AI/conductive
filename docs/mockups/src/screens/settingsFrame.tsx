@@ -1,12 +1,16 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import type { RailState } from '../components/layout/OrgRail'
-import { Page } from '../components/layout/Page'
 import { SettingsDialog } from '../components/settings/SettingsDialog'
 import type { SettingsNavGroup } from '../components/settings/SettingsNav'
+import { defined } from '../defined'
+import {
+  appFrame,
+  mobileFrame,
+} from '../entries/components/layout/AppFrame.mockup'
+import { page as pagePart } from '../entries/components/layout/Page.mockup'
+import { chooseWorkspace } from '../entries/components/screens/listParts.mockup'
 import { paths } from '../paths'
-import { ChooseWorkspace } from './listParts'
 
 /**
  * A tab of Settings, on each viewport. A desktop draws the page below, the
@@ -29,21 +33,21 @@ export function SettingsFrame(props: {
 }) {
   if (props.viewport === 'mobile') {
     return (
-      <MobileFrame>
-        <Page
+      <mobileFrame.Component>
+        <pagePart.Component
           back={{ label: 'Settings', to: paths.settings }}
           subtitle={props.group}
           title={props.title}
           viewport="mobile"
         >
           {props.children}
-        </Page>
+        </pagePart.Component>
         {props.dialog}
-      </MobileFrame>
+      </mobileFrame.Component>
     )
   }
   return (
-    <AppFrame
+    <appFrame.Component
       overlay={
         <>
           <SettingsDialog
@@ -57,9 +61,11 @@ export function SettingsFrame(props: {
         </>
       }
       rail={props.rail}
-      sidebar={props.sidebar}
+      {...defined({ sidebar: props.sidebar })}
     >
-      {props.below ?? <ChooseWorkspace />}
-    </AppFrame>
+      {props.below ?? (
+        <chooseWorkspace.Component moklyInstance="choose-workspace" />
+      )}
+    </appFrame.Component>
   )
 }

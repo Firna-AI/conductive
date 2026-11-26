@@ -7,7 +7,7 @@ import {
   type RefObject,
 } from 'react'
 import { useMenuLayer } from '../../shell/ui/layers'
-import { useEscapeLayer } from '../../shell/ui/Overlay'
+import { useEscapeLayer } from '../../shell/ui/escape-layer'
 import { PopoverSurface, type MenuAlign } from '../../shell/ui/PopoverSurface'
 import type { ButtonHandle } from './actions'
 import { useViewport } from './controls'

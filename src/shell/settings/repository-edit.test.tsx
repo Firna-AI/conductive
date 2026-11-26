@@ -17,7 +17,7 @@ import {
 } from '../../test-support/mount'
 import { click, mountScreen, settle } from '../test-mount'
 import { startedApp } from '../test-render'
-import { OrgSettingsScreen } from './OrgSettingsScreen'
+import { OrgTabContent } from './OrgTabContent'
 import { noticesOf } from './test-builds'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -32,7 +32,7 @@ async function repositoriesTab(server: FakeApiServer) {
   if (boot.state !== 'ready' || !acme) throw new Error('The app did not start.')
   const view = mountScreen(
     app,
-    <OrgSettingsScreen org={acme} tab="repositories" user={boot.user} />,
+    <OrgTabContent org={acme} tab="repositories" user={boot.user} />,
   )
   await settle()
   return view

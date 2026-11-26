@@ -1,8 +1,8 @@
 import type { Viewport } from '@mokly/mokly'
-import { MobileFrame } from '../components/layout/AppFrame'
-import { Page } from '../components/layout/Page'
 import { settingsGroups } from '../components/settings/settingsGroups'
 import { SettingsNav } from '../components/settings/SettingsNav'
+import { mobileFrame } from '../entries/components/layout/AppFrame.mockup'
+import { page as pagePart } from '../entries/components/layout/Page.mockup'
 import { orgs } from '../fixtures/orgs'
 import { paths } from '../paths'
 import { AccountScreen } from './AccountScreen'
@@ -19,8 +19,8 @@ export function SettingsListScreen(props: { viewport: Viewport }) {
     return <AccountScreen state={accountGeneral} viewport="desktop" />
   }
   return (
-    <MobileFrame>
-      <Page
+    <mobileFrame.Component>
+      <pagePart.Component
         back={{ label: 'Workspaces', to: paths.shell }}
         title="Settings"
         viewport="mobile"
@@ -33,7 +33,7 @@ export function SettingsListScreen(props: { viewport: Viewport }) {
           })}
           variant="touch"
         />
-      </Page>
-    </MobileFrame>
+      </pagePart.Component>
+    </mobileFrame.Component>
   )
 }

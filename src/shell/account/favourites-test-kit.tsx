@@ -14,7 +14,7 @@ import { mountScreen } from '../test-mount'
 import { startedApp } from '../test-render'
 import { OverlayHost } from '../ui/Overlay'
 import type { Viewport } from '../ui/viewport'
-import { AccountScreen } from './AccountScreen'
+import { AccountTabContent } from './AccountTabContent'
 
 // The favourites of the account of the fake API, which are the starting
 // favourites of the mockups, in their order.
@@ -66,7 +66,7 @@ export async function mountFavourites(
   const view = mountScreen(
     app,
     <OverlayHost>
-      <AccountScreen connect={null} tab="preferences" user={fakeUser} />
+      <AccountTabContent connect={null} tab="preferences" user={fakeUser} />
     </OverlayHost>,
     { viewport },
   )

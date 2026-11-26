@@ -7,7 +7,7 @@ import type {
   ShortcutKeyText,
 } from '../../../shared/shortcut-key'
 import type { RowControls } from './RowButtons'
-import { useEscapeLayer } from '../../ui/Overlay'
+import { useEscapeLayer } from '../../ui/escape-layer'
 import { KeysRow, RecordingRow, ResetRow } from './RowStates'
 import type { FocusTarget, ShortcutEditor } from './shortcut-edit'
 import { Keys, RowLayout } from './ShortcutParts'

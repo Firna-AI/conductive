@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
-import { X } from 'lucide-react'
-import { IconButton } from '../common/actions'
+import { iconButton } from '../../entries/components/common/actions.mockup'
 import { SettingsNav, type SettingsNavGroup } from './SettingsNav'
 import styles from '../../../../../src/ui/components/settings/SettingsDialog.module.css'
 
@@ -34,7 +33,11 @@ export function SettingsDialog(props: {
               <h1 className={styles.title}>{props.title}</h1>
               <span className={styles.group}>{props.group}</span>
             </div>
-            <IconButton icon={X} label="Close" />
+            <iconButton.Component
+              icon="x"
+              label="Close"
+              moklyInstance="settings-close"
+            />
           </header>
           <div className={styles.body}>
             <div className={styles.column}>{props.children}</div>

@@ -444,7 +444,7 @@ so its default applies.
   Unless sign-ups are paused, a person who waits gets app access at the
   next request, with no use of a code, so Get started opens. The operator
   section shows the switch off, and Zed K as a person who came back and
-  got in by open sign-up. The Account page names open sign-up.
+  got in by open sign-up. Account settings name open sign-up.
 - `inviteCode=used-up|disabled`: every invite of the code of the user is
   used, or an operator turned the code off. The operator section shows
   the same code.

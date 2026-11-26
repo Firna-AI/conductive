@@ -12,12 +12,8 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react'
-import {
-  routes,
-  type AccountTab,
-  type SettingsRoute,
-  type SettingsTab,
-} from '../../app/router'
+import { routes, type AccountTab, type SettingsTab } from '../../app/router'
+import type { SettingsRoute } from '../../app/settings-route'
 import type { OrgSummary } from '../../shared/orgs'
 
 /** A row of the list of Settings. */
@@ -58,6 +54,7 @@ const orgTabs: readonly {
   { tab: 'general', label: 'General', icon: Building2 },
   { tab: 'repositories', label: 'Repositories', icon: FolderGit2 },
   { tab: 'cloud-computer', label: 'Cloud computer', icon: Cloud },
+  { tab: 'agents', label: 'Agents', icon: Bot },
   { tab: 'secrets', label: 'Secrets', icon: KeyRound },
   { tab: 'members', label: 'Members', icon: Users },
 ]

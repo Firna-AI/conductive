@@ -161,7 +161,7 @@ that doc says.
 
 ## Agent logins
 
-- Each user connects their personal logins on the account page. An admin
+- Each user connects their personal logins in Account settings. An admin
   connects the org logins of an org on the Agents tab of the org settings,
   as [Org logins](org-logins.md) says.
 - A user connects Claude with a subscription token from

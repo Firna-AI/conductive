@@ -77,6 +77,7 @@ describe('Settings over the last page', () => {
             'General',
             'Repositories',
             'Cloud computer',
+            'Agents',
             'Secrets',
             'Members',
           ],
