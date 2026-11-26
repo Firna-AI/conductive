@@ -54,11 +54,13 @@ const copyIcons: Readonly<Record<TranscriptDetail, LucideIcon>> = {
 /**
  * The groups of items of the menu of the tab at `index` of the row. A
  * session tab has Rename session, Copy link and its two transcript copies,
- * and the moves. The temporary tab has Keep open, Copy path, and the moves,
- * and a kept file or diff tab has Copy path and the moves. A file or diff
- * tab whose host gives no `copyPath`, such as one whose label hides a
- * secret value, has no Copy path. Every tab ends with Close other tabs and
- * Close tabs to the right. A move or a close that the row rules out is off.
+ * and the moves. The temporary tab has Keep open, Copy path when it is a
+ * file or diff tab, and the moves. A kept file or diff tab has Copy path
+ * and the moves, and a kept skill tab has the moves. A tab whose host gives
+ * no `copyPath` has no Copy path: a skill tab, which has no path, and a
+ * file or diff tab whose label hides a secret value. Every tab ends with
+ * Close other tabs and Close tabs to the right. A move or a close that the
+ * row rules out is off.
  */
 function groupsOf(
   tabs: readonly RowTab[],

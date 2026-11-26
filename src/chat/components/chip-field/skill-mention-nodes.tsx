@@ -14,10 +14,14 @@ import { SkillChip } from '../../../ui/components/chat/SkillChip'
 import type { Agent } from '../../../shared/generated/Agent'
 import { skillTextAt } from '../../../shared/skill-text'
 import {
-  findSkill,
-  useMentionSkills,
+  findListedSkill,
+  type ListedSkill,
   type MentionSkills,
 } from '../../mentions/mention-skills'
+import {
+  useChatMentions,
+  useMentionSkills,
+} from '../../mentions/MentionsContext'
 
 /** The skill text as the text has it, such as `/plans`. */
 const skillState = createState('skill', {
@@ -49,39 +53,47 @@ function useFieldAgent(): Agent | null {
 }
 
 /**
- * The skill of either agent that a whole text names as its skill text, or
- * undefined. The skill of `agent` comes first.
+ * The skill of either agent that a whole text names as its skill text,
+ * with its agent, or undefined. The skill of `agent` comes first.
  */
 export function namedSkill(
   skills: MentionSkills,
   source: string,
   agent?: Agent,
-) {
+): ListedSkill | undefined {
   const text = skillTextAt(source, 0)
   if (text === null || text.source !== source) return undefined
-  return findSkill(skills, text.name, agent)
+  return findListedSkill(skills, text.name, agent)
 }
 
 /**
  * The chip of a skill in the field: the shared `SkillChip`, with the
- * skill icon and the name. Its title is the description of the skill of
- * the agent of the composer, else of the other agent. A press opens
- * nothing. The × of its icon removes it as one step of undo, while the
- * field takes changes. Until the field turns a chip whose skill left both
- * lists into text, it shows the skill text.
+ * skill icon and the name. It names the skill of the agent of the
+ * composer, else of the other agent: its title is the description of that
+ * skill, and a press on its name opens the skill tab of that skill. The ×
+ * of its icon removes it as one step of undo, while the field takes
+ * changes. Until the field turns a chip whose skill left both lists into
+ * text, it shows the skill text.
  */
 function FieldSkillChip(props: { source: string; nodeKey: NodeKey }) {
   const [editor] = useLexicalComposerContext()
   const skills = useMentionSkills()
+  const tabs = useChatMentions()?.skillTabs
   const agent = useFieldAgent() ?? undefined
-  const skill = skills ? namedSkill(skills, props.source, agent) : undefined
-  if (!skill) return props.source
+  const listed = skills ? namedSkill(skills, props.source, agent) : undefined
+  if (!listed) return props.source
+  const { skill } = listed
   const remove = () => {
     if (!editor.isEditable()) return
     editor.update(() => $getNodeByKey(props.nodeKey)?.remove())
   }
   return (
     <SkillChip
+      onOpen={
+        tabs
+          ? () => tabs.open({ agent: listed.agent, name: skill.name })
+          : undefined
+      }
       removal={{ name: skill.name, onRemove: remove }}
       skill={{ name: skill.name, description: skill.description }}
     />

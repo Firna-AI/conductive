@@ -42,6 +42,7 @@ export async function featureFixture(
       | 'initialize'
       | 'stopped'
       | 'seed'
+      | 'use-org-secret'
       | 'advance',
     fields: Record<string, unknown> = {},
     id = OUTER_WORKSPACE,

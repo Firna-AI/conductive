@@ -1,3 +1,4 @@
+import { retainedSkillBaseTabs } from '../app-api/workspace-view-sql'
 import { activeOrgPredicate } from '../data/org-access'
 import { requireActiveWorkspaceOwner } from '../data/user-access'
 import { readMergeWorkspace } from '../github/merge-access'
@@ -94,6 +95,10 @@ function oldWorkspaceBindings(job: RepositoryChangeJob) {
   ]
 }
 
+const SESSION_TABS = `(SELECT json_group_array(json(tab.value))
+  FROM json_each(workspace_views.view_json, '$.tabs') tab
+  WHERE json_extract(tab.value, '$.kind') = 'session')`
+
 /**
  * Drops the file and diff tabs and the temporary-tab mark from the saved
  * view of each member, because their paths belong to the old folder. The
@@ -101,13 +106,15 @@ function oldWorkspaceBindings(job: RepositoryChangeJob) {
  * the chat shows the first open session. A view that is not valid JSON
  * stays as it is.
  */
-const DROP_FILE_TABS = `UPDATE workspace_views SET view_json = json_set(view_json,
-      '$.tabs', json((SELECT json_group_array(json(tab.value))
-        FROM json_each(workspace_views.view_json, '$.tabs') tab
-        WHERE json_extract(tab.value, '$.kind') = 'session')),
+const DROP_FILE_TABS = `UPDATE workspace_views SET view_json = json_patch(
+    json_set(view_json,
+      '$.tabs', json(${SESSION_TABS}),
       '$.activeTab', json(CASE WHEN json_extract(view_json, '$.activeTab.kind') = 'session'
         THEN json_extract(view_json, '$.activeTab') ELSE 'null' END),
       '$.temporaryTab', json('null')),
+    CASE WHEN json_array_length(view_json, '$.skillTabs') > 0 THEN
+      json_object('skillBaseTabs', json(${retainedSkillBaseTabs('workspace_views.view_json', SESSION_TABS)}))
+      ELSE '{}' END),
     updated_at = MAX(updated_at, ?)
     WHERE workspace_id = ? AND json_valid(view_json) AND json_type(view_json, '$.tabs') = 'array'
     AND EXISTS (SELECT 1 FROM workspaces WHERE ${OLD_WORKSPACE})`

@@ -4,8 +4,9 @@ This doc holds the requirements and the decisions in force for the agent
 runner, our program in each sandbox. It covers the connection of the
 runner, its events and their limits, its turns, what an out-of-memory kill
 ends, the background work of Claude turns, its reports of the listening
-ports and of the skills, the repair of lost workspace updates, and the
-warnings of the Worker about the runner. It belongs to
+ports and of the skills, its reads of one skill, the repair of lost
+workspace updates, and the warnings of the Worker about the runner. It
+belongs to
 [Chat and events](chat-and-events.md), which covers the agents, the
 sessions, what the chat shows, and the events. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -48,6 +49,11 @@ run outside every turn, in units of their own.
   does not refuse the hello. This field needs no new protocol version
   either.
 - The Worker sends change notes only to a runner that announces them.
+- Each hello of a runner that answers `skill.read` also carries
+  `skillReads: true`, as [Skill reads](skill-tabs.md#skill-reads) says.
+  Any other hello announces no skill reads, also the hello of an older
+  runner. A value of another type does not refuse the hello. This field
+  needs no new protocol version either.
 - Each build of the org image installs the newest runner. Each sandbox then
   updates its runner itself, at a later start or when its workspace is
   idle, as [Updates](sandbox-software.md#updates) says. Reason: a fix of
@@ -245,6 +251,12 @@ its labels, its limits, and its full reports.
 [The skills report](skill-mentions.md#the-skills-report) gives the skill
 folders of each agent, the limits of the report, the filter of
 credentials, and when the runner sends the report.
+
+## Skill reads
+
+[Skill reads](skill-tabs.md#skill-reads) gives the `skill.read` command
+that reads the text of one skill for a skill tab, its result
+`skill.read.result`, and its errors.
 
 ## Lost workspace updates
 

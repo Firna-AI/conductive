@@ -71,6 +71,17 @@ screen, its props, and the services that the shell passes to it.
   line, as a change of type gives both. Each section of the patch starts at
   its `diff --git` line, and only the whole header lines of a section, before
   its first hunk, count, so no text of the file reads as a header.
+- `SkillPage` shows one skill tab, with the parts of a file page, as
+  [Skill tabs](../../docs/protocol/skill-tabs.md#the-view) says. The shell
+  gives it the read of the text, the description from the skills list,
+  the view, and the `placeholder` of a sandbox that does not run, as
+  [the skill tabs](../shell/workspace/skill-tabs.md) say. Preview shows the
+  Markdown body after the front matter, which `skillBody` of
+  `skill-body.ts` cuts as the runner reads it. Source shows the whole
+  text with its line count. The read that runs, a skill that its list no
+  longer holds, a text over the limit, older software of the cloud
+  computer, and a failed read with Try again each show a notice under the
+  header, with the words of the shared `skillTabCopy.ts`.
 - The `placeholder` prop of `FilePage` and `DiffPage` replaces the content
   of the page, for example with a sandbox state. The page then reads
   nothing, and its header offers no Download. A diff keeps its changed

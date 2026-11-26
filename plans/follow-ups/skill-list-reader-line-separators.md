@@ -1,0 +1,60 @@
+# List reader rejects line separators in front matter
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 1, a problem outside the scope from the check of finding 3, and review round 2, finding 72, which its check moved outside the scope.
+- **Location:** `runner/sdk-helper/src/skill-front-matter.ts:15` (`KEY`) and `:24-51` (`readFrontMatter`), `runner/sdk-helper/src/skill-read.ts:13-51` (`readClaudeSkill`, `claudeSkill`) and `:57-84` (`readCodexSkill`, `codexSkill`), `runner/sdk-helper/src/skill-read.ts:86-108` (`orgSkillEntry`), `runner/sdk-helper/src/providers/skill-metadata.ts:35-65` (`skillMetadata`), `src/chat/mentions/skill-rows.ts:45-52` (`offeredSkills`).
+- **Reason:** The two readers disagreed on `origin/main` before the skill tabs change, which moved only the org skills of the list to the YAML reader.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Front matter:** the YAML block at the start of a `SKILL.md` with the name, the description, and the settings of the skill.
+  - **List reader:** `readFrontMatter` in `runner/sdk-helper/src/skill-front-matter.ts`. It reads the top-level fields of a front matter without a YAML package, for the skills list.
+  - **YAML reader:** `skillMetadata` in `runner/sdk-helper/src/providers/skill-metadata.ts`, with the `yaml` package. The org skill choice, the workspace precedence, and the safe form of an org skill use it.
+  - **Safe form:** the text of an org skill that an agent gets. The `yaml` package writes its front matter.
+  - **Line separators:** the characters U+2028 and U+2029. YAML 1.2 reads them as ordinary characters. The `.` of a JavaScript pattern does not match them.
+- **Background:**
+  - The list reader matches each line of the front matter with `KEY`, `/^([A-Za-z0-9_][\w.-]*)[ \t]*:(?:[ \t]+(.*))?$/` (line 15). Its `(.*)` stops at a line separator, so the line does not match.
+  - The reader then marks the whole front matter as not valid, with no fields (lines 31-34 and 43-44).
+  - With a front matter that is not valid, a Claude workspace skill takes the name of its folder and the first line of its body. The reader then checks neither `user-invocable` nor `disable-model-invocation` (`claudeSkill`, `skill-read.ts:29-51`).
+  - A Codex workspace skill with such a front matter leaves the fallback list (`codexSkill`, `skill-read.ts:66-84`).
+  - The YAML reader reads the same front matter. The workspace precedence uses it (`runner/sdk-helper/src/providers/skills.ts:34`).
+  - The list rules:
+    - The name and the description come from the front matter, and the list holds every skill that the agent loads (`docs/protocol/skill-sources.md:70-83`).
+    - The Claude list leaves out a skill whose `user-invocable` Claude does not read as true (`docs/protocol/skill-sources.md:30-32`). Claude hides such a skill from the menu of its user.
+    - The list of `/` offers a manual-only Claude skill, one with `disable-model-invocation: true`, only when `/` starts the text (`docs/protocol/skill-mentions.md:72-84`, `offeredSkills` in `src/chat/mentions/skill-rows.ts:45-52`).
+  - On 25 November 2026, the skill tabs change moved the org skills of the list to the YAML reader. Each org skill takes its entry from the metadata that its selection read (`orgSkillEntry`, `skill-read.ts:86-108`, commit `7a952095e`).
+  - On `origin/main`, `listOrgSkills` in `runner/sdk-helper/src/skill-org.ts` writes the safe form of each org skill with the `yaml` package, and reads it back with the list reader. The `yaml` package writes a line separator into the safe form as it is.
+- **Problem:**
+  - A run on 25 November 2026 at commit `c459e6971` of the branch used a front matter of `name: declared-name` and a description with U+2028. It gave these results:
+    - A workspace skill in the Claude list: the name `folder-name`, and the description "Body heading", the first line of the body.
+    - The same workspace skill with `user-invocable: false`: in the Claude list.
+    - The same workspace skill with `disable-model-invocation: true`: in the Claude list, without its manual-only mark.
+    - The same workspace skill in the Codex fallback list: left out.
+    - An org skill: its name, its description, and both settings, in the Claude list and in the Codex list.
+  - Before commit `7a952095e`, an earlier run of the same day gave an org skill in the Claude list the description "Body heading". Its name was right. The Codex list left it out, while the agent start still selected it.
+  - Before that commit, an org skill in the Claude list also lost `user-invocable` and `disable-model-invocation`, because the list reader rejected its safe form. `origin/main` reads the safe form in the same way, so its org skills lose the two settings until this branch merges.
+  - U+2029 gives the same results.
+- **Impact if no action:**
+  - A workspace skill can show under another name or description than the agent uses, or miss from the Codex list while the agent loads it. Its chip can then name a skill that the agent does not know.
+  - The list of `/` can offer a Claude skill that Claude hides from its user. It can also offer a manual-only skill later in the text, where Claude does not run it.
+- **Root question:** How do the skills list and the agent start read the same fields from one front matter?
+- **Options:**
+  - **A.** Let the list reader accept line separators inside a line.
+    - Match the value of `KEY` with `[^\r\n]*` in place of `.*`. Check the other patterns of the reader in the same way.
+    - Add cases for a workspace skill, for Claude and for Codex, also with `user-invocable` and `disable-model-invocation`.
+    - Effort: Small.
+  - **B.** Read the front matter of every skill with the YAML reader alone.
+    - The org skills of the list already take their entry from it, since commit `7a952095e`. Give the workspace skills of the Claude list and of the Codex fallback list the same reader.
+    - The list, the tab, the workspace precedence, and the agent start then use one reader.
+    - Map its values to the kinds of field that the list needs. Keep each existing list test.
+    - Cost: the list then follows the `yaml` package for other unusual inputs too. Nobody checked which reader each agent uses for each input.
+    - Effort: Medium.
+- **Left out:**
+  - Change nothing. The list then breaks the rules of `docs/protocol/skill-sources.md:70-83` for these skills.
+  - An escape of the line separators when the safe form is written. It reaches only the org skills, which the branch already moved to the YAML reader. A workspace skill keeps its own file.
+- **Wider fix:** B. With one reader, no input can give the list and the agent start two different results.
+- **Previous examples:** The skill tabs change fixed the org skill name in the Claude list in commit `315b5cbca`. It moved each org skill of the list to the YAML reader in commit `7a952095e`. `plans/follow-ups/claude-reserved-skill-identities.md` records other cases where the helper and Claude disagree on a skill name.
+- **Related:** `plans/follow-ups/claude-reserved-skill-identities.md`. Its option B gives the shared Claude metadata reader one result for each skill identity. Option B here makes the list use that reader. Do both in one branch, or keep that result when B lands. No options conflict.
+- **Recommendation:** B. One reader keeps the list, the tab, and the agent start on the same fields for every input.
+- **Action:** fix after merge, apply B, because the input is rare, the problem is on `origin/main`, and the fix costs the same later.

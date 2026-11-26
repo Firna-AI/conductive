@@ -7,6 +7,7 @@ import {
   FileText,
   Globe,
   MessageSquare,
+  SquareSlash,
   SquareTerminal,
 } from 'lucide-react'
 import { menu as menuPart } from '../../entries/components/common/Menu.mockup'
@@ -25,10 +26,18 @@ import styles from '../../../../../src/ui/components/workspace/WorkspaceTabs.mod
  * The kind of a tab, which sets its icon: a session, or the icon that All
  * files gives a code file, a Markdown file, or another file, or a diff, or
  * a terminal of the Terminal tool, or the one Preview tab of the centre
- * row (decision 288).
+ * row (decision 288), or a skill, with the skill icon of its chip (skill
+ * tab decision 1 B).
  */
 export type TabKind =
-  'session' | 'code' | 'markdown' | 'file' | 'diff' | 'terminal' | 'preview'
+  | 'session'
+  | 'code'
+  | 'markdown'
+  | 'file'
+  | 'diff'
+  | 'terminal'
+  | 'preview'
+  | 'skill'
 
 export type WorkspaceTab = {
   key: string
@@ -45,8 +54,9 @@ export type WorkspaceTab = {
    */
   needsInput?: boolean
   /**
-   * The temporary tab, from decision 284: the next press on a file or a
-   * diff replaces its file. Only its title changes, in italics.
+   * The temporary tab, from decision 284: the next press on a file, a diff,
+   * or a skill replaces it (skill tab decision 2 A). Only its title
+   * changes, in italics.
    */
   temporary?: boolean
   /**
@@ -71,6 +81,7 @@ const icons: Readonly<Record<TabKind, LucideIcon>> = {
   diff: FileDiff,
   terminal: SquareTerminal,
   preview: Globe,
+  skill: SquareSlash,
 }
 
 /**

@@ -47,6 +47,8 @@ export const filesPanel = defineComponent({
       only: { type: 'array', items: { type: 'string' } },
       /** The open menu of a row of the shown list. */
       menu: fileRowMenuSchema,
+      /** The page of README.md in All files, when it differs from its preview. */
+      markdownTo: { type: 'string', minLength: 1 },
     },
   } as const,
   slots: ['placeholder', 'checksTop'],
@@ -63,6 +65,7 @@ export const filesPanel = defineComponent({
         checksTop={props.checksTop}
         edited={props.edited}
         lists={props.lists}
+        markdownTo={props.markdownTo}
         menu={props.menu}
         only={props.only}
         open={props.open}

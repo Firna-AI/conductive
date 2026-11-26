@@ -48,6 +48,7 @@ import {
 } from './read-responses'
 import { readView, readViewReply } from './read-view'
 import { readNewestStoredEvents, readWorkspaceResponse } from './read-workspace'
+import { withSkillTabsApart } from './view-skills'
 
 export interface WorkspaceTarget {
   orgId: string
@@ -102,11 +103,17 @@ export function createChatApi(client: ApiClient, target: WorkspaceTarget) {
     /** The saved view, with the automation of a run workspace. */
     view: () =>
       client.get(workspaceViewPath(orgId, workspaceId), readViewReply),
+    /**
+     * Saves the view, with its skill tabs in their own fields, as
+     * `withSkillTabsApart` says.
+     */
     saveView: (view: WorkspaceView) =>
       client.send(
         'PUT',
         workspaceViewPath(orgId, workspaceId),
-        viewToWire(view) satisfies UpdateWorkspaceViewRequest,
+        viewToWire(
+          withSkillTabsApart(view),
+        ) satisfies UpdateWorkspaceViewRequest,
         readView,
       ),
     models: () => client.get(MODELS_PATH, readModels),

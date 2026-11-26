@@ -22,6 +22,8 @@ first. Each path is relative to `src/files/`, the folder of this guide.
   once.
 - `model/resource-loader.ts` and `model/follow-path.ts`: the read of one
   file or diff, which drops stale replies and reads again after an event.
+  The skill tab reads its text with `ResourceLoader` too, and gives it the
+  errors after which a failed refresh keeps the text that shows.
 - `api/files-client.ts`: `createFilesClient`, the file routes, with their
   errors as `FilesError`, and the download address of a path.
 - `page/file-actions.ts`: Copy and Download, with `browserTargets`.
@@ -37,7 +39,9 @@ first. Each path is relative to `src/files/`, the folder of this guide.
   label that a screen shows for a real path, and `hidesSecret` and
   `tabHidesSecret`, the shared check of a label that hides a secret value.
 - `panel/FilesPanel.tsx`, `page/FilePage.tsx`, `page/DiffPage.tsx`, and
-  `tabs/FileTabItem.tsx`: the screens.
+  `tabs/FileTabItem.tsx`: the screens. `page/SkillPage.tsx` draws a skill
+  tab with the same parts, and `page/skill-body.ts` gives the Markdown body
+  of a skill text after its front matter.
 - `page/file-view.ts`: `fileView`, what a file page shows of one read:
   the picture of an image file that holds bytes, with a `data:` address
   of those bytes, or, for each other file, the text or the binary mark of
@@ -81,7 +85,9 @@ first. Each path is relative to `src/files/`, the folder of this guide.
 - `markdown/markdown-worker.ts` and `markdown/worker-parse.ts`: the module
   worker that runs the parse, and its start from the view, which ends it.
 - `markdown/MarkdownView.tsx`: the safe renderer of a parsed document.
-  `parser` replaces the worker for a static render. It draws each table
+  `parser` replaces the worker for a static render. `states` gives the
+  wait for the worker and its failure the words of a page that shows no
+  file, such as a skill tab. It draws each table
   through the shared `MarkdownTable`, with the margin of
   its `.table` class. Its headings take their look from the shared
   `MarkdownHeadings.module.css`, and its quotes, rules,

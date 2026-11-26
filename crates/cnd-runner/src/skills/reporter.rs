@@ -4,7 +4,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
 
 use async_trait::async_trait;
+use cnd_runner_interface::agents::Agent;
 use cnd_runner_interface::runner::RunnerEvent;
+use cnd_runner_interface::runner_skills::SkillReadOutcome;
 use cnd_runner_interface::skills::{HelperSkillLists, RunnerSkillsUpdated, SkillInput};
 use futures_util::future::BoxFuture;
 use tokio::sync::Mutex;
@@ -15,7 +17,7 @@ use crate::reports::prepare::ReportFilter;
 use crate::reports::queue::SerialQueue;
 
 use super::boundary::{SkillInputs, SkillReports, SkillScanner};
-use super::prepare;
+use super::{prepare, read};
 
 #[derive(Default)]
 struct History {
@@ -122,6 +124,26 @@ impl SkillReports for SkillReporter {
             }
             reporter.scan(full, command_id).await
         })
+    }
+
+    async fn read(&self, agent: Agent, name: String, max_bytes: u64) -> SkillReadOutcome {
+        let skill = {
+            let history = self.history.lock().await;
+            history.source.as_ref().and_then(|lists| {
+                let entries = match agent {
+                    Agent::Claude => &lists.claude,
+                    Agent::Codex => &lists.codex,
+                };
+                entries
+                    .iter()
+                    .find(|entry| entry.skill.name == name)
+                    .cloned()
+            })
+        };
+        match skill {
+            Some(skill) => self.scanner.read(agent, skill, max_bytes).await,
+            None => read::not_found(),
+        }
     }
 
     async fn close(&self) {

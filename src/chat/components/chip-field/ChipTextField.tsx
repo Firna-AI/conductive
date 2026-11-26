@@ -8,8 +8,10 @@ import { classes } from '../../../ui/components/common/classes'
 import { useControlSizes } from '../../../ui/components/common/touch'
 import type { Agent } from '../../../shared/generated/Agent'
 import { useChatLinks } from '../../links/LinksContext'
-import { useMentionSkills } from '../../mentions/mention-skills'
-import { useMentionTree } from '../../mentions/MentionsContext'
+import {
+  useMentionSkills,
+  useMentionTree,
+} from '../../mentions/MentionsContext'
 import { AttachedFileNode } from './attached-file-node'
 import { FieldFilesProvider, type FieldFiles } from './attached-files'
 import { LinkTextNode, WorkspaceChipNode } from './chip-nodes'

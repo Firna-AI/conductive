@@ -15,18 +15,19 @@ decision of the change that keeps each open request above the composer,
 as [The request stack](request-stack.md) says.
 
 - The tab row of the centre column shows the session tabs, the file and
-  diff tabs, and the Preview tabs in one order (decision 186). A Preview
-  tab shows the page of one port, as
+  diff tabs, the skill tabs, and the Preview tabs in one order (decision
+  186). A Preview tab shows the page of one port, as
   [Port previews](port-previews.md#preview-tabs-and-the-end-of-a-preview)
-  says (decision 291).
+  says (decision 291). A skill tab shows the text of one skill, as
+  [Skill tabs](skill-tabs.md) says.
 - Each member has their own order in each workspace. The order stays after
   a reload. The other devices of that member load the same order.
 - A new tab of any kind opens at the end of the row. This holds also for a
   session that the history reopens, and for a new
   [temporary tab](temporary-tabs.md).
-- A press that replaces the file or the diff of the temporary tab leaves
-  the tab in its place. This holds also when later tabs stand after it. A
-  keep does not move the tab either.
+- A press that replaces the file, the diff, or the skill of the temporary
+  tab leaves the tab in its place. This holds also when later tabs stand
+  after it. A keep does not move the tab either.
 - The user can drag any tab to any place in the row.
 - A row that keeps the sessions and the files in two groups was rejected,
   because a file could then never go before a session.
@@ -35,7 +36,7 @@ as [The request stack](request-stack.md) says.
 - On a phone, the row shows only the session tabs. A long press lifts a
   tab there.
 - A move on a phone changes only the place of the moved session tab. Each
-  file tab and each Preview tab keeps its place.
+  file, diff, skill, and Preview tab keeps its place.
 - When the tabs do not fit at their minimum width, the row scrolls
   sideways (decision 187).
 - The row scrolls a tab into view when the tab opens, when it becomes the
@@ -54,12 +55,13 @@ as [The request stack](request-stack.md) says.
 - Each tab of the row keeps the reader's place while another tab or another
   workspace shows. A session tab keeps the row that the user read, as
   [The scroll of the chat](chat-and-events.md#the-scroll-of-the-chat)
-  says. A file or diff tab keeps its scroll offset, one for each of its
-  views, such as the code and the preview of a Markdown file. A reload
-  forgets the places. The user chose this on 13 November 2026.
+  says. A file, diff, or skill tab keeps its scroll offset, one for each
+  of its views, such as the code and the preview of a Markdown file. A
+  reload forgets the places. The user chose this on 13 November 2026.
 - A tab that closes forgets its place, also when another member closes its
-  session. When it opens again, a session tab shows the bottom, and a file
-  or diff tab shows the top. The user chose this on 13 November 2026.
+  session. When it opens again, a session tab shows the bottom, and a
+  file, diff, or skill tab shows the top. The user chose this on 13
+  November 2026.
 
 ## The needs-input mark
 
@@ -93,10 +95,10 @@ as [The request stack](request-stack.md) says.
 ## The shown tab at a return
 
 - A return to a workspace at its address alone shows the tab that showed
-  when the member left it, also a file, diff, or Preview tab. A click on
-  the row of the workspace in the list, its workspace row in the command
-  palette, and a reload of that address open the workspace at that
-  address. The user asked for this on 17 November 2026.
+  when the member left it, also a file, diff, skill, or Preview tab. A
+  click on the row of the workspace in the list, its workspace row in the
+  command palette, and a reload of that address open the workspace at
+  that address. The user asked for this on 17 November 2026.
 - Reason: a member who leaves a Preview tab and comes back expects that
   tab, not the chat.
 - The shown tab comes from the saved view that the browser tab read. A
@@ -136,13 +138,16 @@ as [The request stack](request-stack.md) says.
   three groups, with a line between them: Copy path, then Move left and
   Move right, then Close other tabs and Close tabs to the right.
   The tab menu of a Preview tab holds Move left and Move right, then Close
-  other tabs and Close tabs to the right.
+  other tabs and Close tabs to the right. The tab menu of a kept skill tab
+  holds the same items as the tab menu of a Preview tab. It has no Copy
+  path, because a skill tab has no path.
 - Copy link copies the link of the session of its tab, as
   [Session links](agents-and-sessions.md#session-links) says. The user
   added it on 12 November 2026.
 - The tab menu of the temporary tab holds four groups, with a line between
   them: Keep open (decision 286 B), then Copy path, then Move left and
-  Move right, then Close other tabs and Close tabs to the right.
+  Move right, then Close other tabs and Close tabs to the right. The tab
+  menu of a temporary skill tab holds the same groups without Copy path.
 - Reason: the tab menu groups its items by kind (decision 188). Copy path
   comes after Keep open and before the moves, as the copy items of a
   session tab come after Rename session and before the moves.
@@ -166,8 +171,8 @@ as [The request stack](request-stack.md) says.
   first, as in a browser. Each session tab closes as its Close does, so
   its session moves to the history for every member.
 - On a phone, the row shows only the session tabs, so Close other tabs
-  and Close tabs to the right close only session tabs. Each file tab and
-  each Preview tab stays.
+  and Close tabs to the right close only session tabs. Each file, diff,
+  skill, and Preview tab stays.
 - After a move from the tab menu, a screen reader user hears the name of
   the tab and its new place, such as "Address autocomplete moves to place
   2 of 4". The focus then goes back to the tab.
@@ -204,14 +209,15 @@ as [The request stack](request-stack.md) says.
 - A file or diff tab there without Copy path, such as a tab whose label
   hides a secret value, has no item. So it opens no tab menu, and the
   browser shows its own.
-- A Preview tab there opens no tab menu.
+- A skill tab or a Preview tab there opens no tab menu, because each of
+  its items changes the workspace.
 - Reason: a read-only workspace accepts no change, but a member can still
   copy there, as
   [Read-only workspaces](session-transcripts.md#read-only-workspaces)
   says. The rule also covers each item that the menu gets later.
-- So a read-only workspace also leaves out Keep open. The tab menu of the
-  temporary tab there holds only Copy path, and only a double-click keeps
-  a tab (decision 286 B).
+- So a read-only workspace also leaves out Keep open. The tab menu of a
+  temporary file or diff tab there holds only Copy path, and only a
+  double-click keeps a tab (decision 286 B).
 - The tab menu opens there in the same ways as in other workspaces. A long
   press on a phone opens it, but lifts no tab.
 - An item that the place of a tab rules out, such as Move left on the

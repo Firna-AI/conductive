@@ -200,8 +200,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         value or the output of the command.`,
       text`Your code: your repositories and files live in the cloud
         computers that ${productName} runs for your org. ${productName}
-        reads a file or a diff when you open it, and a picture that an
-        agent answer shows, to show it to you. The
+        reads a file, a diff, or the text of a skill when you open it, and
+        a picture that an agent answer shows, to show it to you. The
         agents send their model requests through ${productName} to
         Anthropic, OpenAI, or the chosen endpoint.
         Agent settings in the repository can send them to another address
@@ -256,7 +256,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         workspace page that you opened in each org. The address holds the
         IDs of the org, the workspace, and the session, the preview, the
         port of a preview, or the terminal. It can also hold the name of a
-        tool and the path of an open file. A switch to the org opens that
+        tool, the path of an open file, or the agent and the name of an
+        open skill. A switch to the org opens that
         page again. The addresses stay in your browser, also after you sign
         out, until you clear its saved data.`,
     ),

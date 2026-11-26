@@ -111,6 +111,11 @@ export type ComposerState = {
    */
   pointer?: boolean
   /**
+   * A view has no pointer, so this draws it over the name of the first chip
+   * of the text, a skill chip, which a press opens in the skill tab.
+   */
+  namePointer?: boolean
+  /**
    * A picker in place of the model picker, for a page that draws the model
    * menu in another place, such as above the page in
    * `app/chat/menu-placement`.
@@ -198,7 +203,11 @@ export function Composer(props: ComposerState & { lines?: number }) {
             moklyInstance="message-field"
             placeholder={placeholder}
             text={props.draft}
-            {...defined({ caret: props.caret, pointer: props.pointer })}
+            {...defined({
+              caret: props.caret,
+              pointer: props.pointer,
+              namePointer: props.namePointer,
+            })}
           />
           <div className={styles.bar}>
             {phone ? (

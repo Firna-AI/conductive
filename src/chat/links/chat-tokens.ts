@@ -8,8 +8,8 @@ import {
 } from '../../markdown/markdown-labels'
 import { bareAddressAt, webAddressStartAt } from '../../markdown/web-links'
 import { mentionAt, type Mention } from '../../shared/mention-text'
-import type { AgentSkill } from '../../shared/generated/AgentSkill'
 import { skillTextAt } from '../../shared/skill-text'
+import type { ListedSkill } from '../mentions/mention-skills'
 
 /** A Markdown link, with its label and address as typed. */
 export interface MarkdownLink {
@@ -39,10 +39,13 @@ export type Token =
   | { kind: 'code'; text: string }
   | LinkToken
   | { kind: 'mention'; mention: Mention }
-  | { kind: 'skill'; source: string; skill: AgentSkill }
+  | ({ kind: 'skill'; source: string } & ListedSkill)
 
-/** Finds the skill of either agent that the name of a skill text names. */
-export type SkillLookup = (name: string) => AgentSkill | undefined
+/**
+ * Finds the skill of either agent that the name of a skill text names, with
+ * the agent whose list holds it.
+ */
+export type SkillLookup = (name: string) => ListedSkill | undefined
 
 /** What a reading of chat text looks for, besides code. */
 interface Reading {
@@ -127,10 +130,10 @@ export function tokens(text: string, reading: Reading): Token[] {
       continue
     }
     const skillText = reading.skills ? skillTextAt(text, index) : null
-    const skill = skillText ? reading.skills?.(skillText.name) : undefined
-    if (skillText && skill) {
+    const listed = skillText ? reading.skills?.(skillText.name) : undefined
+    if (skillText && listed) {
       const { source } = skillText
-      index += add({ kind: 'skill', source, skill }, source.length)
+      index += add({ kind: 'skill', source, ...listed }, source.length)
       continue
     }
     const link = !reading.links

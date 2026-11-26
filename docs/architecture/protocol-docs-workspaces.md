@@ -83,9 +83,9 @@ protocol docs.
       keys.
     - [Terminal links](../protocol/terminal-links.md): the links in the
       output of a terminal.
-  - [Temporary tabs](../protocol/temporary-tabs.md): the one file or diff
-    tab that the next press replaces, what opens and keeps it, and its
-    mark in the saved view.
+  - [Temporary tabs](../protocol/temporary-tabs.md): the one file, diff,
+    or skill tab that the next press replaces, what opens and keeps it,
+    its mark in the saved view, and the skill tabs in the saved view.
   - [File row menu](../protocol/file-row-menu.md): the menu of a row of
     All files and Changes, with Add to chat and Copy path, Copy path in
     the tab menu of a file or diff tab, and the paths whose label hides a

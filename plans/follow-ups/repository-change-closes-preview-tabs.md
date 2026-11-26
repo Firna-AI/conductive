@@ -1,0 +1,45 @@
+# Repository changes close Preview tabs without a rule
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 1, problems outside the scope from the checks of findings 24 and 46.
+- **Location:** `docs/protocol/repository-change-after.md:36-47`, `worker/lifecycle/repository-change-data.ts:98-120` (`SESSION_TABS`, `DROP_FILE_TABS`) and `:122-129` (the comment of `storeChangedRepository`), `src/chat/state/workspace-records.ts:14-30` (`staysAtMove`, `withoutFileTabs`) and `:51-57` (`withRecord`), `worker/lifecycle/repository-change-views.test.ts:49-123`, `src/shell/workspace/repository/RepositoryMenu.test.tsx:115-164`.
+- **Reason:** The Preview tabs closed at a repository change on `origin/main` before the skill tabs change, and no recorded decision says which side is right.
+
+- **Source:** Review. **Category:** Docs or spec.
+- **Terms:**
+  - **Repository change:** the move of a workspace to another repository of the org, as `docs/protocol/repository-change.md` says.
+  - **Preview tab:** a tab of the centre row that shows the page of one port of the cloud computer.
+- **Background:**
+  - The protocol closes each open file tab and diff tab of the old repository (`docs/protocol/repository-change-after.md:41-42`). Its reason: the path of such a tab is no longer a path of the repository.
+  - Each skill tab stays, because it names an agent and a skill, not a path (lines 43-47).
+  - The change stops no program, such as a dev server. Such a program keeps working in the old folder, and its preview shows the old repository (lines 36-40).
+  - No protocol doc says what happens to a Preview tab.
+  - The Worker keeps only the session tabs in `tabs` of each saved view (`SESSION_TABS` in `DROP_FILE_TABS`, `worker/lifecycle/repository-change-data.ts:98-120`). So it also closes each Preview tab.
+  - The comment of `DROP_FILE_TABS` names only the file and diff tabs (lines 102-108). So does the comment of `storeChangedRepository` (lines 122-129).
+  - Since commit `da9d23691` of 25 November 2026, `DROP_FILE_TABS` also keeps an empty place in `skillBaseTabs` for each tab that it closes. It does this when the view has skill tabs (lines 115-117).
+  - It gives `SESSION_TABS` to `retainedSkillBaseTabs` for that, so each skill tab stays beside the tabs that stay open.
+  - The app keeps only the session and the skill tabs (`staysAtMove`, `src/chat/state/workspace-records.ts:14-17`). So it also closes each Preview tab.
+  - The comment of `withoutFileTabs` gives the reason of a path, which a Preview tab does not have (lines 19-25). The comment of `withRecord` names only the file and diff tabs (lines 51-57).
+  - A Worker test expects the Preview tab to close (`worker/lifecycle/repository-change-views.test.ts:49-123`). No app test opens a Preview tab before a move.
+  - The commit of the repository change, `424bf736d` of 18 November 2026, names only the file and diff tabs. The Preview tabs came one day before, in commit `1e01de21f`.
+  - A change of a protocol doc also needs a read of both legal pages and of each public guide, as `AGENTS.md` says.
+- **Problem:** A repository change closes each Preview tab, but the protocol names only the file and diff tabs. Two code comments give a reason that does not hold for a Preview tab.
+- **Impact if no action:** A member loses a Preview tab that the protocol does not say closes, while its server can still run. A later change can follow either the doc or the code, and the app side has no test.
+- **Root question:** What happens to an open Preview tab at a repository change?
+- **Options:**
+  - **A.** Keep the code, and write the rule.
+    - State in `docs/protocol/repository-change-after.md` that each Preview tab closes, with its reason. A possible reason: a tab that stays shows the page of the old folder in the workspace of the new repository.
+    - Correct the comments of `DROP_FILE_TABS`, `storeChangedRepository`, `withoutFileTabs`, and `withRecord`.
+    - Add a Preview tab to the app test of the move in `src/shell/workspace/repository/RepositoryMenu.test.tsx`.
+    - Effort: Small.
+  - **B.** Keep each Preview tab open, as a skill tab stays, because it names a port, not a path.
+    - Keep the kind `preview` in `SESSION_TABS` and in `staysAtMove`, and keep a shown Preview tab as the shown tab. The skill places then keep the Preview tab too, because `retainedSkillBaseTabs` gets the same list.
+    - Update the Worker test, add the app case, and state the rule in the protocol doc.
+    - Cost: it changes the behaviour on `origin/main`.
+    - Effort: Medium.
+- **Left out:** Change nothing. The doc and the code then keep disagreeing, and the next change can break either side.
+- **Wider fix:** None. The `documentation` skill already gives each requirement one home in a protocol doc.
+- **Previous examples:** The skill tabs change added the rule for the skill tabs to the same section, at `docs/protocol/repository-change-after.md:43-47`.
+- **Recommendation:** B. A Preview tab names no path of the old repository, and the doc already accepts that its server keeps showing the old repository. A is the smaller change if the user wants the current behaviour.
+- **Action:** ask the user, because no recorded decision says whether a Preview tab closes or stays, and the user decides which side is right.

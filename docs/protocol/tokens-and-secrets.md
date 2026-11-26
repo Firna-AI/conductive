@@ -145,6 +145,9 @@ that doc says.
   working. No filter in the Worker hides a part of these tokens.
 - A start log hides each exact copy of a secret value and of the workspace
   token before a browser gets it.
+- The Worker hides the secret values, the workspace token, and the turn
+  tokens in the text of a skill tab before a browser gets it, as
+  [The read](skill-tabs.md#the-read) says.
 - The app does not hide the value of an env var that is not secret. So
   each reader of the chat or of a start log can see such a value.
 - Reason: the admin knows which values are secrets. A length rule, where
@@ -153,7 +156,8 @@ that doc says.
   short, common values, such as `1`, in ordinary text.
 - Risk: the app hides only exact copies of a secret value. A changed or
   encoded value still shows. File content, diff content, and the terminal
-  hide no value.
+  hide no value. So the file tab of the `SKILL.md` of a repository skill
+  can show a value that its skill tab hides.
   The mark does not keep a value from the agent or from a member with a
   terminal, because each sandbox gets the env vars of its org.
 - Risk: the runner does not hide secret values. So its saved events on the

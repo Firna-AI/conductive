@@ -1,0 +1,39 @@
+# Chat README names a test-only file send
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 1, a problem outside the scope from the Worker review.
+- **Location:** `worker/chat/integration/README.md:189-190`, `worker/chat/backend.ts:261-269` (`WorkspaceChat.sendFileCommand`), `worker/chat/runner-channel.ts:284-298` (`RunnerChannel.sendFileCommand`), `worker/chat/harness.test-support.ts:159-163`, `worker/chat/recorded-events.test.ts:23-80`.
+- **Reason:** The README line and the method that only tests use are on `origin/main`, and the skill tabs change uses neither.
+
+- **Source:** Review. **Category:** Docs or spec.
+- **Terms:**
+  - **File broker:** `RunnerFiles` in `worker/files/runner.ts`. It sends each `file.read` and `file.diff` command to the runner, and it waits for the reply in the shared read tracker.
+  - **`runnerAttached`:** the hook in `worker/chat/workspace-integration.ts:79-90` that attaches the file broker to each ready runner connection.
+- **Background:**
+  - The README says: "Send each `file.read` and `file.diff` request with `sendFileCommand`. A `false` result means that no runner got the request." (`worker/chat/integration/README.md:189-190`).
+  - The product sends each file and diff read through the file broker. `runnerAttached` gives the broker a send callback, which `attachFiles` of `RunnerConnections` serves (`worker/chat/runner-connections.ts:233-249`).
+  - Each file result goes to the file broker (`receiveFileResult` in `worker/chat/workspace-integration.ts:113-115`). The broker drops a result for which it holds no pending read.
+  - `WorkspaceChat.sendFileCommand` and `RunnerChannel.sendFileCommand` send a command without a pending read. So nothing receives the reply of such a send.
+  - Only the test helper `worker/chat/harness.test-support.ts:159-163` and the test `worker/chat/recorded-events.test.ts:23-80` call `sendFileCommand`.
+  - That test checks these facts:
+    - the send returns `false` before the runner connects and before it is ready
+    - the command reaches the runner
+    - a file result stays out of the history
+    - a failed send returns `false`
+  - The next lines of the same README describe `runnerAttached` correctly (lines 191-193).
+- **Problem:** The README directs a caller to an entry point that only tests use, and whose replies nothing receives.
+- **Impact if no action:** A new caller that follows the README sends file reads whose replies never reach it.
+- **Root question:** How does the README lead the callers of file reads to the send path that the product uses?
+- **Options:**
+  - **A.** Correct the README line: file and diff reads go through the file broker that `runnerAttached` attaches. Keep `sendFileCommand` for the tests. Effort: Small.
+  - **B.** Correct the README line as in A, and delete `sendFileCommand` from `WorkspaceChat` and from `RunnerChannel`, with its test helper.
+    - Move each fact that `recorded-events.test.ts` checks with it onto the path of the file broker.
+    - Drop a check only when it tests the removed path alone, under the removal rule of the `testing` skill.
+    - Follow the steps for dead code in the `git-commit` skill.
+    - Effort: Small.
+- **Left out:** Let the product use `sendFileCommand`. The file broker owns the pending reads and their limits, so a second send path would bypass them.
+- **Wider fix:** B. With one send path, no doc can point to another one.
+- **Previous examples:** None found.
+- **Recommendation:** B. It removes the send path that the product never runs, so the doc and the code keep one way to send a file read.
+- **Action:** fix after merge, apply B, because it is on `origin/main` and outside the skill tabs change.

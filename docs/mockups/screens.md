@@ -18,9 +18,11 @@ the styles, and the controls of a screen come from.
   of New workspace from the states of those two screens. The tab and
   composer states of the workspace screen live in
   `src/screens/chatStates.ts`. `tabStates` covers the session, file,
-  image, HTML, and Preview tabs of the centre column. `temporaryTabStates` covers the
-  temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
-  row. `composerStates` covers the composer, with its links, mentions,
+  image, HTML, Preview, and skill tabs of the centre column.
+  `src/screens/workspaceSkillTab.ts` draws the skill tab in the row and
+  chooses its view. `temporaryTabStates` covers the temporary tab, which
+  `src/screens/workspaceTemporaryTab.ts` draws in the row.
+  `composerStates` covers the composer, with its links, mentions,
   skills, attached files, drops, the chip of Add to chat, and the
   Capabilities control.
   `src/screens/composerState.ts` adds that composer to the workspace state,

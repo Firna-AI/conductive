@@ -1,3 +1,5 @@
+import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
+
 export interface FilesWorkspace {
   id: string
   orgId: string
@@ -6,6 +8,7 @@ export interface FilesWorkspace {
   defaultBranch: string
   sandboxId: string | null
   providerAccount: string
+  state: WorkspaceState
 }
 
 export function findFilesWorkspace(
@@ -17,7 +20,7 @@ export function findFilesWorkspace(
     .prepare(
       `SELECT w.id, w.org_id AS orgId, w.repository_id AS repositoryId,
         r.full_name AS repositoryFullName, COALESCE(w.base_branch, r.default_branch) AS defaultBranch,
-        w.sandbox_id AS sandboxId, w.provider_account AS providerAccount
+        w.sandbox_id AS sandboxId, w.provider_account AS providerAccount, w.state
       FROM workspaces w JOIN repositories r ON r.id = w.repository_id AND r.org_id = w.org_id
       WHERE w.id = ? AND w.org_id = ? AND w.archived_at IS NULL AND w.state != 'archived'`,
     )

@@ -3,7 +3,9 @@
 use std::path::PathBuf;
 
 use async_trait::async_trait;
-use cnd_runner_interface::skills::{HelperSkillLists, SkillInput};
+use cnd_runner_interface::agents::Agent;
+use cnd_runner_interface::runner_skills::SkillReadOutcome;
+use cnd_runner_interface::skills::{HelperSkillLists, SkillEntry, SkillInput};
 use futures_util::future::BoxFuture;
 
 use crate::error::Result;
@@ -17,7 +19,9 @@ use super::lease::SkillsLease;
 pub trait SkillScanner: Send + Sync {
     /// Capture both agent lists. Reload forces a fresh Codex app-server query.
     async fn scan(&self, reload: bool) -> Result<HelperSkillLists>;
-    /// Cancel pending scans and wait for helper cleanup.
+    /// Read a discovered skill, using the current copy for an org skill.
+    async fn read(&self, agent: Agent, skill: SkillEntry, max_bytes: u64) -> SkillReadOutcome;
+    /// Cancel pending helper requests and wait for helper cleanup.
     async fn close(&self);
 }
 
@@ -34,7 +38,9 @@ pub trait SkillInputs: Send + Sync {
 pub trait SkillReports: Send + Sync {
     /// A full refresh sends an unchanged list and reloads the app-server list.
     fn refresh(&self, full: bool, command_id: Option<String>) -> BoxFuture<'static, Result<()>>;
-    /// Stop reports and cancel a pending scanner request.
+    /// Read a skill of the named agent from the latest list.
+    async fn read(&self, agent: Agent, name: String, max_bytes: u64) -> SkillReadOutcome;
+    /// Stop reports and cancel pending scanner requests.
     async fn close(&self);
 }
 

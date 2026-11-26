@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { filePage } from '../entries/components/files/FilePage.mockup'
+import { skillPage } from '../entries/components/files/SkillPage.mockup'
 import { filesPanel } from '../entries/components/files/FilesPanel.mockup'
 import { desktopView } from '../entries/components/tools/DesktopView.mockup'
 import { previewTool } from '../entries/components/tools/PortPreview.mockup'
@@ -20,13 +21,16 @@ import {
 } from '../fixtures/starting'
 import { terminalSets } from '../fixtures/terminals'
 import { openPort } from '../fixtures/previews'
+import { plansAgent } from '../fixtures/skillFiles'
 import { paths } from '../paths'
 import { rowMenuOf } from './workspaceRowMenu'
 import { freshPromptFor, runStartingLog } from './workspaceRun'
 import { panelState } from './workspaceSandbox'
 import { previewServicesOf } from './workspaceServices'
 import { backFrom, openFile } from './workspaceFileTab'
+import { openSkill, showsSkillText } from './workspaceSkillTab'
 import { isNew } from './workspaceTabs'
+import { readmeBesideKeptSkill } from './workspaceTemporaryTab'
 import type { WorkspaceState } from './workspaceState'
 
 /**
@@ -57,17 +61,23 @@ function changedPaths(state: WorkspaceState): readonly string[] | undefined {
  * The sandbox state in place of the content of an open file: while the
  * sandbox starts, because the tab opened then and shows no content yet,
  * while its start is refused, and after a failed first start. A stopped
- * sandbox, and one whose later start failed, keep the file. `withAction`
- * adds the action and the words of a refusal, as a phone shows them, and as
- * a file page shows them on desktop, where the page hides the bar of the
- * chat.
+ * sandbox, one whose later start failed, and an archived one keep the
+ * content that the tab shows. A tab without content, `hasContent` false,
+ * such as a skill tab whose text still loads, shows their state too, with
+ * Resume or Try again, as the app does. `withAction` adds the action and
+ * the words of a refusal, as a phone shows them, and as a file page shows
+ * them on desktop, where the page hides the bar of the chat.
  */
 export function filePlaceholder(
   state: WorkspaceState,
   withAction: boolean,
+  hasContent = true,
 ): ReactNode {
   const panel = panelState(state)
-  return panel && (panel.problem === 'starting' || replacesShownFile(panel)) ? (
+  const replaces =
+    panel !== undefined &&
+    (panel.problem === 'starting' || replacesShownFile(panel) || !hasContent)
+  return replaces ? (
     <sandboxPanel.Component
       moklyInstance="sandbox-file"
       phone={withAction}
@@ -101,9 +111,13 @@ function listsPlaceholder(state: WorkspaceState, phone: boolean): ReactNode {
  * saved. A new workspace has none, so the wait of its first start takes
  * their place, and so does the sandbox state of a refused start or a failed
  * first start. On a phone, an open file shows as a page of the Files tab,
- * with the sandbox state in place of its content, as on desktop. An
- * archived workspace has no file lists: its files went with the cloud
- * computer. A row of the lists can show its open menu.
+ * with the sandbox state in place of its content, as on desktop. An open
+ * skill shows there in the same way, and leads back to All files, as a
+ * file does. An archived workspace has no file lists: its files went with
+ * the cloud computer. A row of the lists can show its open menu. While the
+ * tab row keeps the skill tab of `plans` before README.md, the row of
+ * README.md in All files leads to that tab row, as `readmeBesideKeptSkill`
+ * says.
  */
 export function FilesContent(props: {
   state: WorkspaceState
@@ -121,6 +135,20 @@ export function FilesContent(props: {
         phone={phone}
         place="files"
         state={plainData(panel)}
+      />
+    )
+  }
+  const skill = openSkill(state)
+  if (phone && skill) {
+    return (
+      <skillPage.Component
+        agent={plansAgent}
+        back={{ label: 'All files', to: paths.filesAll }}
+        moklyInstance="skill-page"
+        view={skill}
+        {...defined({
+          placeholder: filePlaceholder(state, true, showsSkillText(skill)),
+        })}
       />
     )
   }
@@ -147,6 +175,7 @@ export function FilesContent(props: {
         checksTop: props.checksTop,
         // Complete lists pass nothing, so the panel keeps its earlier props.
         lists: state.lists === 'limited' ? state.lists : undefined,
+        markdownTo: readmeBesideKeptSkill(state),
         menu: rowMenuOf(state, props.viewport),
         only: changedPaths(state),
         open,

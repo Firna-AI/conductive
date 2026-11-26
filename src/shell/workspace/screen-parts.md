@@ -45,9 +45,10 @@ says.
   `composerFocus`, so the message field takes the focus when it shows, as
   [Chat integration](../../chat/integration.md) says. A phone gets no
   request, so no keyboard opens on its own.
-- On desktop, the chat shows the file, diff, and Preview tabs of the
-  saved view among the session tabs, in the one order of the tab row.
-  [Preview tabs](tools-part.md#preview-tabs) gives the Preview tabs. A
+- On desktop, the chat shows the file, diff, Preview, and skill tabs of
+  the saved view among the session tabs, in the one order of the tab row.
+  [Preview tabs](tools-part.md#preview-tabs) gives the Preview tabs, and
+  [The skill tabs](skill-tabs.md) gives the skill tabs. A
   file or diff tab moves by drag and with its tab menu, as a session tab
   does, as [the chat](../../chat/README.md#rules-for-this-code) says. The
   file or diff tab of the address shows in place of the chat of the
@@ -85,7 +86,8 @@ says.
   them from the one connection of the screen, also on a phone before a
   visit to Files. A file chip opens the file tab, as a
   press in All files does. A folder chip opens the folder in All files and
-  shows the right column on desktop, or the Files tab on a phone.
+  shows the right column on desktop, or the Files tab on a phone. A skill
+  chip opens the skill tab, as [The skill tabs](skill-tabs.md) says.
 - An archived workspace shows no file tabs and no file page, and its chat
   gets no files.
 - A record of the workspace with another repository closes each file and
@@ -211,9 +213,13 @@ Each folder of a path is a part of the address. Another address under
 - A stopped sandbox, and one whose later start failed, keep the file that
   a page already shows, as they keep the lists. Otherwise the sandbox panel
   takes the place of the content. The page hides the bar of the chat, so
-  its panel has Resume or Try again, and the words of a refusal. While
-  the open of the workspace resumes the sandbox, the panel shows the wait
-  of a start instead, with no Resume. The
+  its panel has Resume or Try again, and the words of a refusal. While a
+  Resume of the visit runs, the panel shows the wait of a start instead,
+  with no Resume, and the header of the workspace shows Starting. That
+  Resume can be the one of the open of the workspace, of the open of the
+  tab, or of a press on Resume or Try again. The wait ends with its
+  reply, or with a newer state of the sandbox. After a failed Resume, the
+  panel shows the state of the sandbox again. The
   header keeps the name of the file, and a diff keeps its changed lines.
 - Each visit that opens a file or diff tab resumes a stopped sandbox, as
   [Stop and resume](../../../docs/protocol/workspace-life.md#stop-and-resume)

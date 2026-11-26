@@ -13,8 +13,11 @@ import { specFor } from './fileSpecs'
 import type { FileTabView } from './FilesPanel'
 import styles from './FilePage.module.css'
 
-/** The switch between the rendered file and its source. */
-function ViewSwitch(props: { value: 'preview' | 'source' }) {
+/**
+ * The switch between the rendered file and its source. The tab of a skill
+ * has it too.
+ */
+export function ViewSwitch(props: { value: 'preview' | 'source' }) {
   const { field } = useControlSizes()
   return (
     <SegmentedControl

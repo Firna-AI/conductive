@@ -62,6 +62,7 @@ export const conversationKeys = [
   'mac-in-work',
   'mention-answer',
   'skill-answer',
+  'skill-answer-pointer',
   'file-answer',
   'file-answer-in-work',
   'table-resources',

@@ -1,31 +1,40 @@
 # The tab row
 
-This guide belongs to [the chat](README.md). It gives the rules of the one
-order of the session, file, and diff tabs, the mark of the temporary tab
-and the moves that keep it, the needs-input mark of a session tab, the
-drag, the tab menu with Keep open, Copy
-path, Close other tabs, and Close tabs to the right, and the scroll of the
-row, and the reader's place that each tab keeps.
+This guide belongs to [the chat](README.md). It gives the shared order of
+the session, file, diff, Preview, and skill tabs. It covers the mark of
+the temporary tab, the moves that keep it, and the needs-input mark of a
+session tab. It gives the drag, the scroll of the row, and the reader's
+place that each tab keeps. It also gives the tab menu with Keep open,
+Copy path, Close other tabs, and Close tabs to the right.
 [The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row) states
 the requirements.
 
-- The state keeps one saved order for session, file, and diff tabs. The row
-  order includes each tab once. A host with no file or diff tabs leaves
-  their saved places in the view. In a read-only workspace, the row uses
-  the session tabs that the browser keeps.
+- The state keeps one saved order for session, file, diff, Preview, and
+  skill tabs. The row order includes each tab once. A host with no file or
+  diff tabs leaves their saved places in the view. In a read-only
+  workspace, the row uses the session tabs that the browser keeps.
+- The view route keeps the Preview tabs and the skill tabs in fields of
+  their own, as [Temporary tabs](../../docs/protocol/temporary-tabs.md#the-saved-view)
+  says. `readView` of `api/read-view.ts` puts each of them at its place in
+  the row, and `saveView` of `api/client.ts` takes the skill tabs out of
+  the row with `withSkillTabsApart` of `api/view-skills.ts`. Each save
+  sends `skillTabs`, also an empty list, because the Worker keeps the
+  stored skill tabs for a save without it.
 - The saved view also marks the temporary tab, which the host opens,
   keeps, and closes, as
   [Temporary tabs](../../docs/protocol/temporary-tabs.md) says. A move
   that changes its place keeps it too, as `moveTab` says below. Each change
   of the session tabs keeps the mark as it is.
 - A record of the workspace with another repository, from the stream or a
-  read, closes each file and diff tab and the mark, because their paths
-  belong to the old folder. A file or diff that showed gives its place to
-  the session of the chat. `withRecord` of `state/workspace-records.ts`
-  makes the change, and `afterRepositoryMove` saves the view. At the
-  change, the Worker also closes these tabs in the saved view of every
-  member, so a member whose tab did not follow the stream sees them closed
-  too.
+  read, closes each file, diff, and Preview tab and the mark of a file or a
+  diff, because their paths belong to the old folder. A tab that closes and
+  showed gives its place to the session of the chat. A skill tab stays,
+  with its mark, as the Worker keeps the skill tabs of the saved view, and
+  it reads the skill of the new skills report. `withRecord` of
+  `state/workspace-records.ts` makes the change, and `afterRepositoryMove`
+  saves the view. At the change, the Worker also closes these tabs in the
+  saved view of every member, so a member whose tab did not follow the
+  stream sees them closed too.
 - The load gives each open session a place and removes the places of
   sessions that are not open. When an open session first arrives, the
   state adds its missing place at the end. It drops no other place.

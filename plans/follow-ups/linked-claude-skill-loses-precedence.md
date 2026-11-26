@@ -1,0 +1,64 @@
+# A linked Claude skill loses workspace precedence
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 3, finding 112, with the problem in scope that its check found, and the problem in scope that the check of finding 111 found.
+- **Location:** `runner/sdk-helper/src/providers/skills.ts:13-53` (`repositoryNames`, with the read at `:34`, the folder name at `:36`, and the Codex warning at `:37-40`), `runner/sdk-helper/src/providers/skills.ts:87-90` (the precedence check), `runner/sdk-helper/src/skill-content.ts:85-102` (`readRegularSkill`, with the open check at `:94-97`), `runner/sdk-helper/src/providers/skill-metadata.ts:9-23` and `:47-55`, `runner/sdk-helper/src/skills-org.test.ts:179-194`, `docs/protocol/skill-tabs.md:108-121`, `docs/protocol/skill-sources.md:86-90`, `runner/sdk-helper/README.md:100-111`.
+- **Reason:** The case is rare, and the skill tabs branch used both of its review fix rounds.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Helper:** the Node process under `runner/sdk-helper` that starts each agent, chooses its org skills, and reads skills for the list of `/` and the skill tab.
+  - **Org skill:** a skill of the copy of the org skills repository on the cloud computer. The helper gives the chosen org skills to Claude and to Codex.
+  - **Workspace skill:** a skill of the workspace's own repository: `.claude/skills/<folder>/SKILL.md` for Claude, and `.agents/skills` or `.codex/skills` for Codex.
+  - **Open check:** the check in `readRegularSkill`. Outside the org skills copy, it accepts a `SKILL.md` only when the opened file is a regular file named `SKILL.md`.
+  - **Precedence read:** `repositoryNames`, which reads the names of the workspace skills of one agent, so that no org skill of such a name loads.
+- **Background:**
+  - A workspace skill wins over an org skill with the same name that the agent shows (`docs/protocol/org-skills.md:184-185`, under "What loads"). The list of `/` makes the same choice (`docs/protocol/skill-sources.md:57-61`). The public guide `src/marketing/docs/cloud-computer.md:232` restates the rule.
+  - `selectAgentSkills` gets the names from the precedence read (`skills.ts:75`). It leaves out each org skill with such a name, with the warning "The workspace skill <org folder> takes precedence. The org skill will not load." (`skills.ts:87-90`).
+  - The agent start, the skills list, and the tab read of an org skill all use this choice (`runner/sdk-helper/src/providers/skill-view.ts:114`, `runner/sdk-helper/src/skill-org.ts:42` and `:79`).
+  - On 25 November 2026, Cal chose the open check for the skill tabs change (skill tab decision 3 B). Reason: a link in a skill folder must not bring another file, such as a configuration file, into a skill tab or the list. "The read" in `docs/protocol/skill-tabs.md:108-121` states it.
+  - Commit `175cb0495` of that day added the open check. The precedence read uses it too: `readSkillMetadata(directory, agent, 'agent')` (`skills.ts:34`). Before that commit, the precedence read followed a link to any regular file.
+  - When the open check refuses a file, the helper reads no front matter. For Claude, it then keeps only the folder name (`skill-metadata.ts:47-55`, `skills.ts:36`). For Codex, it keeps no name, and it warns (`skills.ts:37-40`).
+  - Claude 2.1.318, which comes with the SDK 0.3.318 that the helper pins, reads a `SKILL.md` link through to a regular file of any name. It skips only a target over its size limit, a target that is not a regular file, and a device or kernel file.
+  - On 25 November 2026, a review check of the skill tabs change found that Codex 0.170.0 skips file links in its walk of the skill folders. So Codex does not load such a skill. The check read the Codex source, `codex-rs/ext/skills/src/loader/host.rs` at the tag `rust-v0.170.0`.
+  - Commit `175cb0495` also changed the test "keeps workspace precedence regardless of size and limits the org tab text" (`runner/sdk-helper/src/skills-org.test.ts:159-215`). Its workspace skills `.claude/skills/early` and `.claude/skills/late` linked to `early.md` and `late.md` at the root of the repository.
+  - Now they link to `early/SKILL.md` and `late/SKILL.md` (lines 179-194). So no test covers a workspace link to a file of another name.
+  - A change of a protocol doc also needs a read of both legal pages and of each public guide, as `AGENTS.md` says.
+- **Problem:**
+  - A Claude workspace skill whose `SKILL.md` links to a file of another name loses its precedence. The precedence read keeps its folder name, not the name that the front matter of the linked file declares.
+  - An org skill with that declared name then loads. It shows in the Claude list of `/` and in its skill tab, and Claude gets it beside the workspace skill.
+  - Two smaller defects belong to the same case:
+    - For such a Codex workspace skill, the precedence read warns "The workspace skill <path> has no usable Codex name. It will not take precedence." The front matter can hold a valid name and description. The open check is the cause, so the warning names the wrong cause. The runner writes the warning to its log.
+    - `docs/protocol/skill-tabs.md:113-114` says "The agent can still load it". `docs/protocol/skill-sources.md:89-90` says "The agent can still load such a skill, so the list and the agent differ for it." Both hold for Claude. Both are wrong for Codex, which skips such a link.
+- **Evidence:**
+  - On 25 November 2026, the old fixture of `early.md` and `late.md` ran against the helper code of commit `580f6f46a`. The test failed. The Claude list held `oversized`, `review`, and `shadowed`, where the test expects `oversized` alone.
+  - A run of the same day put `.agents/skills/review/SKILL.md` as a link to `README.md`, with `name: review` and a description, beside an org skill `review`. The helper gave the warning about "no usable Codex name". The org skill stayed in the Codex list, which is right, because Codex skips the link.
+  - A static read of the Claude 2.1.318 binary of the Linux x64 package on 25 November 2026 showed the link rule of Claude above. No Claude process ran.
+  - A sketch of option D in a copy of the helper passed all 187 tests of the helper, with the old fixture.
+  - The review check of the Codex source named file links in general. Nobody checked a Codex `SKILL.md` that links to another file named `SKILL.md`. The open check accepts such a link, so the precedence read keeps its name for Codex.
+- **Impact if no action:** In a repository with such a link, Claude gets two skills of one name, against the precedence rule. Nobody knows which of the two Claude then runs. Members see the org skill in the list and in its tab, although the workspace skill should win. The Codex warning and the two doc sentences point a reader to a wrong cause.
+- **Root question:** How do the org skill choice, its warnings, and the docs treat a workspace `SKILL.md` that links to another file, as each agent does?
+- **Options:**
+  - **A.** Let a refused workspace skill lose its precedence. Change the precedence rules of `docs/protocol/org-skills.md`, `docs/protocol/skill-sources.md`, and the public guide to say so. Cost: a change of a requirement, and Claude still gets two skills of one name. Effort: Small.
+  - **B.** Ask Claude for the names of the project skills that the open check refuses, before the helper chooses the org skills. Cost: a query of Claude at each choice, which runs at each agent start, each list scan, and each tab read of an org skill. Effort: Medium.
+  - **C.** Give the agent start, the list of `/`, the skill tab, and the precedence one discovery result for each agent. Cost: a new shared result through the whole helper. Effort: Large.
+  - **D.** Let the precedence read follow a Claude link as Claude does, as before commit `175cb0495`.
+    - In `repositoryNames`, read the front matter of a Claude workspace skill through a link to any regular file. Do not check the name of the opened file.
+    - Give that read its own value of `SkillFileSource`. The value `'org'` also skips the check, but it names the org skills copy.
+    - Keep the open check for Codex, which skips such a link. For a Codex skill that the check refuses, warn with that cause.
+    - Check in the Codex source whether Codex skips every `SKILL.md` link. If it does, refuse every link in the Codex precedence read.
+    - Keep the open check for the list and the tab, as skill tab decision 3 B says. No text of the linked file reaches them. The only effect of the read is that an org skill of that name stays out, with its warning.
+    - Restore the fixture of `early.md` and `late.md` in `skills-org.test.ts:179-194`. Add a Codex case for the new warning.
+    - In "The read" of `docs/protocol/skill-tabs.md` and in `docs/protocol/skill-sources.md:86-90`, say that the precedence read follows such a link for Claude. Say that Claude can still load such a skill, and that Codex skips it.
+    - Add the rule to the skills paragraph of `runner/sdk-helper/README.md`.
+    - Effort: Small.
+- **Left out:**
+  - Change nothing. Claude then keeps two skills of one name, against `docs/protocol/org-skills.md:184-185`.
+  - Drop the open check for every read, as before skill tab decision 3 B. It breaks that decision, which stays.
+  - Hide such a workspace skill from Claude. The helper does not change the workspace's own skill files, and Claude would lose a skill of its repository.
+- **Wider fix:** C. One discovery result keeps the agent start, the list, the tab, and the precedence on the same skills. Option B of `plans/follow-ups/claude-reserved-skill-identities.md` is a smaller step for the Claude names.
+- **Previous examples:** Commit `a5e749503` fixed the workspace precedence for valid YAML with the shared YAML reader. `plans/follow-ups/claude-reserved-skill-identities.md` records two other cases where the precedence read and Claude disagree.
+- **Related:** `plans/follow-ups/claude-reserved-skill-identities.md`. Its option B gives the org skill choice and the precedence one Claude identity result. That result must keep the link rule of D. Both change `repositoryNames`, so do them in one branch, or keep the rule of D when B lands. No options conflict.
+- **Recommendation:** D. It restores the required precedence with a change of one read, and it keeps skill tab decision 3 B for the list and the tab. C best protects the codebase, at a Large cost.
+- **Action:** fix after merge, apply D, because the case is rare, and the skill tabs branch used both of its review fix rounds.

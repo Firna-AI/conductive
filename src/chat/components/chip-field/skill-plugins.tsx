@@ -3,11 +3,8 @@ import { SkillIcon } from '../../../ui/components/chat/SkillChip'
 import { skillListCopy } from '../../../ui/components/chat/skillCopy'
 import type { Agent } from '../../../shared/generated/Agent'
 import type { AgentSkill } from '../../../shared/generated/AgentSkill'
-import {
-  agentSkills,
-  useMentionSkills,
-  type MentionSkills,
-} from '../../mentions/mention-skills'
+import { agentSkills, type MentionSkills } from '../../mentions/mention-skills'
+import { useMentionSkills } from '../../mentions/MentionsContext'
 import { offeredSkills, skillRows } from '../../mentions/skill-rows'
 import { MentionListPlugin, type MentionSource } from './mention-list-plugin'
 import { $pickSkill } from './skill-content'

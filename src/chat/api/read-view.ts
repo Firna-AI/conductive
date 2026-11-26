@@ -21,6 +21,7 @@ import {
   text,
   UnreadableResponse,
 } from './json'
+import { readSkill, readSkillPlaces, withSkillTabsInRow } from './view-skills'
 
 function readTab(value: unknown): WorkspaceTab {
   const source = record(value, 'tab')
@@ -71,9 +72,9 @@ function readPreviewPlace(value: unknown): PreviewTabPlace {
 
 /**
  * The saved view from the shape of the route, as `WorkspaceViewWire` says:
- * the tabs, with each Preview tab at its place in the row. Its shown
- * terminal is optional, and a value that names no terminal leaves it out,
- * as the Worker does.
+ * the tabs, with each Preview tab and then each skill tab at its place in
+ * the row, as `withSkillTabsInRow` says. Its shown terminal is optional,
+ * and a value that names no terminal leaves it out, as the Worker does.
  */
 export function readView(value: unknown): WorkspaceView {
   const view = record(record(value, 'view response').view, 'view')
@@ -82,11 +83,14 @@ export function readView(value: unknown): WorkspaceView {
   if (activePreview !== null && !isTabPort(activePreview)) {
     throw new UnreadableResponse('port')
   }
-  return viewFromWire(
+  const wire = viewFromWire(
     {
       tabs,
       activeTab: nullable(readTab)(view.activeTab),
       temporaryTab: readTemporaryTab(view.temporaryTab, tabs),
+      skillTabs: readSkillPlaces(view.skillTabs),
+      activeSkill: readSkill(view.activeSkill),
+      temporarySkill: readSkill(view.temporarySkill),
       fileList: oneOf({ all: true, changes: true, checks: true })(
         view.fileList,
       ),
@@ -96,6 +100,7 @@ export function readView(value: unknown): WorkspaceView {
     optional(list(readPreviewPlace))(view.previewTabs) ?? [],
     activePreview,
   )
+  return withSkillTabsInRow(wire)
 }
 
 /**

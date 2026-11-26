@@ -7,8 +7,8 @@ use ts_rs::{Config, TS};
 use cnd_runner_interface::{
     agents, api, chat_events, commit_author, file_changes, file_tree, files, messages, ports,
     preview_ingress, provider_events, runner, runner_commands, runner_credentials, runner_files,
-    runner_handshake, runner_repository, sdk_helper, sdk_helper_options, services, skills, tools,
-    workspaces,
+    runner_handshake, runner_repository, runner_skills, sdk_helper, sdk_helper_options, services,
+    skills, tools, workspaces,
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -100,6 +100,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     runner_repository::RunnerRepositoryMove::export_all(&cfg)?;
     runner_repository::RunnerRepositoryMoveRefusal::export_all(&cfg)?;
     runner_repository::RunnerRepositoryMoveRefused::export_all(&cfg)?;
+    runner_skills::RunnerReadSkill::export_all(&cfg)?;
     workspaces::StartStep::export_all(&cfg)?;
     workspaces::WorkspaceStart::export_all(&cfg)?;
     tools::device::DeviceCommandInput::export_all(&cfg)?;

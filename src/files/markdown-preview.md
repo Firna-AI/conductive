@@ -20,7 +20,9 @@ on screen until its own parse arrives.
 
 When no worker can start or parse, the preview shows that the file didn't
 open, with Try again, as a failed read does. Try again parses the text in
-a new worker. A static render, as in a test, cannot wait for a worker. It
+a new worker. A page that shows no file, such as a skill tab, gives the
+wait and the failure its own words with `states` of `MarkdownView`. A
+static render, as in a test, cannot wait for a worker. It
 passes `previewDocument` as `markdownParser` of `FileContent`, or as
 `parser` of `MarkdownView`, and the parse runs on the calling thread.
 

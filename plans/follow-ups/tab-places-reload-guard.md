@@ -22,5 +22,6 @@
 - **Left out:** A lint for the class, because it adds a gate, which the user must approve.
 - **Wider fix:** B. Each call site then uses one tested function.
 - **Previous examples:** `viewKnown` in `src/shell/workspace/saved-view.ts` puts the "view known" check in one place for saves.
+- **Related:** `plans/follow-ups/reopened-tab-restores-old-scroll.md` moves the `useFollowTabs` call of `chat-files.tsx` to one part of the workspace screen, which also follows the skill views. Use the function of B there, or move its test with the call. No options conflict.
 - **Recommendation:** B, with one mounted case of A for the chat.
 - **Action:** fix after merge, apply B, because the guard works today and the gap is only in the tests.

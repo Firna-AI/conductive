@@ -26,9 +26,14 @@ export function skillListFor(
   return skillLists[composer]
 }
 
+/** The states with a skill chip in the text, with or without the pointer. */
+const skillChipStates: ReadonlySet<ComposerKey> = new Set([
+  'skill-chip',
+  'skill-chip-pointer',
+  'skill-chip-name',
+])
+
 /** The draft of a state with a skill chip in the text. */
 export function skillChipFor(composer: ComposerKey): string | undefined {
-  return composer === 'skill-chip' || composer === 'skill-chip-pointer'
-    ? skillChipDraft
-    : undefined
+  return skillChipStates.has(composer) ? skillChipDraft : undefined
 }

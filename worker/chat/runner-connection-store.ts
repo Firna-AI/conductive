@@ -89,6 +89,7 @@ function readConnection(value: unknown): RunnerConnectionState {
     processStartId: warningProcessStartId(value.processStartId),
     protocolVersion: value.protocolVersion ?? null,
     ...(value.fileServer === true ? { fileServer: true } : {}),
+    ...(value.skillReads === true ? { skillReads: true } : {}),
     ...(value.capabilityNotices === true ? { capabilityNotices: true } : {}),
     ...(value.services === true ? { services: true } : {}),
     ...(value.serviceBinding === undefined

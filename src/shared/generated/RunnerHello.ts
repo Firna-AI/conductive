@@ -45,6 +45,10 @@ export type RunnerHello = {
    */
   fileServer?: boolean
   /**
+   * This runner answers skill reads.
+   */
+  skillReads?: boolean
+  /**
    * This runner can deliver app notes and acknowledge the lines read.
    */
   capabilityNotices?: boolean

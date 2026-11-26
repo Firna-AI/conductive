@@ -5,16 +5,23 @@ import { workspacePath, workspacePaths } from '../../shared/workspaces'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, fakeUser } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
-import { queryByLabel, queryByRole } from '../../test-support/dom-queries'
+import {
+  byRole,
+  queryAllByRole,
+  queryByLabel,
+  queryByRole,
+} from '../../test-support/dom-queries'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
+  press,
 } from '../../test-support/mount'
 import { HeldRequests } from '../../app/test-kit'
 import type { AppModel } from '../../app/app-model'
 import { mountScreen, settle } from '../test-mount'
 import { startedApp, textOf } from '../test-render'
 import type { Viewport } from '../ui/viewport'
+import { headerStates } from './header-test-kit'
 import { WorkspaceScreen } from './WorkspaceScreen'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -56,6 +63,7 @@ async function openStopped(
   await settle()
   return {
     container,
+    held,
     release: async () => {
       held.release('POST', resumePath)
       await settle()
@@ -97,6 +105,38 @@ describe('SandboxBar', () => {
     await release()
     expect(container.textContent).toContain('Sandbox stopped')
     expect(queryByRole('button', 'Resume', container)).not.toBeNull()
+  })
+
+  test('on a phone, a press on Resume of the Terminal tab shows the wait in place of its button, and Starting in the header, until its reply', async () => {
+    const { container, held, release } = await openStopped({
+      viewport: 'phone',
+      view: ['terminal'],
+    })
+    await release()
+    const shown = () => ({
+      panel: ['Waiting for the sandbox', 'Sandbox stopped'].filter((words) =>
+        container.textContent?.includes(words),
+      ),
+      resume: queryAllByRole('button', 'Resume', container).length,
+      header: headerStates(container),
+    })
+    const before = shown()
+
+    held.holdAnswer('POST', resumePath)
+    await press(byRole('button', 'Resume', container))
+    const waiting = shown()
+    // The fake keeps the sandbox stopped after its Resume.
+    await release()
+
+    expect({ before, waiting, after: shown() }).toEqual({
+      before: { panel: ['Sandbox stopped'], resume: 1, header: ['Stopped'] },
+      waiting: {
+        panel: ['Waiting for the sandbox'],
+        resume: 0,
+        header: ['Starting'],
+      },
+      after: { panel: ['Sandbox stopped'], resume: 1, header: ['Stopped'] },
+    })
   })
 
   test('a start that failed shows the message that the workspace saved for it, with Try again', async () => {

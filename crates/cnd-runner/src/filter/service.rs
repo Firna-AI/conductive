@@ -6,6 +6,7 @@ use async_trait::async_trait;
 use cnd_runner_interface::file_tree::RunnerFileEvent;
 use cnd_runner_interface::runner::RunnerEvent;
 use cnd_runner_interface::runner_files::RunnerFileResponse;
+use cnd_runner_interface::runner_skills::{RunnerSkillResult, SkillReadOutcome};
 use tokio::sync;
 
 use crate::emitter::EventEmitter;
@@ -65,6 +66,13 @@ impl ReportFilter for CredentialFilter {
     fn response(&self, response: RunnerFileResponse) -> Result<RunnerFileResponse> {
         let state = self.state.lock().or(Err(Error::InvalidCommand))?;
         Ok(fields::response(response, &|s| state.text(s)))
+    }
+    fn skill_response(&self, mut response: RunnerSkillResult) -> Result<RunnerSkillResult> {
+        let RunnerSkillResult::Read { result, .. } = &mut response;
+        if let SkillReadOutcome::Success { text, .. } = result {
+            *text = self.text(text)?;
+        }
+        Ok(response)
     }
 }
 

@@ -54,6 +54,9 @@ describe('the chat tab order', () => {
       tool: 'terminal',
       previewTabs: [],
       activePreview: null,
+      skillTabs: [],
+      activeSkill: null,
+      temporarySkill: null,
     }
     const saved = chat.writes().map((request) => request.clone().json())
     expect(await Promise.all(saved)).toEqual([

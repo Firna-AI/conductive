@@ -23,6 +23,7 @@ import {
 import { settle } from '../test-mount'
 import { filesHref } from './files/files-address'
 import { bodiesOf } from './kept-test-kit'
+import { skillHref } from './skills/skill-address'
 import { previewPortHref } from './tools/tool-address'
 import { openTab } from './wiring-test-kit'
 
@@ -81,6 +82,23 @@ describe('the restore of the shown tab at a return to the workspace', () => {
     const server = serverWith([diffTab], diffTab)
     const { navigation } = await openTab(server, bare)
     expect(navigation.history).toEqual([filesHref(org, id, diffTab)])
+  })
+
+  test('the first show of the address of the workspace shows the saved skill tab, after the read of the view', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const { view: saved } = workspaceFixtures().view
+    const plans = { agent: 'claude', name: 'plans' } as const
+    server.json('GET', workspaceViewPath(org, id), {
+      view: {
+        ...saved,
+        activeTab: null,
+        skillTabs: [{ ...plans, place: 2 }],
+        activeSkill: plans,
+      },
+    })
+    const { navigation } = await openTab(server, bare)
+    expect(navigation.history).toEqual([skillHref(org, id, plans)])
   })
 
   test('the restored tab of a stopped sandbox starts no Resume after the one of the open', async () => {

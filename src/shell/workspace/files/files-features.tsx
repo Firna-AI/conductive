@@ -5,6 +5,7 @@ import {
   type SandboxPanelState,
 } from '../../../ui/components/workspace/sandboxNoticeState'
 import { useServices } from '../../../app/services'
+import { tabKey } from '../../../chat/state/tab-order'
 import type { WorkspaceFiles } from '../../../files/model/files-store'
 import type {
   FileListKind,
@@ -27,6 +28,9 @@ import { useHtmlPreview } from '../previews/use-html-preview'
 import { SandboxPanel } from '../SandboxNotice'
 import { contentState } from '../sandbox-view'
 import { useSavedView } from '../saved-view'
+import { skillPlace } from '../skills/skill-address'
+import { skillTab } from '../skills/skill-navigation'
+import { SkillTabPage } from '../skills/SkillTabPage'
 import { useAddressLines } from './address-lines'
 import { useRowMenuItems } from './copy-path'
 import { filesPlace, tabOf } from './files-address'
@@ -35,26 +39,8 @@ import {
   useFilesNavigation,
   useOpenTab,
 } from './files-navigation'
+import { pagePlaceholder } from './page-placeholder'
 import { useFileTargets, useKeptFiles } from './workspace-files'
-
-/**
- * The state of a sandbox that does not run, in place of the content of a
- * file or diff page. The page hides the bar of the chat, so the state shows
- * the action of the bar, Resume or Try again, and the words of a refusal.
- * While the open resumes the sandbox, it shows the wait of a start.
- */
-function pagePlaceholder(context: WorkspaceContext): ReactNode {
-  const state = contentState(context.panel, context.resumingAtOpen)
-  if (!state) return undefined
-  return (
-    <SandboxPanel
-      phone
-      resume={context.resume}
-      state={state}
-      workspace={context.workspace}
-    />
-  )
-}
 
 /**
  * A file tab or a diff tab as a page, which keeps its tab in the saved view.
@@ -128,12 +114,12 @@ function sandboxPlaceholder(context: WorkspaceContext): ReactNode {
 
 /**
  * The state of the sandbox in place of a list that the workspace has not
- * saved. While the sandbox starts, also while the open resumes it, this is
- * the wait, as at the first start of a new workspace. A refused start and a
- * failed first start already take the place of each list.
+ * saved. While the sandbox starts, also while a Resume of the visit runs,
+ * this is the wait, as at the first start of a new workspace. A refused
+ * start and a failed first start already take the place of each list.
  */
 function listWait(context: WorkspaceContext): ReactNode {
-  const state = contentState(context.panel, context.resumingAtOpen)
+  const state = contentState(context)
   if (!state || !replacesList(state, false)) return undefined
   return sandboxPanel(context, state)
 }
@@ -173,6 +159,7 @@ function FilesPart(props: { context: WorkspaceContext }) {
   const place = filesPlace(context.view)
   useAddressList(context.savedView, place?.kind === 'list' ? place.list : null)
   const tab = tabOf(place)
+  const skill = skillPlace(context.view)
   const listKeys = useListKeys()
   const layout = context.viewport === 'phone' ? 'phone' : 'desktop'
   if (layout === 'phone' && tab) {
@@ -183,6 +170,16 @@ function FilesPart(props: { context: WorkspaceContext }) {
         layout={layout}
         navigation={navigation}
         tab={tab}
+      />
+    )
+  }
+  if (layout === 'phone' && skill) {
+    return (
+      <SkillTabPage
+        context={context}
+        key={tabKey(skillTab(skill))}
+        layout={layout}
+        skill={skill}
       />
     )
   }

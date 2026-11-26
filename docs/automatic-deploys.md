@@ -211,6 +211,7 @@ A failed run does not roll back.
   restores the version before the newest one.
 - A rollback does not undo a D1 migration. It cannot go back across a
   Durable Object migration.
+- After a rollback to a Worker from before skill tabs, each view save clears the saved skill tabs of that view.
 - Provider account switching ships in two releases. The compatibility
   release includes all switch execution and sets `PROVIDER_SWITCH` to
   `"off"` in `wrangler.jsonc`. Activation is a separate pull request that

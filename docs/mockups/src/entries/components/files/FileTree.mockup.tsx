@@ -22,13 +22,20 @@ export const fileTree = defineComponent({
       entries: { type: 'array', items: treeEntrySchema },
       /** The tab of the open file, whose row is marked. */
       open: { enum: treePreviews },
+      /** The page of the Markdown file, when it differs from its preview. */
+      markdownTo: { type: 'string', minLength: 1 },
       /** The open menu of a row, at the pointer or under a sheet. */
       menu: fileRowMenuSchema,
     },
   } as const,
   props: { entries: branchTree },
   render: (props) => (
-    <FileTree entries={props.entries} menu={props.menu} open={props.open} />
+    <FileTree
+      entries={props.entries}
+      markdownTo={props.markdownTo}
+      menu={props.menu}
+      open={props.open}
+    />
   ),
   variants: [
     {

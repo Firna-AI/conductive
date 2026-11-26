@@ -190,7 +190,9 @@ the addresses in the terminal open, as [Terminal](terminal.md) says.
   and its storage after an end.
 - A show of a Preview tab resumes a stopped cloud computer, as the show of
   a file tab does. While the computer does not run, the tab shows its
-  state in place of the bar and the page.
+  state in place of the bar and the page. While a Resume runs, it shows
+  the wait of a start, as [The resume](stop-and-resume.md#the-resume)
+  says.
 - A page stays loaded while another tab shows, so a return does not load
   it again while its preview lives.
 - Close of a tab of the tool, Close preview in the centre bar, and an end

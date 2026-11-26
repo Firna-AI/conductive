@@ -1,13 +1,15 @@
 import { useEffect, useEffectEvent } from 'react'
 import { routeOf, useNavigation, type Navigation } from '../../app/navigation'
+import { tabKey } from '../../chat/state/tab-order'
 import type { WorkspaceContext } from './features'
 import { filesPlace, tabOf } from './files/files-address'
+import { skillPlace } from './skills/skill-address'
 import { toolPlace } from './tools/tool-address'
 
 /**
- * The file, diff, or Preview tab of this workspace that an address names,
- * as a key, such as `file:src/app.ts` or `preview:3000`. Only the desktop
- * has Preview tabs, at `preview/port/<port>`.
+ * The file, diff, skill, or Preview tab of this workspace that an address
+ * names, as a key, such as `file:src/app.ts` or `preview:3000`. Only the
+ * desktop has Preview tabs, at `preview/port/<port>`.
  */
 function tabAt(
   href: string,
@@ -25,6 +27,8 @@ function tabAt(
   }
   const tab = tabOf(filesPlace(route.view))
   if (tab) return `${tab.kind}:${tab.path}`
+  const skill = skillPlace(route.view)
+  if (skill) return tabKey({ kind: 'skill', ...skill })
   const place = toolPlace(route.view)
   return desktop && place?.tool === 'preview' && place.port !== null
     ? `preview:${place.port}`
@@ -50,12 +54,12 @@ export function replaceWithoutVisit(navigation: Navigation, to: string): void {
 
 /**
  * Calls `onOpen` with the key of the tab at each visit that opens a file,
- * diff, or Preview tab of the workspace. A visit opens a tab when it moves
- * to another tab, or when it visits the address of the tab again, as a
- * second click on the tab, on its file, or on its port does. Each click,
- * link, and move back or forward is a visit. A switch between the preview
- * and the source of one file keeps its tab. The address of the screen at
- * its first show calls nothing, and nor does an address that
+ * diff, skill, or Preview tab of the workspace. A visit opens a tab when it
+ * moves to another tab, or when it visits the address of the tab again, as
+ * a second click on the tab, on its file, on its chip, or on its port does.
+ * Each click, link, and move back or forward is a visit. A switch between
+ * the preview and the source of one file keeps its tab. The address of the
+ * screen at its first show calls nothing, and nor does an address that
  * `replaceWithoutVisit` puts in its place.
  */
 export function useTabVisits(

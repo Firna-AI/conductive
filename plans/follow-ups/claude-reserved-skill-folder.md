@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-17, from PR #426, review finding 402 and its independent check.
-- **Location:** `runner/sdk-helper/src/providers/skills.ts:95`, `runner/sdk-helper/src/providers/skill-metadata.ts:12`, and `runner/sdk-helper/src/providers/skill-view.ts:103`.
+- **Location:** `runner/sdk-helper/src/providers/skills.ts:95`, `runner/sdk-helper/src/providers/skill-metadata.ts:16`, and `runner/sdk-helper/src/providers/skill-view.ts:103`.
 - **Reason:** The defect requires an unusual folder name, and the branch has used its two feature fix rounds.
 
 - **Source:** Review.

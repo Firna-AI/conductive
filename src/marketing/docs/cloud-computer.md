@@ -199,7 +199,7 @@ The author of a commit does not prove who made it.
 
 The **Secret** mark hides exact copies of a value in displayed agent output and start logs.
 It also hides them in server and service details and service logs in **Preview**.
-The same rule covers skill names and descriptions in the message box.
+The same rule covers skill names and descriptions in the message box, and the text of a skill that you open.
 It does not hide values in file content, pictures in agent replies, diffs, or Terminal.
 
 ## Share agent skills across the org

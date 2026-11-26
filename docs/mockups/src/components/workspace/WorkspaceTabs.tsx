@@ -94,9 +94,10 @@ function placeAfterDrop(from: number, index: number): number {
 }
 
 /**
- * The tabs of the centre column: the agent sessions and the open files and
- * diffs in the order that the user gave them, + for a new session on the
- * same branch and cloud computer, and the clock of the session history.
+ * The tabs of the centre column: the agent sessions and the open files,
+ * diffs, and skills in the order that the user gave them, + for a new
+ * session on the same branch and cloud computer, and the clock of the
+ * session history.
  * Every tab closes, and a right click opens its menu, the one way to rename
  * a session. `drag` draws a tab in the middle of a drag, and `menuTab` the
  * menu of a tab, below it or, on a phone, as a sheet that the screen draws.

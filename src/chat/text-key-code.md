@@ -24,10 +24,17 @@ relative to `src/chat/`, the folder of this guide.
   `LinkedText.tsx` holds `useChatParts` and
   `ChatText`. `useChatParts` reads the parts of a text with the workspaces
   and the tree and skill lists of the chat, the files of a sent message, and the web links
-  of `useTextLinks` in `../shell/ui/text-links.tsx`. `ChatText`
-  draws the parts with their workspace and session chips, and their
-  links through `WebLinkText.tsx`. A skill part draws as a `SkillChip` that
-  opens nothing. Answers keep skill text as text. `FileChips.tsx` draws the file chips,
+  of `useTextLinks` in `../shell/ui/text-links.tsx`. The agent of the
+  choice of the message comes first in the lookup of its skills, as
+  `findListedSkill` finds them. Each skill part keeps the skill and the
+  agent whose list holds it, so the title of a skill chip and its skill
+  tab come from one lookup.
+  `ChatText` draws the parts with their workspace and session chips, and
+  their links through `WebLinkText.tsx`. `SkillLink.tsx` draws a skill part
+  as a `SkillChip` that links to the skill tab of its part, through
+  `skillTabs` of `ChatMentions`. In a chat without `skillTabs`, the chip
+  opens nothing. Answers keep skill text as text.
+  `FileChips.tsx` draws the file chips,
   and each `AttachmentPart` as the shared `SentFileChip`.
   `SessionLinkText` draws a session that the chat names by its IDs, such
   as the session whose agent stopped a turn, with the same session chip.
@@ -63,7 +70,12 @@ relative to `src/chat/`, the folder of this guide.
   or a folder of a mention.
   `MentionIcon.tsx` gives the icon of All files for an entry.
   `mention-skills.ts` gives `MentionSkills`, the skill lists in
-  `ChatMentions.skills`, and the lookup of a skill of either agent.
+  `ChatMentions.skills`, and `findListedSkill`, the lookup of a skill of
+  either agent, which also gives the agent whose list holds the skill. It
+  holds no React, so the readers of chat text use its types, and
+  `useMentionSkills` of `MentionsContext.tsx` follows the lists.
+  `ChatMentions.skillTabs` opens the skill tab of a skill chip and gives
+  its address.
   `skill-rows.ts` gives the rows of the list of `/` and their order.
   [`skill-text.ts`](../shared/skill-text.ts) owns the shared skill text rule.
   [`mention-text.ts`](../shared/mention-text.ts) in the shared contracts

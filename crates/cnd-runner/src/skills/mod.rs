@@ -7,6 +7,7 @@ pub mod git;
 pub mod helper;
 pub mod lease;
 pub(crate) mod prepare;
+pub(crate) mod read;
 pub mod reporter;
 pub mod service;
 
