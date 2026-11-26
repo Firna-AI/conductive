@@ -8,7 +8,11 @@ workspace. On Boat, the machine has one ext4 disk of 84.2 GB, but a resume
 on the `default` size accepted at most 76 GB of Boat's measure. The Boat docs
 promise 51 GB for "your own files", without the operating system and the
 pre-installed tools ([Sandbox sizes](https://docs.boat.dev/machines)).
-Nothing enforces that limit while the computer runs. On 2026-11-26, Rust
+Nothing enforces that limit while the computer runs. Later on 2026-11-26,
+Boat's resume refused `default` above 51.2 GiB of its measure: "This Sandbox
+needs 58.2 GiB of disk but the largest 'default' machine holds 51.2 GiB".
+Its measure did not drop when 52 to 57 GB of build output was deleted, in
+three of four sandboxes. On 2026-11-26, Rust
 build output brought the Bookfolio workspace "ITSA full approval" to 79.7 GB,
 and its resumes failed with `resume_failed`. The same failure happened on
 2026-11-20 with 80.4 GB (commit `a8c31a53c`).
@@ -114,7 +118,8 @@ Contract owners:
 - **Related:** Decision 1. A needs design call 6 for an image above the line.
 - **Recommendation:** A. It adds no build error, and the card shows the room
   that the work really gets. If Cal wants a build error, C is better than B.
-- **Action:** ask the user, because B and C add a new build error. **Open.**
+- **Decision:** **A**, from Cal on 2026-11-26: "6 = A". Builds get no hold,
+  and the build card shows the free storage under the line.
 
 ## Design
 
@@ -180,8 +185,11 @@ the protocol docs and the public guide.
         same machine keeps it.
   - [ ] A disk near the line still restores with the restore-safe hold.
   - [ ] At the line, snapshots, stops, and resumes still work.
-  - [ ] Boat's "uses X GB" figure, its 85 % email, and its low-space cleanup
-        ignore the hold.
+  - [ ] Boat's "needs X GiB" figure, its 85 % email, and its low-space
+        cleanup ignore the hold.
+  - [ ] How Boat's "needs X GiB" figure relates to the used disk, and when
+        it drops after a delete. The hold must keep that figure under the
+        limit, not only the used disk.
   - [ ] An agent turn at the line: what the agent and the chat do.
 - [ ] Update the design above for each fact that differs.
 - [ ] `docs/protocol/stop-and-resume.md`: a section on the disk line, with
@@ -235,10 +243,11 @@ Depends on: 3
 
 ## Milestone 5: Image builds
 
-Depends on: 2, and decision 6
+Depends on: 2
 
-- [ ] Apply the option of decision 6 in `worker/lifecycle/image-storage.ts`.
-      Measure the disk of `/`, because a build does not wait for its restore.
+- [ ] In `worker/lifecycle/image-storage.ts`, show the free storage under
+      the line, as decision 6 says. Measure the disk of `/`, because a build
+      does not wait for its restore. A build gets no hold.
 - [ ] Update `docs/protocol/org-image.md` and the guide sentence on free
       storage.
 

@@ -1,24 +1,23 @@
-# Four archived Boat sandboxes fail every resume
+# Three archived Boat sandboxes stay on the large size
 
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-26, from branch `calummoore/failed-message-action-kssx`, the options check of the plan for the workspace disk hold.
 - **Location:** `worker/lifecycle/archive-maintenance.ts:65` and `worker/lifecycle/disk-retention.ts:125`.
-- **Reason:** the disk hold prevents new cases, but it does not recover sandboxes that are already over the limit.
+- **Reason:** Boat must explain its disk measure before these sandboxes can move back to the `default` size.
 
 - **Terms:**
-  - **Resume limit:** the largest used disk that a Boat resume accepts. On the `default` size it was 76 GB on 2026-11-26.
+  - **Resume limit:** the largest disk that a Boat resume accepts on one size. On 2026-11-26 it was 51.2 GiB of Boat's measure for `default`.
   - **Background restart:** the restart near day 14 and the Archive restart, which resume a stopped sandbox to keep its disk.
-- **Background:** Four Boat sandboxes of archived workspaces return HTTP 409 `resume_failed` on each resume: `bx_2pccpak4`, `bx_k4th26f3`, `bx_nqkvc3s5`, and `bx_gah52t9c`. The background restarts try each one about once an hour. A fifth sandbox, `bx_egwvnjzg`, failed for a disk of 79.7 GB over the limit. An operator fixed it on 2026-11-26: a resume on the `large` size, a delete of the Rust `target/` folder, and a move back to `default`. All four also show `wipePendingUntilRestart: true`, a Boat flag that a share of the sandbox sets.
-- **Problem:** The cause of the four failures is not confirmed. It can be the disk size or the pending wipe.
-- **Impact if no action:** The background restarts keep failing, and the disks of these archived workspaces can expire on Boat.
-- **Root question:** How do these four archived workspaces keep their disks?
+- **Background:** On 2026-11-26, four Boat sandboxes of archived Mokly workspaces failed every resume with HTTP 409 `resume_failed`. Each held 52 to 57 GB of Rust build output in `/home/user/code/mokly/target`. An operator resumed each on the `large` size with `noEnv: true`, deleted that folder, and stopped it. The used disk fell to about 30 GB. `bx_nqkvc3s5` then moved back to `default`. For `bx_k4th26f3`, `bx_2pccpak4`, and `bx_gah52t9c`, Boat still refused `default`: "needs 58.2 GiB", "56.4 GiB", and "56.7 GiB" of 51.2 GiB. A new full snapshot did not change the figure. These three stay stopped on `large`, so the background restarts work.
+- **Problem:** Three archived sandboxes cost twice as much per hour while a background restart runs them.
+- **Impact if no action:** A small extra cost for a few minutes about every 14 days per sandbox.
+- **Root question:** When can these three sandboxes move back to `default`?
 - **Options:**
-  - **A.** Ask Boat support for the cause of each failure. Effort: Small.
-  - **B.** An operator resumes each sandbox on `large` with `noEnv: true`, deletes rebuildable build output, stops it, then resumes it on `default` and stops it again. Each step costs a short run of a larger machine. Effort: Small.
-  - **C.** Leave them. The workspaces are archived, and their owners can restore them while Boat keeps the disk. Effort: Small.
-- **Left out:** A code change in the Worker, because the disk hold covers new cases and these are four single cases.
+  - **A.** Ask Boat why the figure does not drop after a delete. Move each sandbox back to `default` when Boat says that it fits: a resume with `type: "default"` and `noEnv: true`, then a stop. Effort: Small.
+  - **B.** Leave them on `large`. Effort: Small.
+- **Left out:** A Worker change, because the plan for the disk hold covers new cases.
 - **Wider fix:** None. The disk hold is the wider fix for new cases.
-- **Previous examples:** `bx_egwvnjzg` on 2026-11-26, and an 80.4 GB disk on 2026-11-20 in commit `a8c31a53c`.
-- **Recommendation:** A, then B for each sandbox that is over the limit, because B worked for `bx_egwvnjzg`.
-- **Action:** ask the user, because B writes to the shared provider account.
+- **Previous examples:** `bx_egwvnjzg` on 2026-11-26, which moved back to `default` after the same cleanup.
+- **Recommendation:** A, because the extra cost is small, and Boat's answer also matters for the disk hold.
+- **Action:** fix after merge, apply A, because it waits for Boat's answer.
