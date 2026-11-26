@@ -39,6 +39,7 @@ export async function acceptRunnerHello(
   active.state.protocolVersion = welcome.protocolVersion
   active.state.loginKinds = message.loginKinds
   active.state.repositoryFolder = message.repositoryFolder
+  active.state.addsRepositoryFolder = message.addsRepositoryFolder
   active.state.fileServer = message.fileServer
   active.state.capabilityNotices = message.capabilityNotices
   await context.services.negotiate(active, message.services === true)

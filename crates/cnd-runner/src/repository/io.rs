@@ -1,5 +1,6 @@
 //! Injectable filesystem operations for repository comparisons.
 
+use std::collections::BTreeMap;
 use std::fs::Metadata;
 use std::io::Read;
 use std::os::unix::fs::MetadataExt;
@@ -13,6 +14,7 @@ use tempfile::TempDir;
 
 use super::access::safe_path;
 use super::error::{Error, ErrorResultExt, Result};
+use super::git::{Cancellation, ChildGit, GitRequest, GitRunner};
 use super::open::{inside, verified_file};
 
 /// Physical kinds do not follow links in the Git namespace.
@@ -100,6 +102,8 @@ pub trait RepositoryIo: Send + Sync {
     async fn prepare_context(&self, root: PathBuf, exclude: PathBuf) -> Result<()>;
     /// Inspect an entry without following its link.
     async fn kind(&self, path: PathBuf) -> Result<PathKind>;
+    /// Check that a directory is the root of a Git work tree.
+    async fn is_work_tree(&self, root: PathBuf) -> bool;
     /// Read through a verified descriptor and enforce the effective cap.
     async fn read(&self, root: PathBuf, path: String, max_bytes: u64) -> Result<Vec<u8>>;
     /// Read link text after checking the real parent.
@@ -147,6 +151,23 @@ impl RepositoryIo for LocalRepositoryIo {
             }
             Err(error) => Err(Error::internal(error)),
         }
+    }
+
+    async fn is_work_tree(&self, root: PathBuf) -> bool {
+        ChildGit
+            .run(GitRequest {
+                root,
+                args: ["rev-parse", "--is-inside-work-tree", "--show-prefix"]
+                    .map(String::from)
+                    .to_vec(),
+                environment: BTreeMap::new(),
+                input: Vec::new(),
+                literal_paths: true,
+                max_bytes: Some(1024),
+                cancellation: Cancellation::default(),
+            })
+            .await
+            .is_ok_and(|output| output == b"true\n\n")
     }
 
     async fn read(&self, root: PathBuf, path: String, max_bytes: u64) -> Result<Vec<u8>> {

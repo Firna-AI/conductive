@@ -49,6 +49,10 @@ impl RepositoryIo for ObservedIo {
         LocalRepositoryIo.kind(path).await
     }
 
+    async fn is_work_tree(&self, root: PathBuf) -> bool {
+        LocalRepositoryIo.is_work_tree(root).await
+    }
+
     async fn read(&self, root: PathBuf, path: String, max_bytes: u64) -> Result<Vec<u8>> {
         LocalRepositoryIo.read(root, path, max_bytes).await
     }

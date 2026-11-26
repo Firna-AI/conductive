@@ -16,6 +16,9 @@ The crate provides handshake messages, commands, numbered events, confirmations,
 resend requests, file results, and temporary turn credentials.
 `runner_repository` holds the repository move, its refusal reply, and the
 current repository of each turn and message.
+When hello offers `addsRepositoryFolder`, a move can carry the optional
+`variable` of a new folder. The runner registers that folder and its
+variable for the next round.
 `runner_tool_detail` holds the private `tool.detail.part` events of a
 complete tool-detail source. Only the first part carries the turn and the
 tool metadata.
@@ -104,8 +107,10 @@ let hello = RunnerHello::Hello {
     login_kinds: None,
     process_start_id: None,
     repository_folder: Some("/home/user/code/storefront".into()),
+    adds_repository_folder: Some(true),
     complete_tool_details: Some(true),
     file_server: None,
+    capability_notices: None,
     services: None,
 };
 ```

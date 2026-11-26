@@ -58,6 +58,10 @@ pub enum RunnerHello {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         repository_folder: Option<String>,
+        /// This runner accepts a repository move with a new folder variable.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        adds_repository_folder: Option<bool>,
         /// Offer complete tool sources in private numbered parts.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]

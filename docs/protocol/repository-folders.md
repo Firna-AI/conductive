@@ -40,7 +40,9 @@ number names a dated record, as
   process that starts after the change gets it: a new terminal, each
   command of a later agent turn, and the startup script at the next start.
   A process that already runs keeps its value.
-- A repository change changes no folder variable of a repository.
+- A repository change changes no folder variable that the sandbox already
+  has. A change that clones a repository adds the variable of its new
+  folder, as [Folders over time](#folders-over-time) says.
 - The sandbox of a build or a refresh gets only the folder variables, which
   hold no secret. Only the Git command that copies a repository gets a read
   token, as [GitHub tokens](tokens-and-secrets.md#github-tokens) says.
@@ -56,10 +58,31 @@ number names a dated record, as
   [Repository changes on GitHub](repository-changes-on-github.md#folders)
   says.
 - A workspace keeps the folders and the variables of the org image that it
-  starts from. Each resume, and each restart near day 14 of a stop, uses
-  them, also after a later build or a change of the chosen repositories.
-- A repository change adds no folder. It moves the workspace to a folder
-  that its sandbox already holds.
+  starts from, in the record of its folders. Each resume, and each restart
+  near day 14 of a stop, uses it, also after a later build or a change of
+  the chosen repositories.
+- A [repository change](repository-change.md) to a repository with no
+  folder in the record clones it into a new folder.
+  [A clone at a repository change](repository-change-clone.md) gives the
+  requirements of that clone. The record then holds the new folder and its
+  variable.
+- The name of the new folder follows [Folder names](#folder-names), with
+  the recorded folders as the names in use:
+  - The name is the name of the repository on GitHub.
+  - When a recorded folder has that name, with case ignored, the name
+    starts with the owner, such as `acme-storefront`.
+  - A name that is still in use, in the record or on the disk, gets `-2`,
+    `-3`, and so on.
+- The variable of the new folder follows
+  [Folder variables](#folder-variables), with the recorded variables as
+  the names in use.
+- No recorded folder and no recorded variable changes. Reason: a rename of
+  a recorded folder would move the work of the agents and the terminals in
+  it.
+- Each command of a later agent turn gets the new variable at once, with
+  no new start of the sandbox. Each new terminal gets it too.
+- Each later start gives the new variable from the record, also to the
+  startup script. A process that already runs does not get it.
 
 ## The context folder
 

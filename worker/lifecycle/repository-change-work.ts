@@ -31,12 +31,14 @@ export async function readRepositoryChangeWork(
     return localWorkResult(result.stdout)
   }
   const localWork = await read(localWorkCommand(job.directory))
-  const carried = await read(carriedWorkCommand(job.target.directory))
+  const carriedFiles = job.target.clone
+    ? []
+    : (await read(carriedWorkCommand(job.target.directory))).uncommittedFiles
   return {
     localWork,
     pullRequest: job.oldBranch?.pullRequest ?? null,
     pushedCommits: job.oldBranch?.pushedCommits ?? 0,
-    carriedFiles: carried.uncommittedFiles,
+    carriedFiles,
   }
 }
 

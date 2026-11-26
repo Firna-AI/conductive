@@ -16,9 +16,11 @@ function connectChange(change: RepositoryChange): () => void {
 
 /**
  * The repositories of the menu, in the order of New workspace: the current
- * one, and each other repository that the org chose and that the cloud
- * computer holds (repository change decision 4 G). Without a record of the
- * folders, `held` is null, and only the current repository shows.
+ * one, and each other repository that the org chose. A chosen repository
+ * that the cloud computer does not hold shows too, because the change
+ * copies it from GitHub into a new folder (repository clone decision 1 C).
+ * Without a record of the folders, `held` is null, and only the current
+ * repository shows.
  */
 export function repositoryChoices(
   repositories: readonly Repository[] | undefined,
@@ -27,8 +29,7 @@ export function repositoryChoices(
 ): Repository[] {
   return (repositories ?? []).filter(
     (repository) =>
-      repository.id === currentId ||
-      (repository.selected && held !== null && held.includes(repository.id)),
+      repository.id === currentId || (held !== null && repository.selected),
   )
 }
 

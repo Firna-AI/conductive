@@ -167,12 +167,16 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 2. The Durable Object reads the work that the workspace stops following:
    the local work of the old folder, and the open pull request and the
    pushed commits of the old branch. It also reads the changed files of
-   the new folder. When it finds work, the app asks the member first.
+   the new folder, when the sandbox holds it. When it finds work, the app
+   asks the member first.
 3. The Durable Object runs a trusted job in the sandbox, as for Continue.
    Its fetch of the default branch of the new repository gets the GitHub
-   token of that member, only while the fetch runs. The job adds the
-   exclude rule of the context folder, copies the context folder, and
-   creates the new branch in the new folder with its changed files.
+   token of that member, only while the fetch runs. When the sandbox does
+   not hold the new repository, the fetch gets every branch and tag, and
+   the job builds the new folder from it. The job adds the exclude rule
+   of the context folder, copies the context folder, and creates the new
+   branch in the new folder with its changed files. The Worker records a
+   new folder in D1 when the job succeeds.
 4. The Worker stores the new repository, branch, and base branch in D1 in
    one guarded write. The Durable Object pushes the new state and one note
    to each session, and reads the GitHub state of the new branch.

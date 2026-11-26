@@ -20,6 +20,7 @@ export function readRunnerBranches(
 export interface RunnerRepositoryRecord {
   repository: RunnerRepository
   folders: readonly string[]
+  variable: string
 }
 
 /**
@@ -40,12 +41,13 @@ export async function readRunnerRepository(
     .first<{ repositoryId: string; fullName: string }>()
   if (!row) return null
   const locations = await storedRepositoryLocations(db, workspaceId)
-  const folder = locations?.find(
+  const location = locations?.find(
     (location) => location.repositoryId === row.repositoryId,
-  )?.directory
-  if (!locations || !folder) return null
+  )
+  if (!locations || !location) return null
   return {
-    repository: { fullName: row.fullName, folder },
+    repository: { fullName: row.fullName, folder: location.directory },
     folders: locations.map((location) => location.directory),
+    variable: location.variable,
   }
 }

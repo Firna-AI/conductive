@@ -75,6 +75,13 @@ merge queue. A decision number names a dated record, as
 - A [repository change](repository-change.md) fetches the latest default
   branch of the new repository in the same way, with the token of the
   member who changes the repository.
+- When the sandbox does not hold the new repository, the change clones it,
+  as [A clone at a repository change](repository-change-clone.md) says.
+  The fetch of that clone gets every branch and every tag. It uses the
+  same token and the same trusted fetch, so the token reaches only that
+  fetch.
+- Reason: the rule above already covers the fetch of a repository change.
+  The rejected ways below hold for the fetch of a clone too.
 - These ways were rejected (decision 226):
   - The token of the workspace owner, through the mode that `gh` uses
     outside a turn. It works only in a workspace from a newer org image.

@@ -61,9 +61,10 @@ mockups are at `app/repository-change`. The button and the words come from
 the shared `RepositoryButton`, `RepositoryPicker.module.css`, and
 `repositoryMoveCopy`.
 
-- Its menu lists the repositories of the org that the cloud computer
-  holds, in the order of New workspace, with a check on the current one.
-  The chat reads `heldRepositoryIds` with the view, and
+- Its menu lists the repositories that the org chose, in the order of
+  New workspace, with a check on the current one. The change copies a
+  chosen repository that the cloud computer does not hold into a new
+  folder. The chat reads `heldRepositoryIds` with the view, and
   `useHeldRepositories` gives it. Without a record of the folders, only
   the current repository shows. Desktop opens the menu below the button,
   and a phone opens a sheet. Every member may pick (repository change

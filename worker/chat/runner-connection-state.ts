@@ -14,6 +14,8 @@ export interface RunnerConnectionState {
   loginKinds?: readonly RunnerLoginKind[]
   /** The folder of a runner that accepts repository.move. Older runners omit it. */
   repositoryFolder?: string
+  /** True when this runner can register a folder variable in a move. */
+  addsRepositoryFolder?: boolean
   /** The move of this connection. A new connection starts without one. */
   repositoryMove?: RepositoryMoveState
   fileServer?: boolean

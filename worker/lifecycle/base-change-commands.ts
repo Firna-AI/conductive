@@ -16,17 +16,32 @@ interface BaseChangeSource {
 
 /** Only the isolated stage can request the credential of this trusted job. */
 export function baseChangeFetchCommand(
-  input: BaseChangeSource & { fetchId: string; fullName: string },
+  input: BaseChangeSource & {
+    fetchId: string
+    fullName: string
+    allBranchesAndTags?: boolean
+  },
 ): string {
   requireGitBranchName(input.baseBranch)
   const stage = shellQuote(input.stage)
+  const url = shellQuote(sourceRepositoryUrl(input.fullName))
+  const credential =
+    '-c credential.helper=/usr/local/bin/conductive-git-credential'
+  const fetch = input.allBranchesAndTags
+    ? [
+        `${BASE_CHANGE_GIT} ${credential} clone --bare --tags --quiet --no-recurse-submodules --template= -- ${url} ${stage}`,
+        `${BASE_CHANGE_GIT} --git-dir=${stage} rev-parse --verify ${shellQuote(`refs/heads/${input.baseBranch}^{commit}`)}`,
+      ]
+    : [
+        `${BASE_CHANGE_GIT} init --bare --quiet --template= ${stage}`,
+        `${BASE_CHANGE_GIT} --git-dir=${stage} ${credential} fetch --quiet --no-tags --no-recurse-submodules -- ${url} ${shellQuote(`+refs/heads/${input.baseBranch}:refs/heads/continue-base`)}`,
+      ]
   return isolatedSourceCommand(
     [
       'cd /tmp',
       `export CONDUCTIVE_TURN_ID=${shellQuote(input.fetchId)}`,
       `mkdir -p ${stage}`,
-      `${BASE_CHANGE_GIT} init --bare --quiet --template= ${stage}`,
-      `${BASE_CHANGE_GIT} --git-dir=${stage} -c credential.helper=/usr/local/bin/conductive-git-credential fetch --quiet --no-tags --no-recurse-submodules -- ${shellQuote(sourceRepositoryUrl(input.fullName))} ${shellQuote(`+refs/heads/${input.baseBranch}:refs/heads/continue-base`)}`,
+      ...fetch,
     ].join('\n'),
   )
 }

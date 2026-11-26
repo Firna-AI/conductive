@@ -46,7 +46,7 @@ it('changes the repository through real routes: refusals, a runner that cannot m
     f.others.push(billing)
     await f.env.DB.batch([
       f.env.DB.prepare(
-        "INSERT INTO repositories (id, org_id, github_repository_id, full_name, default_branch, installation_id) VALUES ('billing-repository', ?, 77, 'example/billing', 'trunk', 1), ('unheld', ?, 78, 'example/unheld', 'main', 1)",
+        "INSERT INTO repositories (id, org_id, github_repository_id, full_name, default_branch, installation_id, selected) VALUES ('billing-repository', ?, 77, 'example/billing', 'trunk', 1, 1), ('unheld', ?, 78, 'example/unheld', 'main', 1, 0)",
       ).bind(OUTER_ORG, OUTER_ORG),
       f.env.DB.prepare(
         'UPDATE workspace_runtime SET repository_locations_json = ? WHERE workspace_id = ?',
@@ -160,6 +160,15 @@ it('changes the repository through real routes: refusals, a runner that cannot m
     })
     expect(record(await runner.inbox.next()).type).toBe('welcome')
     runner.emit({ type: 'runner.ready' })
+    await f.env.DB.prepare(
+      "UPDATE repositories SET selected = 1 WHERE id = 'unheld'",
+    ).run()
+    const cloneRefused = await post('unheld')
+    expect(cloneRefused.status).toBe(409)
+    expect(await error(cloneRefused)).toMatchObject({
+      code: 'workspace_software_outdated',
+      message: 'Restart the software, then try again.',
+    })
     const started = await post()
     expect(started.status).toBe(202)
     const changeId = string(record(await started.json()).changeId)

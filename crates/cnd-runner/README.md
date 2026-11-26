@@ -98,9 +98,11 @@ The runtime closes the link, shuts down its handlers, and persists before
 returning `RunExit::Swap`. The caller owns activation and process replacement.
 
 A runner whose hello names `repositoryFolder` accepts `repository.move`.
-`RepositoryFolders` accepts only a folder of a `CONDUCTIVE_REPOSITORY_<NAME>_DIR`
-variable that holds `.git`. It refuses any other folder with a
-`repository.move.refused` reply, and the runner keeps its folder. A move to
+Folders from `CONDUCTIVE_REPOSITORY_<NAME>_DIR` variables must hold `.git`.
+When hello also offers `addsRepositoryFolder`, the move can add a new Git
+work tree directly under `/home/user/code` with an unused folder variable.
+The next round gives the new variable to agent commands and instructions.
+A refusal sends `repository.move.refused` and keeps the folder. A move to
 the current folder changes nothing. A good move waits until
 `CommandHandler::working` reports no agent work. It checks again each
 second, and report work does not delay it. The runtime then ends the round as
@@ -110,7 +112,8 @@ same process. Agent processes keep running. The new round prepares the
 context folder, sends a full file report, and names the new folder in hello.
 The stream and the file revisions stay, so the Worker reads the first report
 of the new folder as a full replacement. A later restart or swap reads the
-start variables again, so the Worker sends the move again after that hello.
+start variables again. A new workspace start loads them from its saved
+folder record.
 
 The repository runs Git child processes with literal paths and cancellation.
 Comparisons preserve the real index and object store. Reads check the opened
@@ -314,7 +317,7 @@ and connection drops. It does not run the Worker.
 - [services.rs](src/link/services.rs): rejects stale or unnegotiated private replies without numbered storage.
 - [startup_log.rs](src/startup_log.rs): `ProcessStartupLog` records the four startup measurements once per process.
 - [update.rs](src/update.rs): `ReleaseReadiness` supplies local release conditions for an idle swap.
-- [relocation.rs](src/relocation.rs): `RepositoryFolders` checks a repository move and refuses unknown folders.
+- [relocation.rs](src/relocation.rs): `RepositoryFolders` checks a repository move and validates new folder variables.
 - [handler.rs](src/engine/handler.rs): `AgentEngine` routes turns and Stop to independent session actors.
 - [service.rs](src/filter/service.rs): `CredentialFilter` filters chat, report labels, and helper warnings.
 - [registry.rs](src/filter/registry.rs): keeps one canonical value per credential and resolves historical matches for retained suffixes.

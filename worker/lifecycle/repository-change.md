@@ -42,9 +42,8 @@ the browser gate, beside the Continue route.
   nothing.
 - The reply holds no fetch ID, token, command output, or GitHub error text.
 - The view read of [the shell route](../app-api/shell.ts) gives
-  `heldRepositoryIds`: the repositories of the folder record, or null
-  without a record. The menu lists only those repositories, as repository
-  change decision 4 G says.
+  `heldRepositoryIds` with the repositories of the folder record. It gives
+  null for a workspace without a record.
 
 ## Admission
 
@@ -64,14 +63,14 @@ request in the chat queue, in this order:
   reply is 409 `workspace_repository_changed`. The current repository
   gives 409 `workspace_repository_current`.
 - The new repository must be chosen, with an installation that is not
-  suspended, and the folder record of the workspace must hold it. A
-  workspace without a folder record holds only its current repository.
-  Otherwise the reply is 404 `repository_unavailable`.
+  suspended. The workspace must have a folder record. Otherwise the reply
+  is 404 `repository_unavailable`. A chosen repository outside the record
+  gets a clone target.
 - No turn may run or stop, or the reply is 409 `workspace_turn_running`.
   A running Restart gives 409 `workspace_restarting`.
-- A connected runner whose hello has no `repositoryFolder` cannot move, so
-  the reply is 409 `workspace_software_outdated` with "Restart the
-  software, then try again." (repository change decision 5 A).
+- A connected runner must offer `repositoryFolder` and a clone also
+  needs `addsRepositoryFolder`. A missing capability gives 409
+  `workspace_software_outdated` with "Restart the software, then try again."
 - The owner must be active, and the workspace must have a saved sandbox.
 - The new branch takes its name from `workspaceBranch`, as for Continue,
   with the next task number. The publish write adds 1 to the task number.
@@ -112,23 +111,27 @@ and the command still settles.
    A merged pull request counts no pushed commits.
 2. `resume` starts a stopped sandbox, as Continue does.
 3. `runner` waits for the hello of the runner. A runner without
-   `repositoryFolder` ends the job with `workspace_software_outdated`. No
-   hello within 3 minutes ends the job.
+   the required capability ends the job with `workspace_software_outdated`.
+   No hello within 3 minutes ends the job.
 4. `check` reads the local work of the old folder with the command of
-   Continue, and the changed files of the new folder without its context
-   folder. Work without `allowWork` ends the job with
-   `confirmation-required`, and no fetch or move has run.
-5. `fetch` runs the staged fetch of Continue for the new repository. Only
-   the member who started the change gets the credential, while the fetch
-   runs, as [The git credential sender](git-credentials.md#continue) says.
-6. `move` runs the move command in the new folder.
+   Continue. It reads carried files only when the new folder already
+   exists. Work without `allowWork` ends the job with
+   `confirmation-required`. For a clone, this step reads the names on disk
+   and the names of captured environment variables. It saves the new
+   directory and variable in the job.
+5. `fetch` stages the new repository. It gets the default branch for a
+   held folder, or all branches and tags for a clone.
+   [The git credential sender](git-credentials.md#continue) gives the fetch
+   the GitHub credential of the member who started the change.
+6. `move` checks out the new branch. For a clone, it prepares a temporary
+   folder and moves it to the saved name once it is ready.
 7. `publish` stores and publishes the change.
 
 ## The move
 
 `repositoryChangeMoveCommand` in
-[`repository-change-commands.ts`](repository-change-commands.ts) runs in
-the new folder with the isolated source command, in this order:
+[`repository-change-commands.ts`](repository-change-commands.ts) runs in a
+held folder with the isolated source command, in this order:
 
 1. It adds `/.context/` to the local exclude file of the new folder, when
    the rule is missing. So Changes lists no copied file.
@@ -146,11 +149,17 @@ the new folder with the isolated source command, in this order:
 4. It points `origin/HEAD` at the base and sets the `gh-merge-base`
    setting of the new branch.
 
+For a clone, [the clone command](repository-change-clone-command.ts)
+sets up `origin`, the remote-tracking branches, and the tags from the stage.
+It checks out the new branch and copies the context into the temporary
+folder. The final rename refuses an occupied name.
+
 After a lost process or a failed exit, `repositoryChangeBranchCommand`
 reads the branch of the new folder. On the new branch it repairs the base
-settings, and the move is done. Any other branch ends the job. A failed
-read, such as in a removed folder or without `refs/remotes/origin/<base>`,
-keeps the reservation, and the step retries until the end rule of
+settings, and the move is done. A clone recovery checks the job ID in the
+folder's Git config before it trusts the branch. A missing clone folder
+means the rename did not happen. A failed branch read keeps the reservation
+and retries until the end rule of
 [Failures and recovery](#failures-and-recovery) ends it.
 
 ## Publication
@@ -159,6 +168,8 @@ keeps the reservation, and the step retries until the end rule of
 [`repository-change-publication.ts`](repository-change-publication.ts)
 runs after a good move. It never runs Git again.
 
+- A successful clone move records the directory and variable in
+  `workspace_runtime` before publication. A retry keeps the single entry.
 - `storeChangedRepository` writes the new repository, branch, and base
   branch, sets `github_summary` to NULL, and adds 1 to the task number. It
   writes only while the row still names the old repository and branch,
@@ -185,11 +196,13 @@ runs after a good move. It never runs Git again.
 - The settle command then copies the context folder again, for a file
   that a turn attached during the change. It writes the new folder to
   `/run/conductive/repository` for new terminals, and sets
-  `CONDUCTIVE_REPOSITORY_DIR` in the global tmux environment. A failure of
-  this step only warns.
+  `CONDUCTIVE_REPOSITORY_DIR` in the global tmux environment. It also sets
+  the variable of a cloned folder.
 - It schedules a GitHub read of the new binding and ends the reservation.
   The job then sends `repository.move` to a connected runner, as
   [the runner check](../chat/key-code.md) says, and flushes the held turns.
+  A runner that offers `addsRepositoryFolder` receives the recorded
+  variable so it can register the folder.
 
 ## Labels
 
@@ -277,6 +290,10 @@ have it.
 - [`repository-change-native.test.ts`](repository-change-native.test.ts)
   runs the commands with real Git: the exclude rule, the copy that skips a
   file, a linked context folder, a clash, and the settle command.
+- [`repository-change-clone.test.ts`](repository-change-clone.test.ts)
+  checks the disk name, folder record, runner move, and a failed clone.
+  [`repository-change-clone-native.test.ts`](repository-change-clone-native.test.ts)
+  checks the staged refs, context files, and final rename with real Git.
 - [`repository-change-routes.test.ts`](../features/repository-change-routes.test.ts)
   runs a change through the real routes of the production Worker, with a
   runner that cannot move, and the GitHub events of the new repository.

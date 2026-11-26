@@ -73,10 +73,11 @@ const member = senderSnapshot(options.member ? fakeUsers[1] : fakeUser)
 const barFetch = bar
   ? scenarioFetch(server, bar.scenario, member, now)
   : server.fetch
-// A repository change answers as the Worker does, over each chosen folder,
-// with the branch names of the bar.
+// A repository change answers as the Worker does, with the branch names of
+// the bar. The cloud computer does not hold marketing-site, so a pick of it
+// is a change that copies the repository first.
 if (options.repository) {
-  serveHeld(server, ['storefront', 'billing-service', 'marketing-site'])
+  serveHeld(server, ['storefront', 'billing-service'])
 }
 const fetch = options.repository
   ? repositoryFetch(

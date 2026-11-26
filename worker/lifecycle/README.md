@@ -36,8 +36,8 @@ gives the create, read, resume, and activity routes of a workspace to
   during a saved base-move fetch.
 - Continue a workspace on a new branch after its merge, with the same
   sandbox and sessions.
-- Change the repository of a workspace to another repository that its
-  sandbox holds, with the same sandbox and sessions.
+- Change a workspace to another chosen repository in the same sandbox.
+  Clone the repository when the sandbox needs its folder.
 - Restart the runner, preview relay, and terminal service of a running workspace after
   an update check. A member can use [Restart](routes.md#restart). The workspace
   alarm can also start it for a runner that stays away while a message waits, as
@@ -139,13 +139,15 @@ the default branch, with its retry, its owner fetch, and its tests.
 
 [Repository change](repository-change.md) gives the routes and errors, the
 admission and the reservation that it shares with Continue, its phases,
-the move command with the context copy, the publication, the masked
+the move and clone commands, the context copy, the publication, the masked
 labels, and the recovery. [`workspace-jobs.ts`](workspace-jobs.ts) owns
 both jobs for the workspace object.
 
 [`repository-change-progress.ts`](repository-change-progress.ts) keeps the new target's default base null in its binding.
 [`storeChangedRepository`](repository-change-data.ts) stores a base equal to that default as null and checks the effective base after publication.
 Saved jobs with the earlier named default still publish through the same path.
+[`repository-change-clone-command.ts`](repository-change-clone-command.ts) prepares a Git work tree from the stage and moves it into place.
+[`repository-location-data.ts`](repository-location-data.ts) records its directory and variable before publication.
 
 ### Builds and refreshes
 

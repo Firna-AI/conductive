@@ -120,6 +120,9 @@ export class RepositoryMoves {
       commandId,
       folder: repository.folder,
       branches,
+      ...(active.state.addsRepositoryFolder === true
+        ? { variable: record.variable }
+        : {}),
     })
     return { state: 'wait' }
   }

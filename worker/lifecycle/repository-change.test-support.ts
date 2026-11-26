@@ -24,6 +24,7 @@ import type { DurableLifecycleState } from './durable-types'
 import { LifecycleBoat } from './lifecycle-boat-test-support'
 import { handleGitCredential } from './machine'
 import { WorkspaceRepositoryChange } from './repository-change'
+import { repositoryCloneNamesCommand } from './repository-change-clone-command'
 import {
   REPOSITORY_CHANGE_JOB_KEY,
   type RepositoryChangeJob,
@@ -45,10 +46,13 @@ export async function repositoryChangeFixture(harness: TestHarness) {
   boat.synchronousOutput = '\0' + '0\n'
   boat.states.set('bx_change', 'ready')
   const work = new Map<string, string>()
+  const diskNames: string[] = []
   let inspectionBranch = 'main'
   boat.beforeCommand = async (command, detached) => {
     if (detached) return
-    if (command.includes('symbolic-ref --quiet --short HEAD'))
+    if (command === repositoryCloneNamesCommand)
+      boat.synchronousOutput = [...diskNames, '', ''].join('\0')
+    else if (command.includes('symbolic-ref --quiet --short HEAD'))
       boat.synchronousOutput = `${inspectionBranch}\n`
     else if (command.includes('git status'))
       boat.synchronousOutput =
@@ -257,6 +261,7 @@ export async function repositoryChangeFixture(harness: TestHarness) {
     boat,
     controls,
     work,
+    diskNames,
     options,
     refreshed,
     resumed,

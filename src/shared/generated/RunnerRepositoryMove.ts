@@ -20,4 +20,9 @@ export type RunnerRepositoryMove = {
    * The branches of the workspace in that folder.
    */
   branches: RunnerBranches
+  /**
+   * Folder variable for a move that adds a repository folder. Send
+   * only when hello offers addsRepositoryFolder.
+   */
+  variable?: string
 }

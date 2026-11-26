@@ -75,7 +75,7 @@ These docs belong to this doc:
   rejected, because each workspace gets its own sandbox.
 - A workspace works in one repository at a time. A
   [repository change](repository-change.md) moves it to another repository
-  that its sandbox holds.
+  that its org chose.
 - Every sandbox has one machine size for now, on each provider: Boat's
   default size, with 4 vCPU and 8 GB.
 - [Provider accounts](provider-accounts.md) gives the account of each org

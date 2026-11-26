@@ -90,6 +90,9 @@ function readConnection(value: unknown): RunnerConnectionState {
     protocolVersion: value.protocolVersion ?? null,
     ...(value.fileServer === true ? { fileServer: true } : {}),
     ...(value.capabilityNotices === true ? { capabilityNotices: true } : {}),
+    ...(value.addsRepositoryFolder === true
+      ? { addsRepositoryFolder: true }
+      : {}),
     ...(value.services === true ? { services: true } : {}),
     ...(value.serviceBinding === undefined
       ? {}

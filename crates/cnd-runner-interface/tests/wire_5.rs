@@ -1,6 +1,7 @@
 //! JSON snapshots of the repository folder messages: hello, move, refusal, and turn fields.
 
 use cnd_runner_interface::runner_handshake::{RunnerToWorkspace, WorkspaceToRunner};
+use serde_json::json;
 
 macro_rules! wire_message {
     ($name:ident, $ty:ty, $json:literal) => {
@@ -25,6 +26,30 @@ wire_message!(
     WorkspaceToRunner,
     r#"{"type":"repository.move","commandId":"command-1","folder":"/home/user/code/billing","branches":{"workspaceBranch":"member/cart-v2-cd34","targetBranch":"main"}}"#
 );
+
+#[test]
+fn retains_the_folder_addition_fields() -> Result<(), serde_json::Error> {
+    let hello = json!({
+        "type": "hello",
+        "protocolVersion": 2,
+        "workspaceId": "workspace-1",
+        "streamId": "stream-1",
+        "repositoryFolder": "/home/user/code/storefront",
+        "addsRepositoryFolder": true
+    });
+    let command = json!({
+        "type": "repository.move",
+        "commandId": "command-1",
+        "folder": "/home/user/code/billing",
+        "branches": {"workspaceBranch": "member/cart-v2-cd34", "targetBranch": "main"},
+        "variable": "CONDUCTIVE_REPOSITORY_BILLING_DIR"
+    });
+    let runner: RunnerToWorkspace = serde_json::from_value(hello.clone())?;
+    let worker: WorkspaceToRunner = serde_json::from_value(command.clone())?;
+    assert_eq!(serde_json::to_value(runner)?, hello);
+    assert_eq!(serde_json::to_value(worker)?, command);
+    Ok(())
+}
 
 wire_message!(
     repository_move_refused,

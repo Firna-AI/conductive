@@ -40,6 +40,8 @@ interface RepositoryChangeTarget {
   repositoryId: string
   fullName: string
   directory: string
+  /** The variable for a clone into directory. Older jobs omit this field. */
+  clone?: { variable: string }
   /** The GitHub binding of the new repository, with the new branch. */
   binding: GitHubWorkspace
 }
@@ -81,7 +83,8 @@ export interface RepositoryChangeJob {
 
 /** The runner connection that the job sees. */
 export type RunnerView =
-  { state: 'none' } | { state: 'hello'; canMove: boolean }
+  | { state: 'none' }
+  | { state: 'hello'; canMove: boolean; addsRepositoryFolder?: boolean }
 
 export interface RepositoryChangeOptions {
   env: AppEnv

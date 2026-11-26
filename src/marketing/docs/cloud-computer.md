@@ -66,8 +66,13 @@ If a build or refresh is running, one more build usually starts after it succeed
 When the repository notice offers **Try again**, the last build failed, and the repository waits for it.
 Select **Try again** to build it.
 A newly added repository goes at the end of the order.
-A newly added repository becomes usable after a successful build includes it.
-Until then, **New workspace** shows it as unavailable, with a note that says when it will be ready.
+In **New workspace**, it becomes available after a successful build includes it.
+Until then, the menu shows it as unavailable and says when it will be ready.
+
+You can change an existing workspace to a repository that is waiting for a build.
+If the cloud computer has no copy, Conductive copies the repository from GitHub into a new folder.
+
+- [Change the repository](/docs/workspaces#change-the-repository)
 
 When a repository gets a new name or default branch on GitHub, Conductive saves it and starts a build automatically.
 After that build, the repository's folder uses its new name, such as `~/code/<new-name>`.
@@ -92,9 +97,8 @@ The removal turns off each automation of the repository.
 After the repository is back, the owner of each automation turns it on again.
 
 A removed repository stays in the setup until the next build.
-To apply a removal, select **Build computer** under **Cloud computer**.
-Existing workspaces keep the repositories and folders from the setup they started with.
-A workspace can move only to a repository that its computer holds, as [Change the repository](/docs/workspaces#change-the-repository) says.
+To apply the removal to the starting setup, select **Build computer** under **Cloud computer**.
+Removing a repository leaves its files in any workspace that already has a copy.
 
 ## Order repositories
 

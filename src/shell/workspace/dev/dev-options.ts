@@ -33,9 +33,9 @@ import { firstStartStates, type FirstStartState } from './dev-first-start'
  * - `bar=<state>`: the GitHub state of the bar, with the app's own Files
  *   part. `turn=running`, `access`, `method`, `merge`, `work`, and
  *   `continue` choose how the actions of the bar end.
- * - `repository=changed|question|clash|outdated|fetch-failed`: the cloud
- *   computer holds each chosen repository, and a repository change ends in
- *   that way. With `bar`, the change takes the names of `branches`.
+ * - `repository=changed|question|clash|outdated|fetch-failed`: the header
+ *   menu lists each chosen repository, and a repository change ends in that
+ *   way. The cloud computer does not hold marketing-site. With `bar`, the change takes the names of `branches`.
  * - `services=running|ended|empty|load-failed`: the Preview tool lists
  *   these services above the servers of the stored report of the ports.
  * - `lists=limited`: the file lists of a large branch, whose reports leave

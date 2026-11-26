@@ -9,7 +9,9 @@ those of the [architecture doc](../architecture.md#terms). A decision
 number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A
 repository change decision number, such as repository change decision 1,
-names a decision of the change that added this action.
+names a decision of the change that added this action. A repository clone
+decision number, such as repository clone decision 1, names a decision of
+the change that lets this action clone a repository.
 
 ## Terms
 
@@ -17,6 +19,10 @@ names a decision of the change that added this action.
   and its folder in the sandbox.
 - **New repository:** the repository that the member picks, and its
   folder in the sandbox.
+- **Record of the folders:** the list of the repository folders in the
+  sandbox of a workspace, with their variables, that the app keeps, as
+  [Folders over time](repository-folders.md#folders-over-time) says. The
+  sandbox holds a repository when this record has a folder of it.
 
 ## A change in place
 
@@ -58,33 +64,39 @@ names a decision of the change that added this action.
   suspended org (repository change decision 11 A). Reason: a menu with
   nothing to pick adds nothing. A menu with only the current repository
   was rejected for this reason.
-- Its menu lists the repositories that the org chose and that this sandbox
-  holds, in the order of New workspace. The current repository has a
-  check. The menu has no notes.
-- A chosen repository that this sandbox does not hold does not show. This
-  holds also for a
-  [waiting repository](org-image-repositories.md)
-  (repository change decision 4 G).
+- Its menu lists every repository that the org chose, in the order of New
+  workspace (repository clone decision 1 C). The current repository has a
+  check.
+- This holds also for a repository that this sandbox does not hold, such
+  as a [waiting repository](org-image-repositories.md). The change clones
+  such a repository, as
+  [A repository that the computer does not hold](#a-repository-that-the-computer-does-not-hold)
+  says.
+- Reason: a member in an older workspace then reaches a repository that
+  the org chose after the workspace started, with no new workspace. The
+  clone reads GitHub, not the org image, so a waiting repository needs no
+  build first.
+- A [removed repository](org-image-repositories.md) does not show, because
+  the org no longer chose it.
+- The menu has no notes (repository change decision 4). So a row that
+  needs a clone looks like each other row.
 - When the app has no record of the folders of a sandbox, no other
   repository can show, so the header shows text. Reason: the app knows no
   other folder of that sandbox.
 - A pick of the current repository changes nothing.
-- The app refuses a change to a repository that the org did not choose, or
-  that this sandbox does not hold.
-- Reason: such a repository is rare, because each new workspace starts
-  from the newest org image. A member who needs it creates a new
-  workspace.
-- These ways were rejected (repository change decision 4):
+- The app refuses a change to a repository that the org did not choose. It
+  also refuses each change when the app has no record of the folders of
+  the sandbox.
+- These ways were rejected (repository change decision 4 and repository
+  clone decision 1):
+  - A menu with only the repositories that this sandbox holds (repository
+    change decision 4 G). A member then has to create a new workspace for
+    a repository that the org chose after the workspace started.
   - A row that is off, with a note that says to create a new workspace.
     Also such a row that opens New workspace with that repository picked.
     The menu has no notes.
-  - A clone of the repository into its folder at the change. It reverses
-    two rejections in force: a clone after a start, as
-    [Waiting repositories](create-a-workspace.md#waiting-repositories)
-    says, and the install script only in a build. A folder added later
-    also needs its own name rule.
-  - Such a clone with a run of the install script. The script runs for
-    every folder, can take minutes, and can change the other folders.
+  - A clone that also runs the install script. The script runs for every
+    folder, can take minutes, and can change the other folders.
   - A new sandbox from the newest org image for this case only. The
     files, the local work, and the processes of the old sandbox are lost.
   - A helper sandbox from the newest org image that packs the folder for
@@ -206,6 +218,17 @@ names a decision of the change that added this action.
   of the new folder stay on their local branches.
 - When Git cannot move these changed files to the new branch, the change
   stops. Reason: a forced move can lose work.
+
+## A repository that the computer does not hold
+
+- When this sandbox does not hold the new repository, the change clones it
+  from GitHub into a new folder (repository clone decision 1 C). Then the
+  change goes on as for a repository that the sandbox holds.
+- The change runs neither the install script nor the startup script for
+  the new folder. So its dependencies are not installed until an agent or
+  a member installs them. Repository clone decision 1 C accepts this cost.
+- [A clone at a repository change](repository-change-clone.md) gives the
+  other requirements of the clone and of its new folder.
 
 ## The context folder
 

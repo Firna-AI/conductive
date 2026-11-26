@@ -60,6 +60,9 @@ protocol docs.
 - [Repository change](../protocol/repository-change.md): the move of a
   workspace to another repository of its org, on a new branch with the
   same sandbox and sessions.
+  - [A clone at a repository change](../protocol/repository-change-clone.md):
+    the clone of a repository that the sandbox does not hold, its fetch,
+    its new folder, and a failed clone.
 - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
   row, which moves, reassigns, renames, and archives the workspace, and
   adds it to the merge queue or removes it.

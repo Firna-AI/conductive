@@ -7,7 +7,7 @@ export const CONTEXT_COPY_FAILED = 81
 /** The move exits with this code when Git refused the checkout of the new branch. */
 export const CHECKOUT_REFUSED = 82
 
-/** A runner without `repositoryFolder` in its hello cannot move (decision 5 A). */
+/** The runner did not offer the capability that the move requires. */
 export function softwareOutdated(): HttpError {
   return new HttpError(
     409,

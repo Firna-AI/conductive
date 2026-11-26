@@ -108,6 +108,7 @@ function repositoryChangeOptions(
         ? {
             state: 'hello',
             canMove: active.state.repositoryFolder !== undefined,
+            addsRepositoryFolder: active.state.addsRepositoryFolder === true,
           }
         : { state: 'none' }
     },

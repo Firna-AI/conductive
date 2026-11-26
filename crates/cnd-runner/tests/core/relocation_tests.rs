@@ -175,12 +175,15 @@ async fn names_its_folder_in_hello_and_moves_after_the_turns_end() {
     let h = start(root).await;
     let hello = h.fixture.endpoint.state.lock().await.received[0].clone();
     let RunnerToWorkspace::RunnerHello(RunnerHello::Hello {
-        repository_folder, ..
+        repository_folder,
+        adds_repository_folder,
+        ..
     }) = hello
     else {
         panic!("expected hello");
     };
     assert_eq!(repository_folder, Some(current.to_string_lossy().into()));
+    assert_eq!(adds_repository_folder, Some(true));
     h.fixture.endpoint.raw(serde_json::to_vec(&json!({"type":"services.logs","request":{"requestId":"held","target":{"bootId":"boot","serviceId":"web","generation":"run"}}})).unwrap()).await;
     h.services.entered.notified().await;
     h.turns.working.store(true, Ordering::SeqCst);
@@ -197,6 +200,7 @@ async fn names_its_folder_in_hello_and_moves_after_the_turns_end() {
             folder: billing,
             default_branch: "trunk".into(),
             workspace_branch: "alice/cart-v2-cd34".into(),
+            variable: None,
         })
     );
     assert!(h.turns.ended.load(Ordering::SeqCst));

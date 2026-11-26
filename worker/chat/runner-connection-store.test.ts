@@ -33,16 +33,26 @@ const connection: Omit<RunnerConnectionState, 'generation'> = {
   checkAt: 100,
 }
 
-it('keeps the repository folder of a runner that can move, and reads older records without it', async () => {
+it('keeps repository move capabilities across a wake and accepts older records', async () => {
   const storage = memory()
   const store = new RunnerConnectionStore(storage)
   const saved = await store.replace({
     ...connection,
     repositoryFolder: '/home/user/code/billing',
+    addsRepositoryFolder: true,
   })
   expect(await store.current()).toEqual(saved)
   expect(saved.repositoryFolder).toBe('/home/user/code/billing')
-  await store.save({ ...saved, repositoryFolder: undefined }, saved.generation)
+  await store.save({ ...saved, addsRepositoryFolder: false }, saved.generation)
+  expect(await store.current()).toEqual({
+    ...connection,
+    generation: saved.generation,
+    repositoryFolder: '/home/user/code/billing',
+  })
+  await store.save(
+    { ...saved, repositoryFolder: undefined, addsRepositoryFolder: undefined },
+    saved.generation,
+  )
   expect(await store.current()).not.toHaveProperty('repositoryFolder')
   const older = await store.replace(connection)
   expect(await store.current()).toEqual(older)

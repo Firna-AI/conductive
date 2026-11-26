@@ -2,6 +2,7 @@ import { HttpError } from '../http'
 import { providerForAccount } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { lifecycleCommand } from './command-intents'
+import { workspaceAutoStopSeconds } from './idle-stop'
 import {
   repositoryChangeBranchCommand,
   repositoryChangeFetchCommand,
@@ -17,7 +18,7 @@ import type {
   RepositoryChangeJob,
   RepositoryChangeOptions,
 } from './repository-change-types'
-import { workspaceAutoStopSeconds } from './idle-stop'
+import { recordClonedRepositoryLocation } from './repository-location-data'
 
 /**
  * The fetch and the move run detached, as in Continue. Once a command
@@ -50,15 +51,35 @@ export async function advanceRepositoryChangeCommand(
     job.providerAccount,
   )
   if (await step(provider, options, progress, job))
-    await completeCommand(progress, job)
+    await completeCommand(options, progress, job)
 }
 
 async function completeCommand(
+  options: RepositoryChangeOptions,
   progress: RepositoryChangeProgress,
   job: RepositoryChangeJob,
 ) {
   progress.scope = null
-  if (job.phase === 'fetch' && (job.cancelled || job.failure)) {
+  const clone = job.phase === 'move' ? job.target.clone : undefined
+  const sandboxChanged =
+    clone &&
+    !(await recordClonedRepositoryLocation(
+      options.env.DB,
+      {
+        id: job.binding.id,
+        sandboxId: job.sandboxId,
+        providerAccount: job.providerAccount,
+      },
+      {
+        repositoryId: job.target.repositoryId,
+        directory: job.target.directory,
+        variable: clone.variable,
+      },
+    ))
+  if (
+    sandboxChanged ||
+    (job.phase === 'fetch' && (job.cancelled || job.failure))
+  ) {
     const error = job.failure ?? repositoryChangeFailed(job)
     await progress.finish(job, {
       ok: false,

@@ -85,7 +85,7 @@ export async function reserveRepositoryChange(
     options.env.DB,
     workspaceId,
     row.repositoryId,
-    repository.id,
+    repository,
   )
   const recovery = await options.chat.store.read(workspaceId, (view) =>
     view.lifecycleRecovery(),
@@ -107,7 +107,11 @@ export async function reserveRepositoryChange(
       'The software is restarting. Try again when it is ready.',
     )
   const runner = await options.runner()
-  if (runner.state === 'hello' && !runner.canMove) throw softwareOutdated()
+  if (
+    runner.state === 'hello' &&
+    (!runner.canMove || (folders.clone && !runner.addsRepositoryFolder))
+  )
+    throw softwareOutdated()
   await requireActiveWorkspaceOwner(options.env.DB, row.ownerUserId, orgId)
   if (!row.sandboxId)
     throw new HttpError(
@@ -129,6 +133,7 @@ export async function reserveRepositoryChange(
       repositoryId: repository.id,
       fullName: repository.fullName,
       directory: folders.targetDirectory,
+      ...(folders.clone ? { clone: folders.clone } : {}),
       binding: {
         id: workspaceId,
         orgId,

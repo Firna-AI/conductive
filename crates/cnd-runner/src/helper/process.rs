@@ -45,6 +45,12 @@ impl NodeHelpers {
         if let Some(branch) = &configuration.workspace_branch {
             environment.insert("CONDUCTIVE_WORKSPACE_BRANCH".to_owned(), branch.clone());
         }
+        environment.extend(
+            configuration
+                .repository_directories
+                .iter()
+                .map(|(name, directory)| (name.clone(), directory.to_string_lossy().into_owned())),
+        );
         environment
     }
 }

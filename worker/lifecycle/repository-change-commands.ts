@@ -1,61 +1,39 @@
 import { TERMINAL_RUNTIME } from '../../src/shared/restore-marker'
 import { TERMINAL_FOLDER_FILE } from '../terminal/bridge/folder'
-import { shellQuote } from './commands'
 import {
-  continueFetchCommand,
-  continueStagingDirectory,
-} from './continue-commands'
+  BASE_CHANGE_GIT as GIT,
+  baseChangeFetchCommand,
+} from './base-change-commands'
+import { shellQuote } from './commands'
+import { continueStagingDirectory } from './continue-commands'
 import { isolatedSourceCommand } from './image-sources/native-command'
+import {
+  repositoryCloneBranchGuard,
+  repositoryCloneMoveCommand,
+} from './repository-change-clone-command'
+import { contextCopy, excludeContext } from './repository-change-context'
 import {
   CHECKOUT_REFUSED,
   CONTEXT_COPY_FAILED,
 } from './repository-change-errors'
 import type { RepositoryChangeJob } from './repository-change-types'
 
-const GIT =
-  '/usr/bin/git -c core.hooksPath=/dev/null -c core.askPass= -c credential.helper= -c http.followRedirects=false -c protocol.ext.allow=never -c submodule.recurse=false'
-
 /** The changed files of the new folder, which the checkout carries. */
 export function carriedWorkCommand(directory: string): string {
   return `set -eu\ncd ${shellQuote(directory)}\ngit status --porcelain=v1 -z --untracked-files=all -- . ':(exclude).context'\nprintf '\\0'\nprintf '0'`
 }
 
-/** Fetches the latest default branch of the new repository, as Continue does. */
+/** Fetch the new repository into the same isolated stage as Continue. */
 export function repositoryChangeFetchCommand(
   job: Pick<RepositoryChangeJob, 'id' | 'fetchId' | 'baseBranch' | 'target'>,
 ): string {
-  return continueFetchCommand({
-    id: job.id,
+  return baseChangeFetchCommand({
+    stage: continueStagingDirectory(job.id),
     fetchId: job.fetchId,
     baseBranch: job.baseBranch,
-    binding: job.target.binding,
+    fullName: job.target.binding.fullName,
+    allBranchesAndTags: Boolean(job.target.clone),
   })
-}
-
-/**
- * Copies the context folder of the old folder into the new folder. A file
- * with the same path in the new folder stays. Both folders must be real
- * folders, not links. A missing old context folder copies nothing.
- */
-function contextCopy(from: string, to: string, failure: number): string {
-  const source = shellQuote(`${from}/.context`)
-  const target = shellQuote(`${to}/.context`)
-  return `if [ -d ${source} ] && [ ! -L ${source} ]; then
-  if [ ! -e ${target} ] && [ ! -L ${target} ]; then mkdir -- ${target} || exit ${failure}; fi
-  if [ ! -d ${target} ] || [ -L ${target} ]; then exit ${failure}; fi
-  /usr/bin/cp -R --no-dereference --preserve=mode,timestamps --update=none -- ${shellQuote(`${from}/.context/.`)} ${shellQuote(`${to}/.context/`)} || exit ${failure}
-fi`
-}
-
-/** Adds the rule `/.context/` to the local exclude file of the folder. */
-function excludeContext(): string {
-  return `conductive_exclude=$(${GIT} rev-parse --git-path info/exclude)
-mkdir -p -- "$(dirname -- "$conductive_exclude")"
-touch -- "$conductive_exclude"
-if ! grep -qxF '/.context/' "$conductive_exclude"; then
-  if [ -s "$conductive_exclude" ] && [ -n "$(tail -c 1 -- "$conductive_exclude")" ]; then printf '\\n' >> "$conductive_exclude"; fi
-  printf '%s\\n' '/.context/' >> "$conductive_exclude"
-fi`
 }
 
 /**
@@ -69,6 +47,8 @@ export function repositoryChangeMoveCommand(
     'id' | 'baseBranch' | 'directory' | 'branch' | 'target'
   >,
 ): string {
+  if (job.target.clone)
+    return repositoryCloneMoveCommand(job, continueStagingDirectory(job.id))
   const stage = shellQuote(continueStagingDirectory(job.id))
   const base = shellQuote(`refs/remotes/origin/${job.baseBranch}`)
   return isolatedSourceCommand(
@@ -93,11 +73,12 @@ export function repositoryChangeMoveCommand(
  * folder without a branch prints an empty line.
  */
 export function repositoryChangeBranchCommand(
-  job: Pick<RepositoryChangeJob, 'target' | 'branch' | 'baseBranch'>,
+  job: Pick<RepositoryChangeJob, 'id' | 'target' | 'branch' | 'baseBranch'>,
 ): string {
   const base = shellQuote(`refs/remotes/origin/${job.baseBranch}`)
+  const guard = job.target.clone ? `${repositoryCloneBranchGuard(job)}\n` : ''
   const command = `set -eu
-cd ${shellQuote(job.target.directory)}
+${guard}cd ${shellQuote(job.target.directory)}
 conductive_current_branch=$(${GIT} symbolic-ref --quiet --short HEAD || true)
 if [ "$conductive_current_branch" = ${shellQuote(job.branch)} ]; then
   ${GIT} rev-parse --verify ${shellQuote(`refs/remotes/origin/${job.baseBranch}^{commit}`)} > /dev/null
@@ -143,6 +124,9 @@ export function repositoryChangeSettleCommand(
   const folder = shellQuote(job.target.directory)
   const file = shellQuote(TERMINAL_FOLDER_FILE)
   const copy = contextCopy(job.directory, job.target.directory, 1)
+  const tmux = `/usr/bin/tmux -S ${shellQuote(`${TERMINAL_RUNTIME}/tmux.sock`)}`
+  const setVariable = (variable: string) =>
+    `${tmux} set-environment -g ${shellQuote(variable)} ${folder} 2>/dev/null || true`
   return `conductive_status=0
 ( set -eu
 umask 077
@@ -155,7 +139,7 @@ if [ -d /run/conductive ]; then
   mv -f -- "$conductive_file" ${file}
   ) || { echo 'conductive: the terminal folder was not written' >&2; conductive_status=1; }
 fi
-/usr/bin/tmux -S ${shellQuote(`${TERMINAL_RUNTIME}/tmux.sock`)} set-environment -g CONDUCTIVE_REPOSITORY_DIR ${folder} 2>/dev/null || true
-${idleShellMove(job.directory, job.target.directory)}
+${setVariable('CONDUCTIVE_REPOSITORY_DIR')}
+${job.target.clone ? `${setVariable(job.target.clone.variable)}\n` : ''}${idleShellMove(job.directory, job.target.directory)}
 exit "$conductive_status"`
 }

@@ -417,28 +417,31 @@ It gets a new branch in the folder of the new repository.
 5. Read the question if it lists work.
 6. Select **Change repository** to keep going, or **Cancel** to keep the current repository.
 
-The menu lists only the org's repositories that the workspace's cloud computer holds.
+The menu lists every repository that the org chose, including repositories waiting for a build.
 When no other repository can show, the header shows the repository as text, with no menu.
-A repository that the org added after the workspace started does not show.
-Create a new workspace to use it.
 
 The question lists the work that the workspace stops following.
 This work can be files not committed, commits not pushed, an open pull request, and pushed commits of the branch.
 That work stays with the old repository.
-The question also lists the changed files in the folder of the new repository.
+If the new repository's folder has changed files, the question lists them too.
 These files move to the new branch.
 Without such work, the change starts at once.
 
-If the message says "Restart the software, then try again.", the computer needs newer software first.
-Use **Restart**, as [Restart the software](/docs/workspaces#restart-the-software) says, then change the repository again.
+If the cloud computer needs newer software, Conductive shows **Restart the software, then try again.**
+Select the state in the workspace header, then select **Restart**.
+Try the repository change again.
 
 The computer starts first if it is stopped.
+If the cloud computer has no copy of the selected repository, Conductive copies it from GitHub into a new folder under `~/code`.
+Conductive skips the install script and the startup script for that folder during the change.
+Install any dependencies you need in the new folder, or ask the agent to install them.
+
 The new branch starts from the latest default branch of the new repository.
 That default branch becomes the workspace's base branch.
 The base follows a later rename of that default branch.
 Conductive fetches the new default before the cloud computer targets it.
 A stopped computer completes this move when it resumes.
-Your GitHub account needs read access to fetch it.
+Your GitHub account needs read access to the new repository.
 The new branch name uses the owner's GitHub login, the workspace name, a version such as `v2`, and a new short suffix.
 The change copies the `.context/` folder into the folder of the new repository.
 A file that already exists there stays.
@@ -462,6 +465,7 @@ If the pull request was queued, it leaves the merge queue.
 If the change fails, the workspace keeps its repository and branch, and a message names the reason.
 If changed files in the new folder clash with its latest default branch, commit or discard them, then try again.
 
+- [Restart the software](/docs/workspaces#restart-the-software)
 - [Continue after a merge](/docs/workspaces#continue-after-a-merge)
 
 ## Archive a workspace

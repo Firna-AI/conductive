@@ -48,13 +48,15 @@ function useFailureToast(failure: RepositoryChangeSnapshot['failure']): void {
  * The repository of the open workspace in its header. Every member of the
  * org may change it (repository change decision 2 B). Its menu lists the
  * current repository with a check, and each other repository that the org
- * chose and that the cloud computer holds. Desktop opens the menu below the
- * button, and a phone opens a sheet. A pick of another repository starts
- * the change at once, or asks first when the workspace has work, as
- * `RepositoryQuestion` says. While the change runs, the button shows a
- * spinner and the new repository. A failure shows a toast. An archived
- * workspace, a suspended org, and a menu with nothing to pick show the
- * repository as text.
+ * chose, while the app has a record of the folders of the cloud computer.
+ * Desktop opens the menu below the button, and a phone opens a sheet. A
+ * pick of another repository starts the change at once, or asks first when
+ * the workspace has work, as `RepositoryQuestion` says. The change copies a
+ * repository that the cloud computer does not hold from GitHub into a new
+ * folder (repository clone decision 1 C). While the change runs, the button
+ * shows a spinner and the new repository. A failure shows a toast. An
+ * archived workspace, a suspended org, and a menu with nothing to pick show
+ * the repository as text.
  */
 export function RepositoryControl(props: { context: WorkspaceContext }) {
   const { context } = props

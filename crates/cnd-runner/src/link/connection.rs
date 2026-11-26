@@ -175,6 +175,7 @@ impl RunnerLink for SavedRunnerLink {
                 },
             ]),
             repository_folder: self.repository_folder.clone(),
+            adds_repository_folder: self.repository_folder.is_some().then_some(true),
             complete_tool_details: Some(true),
             capability_notices: Some(true),
             services: self.services_offered.then_some(true),

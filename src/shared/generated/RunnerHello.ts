@@ -37,6 +37,10 @@ export type RunnerHello = {
    */
   repositoryFolder?: string
   /**
+   * This runner accepts a repository move with a new folder variable.
+   */
+  addsRepositoryFolder?: boolean
+  /**
    * Offer complete tool sources in private numbered parts.
    */
   completeToolDetails?: boolean

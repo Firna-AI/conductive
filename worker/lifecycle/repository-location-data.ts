@@ -13,6 +13,8 @@ interface LocationRow {
   locationsJson: string | null
   repositoryId: string
   orgId: string
+  sandboxId: string | null
+  providerAccount: string
   fullName: string
   defaultBranch: string
   repositoriesJson: string | null
@@ -26,7 +28,8 @@ async function readLocationRow(
   const row = await db
     .prepare(
       `SELECT r.repository_locations_json AS locationsJson, w.repository_id AS repositoryId,
-      w.org_id AS orgId, repository.full_name AS fullName, repository.default_branch AS defaultBranch,
+      w.org_id AS orgId, w.sandbox_id AS sandboxId, w.provider_account AS providerAccount,
+      repository.full_name AS fullName, repository.default_branch AS defaultBranch,
       p.repositories_json AS repositoriesJson, p.repository_locations_json AS plannedLocationsJson
     FROM workspace_runtime r JOIN workspaces w ON w.id = r.workspace_id
     JOIN repositories repository ON repository.id = w.repository_id
@@ -79,6 +82,52 @@ export async function recordedRepositoryLocations(
   workspaceId: string,
 ): Promise<RepositoryLocation[] | null> {
   return recordedLocations(await readLocationRow(db, workspaceId))
+}
+
+/** Append a completed clone once, or return false if the workspace changed sandboxes. */
+export async function recordClonedRepositoryLocation(
+  db: D1Database,
+  workspace: { id: string; sandboxId: string; providerAccount: string },
+  location: RepositoryLocation,
+): Promise<boolean> {
+  const row = await readLocationRow(db, workspace.id)
+  if (
+    row.sandboxId !== workspace.sandboxId ||
+    row.providerAccount !== workspace.providerAccount
+  )
+    return false
+  const locations = recordedLocations(row)
+  if (!locations) throw new Error(MISSING_FOLDERS)
+  const existing = locations.find(
+    ({ repositoryId }) => repositoryId === location.repositoryId,
+  )
+  if (existing) {
+    if (
+      existing.directory === location.directory &&
+      existing.variable === location.variable
+    )
+      return true
+    throw new Error('The cloned repository folder conflicts with its record.')
+  }
+  const updated = readRepositoryLocations([...locations, location])
+  const result = await db
+    .prepare(
+      `UPDATE workspace_runtime SET repository_locations_json = ?
+      WHERE workspace_id = ? AND repository_locations_json IS ?
+      AND EXISTS (SELECT 1 FROM workspaces w WHERE w.id = workspace_runtime.workspace_id
+        AND w.sandbox_id = ? AND w.provider_account = ?)`,
+    )
+    .bind(
+      JSON.stringify(updated),
+      workspace.id,
+      row.locationsJson,
+      workspace.sandboxId,
+      workspace.providerAccount,
+    )
+    .run()
+  if (result.meta.changes !== 1)
+    throw new Error('The workspace folder record changed during the move.')
+  return true
 }
 
 /**

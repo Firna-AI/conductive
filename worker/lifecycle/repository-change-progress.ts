@@ -1,10 +1,13 @@
+import { providerForAccount } from '../sandbox/client'
+import { repositoryCloneNamesCommand } from './repository-change-clone-command'
+import { advanceRepositoryChangeCommand } from './repository-change-command'
+import { authorizeRepositoryChange } from './repository-change-data'
 import {
   repositoryChangeFailed,
   softwareOutdated,
 } from './repository-change-errors'
-import { advanceRepositoryChangeCommand } from './repository-change-command'
-import { authorizeRepositoryChange } from './repository-change-data'
 import { publishRepositoryChange } from './repository-change-publication'
+import { changeFolders } from './repository-change-target'
 import type {
   RepositoryChangeJob,
   RepositoryChangeOptions,
@@ -13,6 +16,8 @@ import {
   hasRepositoryChangeWork,
   readRepositoryChangeWork,
 } from './repository-change-work'
+import { workspaceEnvironmentSettings } from './settings-data'
+import { runningEnvironment } from './start-environment'
 
 /** A runner that has not said hello within this time ends the change. */
 const RUNNER_WAIT_MS = 3 * 60 * 1_000
@@ -81,7 +86,8 @@ export async function advanceRepositoryChange(
     const runner = await options.runner()
     const now = options.dependencies.now()
     if (runner.state === 'hello') {
-      if (!runner.canMove) throw softwareOutdated()
+      if (!runner.canMove || (job.target.clone && !runner.addsRepositoryFolder))
+        throw softwareOutdated()
       job.phase = 'check'
     } else if (job.runnerSince === undefined) job.runnerSince = now
     else if (now - job.runnerSince >= RUNNER_WAIT_MS)
@@ -108,6 +114,49 @@ export async function advanceRepositoryChange(
     })
     return
   }
+  if (job.target.clone) await chooseCloneLocation(options, job)
   job.phase = 'fetch'
   await progress.save(job)
+}
+/** Keep the selected name in the job before a detached command can use it. */
+async function chooseCloneLocation(
+  options: RepositoryChangeOptions,
+  job: RepositoryChangeJob,
+): Promise<void> {
+  const provider = providerForAccount(
+    options.env,
+    options.dependencies.fetch,
+    job.providerAccount,
+  )
+  const { exitCode, timedOut, stdout } = await provider.runCommand(
+    job.sandboxId,
+    repositoryCloneNamesCommand,
+  )
+  if (
+    exitCode !== 0 ||
+    timedOut ||
+    (stdout !== '\0' && !stdout.endsWith('\0\0'))
+  )
+    throw repositoryChangeFailed(job)
+  const names = stdout.split('\0').slice(0, -2)
+  const environment = await workspaceEnvironmentSettings(
+    options.env,
+    job.binding.orgId,
+    await runningEnvironment(options.env.DB, job.binding.id),
+  )
+  const folders = await changeFolders(
+    options.env.DB,
+    job.binding.id,
+    job.repositoryId,
+    { id: job.target.repositoryId, fullName: job.target.fullName },
+    names,
+    Object.keys(environment),
+  )
+  if (!folders.clone || folders.directory !== job.directory)
+    throw repositoryChangeFailed(job)
+  job.target = {
+    ...job.target,
+    directory: folders.targetDirectory,
+    clone: folders.clone,
+  }
 }

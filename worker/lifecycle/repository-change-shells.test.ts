@@ -94,13 +94,17 @@ it.skipIf(!existsSync(TMUX))(
     await tmux('new-window', '-n', 'busy', '-c', old, 'sleep 60')
     await tmux('new-window', '-n', 'elsewhere', '-c', other, shell)
     await tmux('send-keys', '-t', 'workspace:idle', '-l', 'half typed')
+    const variable = 'CONDUCTIVE_REPOSITORY_TARGET_DIR'
     const command = repositoryChangeSettleCommand({
       directory: old,
-      target: { directory: target },
+      target: { directory: target, clone: { variable } },
     } as Parameters<typeof repositoryChangeSettleCommand>[0])
       .replaceAll('/run/conductive-terminal', runtime)
       .replaceAll('/run/conductive', join(root, 'run'))
     await run('/bin/sh', ['-c', command])
+    expect((await tmux('show-environment', '-g', variable)).stdout).toBe(
+      `${variable}=${target}\n`,
+    )
     expect(await settled(socket, { idle: target, deeper: target })).toEqual({
       idle: target,
       deeper: target,

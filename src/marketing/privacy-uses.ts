@@ -52,6 +52,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         If that branch no longer exists, it fetches the default branch.
         A repository change fetches the latest default branch of the new
         repository with the token of the member who changes the repository.
+        When the cloud computer has no copy of that repository, the change
+        copies it from GitHub with the same token.
         For a workspace outside the merge queue, ${productName} fetches
         the default branch if GitHub deletes its base or changes the default
         branch it follows. The cloud computer uses the new base only after

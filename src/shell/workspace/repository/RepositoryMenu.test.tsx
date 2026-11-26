@@ -2,6 +2,7 @@
 
 import { describe, expect, test, vi } from 'vitest'
 import { nameLabel } from '../../../shared/name-label'
+import { orgSettingsPaths } from '../../../shared/org-settings'
 import { workspaceViewPath } from '../../../shared/workspace-view'
 import { queryByRole } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
@@ -14,6 +15,7 @@ import {
   serveRepositoryChange,
 } from '../../../test-support/fake-repository-change'
 import { fakeUser } from '../../../test-support/fixtures/core'
+import { repositoryFixtures } from '../../../test-support/fixtures/repositories'
 import { FAKE_FILE_PATH } from '../../../test-support/fixtures/tools'
 import {
   senderSnapshot,
@@ -62,16 +64,29 @@ function publish(server: FakeApiServer) {
 }
 
 describe('the repository menu in the header', () => {
-  test('lists the chosen repositories that the cloud computer holds, and a pick moves the workspace with progress and a note', async () => {
+  test('lists each chosen repository, also a waiting one that the cloud computer does not hold, and a pick of that one moves the workspace with progress and a note', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
-    // The org chose acme/marketing-site too, but the cloud computer lacks it.
-    serveHeld(server, ['storefront', 'billing-service'])
+    // acme/billing-service waits for the next build of the org image, and the
+    // cloud computer lacks it. The cloud computer holds acme/admin-dashboard,
+    // which the org no longer chooses.
+    const { repositories } = repositoryFixtures(org).repositories
+    server.json('GET', orgSettingsPaths.repositories(org), {
+      repositories: repositories.map((item) => ({
+        ...item,
+        ready: item.id !== 'billing-service',
+      })),
+    })
+    serveHeld(server, ['storefront', 'marketing-site', 'admin-dashboard'])
     serveRepositoryChange(server, 'changed')
     const tab = await openWorkspace(server)
 
     await press(await tab.button(current))
-    const rows = menuRows()
+    expect(menuRows()).toEqual([
+      { name: 'acme/storefront', checked: true },
+      { name: 'acme/billing-service', checked: false },
+      { name: 'acme/marketing-site', checked: false },
+    ])
     await press(menuRow('acme/storefront'))
     const afterCurrent = (await changeBodies(server)).length
     await press(await tab.button(current))
@@ -85,7 +100,6 @@ describe('the repository menu in the header', () => {
     await settle()
 
     expect({
-      rows,
       afterCurrent,
       progress: progress.textContent,
       bodies: await changeBodies(server),
@@ -93,10 +107,6 @@ describe('the repository menu in the header', () => {
         .textContent,
       note: (tab.view.textContent ?? '').includes(note),
     }).toEqual({
-      rows: [
-        { name: 'acme/storefront', checked: true },
-        { name: 'acme/billing-service', checked: false },
-      ],
       afterCurrent: 0,
       progress: 'acme/billing-service',
       bodies: [

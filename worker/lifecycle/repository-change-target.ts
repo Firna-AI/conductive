@@ -1,6 +1,6 @@
 import { HttpError } from '../http'
 import { recordedRepositoryLocations } from './repository-location-data'
-import type { RepositoryLocation } from './repository-locations'
+import { addedRepositoryLocation } from './repository-locations'
 
 /** A chosen repository of the org, with an installation that is not suspended. */
 export interface ChosenRepository {
@@ -37,23 +37,38 @@ export async function readChosenRepository(
   return row
 }
 
-/**
- * The folders of the old and the new repository. Only a workspace with a
- * record of its folders can change, as repository change decision 4 G
- * says: without the record, the Worker knows no other folder.
- */
+/** Find the two folders, or allocate a location for a chosen repository to clone. */
 export async function changeFolders(
   db: D1Database,
   workspaceId: string,
   oldRepositoryId: string,
-  newRepositoryId: string,
-): Promise<{ directory: string; targetDirectory: string }> {
+  target: Pick<ChosenRepository, 'id' | 'fullName'>,
+  diskNames?: readonly string[],
+  runningVariables?: readonly string[],
+): Promise<{
+  directory: string
+  targetDirectory: string
+  clone?: { variable: string }
+}> {
   const locations = await recordedRepositoryLocations(db, workspaceId)
-  const folder = (id: string, all: readonly RepositoryLocation[]) =>
-    all.find((location) => location.repositoryId === id)?.directory
-  const directory = locations && folder(oldRepositoryId, locations)
-  const targetDirectory = locations && folder(newRepositoryId, locations)
-  if (!directory || !targetDirectory || directory === targetDirectory)
-    throw repositoryUnavailable()
-  return { directory, targetDirectory }
+  if (!locations) throw repositoryUnavailable()
+  const directory = locations.find(
+    (location) => location.repositoryId === oldRepositoryId,
+  )?.directory
+  const targetDirectory = locations.find(
+    (location) => location.repositoryId === target.id,
+  )?.directory
+  if (!directory || directory === targetDirectory) throw repositoryUnavailable()
+  if (targetDirectory) return { directory, targetDirectory }
+  const clone = addedRepositoryLocation(
+    target,
+    locations,
+    diskNames,
+    runningVariables,
+  )
+  return {
+    directory,
+    targetDirectory: clone.directory,
+    clone: { variable: clone.variable },
+  }
 }

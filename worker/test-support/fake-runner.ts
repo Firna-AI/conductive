@@ -21,6 +21,7 @@ export interface FakeRunnerOptions {
   loginKinds?: readonly RunnerLoginKind[]
   /** A runner that accepts repository.move names its folder. */
   repositoryFolder?: string
+  addsRepositoryFolder?: RunnerHello['addsRepositoryFolder']
   processStartId?: RunnerHello['processStartId']
   completeToolDetails?: RunnerHello['completeToolDetails']
   capabilityNotices?: RunnerHello['capabilityNotices']
@@ -77,6 +78,9 @@ export class FakeRunner {
       ...(this.options.repositoryFolder
         ? { repositoryFolder: this.options.repositoryFolder }
         : {}),
+      ...(this.options.addsRepositoryFolder === undefined
+        ? {}
+        : { addsRepositoryFolder: this.options.addsRepositoryFolder }),
     })
   }
 

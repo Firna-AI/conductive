@@ -114,26 +114,26 @@ Depends on: none
 State the clone as a requirement, and remove the rule that hides a
 repository that the computer does not hold.
 
-- [ ] In `docs/protocol/repository-change.md`, under "The menu": the menu
+- [x] In `docs/protocol/repository-change.md`, under "The menu": the menu
       lists every chosen repository, with design calls 1 to 3. Replace
       repository change decision 4 G with repository clone decision 1 C.
       Keep the other rejected ways of decision 4 and add 4 G as rejected.
-- [ ] Add a section "A repository that the computer does not hold" to
+- [x] Add a section "A repository that the computer does not hold" to
       `docs/protocol/repository-change.md`, with design calls 4 to 11. Say
       that the install script and the startup script do not run for the
       new folder.
-- [ ] In `docs/protocol/repository-folders.md`, replace "A repository
+- [x] In `docs/protocol/repository-folders.md`, replace "A repository
       change adds no folder" with the clone and the name rule of design
       call 8. Say that a later start gives the folder its variable.
-- [ ] In `docs/protocol/github-tokens-worker.md`, under Continue, say that
+- [x] In `docs/protocol/github-tokens-worker.md`, under Continue, say that
       the fetch of a clone uses the same token.
-- [ ] Update `src/marketing/docs/workspaces.md`, "Change the repository",
+- [x] Update `src/marketing/docs/workspaces.md`, "Change the repository",
       and the matching sentence of `src/marketing/docs/cloud-computer.md`.
       Read each public guide in full for other sentences that restate the
       rule.
-- [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full.
+- [x] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full.
       Update each sentence that restates the changed facts.
-- [ ] Check each relative link of the changed Markdown files.
+- [x] Check each relative link of the changed Markdown files.
 
 ## Milestone 2: Runner accepts a new folder
 
@@ -142,51 +142,51 @@ Depends on: 1
 A runner accepts a move to a folder that the move adds, and older runners
 keep working.
 
-- [ ] In `crates/cnd-runner-interface/src/runner_repository.rs`, add an
+- [x] In `crates/cnd-runner-interface/src/runner_repository.rs`, add an
       optional `variable` to `repository.move`. It names the variable of
       a folder that the move adds.
-- [ ] Add an optional hello field, such as `addsRepositoryFolder`, in
+- [x] Add an optional hello field, such as `addsRepositoryFolder`, in
       `runner_handshake.rs`. Only a runner that sets it gets a move with
       `variable`.
-- [ ] In `crates/cnd-runner/src/relocation.rs`, accept a folder that is not
+- [x] In `crates/cnd-runner/src/relocation.rs`, accept a folder that is not
       known when the move names a valid `CONDUCTIVE_REPOSITORY_*_DIR`
       variable that is not in use, the folder is a direct child of
       `/home/user/code`, and it holds a Git work tree.
-- [ ] Add the folder and the variable to `repository_directories` and to
+- [x] Add the folder and the variable to `repository_directories` and to
       the agent command environment of the next runner round.
-- [ ] Add Rust tests for the accepted and the refused cases.
-- [ ] Run `cargo run -p cnd-runner-interface --example export_bindings`
+- [x] Add Rust tests for the accepted and the refused cases.
+- [x] Run `cargo run -p cnd-runner-interface --example export_bindings`
       and commit `src/shared/generated/`.
-- [ ] Update the crate READMEs.
-- [ ] Run the Rust checks of `CLAUDE.md`.
+- [x] Update the crate READMEs.
+- [x] Run the Rust checks of `CLAUDE.md`.
 
 ## Milestone 3: Worker clones at the change
 
 Depends on: 2
 
-- [ ] Add a function in `worker/lifecycle/repository-locations.ts` that
+- [x] Add a function in `worker/lifecycle/repository-locations.ts` that
       gives the location of one added repository, from the recorded
       locations, with design call 8. Test it.
-- [ ] In `repository-change-target.ts`, give a target with `clone` when
+- [x] In `repository-change-target.ts`, give a target with `clone` when
       the recorded folders do not hold the new repository. Keep the
       refusal for a workspace with no record.
-- [ ] Store the clone in the job, with its folder and variable. A job of
+- [x] Store the clone in the job, with its folder and variable. A job of
       an older deploy has no clone, and runs as before.
-- [ ] In admission and in the runner phase, refuse a clone with
+- [x] In admission and in the runner phase, refuse a clone with
       `softwareOutdated()` when the runner has no flag from Milestone 2.
-- [ ] Skip the carried files read for a clone.
-- [ ] Fetch every branch and every tag into the stage for a clone.
-- [ ] Add a clone command: a check of the names on disk, `git init` in a
+- [x] Skip the carried files read for a clone.
+- [x] Fetch every branch and every tag into the stage for a clone.
+- [x] Add a clone command: a check of the names on disk, `git init` in a
       temporary folder, the layout of design call 7, the fetch from the
       stage, the exclude rule, the context copy, the checkout of the new
       branch, and the move to the folder name.
-- [ ] Record the new location in `workspace_runtime` when the move
+- [x] Record the new location in `workspace_runtime` when the move
       succeeds, as design call 10 says.
-- [ ] Send `variable` with the runner move, and set the variable in the
+- [x] Send `variable` with the runner move, and set the variable in the
       settle step for new terminals.
-- [ ] Add Worker tests for a clone change, an older runner, a name in use
+- [x] Add Worker tests for a clone change, an older runner, a name in use
       on the disk, and a failed clone.
-- [ ] Update `worker/lifecycle/README.md` when it names the change steps.
+- [x] Update `worker/lifecycle/README.md` when it names the change steps.
 
 ## Milestone 4: Menu lists every chosen repository
 
@@ -194,14 +194,18 @@ Tags: ui
 
 Depends on: 3
 
-- [ ] In `src/shell/workspace/repository/use-repository-change.ts`, make
+- [x] In `src/shell/workspace/repository/use-repository-change.ts`, make
       `repositoryChoices` list each chosen repository while the record of
       the folders exists. Update its comment and the comment of
       `RepositoryControl`.
-- [ ] Update `RepositoryMenu.test.tsx` for a repository that the computer
+- [x] Update `RepositoryMenu.test.tsx` for a repository that the computer
       does not hold.
-- [ ] Smoke-test the menu and a clone change in the app in a browser. Save
+- [x] Smoke-test the menu and a clone change in the app in a browser. Save
       a screenshot under `.context/repository-clone-on-change/`.
+      The development page showed the menu with a repository that the
+      cloud computer does not hold. A real clone needs a cloud computer, so
+      it moved to the post-merge follow-up below. Evidence:
+      `.context/repository-clone-on-change/menu-lists-unheld.png`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

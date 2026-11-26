@@ -30,6 +30,11 @@ pub enum RunnerRepositoryMove {
         folder: String,
         /// The branches of the workspace in that folder.
         branches: RunnerBranches,
+        /// Folder variable for a move that adds a repository folder. Send
+        /// only when hello offers addsRepositoryFolder.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        variable: Option<String>,
     },
 }
 
@@ -50,7 +55,7 @@ pub enum RunnerRepositoryMoveRefused {
 /// Why the runner refused a move.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
 pub enum RunnerRepositoryMoveRefusal {
-    /// The folder is not a repository folder of the sandbox variables.
+    /// No registered folder or valid folder addition matches the move.
     #[serde(rename = "unknown_folder")]
     UnknownFolder,
     /// The folder holds no Git work tree.

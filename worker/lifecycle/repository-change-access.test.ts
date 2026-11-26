@@ -17,7 +17,7 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('refuses a change by a removed member, in a suspended org, in an archived workspace, and to a repository that the sandbox does not hold', async () => {
+it('refuses a change without access, a chosen repository, or a workspace folder record', async () => {
   const cases = [
     {
       name: 'member removed',
@@ -65,12 +65,6 @@ it('refuses a change by a removed member, in a suspended org, in an archived wor
   }
   await harness.reset()
   const f = await repositoryChangeFixture(harness)
-  await expect(f.start({ repositoryId: 'unheld' })).rejects.toMatchObject({
-    status: 404,
-    code: 'repository_unavailable',
-    message:
-      "This cloud computer doesn't have this repository. Create a new workspace to use it.",
-  })
   await expect(f.start({ repositoryId: 'repo' })).rejects.toMatchObject({
     status: 409,
     code: 'workspace_repository_current',
@@ -86,6 +80,31 @@ it('refuses a change by a removed member, in a suspended org, in an archived wor
     status: 409,
     code: 'workspace_restarting',
   })
+  expect(f.boat.commandRequests).toEqual([])
+})
+
+it('refuses a clone at admission and after resume when the runner can move only to known folders', async () => {
+  const f = await repositoryChangeFixture(harness)
+  const request = { repositoryId: 'unheld', allowWork: true }
+  const outdated = {
+    status: 409,
+    code: 'workspace_software_outdated',
+    message: 'Restart the software, then try again.',
+  }
+  await expect(f.start(request)).rejects.toMatchObject(outdated)
+  expect(await f.active()).toBeUndefined()
+
+  await f.env.DB.prepare("UPDATE workspaces SET state = 'stopped' WHERE id = ?")
+    .bind(WORKSPACE_ID)
+    .run()
+  f.controls.runner = { state: 'none' }
+  const pending = await f.start(request)
+  if (pending.state !== 'pending') throw new Error('Expected a change.')
+  await f.advanceTo('runner')
+  expect(f.resumed).toEqual([WORKSPACE_ID])
+  f.controls.runner = { state: 'hello', canMove: true }
+  await f.finish()
+  await expect(f.result(pending.changeId)).rejects.toMatchObject(outdated)
   expect(f.boat.commandRequests).toEqual([])
 })
 

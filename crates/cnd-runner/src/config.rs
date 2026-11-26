@@ -59,7 +59,7 @@ pub struct Configuration {
     pub trusted_skills_repository: Option<String>,
     /// Validated tree facts, omitted for older or malformed service settings.
     pub workspace_context: Option<WorkspaceContext>,
-    /// Image repository variables in name order.
+    /// Repository folder variables in name order.
     pub repository_directories: BTreeMap<String, PathBuf>,
     /// State file path, with the Node runner's default.
     pub state_path: PathBuf,
@@ -216,7 +216,8 @@ fn required(env: &BTreeMap<String, String>, name: &'static str) -> Result<String
         .ok_or(Error::MissingSetting { name })
 }
 
-fn repository_variable(name: &str) -> bool {
+/// Check the name of a repository folder variable.
+pub(crate) fn repository_variable(name: &str) -> bool {
     name.strip_prefix("CONDUCTIVE_REPOSITORY_")
         .and_then(|s| s.strip_suffix("_DIR"))
         .is_some_and(|s| {

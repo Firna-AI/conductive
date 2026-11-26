@@ -1,6 +1,8 @@
 import { isRecord } from '../http'
 import type { SelectedRepository } from './settings-data'
 
+export const REPOSITORY_CODE_DIRECTORY = '/home/user/code'
+
 export interface RepositoryLocation {
   repositoryId: string
   directory: string
@@ -17,18 +19,46 @@ function safeFolder(value: string): string {
   return !safe || safe === '.' || safe === '..' ? 'repository' : safe
 }
 
+function repositoryName(
+  repository: Pick<SelectedRepository, 'id' | 'fullName'>,
+) {
+  const parts = repository.fullName.split('/')
+  return {
+    repositoryId: repository.id,
+    owner: safeFolder(parts.slice(0, -1).join('-')),
+    name: safeFolder(parts.at(-1) ?? ''),
+  }
+}
+
+function allocateLocation(
+  repositoryId: string,
+  base: string,
+  folders: Set<string>,
+  variables: Set<string>,
+): RepositoryLocation {
+  let name = base
+  let suffix = 1
+  while (folders.has(name.toLowerCase())) name = `${base}-${++suffix}`
+  folders.add(name.toLowerCase())
+  const variableBase = name.replace(/[^a-zA-Z0-9_]/gu, '_').toUpperCase()
+  const variableName = (part: string) => `CONDUCTIVE_REPOSITORY_${part}_DIR`
+  let variable = variableName(variableBase)
+  suffix = 1
+  while (variables.has(variable))
+    variable = variableName(`${variableBase}_${++suffix}`)
+  variables.add(variable)
+  return {
+    repositoryId,
+    directory: `${REPOSITORY_CODE_DIRECTORY}/${name}`,
+    variable,
+  }
+}
+
 /** The captured set, rather than a live repository picker, owns every name. */
 export function repositoryLocations(
   repositories: readonly SelectedRepository[],
 ): RepositoryLocation[] {
-  const names = repositories.map((repository) => {
-    const parts = repository.fullName.split('/')
-    return {
-      repositoryId: repository.id,
-      owner: safeFolder(parts.slice(0, -1).join('-')),
-      name: safeFolder(parts.at(-1) ?? ''),
-    }
-  })
+  const names = repositories.map(repositoryName)
   const used = new Set<string>()
   const variables = new Set<string>()
   return names
@@ -46,21 +76,34 @@ export function repositoryLocations(
         ).length > 1
           ? `${repository.owner}-${repository.name}`
           : repository.name
-      let name = base
-      let suffix = 1
-      while (used.has(name.toLowerCase())) name = `${base}-${++suffix}`
-      used.add(name.toLowerCase())
-      const variableBase = name.replace(/[^a-zA-Z0-9_]/gu, '_').toUpperCase()
-      let variable = variableBase
-      suffix = 1
-      while (variables.has(variable)) variable = `${variableBase}_${++suffix}`
-      variables.add(variable)
-      return {
-        repositoryId: repository.repositoryId,
-        directory: `/home/user/code/${name}`,
-        variable: `CONDUCTIVE_REPOSITORY_${variable}_DIR`,
-      }
+      return allocateLocation(repository.repositoryId, base, used, variables)
     })
+}
+
+/** Allocate one new location while keeping each recorded folder and variable. */
+export function addedRepositoryLocation(
+  repository: Pick<SelectedRepository, 'id' | 'fullName'>,
+  locations: readonly RepositoryLocation[],
+  diskNames: readonly string[] = [],
+  runningVariables: readonly string[] = [],
+): RepositoryLocation {
+  const { repositoryId, name, owner } = repositoryName(repository)
+  const folders = new Set(
+    locations.map(({ directory }) =>
+      directory.slice(directory.lastIndexOf('/') + 1).toLowerCase(),
+    ),
+  )
+  const base = folders.has(name.toLowerCase()) ? `${owner}-${name}` : name
+  for (const diskName of diskNames) folders.add(diskName.toLowerCase())
+  return allocateLocation(
+    repositoryId,
+    base,
+    folders,
+    new Set([
+      ...locations.map(({ variable }) => variable),
+      ...runningVariables,
+    ]),
+  )
 }
 
 export function legacyRepositoryLocations(
