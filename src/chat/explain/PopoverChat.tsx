@@ -3,6 +3,7 @@ import type { Agent } from '../../shared/generated/Agent'
 import { popoverChatLabel } from '../../ui/components/explain/explainCopy'
 import { modelLabel } from '../../shared/agents'
 import { turnCopy } from '../../shared/transcript/turn-words'
+import { newestAnswer } from '../../shared/transcript/turn-work'
 import { ChatPane } from '../components/ChatPane'
 import type { FieldHandle } from '../components/chip-field/focus-plugins'
 import {
@@ -76,7 +77,9 @@ function promptOf(state: SessionState): string | null {
  * the field stays under it. The place of the composer holds the bar and the
  * field, as `useComposerPlace` says. A closed explanation names how it
  * opens again over the field. A read-only workspace shows the chat to read,
- * with no field.
+ * with no field. When a turn ends, or the popover opens on an ended turn,
+ * the chat shows the top of the answer, so the member reads it from its
+ * start.
  */
 export function PopoverChat(props: PopoverChatProps) {
   const { snapshot, controller, sessionId, readOnly } = props
@@ -114,6 +117,10 @@ export function PopoverChat(props: PopoverChatProps) {
     snapshot.notice?.sessionId === sessionId ? snapshot.notice : null
   const status = historyStatus(state)
   const prompt = props.explanation ? promptOf(state) : null
+  const answer = useMemo(
+    () => newestAnswer(state.transcript),
+    [state.transcript],
+  )
   const content =
     starting !== null ||
     state.transcript.turn !== null ||
@@ -180,6 +187,7 @@ export function PopoverChat(props: PopoverChatProps) {
   )
   return (
     <ChatPane
+      answer={answer}
       compact
       empty={content ? null : empty}
       footer={footer}

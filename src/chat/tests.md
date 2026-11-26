@@ -142,7 +142,9 @@ for a reader at the bottom, for a read row that folded away, and for a
 session that kept no place, the read row of a session whose sent message
 still waits, a send after a switch of session tabs, and the bottom of a
 session that the user closed and opened again. `components/reading-place-test-kit.tsx` holds
-the long turn and the layout of both files.
+the long turn and the layout of both files. Its `layOutChat` also takes the
+label of another chat and the height of each row, as the popover tests of
+a long answer use it.
 `components/TabDrag.dom.test.tsx` mounts the chat with the real
 `FileTabItem` of the Files screens and drags tabs with pointer events over
 boxes that `components/tab-drag-test-kit.tsx` gives them. The file tab of

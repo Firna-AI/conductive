@@ -8,7 +8,7 @@ import type { WorkStep } from '../../shared/transcript/transcript-entries'
 import { turnCopy, type ChatReaders } from '../../shared/transcript/turn-words'
 import type { PendingMessage } from '../state/chat-snapshot'
 import { ChatClock, useNow } from '../ui/clock'
-import { rowKeyAttribute } from './chat-place'
+import { itemRowKey, rowKeyAttribute } from './chat-place'
 import local from './chat.module.css'
 import { sameData } from './same-data'
 import { ToolGroup } from './ToolGroup'
@@ -90,7 +90,7 @@ export const ItemRow = memo(function ItemRow(props: {
   live?: boolean
 }) {
   return (
-    <Row id={`item:${props.item.id}`}>
+    <Row id={itemRowKey(props.item.id)}>
       <ItemView
         actions={props.actions}
         item={props.item}
@@ -109,7 +109,7 @@ export const TurnEndRow = memo(function TurnEndRow(props: {
 }) {
   const { item, facts } = props
   return (
-    <Row id={`item:${item.id}`}>
+    <Row id={itemRowKey(item.id)}>
       <TurnEnd
         durationMs={item.durationMs}
         endReason={facts.endReason}
@@ -129,7 +129,7 @@ export const StopRow = memo(function StopRow(props: {
   facts: StopFacts
 }) {
   return (
-    <Row id={`item:${props.item.id}`}>
+    <Row id={itemRowKey(props.item.id)}>
       <StoppedLine facts={props.facts} />
     </Row>
   )

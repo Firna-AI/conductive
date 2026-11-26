@@ -225,8 +225,10 @@ previews.
     positioning. It opens below the mark, from the start of the mark, and
     above the mark when the frame has more room there, so it never covers
     the marked text. Its highest height is 420 px, or the room on its side
-    of the mark less its 6 px margins. Its chat scrolls inside it, and its
-    newest line stays in view. It has the full hairline outline of a card
+    of the mark less its 6 px margins. Its chat scrolls inside it. While a
+    turn runs, its newest line stays in view. When the turn has ended, the
+    chat shows the top of the answer, so the screens of an ended turn start
+    at the top of the chat. It has the full hairline outline of a card
     and the shadow of a menu. No dim lies over the app, because the parent
     chat stays live around it.
   - On a phone the popover is a sheet at half the height of the screen,

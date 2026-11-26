@@ -67,6 +67,7 @@ function popoverChat(
     <ChatPane
       compact
       field={field}
+      fromTop={!starting && !explainRuns(session)}
       hide={promptId}
       items={starting ? [queuedPrompt] : explanationChats[session]}
       notice={reopens}
