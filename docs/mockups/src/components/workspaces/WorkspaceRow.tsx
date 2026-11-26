@@ -10,6 +10,7 @@ import { guideClasses } from '../../../../../src/ui/components/workspaces/guideL
 import { rowPointMenu } from '../../entries/components/workspaces/RowMenu.mockup'
 import type { RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
+import { rowMarkOf } from './rowMark'
 import { listMarkLabel } from '../../../../../src/ui/components/workspaces/status'
 import type { RowIndent } from './trees'
 import {
@@ -18,15 +19,6 @@ import {
 } from '../../../../../src/ui/components/workspaces/WorkspaceName'
 import rowMenu from '../../../../../src/ui/components/workspaces/RowMenu.module.css'
 import styles from '../../../../../src/ui/components/workspaces/WorkspaceRow.module.css'
-
-/**
- * The waiting message of a row for its mark. Mokly takes only plain data,
- * so a row without one passes no prop.
- */
-function waitingOf(row: WorkspaceRow): { messageWaiting?: boolean } {
-  const { messageWaiting } = row.workspace
-  return messageWaiting === undefined ? {} : { messageWaiting }
-}
 
 /** How a drag shows a row: lifted under the pointer, or left behind. */
 export type RowDrag = 'lifted' | 'placeholder'
@@ -82,11 +74,7 @@ function RenameRow(props: {
         nestedClasses(row.indent, row.lines),
       )}
     >
-      <workspaceMark.Component
-        github={row.github}
-        {...waitingOf(row)}
-        status={row.status}
-      />
+      <workspaceMark.Component {...rowMarkOf(row)} />
       <span
         aria-label="Workspace name"
         className={classes(rowMenu.field, page && rowMenu.fieldPage)}
@@ -182,11 +170,7 @@ export function WorkspaceRowView(props: {
   )
   const content = (
     <>
-      <workspaceMark.Component
-        github={row.github}
-        {...waitingOf(row)}
-        status={row.status}
-      />
+      <workspaceMark.Component {...rowMarkOf(row)} />
       <WorkspaceName
         className={styles.name}
         emphasis={nameEmphasis}

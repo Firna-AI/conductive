@@ -9,7 +9,10 @@ import { classes } from '../../ui/components/common/classes'
 import { KeyChips } from '../../ui/components/common/KeyChips'
 import styles from '../../ui/components/palette/CommandPalette.module.css'
 import { listMarkLabel } from '../../ui/components/workspaces/status'
-import { WorkspaceMark } from '../../ui/components/workspaces/WorkspaceMark'
+import {
+  markOf,
+  WorkspaceMark,
+} from '../../ui/components/workspaces/WorkspaceMark'
 import {
   WorkspaceName,
   type EmphasisClasses,
@@ -88,11 +91,7 @@ function RowContent(props: {
   return (
     <>
       <span className={styles.lead}>
-        <WorkspaceMark
-          github={workspace.github}
-          messageWaiting={workspace.messageWaiting}
-          status={workspace.state}
-        />
+        <WorkspaceMark {...markOf(workspace)} />
       </span>
       {row.numberLabel ? (
         <span className={styles.number}>{row.numberLabel}</span>

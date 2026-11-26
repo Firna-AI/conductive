@@ -53,9 +53,10 @@ export function workspaceUpdated(workspace: Workspace): ListChange {
 }
 
 /**
- * Whether a message waits for the start. Only the list read carries it, so
- * a listed row keeps it while the row and the newer record both start. A
- * value from an earlier start never moves the mark of a later start.
+ * Whether a message waits for the start. An event record carries no
+ * answer, so a listed row keeps its answer while the row and the newer
+ * record both start. A value from an earlier start never moves the mark of
+ * a later start.
  */
 function waitingOf(
   item: Workspace,

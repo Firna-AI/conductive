@@ -1,4 +1,5 @@
 import type { GitHubSummary } from '../../../shared/generated/GitHubSummary'
+import type { Workspace } from '../../../shared/generated/Workspace'
 import type { ActivityStatus } from './activityStatus'
 import { classes } from '../common/classes'
 import { MarkGrid, ring, ringDelay, type MarkCell } from './MarkGrid'
@@ -33,6 +34,35 @@ function toneOf(github: GitHubSummary | null, status: ActivityStatus) {
   if (status === 'archived') return styles.archived
   if (status === 'input') return styles.input
   return github === null ? styles.none : colours[github]
+}
+
+/** Every input of the mark of a workspace. */
+export type MarkState = {
+  /** The GitHub state of its pull request, or `null` without one. */
+  github: GitHubSummary | null
+  /** The state of its agent and its cloud computer. */
+  status: ActivityStatus
+  /**
+   * Whether a message waits for its cloud computer to start. Without it,
+   * the mark of a start stays still.
+   */
+  messageWaiting?: boolean
+}
+
+/**
+ * The inputs of the mark of a workspace record. Each place that draws the
+ * mark of a record takes them from here, so that it gets every input. A
+ * record without a waiting answer gives no `messageWaiting`.
+ */
+export function markOf(
+  workspace: Pick<Workspace, 'github' | 'state' | 'messageWaiting'>,
+): MarkState {
+  const { github, state, messageWaiting } = workspace
+  return {
+    github,
+    status: state,
+    ...(messageWaiting !== undefined && { messageWaiting }),
+  }
 }
 
 /**
@@ -117,17 +147,13 @@ function cellOf(
  * is dim grey.
  * A light runs around the ring while the agent works, a message waits for
  * the cloud computer to start, or the checks run. `messageWaiting` comes
- * from the list read of the Worker, and a mark without it stays still
- * while the cloud computer starts.
+ * from the Worker, and a mark without it stays still while the cloud
+ * computer starts.
  * While the agent needs input, the mark turns blue and pulses, whatever the
  * GitHub state. Every other mark is still. It imports no fixture value, so
  * the app uses it too.
  */
-export function WorkspaceMark(props: {
-  github: GitHubSummary | null
-  status: ActivityStatus
-  messageWaiting?: boolean
-}) {
+export function WorkspaceMark(props: MarkState) {
   const { github, status } = props
   const messageWaiting = props.messageWaiting === true
   return (

@@ -3,6 +3,7 @@ import type { Workspace } from '../../shared/generated/Workspace'
 import { useEffect } from 'react'
 import type { ChipSession } from '../../ui/components/chat/SessionChip'
 import { workspaceLabel } from '../../ui/components/workspaces/label'
+import { markOf } from '../../ui/components/workspaces/WorkspaceMark'
 import { nameLabel } from '../../shared/name-label'
 
 import { useChatLinks } from './LinksContext'
@@ -72,9 +73,7 @@ export function sessionChipOf(
   return {
     workspace: {
       label: workspaceLabel(workspace.number),
-      status: workspace.state,
-      github: workspace.github,
-      messageWaiting: workspace.messageWaiting,
+      ...markOf(workspace),
     },
     title: nameLabel(session.title),
   }

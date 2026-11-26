@@ -4,6 +4,7 @@ import { nameLabel } from '../../../../../src/shared/name-label'
 import { ScreenLink } from '../common/ScreenLink'
 import { workspaceLabel } from '../../../../../src/ui/components/workspaces/label'
 import type { WorkspaceRow } from '../workspaces/sections'
+import { rowMarkOf } from '../workspaces/rowMark'
 import { useChatWorkspaces } from './chatWorkspaces'
 import type { ChipRemoval } from '../../../../../src/ui/components/chat/ChipRemove'
 import {
@@ -27,11 +28,7 @@ function chipOf(row: WorkspaceRow): ChipWorkspace {
   return {
     label: workspaceLabel(row.workspace.number),
     name: row.workspace.name,
-    status: row.status,
-    github: row.github,
-    ...(row.workspace.messageWaiting !== undefined && {
-      messageWaiting: row.workspace.messageWaiting,
-    }),
+    ...rowMarkOf(row),
   }
 }
 
@@ -53,11 +50,7 @@ export function LinkChip(props: {
     const chip: ChipSession = {
       workspace: {
         label: workspaceLabel(row.workspace.number),
-        status: row.status,
-        github: row.github,
-        ...(row.workspace.messageWaiting !== undefined && {
-          messageWaiting: row.workspace.messageWaiting,
-        }),
+        ...rowMarkOf(row),
       },
       title: nameLabel(session.title),
     }

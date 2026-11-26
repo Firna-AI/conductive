@@ -1,10 +1,8 @@
 import type { ReactNode } from 'react'
-import type { GitHubSummary } from '../../../shared/generated/GitHubSummary'
-import type { ActivityStatus } from '../workspaces/activityStatus'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { listMarkLabel } from '../workspaces/status'
-import { WorkspaceMark } from '../workspaces/WorkspaceMark'
+import { WorkspaceMark, type MarkState } from '../workspaces/WorkspaceMark'
 import {
   WorkspaceName,
   type EmphasisClasses,
@@ -31,19 +29,7 @@ export type ChipWorkspace = {
   label: string
   /** The current link name, or the title of a session chip. */
   name: string
-  /** The current state of its agent and its cloud computer. */
-  status: ActivityStatus
-  /**
-   * The GitHub state of its pull request, which the list mark shows in
-   * colour, or `null` without one.
-   */
-  github: GitHubSummary | null
-  /**
-   * Whether a message waits for its cloud computer to start, which moves
-   * the list mark. Without it, a start stays still.
-   */
-  messageWaiting?: boolean
-}
+} & MarkState
 
 /** What the element that opens the page of a chip gets from it. */
 export type ChipOpener = {
@@ -90,16 +76,11 @@ export function WorkspaceChip(props: {
   /** A session icon and its spoken name, before the link name. */
   beforeName?: ReactNode
 }) {
-  const { label, name, github, status, messageWaiting } = props.workspace
+  const { label, name, ...markState } = props.workspace
+  const { github, status } = markState
   const { removal } = props
   const className = useChipClass(removal)
-  const mark = (
-    <WorkspaceMark
-      github={github}
-      messageWaiting={messageWaiting}
-      status={status}
-    />
-  )
+  const mark = <WorkspaceMark {...markState} />
   const chip: ChipOpener = {
     className,
     title: name,

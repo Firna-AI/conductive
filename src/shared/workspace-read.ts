@@ -61,8 +61,9 @@ export function createWorkspaceReader(read: WorkspaceFieldReaders) {
       typeof source.githubPullFromFork === 'boolean'
         ? source.githubPullFromFork
         : undefined
-    // Only the list read sets it, for a starting workspace. A malformed
-    // value reads as no answer, so the mark stays still.
+    // A read or a reply sets it for a starting workspace, and an event
+    // leaves it out. A malformed value reads as no answer, so the mark
+    // stays still.
     const messageWaiting =
       typeof source.messageWaiting === 'boolean'
         ? source.messageWaiting

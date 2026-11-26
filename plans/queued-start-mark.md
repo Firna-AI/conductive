@@ -108,8 +108,12 @@ Depends on: 3
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests, the Rust checks, and the complete gate.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run the targeted tests, the Rust checks, and the complete gate.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review round 1 found five Low findings. Items 2, 3, and 5 are
+      fixed. Items 1 and 4 are follow-up items
+      `plans/follow-ups/new-workspace-waiting-gap.md` and
+      `plans/follow-ups/starting-read-double-call.md`.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
