@@ -3,6 +3,7 @@ import { classes } from '../../../../../src/ui/components/common/classes'
 import headingStyles from '../../../../../src/ui/components/common/MarkdownHeadings.module.css'
 import prose from '../../../../../src/ui/components/common/MarkdownProse.module.css'
 import { markdownTable } from '../../entries/components/common/MarkdownTable.mockup'
+import { CodeBlockText, codeLanguage } from '../common/CodeBlockText'
 import { taskText } from '../common/markdownTasks'
 import { TaskBox } from '../../../../../src/ui/components/common/TaskBox'
 import { PreviewText } from './PreviewText'
@@ -56,7 +57,14 @@ function Block(props: { block: MarkdownBlock }) {
       return <List>{block.items.map(listItem)}</List>
     }
     case 'code':
-      return <pre className={styles.block}>{block.text}</pre>
+      return (
+        <pre className={styles.block}>
+          <CodeBlockText
+            language={codeLanguage(block.name)}
+            text={block.text}
+          />
+        </pre>
+      )
     case 'table':
       return (
         <markdownTable.Component
@@ -83,7 +91,9 @@ function Block(props: { block: MarkdownBlock }) {
  * A Markdown file, rendered as formatted text. The headings take the look
  * of MarkdownHeadings.module.css, and the quotes, the rules, the bold text,
  * the emphasis, the strikethrough, and the task boxes the look of
- * MarkdownProse.module.css, which the replies of the chat share.
+ * MarkdownProse.module.css, which the replies of the chat share. A code
+ * block with the label of a known language shows the colours of a file tab
+ * of that language, as a code block of a reply does.
  */
 export function MarkdownView(props: { blocks: readonly MarkdownBlock[] }) {
   return (

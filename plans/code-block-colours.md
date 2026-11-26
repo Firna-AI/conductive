@@ -76,6 +76,28 @@ requirement settles it or it has a clearly best option.
 12. The public guide `src/marketing/docs/sessions-and-chat.md` gets one
     sentence about colours, near "To copy a code block".
 13. Sent messages of members keep their code as typed.
+14. Rust gets a family of its own in `languages.ts`, with Rust keywords
+    such as `as`, `dyn`, `async`, and `unsafe`, and without `new`, `null`,
+    or `this`. Reason: the mockups showed `::new` as a keyword, and Rust
+    shares the C family list today. Mockup finding 2 B.
+15. One shared part draws coloured lines with line feeds between them,
+    `CodeText` in `src/files/code/`, beside `TokenSpans`. The chat, the
+    file preview, and the mockups use it. Reason: the mockups built
+    `CodeBlockText` for this, and one copy keeps the looks the same.
+    Mockup finding 4 A.
+16. The pull request description lists the visible mockup changes. The
+    Mokly Changes view marks about 600 screens as changed, because every
+    chat screen now loads `code.module.css`. Mockup finding 5 A.
+
+Replaced ways:
+
+- The file name that stands for a fence label in the mockups → the fence
+  label of the parsed block. Consumers: `codeBlockNames` in
+  `docs/mockups/src/fixtures/codeBlockConversations.ts`, `codeLanguage`
+  and `CodeBlockText` in
+  `docs/mockups/src/components/common/CodeBlockText.tsx`, the `name` prop
+  of the code block entry, and the `name` field of the mockup
+  `MarkdownBlock` with its schema. Moved and deleted in Milestone 4.
 
 Contract owners:
 
@@ -90,20 +112,26 @@ Tags: mockup
 
 Depends on: none
 
-The chat code block and the Markdown preview mockups show a labelled Rust
-block in colour, and a block without a label in plain text.
+The chat mockups show a labelled Rust block in colour, and a block
+without a label in plain text. The Markdown preview mockup shows a
+labelled TypeScript block in its README.md, because that file belongs to
+a Next.js shop.
 
-- [ ] Give the mockup `CodeBlock` in
+- [x] Give the mockup `CodeBlock` in
       `docs/mockups/src/components/chat/CodeBlock.tsx` a language, and
       draw its lines with the shared token spans. Until Milestone 3 adds
       the fence label table, the mockups find the family with the
       existing `languageOf` and a file name, such as `example.rs`.
-- [ ] Add a labelled Rust block and a plain block to the chat code block
+- [x] Add a labelled Rust block and a plain block to the chat code block
       entry and to a chat conversation fixture.
-- [ ] Colour the labelled code blocks of the mockup `MarkdownView`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+- [x] Colour the labelled code blocks of the mockup `MarkdownView`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. Six findings, applied as design calls 14 to 16,
+      `Replaced ways`, and the TODOs of Milestones 3 and 4.
+
+Evidence: `.context/code-colours/reports/m1-*.log` and
+`.context/code-colours/screenshots/m1-*.png`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -130,6 +158,8 @@ parallel.
 - [ ] Keep the label on the `code` blocks of `agent-blocks.ts` and
       `preview-blocks.ts`, with tests.
 - [ ] Fix Rust lifetimes in `highlight.ts`, with a regression test.
+- [ ] Give Rust its own family in `languages.ts`, by design call 14, with
+      a test.
 - [ ] Add the fence label sentence to
       `crates/cnd-runner/src/engine/instructions.rs`, with its test. Run
       the Rust checks.
@@ -140,15 +170,22 @@ Tags: ui
 
 Depends on: 3
 
+- [ ] Add `CodeText` in `src/files/code/`, by design call 15.
 - [ ] Draw the chat `CodeBlock` with coloured lines, through `AgentDrawing`
-      and `answerDrawing`, also in open message lines.
+      and `answerDrawing`.
+- [ ] Make `LineBlocks` draw the code blocks of an open message line
+      through the drawing too, so an open line shows the colours of an
+      answer. A closed line stays plain.
 - [ ] Colour the code blocks of `MarkdownView`, with the tokens from the
       parse worker.
-- [ ] Make the mockups read the fence label with the label table of
-      Milestone 3, in place of a file name.
+- [ ] Move each consumer of `Replaced ways` to the fence label: the
+      mockup block schema in `chatBlockSchemas.ts`, the `codeBlock`
+      fixture builder, the fixtures, the code block entry, and the mockup
+      `MarkdownView`. Delete `codeBlockNames`, `codeLanguage`, and
+      `CodeBlockText`, and use `CodeText`.
 - [ ] Test that Copy code and Explain read the exact text.
-- [ ] Check a labelled Rust block in the browser, in the chat and in the
-      file preview. Save the screenshots under `.context/code-colours/`.
+- [ ] Check a labelled Rust block in the browser, in an answer, in an
+      open message line, and in the file preview. Save the screenshots under `.context/code-colours/`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
@@ -166,4 +203,5 @@ Depends on: 1, 2, 3, 4
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this
-      plan, and the follow-up items that the change adds.
+      plan, the follow-up items that the change adds, and the visible
+      mockup changes of design call 16.

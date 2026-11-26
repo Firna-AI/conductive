@@ -8,8 +8,23 @@ const textBlock = {
   additionalProperties: false,
   required: ['kind', 'text'],
   properties: {
-    kind: { enum: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'code'] },
+    kind: { enum: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p'] },
     text: { type: 'string' },
+  },
+} as const
+
+/**
+ * A code block of a Markdown file. `name` is the file name that stands for
+ * its fence label, as `MarkdownBlock` says.
+ */
+const codeBlock = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['kind', 'text'],
+  properties: {
+    kind: { const: 'code' },
+    text: { type: 'string' },
+    name: { type: 'string' },
   },
 } as const
 
@@ -52,7 +67,13 @@ const ruleBlock = {
 } as const
 
 /** The blocks of a Markdown file that hold no other block. */
-const flatBlocks = [textBlock, listBlock, tableBlock, ruleBlock] as const
+const flatBlocks = [
+  textBlock,
+  codeBlock,
+  listBlock,
+  tableBlock,
+  ruleBlock,
+] as const
 
 /** A quote of a Markdown file whose blocks take the schema `block`. */
 function quoteOf<const Block>(block: Block) {
@@ -84,8 +105,11 @@ export const markdownView = defineComponent({
   slug: 'markdown-view',
   title: 'Markdown view',
   description:
-    'A Markdown file, rendered as formatted text: its headings, paragraphs, lists, code blocks, tables, quotes, and rules, with inline code, images as links, bold text, emphasis, strikethrough, and line breaks. A task item shows its check box. Its own page shows the README of Storefront.',
-  relatedDocs: ['docs/mockups/catalogue-attachments-and-files.md'],
+    'A Markdown file, rendered as formatted text: its headings, paragraphs, lists, code blocks, tables, quotes, and rules, with inline code, images as links, bold text, emphasis, strikethrough, and line breaks. A task item shows its check box. A code block with the fence label of a known language shows the colours of a file tab of that language, and a block without a label stays plain. Its own page shows the README of Storefront, with a TypeScript block in colour.',
+  relatedDocs: [
+    'docs/mockups/catalogue-attachments-and-files.md',
+    'docs/mockups/design-markdown.md',
+  ],
   propSchema: {
     type: 'object',
     additionalProperties: false,
