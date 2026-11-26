@@ -1,10 +1,12 @@
 import type { LocalWork } from '../shared/workspaces'
+import type { GitHubStoredResponse } from '../shared/github'
 import type { BarActionsPorts, PromptResult } from './barPorts'
 import {
   continueOutcome,
   mergeOutcome,
   pendingJobWait,
   readyOutcome,
+  runBarMerge,
   streamReaches,
   waitFor,
 } from './barRuns'
@@ -51,10 +53,10 @@ export class BarActions {
   private outcomeAt: GitHubState | null = null
   private run: AbortController | null = null
   private reading: AbortController | null = null
+  private prompting: AbortController | null = null
   /**
-   * The connection that `connect` started last, or null before the first
-   * connect. Its stop aborts it, and the next connect starts a new one, so
-   * a connection that ended stays ended.
+   * The current connection, or null while disconnected. Its stop aborts
+   * it, so results from a stopped connection never reach the next one.
    */
   private connection: AbortController | null = null
 
@@ -89,6 +91,7 @@ export class BarActions {
     this.readCapabilities()
     return () => {
       connection.abort()
+      if (this.connection === connection) this.connection = null
       for (const stop of stops) stop()
       this.reading?.abort()
       this.reading = null
@@ -108,19 +111,24 @@ export class BarActions {
     const method =
       access.status === 'ready' ? access.capabilities.mergeMethod : null
     if (pullRequest === null || method === null) return
+    const { queue, mergeStack } = snapshot
+    if (queue && (queue.mergeAhead === undefined || queue.state === 'merging'))
+      return
+    if (!queue && mergeStack?.queue === 'other-org') return
     const run = this.begin({ kind: 'merging' })
     if (!run) return
     const { signal } = run
-    const { github } = this.ports
     try {
-      let reply = await github.merge(
-        { headSha: pullRequest.headSha, method },
+      await runBarMerge(
+        this.ports,
+        snapshot,
+        {
+          pullNumber: pullRequest.number,
+          headSha: pullRequest.headSha,
+          method,
+        },
         signal,
       )
-      while (reply.state === 'pending') {
-        await waitFor(this.ports.delay, pendingJobWait, signal)
-        reply = await github.mergeResult(reply.mergeId, signal)
-      }
       // Merging shows until the bar reads the merged state.
       if (this.end(run, { kind: 'merging' })) this.ports.refreshGitHub()
     } catch (error) {
@@ -203,19 +211,33 @@ export class BarActions {
     this.update({ question: null })
   }
 
-  /**
-   * Sends a fixed prompt through the chat. A press while it sends does
-   * nothing. The result goes only to the connection of the press. After the
-   * stop of that connection, the result is null, also when the store
-   * connects again. So the caller moves no page and selects no session for
-   * a screen that the member left. The stop does not cancel the send, so
-   * the chat still keeps its notice and the client ID of a failed send.
-   */
-  async sendPrompt(text: string): Promise<PromptResult | null> {
+  /** Sends one fixed prompt at a time. A queued action reads state at the press. */
+  async sendPrompt(
+    prompt: string | ((stored: GitHubStoredResponse) => string),
+  ): Promise<PromptResult | null> {
     const connection = this.connection
-    const result = await this.ports.sendPrompt(text)
-    const ended = connection === null || connection.signal.aborted
-    return ended ? null : result
+    if (!connection || this.prompting === connection) return null
+    this.prompting = connection
+    try {
+      const text =
+        typeof prompt === 'string'
+          ? prompt
+          : await this.ports.github
+              .stored(connection.signal)
+              .then(prompt, () => null)
+      if (connection.signal.aborted) return null
+      if (text === null) {
+        this.outcomeAt = this.ports.githubState.get()
+        this.update({ outcome: { kind: 'prompt-read-failed' } })
+        return null
+      }
+      if (this.snapshot.outcome?.kind === 'prompt-read-failed')
+        this.update({ outcome: null })
+      const result = await this.ports.sendPrompt(text)
+      return connection.signal.aborted ? null : result
+    } finally {
+      if (this.prompting === connection) this.prompting = null
+    }
   }
 
   private readCapabilities(): void {

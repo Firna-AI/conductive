@@ -100,6 +100,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Agent workspace calls | `202611111200`–`202611111259` |
 | Parallel image sources | `202611161200`–`202611161259` |
 | Sub-workspaces | `202611161700`–`202611161759` |
+| Merge queue | `202611231200`–`202611231259` |
 | Build free storage | `202611261200`–`202611261259` |
 
 ## Key code
@@ -622,6 +623,26 @@ one account. Existing rows keep null. The migration changes no existing
 column, default, or constraint, so the previous Worker keeps working.
 [Model favourites](../docs/protocol/model-favourites-account.md#the-starting-favourites)
 gives the rules for an account without a saved list.
+
+`202611231200_merge_queue.sql` adds the queue, entry, leave notice, and
+list facts tables. The queue stores the trunk and the last pull request
+seen on it. Entries keep the order, queuers, step times, and commits for
+restacks, syncs, and merges. A leave notice records the branch that a pull
+request still targets after a failed reset. List facts hold expiring
+repository facts and per-viewer write access. The previous Worker can
+keep writing the existing tables. The
+[merge queue backend](../worker/merge-queue/README.md) owns the new tables.
+
+`202611241623_image_source_failures.sql` adds the nullable columns
+`image_source_runs.failure_step` and `image_source_runs.failure_github_status`.
+They keep the step and the GitHub status of the first failure of a
+repository load. A failure that ends on a later alarm then still names
+them in the `image_build_failed` warning. They hold no token, no
+repository name, and no response text. Existing rows and previous Worker
+inserts get null. The migration changes no existing column, default, or
+constraint, so the previous Worker keeps working. The
+[source loader](../worker/lifecycle/repository-layout.md#the-source-loader)
+owns these records.
 
 `202611261200_image_build_storage.sql` adds the nullable integer columns
 `image_builds.storage_total_bytes` and `image_builds.storage_free_bytes`.

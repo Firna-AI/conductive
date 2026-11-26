@@ -1,0 +1,207 @@
+/*
+ * The Merge queue group at the top of the list. Each queue is a block of
+ * normal workspace rows. A drag of a row of a section over a block gives
+ * the block a full outline and the soft fill of the accent, or the dashed
+ * neutral outline of a target that takes no drop.
+ */
+.blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/*
+ * `--join-x` is the middle of the cells of a list mark, as `--row-guide` of
+ * `WorkspaceRow.module.css` gives it for a top-level row. The line that
+ * joins the marks runs there.
+ */
+.block {
+  --join-x: 15px;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border-radius: var(--ui-radius-md);
+}
+
+/* The taller rows of the list page of a phone take a wider padding. */
+.pageBlock {
+  --join-x: 17px;
+}
+
+.target {
+  padding-bottom: 3px;
+  outline: 1px solid var(--ui-primary);
+  outline-offset: 1px;
+  background: var(--ui-primary-soft);
+}
+
+/*
+ * A row that cannot join over the block: the dashed neutral outline of the
+ * zone that waits, with no fill. The reason follows the rows.
+ */
+.refused {
+  outline: 1px dashed var(--ui-border2);
+  outline-offset: 1px;
+}
+
+/* The name of the repository, only while two or more queues have entries. */
+.repository {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 3px 8px 3px 6px;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  font-weight: 400;
+}
+
+.repositoryIcon {
+  flex-shrink: 0;
+  color: var(--ui-faint);
+}
+
+.repositoryName {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * The line that joins the list marks of the layers of the GitHub stack.
+ * `.above` draws its piece from the row above, across the 1 px gap between
+ * two rows, down to the top of the cells of the mark. `.below` draws its
+ * piece from the bottom of the cells down to the next row. The cells run
+ * from 6 px above the middle of the row to 5 px under it, so each piece is
+ * half the row less 5 px. The line is 1 px in the `border2` colour, as the
+ * guide lines of a tree: a neutral line of the list, not the edge of a
+ * box. It lies over the fill of a hover or a selection, and it takes no
+ * pointer input.
+ */
+.above,
+.below {
+  position: relative;
+}
+
+.above::before,
+.below::after {
+  position: absolute;
+  z-index: 1;
+  left: var(--join-x);
+  width: 1px;
+  height: calc(50% - 5px);
+  background: var(--ui-border2);
+  content: '';
+  pointer-events: none;
+}
+
+.above::before {
+  top: -1px;
+}
+
+.below::after {
+  bottom: 0;
+}
+
+/* The pieces of a row that stays faint in its place during a drag. */
+.faintLine::before,
+.faintLine::after {
+  opacity: 0.35;
+}
+
+/*
+ * In forced colours, the browser drops the fill of the pieces. So they
+ * take the system colour of quiet text, as the guide lines of a tree do.
+ */
+@media (forced-colors: active) {
+  .above::before,
+  .below::after {
+    background: GrayText;
+    forced-color-adjust: none;
+  }
+}
+
+/*
+ * Why a row that cannot join takes no drop, after the rows of the block,
+ * in the muted words of the zone. The room under the words holds the edge
+ * of the row that floats there.
+ */
+.reason {
+  position: relative;
+  padding: 6px 10px 14px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 16px;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.pageReason {
+  font-size: var(--ui-text-md);
+  line-height: 18px;
+}
+
+/*
+ * The group while a drag runs and no queue has entries: a zone with a
+ * dashed outline on every side. It takes the accent while a row of a
+ * section that can join is over it.
+ */
+.zone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px dashed var(--ui-border2);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  text-align: center;
+  text-wrap: balance;
+}
+
+.zoneOver {
+  border: 1px solid var(--ui-primary);
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary-deep);
+}
+
+/* A row over the zone: room under the words for the edge of the row. */
+.zoneHeld {
+  padding-bottom: 14px;
+}
+
+.pageZone {
+  min-height: 56px;
+  font-size: var(--ui-text-md);
+}
+
+/*
+ * The row of a section under the pointer, over the lower edge of the zone
+ * or of the words of a block, so the words stay in view. The row keeps the
+ * start alignment of a row, not the centred words around it.
+ */
+.lift {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% - 12px);
+  right: -6px;
+  left: 16px;
+  text-align: start;
+  transform: rotate(-1.5deg);
+}

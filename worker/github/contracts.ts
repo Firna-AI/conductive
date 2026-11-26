@@ -24,6 +24,9 @@ export interface GitHubSnapshot {
   checks: GitHubChecksResponse
   headSha: string | null
   pullBaseBranch?: string
+  pullBaseSha?: string
+  /** The open pull requests that GitHub would land before this one. */
+  stackBelow?: readonly number[]
   baseChange?: { from: string; to: string }
 }
 

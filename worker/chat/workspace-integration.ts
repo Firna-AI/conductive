@@ -4,7 +4,7 @@ import { WorkspaceFiles } from '../files/workspace'
 import { durableFilesStorage } from '../files/storage'
 import { WorkspaceAlarms, nativeAlarmStorage } from '../features/alarms'
 import { WorkspaceBaseChanges } from '../lifecycle/workspace-base'
-import { baseChangeChatStorage } from '../lifecycle/base-change-storage'
+import { workspaceJobChatStorage } from '../lifecycle/base-change-storage'
 import { nativeWorkspaceStorage } from '../lifecycle/platform-storage'
 import {
   assertReceiverActive,
@@ -63,7 +63,7 @@ export function createWorkspaceIntegration(
   const matches = (name: string) =>
     env.WORKSPACES.idFromName(name).equals(context.id)
   const chat: WorkspaceChat = new WorkspaceChat(
-    baseChangeChatStorage(storage),
+    workspaceJobChatStorage(storage),
     env,
     {
       ...resolvers,

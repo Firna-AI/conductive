@@ -17,9 +17,9 @@
 - **Background:**
   - Conductive gives each workspace one cloud computer and one branch at a time. Continue keeps the cloud computer, the files, and the sessions of the workspace.
   - Continue runs as a durable job in the phases `verify`, `resume`, `check`, `fetch`, `move`, and `publish`. `worker/lifecycle/continue.md` and `worker/lifecycle/continue-failures.md` describe the job.
-  - `docs/protocol/github-banner.md:280` says: "A Continue that stopped names its reason in a message under the bar."
+  - `docs/protocol/github-banner-merge.md:108` says: "A Continue that stopped names its reason in a message under the bar."
   - `docs/protocol/continue.md:79-80` says that when Git cannot move the changed files, Continue stops, keeps the earlier branch, and names the reason.
-  - `docs/protocol/github-banner.md:193-194` says: "The mockups at `app/banner` give the words of each label, each message, and each prompt." The mockups under `docs/mockups/` are part of the spec. A drawn state is one mockup screen.
+  - `docs/protocol/github-banner.md:226-227` says: "The mockups at `app/banner` give the words of each label, each message, and each prompt." The mockups under `docs/mockups/` are part of the spec. A drawn state is one mockup screen.
   - The drawn state `app/banner/continue/failed` shows one danger line under the bar. Continue stays on the bar, so the member can try again. Its only words are the clash line: "Continue stopped: the changed files clash with the latest {base}. The workspace stays on {branch}."
   - The mockups choose that line from the one `appAction` value `continue-failed`, in `barModel.ts` and the screen state of `barState.ts`. `BarMessage` shows its text from `barCopy.ts`. No screen state carries a stop cause.
   - The mockups import nothing from `worker/`. The Worker imports mockup copy, as `worker/lifecycle/repository-change-errors.ts` imports `repositoryFailure`. So a shared copy function needs a key type in the mockups, and `continueFailed` maps each stop cause to that key.
@@ -87,7 +87,7 @@
 - **Previous examples:** The drawn clash line already uses this shape of two sentences. The repository change takes its clash words from `repositoryFailure` in `src/ui/components/workspace/repositoryMoveCopy.ts:35-39`, but keeps its other failure words only in `worker/lifecycle/repository-change-errors.ts`. Commits `3f35ef98` and `2e6961f9` logged safe causes of failed image builds and workspace starts on 8 November 2026.
 - **Related:** `plans/follow-ups/repository-change-fetch-access-hint.md` holds the same guessed GitHub access cause in the repository change. Both items depend on the shared `continueFetchCommand`. Option C of each item classifies an access refusal there, so one classification serves both. An answer here can guide the words there. Neither item waits for the other.
 - **Recommendation:** C. It is the only option that keeps an access line for a proven access refusal. A is the lower-effort choice if that line is not worth the Large effort.
-- **Action:** ask the user, because the new lines are user-visible words that no drawn state gives. `docs/protocol/github-banner.md:193-194` makes the `app/banner` mockups the source of each bar message, and they draw only the clash line. A and C also trade a smaller change against a true access line.
+- **Action:** ask the user, because the new lines are user-visible words that no drawn state gives. `docs/protocol/github-banner.md:226-227` makes the `app/banner` mockups the source of each bar message, and they draw only the clash line. A and C also trade a smaller change against a true access line.
 - **Design calls:** The agents of the branch made these calls on 20 November 2026. None is a choice of the user.
   - An ignored file that the base tracks gets the clash line. Git reports it as an untracked file that the checkout would overwrite, and the recovery is the same.
   - A failure of the branch comparison after a good checkout shows no stop line. The read repairs it, or the step retries.

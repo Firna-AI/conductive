@@ -13,7 +13,11 @@ import {
   completeEmptyProviderSwitch,
 } from './provider-switch-data'
 import { switchBuildInputs } from './provider-switch-inputs'
-import { firstActiveOrgAdmin, readRepositories } from './settings-data'
+import {
+  firstActiveOrgAdmin,
+  readRepositories,
+  repositoriesWithSavedValues,
+} from './settings-data'
 import { capturedRepositoryLocations } from './repository-locations'
 import { latestSoftwareRelease } from './software-release'
 import { softwareVersion } from '../software-image/version'
@@ -65,8 +69,15 @@ export async function progressProviderSwitch(
     await waitProviderSwitch(env.DB, item.id, 'admin')
     return true
   }
-  const repositories = readRepositories(JSON.parse(source.repositoriesJson))
   const software = await latestSoftwareRelease(env, dependencies.fetch)
+  const capturedRepositories = readRepositories(
+    JSON.parse(source.repositoriesJson),
+  )
+  const repositories = await repositoriesWithSavedValues(
+    env.DB,
+    orgId,
+    capturedRepositories,
+  )
   const id = dependencies.randomToken()
   const inserted = await insertBuild(env.DB, {
     id,
@@ -82,7 +93,7 @@ export async function progressProviderSwitch(
     repositories,
     repositoryLocations: capturedRepositoryLocations(
       source.repositoryLocationsJson,
-      repositories,
+      capturedRepositories,
     ),
     previousRepositoryLocations: [],
     previousImageName: null,

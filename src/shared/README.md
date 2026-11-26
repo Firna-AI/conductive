@@ -18,6 +18,11 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 `Workspace.link` is its absolute web link, with org and workspace IDs.
 `AgentWorkspaceSummary` gives the same number and link.
 `Workspace.github` is the GitHub summary of its pull request, or null.
+The list can also give `Workspace.mergeQueue`, `githubCanWrite`, and
+`githubPullBase`. A queue entry can include the planned removal base and
+the entries that leave with it. `mergeQueueLabels` holds filtered branch
+labels for the list's queue controls.
+The [merge queue paths](merge-queue.ts) build the member routes.
 `GitHubSummary` comes from `generated/`. `githubSummary` in `github.ts` gives
 it from a banner: the state of the bar, or null without a pull request and
 for a closed pull request.
@@ -312,6 +317,10 @@ per-target outer alias and no credential.
   cutoff time. It drops a missing, malformed, or future value, and it
   rejects no record for it. The record then keeps the older notice.
   `ARCHIVED_COMPUTER_STATES` lists the known states.
+- [The merge queue readers](merge-queue-read.ts) read the optional list
+  facts, repository metadata, bar state, and leave notice. Each reader
+  keeps the known fields when an optional field is missing or malformed.
+  [Merge queue paths](merge-queue.ts) give the member routes.
 - [Workspace views](workspace-view.ts) define the saved view and its
   `temporaryTab` field. The field names one file or diff by kind and path,
   without a display mode, or is null. The Worker and browser readers use

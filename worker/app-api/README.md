@@ -18,6 +18,7 @@ Each handler returns `null` for a path that it does not own. The
 | `branchesRoute` in [`branches.ts`](branches.ts) | `GET /api/orgs/:orgId/repositories/:repositoryId/branches` reads live branches with the member's fresh GitHub user token |
 | `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; `GET /api/orgs/:orgId/settings/skills`; repository choices and moves; section writes; workspace names and moves |
 | `archiveRoute` in [`archive.ts`](archive.ts) | `POST` of a workspace’s `archive` and `restore` |
+| `mergeQueueRoute` in [`merge-queue.ts`](merge-queue.ts) | `POST` and `DELETE` of a workspace's `merge-queue`. `PUT` of its `merge-queue/order`. `POST` of its `merge-queue/merge`. |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume` and `activity`, and image build, refresh, and log routes |
 | `feedbackRoute` in [`feedback.ts`](feedback.ts) | `GET` and `POST` of `/api/feedback`. [Feedback routes](feedback.md) gives their checks, their errors, and the email |
 | `secretsRoute` in [`secrets.ts`](secrets.ts) | `GET` and `POST /api/orgs/:orgId/secrets`, `PATCH` and `DELETE` of `/:secretId`, and `PUT` of `/:secretId/all-agents` |
@@ -28,6 +29,23 @@ access, org creation with initials and repository choices, shared settings,
 repository selection, sections, and workspace metadata.
 The [invitation route](invitations.ts) serves the signed-in pending list and explicit acceptance.
 The [archive route](archive.ts) archives and restores a workspace through its workspace object, as [Archive](../../docs/protocol/workspace-life.md#archive) says.
+The [merge queue backend](../merge-queue/README.md) runs each queue change through its repository coordinator.
+`POST /merge-queue/merge` takes `{ "ahead": number }` with the count shown
+in the workspace's GitHub bar. It returns an empty `202` when the
+coordinator accepts the merge. It uses the requesting member's GitHub
+token and merge method.
+
+The workspace list also carries its repositories' names, default branches,
+and selection. The drop target uses saved queue and GitHub facts before it
+sends Add. [The list refresh](list-queue-refresh.ts) claims stale facts in
+D1 and reads GitHub in the background. It records write access by viewer
+and groups pull request and rule reads by repository. A queue write or pull
+request event marks the facts old. The cleanup timer removes expired facts.
+Add and remove take an empty JSON object. Re-order takes a target workspace ID in `beforeWorkspaceId`, or null for the end.
+Each successful change returns 204.
+The workspace list gives the optional queue entry and its removal plan,
+GitHub write access for the viewer, and the saved GitHub base of an open
+pull request. Branch labels use the environment of each workspace start.
 The [Continue route](continue.ts) starts a Continue job and reads its result in the real workspace object, as [Continue routes](../lifecycle/continue-routes.md) says.
 The [repository change route](repository-change.ts) starts a repository change and reads its result in the same way, as [Repository change](../lifecycle/repository-change.md#routes) says.
 `membersRoute` alone serves the org list and one org.
@@ -354,7 +372,7 @@ The machine tools use the configured app origin instead.
 - `writeWorkspaceTree` selects the current top-level rows and descendants
   with recursive SQL inside its D1 batch. The selection follows
   [the shared placement rule](../../src/shared/workspace-tree.ts), including
-  archived ancestors and the default section for an unknown section.
+  archived or queued ancestors and the default section for an unknown section.
   A move writes every descendant's section, including archived descendants.
   `RETURNING` gives the workspace IDs for metadata publication after the batch.
   A section-only move of a nested row changes no placement or activity time.

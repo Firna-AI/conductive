@@ -83,6 +83,16 @@ The added build uses the first admin who is not suspended. A failed start
 keeps the published image and writes one fixed warning. A failed build
 starts no added build. A refresh after a failed build gets none either.
 
+A job that fails while the image coordinator advances it writes the
+`image_build_failed` warning, in `handleImageBuildFailure` of
+[`image-build-failure.ts`](image-build-failure.ts). Other paths that fail a
+build, such as a job that could not be scheduled, write none. When the job fails
+in the `sources` phase, the warning adds `sourceStep`, the fixed step of the
+repository load that failed, and `githubStatus`, the HTTP status of a GitHub
+reply that was not OK, or null. [`image-sources/failure.ts`](image-sources/failure.ts)
+gives the steps. A step that the code does not know gives `unknown`. The
+warning holds no token, no repository name, and no response text.
+
 `readBuildHistory` in [`build-data.ts`](build-data.ts) returns
 `BuildsResponse.changes` with the build history. It excludes operator
 switch builds. A hidden published image points the member reply at the
@@ -248,9 +258,15 @@ A daily refresh sets the saved daily deadline 24 hours after its start.
 [`org-image-refresh-data.ts`](org-image-refresh-data.ts) is true when the
 published image holds a repository name or default branch that differs from
 the saved one, and the newest build succeeded. `readImageSchedule` then makes
-the next alarm due at once, and `runImageAlarm` and `refreshImagesForPush`
-start a build in place of a refresh. So a build follows each job or failed
-start that leaves old values in the image. The check reads no GitHub data,
+the next alarm due at once, and `admitImageBuild` starts a build in place of
+each refresh, also one that an admin starts. So a build follows each job or
+failed start that leaves old values in the image.
+In every other case, a refresh captures the repositories of the published
+image with their saved name and default branch, read by repository ID in
+`repositoriesWithSavedValues` of [`settings-data.ts`](settings-data.ts). It
+keeps the folders of the image. So a refresh after a rename or a move works
+also while the newest build failed, and the next build moves the folder. A
+switch build captures its repositories the same way. The check reads no GitHub data,
 so it cannot find a change whose webhook never saved it.
 `wakeImagesForRepositoryChange` in
 [`repository-change-builds.ts`](repository-change-builds.ts) wakes the

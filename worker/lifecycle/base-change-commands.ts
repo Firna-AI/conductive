@@ -32,7 +32,7 @@ export function baseChangeFetchCommand(
 }
 
 /** Import objects without a credential or the environment of an agent turn. */
-function baseReferenceCommands(
+export function baseReferenceCommands(
   input: BaseChangeSource & { directory: string; expectedBranch?: string },
 ): string[] {
   requireGitBranchName(input.baseBranch)

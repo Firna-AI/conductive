@@ -4,6 +4,7 @@ import { pullRequest } from '../../fixtures/pullRequests'
 import { repositories } from '../../fixtures/repositories'
 import type { Workspace } from '../../fixtures/workspaces'
 import { barPaths, paths } from '../../paths'
+import { queuePaths } from '../../queuePaths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
@@ -17,7 +18,7 @@ import {
   agentActionLabels,
   barLabels,
   barMessageText,
-  mergeLabels,
+  type AgentAction,
   type BarMessageKind,
 } from '../../../../../src/ui/components/workspace/barCopy'
 import { agentIcons } from '../../../../../src/ui/components/workspace/barIcons'
@@ -25,12 +26,10 @@ import type {
   BarAction,
   BarModel,
 } from '../../../../../src/ui/components/workspace/barModel'
-import {
-  barGitHubLink,
-  githubLink,
-} from '../../entries/components/workspace/barParts.mockup'
-import { ChecksBranches } from './ChecksBranches'
-import { barTint, hasPullRequest } from './prStatus'
+import { mergeButtonLabel } from '../../../../../src/ui/components/workspace/queueCopy'
+import { QueueAddButton } from './QueueBarParts'
+import { githubLink } from '../../entries/components/workspace/barParts.mockup'
+import { barTint } from './prStatus'
 import { iconKeyOf } from '../../entries/components/common/icons'
 import styles from '../../../../../src/ui/components/workspace/BarActions.module.css'
 
@@ -43,12 +42,15 @@ import styles from '../../../../../src/ui/components/workspace/BarActions.module
  * because the link of the mockups needs the button as its own child. On
  * desktop, the tooltip of a button that takes a click names the key of its
  * command, such as "Create PR (⇧⌘P)". Each button without a tint takes the
- * outline tone, so the colour of the bar shows through it.
+ * outline tone, so the colour of the bar shows through it. On a queued
+ * workspace, Resolve conflicts asks for a rebase, and Merge goes through
+ * the queue with the layers below it.
  */
 function BarButton(props: {
   action: BarAction
   localWork: boolean
   tint: ButtonTint | undefined
+  queued: boolean
 }) {
   const { action, tint } = props
   // Only a tint fills the main action. A bar without one shows the outline.
@@ -62,7 +64,7 @@ function BarButton(props: {
           moklyInstance="agent-tip"
         >
           <TintedTheme tint={tint}>
-            <ScreenLink asChild to={barPaths.sent[action.action]}>
+            <ScreenLink asChild to={sentPath(action.action, props.queued)}>
               <actionButton.Component
                 icon={iconKeyOf(agentIcons[action.action])}
                 moklyInstance={`agent-${action.action}`}
@@ -74,28 +76,36 @@ function BarButton(props: {
           </TintedTheme>
         </shortcutTip.Component>
       )
-    case 'merge':
+    case 'merge': {
+      const label = mergeButtonLabel(
+        action.method,
+        action.below,
+        action.stackCount,
+      )
+      const to =
+        action.below === undefined ? barPaths.merging : queuePaths.merging
       return (
         <shortcutTip.Component
           command="merge-pull-request"
-          label={mergeLabels[action.method]}
+          label={label}
           moklyInstance="merge-tip"
           off={action.busy}
         >
           <TintedTheme tint={tint}>
-            <ScreenLink asChild to={barPaths.merging}>
+            <ScreenLink asChild to={to}>
               <actionButton.Component
                 busy={action.busy}
                 icon="git-merge"
                 moklyInstance="merge-pull-request"
                 tone={tone}
               >
-                {action.busy ? barLabels.merging : mergeLabels[action.method]}
+                {action.busy ? barLabels.merging : label}
               </actionButton.Component>
             </ScreenLink>
           </TintedTheme>
         </shortcutTip.Component>
       )
+    }
     case 'ready':
       return (
         <shortcutTip.Component
@@ -195,23 +205,45 @@ function BarButton(props: {
   }
 }
 
-/** The buttons of the bar, in order: the main action first. */
+/**
+ * The screen of the message that an agent action sends. On a queued
+ * workspace, Resolve conflicts sends the rebase variant of its prompt.
+ */
+function sentPath(action: AgentAction, queued: boolean): string {
+  if (queued && action === 'resolve-conflicts') return queuePaths.rebase
+  return barPaths.sent[action]
+}
+
+/**
+ * The buttons of the bar, in order: the main action first, then Add to
+ * merge queue when the pull request can join the queue.
+ */
 export function BarButtons(props: { bar: BarModel }) {
-  const tint = barTint(props.bar.banner)
-  return props.bar.actions.map((action) => (
-    <BarButton
-      action={action}
-      key={action.kind}
-      localWork={props.bar.localWork}
-      tint={tint}
-    />
-  ))
+  const { bar } = props
+  const tint = barTint(bar.banner)
+  return (
+    <>
+      {bar.actions.map((action) => (
+        <BarButton
+          action={action}
+          key={action.kind}
+          localWork={bar.localWork}
+          queued={bar.queue?.line !== undefined}
+          tint={tint}
+        />
+      ))}
+      {bar.queue?.add ? (
+        <QueueAddButton beside={bar.actions.length > 0} />
+      ) : null}
+    </>
+  )
 }
 
 /** The icon of each status under the bar. A refusal shows `CircleAlert`. */
 const statusIcons: Partial<Record<BarMessageKind, LucideIcon>> = {
   'continue-waits': Clock,
   'base-moved': Info,
+  'merge-stack-held': Info,
 }
 
 /**
@@ -247,34 +279,6 @@ export function BarMessage(props: {
           href={pullRequest.url}
           label={barLabels.openOnGitHub}
         />
-      ) : null}
-    </div>
-  )
-}
-
-/**
- * The top of the Checks tab of a phone: the message of the bar, then its
- * actions and its link to GitHub. While the branch has no pull request, the
- * branch and its base stand above the actions, also when the bar has none.
- * The row above opens this tab, because a button cannot sit inside the link
- * of the row.
- */
-export function ChecksActions(props: { bar: BarModel; workspace: Workspace }) {
-  const { bar } = props
-  const branches = !hasPullRequest(bar.banner)
-  const buttons = bar.actions.length > 0 || bar.link !== undefined
-  if (!bar.message && !buttons && !branches) return null
-  return (
-    <div aria-label="Pull request actions" className={styles.top} role="group">
-      {bar.message ? (
-        <BarMessage kind={bar.message} workspace={props.workspace} />
-      ) : null}
-      {buttons || branches ? (
-        <div className={styles.buttons}>
-          {branches ? <ChecksBranches workspace={props.workspace} /> : null}
-          <BarButtons bar={bar} />
-          {bar.link ? <barGitHubLink.Component /> : null}
-        </div>
       ) : null}
     </div>
   )

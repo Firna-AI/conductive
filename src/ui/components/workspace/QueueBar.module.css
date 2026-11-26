@@ -1,0 +1,63 @@
+/*
+ * The line of a queued workspace under the pull request bar takes the
+ * parts of a message line, with no tint. A spinner takes the place of its
+ * icon while a step of the queue runs.
+ */
+.spinner {
+  display: flex;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/*
+ * The words and the actions of the line. The actions keep their size at
+ * the end, and they wrap under the words when the line has no room for
+ * both, as on a phone.
+ */
+.lineBody {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.lineText {
+  flex: 1 1 180px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.lineActions {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/*
+ * Add to merge queue beside a main action. A bar narrower than its two
+ * labels shows Add to merge queue with only its icon, as a link to GitHub
+ * keeps only its mark. Its name stays as a tooltip and for screen readers.
+ */
+.beside,
+.wide,
+.narrow {
+  display: contents;
+}
+
+.narrow {
+  display: none;
+}
+
+@container (max-width: 539px) {
+  .beside .wide {
+    display: none;
+  }
+
+  .beside .narrow {
+    display: contents;
+  }
+}

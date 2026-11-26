@@ -14,6 +14,12 @@ export function messageOf(
   outcome: BarOutcome | null,
   banner: GitHubBanner,
 ): BarMessage | null {
+  if (outcome?.kind === 'prompt-read-failed')
+    return {
+      text: "Couldn't check the merge queue. Try again.",
+      tone: 'danger',
+      href: null,
+    }
   const url = banner.pullRequest?.url ?? null
   // The messages show the labels, which hide each secret value.
   const branches = {
@@ -47,6 +53,12 @@ export function messageOf(
       return {
         text: barMessageText(model.message, branches),
         tone: 'danger',
+        href: null,
+      }
+    case 'merge-stack-held':
+      return {
+        text: barMessageText(model.message, branches),
+        tone: 'info',
         href: null,
       }
     case 'base-moved':

@@ -61,6 +61,12 @@ export class TurnCompletion {
     await this.removeCommands(turn.id)
     await this.transaction.capabilityNotes.release(turn.sessionId, turn.id)
     await this.transaction.saveTurn(turn)
+    await this.transaction.queueFixes.end(
+      turn,
+      end.state,
+      occurredAt,
+      this.transaction.now,
+    )
     await readySessionWatches(this.transaction, turn)
     if (this.session.activeTurnId === turn.id) {
       this.session.retryMessageId =

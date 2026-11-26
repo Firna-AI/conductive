@@ -1,4 +1,5 @@
 import { act } from 'react'
+import { beforeEach, vi } from 'vitest'
 import { routes } from '../../app/router'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import type { RowMenu } from './row-menu'
@@ -6,6 +7,25 @@ import type { SectionActions } from './SectionHeader'
 
 // The helpers of the tests that drag the rows of a list in happy-dom,
 // which lays out no box, so a test gives each box its place.
+
+const placed = new Set<Element>()
+beforeEach(() => {
+  placed.clear()
+  const hit = vi.spyOn(document, 'elementFromPoint').mockImplementation(
+    (x, y) =>
+      [...placed].findLast((element) => {
+        const { left, right, top, bottom } = element.getBoundingClientRect()
+        return (
+          element.isConnected &&
+          x >= left &&
+          x <= right &&
+          y >= top &&
+          y <= bottom
+        )
+      }) ?? null,
+  )
+  return () => hit.mockRestore()
+})
 
 /** The menu of a row, closed. */
 export const closedMenu: RowMenu = {
@@ -34,8 +54,9 @@ export function rowLink(view: HTMLElement, workspaceId: string): HTMLElement {
 }
 
 /** Gives an element a box `height` px high, `top` px down the page. */
-function placeAt(element: Element | null, top: number, height: number) {
+export function placeAt(element: Element | null, top: number, height: number) {
   if (!element) throw new Error('The list has no element to place.')
+  placed.add(element)
   const box = new DOMRect(0, top, 200, height)
   Object.defineProperty(element, 'getBoundingClientRect', {
     configurable: true,

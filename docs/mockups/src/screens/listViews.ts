@@ -9,7 +9,8 @@ import {
 import { viewerMembership } from '../fixtures/members'
 import { checkoutAutocomplete } from '../fixtures/workspaces'
 import { newOrgs } from './listStates'
-import { subWorkspaceView, type TreeListView } from './subWorkspaceStates'
+import { queueListView, type QueueListView } from './queueStates'
+import { subWorkspaceView } from './subWorkspaceStates'
 import { isWorkspaceMenuState } from './workspaceMenuStates'
 import {
   generalOnlySections,
@@ -42,13 +43,15 @@ export function archivedGroupView(): Pick<MenuListView, 'archived' | 'focus'> {
 }
 
 /**
- * The list and what lies over it, in a state of sub-workspaces or of the
- * menu of a row.
+ * The list and what lies over it, in a state of the merge queue, of
+ * sub-workspaces, or of the menu of a row.
  */
 export function stateView(
   state: WorkspaceListState,
   viewport: Viewport,
-): TreeListView | undefined {
+): QueueListView | undefined {
+  const queue = queueListView(state.mergeQueue, viewport)
+  if (queue) return queue
   const trees = subWorkspaceView(state.subWorkspaces, viewport)
   if (trees) return trees
   const { list, menu } = state

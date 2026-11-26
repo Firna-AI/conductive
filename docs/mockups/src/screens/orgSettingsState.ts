@@ -85,7 +85,9 @@ export const orgSettingsSchema = {
      * The order of the chosen repositories outside Edit, from
      * repository-order decision 1 F: the plain list, the row menu of
      * acme/billing-service open, a drag of acme/marketing-site to the top,
-     * or the list after Make default on acme/billing-service.
+     * or the list after Make default on acme/billing-service. The question
+     * before a removal shows after Remove in the row menu of
+     * acme/storefront, the first row, or of acme/marketing-site, the last.
      */
     repositoryOrder: { enum: repositoryOrderStates },
     /**

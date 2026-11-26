@@ -1,10 +1,17 @@
 import { expect, it } from 'vitest'
 
-import { TEST_TIME } from '../test-support/harness'
+import {
+  orgSettingsPaths,
+  type BuildResponse,
+} from '../../src/shared/org-settings'
+import { createApp } from '../application'
+import { TEST_ORIGIN, TEST_TIME } from '../test-support/harness'
 import { SOFTWARE } from './backend-test-support'
 import { setupBackendTests } from './backend-test-hooks'
 import { readBuildHistory, readBuildJob } from './build-data'
+import { startImageBuild } from './image-builds'
 import { refreshImagesForPush, runImageAlarm } from './image-timers'
+import { readOrgImage } from './org-image-data'
 import {
   SECONDARY_IMAGE_ACCOUNT,
   seedSecondaryOrgImage,
@@ -148,4 +155,53 @@ it('builds in place of a push refresh while the image holds old values', async (
   expect((await readBuildJob(runtime.env.DB, org.id, id ?? '')).kind).toBe(
     'build',
   )
+})
+
+it('returns a build from the admin refresh route when the image holds old values after a successful build', async () => {
+  const { org, repositoryId, runtime, session } = backendFixture()
+  await installed(runtime.env.DB)
+  await rename(runtime.env.DB)
+
+  const response = await createApp(runtime.dependencies).fetch(
+    new Request(TEST_ORIGIN + orgSettingsPaths.refresh(org.id), {
+      method: 'POST',
+      headers: {
+        Cookie: session,
+        Origin: TEST_ORIGIN,
+        'Content-Type': 'application/json',
+      },
+      body: '{}',
+    }),
+    runtime.env,
+  )
+  expect(response.status).toBe(202)
+  const { build }: BuildResponse = await response.json()
+  expect(build).toMatchObject({ kind: 'build', state: 'running' })
+  const job = await readBuildJob(runtime.env.DB, org.id, build.id)
+  expect(JSON.parse(job.repositoryLocationsJson ?? 'null')).toEqual([
+    {
+      repositoryId,
+      directory: '/home/user/code/renamed',
+      variable: 'CONDUCTIVE_REPOSITORY_RENAMED_DIR',
+    },
+  ])
+})
+
+it('leaves the daily deadline unset when admission changes a daily refresh to a build', async () => {
+  const { images, org, user } = backendFixture()
+  const db = images.env.DB
+  await installed(db)
+  await rename(db)
+
+  const id = await startImageBuild(images, {
+    orgId: org.id,
+    userId: user.id,
+    kind: 'refresh',
+    software: SOFTWARE,
+    dailyRefresh: true,
+  })
+  expect(await readBuildJob(db, org.id, id)).toMatchObject({ kind: 'build' })
+  expect(await readOrgImage(db, org.id, 'boat')).toMatchObject({
+    nextImageRefreshAt: null,
+  })
 })

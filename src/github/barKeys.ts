@@ -8,6 +8,7 @@ import type { BarAction } from '../ui/components/workspace/barModel'
 import type { ShortcutCommandId } from '../shared/shortcut-commands'
 import type { CommandKey } from './ActionButton'
 import type { BarControls } from './barView'
+import { mergeButtonLabel } from '../ui/components/workspace/queueCopy'
 
 /**
  * Gives the key of the command of a control, for the label that the
@@ -67,7 +68,9 @@ function idleLabel(action: BarAction): string {
     case 'agent':
       return agentActionLabels[action.action]
     case 'merge':
-      return mergeLabels[action.method]
+      return action.stackCount === undefined
+        ? mergeLabels[action.method]
+        : mergeButtonLabel(action.method, undefined, action.stackCount)
     case 'ready':
       return barLabels.readyForReview
     case 'continue':

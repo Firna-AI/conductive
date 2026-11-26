@@ -1,6 +1,7 @@
 import type { WorkspaceAlarms } from './features/alarms'
 import type { WorkspaceFeatures } from './features/workspace'
 import type { ReceiverStorage } from './members/receiver-storage'
+import { QUEUE_FIX_REPORT } from './chat/queue-fix-records'
 
 export async function expireWorkspacePreviews(
   storage: ReceiverStorage,
@@ -50,6 +51,7 @@ export async function runWorkspaceAlarms(
     devices(): Promise<void>
     publishRevocations(): Promise<void>
     automationReport?(): Promise<void>
+    queueFixReport?(): Promise<void>
     sessionWatches?(): Promise<void>
   },
   options: { securityHandled?: boolean; fallbackLifecycle?: boolean } = {},
@@ -85,6 +87,7 @@ export async function runWorkspaceAlarms(
     if (due.has('previews')) await tasks.previews()
     if (due.has('automation-report') && tasks.automationReport)
       await retryAutomationReport(alarms, startedAt, tasks.automationReport)
+    if (due.has(QUEUE_FIX_REPORT)) await tasks.queueFixReport?.()
     if (due.has('session-watches') && tasks.sessionWatches)
       await alarms.run('session-watches', startedAt, tasks.sessionWatches)
     if (!options.securityHandled)

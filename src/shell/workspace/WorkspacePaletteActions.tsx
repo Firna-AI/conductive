@@ -68,8 +68,9 @@ export function useNewTerminalOffer(
  * for Session history, a tab of the right column for a Go to row, the
  * Archive button, and Restore on the archived bar. The Terminal tool
  * offers New terminal through `useNewTerminalOffer`. Merge latest has no
- * control: it sends its prompt as the agent actions of the bar do. It
- * draws nothing.
+ * control: it sends its prompt as the agent actions of the bar do. Add to
+ * merge queue and Remove from queue follow the menu of the header, and
+ * Remove from queue asks first. It draws nothing.
  */
 export function WorkspacePaletteActions(props: {
   context: WorkspaceContext
@@ -82,7 +83,9 @@ export function WorkspacePaletteActions(props: {
   const rightColumn = useRightColumnTabs(context)
   const phone = context.viewport === 'phone'
   const archived = context.sandbox === 'archived'
-  const mergeLatest = useScreenBar()?.mergeLatest ?? null
+  const bar = useScreenBar()
+  const mergeLatest = bar?.mergeLatest ?? null
+  const queue = bar?.queue
   const ids = workspaceActionIds({
     access,
     workspace: context.workspace,
@@ -92,6 +95,7 @@ export function WorkspacePaletteActions(props: {
     desktopTool: toolOffered('desktop'),
     offersRestore: context.restore !== null,
     mergeLatest: mergeLatest !== null,
+    queue: queue?.menu ?? null,
   })
   const list = (id: WorkspaceActionId, kind: FileListKind): OfferedAction => {
     const target: FilesTarget = { kind: 'list', list: kind }
@@ -122,6 +126,10 @@ export function WorkspacePaletteActions(props: {
         return toolTab(id, 'desktop')
       case 'merge-latest':
         return { id, label: mergeLatest?.label, run: () => mergeLatest?.run() }
+      case 'add-to-merge-queue':
+        return { id, run: () => queue?.add() }
+      case 'remove-from-merge-queue':
+        return { id, run: () => queue?.remove() }
       case 'archive-workspace':
         return { id, run: () => context.archive?.() }
       case 'restore-workspace':

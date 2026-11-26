@@ -1,4 +1,8 @@
-import { d1ErrorReason, type D1ErrorReason } from './d1-errors'
+import {
+  D1_ERROR_REASONS,
+  d1ErrorReason,
+  type D1ErrorReason,
+} from './d1-errors'
 import { HttpError } from './http'
 import {
   type MailDiagnosticFields,
@@ -108,6 +112,7 @@ const HTTP_CODES = [
   'workspace_start_failed',
   'workspace_start_stopped',
   'image_build_failed',
+  'image_sources_unavailable',
   'image_required',
   'build_not_found',
   'coordinator_conflict',
@@ -118,6 +123,7 @@ const HTTP_CODES = [
   'current_turn_required',
   'github_reconnect_required',
   'github_refresh_failed',
+  'github_unavailable',
   'attachment_copy_failed',
   'attachment_missing',
   'attachment_not_found',
@@ -186,4 +192,35 @@ export function errorSummary(error: unknown): ErrorSummary {
   const reason = d1ErrorReason(error)
   if (reason) return { kind: 'd1', reason }
   return { kind: error instanceof Error ? 'error' : 'unknown' }
+}
+
+export function errorFields(error: ErrorSummary): ErrorSummary {
+  switch (error.kind) {
+    case 'mail':
+      return { kind: 'mail', ...mailDiagnosticFields(error) }
+    case 'provider':
+      return {
+        kind: error.kind,
+        providerKind: error.providerKind,
+        status: error.status,
+        code: error.code,
+      }
+    case 'http':
+      return { kind: error.kind, status: error.status, code: error.code }
+    case 'command':
+      return {
+        kind: error.kind,
+        state: error.state,
+        exitCode: error.exitCode,
+        timedOut: error.timedOut,
+      }
+    case 'd1':
+      return {
+        kind: error.kind,
+        reason:
+          D1_ERROR_REASONS.find((reason) => reason === error.reason) ?? 'other',
+      }
+    default:
+      return { kind: error.kind }
+  }
 }

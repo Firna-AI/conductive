@@ -1,6 +1,7 @@
 import {
   githubPaths,
   type GitHubBanner,
+  type GitHubBannerResponse,
   type GitHubChecksResponse,
 } from '../shared/github'
 import {
@@ -19,8 +20,15 @@ export interface WorkspaceTarget {
   workspaceId: string
 }
 
-/** The GitHub state of a branch: its banner and its checks, read together. */
-export interface GitHubSnapshot {
+/**
+ * The GitHub state of a branch: its banner and its checks, read together,
+ * and the merge queue state of a queued workspace, which only the reads of
+ * the bar carry.
+ */
+export interface GitHubSnapshot extends Pick<
+  GitHubBannerResponse,
+  'queue' | 'queueLeave' | 'mergeStack'
+> {
   banner: GitHubBanner
   checks: GitHubChecksResponse
 }
@@ -82,7 +90,7 @@ export async function loadGitHubSnapshot(
       readChecksResponse,
     ),
   ])
-  return { banner: banner.banner, checks }
+  return { ...banner, checks }
 }
 
 /**
@@ -96,12 +104,55 @@ export async function loadStoredSnapshot(
   target: WorkspaceTarget,
   signal: AbortSignal,
 ): Promise<GitHubSnapshot | null> {
+  const { state, ...queue } = await loadStoredGitHubState(fetch, target, signal)
+  return state && { ...state, ...queue }
+}
+
+/** Reads the stored banner and the current queue, even without a stored banner. */
+export function loadStoredGitHubState(
+  fetch: FetchLike,
+  target: WorkspaceTarget,
+  signal: AbortSignal,
+) {
   const { orgId, workspaceId } = target
-  const reply = await readJson(
+  return readJson(
     fetch,
     githubPaths.stored(orgId, workspaceId),
     signal,
     readStoredResponse,
   )
-  return reply.state
+}
+
+/** Keep queue fields when the two banners describe the same open pull request. */
+export function queueOnGitHubEvent(
+  shown: GitHubSnapshot | undefined,
+  banner: GitHubBanner,
+) {
+  if (
+    !shown ||
+    !banner.pullRequest ||
+    shown.banner.branch !== banner.branch ||
+    shown.banner.pullRequest?.number !== banner.pullRequest.number ||
+    banner.state === 'merged' ||
+    banner.state === 'closed'
+  )
+    return undefined
+  const { queue, queueLeave, mergeStack } = shown
+  const sameHead =
+    shown.banner.pullRequest.headSha === banner.pullRequest.headSha
+  const sameBase = shown.banner.baseBranch === banner.baseBranch
+  const next = queue && { ...queue }
+  if (next && (!sameHead || !sameBase)) {
+    delete next.mergeAhead
+    delete next.oldBase
+    if (next.rebase) {
+      next.rebase = { ...next.rebase }
+      delete next.rebase.oldBase
+    }
+  }
+  return {
+    ...(next && { queue: next }),
+    ...(queueLeave && sameBase && { queueLeave }),
+    ...(mergeStack && sameBase && { mergeStack }),
+  }
 }

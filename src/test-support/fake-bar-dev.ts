@@ -7,7 +7,8 @@ import { readChoice } from '../chat/api/read-chat'
 import { readSessions } from '../chat/api/read-responses'
 import type { WorkspaceEvent } from '../shared/events'
 import { filePaths } from '../shared/files'
-import { githubPaths, type GitHubMergeMethod } from '../shared/github'
+import { githubPaths } from '../shared/github'
+import type { GitHubMergeMethod } from '../shared/generated/GitHubMergeMethod'
 import { sessionsPath } from '../shared/sessions'
 import {
   workspacePath,

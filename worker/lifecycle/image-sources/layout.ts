@@ -1,6 +1,7 @@
 import type { AppEnv } from '../../env'
 import type { PrepareImageSources } from '../image-builds'
 import { legacyRepositoryLocations } from '../repository-locations'
+import { ImageSourceStepError, sourceCommandFailure } from './failure'
 import { sourceLayoutCommand } from './layout-command'
 import { isolatedSourceCommand } from './native-command'
 import {
@@ -37,21 +38,25 @@ export async function advanceSourceLayout(
       )
       await setRunPhase(env.DB, run.buildId, 'layout', started.processId)
     } catch (error) {
-      if (refusedSourceStart(error))
-        await setRunPhase(env.DB, run.buildId, 'layout-ready')
+      if (!refusedSourceStart(error))
+        throw sourceCommandFailure(error, 'interrupted')
+      await setRunPhase(env.DB, run.buildId, 'layout-ready')
       throw error
     }
     return
   }
-  if (run.processId === null) throw new Error('Missing source process')
-  const status = await input.commands.status(run.processId, run)
+  if (run.processId === null) throw new ImageSourceStepError('interrupted')
+  const status = await input.commands
+    .status(run.processId, run)
+    .catch((error: unknown) => {
+      throw sourceCommandFailure(error, 'layout')
+    })
   const text = await saveMemoryStatus(env.DB, run, status)
   if (status.running || status.more) return
-  if (!sourceCommandSucceeded(status))
-    throw new Error('The source command failed')
+  if (!sourceCommandSucceeded(status)) throw new ImageSourceStepError('layout')
   const match = text.match(/^MemAvailable:\s+(\d+) kB\s*$/u)
   const available = match ? Number(match[1]) * 1024 : NaN
   if (!Number.isSafeInteger(available) || available < 0)
-    throw new Error('Memory budget is not available')
+    throw new ImageSourceStepError('layout')
   await saveMemoryBudget(env.DB, run.buildId, Math.floor(available / 2))
 }

@@ -45,6 +45,8 @@ export const shortcutCommandIds = [
   'commit-and-push',
   'mark-ready-for-review',
   'merge-pull-request',
+  'add-to-merge-queue',
+  'remove-from-merge-queue',
   'continue-after-merge',
   'open-pull-request',
   'go-to-all-files',

@@ -33,7 +33,7 @@ export const repositoriesChanged = defineScreen({
       slug: 'build-failed',
       title: 'Newest build failed',
       description:
-        'The build of acme/admin-dashboard failed. The notice says that acme/admin-dashboard is ready after a build succeeds, and that the last build failed. It has no button. The card under it shows the saved message, the end of the log, and Try again.',
+        'The build of acme/admin-dashboard failed. The title of the notice says that the last build failed. Its body says that acme/admin-dashboard is ready after a build succeeds. It has no button. The card under it shows the saved message, the end of the log, and Try again.',
       rationale: `${decision} ${noButton} New workspace links an admin here while no chosen repository is ready after a failed build, as app/new-workspace/waiting-repository/none-ready shows.`,
       props: { build: 'failed' },
     },

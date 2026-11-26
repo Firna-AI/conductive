@@ -148,7 +148,13 @@ If it cannot send while you stay in the workspace on the same branch, the chat o
 If you leave or change the branch before the failure arrives, your chosen page stays open.
 The cause waits in that session's message box, also if you return before the failure arrives.
 
+If the merge queue needs an agent to rebase a branch, it waits for all running turns in the workspace to end.
+When no turn runs, it sends one message to the newest open session.
+The member who added the pull request is the sender.
+The session's login rules apply.
+
 - [Choose a pull request action](/docs/pull-requests#read-the-pull-request-state)
+- [Use the merge queue](/docs/pull-requests#merge-queue)
 
 ## Delegate work to another session
 

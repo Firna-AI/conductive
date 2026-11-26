@@ -20,6 +20,11 @@ import {
 } from './image-retry-data'
 import { readSourceJob } from './image-sources/source-data'
 import { imageSourceFailure } from './image-sources/materialize'
+import {
+  readSourceRun,
+  saveSourceRunFailure,
+  sourceRunFailure,
+} from './image-sources/run-data'
 import { advanceBuildStep } from './image-build-steps'
 import { cleanupBuildImageSources } from './image-sources/cleanup'
 import type { SourceCommandPort } from './image-sources/source-commands'
@@ -143,10 +148,16 @@ export async function advanceImageBuild(
     if (job.phase === 'sources' && job.state === 'running' && !expired) {
       const source = await readSourceJob(env.DB, buildId)
       if (source && (source.failed || source.phase === 'abort')) {
+        const run = await readSourceRun(env.DB, buildId)
+        const failure = sourceRunFailure(run)
+        if (run && run.failureStep === null && source.phase === 'revoke') {
+          failure.sourceStep = 'copy'
+          await saveSourceRunFailure(env.DB, buildId, failure)
+        }
         await clearImageRetryStatement(env.DB, buildId).run()
         if (!(await cleanupBuildImageSources(env, dependencies.fetch, buildId)))
           return false
-        throw imageSourceFailure()
+        throw imageSourceFailure(false, failure)
       }
     }
     if (activeWork) await requireActiveOrg(env.DB, orgId)

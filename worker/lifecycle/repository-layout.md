@@ -111,10 +111,14 @@ A terminal error waits for those calls too, then runs cleanup for the whole job.
    clone in a staging folder, with no checkout, hook, filter, or submodule.
    No helper or token stays in a Git config.
 5. When a copy ends, the build log gets the line
-   `Repository copy complete: <owner>/<name>`, with the full name of the
-   captured repository. That name comes from the build's saved list, not
-   from the command output. A list without that entry gives the old line
-   `Repository copy complete.`
+   `Repository copy complete: <owner>/<name>`, or
+   `Repository copy failed: <owner>/<name>` when the copy failed, with the
+   full name of the captured repository. That name comes from the build's
+   saved list, not from the command output. A list without that entry gives
+   the line without the name, such as `Repository copy complete.`
+   The first failure of the repository load saves its step and GitHub
+   status on the source run, for the `image_build_failed` warning, as
+   [Image builds](image-builds.md) says.
    The Worker then revokes the token through [`revokeInstallationToken`](image-sources/github-app.ts).
    Only a 204 or a 401 reply from GitHub confirms that the token is inactive.
    Any other reply keeps the encrypted token for a later alarm, and no local

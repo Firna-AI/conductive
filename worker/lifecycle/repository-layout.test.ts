@@ -4,7 +4,7 @@ import { installScript } from '../../docs/mockups/src/fixtures/computer'
 import { setupBackendTests } from './backend-test-hooks'
 import { SOFTWARE } from './backend-test-support'
 import { readBuildJob } from './build-data'
-import { startImageBuild } from './image-builds'
+import { advanceImageBuild, startImageBuild } from './image-builds'
 import { finishImageBuild } from './image-test-support'
 import { shellQuote } from './commands'
 import {
@@ -157,6 +157,65 @@ it('runs the sample install script in named image repositories and keeps install
     expect(
       await local.read('/home/user/code/storefront/node_modules/installed'),
     ).toBe('installed')
+  } finally {
+    await local.dispose()
+  }
+})
+
+it('moves the installed folder on the next build when a refresh captured a rename', async () => {
+  const { images, org, user, repositoryId } = fixtureForTest()
+  const db = images.env.DB
+  const local = await repositoryShellFixture()
+  try {
+    await db.batch([
+      db
+        .prepare(
+          "UPDATE repositories SET full_name = 'example/renamed' WHERE id = ?",
+        )
+        .bind(repositoryId),
+      db.prepare(
+        "UPDATE image_builds SET kind = 'refresh' WHERE id = 'published-image'",
+      ),
+      db.prepare(
+        `UPDATE image_build_jobs SET repositories_json = json_set(repositories_json, '$[0].fullName', 'example/renamed')
+         WHERE build_id = 'published-image'`,
+      ),
+    ])
+    const oldFolder = '/home/user/code/repository'
+    const installedFile = 'node_modules/installed'
+    expect(
+      await local.run(
+        `mkdir -p ${oldFolder}/node_modules\nprintf installed > ${oldFolder}/${installedFile}`,
+      ),
+    ).toMatchObject({ exitCode: 0 })
+    images.prepareSources = async ({
+      buildId,
+      repositoryLocations,
+      previousRepositoryLocations,
+    }) => {
+      await local.run(
+        sourceLayoutCommand(
+          buildId,
+          repositoryLocations ?? [],
+          previousRepositoryLocations ?? [],
+        ),
+      )
+    }
+
+    const build = await startImageBuild(images, {
+      orgId: org.id,
+      userId: user.id,
+      kind: 'build',
+      software: SOFTWARE,
+    })
+    await advanceImageBuild(images, org.id, build)
+    await advanceImageBuild(images, org.id, build)
+    expect(await local.read(`/home/user/code/renamed/${installedFile}`)).toBe(
+      'installed',
+    )
+    await expect(
+      local.read(`${oldFolder}/${installedFile}`),
+    ).rejects.toMatchObject({ code: 'ENOENT' })
   } finally {
     await local.dispose()
   }

@@ -8,6 +8,9 @@ import {
   type RepositoryPull,
 } from './fake-pull'
 import { RepositoryMerges } from './fake-merges'
+import { fakePullLists } from './fake-pull-reads'
+import { changeFakePullBase, repositoryToken } from './fake-pull-writes'
+import { RepositoryStacks } from './fake-stacks'
 
 export class RepositoryGitHub {
   requests: Request[] = []
@@ -19,15 +22,19 @@ export class RepositoryGitHub {
     ['refs/heads/changes', HEAD_SHA],
   ])
   comparisons = new Map([['refs/heads/main', new Map([[HEAD_SHA, 1]])]])
+  mergeBases = new Map<string, string>()
   pulls: Record<number, RepositoryPull> = { 2: repositoryPull() }
   checks = new Map<string, unknown[]>([[HEAD_SHA, [passedRun]]])
   pageSize = 100
   commitDates = new Map<string, string>()
   deniedTokens = new Set<string>()
+  branchRules = new Map<string, readonly { type: string }[]>()
   readonly merges = new RepositoryMerges()
+  readonly stacks = new RepositoryStacks(this)
   failure: Response | null = null
   /** GitHub refuses Ready for review, such as for a rule of the branch. */
   readyRefused = false
+  readonly refusedBaseWrites = new Set<number>()
   onRequest: ((operation: string) => Promise<void>) | null = null
   private readonly signIn: FakeGitHub
 
@@ -35,7 +42,7 @@ export class RepositoryGitHub {
     this.signIn = signIn
   }
 
-  private page(items: readonly unknown[], after: unknown, first = 100) {
+  page(items: readonly unknown[], after: unknown, first = 100) {
     const start = typeof after === 'string' ? Number(after) : 0
     const end = start + Math.min(this.pageSize, first)
     return {
@@ -70,9 +77,11 @@ export class RepositoryGitHub {
     }
   }
 
-  private pullPage(pull: RepositoryPull) {
+  pullPage(pull: RepositoryPull) {
     return {
       ...pull,
+      id: `PR_${pull.number}`,
+      baseRefOid: this.branches.get(`refs/heads/${pull.baseRefName}`) ?? null,
       ...this.pullChecks(pull, null, null),
       latestOpinionatedReviews: this.page(pull.reviews, null),
     }
@@ -80,10 +89,7 @@ export class RepositoryGitHub {
 
   /** Ready for review, which needs write access, as on GitHub. */
   private markReady(request: Request, variables: Record<string, unknown>) {
-    const token = (request.headers.get('Authorization') ?? '').replace(
-      /^Bearer /,
-      '',
-    )
+    const token = repositoryToken(request)
     const permission = this.merges.capabilities(token).viewerPermission
     const pull = Object.values(this.pulls).find(
       (pull) => `PR_${pull.number}` === variables.id,
@@ -111,6 +117,18 @@ export class RepositoryGitHub {
       return this.signIn.fetch(request)
     this.requests.push(request.clone())
     if (this.failure) return this.failure.clone()
+    const compare = url.pathname.match(
+      /^\/repos\/([^/]+)\/([^/]+)\/compare\/([^/]+)$/,
+    )
+    if (compare) {
+      const [base, head] = compare[3].split('...')
+      const sha =
+        this.mergeBases.get(compare[3]) ??
+        this.mergeBases.get(`${head}...${base}`)
+      return sha && `${compare[1]}/${compare[2]}` === this.fullName
+        ? Response.json({ merge_base_commit: { sha } })
+        : Response.json({}, { status: 404 })
+    }
     const merge = url.pathname.match(
       /^\/repos\/([^/]+)\/([^/]+)\/pulls\/(\d+)\/merge-async(?:\/([^/]+))?$/,
     )
@@ -121,7 +139,49 @@ export class RepositoryGitHub {
       )
         return Response.json({}, { status: 404 })
       await this.onRequest?.(merge[4] ? 'MergeResult' : 'MergeStart')
-      return this.merges.fetch(request, this.pulls[Number(merge[3])], merge[4])
+      const number = Number(merge[3])
+      const reply = await this.merges.fetch(
+        request,
+        this.pulls[number],
+        merge[4],
+      )
+      if (merge[4] && this.merges.jobs.get(merge[4])?.state === 'merged')
+        this.stacks.landThrough(number)
+      return reply
+    }
+    const stack = url.pathname.match(
+      /^\/repos\/([^/]+)\/([^/]+)\/stacks(?:\/(\d+)(?:\/(add|unstack))?)?$/,
+    )
+    const base =
+      request.method === 'PATCH' &&
+      url.pathname.match(/^\/repos\/([^/]+)\/([^/]+)\/pulls\/(\d+)$/)
+    const rules = url.pathname.match(
+      /^\/repos\/([^/]+)\/([^/]+)\/rules\/branches\/([^/]+)$/,
+    )
+    const rest = stack || base || rules
+    if (rest) {
+      if (
+        `${decodeURIComponent(rest[1])}/${decodeURIComponent(rest[2])}` !==
+          this.fullName ||
+        this.deniedTokens.has(repositoryToken(request))
+      )
+        return Response.json(
+          { message: 'Missing repository.' },
+          { status: 404 },
+        )
+      if (stack) {
+        await this.onRequest?.('Stacks')
+        const number = stack[3] === undefined ? undefined : Number(stack[3])
+        return this.stacks.fetch(request, number, stack[4])
+      }
+      if (rules) {
+        await this.onRequest?.('BranchRules')
+        return Response.json(
+          this.branchRules.get(decodeURIComponent(rules[3])) ?? [],
+        )
+      }
+      await this.onRequest?.('ChangePullBase')
+      return changeFakePullBase(this, request, Number(rest[3]))
     }
     const body: unknown = await request.json()
     if (
@@ -135,11 +195,7 @@ export class RepositoryGitHub {
     await this.onRequest?.(operation)
     const variables = body.variables
     if (operation === 'MarkReady') return this.markReady(request, variables)
-    if (
-      this.deniedTokens.has(
-        (request.headers.get('Authorization') ?? '').replace(/^Bearer /, ''),
-      )
-    )
+    if (this.deniedTokens.has(repositoryToken(request)))
       return Response.json({
         data: { repository: null },
         errors: [{ type: 'NOT_FOUND', message: 'Private GitHub detail' }],
@@ -170,28 +226,12 @@ export class RepositoryGitHub {
     } else if (operation === 'MergeCapabilities') {
       Object.assign(
         repository,
-        this.merges.capabilities(
-          (request.headers.get('Authorization') ?? '').replace(/^Bearer /, ''),
-        ),
+        this.merges.capabilities(repositoryToken(request)),
       )
-    } else if (operation === 'BannerLookup') {
-      const tip = this.branches.get(String(variables.ref))
-      const states = Array.isArray(variables.states) ? variables.states : []
-      const pulls = Object.values(this.pulls)
-        .filter(
-          (pull) =>
-            pull.headRefName === variables.head && states.includes(pull.state),
-        )
-        .sort((a, b) => b.createdAt - a.createdAt)
-        .map((pull) => this.pullPage(pull))
-      Object.assign(repository, {
-        nameWithOwner: this.fullName,
-        defaultBranchRef: this.branches.has(`refs/heads/${this.defaultBranch}`)
-          ? { name: this.defaultBranch }
-          : null,
-        ref: tip === undefined ? null : { target: { oid: tip } },
-        pullRequests: this.page(pulls, variables.after, 5),
-      })
+    } else if (
+      ['ListQueuePulls', 'BannerLookup', 'QueuePull'].includes(operation)
+    ) {
+      Object.assign(repository, fakePullLists(this, operation, variables))
     } else if (operation === 'BannerCompare') {
       const base = String(variables.baseRef)
       const head = String(variables.headRef)

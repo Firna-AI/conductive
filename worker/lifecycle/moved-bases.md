@@ -2,7 +2,8 @@
 
 This guide belongs to the [workspace lifecycle README](README.md). It gives
 the job that moves the base of a workspace in its cloud computer: after
-GitHub deletes the base, and after a rename of the default branch.
+GitHub deletes the base, after a rename of the default branch, and when
+the merge queue changes the base.
 [Base branches](../../docs/protocol/base-branches.md) states the
 requirements.
 
@@ -28,6 +29,19 @@ The job checks its revision before installation and again before completion.
 The guarded webhook write remains the owner of the repository values.
 The job uses the same isolated fetch, target installation, and retry path as a deleted-base move.
 The workspace base stays null, and the webhook adds no deleted-branch message to the banner.
+
+The [merge queue's move](queue-base-change.ts) saves the base of its
+workspace and reuses the same retry and owner fetch. It can store an
+explicit base as well as a null base for the default branch.
+
+The [guarded sync](queue-head-sync.ts) uses the same isolated fetch with
+the owner's token when GitHub rewrites a queued branch. It checks that
+no turn runs and the repository is clean before the fetch and again
+before the local move. The fetch pins the new head. The local command
+changes the checked-out branch only while it is still at the old head.
+The checkout protects local files, including ignored files GitHub now
+tracks. If the move needs a restack turn, the queue sends it as the
+queuer.
 
 [`base-change-commands.ts`](base-change-commands.ts) shares the isolated fetch and reference installation with Continue.
 The fetch uses a bare stage outside the working repository.

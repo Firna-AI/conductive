@@ -7,6 +7,7 @@ use ts_rs::TS;
 use crate::agents::AgentChoice;
 use crate::api::Timestamp;
 use crate::messages::MessageSender;
+use crate::tools::merge_queue::{MergeQueueEntry, MergeQueueListLabels};
 
 /// Workspace activity; input means the agent waits for a user action.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
@@ -139,6 +140,26 @@ pub struct Workspace {
     pub state: WorkspaceState,
     /// github.
     pub github: Option<GitHubSummary>,
+    /// The entry when this workspace is in the merge queue.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub merge_queue: Option<MergeQueueEntry>,
+    /// Whether the viewing member can write to the repository on GitHub.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub github_can_write: Option<bool>,
+    /// The base branch of the open pull request on GitHub.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub github_pull_base: Option<String>,
+    /// The filtered branch labels for the queue controls of this workspace.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub merge_queue_labels: Option<MergeQueueListLabels>,
+    /// Whether only a fork has an open pull request for the branch name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub github_pull_from_fork: Option<bool>,
     /// created at.
     pub created_at: Timestamp,
     /// updated at.

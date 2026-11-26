@@ -1,6 +1,6 @@
 import type { HttpFetch } from '../env'
 import { base64Url } from '../security/crypto'
-import { githubFailure, object, text } from './parsers'
+import { githubFailure, githubFailureStatus, object, text } from './parsers'
 import { appSigningKey } from './private-key'
 import { githubJson, githubRequest, withGitHubResponse } from './transport'
 
@@ -18,7 +18,7 @@ interface InstallationAccess {
 interface CredentialDependencies {
   fetch: HttpFetch
   now: () => number
-  failure: () => Error
+  failure: (githubStatus: number | null) => Error
 }
 
 let imported: { pem: string; key: Promise<CryptoKey> } | undefined
@@ -70,9 +70,9 @@ export async function installationAccessToken(
     const token = text(result.token)
     if (!token) throw githubFailure()
     return token
-  } catch {
+  } catch (error) {
     if (imported?.pem === identity.privateKey) imported = undefined
-    throw dependencies.failure()
+    throw dependencies.failure(githubFailureStatus(error))
   }
 }
 

@@ -12,7 +12,8 @@
  * that time with the toast of a failed update check. Or the workspace menu
  * that the name in the header opens, or the field of its Rename in place
  * of the name. Or the page of the shown Preview tab or HTML file in its
- * large window over the whole app, after Expand on desktop.
+ * large window over the whole app, after Expand on desktop. Or the
+ * question before Remove from queue.
  */
 export const overlayStates = [
   'none',
@@ -35,4 +36,5 @@ export const overlayStates = [
   'workspace-menu',
   'header-rename',
   'expanded-page',
+  'remove-from-queue',
 ] as const

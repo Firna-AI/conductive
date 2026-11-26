@@ -35,6 +35,10 @@ decision number names a dated record, as
 - Reason: a button cannot sit inside the link of the row, and two states
   have two actions.
 - A row of a branch without commits and without local work is not a link.
+- [The bar of a queued workspace](merge-queue-in-the-app.md#the-bar-of-a-queued-workspace)
+  gives the compact row and the line of a workspace in the merge queue on a
+  phone. [Add to merge queue](merge-queue-in-the-app.md#add-to-merge-queue)
+  gives the form of its button in a narrow bar.
 
 ### The branch and its base on a phone
 

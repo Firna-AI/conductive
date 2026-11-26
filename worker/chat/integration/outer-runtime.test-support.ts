@@ -26,6 +26,7 @@ type OuterConfiguration = Partial<
     | 'CONDUCTIVE_STARTING_FAVOURITES'
     | 'GITHUB_APP_PRIVATE_KEY'
     | 'GITHUB_WEBHOOK_SECRET'
+    | 'OPERATOR_GITHUB_IDS'
     | 'PREVIEW_DOMAIN'
   >
 >

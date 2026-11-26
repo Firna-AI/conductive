@@ -52,6 +52,7 @@ export async function shellRepositories(
 
 export interface ListedWorkspaceRow extends WorkspaceRow {
   readThroughEventNumber: number
+  environmentCiphertext: string | null
 }
 
 export async function shellWorkspaces(
@@ -70,6 +71,7 @@ export async function shellWorkspaces(
      ${archivedComputerColumn('w')},
      w.stopped_at AS stoppedAt, w.next_disk_keepalive_at AS nextDiskKeepaliveAt,
      r.agent, r.model, r.effort, r.session_id AS sessionId, r.first_turn_id AS firstTurnId,
+     r.environment_ciphertext AS environmentCiphertext,
      COALESCE(m.through_event_number, 0) AS readThroughEventNumber
      FROM workspaces w JOIN users u ON u.id = w.owner_user_id
      JOIN workspace_runtime r ON r.workspace_id = w.id

@@ -4,8 +4,11 @@ import { seedReadySoftwareImage } from '../software-image/test-support'
 import { readOrgProviderAccount } from '../data/org-provider-account'
 import { TEST_TIME } from '../test-support/harness'
 import { readBuildJob, runningBuild } from './build-data'
+import { advanceImageBuild } from './image-builds'
+import { readSourceRepositories } from './image-sources/data'
 import { finishImageBuild } from './image-test-support'
 import { progressProviderSwitch } from './provider-switch-builds'
+import { legacyRepositoryDirectory } from './repository-locations'
 import {
   setupSwitchTests,
   requestSwitch,
@@ -111,6 +114,47 @@ it('copies the published inputs, starts from target software, and changes the ac
         .all()
     ).results,
   ).toHaveLength(3)
+})
+
+it('copies a renamed repository during a switch and keeps its legacy folder', async () => {
+  const fixture = await fixtureForTest()
+  const { images, org, repositoryId } = fixture
+  const db = images.env.DB
+  await db.batch([
+    db
+      .prepare(
+        "UPDATE repositories SET full_name = 'example/renamed', default_branch = 'trunk' WHERE org_id = ? AND id = ?",
+      )
+      .bind(org.id, repositoryId),
+    db.prepare(
+      "UPDATE image_build_jobs SET repository_locations_json = NULL WHERE build_id = 'published-image'",
+    ),
+  ])
+  images.prepareSources = async ({ orgId, repositories }) => {
+    await readSourceRepositories(db, orgId, repositories)
+  }
+  const record = await requestSwitch(fixture)
+  await progressProviderSwitch(images, org.id)
+  const id = (await record.read())?.buildId ?? ''
+  await advanceImageBuild(images, org.id, id)
+  await advanceImageBuild(images, org.id, id)
+  const job = await readBuildJob(db, org.id, id)
+  expect(job).toMatchObject({ state: 'running', phase: 'software' })
+  expect(JSON.parse(job.repositoriesJson)).toEqual([
+    {
+      id: repositoryId,
+      orgId: org.id,
+      fullName: 'example/renamed',
+      defaultBranch: 'trunk',
+    },
+  ])
+  expect(JSON.parse(job.repositoryLocationsJson ?? 'null')).toEqual([
+    {
+      repositoryId,
+      directory: legacyRepositoryDirectory(repositoryId),
+      variable: 'CONDUCTIVE_REPOSITORY_REPOSITORY_DIR',
+    },
+  ])
 })
 
 it('changes an org with no good image at once without a build, also while suspended or deleted', async () => {

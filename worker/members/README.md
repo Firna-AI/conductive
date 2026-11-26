@@ -53,6 +53,8 @@ A suspended org stays visible to its members.
 Every write in the org except voluntary Leave uses the shared active-org check and SQL predicate.
 The person's org rail order spans orgs and uses no active-org check.
 The Leave recipient and last-active-admin rules remain in force.
+After a member leaves, the Worker wakes the [merge queues](../merge-queue/README.md)
+that hold an entry from that member.
 Pending invitation lists omit suspended orgs, and acceptance preserves their invitations and memberships.
 Org suspension also blocks a pending Restore activation and disk retention restart.
 

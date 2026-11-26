@@ -44,7 +44,7 @@ export async function markWorkspaceArchived(
     env.DB.prepare(
       `${workspaceTreeSql}, archive_place AS MATERIALIZED (
          SELECT section_id, position, MAX(0, (SELECT COUNT(*) FROM promoted) - 1) AS shift
-         FROM tree_rows WHERE id = ?2
+         FROM tree_rows WHERE id = ?2 AND NOT queued
        ), promoted_places AS MATERIALIZED (
          SELECT w.id, p.position + ROW_NUMBER() OVER (ORDER BY w.created_at, w.id) - 1 AS position
          FROM tree_rows w JOIN promoted ON promoted.id = w.id CROSS JOIN archive_place p

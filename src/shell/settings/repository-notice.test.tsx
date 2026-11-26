@@ -84,7 +84,7 @@ describe('the repository notice on the Repositories tab of an admin', () => {
       ],
       failed: [
         {
-          text: 'acme/admin-dashboard is ready after a build succeeds The last build failed. Try again',
+          text: 'The last build failed acme/admin-dashboard is ready after a build succeeds. Try again',
           ...notice,
           danger: true,
           buttons: ['Try again'],
@@ -197,7 +197,7 @@ describe('the repository notice on the Repositories tab of an admin', () => {
       buttons: view.querySelectorAll('button').length,
     }).toEqual({
       text: expect.stringContaining(
-        'Only an admin can change them. acme/admin-dashboard is ready after a build succeeds The last build failed. An admin can try it again.',
+        'Only an admin can change them. The last build failed acme/admin-dashboard is ready after a build succeeds. An admin can try it again.',
       ) as unknown,
       buttons: 0,
     })

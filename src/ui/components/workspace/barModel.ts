@@ -1,4 +1,10 @@
 import type { AgentAction, BarMessageKind, MergeMethod } from './barCopy'
+import {
+  barQueueOf,
+  queuedMerge,
+  type BarQueue,
+  type QueueFacts,
+} from './queueModel'
 
 /**
  * The states of the pull request bar (decisions 18 and 64). `none` is a
@@ -64,7 +70,17 @@ export type LocalWorkKind = (typeof localWorkKinds)[number]
 /** A button of the bar. The agent actions send a fixed prompt. */
 export type BarAction =
   | { kind: 'agent'; action: AgentAction }
-  | { kind: 'merge'; method: MergeMethod; busy: boolean }
+  /**
+   * `below`: the layers of the merge queue that land with a queued
+   * workspace. `stackCount` counts all pull requests in a member stack merge.
+   */
+  | {
+      kind: 'merge'
+      method: MergeMethod
+      busy: boolean
+      below?: number
+      stackCount?: number
+    }
   /** Ready for review of a draft. `busy`: the change runs. */
   | { kind: 'ready'; busy: boolean }
   /** `waiting`: a turn runs, so Continue is not available yet. */
@@ -83,6 +99,8 @@ export type BarModel = {
   message?: BarMessageKind
   /** The sandbox has local work, so Continue asks first. */
   localWork: boolean
+  /** The merge queue, when the facts name it. */
+  queue?: BarQueue
 }
 
 /** The facts that choose the actions of the bar. */
@@ -109,6 +127,13 @@ export type BarFacts = {
    * moved the base to the default branch (decision 304).
    */
   baseMoved?: boolean
+  /**
+   * The merge queue of the pull request: one that can join, or a layer of
+   * the stack. Without it, the bar shows no part of the queue.
+   */
+  queue?: QueueFacts
+  /** Open pull requests landed by a stack merge, including the target. */
+  stack?: { count: number; held: boolean }
 }
 
 /** The fix of a state that the agent can act on, without local work. */
@@ -157,14 +182,7 @@ function localWorkAction(localWork: LocalWorkKind): AgentAction | undefined {
   }
 }
 
-/**
- * The one main action of a state before the merge. Local work comes first:
- * Commit and push, or Push, takes the place of Merge, of the fixes, and of
- * Ready for review. An agent action needs write access, or an access that
- * the Worker could not read. Ready for review needs write access that the
- * Worker read. Merge needs write access that the Worker read, and a merge
- * method.
- */
+/** Local work takes priority. Merge needs confirmed write access and a method. */
 function mainAction(facts: BarFacts): BarAction | undefined {
   const { banner, method } = facts
   const agent = (action: AgentAction): BarAction | undefined =>
@@ -175,6 +193,13 @@ function mainAction(facts: BarFacts): BarAction | undefined {
   }
   const local = localWorkAction(facts.localWork)
   if (local && isOpen(banner)) return agent(local)
+  if (
+    banner !== 'draft' &&
+    isOpen(banner) &&
+    facts.queue?.kind === 'entry' &&
+    facts.queue.waitsForRebase
+  )
+    return agent('resolve-conflicts')
   const fix = fixOf(banner)
   if (fix) return agent(fix)
   if (banner === 'draft') {
@@ -189,7 +214,19 @@ function mainAction(facts: BarFacts): BarAction | undefined {
     return undefined
   }
   const busy = facts.appAction === 'merging'
-  return { kind: 'merge', method, busy }
+  const queued = queuedMerge(facts.queue)
+  if (queued === null) return undefined
+  if (queued === undefined) {
+    if (facts.stack?.held) return undefined
+    return {
+      kind: 'merge',
+      method,
+      busy,
+      ...(facts.stack && { stackCount: facts.stack.count }),
+    }
+  }
+  const { below } = queued
+  return { kind: 'merge', method, busy: busy || queued.busy, below }
 }
 
 /**
@@ -244,9 +281,18 @@ export function barModel(facts: BarFacts): BarModel {
   if (facts.readOnly) return bar
   if (banner === 'merged') return { ...bar, ...afterMerge(facts) }
   const main = mainAction(facts)
+  const queue = barQueueOf(facts.queue, {
+    open: isOpen(banner),
+    change: facts.access === 'write',
+    localWork,
+  })
   return {
     ...bar,
     actions: main ? [main] : [],
-    message: refusalMessage(facts) ?? baseMessage(facts),
+    message:
+      facts.stack?.held && isOpen(banner)
+        ? 'merge-stack-held'
+        : (refusalMessage(facts) ?? baseMessage(facts)),
+    ...(queue ? { queue } : {}),
   }
 }

@@ -6,6 +6,7 @@ import {
   mergeLatestCommandLabel,
   mergeLatestWords,
 } from '../../ui/components/workspace/mergeLatestCopy'
+import { queueLabels } from '../../ui/components/workspace/queueCopy'
 import {
   shortcutDigits,
   type ShortcutCommandId,
@@ -35,6 +36,8 @@ export const offeredActionIds = [
   'go-to-desktop',
   'new-terminal',
   'merge-latest',
+  'add-to-merge-queue',
+  'remove-from-merge-queue',
   'archive-workspace',
   'restore-workspace',
   'new-section',
@@ -65,6 +68,14 @@ export const actionTexts: Readonly<
   'new-terminal': { label: 'New terminal', words: ['shell', 'tab'] },
   // The row names the target branch, as `mergeLatestLabel` gives it.
   'merge-latest': { label: mergeLatestCommandLabel, words: mergeLatestWords },
+  'add-to-merge-queue': {
+    label: queueLabels.add,
+    words: ['merge queue', 'stack', 'pull request', 'land'],
+  },
+  'remove-from-merge-queue': {
+    label: queueLabels.remove,
+    words: ['merge queue', 'leave', 'pull request'],
+  },
   'archive-workspace': { label: 'Archive workspace', words: [] },
   'restore-workspace': { label: 'Restore workspace', words: ['unarchive'] },
   'new-workspace': { label: 'New workspace', words: ['create', 'task'] },
@@ -99,6 +110,8 @@ export const actionCommands: Readonly<
   'go-to-desktop': null,
   'new-terminal': 'new-terminal',
   'merge-latest': 'merge-latest',
+  'add-to-merge-queue': 'add-to-merge-queue',
+  'remove-from-merge-queue': 'remove-from-merge-queue',
   'archive-workspace': 'archive-workspace',
   'restore-workspace': 'restore-workspace',
   'new-section': 'new-section',

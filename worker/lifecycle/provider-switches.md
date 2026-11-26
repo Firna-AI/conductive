@@ -34,7 +34,8 @@ changes the org account without a build once no job executes. That
 conditional account update and switch completion share one D1 batch.
 
 The switch copies repositories and captured folders from the published
-image. Its install script and settings revision come from the newest
+image. Each repository takes its saved name and default branch, as a refresh
+does. Its install script and settings revision come from the newest
 successful full build on that source account. A refresh can hold saved
 script text that it never ran, so it does not supply these two inputs.
 

@@ -246,6 +246,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [waitlist/route.ts](waitlist/route.ts) reads the signed-in user's waitlist state and uses invite or referral codes.
 - [waitlist/grant.ts](waitlist/grant.ts) supplies the shared app access grant statements for D1 batches.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
+- [merge-queue/README.md](merge-queue/README.md) gives the repository coordinator, its entry writes, and the app reads.
 - [secrets/README.md](secrets/README.md) owns encrypted org secrets, their grants, and workspace capabilities.
 - [configuration.ts](configuration.ts): `appFrameSources` reads extra frame origins. Release admission reads validated newest-release metadata.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace. It records the [last active time](#last-active-time) of a sent message.

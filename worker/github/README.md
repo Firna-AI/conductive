@@ -10,6 +10,8 @@ The production Worker mounts the browser reads, the member merge routes, and the
 The workspace object owns one state adapter and its durable retry requests.
 Verified default-branch pushes also notify image refresh.
 Verified pull request events also store [automation runs](../automations/README.md).
+They age the workspace list's saved GitHub facts and wake the repository's
+[merge queue](../merge-queue/README.md) for a live read.
 The run callback and banner refresh have separate error boundaries.
 The production composition starts stored runs through `waitUntil` after webhook handling.
 Without a request execution context, the minute scan recovers the queued runs.
@@ -265,6 +267,8 @@ The reader checks each explicit workspace base through [checkRepositoryBranch](b
 Only `branch_not_found` moves the base to GitHub's live default branch.
 A failed read or missing repository access keeps the base.
 [Base branches](../../docs/protocol/base-branches.md#a-base-branch-that-github-deleted) states the requirement.
+The [merge queue](../merge-queue/README.md) owns base moves for queued
+workspaces. A regular refresh uses their saved comparison base.
 
 The snapshot records its private `baseChange` repair marker with one saved `baseChange:job` and its alarm source in the same transaction.
 The native alarm registers before that transaction commits.
@@ -328,11 +332,12 @@ The GitHub tests that store state run on the production workspace object in Mini
 
 - [Production composition](../features/github.ts) owns the state adapter and retry alarm, and the reads that Continue and a repository change ask for. Its `defaultBranch` can read another repository of the org while access follows the record, for the new repository of a change. Its `branchWork` reads the work of the old branch for the question of a change.
 - [branch-work.ts](branch-work.ts) reads that work from a fresh snapshot: an open pull request, and the pushed commits that the base does not hold. A merged or closed pull request is not such work, and a merged branch counts no pushed commits.
-- [composition.ts](composition.ts) mounts verified webhooks, image refresh, and background automation starts.
+- [composition.ts](composition.ts) mounts verified webhooks, image refresh, background automation starts, and merge queue wakes.
 - [contracts.ts](contracts.ts) defines the server-side integration ports.
 - [webhook.ts](webhook.ts) verifies deliveries, stores pull request runs and merge records, and starts workspace refreshes.
 - [webhook-routing.ts](webhook-routing.ts) reads pull request facts, GitHub account IDs, and available author and sender logins after signature verification.
-- [app-handler.ts](app-handler.ts) serves protected banner and checks reads.
+  It also reads stack membership and the old and new base refs and SHAs from pull request edits.
+- [app-handler.ts](app-handler.ts) serves protected banner and checks reads. The fresh and stored banner replies include the queue state or the display label of a base that the queue could not reset.
 - [workspace-state.ts](workspace-state.ts) serializes refreshes, commits changed snapshots, replays delivery receipts, and runs the summary copy.
 - [summary-data.ts](summary-data.ts) writes a changed GitHub summary to the workspace record.
 - [base-data.ts](base-data.ts) applies the base move of a committed snapshot to D1.
@@ -343,6 +348,21 @@ The GitHub tests that store state run on the production workspace object in Mini
 - [output.ts](output.ts) adds the masked labels `displayBranch`, `displayBaseBranch`, and `displayBaseMoved` to the banner of the fresh and stored replies of `app-handler.ts`, with the secret values of the last start of the sandbox. The chat backend labels each `github.updated` event, as [Branch and path labels](../chat/integration/README.md#branch-and-path-labels) says. Snapshots and receipts keep the real names.
 - [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.
 - [client.ts](client.ts) reads current GitHub state and follows pagination. Its `defaultBranch` reads the current default branch for Continue. Its `aheadBy` counts the commits of a head that a base branch does not hold.
+- [queue-pulls.ts](queue-pulls.ts) reads open pull requests, their GitHub bases, pinned branch heads, and the rules of the queue's trunk.
+  It batches the pull request and fork facts for the workspace list by repository.
+- [compare-merge-base.ts](compare-merge-base.ts) reads the common commit of two pinned commits for a queued layer's conflict prompt.
+- [stack-client.ts](stack-client.ts) lists stacks for one pull request and reads, creates, extends, and unstacks them.
+  [stack-parsers.ts](stack-parsers.ts) reads layers from REST responses and stack membership from webhooks.
+  An unstack returns the remaining stack or null when GitHub dissolves it.
+- A tab read of an open pull request lists its stacks once. The Worker
+  stores the numbers of the open pull requests below it. The bar gets
+  the count including the target and whether a lower layer is queued in
+  this org or another org. A direct merge reads the stack again with the
+  member's token before sending the request.
+- [pull-client.ts](pull-client.ts) changes the base of a pull request and asks GitHub to rebase its head onto its current base.
+  Callers supply a member token and the expected head object ID for a rebase.
+  The client maps GitHub refusals to fixed errors.
+- [RepositoryGitHub](fake-repository.ts) serves the stack routes, base changes, and branch rebases in tests.
 - [base-moved.test.ts](base-moved.test.ts) checks a deleted base, its saved banner, and failed reads.
 - [Cloud base tests](../features/base-moved.test.ts) use native storage, saved alarms, and hibernation to check growing retries, resume, and failed D1 publication. The recovery push names an unrelated branch.
 - [Owner credential tests](../features/base-moved-credentials.test.ts) check the trusted fetch scope and keep tokens out of commands, saved state, logs, and banner replies.
@@ -353,7 +373,8 @@ The GitHub tests that store state run on the production workspace object in Mini
 - [merge-handler.ts](merge-handler.ts) gates and parses the member merge routes.
 - [merge.ts](merge.ts) selects the capability, starts and polls merges, and diagnoses refusals.
 - [merge-capabilities.ts](merge-capabilities.ts) reads member permissions, allowed methods, and the member's default method with their fresh token.
-- [merge-client.ts](merge-client.ts) sends direct asynchronous merges with the displayed head and reads their result.
+  It also detects lost write access and a failed token for the merge queue.
+- [merge-client.ts](merge-client.ts) sends direct asynchronous merges with the expected head and reads their result.
 - [merge-jobs.ts](merge-jobs.ts) reads and stores member jobs in the workspace object.
 - [merge-access.ts](merge-access.ts) and [merge-data.ts](merge-data.ts) check active member access for merge operations and their shared-state publication.
 - [merge-errors.ts](merge-errors.ts) defines the safe merge error codes and messages.

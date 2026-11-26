@@ -2,10 +2,14 @@ import { buildLogStatements } from '../build-log-statements'
 import type { SourceJob } from './source-data'
 
 /** Names the repository when the captured list still has it. */
-function sourceCopyLogLine(fullName: string | undefined): string {
-  return fullName
-    ? `Repository copy complete: ${fullName}\n`
-    : 'Repository copy complete.\n'
+function sourceCopyLogLine(
+  fullName: string | undefined,
+  succeeded: boolean,
+): string {
+  const message = succeeded
+    ? 'Repository copy complete'
+    : 'Repository copy failed'
+  return fullName ? `${message}: ${fullName}\n` : `${message}.\n`
 }
 
 export async function finishSourceCopy(
@@ -22,7 +26,12 @@ export async function finishSourceCopy(
        grant_hash = NULL, failed = ? WHERE build_id = ? AND source_index = ?`,
       )
       .bind(succeeded ? 0 : 1, job.buildId, job.sourceIndex),
-    ...buildLogStatements(db, job.buildId, sourceCopyLogLine(fullName), now),
+    ...buildLogStatements(
+      db,
+      job.buildId,
+      sourceCopyLogLine(fullName, succeeded),
+      now,
+    ),
   ])
 }
 

@@ -155,6 +155,44 @@ sessions as tabs above the chat, and four tabs at the bottom.
   selected. `RowMenu.module.css` beside `workspaceMenu.ts` styles the
   field, and `PointMenu.module.css` in `src/components/common/` styles the
   menu at the pointer.
+- The Merge queue group stands at the top of the list, above the
+  sections, while a queue has entries, as `app/merge-queue` shows. It is
+  the app's own group, as Archived is: it has no menu, and it collapses
+  with the count of its entries. It holds one block for each queue, in the
+  order of the repositories of the org. A block names its repository only
+  while two or more queues have entries. Each row is the normal workspace
+  row of a section, from `WorkspaceRow.tsx`: its list mark, its name, and
+  its time, with its hover, its Archive, and its menu, as Cal asked on 22
+  November 2026. A block lists the layers of its stack from place 1, which
+  merges first, and a vertical line joins their list marks. The line is a
+  1 px hairline in the `border2` colour, as the guide lines of a tree,
+  under the middle of the marks. It runs from the bottom of the cells of
+  one mark to the top of the cells of the next, so it does not cross a
+  mark. It lies over the fill of a hover or a selection, and in forced
+  colours it takes the system colour of quiet text. A block of one layer
+  has no line. An entry that cannot merge keeps its place on the line,
+  with the red or amber mark of its GitHub state and no label, because
+  the user handles a failure, as Cal chose on 22 November 2026. A member
+  stack has no outline, because the line already joins every entry. A
+  drag of an entry lifts its unit, the rows of the unit stay faint in
+  their place with their part of the line, and the drop line falls only
+  between two units of its block, where the line opens. A row of a
+  section over the group gives the block of its repository the outline
+  and the soft fill of a drop target. A row that cannot join gives the
+  block a dashed outline in the `border2` colour, with no fill and no drop
+  line, and the reason after its rows,
+  from `joinRefusalText` in `queueCopy.ts`. During a drag while no queue
+  has entries, the group shows as a zone with a dashed outline, which
+  shows the reason in place of its words for a row that cannot join.
+  `MergeQueueGroup.tsx` and `QueueBlock.tsx` in `src/components/workspaces/`
+  draw it, with the shared
+  [`MergeQueue.module.css`](../../src/ui/components/workspaces/MergeQueue.module.css).
+  A queued workspace leaves its
+  section, and `withTrees` places its sub-workspaces with the rule of an
+  archived parent (decision 318 D). The menu of a row whose pull request
+  can join adds Add to merge queue after the line of the menu, before
+  Archive, and the menu of a queued row has Remove from queue and no Move
+  to section.
 - `OrgRail` in `src/components/layout/` draws the order of the orgs that
   each person keeps, from decisions 515 to 517, as `app/orgs/reorder`
   shows. A drag of a tile looks like the drag of a tab and of a workspace

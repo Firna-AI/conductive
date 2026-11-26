@@ -60,7 +60,7 @@ describe('repositoryMoved', () => {
 })
 
 describe('the repository order of the Repositories tab', () => {
-  test('an admin sees Default on the first row, and Make default moves a repository to the top at once and says so', async () => {
+  test('an admin sees Default on the first row, the row menu ends with Remove, and Make default moves a repository to the top at once and says so', async () => {
     const server = new FakeApiServer()
     server.json(
       'PUT',
@@ -94,6 +94,7 @@ describe('the repository order of the Repositories tab', () => {
         { name: 'Make default', off: false },
         { name: 'Move up', off: false },
         { name: 'Move down', off: false },
+        { name: 'Remove', off: false },
       ],
       after: [
         'acme/billing-service Default',

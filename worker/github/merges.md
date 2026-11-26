@@ -31,6 +31,11 @@ each route under `/api/orgs/:orgId/workspaces/:workspaceId`.
   `workspace_archived`.
 - The repository and the pull request come from the workspace record,
   never from the request.
+- Before a direct merge, the Worker reads the open stack through the
+  target. It returns 409 `merge_queue_required` if any pull request in that
+  set is queued in any org. The reply gives no entry or org details.
+- A direct stack request carries `stackCount` from the bar. A different
+  live count gives 409 `merge_stack_changed`.
 - A body without a `headSha` text, or with another method than `merge`,
   `squash`, or `rebase`, returns 400 `invalid_input`. A ready body without
   a positive integer `pullNumber` returns the same error.
@@ -63,6 +68,8 @@ each route under `/api/orgs/:orgId/workspaces/:workspaceId`.
 - [requestMerge](merge-client.ts) sends GitHub's asynchronous merge, with
   the displayed head as `sha`, the method, the action `direct_merge`, and
   `bypass_rules: false`.
+  A server caller can use the same client to start and poll a stack layer
+  merge with a member's token and the head that the caller checked.
 - A pending reply must name the same method, a direct merge, the same
   head, and no bypass. Any other pending reply, such as a merge queue,
   returns 409 `github_merge_refused`.

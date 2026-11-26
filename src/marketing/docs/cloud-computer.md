@@ -53,6 +53,14 @@ If you leave the tab before **Done**, nothing changes.
 The full list has **Manage access** for the GitHub App's access on GitHub.
 Your account and the app must both be able to reach a repository to select it.
 
+To remove one repository outside **Edit**, open its **More** menu on the **Repositories** tab and choose **Remove**.
+A question then says what the removal changes.
+**New workspace** no longer offers the repository.
+Its automations turn off, and only the owner of each can turn it on again.
+If it is the first repository, the next one becomes the default.
+Select **Remove** to confirm, or **Cancel** to keep the repository.
+The removal saves at once and starts no build.
+
 Selecting **Done** after you add repositories starts one build automatically, so you can add many repositories first.
 If a build or refresh is running, one more build usually starts after it succeeds.
 When the repository notice offers **Try again**, the last build failed, and the repository waits for it.
@@ -65,11 +73,15 @@ When a repository gets a new name or default branch on GitHub, Conductive saves 
 After that build, the repository's folder uses its new name, such as `~/code/<new-name>`.
 Update each install or startup script that names the old folder.
 Existing workspaces keep their old folders.
-Workspaces that target the default branch fetch its new name and then target it.
+Outside the merge queue, workspaces that target the default branch fetch its new name and then target it.
 A stopped computer completes this move when it resumes.
-Workspaces that target another branch keep that target.
+Outside the merge queue, workspaces that target another branch keep that target.
+Renaming the default branch keeps the merge queue.
+Choosing a different default branch empties the queue.
+The pull request bar shows a wait while the queue verifies the change.
 If a build is running, the new build starts after it.
 If the last build failed, the change waits for **Try again**.
+Until then, refreshes still fetch new commits, and the folder keeps its old name.
 
 When a repository moves to another owner on GitHub, Conductive follows the move like a new name.
 It does so only when the org already has another repository of the new owner.

@@ -2,6 +2,12 @@ import { activeOrgPredicate } from '../../data/org-access'
 import type { CommandStatus } from '../../sandbox/provider'
 import type { SelectedRepository } from '../settings-data'
 import { clearImageRetryStatement } from '../image-retry-data'
+import {
+  ImageSourceStepError,
+  readGitHubStatus,
+  readImageSourceStep,
+  type ImageSourceFailureDetails,
+} from './failure'
 
 export type RunPhase =
   | 'legacy'
@@ -31,19 +37,46 @@ export interface SourceRun {
   metadataBatchIndex: number
   metadataRepositoryIndex: number
   failed: number
+  failureStep: string | null
+  failureGitHubStatus: number | null
 }
 
 const columns = `build_id AS buildId, org_id AS orgId, sandbox_id AS sandboxId,
   provider_account AS providerAccount, phase, process_id AS processId,
   stdout_offset AS stdoutOffset, stderr_offset AS stderrOffset, memory_text AS memoryText,
   memory_budget AS memoryBudget, metadata_plan_json AS metadataPlanJson,
-  metadata_batch_index AS metadataBatchIndex, metadata_repository_index AS metadataRepositoryIndex, failed`
+  metadata_batch_index AS metadataBatchIndex, metadata_repository_index AS metadataRepositoryIndex, failed,
+  failure_step AS failureStep, failure_github_status AS failureGitHubStatus`
 
 export function readSourceRun(db: D1Database, buildId: string) {
   return db
     .prepare(`SELECT ${columns} FROM image_source_runs WHERE build_id = ?`)
     .bind(buildId)
     .first<SourceRun>()
+}
+
+export function sourceRunFailure(
+  run: SourceRun | null,
+): ImageSourceFailureDetails {
+  return {
+    sourceStep: readImageSourceStep(run?.failureStep),
+    githubStatus: readGitHubStatus(run?.failureGitHubStatus),
+  }
+}
+
+export async function saveSourceRunFailure(
+  db: D1Database,
+  buildId: string,
+  failure: ImageSourceFailureDetails,
+) {
+  await db
+    .prepare(
+      `UPDATE image_source_runs SET phase = 'abort', failed = 1,
+       failure_step = ?, failure_github_status = ?
+       WHERE build_id = ? AND failure_step IS NULL`,
+    )
+    .bind(failure.sourceStep, failure.githubStatus, buildId)
+    .run()
 }
 
 export function sourceRowsStatement(
@@ -104,7 +137,7 @@ export async function insertSourceRun(
     ...(legacy ? [] : [sourceRowsStatement(db, identity, repositories)]),
   ])
   const run = await readSourceRun(db, identity.buildId)
-  if (!run) throw new Error('Source ownership changed')
+  if (!run) throw new ImageSourceStepError('builder')
   return run
 }
 

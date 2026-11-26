@@ -1,4 +1,5 @@
 import type { BuildPhase } from './lifecycle/build-data'
+import type { ImageSourceFailureDetails } from './lifecycle/image-sources/failure'
 import type { RepairKind } from './lifecycle/repair-data'
 import type { WorkspaceStartJob } from './lifecycle/start-types'
 import type { WorkspaceArchiveState } from './lifecycle/archive-types'
@@ -57,6 +58,16 @@ export const SIMPLE_WARNINGS = {
     'A queued automation run could not start. The next scan will try again.',
   automation_background_start_failed:
     'A pull request run could not start in the background.',
+  merge_queue_fix_retry:
+    'A merge queue fix step failed. The queue alarm will retry it.',
+  merge_queue_report_failed:
+    'A merge queue turn report failed. The workspace alarm will retry it.',
+  merge_queue_merge_retry:
+    'A merge queue merge step failed. The queue alarm will retry it.',
+  merge_queue_step_retry:
+    'A merge queue step failed. The queue alarm will retry it.',
+  merge_queue_refresh_failed:
+    'The merged pull request was recorded. The workspace GitHub refresh failed.',
   marketing_site_unavailable: 'The built marketing site is not available.',
   turn_speed_invalid:
     'A turn end had a speed that the Worker does not know. It counts as standard speed.',
@@ -90,6 +101,8 @@ export const SIMPLE_WARNINGS = {
     'Software image repair failed. It runs again at the next timer.',
   job_record_cleanup_failed:
     'The deletion of old job step records failed. It runs again at the next timer.',
+  merge_queue_list_cleanup_failed:
+    'The deletion of expired merge queue list facts failed. It runs again at the next timer.',
   software_image_cleanup_failed:
     'Software image cleanup failed. It runs again at the next timer.',
   attachment_cleanup_retry: 'An attachment cleanup will retry.',
@@ -271,6 +284,8 @@ export type WorkerWarning =
       kind: 'image_build_failed'
       buildId: WarningId
       phase: BuildPhase
+      sourceStep: ImageSourceFailureDetails['sourceStep'] | null
+      githubStatus: number | null
       error: ErrorSummary
     }
   | {

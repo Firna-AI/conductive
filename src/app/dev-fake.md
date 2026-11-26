@@ -109,6 +109,17 @@ socket takes the events of its workspace after its own cursor.
   as the Worker lists new workspaces, and each opens with the recorded
   chat, as the other rows do. Without the option, no workspace has a
   parent.
+- `?mergeQueue=one` gives Acme the queue of acme/storefront that the
+  mockup page `app/merge-queue` draws, with `checkout-autocomplete` at
+  place 4, whose bar names its place. `?mergeQueue=two` also queues a
+  member stack of acme/billing-service, so the blocks name their
+  repositories. `?mergeQueue=open` queues nothing, so the bar of
+  `checkout-autocomplete` offers Add to merge queue. With each value,
+  each open pull request has write access and targets main, except
+  Invoice PDF fonts, which targets a release branch, so its drag names
+  the reason that it cannot join. `dev/queue-routes.ts` answers Add,
+  Remove, and a move, and adds the queue state to the bar of a queued
+  workspace. Without the option, no record has a field of the queue.
 - The writes of the fake place the trees as the Worker does, with or
   without the option. A move of a top-level row, by a drag, by keys, or by
   Move to section, takes its whole tree, and writes the section of each

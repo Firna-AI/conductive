@@ -65,7 +65,7 @@ says.
 ## When the switch build starts
 
 - A job is a build or a refresh of the org image, as
-  [Repository changes](org-image.md#repository-changes) says.
+  [Repository changes](org-image-repositories.md) says.
 - The switch build waits while one of these is true:
   - A job of the org runs.
   - The org is suspended.
@@ -123,10 +123,15 @@ says.
   script, the repositories, and the folder of each repository. It takes no
   saved change that no build ran yet. Reason: members do not see the
   switch build, so it must not change their image.
+- One exception: it copies each repository with its saved name and
+  default branch, as a refresh does, as
+  [The org image](repository-changes-on-github.md#the-org-image) in
+  Repository changes on GitHub says. Each folder keeps its name. Reason:
+  with the old name or branch, the copy fails, and so the switch fails.
 - So the notices of the install script and of the repositories show the
   same state after the switch as before it.
 - It starts as a build of an org without an org image does, as
-  [The software image](sandbox-software.md#the-software-image) says. So it
+  [The software image](software-image.md#the-software-image) says. So it
   starts from the ready software image of the new account, or else from
   its base image. It is the one later build that does not start from the
   last org image.
@@ -134,7 +139,8 @@ says.
   Reason: such an image got no refresh after the org left that account.
 - It gets no added build, also when a repository waits. A waiting
   repository then waits for the next build, as
-  [The repository notice](org-image.md#the-repository-notice) says.
+  [The repository notice](org-image-repositories.md#the-repository-notice)
+  says.
 - Its time limit is 60 minutes, as for each build.
 - A push to the default branch of a chosen repository during the switch
   build also makes a refresh of the new image due. That refresh starts
@@ -155,7 +161,8 @@ says.
   Admins would then see a failure that they cannot fix.
 - After the switch, the Cloud computer tab keeps the newest good build
   that members see as the current build. That build holds the same inputs
-  as the switch build.
+  as the switch build, except the saved names and default branches that
+  the switch build copies, as [The switch build](#the-switch-build) says.
 - A Build computer or a Try again of an admin during a switch build waits
   until the switch build ends (switch decision 2 D). Then it runs on the
   account of the org at that time.
@@ -173,8 +180,9 @@ says.
 - An admin whose Done saves an add of a repository during a switch build
   gets one build that waits in the same way. So does an add from an older
   copy of the app. Reason: Done after an add starts a build when no job
-  runs, as [Added repositories](org-image.md#added-repositories) says, and
-  the switch build is hidden from members.
+  runs, as
+  [Added repositories](org-image-repositories.md#added-repositories)
+  says, and the switch build is hidden from members.
 - The counts of the operator section leave out a build that waits, as
   [The counts](operator-overview.md#the-counts) says.
 - A build or a refresh that the switch question ends fails, with the saved

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useToast } from '@firna/ui/toast'
 import { EditRepositoryNotice } from '../../ui/components/settings/RepositoryNotice'
 import { Section } from '../../ui/components/settings/Section'
@@ -34,7 +34,9 @@ import { AdminRepositoryNotice } from './RepositoryChangeNotice'
  * the tab drops the edit. The repository notice above the list shows the
  * changes that the cloud computer does not hold yet, with Try again or
  * Build computer. While the edit adds repositories, it points to Done
- * instead, with no button.
+ * instead, with no button. Outside Edit, Remove in the row menu of a
+ * repository asks first and saves at once. Edit takes the focus after a
+ * removal that leaves no row.
  */
 function AdminRepositories(props: {
   org: OrgSummary
@@ -47,6 +49,10 @@ function AdminRepositories(props: {
   const { toast } = useToast()
   const [editing, setEditing] = useState(false)
   const [changes, setChanges] = useState<RepositoryChanges>(noRepositoryChanges)
+  const toggle = useRef<HTMLElement | null>(null)
+  const toggleRef = useCallback((element: unknown) => {
+    toggle.current = element instanceof HTMLElement ? element : null
+  }, [])
   const done = useAction(async (list: readonly Repository[]) => {
     const saved = await saveRepositoryChanges(model, list, changes)
     // The edit keeps its changes, and so its notice, until the build start
@@ -72,6 +78,7 @@ function AdminRepositories(props: {
       action={
         <RepositoryEditToggle
           busy={done.pending}
+          buttonRef={toggleRef}
           editing={editing}
           toggle={() => {
             if (!editing) {
@@ -106,7 +113,11 @@ function AdminRepositories(props: {
               repositories={withRepositoryChanges(list, changes)}
             />
           ) : (
-            <RepositoryOrder model={model} repositories={list} />
+            <RepositoryOrder
+              focusEdit={() => toggle.current?.focus()}
+              model={model}
+              repositories={list}
+            />
           )
         }
       </Loaded>
