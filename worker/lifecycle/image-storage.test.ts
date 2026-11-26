@@ -81,6 +81,24 @@ it('gives no number for a build of another provider account', async () => {
   })
 })
 
+it('gives no number for a build that failed after its measurement', async () => {
+  const fixture = backendFixture()
+  const { org, runtime } = fixture
+  const id = await build(fixture)
+  // The save step stores the numbers before the snapshot, which can fail.
+  await runtime.env.DB.prepare(
+    "UPDATE image_builds SET state = 'failed' WHERE id = ?",
+  )
+    .bind(id)
+    .run()
+  const empty = { storageTotalBytes: null, storageFreeBytes: null }
+  const history = await readBuildHistory(runtime.env.DB, org.id)
+  expect(history.builds[0]).toMatchObject({ id, ...empty })
+  expect((await readBuild(runtime.env.DB, org.id, id)).build).toMatchObject(
+    empty,
+  )
+})
+
 it.each([
   ['', null],
   ['done\n', null],
