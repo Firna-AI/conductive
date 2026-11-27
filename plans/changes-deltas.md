@@ -255,11 +255,12 @@ Summary, medians of nine edits in the local Worker harness, 27 November 2026. Th
 
 Depends on: every other milestone
 
-- [ ] Run `npm --prefix desktop ci`, `npm ci --prefix runner`, the complete gate, and the Rust checks named in `AGENTS.md`.
+- [x] Run `npm --prefix desktop ci`, `npm ci --prefix runner`, the complete gate, and the Rust checks named in `AGENTS.md`.
+  The static checks and the Rust checks passed. 6,149 of 6,159 tests passed in one local run. The other 10 were 15-second timeouts under the load of that run, and they passed when their files ran again. The evidence is `.context/changes-deltas/gate/`.
 - [x] Record follow-up items for the costs that still grow: bounded Files reads, a bounded full list after each connect, and a virtual list for the Changes panel.
 - [x] Record a follow-up item for the activation pull request and for a check in a live sandbox.
   The items are `plans/follow-ups/changes-costs-per-read-and-connect.md`, one item with the three costs as options, and `plans/follow-ups/changes-deltas-activation.md`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings, then apply the fix rule: fix the `fix now` findings, record follow-up items under `plans/follow-ups/` for the rest, re-review once, and report.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the plan".
 - [ ] Open the pull request. Its description gives the decisions and the design calls of this plan with their dates, a permalink to this plan, the follow-up items that the change adds, and the rollback rule.
