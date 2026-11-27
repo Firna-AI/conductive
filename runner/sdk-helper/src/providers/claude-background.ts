@@ -113,6 +113,7 @@ function listedTask(id: string, value: unknown): ListedTask {
   return {
     id,
     runId: text(entry.run_id) ?? '',
+    type: text(entry.task_type) ?? '',
     description: text(entry.description) ?? '',
     owner: text(entry.parent_task_id),
   }

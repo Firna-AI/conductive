@@ -75,11 +75,15 @@ states the requirement.
   `parent_task_id` of the entry. The pinned program can drop that field
   once the owner stops, so the adapter keeps the first value it saw.
 - It reads `task_started` for the tool use ID of each subagent, and
-  `task_notification` for the end status and the output file of each task.
+  `task_notification` for the end status and the output file of each task
+  run.
 - A listed task leaves the list while its owner is not listed. The adapter
-  then starts the grace time for that task, unless its status is
-  `stopped`, or an earlier note of the turn named its run. Tasks that
-  leave in one list change share one grace time.
+  then starts the grace time for that task run, unless the run ended as
+  `stopped`, or an earlier note of the turn named the run. A task of the
+  type `local_agent` gets no grace time.
+- The pinned program stops each command of a foreground subagent when that
+  subagent ends its reply, and reports the command as `stopped`. So only a
+  subagent in the background can be parked.
 - While a grace time runs, `ClaudeBackground.live` is true. So the engine
   keeps the turn open with its current rules, and the Rust engine needs no
   change.
@@ -89,6 +93,9 @@ states the requirement.
 - At the end of the grace time, the adapter sends one user message with the
   note on the input path, with the priority `next`. Its key
   `orphan:<task>:<run>` joins the set of named work of the turn.
+- The note takes one slot of the input window of 64 messages until a
+  result answers it, because one result lists at most 64 inputs. It does
+  not count as held member input.
 - `live` stays true until a result names the note message. A result that
   answers only note messages is a wake-up reply. It frees no held input.
 - A probe with the pinned program, 0.3.318, showed this order: the shell

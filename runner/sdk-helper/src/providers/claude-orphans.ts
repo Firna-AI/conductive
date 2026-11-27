@@ -10,6 +10,7 @@ export const ORPHAN_GRACE_MS = 120_000
 export interface ListedTask {
   id: string
   runId: string
+  type: string
   description: string
   owner: string | null
 }
@@ -18,10 +19,15 @@ interface TaskRecord {
   description: string
   owner: string | null
   runId: string
+  subagent: boolean
+}
+
+interface Ending {
+  status: 'completed' | 'failed' | 'stopped'
+  output: string | null
 }
 
 interface Wait {
-  key: string
   task: string
   owner: string
   timer: ReturnType<typeof setTimeout>
@@ -33,20 +39,25 @@ export interface ClaudeOrphanOptions {
   saveNamed: () => void
   /** Sends the note to the main agent and gives the UUID of its message. */
   deliver: (text: string) => string | null
+  /** A result answered the note with this UUID. */
+  settled: (uuid: string) => void
   changed: () => void
-  grace?: number
+}
+
+/** One run of one task. A resumed task keeps its ID and gets a new run. */
+function runKey(task: string, run: string): string {
+  return `${task}:${run}`
 }
 
 /**
  * Finds work that ended while the subagent that started it was not live.
  * The result of such work reaches only that subagent. The turn stays open
  * for the grace time, so that the program can wake the subagent. When the
- * subagent does not run again, the main agent gets one note.
+ * subagent does not run again, the main agent gets one note for each run.
  */
 export class ClaudeOrphans {
   private readonly records = new Map<string, TaskRecord>()
-  private readonly ends = new Map<string, OrphanTask['status'] | 'stopped'>()
-  private readonly outputs = new Map<string, string>()
+  private readonly ends = new Map<string, Ending>()
   private readonly agents = new Map<string, string>()
   private readonly waits = new Map<string, Wait>()
   private readonly sent = new Set<string>()
@@ -57,7 +68,7 @@ export class ClaudeOrphans {
     this.options = options
   }
 
-  /** True while the grace time runs or while a note waits for its reply. */
+  /** True while a grace time runs or while a note waits for its reply. */
   get holding(): boolean {
     return this.waits.size > 0 || this.sent.size > 0
   }
@@ -75,17 +86,19 @@ export class ClaudeOrphans {
         typeof input.tool_use_id === 'string'
       )
         this.agents.set(input.tool_use_id, id)
-      if (input.subtype === 'task_notification') {
-        const status = input.status
-        if (
-          status === 'completed' ||
-          status === 'failed' ||
-          status === 'stopped'
+      const status = input.status
+      if (
+        input.subtype === 'task_notification' &&
+        (status === 'completed' || status === 'failed' || status === 'stopped')
+      )
+        this.ends.set(
+          runKey(id, typeof input.run_id === 'string' ? input.run_id : ''),
+          {
+            status,
+            output:
+              typeof input.output_file === 'string' ? input.output_file : null,
+          },
         )
-          this.ends.set(id, status)
-        if (typeof input.output_file === 'string')
-          this.outputs.set(id, input.output_file)
-      }
       return
     }
     // A delivered notice is not a wake. Only a reply of the subagent's model is.
@@ -107,33 +120,23 @@ export class ClaudeOrphans {
         description: task.description,
         owner: task.owner ?? record?.owner ?? null,
         runId: task.runId || record?.runId || '',
+        subagent: task.type === 'local_agent' || record?.subagent === true,
       })
       this.resolve(task.id)
     }
-    const found: Omit<Wait, 'timer'>[] = []
     for (const id of before) {
-      if (now.has(id)) continue
-      const owner = this.records.get(id)?.owner
-      if (!owner || now.has(owner) || !this.records.has(owner)) continue
-      if (this.ends.get(id) === 'stopped') continue
-      const key = `orphan:${id}:${this.records.get(id)?.runId ?? ''}`
-      if (this.options.named.has(key) || this.waits.has(key)) continue
-      found.push({ key, task: id, owner })
+      if (!now.has(id)) this.ended(id, now)
     }
-    if (!found.length) return
-    // Work that leaves in one list change shares one grace time and one note.
-    const keys = found.map((wait) => wait.key)
-    const timer = setTimeout(
-      () => this.expire(keys),
-      this.options.grace ?? ORPHAN_GRACE_MS,
-    )
-    for (const wait of found) this.waits.set(wait.key, { ...wait, timer })
   }
 
   /** Clears each note that a result answered. */
   answered(uuids: readonly string[]): void {
     let changed = false
-    for (const uuid of uuids) changed = this.sent.delete(uuid) || changed
+    for (const uuid of uuids) {
+      if (!this.sent.delete(uuid)) continue
+      this.options.settled(uuid)
+      changed = true
+    }
     if (changed) this.options.changed()
   }
 
@@ -144,40 +147,49 @@ export class ClaudeOrphans {
     this.sent.clear()
   }
 
+  private ended(id: string, now: ReadonlySet<string>): void {
+    const record = this.records.get(id)
+    // The program sends the result of a subagent to the main agent, or to
+    // the agent that resumed it, so only other tasks can lose their result.
+    if (!record || record.subagent) return
+    const owner = record.owner
+    if (!owner || now.has(owner) || !this.records.has(owner)) return
+    const key = runKey(id, record.runId)
+    if (this.ends.get(key)?.status === 'stopped') return
+    if (this.options.named.has(`orphan:${key}`) || this.waits.has(key)) return
+    const timer = setTimeout(() => this.expire(key), ORPHAN_GRACE_MS)
+    this.waits.set(key, { task: id, owner, timer })
+  }
+
   private resolve(owner: string): void {
     let changed = false
     for (const [key, wait] of this.waits) {
       if (wait.owner !== owner) continue
+      clearTimeout(wait.timer)
       this.waits.delete(key)
-      if (![...this.waits.values()].some((other) => other.timer === wait.timer))
-        clearTimeout(wait.timer)
       changed = true
     }
     if (changed) this.options.changed()
   }
 
-  private expire(keys: readonly string[]): void {
-    if (this.closed) return
-    const tasks: OrphanTask[] = []
-    for (const key of keys) {
-      const wait = this.waits.get(key)
-      if (!wait) continue
-      this.waits.delete(key)
-      const status = this.ends.get(wait.task) ?? null
-      if (status === 'stopped') continue
-      this.options.named.add(key)
-      tasks.push({
+  private expire(key: string): void {
+    const wait = this.waits.get(key)
+    if (this.closed || !wait) return
+    this.waits.delete(key)
+    const ending = this.ends.get(key)
+    const status = ending?.status ?? null
+    if (status !== 'stopped') {
+      this.options.named.add(`orphan:${key}`)
+      this.options.saveNamed()
+      const task: OrphanTask = {
         id: wait.task,
         description: this.records.get(wait.task)?.description ?? '',
         owner: wait.owner,
         ownerDescription: this.records.get(wait.owner)?.description ?? '',
         status,
-        output: this.outputs.get(wait.task) ?? null,
-      })
-    }
-    if (tasks.length) {
-      this.options.saveNamed()
-      const uuid = this.options.deliver(orphanNote(tasks))
+        output: ending?.output ?? null,
+      }
+      const uuid = this.options.deliver(orphanNote(task))
       if (uuid) this.sent.add(uuid)
     }
     this.options.changed()

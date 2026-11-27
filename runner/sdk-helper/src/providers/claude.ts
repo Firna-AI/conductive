@@ -107,9 +107,10 @@ export function createClaudeFactory(
       deliver: (content) => {
         if (closed) return null
         const message = userInput(options.conversationId ?? '', content)
-        input.continue([], message)
+        input.note(message)
         return message.uuid
       },
+      settled: (uuid) => input.settle(uuid),
       changed: () => background.publish(),
     })
     background.watch(orphans)

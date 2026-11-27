@@ -79,17 +79,19 @@ work.
 - A subagent is an agent that the main agent of a Claude turn starts. A
   subagent that ends its reply while its own task runs is parked. The
   agent program wakes it when that task ends.
-- A task that a parked subagent started is live work until it ends. After
-  it ends, the turn stays open for a grace time of 2 minutes, so that the
-  agent program can wake the subagent (background work decision 4).
+- When a task that a parked subagent started ends, the turn stays open for
+  a grace time of 2 minutes, so that the agent program can wake the
+  subagent (background work decision 4).
 - The grace time ends early when the subagent runs again.
 - When the subagent does not run again in the grace time, the main agent
-  gets one note in the same turn. The note names each such task, its
-  subagent, how the task ended, and where its output is. It asks the main
-  agent to resume the subagent or to finish the work itself.
-- The note names each task run at most once in a turn. Tasks that end
-  together share one note.
+  gets a note in the same turn. The note names the task, its subagent, how
+  the task ended, and where its output is. It asks the main agent to resume
+  the subagent or to finish the work itself.
+- Each run of a task gets its own grace time and at most one note in a
+  turn.
 - A task that an agent stopped gets no grace time and no note.
+- A subagent that a parked subagent started gets no grace time and no
+  note. Reason: the agent program sends its result to the main agent.
 - The turn stays open until the reply to the note ends. That reply is a
   wake-up reply of the same turn. It answers no member message.
 - The note follows the rules of [The note](#the-note): the chat never
