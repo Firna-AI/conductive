@@ -1,4 +1,5 @@
 import type { WorkspaceLinkContext } from '../data/workspace-link'
+import type { AppEnv } from '../env'
 import type {
   WorkspaceSockets,
   NativeSocketAttachment,
@@ -26,12 +27,14 @@ export interface NativeBrowserConnections {
 export class BrowserConnections extends BrowserTabs {
   private readonly connections = new WeakMap<WebSocket, BrowserPeer>()
   private readonly store: ChatStore
+  private readonly env: AppEnv
   private readonly operation: (id: string) => ChatOperation
   private readonly bind: (id: string) => void
   private readonly native?: NativeBrowserConnections
 
   constructor(
     store: ChatStore,
+    env: AppEnv,
     dependencies: ChatDependencies,
     operation: (id: string) => ChatOperation,
     bind: (id: string) => void,
@@ -39,6 +42,7 @@ export class BrowserConnections extends BrowserTabs {
   ) {
     super(dependencies)
     this.store = store
+    this.env = env
     this.operation = operation
     this.bind = bind
     this.native = native
@@ -82,6 +86,7 @@ export class BrowserConnections extends BrowserTabs {
       }
       return subscribeBrowser({
         store: this.store,
+        env: this.env,
         browsers: this,
         operation: this.operation(access.workspace.id),
         access,

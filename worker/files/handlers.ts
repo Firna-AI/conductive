@@ -5,11 +5,11 @@ import {
   filterFileResponse,
   filterTree,
 } from '../../src/shared/output-fields'
-import { OutputSanitizer } from '../../src/shared/output-sanitizer'
 import type { AppEnv, HttpFetch } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { gate } from '../security/gate'
 import { runningOutputSecrets } from '../lifecycle/output-secrets'
+import { secretTextFilter } from '../secrets/output-values'
 import { filesWorkspace } from './access'
 import type { FilesWorkspace } from './data'
 import { readBoatFile } from './boat'
@@ -60,23 +60,20 @@ export function createFilesHandler(options: FilesHandlerOptions) {
         )
       }
       const workspace = await filesWorkspace(env, context, workspaceId)
-      const output = new OutputSanitizer()
-      for (const secret of await runningOutputSecrets(env, workspace))
-        output.add(secret)
-      const text = (value: string) => output.text(value)
       const paths = filePaths
       let response: Response
       if (url.pathname === paths.tree(context.org.id, workspaceId)) {
         response = fileListResponse(
-          await options.fileLists.tree(workspaceId),
-          (tree) => filterTree(tree, text),
+          await options.fileLists.tree(env, workspace, filterTree),
         )
       } else if (url.pathname === paths.changes(context.org.id, workspaceId)) {
         response = fileListResponse(
-          await options.fileLists.changes(workspaceId),
-          (changes) => filterChanges(changes, text),
+          await options.fileLists.changes(env, workspace, filterChanges),
         )
       } else {
+        const text = secretTextFilter(
+          await runningOutputSecrets(env, workspace),
+        )
         const files = await options.workspaceFiles(workspace)
         const path = readFilePath(url.searchParams.get('path'))
         if (
@@ -155,11 +152,11 @@ export function createFilesHandler(options: FilesHandlerOptions) {
   }
 }
 
-function fileListResponse<List extends object>(
-  { list, stateRead }: FilesListRead<List>,
-  filter: (list: List) => List,
-): Response {
-  if (list) return Response.json({ ...filter(list), stateRead })
+function fileListResponse<List extends object>({
+  list,
+  stateRead,
+}: FilesListRead<List>): Response {
+  if (list) return Response.json({ ...list, stateRead })
   const { status, code, message } = fileUnavailable()
   return Response.json({ error: { code, message }, stateRead }, { status })
 }

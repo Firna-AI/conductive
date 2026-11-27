@@ -1,6 +1,7 @@
 import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
 import type { AgentChatEvent } from '../../src/shared/generated/AgentChatEvent'
 import { boundChatEvent } from '../../src/shared/event-limits'
+import type { FilterText } from '../../src/shared/output-fields'
 import { OutputSanitizer } from '../../src/shared/output-sanitizer'
 import type { AppEnv } from '../env'
 import { runningOutputSecrets } from '../lifecycle/output-secrets'
@@ -8,7 +9,7 @@ import type { ChatTransaction } from './store'
 import type { RunnerWorkspaceRecord } from './types'
 import { displayPortReport } from './port-reports'
 import { displaySkillReport } from './skill-reports'
-import { agentOutputSecrets } from '../secrets/output-values'
+import { agentOutputSecrets, secretTextFilter } from '../secrets/output-values'
 import { filterToolDetail } from './tool-detail-filter'
 import { prepareOutputState } from './output-filter-state'
 import { AnswerOutputRecords } from './output-answer-records'
@@ -16,6 +17,7 @@ import { AnswerOutputRecords } from './output-answer-records'
 export interface FilteredRunnerOutput {
   events: RunnerEventEnvelope[]
   privateContext?: AgentChatEvent
+  filterLabel: FilterText
   save(): Promise<void>
 }
 
@@ -28,6 +30,14 @@ export async function runnerOutputSecretValues(
     ...(await runningOutputSecrets(env, workspace)),
     ...(await agentOutputSecrets(env, view.secrets, workspace, view.now)),
   ]
+}
+
+export async function runnerOutputLabelFilter(
+  env: AppEnv,
+  view: ChatTransaction,
+  workspace: { id: string; orgId: string },
+): Promise<FilterText> {
+  return secretTextFilter(await runnerOutputSecretValues(env, view, workspace))
 }
 
 /** Restore per-receipt state so a failed transaction cannot consume held text. */
@@ -72,6 +82,7 @@ export async function filterRunnerOutput(
   }))
   return {
     events,
+    filterLabel: (text) => sanitizer.text(text),
     save: () =>
       records.save(input.streamId, sanitizer.snapshot(), answers, activeValues),
   }

@@ -131,27 +131,24 @@ export async function applyChangesDelta(
     if (previousRevision !== delta.revision - 1) invalidRunnerReport()
   }
   const { edits, upserts, fields } = await readEdits(transaction, list, delta)
+  const previousOrder = await readOrderText(transaction, 'changes', list)
+  const order = applyOrder(previousOrder, list, edits, upserts)
   const buckets = [...list.buckets]
-  let orderChunks = list.orderChunks
-  if (edits.size > 0) {
-    const previousOrder = await readOrderText(transaction, 'changes', list)
-    const order = applyOrder(previousOrder, list, edits, upserts)
-    for (const [bucket, { files }] of edits)
-      buckets[bucket] = await writeBucket(
-        transaction,
-        'changes',
-        bucket,
-        files,
-        buckets[bucket],
-      )
-    orderChunks = await writeOrder(
+  for (const [bucket, { files }] of edits)
+    buckets[bucket] = await writeBucket(
       transaction,
       'changes',
-      order,
-      previousOrder,
-      list.orderChunks,
+      bucket,
+      files,
+      buckets[bucket],
     )
-  }
+  const orderChunks = await writeOrder(
+    transaction,
+    'changes',
+    order,
+    previousOrder,
+    list.orderChunks,
+  )
   manifest.changes = {
     fields,
     count: delta.summary.files,

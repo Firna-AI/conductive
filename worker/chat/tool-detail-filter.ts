@@ -126,6 +126,7 @@ export async function filterToolDetail(
       ? [{ ...input, occurredAt: state.occurredAt, event }]
       : [],
     privateContext: event,
+    filterLabel: (text) => filterSecretText(text, true, values).text,
     save: async () => {
       if (part.finalPart) {
         await saveToolDetail(env, transaction, input.streamId, undefined)

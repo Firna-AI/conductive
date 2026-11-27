@@ -28,7 +28,7 @@ const access = {
  * after 4,196,247 UTF-8 bytes. The final list contains three more events.
  */
 async function storedWorkspace() {
-  const { storage } = await nativeChatStore()
+  const { storage, harness } = await nativeChatStore()
   const name = '🙂'.repeat(1_000)
   await seedLegacyHistory(
     storage,
@@ -37,7 +37,7 @@ async function storedWorkspace() {
       name,
     })),
   )
-  return new ChatStore(storage, () => 25)
+  return { store: new ChatStore(storage, () => 25), env: harness.env }
 }
 
 function grants(deadline = 60_000) {
@@ -109,11 +109,12 @@ const budgetCases = [
 it.each(budgetCases)(
   'ends a replay at its UTF-8 byte budget $end and closes the tab, and a tab after its last event gets the rest',
   async ({ budget, first, rest }) => {
-    const store = await storedWorkspace()
+    const { store, env } = await storedWorkspace()
     const browsers = grants()
     const ended = tab()
     await subscribeBrowser({
       store,
+      env,
       browsers,
       operation: logins,
       access,
@@ -128,6 +129,7 @@ it.each(budgetCases)(
     const resumed = tab()
     await subscribeBrowser({
       store,
+      env,
       browsers,
       operation: logins,
       access,
@@ -145,11 +147,12 @@ it('refuses a tab without a grant before its first history page, with no unhandl
   const listener = (reason: unknown) => unhandled.push(reason)
   process.on('unhandledRejection', listener)
   try {
-    const store = await storedWorkspace()
+    const { store, env } = await storedWorkspace()
     const refused = tab()
     let registered = 0
     const subscription = subscribeBrowser({
       store,
+      env,
       browsers: grants(0),
       operation: logins,
       access,
@@ -200,13 +203,20 @@ async function seedChangesReplay(store: ChatStore) {
 }
 
 it('charges the complete changes event to the replay budget of an older tab', async () => {
-  const { storage } = await nativeChatStore()
+  const { storage, harness } = await nativeChatStore()
   const store = new ChatStore(storage, () => 25)
   await seedChangesReplay(store)
 
   const older = tab()
   const browsers = grants()
-  const options = { store, browsers, operation: logins, access, budget: 1_000 }
+  const options = {
+    store,
+    env: harness.env,
+    browsers,
+    operation: logins,
+    access,
+    budget: 1_000,
+  }
   await subscribeBrowser({ ...options, after: 1, peer: older.peer })
   expect(pages(older.state.messages)).toEqual([
     { numbers: [2], through: 3, next: 2 },
@@ -235,7 +245,7 @@ it('charges the complete changes event to the replay budget of an older tab', as
 })
 
 it('omits a changes delta from older-tab replay when its saved list is unreadable', async () => {
-  const { storage } = await nativeChatStore()
+  const { storage, harness } = await nativeChatStore()
   const store = new ChatStore(storage, () => 25)
   await seedChangesReplay(store)
   await storage.delete(orderKey('changes', 0))
@@ -244,6 +254,7 @@ it('omits a changes delta from older-tab replay when its saved list is unreadabl
 
   await subscribeBrowser({
     store,
+    env: harness.env,
     browsers,
     operation: logins,
     access,

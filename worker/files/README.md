@@ -53,7 +53,7 @@ A changes delta reads the touched buckets and the order text.
 It checks the digests of the buckets that it reads.
 It checks the new summary from the previous summary and the affected rows.
 It writes changed buckets, changed order text, and the new manifest.
-A delta with only a header reads and writes no list chunks.
+A delta with only a header reads and checks the order text. It leaves healthy list chunks unchanged.
 A connection reset updates the manifest. An unavailable-tree mark and a repository move update the manifest of a bucket projection without reading list items.
 The first list write or tree mark of an old projection converts retained lists one entry at a time.
 It reads the old chunks in bounded batches.
@@ -170,8 +170,8 @@ In the combined integration, these results reach the owner through the chat back
 These results use request IDs and bypass the numbered chat event history.
 Real file paths and base branches stay unchanged for every operation.
 Separate masked display labels come from the shared output field policy.
-The gated handler fills those labels from the actual start capture for
-runner results, direct opens, cached reports, and provider fallback.
+The gated handler fills those labels from the start capture for runner
+results, direct opens, and provider fallback.
 The browser receives no secret list. Raw operational paths can therefore
 contain marked values; the access protocol states this exposure.
 The broker checks the response type, connection, requested path, requested base branch, and file byte count.
@@ -191,10 +191,10 @@ It returns the last stored lists while the sandbox sleeps.
 The list routes load the output filter after the request gates.
 They wait for the shared read-state recovery when it must run.
 One chat-queued view gives the list and its `stateRead`.
+The view uses the current secret values to mask the display labels of the list.
 This field gives the event number, the first open repair failure of that list, and the repository ID at that event number.
 Omission metadata is part of the list payload.
 The changes payload also gives the list revision when it is known.
-The handler filters the list after the queued read.
 A missing list gives HTTP 503 `file_unavailable` with `stateRead`.
 For the tree, this can occur before the first tree report or unavailable-tree mark.
 See [The state of a new tab](../../docs/protocol/workspace-events.md#the-state-of-a-new-tab).

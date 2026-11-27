@@ -41,11 +41,19 @@ const delta = changesDelta({
 const editedBucket = bucketOf(edited.path)
 const editedChunk = bucketKey('changes', editedBucket, 0)
 const orderChunk = orderKey('changes', 0)
+const removeOrder = (storage: DurableObjectStorage) =>
+  storage.delete(orderChunk)
 
 const damageCases = [
   {
     damage: 'missing order chunk',
-    set: async (storage: DurableObjectStorage) => storage.delete(orderChunk),
+    set: removeOrder,
+  },
+  {
+    damage: 'missing order on a header-only delta',
+    set: removeOrder,
+    update: changesDelta({ summary }),
+    currentTab: true,
   },
   {
     damage: 'missing touched bucket chunk',
@@ -79,7 +87,7 @@ const damageCases = [
 
 it.each(damageCases)(
   'refuses a changes delta for $damage and rebuilds the list',
-  async ({ set }) => {
+  async ({ set, update = delta, currentTab }) => {
     const fixture = await createChatFixture(harness)
     const runner = await fixture.connect()
     runner.emit(initial)
@@ -87,15 +95,15 @@ it.each(damageCases)(
     const request = fixture.request(
       workspaceEventsPath(fixture.org.id, WORKSPACE_ID),
     )
-    const olderUrl = new URL(request.url)
-    olderUrl.searchParams.delete('forms')
-    await fixture.actor.api.peers.openBrowser('older', {
-      url: olderUrl.href,
+    const url = new URL(request.url)
+    if (!currentTab) url.searchParams.delete('forms')
+    await fixture.actor.api.peers.openBrowser('tab', {
+      url: url.href,
       headers: Object.fromEntries(request.headers),
     })
     await set(fixture.storage)
 
-    const refused = runner.emit(delta)
+    const refused = runner.emit(update)
     await fixture.drain()
     const marker = {
       type: 'runner.event-refused',
@@ -140,9 +148,9 @@ it.each(damageCases)(
       fixture.actor.api.controls.fileProjection('changes'),
     ).resolves.toEqual(rebuilt)
     expect(refreshCommands(runner)).toHaveLength(1)
-    const older = await fixture.actor.api.peers.take('older')
-    expect(older.closed).toBe(0)
-    expect(older.messages).toEqual([
+    const tab = await fixture.actor.api.peers.take('tab')
+    expect(tab.closed).toBe(0)
+    expect(tab.messages).toEqual([
       expect.objectContaining({ type: 'history' }),
       {
         type: 'event',

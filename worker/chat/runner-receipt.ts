@@ -53,17 +53,15 @@ export async function commitRunnerReceipt(
           workspace,
           message,
           dependencies,
+          () => publication.needsCompleteChanges(),
         )
-        const delta = receipt.stored.find(
-          ({ event }) => event.type === 'changes.changed',
-        )
-        if (delta && publication.needsCompleteChanges())
-          completeChanges =
-            (await readCompleteChanges(transaction.files, delta).catch(
-              throwUnreadableChanges,
-            )) ?? undefined
+        completeChanges = receipt.completeChanges ?? undefined
         await transaction.saveCursor(message.streamId, message.eventNumber)
-        return { ...receipt, cursor: message.eventNumber }
+        return {
+          ready: receipt.ready,
+          stored: receipt.stored,
+          cursor: message.eventNumber,
+        }
       },
       (events) => publication.publish(events, completeChanges),
     )
@@ -83,7 +81,12 @@ async function storeRunnerReceipt(
   workspace: RunnerWorkspaceRecord,
   message: IncomingRunnerEnvelope,
   dependencies: ChatDependencies,
-): Promise<{ ready: boolean; stored: WorkspaceEventEnvelope[] }> {
+  needsCompleteChanges: () => boolean,
+): Promise<{
+  ready: boolean
+  stored: WorkspaceEventEnvelope[]
+  completeChanges?: WorkspaceEventEnvelope | null
+}> {
   const stored: WorkspaceEventEnvelope[] = []
   const { randomId } = dependencies
   let parsed: RunnerEventEnvelope
@@ -150,7 +153,16 @@ async function storeRunnerReceipt(
     if (!result.accepted) break
   }
   if (accepted) await filtered.save()
-  return { ready, stored }
+  const delta = stored.find(({ event }) => event.type === 'changes.changed')
+  const completeChanges =
+    delta && needsCompleteChanges()
+      ? await readCompleteChanges(
+          transaction.files,
+          delta,
+          filtered.filterLabel,
+        ).catch(throwUnreadableChanges)
+      : null
+  return { ready, stored, completeChanges }
 }
 
 async function refuseInvalid(

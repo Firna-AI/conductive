@@ -87,7 +87,9 @@ it('applies ordered changes with reads and writes only for the touched buckets',
   observed.writes.length = 0
   const omitted = { files: 4, added: 8, removed: 2 }
   await reports.accept(changesDelta({ revision: 3, summary, omitted }))
-  expect(observed.reads.flat().filter(changedRows)).toEqual([])
+  expect(observed.reads.flat().filter(changedRows)).toEqual([
+    orderKey('changes', 0),
+  ])
   expect(
     observed.writes
       .flatMap(({ updates }) => Object.keys(updates))

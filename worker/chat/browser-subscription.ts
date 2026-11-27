@@ -1,3 +1,9 @@
+import {
+  filterChanges,
+  filterTree,
+  type FilterText,
+} from '../../src/shared/output-fields'
+import type { AppEnv } from '../env'
 import { randomToken } from '../security/crypto'
 import type { BrowserAccess } from './browser-authorization'
 import type { BrowserTabs, BrowserPersistence } from './browser-tabs'
@@ -5,6 +11,7 @@ import type { SessionLogins } from './session-login'
 import type { ChatStore } from './store'
 import type { WorkspaceEventPeer } from './workspace-events'
 import { presentCompleteChanges } from './browser-changes'
+import { runnerOutputLabelFilter } from './runner-output'
 
 /**
  * The most UTF-8 JSON bytes of events that the history pages of one
@@ -16,6 +23,7 @@ const REPLAY_BUDGET = 8 * 1024 * 1024
 
 interface BrowserSubscriptionOptions {
   store: ChatStore
+  env: AppEnv
   browsers: BrowserTabs
   /** The logins of the sessions, which an active workspace refreshes first. */
   operation: { logins: Pick<SessionLogins, 'refresh'> }
@@ -92,6 +100,7 @@ export async function subscribeBrowser(
  */
 async function replay({
   store,
+  env,
   browsers,
   access,
   peer,
@@ -99,16 +108,36 @@ async function replay({
   budget = REPLAY_BUDGET,
 }: BrowserSubscriptionOptions): Promise<boolean> {
   const left = { bytes: budget }
+  const completeChanges = !peer.forms?.includes('changes.changed')
+  let filter: Promise<FilterText> | undefined
   let through: number | undefined
   while (true) {
-    const history = await store.read(access.workspace.id, (view) =>
-      view.history(after, through, {
+    const history = await store.read(access.workspace.id, (view) => {
+      const labels = () =>
+        (filter ??= runnerOutputLabelFilter(env, view, access.workspace))
+      return view.history(after, through, {
         budget: left,
-        present: peer.forms?.includes('changes.changed')
-          ? undefined
-          : (envelope) => presentCompleteChanges(view.files, envelope),
-      }),
-    )
+        present: async (envelope) => {
+          const { event } = envelope
+          if (event.type === 'changes.changed' && completeChanges)
+            return presentCompleteChanges(view.files, envelope, await labels())
+          if (event.type === 'changes.updated')
+            return {
+              ...envelope,
+              event: {
+                ...event,
+                changes: filterChanges(event.changes, await labels()),
+              },
+            }
+          if (event.type === 'files.snapshot')
+            return {
+              ...envelope,
+              event: { ...event, tree: filterTree(event.tree, await labels()) },
+            }
+          return envelope
+        },
+      })
+    })
     browsers.check(peer)
     peer.send({ type: 'history', history })
     if (!history.hasMore) return true

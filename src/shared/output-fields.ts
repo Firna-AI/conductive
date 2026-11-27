@@ -15,7 +15,7 @@ import type {
   ContinueWorkspaceResponse,
   LocalWork,
 } from './workspaces'
-type FilterText = (value: string) => string
+export type FilterText = (value: string) => string
 
 function pathLabel<T extends { path: string; displayPath?: string }>(
   value: T,

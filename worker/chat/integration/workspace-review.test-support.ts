@@ -33,9 +33,18 @@ export async function reviewWorkspaceFixture(bundle: string) {
   await runner.inbox.next()
   const turn = record(await runner.inbox.next())
   await actor().readLifecycle()
-  const browser = async (after = 0, cookie = fixture.cookies.ownerCookie) => {
-    const response = await fixture.request(
+  const browser = async (
+    after = 0,
+    cookie = fixture.cookies.ownerCookie,
+    form: 'current' | 'older' = 'current',
+  ) => {
+    const address = new URL(
       workspaceEventsPath(OUTER_ORG, OUTER_WORKSPACE, after),
+      fixture.env.APP_ORIGIN,
+    )
+    if (form === 'older') address.searchParams.delete('forms')
+    const response = await fixture.request(
+      `${address.pathname}${address.search}`,
       { headers: { Upgrade: 'websocket', Cookie: cookie } },
     )
     const socket = response.webSocket
