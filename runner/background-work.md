@@ -97,7 +97,8 @@ states the requirement.
   result answers it, because one result lists at most 64 inputs. It does
   not count as held member input.
 - `live` stays true until a result names the note message. A result that
-  answers only note messages is a wake-up reply. It frees no held input.
+  answers only note messages is a wake-up reply, also after a member
+  message arrived during that reply. It answers no member message.
 - A probe with the pinned program, 0.3.318, showed this order: the shell
   of a parked subagent leaves the list, and the subagent joins the list
   again 10 ms later with a new run ID. Check it again after each SDK

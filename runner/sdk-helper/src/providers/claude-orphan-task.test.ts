@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, expect, it, onTestFinished, vi } from 'vitest'
 
+import { continueText, dropText } from '../../test-support/claude-continue'
 import { FakeClaudeQuery } from '../../test-support/claude-query'
 import { mockComputerServer } from '../../test-support/computer-mcp'
 import { providerFixture } from '../../test-support/fixture'
+import { duringTurn, turn } from '../../test-support/input'
 import { fakeClaudeProfile } from '../../test-support/profile'
 import { string } from '../parse'
 import { createClaudeFactory } from './claude'
@@ -80,7 +82,7 @@ async function parkedSubagent() {
   })
   const live = () =>
     h.events.findLast((event) => event.type === 'background')?.live
-  return { ...h, sdk, saved, tasks, ended, live }
+  return { ...h, sdk, provider, saved, tasks, ended, live }
 }
 
 it('holds the turn, then sends one note when a parked subagent does not wake', async () => {
@@ -111,6 +113,12 @@ it('holds the turn, then sends one note when a parked subagent does not wake', a
     { type: 'wake-up', state: 'finished' },
   ])
   expect(h.live()).toBe(false)
+  // The same run gets no second grace time and no second note.
+  await h.tasks([shell])
+  await h.tasks([])
+  expect(h.live()).toBe(false)
+  await vi.advanceTimersByTimeAsync(120_000)
+  expect(h.saved).toHaveLength(1)
 })
 
 it('sends no note when the subagent wakes in the grace time', async () => {
@@ -178,4 +186,32 @@ it('holds no turn for a subagent that a parked subagent started', async () => {
   await h.ended(shell, 'stopped')
   await h.tasks([])
   expect(h.live()).toBe(false)
+})
+
+it('continues a dropped reply to the note after a member message', async () => {
+  const h = await parkedSubagent()
+  await h.ended(shell, 'completed')
+  await h.tasks([])
+  await vi.advanceTimersByTimeAsync(120_000)
+  const note = await h.sdk.nextUser()
+  const member = turn('2')
+  await h.provider.send({
+    ...duringTurn(member),
+    type: 'message',
+    turnId: 'turn-1',
+    message: { ...member.message, text: 'Status?' },
+  })
+  await h.sdk.nextUser()
+  await h.sdk.raw({
+    type: 'result',
+    subtype: 'error_during_execution',
+    is_error: true,
+    errors: [dropText],
+    user_message_uuid: string(note.uuid),
+  })
+  expect(h.warnings).toEqual([
+    'The Claude answer stream dropped. Continuing the agent once.',
+  ])
+  expect((await h.sdk.nextUser()).message.content).toBe(continueText)
+  expect(h.events.filter((event) => event.type === 'failed')).toEqual([])
 })

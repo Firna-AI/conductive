@@ -94,13 +94,19 @@ export class ClaudeEvents {
       reply = this.reply.uuids.includes(continuation.uuid)
         ? this.reply
         : this.association(completed)
+    // The reply to a note of the runner is a wake-up reply in the same turn.
+    const note =
+      input.type === 'result' &&
+      uuids.length > 0 &&
+      uuids.every((uuid) => this.background.isNote(uuid))
     const wake =
       input.type === 'result' &&
       (continuation
         ? continuation.wake && !reply.userMessageIds.length
-        : !this.answersOutstandingInput(input))
+        : note || !this.answersOutstandingInput(input))
     if (input.type === 'result') this.background.answered(uuids)
-    if (wake && !this.background.waited && !continuation) return
+    // The runner sent the note, so its result stays current after member input.
+    if (wake && !this.background.waited && !continuation && !note) return
     if (
       this.background.waited &&
       input.type === 'system' &&
@@ -222,10 +228,6 @@ export class ClaudeEvents {
   }
 
   private answersOutstandingInput(input: Record<string, unknown>): boolean {
-    const uuids = userUuids(input)
-    // The reply to a note of the runner is a wake-up reply in the same turn.
-    if (uuids.length && uuids.every((uuid) => this.background.isNote(uuid)))
-      return false
     const origin = input.origin
     if (
       typeof origin !== 'object' ||
@@ -234,7 +236,7 @@ export class ClaudeEvents {
       origin.kind !== 'task-notification'
     )
       return true
-    return uuids.some(this.hasOutstanding)
+    return userUuids(input).some(this.hasOutstanding)
   }
 
   private partial(event: Record<string, unknown>): void {
