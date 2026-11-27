@@ -31,14 +31,5 @@ export const mergeQueueCannotJoin = defineScreen({
         'Every member of the org sees each queue, and a member with write access or more to the repository adds, removes, and re-orders entries, because Merge already needs that access (decision 221).',
       props: { mergeQueue: 'refused-access' },
     },
-    {
-      slug: 'zone',
-      title: 'Over the empty zone',
-      description:
-        'No queue has entries, and Cal drags Dark mode for emails, whose branch has no pull request, over the zone of the group. The zone keeps its dashed outline, takes no accent, and shows the reason in place of its own words: "Open a pull request to add it to the queue." It shows these words for the whole drag of this row.',
-      rationale:
-        'The app knows the dragged row when the drag starts, so the zone of a row that cannot join never offers a drop.',
-      props: { mergeQueue: 'refused-zone' },
-    },
   ],
 })

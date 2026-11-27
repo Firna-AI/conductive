@@ -156,8 +156,9 @@
 }
 
 /*
- * The group while a drag runs and no queue has entries: a zone with a
- * dashed outline on every side. It takes the accent while a row of a
+ * The group while a drag runs and no shown block takes the row: the queue
+ * of its repository has no entries, or the group is collapsed. A zone with
+ * a dashed outline on every side. It takes the accent while a row of a
  * section that can join is over it.
  */
 .zone {
@@ -181,19 +182,14 @@
   color: var(--ui-primary-deep);
 }
 
-/* A row over the zone: room under the words for the edge of the row. */
-.zoneHeld {
-  padding-bottom: 14px;
-}
-
 .pageZone {
   min-height: 56px;
   font-size: var(--ui-text-md);
 }
 
 /*
- * The row of a section under the pointer, over the lower edge of the zone
- * or of the words of a block, so the words stay in view. The row keeps the
+ * The row of a section under the pointer, over the lower edge of the words
+ * of a block, so the words stay in view. The row keeps the
  * start alignment of a row, not the centred words around it.
  */
 .lift {

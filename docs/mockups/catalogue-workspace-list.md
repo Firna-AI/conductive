@@ -106,19 +106,18 @@ pages:
 - `app/merge-queue/drag` has the drag of an entry to another place of its
   block, where the line opens for the drop line. Its `add` variant has a
   row of a section over the group, whose block takes the outline of a drop
-  target, with the drop line after its last layer (decision 317 D). Its
-  `zone` variant has the drop zone that the group shows during a drag
-  between sections, while no queue has entries. Its `add-empty` variant has
-  a row over that zone.
+  target, with the drop line after its last layer (decision 317 D). While
+  no queue has entries, a drag shows no group, so the catalogue has no
+  drop zone of an empty queue.
 - `app/merge-queue/cannot-join` has a row whose pull request targets
   another branch over the group. The block takes a dashed outline in the
   neutral colour, with no fill and no drop line, and names the reason after
   its rows, so the drop does nothing. Its `write-access` variant has the
-  reason for a member without write access to the repository. Its `zone`
-  variant has the empty zone with the reason of a branch without a pull
-  request. `joinRefusalText` in `queueCopy.ts` also gives the words of a
-  default branch that needs GitHub's own merge queue, and of a repository
-  that another org already queues. No page draws those two.
+  reason for a member without write access to the repository.
+  `joinRefusalText` in `queueCopy.ts` also gives the words of a branch
+  without a pull request, of a default branch that needs GitHub's own
+  merge queue, and of a repository that another org already queues. No
+  page draws those three.
 - `app/merge-queue/sub-workspaces` has a queued parent and a queued
   sub-workspace, whose sub-workspaces that are not queued move up a level,
   as for an archived parent. Its `left` variant has the trees after the

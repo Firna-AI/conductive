@@ -18,8 +18,8 @@ type ElementRef = (node: HTMLElement | null) => void
 
 /**
  * The group as a drop zone, while a drag of a row of a section runs and no
- * block takes the row: no queue has entries, the queue of its repository
- * has none, or the group is collapsed. The zone takes the accent while the
+ * block takes the row: the queue of its repository has no entries, or the
+ * group is collapsed. The zone takes the accent while the
  * row is over the group. For a row that cannot join, the reason takes the
  * place of the words, and the zone keeps its dashed outline.
  */
@@ -49,9 +49,10 @@ function DropZone(props: { adding: QueueAdd; variant: RowVariant }) {
 
 /**
  * The Merge queue group at the top of the list. It shows while a queue has
- * entries, with one block for each queue in the order of the repositories,
- * and during each drag of a row of a section, as a drop target, also when
- * no queue has entries (decision 317). Each row is the normal row of its
+ * entries, with one block for each queue in the order of the repositories.
+ * During a drag of a row of a section, the group is also a drop target
+ * (decision 317). While no queue has entries, a drag shows no group, so the
+ * sections do not move down. Each row is the normal row of its
  * workspace, and a line joins the marks of each stack. The blocks name
  * their repositories only when two or more queues have entries. The group
  * is the app's own, not a section of the org, so it has no menu. It

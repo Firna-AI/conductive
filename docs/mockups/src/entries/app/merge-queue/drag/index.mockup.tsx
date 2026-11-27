@@ -31,21 +31,5 @@ export const mergeQueueDrag = defineScreen({
         'Decision 317 D adds a drag of a row into the group, which shows as a drop target during each drag. A new entry joins at the top of the stack, so the drop line always falls after the last layer of the block.',
       props: { mergeQueue: 'add' },
     },
-    {
-      slug: 'zone',
-      title: 'Drop zone of an empty queue',
-      description:
-        'No queue has entries, and Cal drags Retry failed webhooks to General. The group shows at the top of the list as a zone with a dashed outline and its words, while the drag lasts. Without a drag, the list shows no group.',
-      rationale:
-        'The group shows as a drop target during each drag, also when no queue has entries (decision 317 D), so the drag into the queue needs no other control.',
-      props: { mergeQueue: 'zone' },
-    },
-    {
-      slug: 'add-empty',
-      title: 'Drop on the empty zone',
-      description:
-        'Cal drags Apple Pay button over the zone. The zone takes the outline and the fill of the accent, and the lifted row floats over it. After the drop, a block of acme/storefront holds Apple Pay button at place 1.',
-      props: { mergeQueue: 'add-empty' },
-    },
   ],
 })

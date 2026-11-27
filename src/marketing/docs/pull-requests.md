@@ -188,7 +188,7 @@ Add the pull request in one of these places.
 - Open the command palette and select **Add to merge queue**.
 - Drag the workspace row into **Merge queue** in the sidebar.
 
-The drop target appears while you drag, even when the queue is empty.
+You can drag a row into the queue only while **Merge queue** shows, so another workspace must already be in a queue.
 If a workspace cannot join, the drop target shows the reason.
 A pull request that joins on its own goes at the end of its repository's queue.
 Adding a draft marks it ready for review on GitHub with your account.

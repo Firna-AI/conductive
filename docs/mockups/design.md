@@ -181,9 +181,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   and the soft fill of a drop target. A row that cannot join gives the
   block a dashed outline in the `border2` colour, with no fill and no drop
   line, and the reason after its rows,
-  from `joinRefusalText` in `queueCopy.ts`. During a drag while no queue
-  has entries, the group shows as a zone with a dashed outline, which
-  shows the reason in place of its words for a row that cannot join.
+  from `joinRefusalText` in `queueCopy.ts`. While no queue has entries,
+  a drag shows no group, so the sections do not move down.
   `MergeQueueGroup.tsx` and `QueueBlock.tsx` in `src/components/workspaces/`
   draw it, with the shared
   [`MergeQueue.module.css`](../../src/ui/components/workspaces/MergeQueue.module.css).
