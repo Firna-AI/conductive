@@ -225,6 +225,10 @@ Depends on: every other milestone
       confirmed all six. Findings 1, 2, 3, 6 and a refusal text fixed in
       round 1. Finding 4, an empty repository, waits for Cal. Finding 5
       deferred. Record: `.context/reviews/calummoore/add-repo-not-added-faoc/findings.md`.
+      Review round 2 on `b2a95dbbc` gave five findings. Its checks
+      removed one. Findings 9, 11 and 12 fixed in round 2. The fate of an
+      unrecorded clone folder waits for Cal. Finding 10 deferred. The two
+      fix rounds are used.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
