@@ -1,0 +1,70 @@
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 56px 1fr 52px;
+  align-items: center;
+  gap: 10px;
+  height: 22px;
+}
+
+.name,
+.size {
+  color: var(--ui-ink2);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.size {
+  text-align: right;
+}
+
+.track {
+  display: flex;
+  align-items: center;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--ui-soft);
+}
+
+/* A 2 px gap of the surface between the parts, with rounded ends. */
+.bar {
+  display: flex;
+  gap: 2px;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.segment {
+  min-width: 3px;
+}
+
+.shared .name {
+  color: var(--ui-muted);
+}
+
+.history {
+  width: 3px;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--ui-border2);
+}
+
+.cloudTrack {
+  height: 22px;
+  padding: 0 8px;
+  border: 1px dashed var(--ui-primary-border);
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary-deep);
+  font-size: var(--ui-text-xs);
+  box-sizing: border-box;
+}

@@ -1,0 +1,16 @@
+/* The graphic needs more width than a picture of a screen. */
+.section {
+  max-width: 880px;
+}
+
+.stage {
+  margin: 0;
+  align-items: stretch;
+}
+
+.footnote {
+  margin: -16px 0 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+}
