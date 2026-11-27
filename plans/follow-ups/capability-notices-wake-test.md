@@ -1,0 +1,35 @@
+# Capability notices flag has no real wake test
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-27, from the branch `calummoore/add-repo-not-added-faoc`, a finding check of review finding 6.
+- **Location:** The store test at `worker/chat/runner-connection-store.test.ts:63-75`. The reader of the saved flag at `worker/chat/runner-connection-store.ts:93`. `restore()` at `worker/chat/runner-connections.ts:179-219`. The real wake tests in `worker/chat/runner-move-wake.test.ts`. `runnerControls.connect` at `worker/chat/runner-native.test-support.ts:68-106`, with its hello fields at `:73-79`. `OuterFakeRunner` at `worker/chat/integration/runner-socket.test-support.ts:31`, with its hello at `:79-102`. The test actions of the wake runtime at `worker/chat/runner-entry.test-support.ts:146-188`.
+- **Reason:** The flag came with an earlier change, not with the branch that found the gap.
+
+- **Source:** Review.
+- **Category:** Test.
+- **Terms:**
+  - **Wake:** the restart of a workspace Durable Object that restores its existing runner connection from storage.
+  - **Notice:** an app note to the agent, such as "Octocat pre-approved `DEPLOY_KEY`.", which the Worker sends only to a runner that offered `capabilityNotices`.
+- **Background:**
+  - The runner hello can offer `capabilityNotices`. The Worker saves it with the connection and must restore it after a wake.
+  - `worker/chat/access.md:191-194` says that a restore reads back the whole value, also each field that a later change adds.
+  - The reader keeps the flag only when it is `true`, at `worker/chat/runner-connection-store.ts:93`. `restore()` then makes the saved record the state of the active runner, at `worker/chat/runner-connections.ts:216`.
+  - The Worker sends a notice as a `notice` command, or in the `notices` of a `turn`. It checks the flag first, at `worker/chat/runner-command-preparation.ts:49` and `:185`, and at `worker/chat/runner-delivery.ts:67`.
+  - The store test at `worker/chat/runner-connection-store.test.ts:63-75` saves and reads the flag on native Durable Object storage, through `nativeChatStore()`. It runs no wake and no `restore()`.
+  - The real wake test "sends the recorded folder variable on the same runner socket after wake", in `worker/chat/runner-move-wake.test.ts`, wakes a connection that offered `addsRepositoryFolder`. It checks the restored record, then the next `repository.move` on the same socket.
+  - That test connects through `runnerControls.connect`, which builds an `OuterFakeRunner`. Neither accepts `capabilityNotices` today.
+  - The wake runtime has a `seed` action, which writes raw storage keys. No action makes a notice. The notice tests seed notes through `noticeFixture` in `worker/chat/capability-notices.test-support.ts`, on another harness.
+- **Problem:** No test wakes a runner connection that offered `capabilityNotices`. The store test reads the saved flag, but it never restores a connection.
+- **Impact if no action:** A restore that drops the flag after the reader would pass every test, and the runner would stop getting notices after a wake.
+- **Root question:** How do tests prove that `capabilityNotices` survives a real wake?
+- **Options:**
+  - **A.** Let `OuterFakeRunner` and `runnerControls.connect` send `capabilityNotices`. Add a real wake case beside the `addsRepositoryFolder` case. Check the restored record, then check that a notice reaches the same socket after the wake. Cost: the wake runtime needs a new test action that makes a notice, or note records that `seed` writes. Effort: Small.
+- **Left out:**
+  - More assertions in the store test: they cannot exercise the real wake, because that test never restores a connection.
+  - A check of the restored record only: it proves the stored value, not the restored connection, so it fails the goal.
+  - A test that sends every hello flag and fails the typecheck for a new one: it is a test for the class, which needs the user.
+- **Wider fix:** None. The testing skill already requires integration coverage of storage boundaries.
+- **Previous examples:** The real wake test for `addsRepositoryFolder` in `worker/chat/runner-move-wake.test.ts`, added in the branch `calummoore/add-repo-not-added-faoc`. Commit `c0b852710` added the real wake tests of that file on 21 November 2026.
+- **Recommendation:** A. It uses the real wake fixture and the same socket.
+- **Action:** fix after merge, apply A, because the gap is outside the branch that found it.

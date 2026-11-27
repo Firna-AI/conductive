@@ -10,6 +10,7 @@ import { HttpError } from '../http'
 import { providerForAccount } from '../sandbox/client'
 import { ProviderError } from '../sandbox/errors'
 import { reserveRepositoryChange } from './repository-change-admission'
+import { discardFailedCloneStage } from './repository-change-command'
 import { authorizeRepositoryChange } from './repository-change-data'
 import { endAfterMove, failedAfterMove } from './repository-change-end'
 import { repositoryChangeFailed } from './repository-change-errors'
@@ -147,6 +148,7 @@ export class WorkspaceRepositoryChange implements RepositoryChangeProgress {
     outcome: NonNullable<RepositoryChangeJob['outcome']>,
   ): Promise<void> {
     this.scope = null
+    if (!outcome.ok) await discardFailedCloneStage(this.options, job)
     await this.options.run(async () => {
       const current = await readRepositoryChangeJob(this.options.storage)
       if (!current || current.id !== job.id) return

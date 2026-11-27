@@ -4,6 +4,7 @@ import { WORKSPACE_ID } from '../chat/harness.test-support'
 import { encrypt } from '../security/crypto'
 import { FakeRunner } from '../test-support/fake-runner'
 import { createHarness, type TestHarness } from '../test-support/harness'
+import { continueStagingDirectory } from './continue-commands'
 import { REPOSITORY_CHANGE_JOB_KEY } from './repository-change-types'
 import {
   OLD_FOLDER,
@@ -123,6 +124,14 @@ it('keeps the original folder record when the clone fails before the move', asyn
     status: 409,
     code: 'workspace_repository_change_failed',
   })
+  const cleanup = f.boat.commandRequests.at(-1)
+  expect(cleanup).toMatchObject({
+    detached: false,
+    command: expect.stringContaining(
+      continueStagingDirectory(pending.changeId),
+    ),
+  })
+  expect(cleanup?.command).toContain('rm -rf -- ')
   expect(await recordedRepositoryLocations(f.env.DB, WORKSPACE_ID)).toEqual(
     original,
   )

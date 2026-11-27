@@ -46,6 +46,7 @@ export class OuterFakeRunner {
       protocolVersion?: RunnerProtocolVersion
       /** A runner that accepts repository.move names its folder. */
       repositoryFolder?: string
+      addsRepositoryFolder?: RunnerHello['addsRepositoryFolder']
       processStartId?: RunnerHello['processStartId']
       loginKinds?: RunnerHello['loginKinds']
       fileServer?: RunnerHello['fileServer']
@@ -83,6 +84,9 @@ export class OuterFakeRunner {
       ...(options.repositoryFolder
         ? { repositoryFolder: options.repositoryFolder }
         : {}),
+      ...(options.addsRepositoryFolder === undefined
+        ? {}
+        : { addsRepositoryFolder: options.addsRepositoryFolder }),
       ...(options.processStartId === undefined
         ? {}
         : { processStartId: options.processStartId }),

@@ -148,6 +148,7 @@ both jobs for the workspace object.
 Saved jobs with the earlier named default still publish through the same path.
 [`repository-change-clone-command.ts`](repository-change-clone-command.ts) prepares a Git work tree from the stage and moves it into place.
 [`repository-location-data.ts`](repository-location-data.ts) records its directory and variable before publication.
+[`repository-folder-file.ts`](repository-folder-file.ts) writes the folder record for runner, terminal, and service starts.
 
 ### Builds and refreshes
 

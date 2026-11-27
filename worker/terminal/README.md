@@ -118,8 +118,9 @@ Both units run as `user`. They share the runtime folder
 The ttyd unit requires the shell server unit, and starts after it.
 
 The shell server loads the workspace variables from
-`/run/ascii-secrets/env.sh`, and moves to `CONDUCTIVE_REPOSITORY_DIR`, the
-repository folder. Then it starts one tmux server on the socket
+`/run/ascii-secrets/env.sh` and reads the recorded folder variables from
+`/run/conductive/repository-folders`. It moves to
+`CONDUCTIVE_REPOSITORY_DIR` and starts one tmux server on the socket
 `/run/conductive-terminal/tmux.sock`. The server reads no tmux
 configuration file. It keeps running when no session exists. It keeps
 2,000 lines of history in each pane, as the screen does. It enables mouse
@@ -135,9 +136,10 @@ The launcher loads the same variables, moves to the repository folder, and
 checks the password before it runs ttyd with `--url-arg`.
 For each connection, ttyd runs the attach program with the repository path
 as its first, internal argument. It then adds each URL argument.
-The attach program runs the terminal bridge with the private Node of the
-image. It removes `NODE_OPTIONS` and `NODE_PATH` of the workspace variables
-first, because they could make Node load other code. With no URL argument,
+The attach program refreshes the recorded folder variables in the shell
+server for new sessions. It removes `NODE_OPTIONS` and `NODE_PATH`, because
+they could make Node load other code. It then runs the terminal bridge with
+the private Node of the image. With no URL argument,
 the attach program selects `workspace`, the shell of Terminal 1.
 One URL argument must be exactly 32 lowercase hexadecimal characters.
 It selects the session `terminal-<id>`. Each other argument list exits

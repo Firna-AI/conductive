@@ -55,6 +55,7 @@ printf '%s\\0' "$PWD" "$CONDUCTIVE_LAUNCH_TEST" "$@"
     runtimeDirectory: runtime.path,
     restoreMarker: `${runtime.path}/restore-ended`,
     environmentFile,
+    repositoryFoldersFile: `${root}/repository-folders`,
     owner: String(process.getuid?.()),
     group: String(process.getgid?.()),
     entropyCommand: [entropy, '-An', '-v', '-N32', '-tx1', entropyInput],

@@ -282,7 +282,7 @@ Queue prompts use pull request numbers and commits in Git commands.
 ## Understand services
 
 A service is a named program that runs outside an agent turn.
-It uses the org environment values installed at this computer start, plus values supplied for that service.
+It uses the org environment values installed at this computer start, the recorded repository folder variables, and values supplied for that service.
 It does not inherit the agent's credentials, turn context, or secrets added to an approved command.
 Services run as the same computer user as the other programs.
 Their code can still read available files and credentials, including those of later turns.

@@ -113,6 +113,8 @@ tools that start, list, stop, and restart services, and read their logs.
   values:
   - the [env vars of the org](workspaces-and-sandboxes.md#startup-script-and-env-vars),
     as the cloud computer got them at its current start
+  - the [repository folder variables](repository-folders.md#folder-variables)
+    from the workspace's current record
   - the explicit values of its definition
   - the base variables of a program of the sandbox user, such as `HOME`
     and `PATH`

@@ -1,22 +1,8 @@
 import { expect, it } from 'vitest'
 
+import { nativeChatStore } from './native-store.test-support'
 import { RunnerConnectionStore } from './runner-connection-store'
 import type { RunnerConnectionState } from './runner-connection-state'
-import type { ChatData, ChatStorage } from './types'
-
-function memory(): ChatStorage & { values: Map<string, unknown> } {
-  const values = new Map<string, unknown>()
-  const data: ChatData = {
-    get: <T>(key: string) => Promise.resolve(values.get(key) as T | undefined),
-    put: (key, value) => {
-      values.set(key, structuredClone(value))
-      return Promise.resolve()
-    },
-    delete: (key) => Promise.resolve(values.delete(key)),
-    list: () => Promise.resolve(new Map()),
-  }
-  return { ...data, values, transaction: (work) => work(data) }
-}
 
 const connection: Omit<RunnerConnectionState, 'generation'> = {
   id: 'connection',
@@ -34,7 +20,7 @@ const connection: Omit<RunnerConnectionState, 'generation'> = {
 }
 
 it('keeps repository move capabilities across a wake and accepts older records', async () => {
-  const storage = memory()
+  const { storage } = await nativeChatStore()
   const store = new RunnerConnectionStore(storage)
   const saved = await store.replace({
     ...connection,
@@ -59,20 +45,23 @@ it('keeps repository move capabilities across a wake and accepts older records',
 })
 
 it('refuses a saved repository folder that is not text', async () => {
-  const storage = memory()
+  const { storage } = await nativeChatStore()
   const store = new RunnerConnectionStore(storage)
-  await store.replace(connection)
-  const text = String(storage.values.get('native:runner:state:0'))
-  const state = JSON.parse(text) as { connection: Record<string, unknown> }
-  state.connection.repositoryFolder = 7
-  storage.values.set('native:runner:state:0', JSON.stringify(state))
+  const saved = await store.replace(connection)
+  await storage.put(
+    'native:runner:state:0',
+    JSON.stringify({
+      generation: saved.generation,
+      connection: { ...saved, repositoryFolder: 7 },
+    }),
+  )
   await expect(store.current()).rejects.toThrow(
     'The saved runner connection is invalid.',
   )
 })
 
 it('keeps the capability notice announcement across a wake and defaults older records to no support', async () => {
-  const storage = memory()
+  const { storage } = await nativeChatStore()
   const store = new RunnerConnectionStore(storage)
   const capable = await store.replace({
     ...connection,
@@ -86,7 +75,7 @@ it('keeps the capability notice announcement across a wake and defaults older re
 })
 
 it('keeps pending and refused repository moves and reads records without a move', async () => {
-  const storage = memory()
+  const { storage } = await nativeChatStore()
   const store = new RunnerConnectionStore(storage)
   const repositoryMove = {
     commandId: 'move-billing',
@@ -104,7 +93,7 @@ it('keeps pending and refused repository moves and reads records without a move'
   const older = await store.replace(connection)
   expect(await store.current()).toEqual(older)
   const malformed = { ...older, repositoryMove: { commandId: 7 } }
-  storage.values.set(
+  await storage.put(
     'native:runner:state:0',
     JSON.stringify({ generation: older.generation, connection: malformed }),
   )

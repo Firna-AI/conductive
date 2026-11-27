@@ -112,9 +112,8 @@ configuration at the new folder and branches and starts a new round in the
 same process. Agent processes keep running. The new round prepares the
 context folder, sends a full file report, and names the new folder in hello.
 The stream and the file revisions stay, so the Worker reads the first report
-of the new folder as a full replacement. A later restart or swap reads the
-start variables again. A new workspace start loads them from its saved
-folder record.
+of the new folder as a full replacement. A later restart or swap loads
+the recorded folder variables after the start settings.
 
 The repository runs Git child processes with literal paths and cancellation.
 Comparisons preserve the real index and object store. Reads check the opened

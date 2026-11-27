@@ -1,0 +1,51 @@
+# Repository change to an empty repository fails
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-27, from the branch `calummoore/add-repo-not-added-faoc`, review finding 4.
+- **Location:** `defaultBranch()` at `worker/github/client.ts:60-70`. The verify phase at `worker/lifecycle/repository-change-progress.ts:51-56`. In `baseChangeFetchCommand`, the clone fetch at `worker/lifecycle/base-change-commands.ts:32-41` and the held-folder fetch at `:42-46`. The fetch reason of `repositoryChangeFailed` at `worker/lifecycle/repository-change-errors.ts:32-35`. The section "A failed change" at `docs/protocol/repository-change.md:252`.
+- **Reason:** Each fix adds new words for the member and a requirement for repositories with no first commit, and the user reviews each new requirement and its words.
+
+- **Source:** Review.
+- **Category:** Docs or spec.
+- **Terms:**
+  - **Repository change:** the action that moves an existing workspace to a new branch in the folder of another chosen repository of its org, on the same cloud computer.
+  - **Empty repository:** a GitHub repository with no commits and no branches.
+  - **Verify phase:** the first step of a repository change, which reads the default branch of the new repository from GitHub before any work on the computer.
+  - **Continue:** the action after a merge that moves the workspace to a new branch from the latest default branch.
+- **Background:**
+  - Repository clone decision 1 C of 27 November 2026 makes the header menu list every chosen repository. When the cloud computer does not hold the picked one, the change clones it from GitHub. Otherwise the change uses the held folder of that repository. `docs/protocol/repository-change.md:67-68` and `:224-225` state this.
+  - The new branch starts from the latest default branch of the new repository.
+  - An empty repository has no default branch commit. The clone fetch runs `git clone --bare`, which exits 0 with a warning. Then `git rev-parse --verify 'refs/heads/<default>^{commit}'` exits 128.
+  - A folder that an org image built while the repository was empty is an unborn folder. The held-folder fetch of `+refs/heads/<default>` then also exits 128. This held-folder case is older than the clone.
+  - A check with Git 2.43 on 27 November 2026 gave these exit codes.
+  - The fetch commands discard all Git output, so only the exit code reaches the Worker. `repositoryChangeFailed` ignores that code in the fetch phase and shows the toast that asks the member to check GitHub access.
+  - GitHub gives a null `defaultBranchRef` for an empty repository. `defaultBranch()` then returns the stored name silently, so the job goes on to the resume, the question, and the fetch.
+  - `defaultBranch()` is also the read of Continue, through `memberDefaultBranch` at `worker/features/github.ts:170-181`, which `worker/lifecycle/continue-progress.ts:61` calls. The repository change reaches it through `worker/lifecycle/workspace-jobs.ts:91-92` and `worker/features/github.ts:155-163`. So a change of its null case also reaches Continue.
+  - New workspace handles an empty repository. It pushes an empty first commit to the default branch, then creates the workspace branch from it. Decision 89 chose this, and it took effect on 7 November 2026. `docs/protocol/create-a-workspace.md:143-146` states it.
+  - New words for the member go in `repositoryFailure` at `src/ui/components/workspace/repositoryMoveCopy.ts:35-39`. The mockups draw the failure toast in the `failed` state at `docs/mockups/src/entries/app/repository-change/index.mockup.tsx:43-49`.
+- **Problem:** A change to an empty repository fails with a toast that asks the member to check GitHub access, also when the member has access. No requirement says what the change does for a repository with no first commit.
+- **Screenshot:** After a pick of an empty chosen repository in the header menu, the failure toast asks the member to check GitHub access.
+- **Impact if no action:** The member retries or checks permissions with no result. The change needs a first commit before it can succeed, and nothing says so.
+- **Root question:** How should a member change an existing workspace to a repository with no first commit?
+- **Options:**
+  - **A.** State that a first commit is required. Detect an empty target in the fetch and ask the member to push a first commit, then try again. New words. Effort: Small.
+  - **D.** Do A, but detect the empty target in the verify phase, from the null `defaultBranchRef` that the GitHub read already returns. End the job there with the new reason, which can also name New workspace. This covers held folders and clones, before any resume or download. It adds no GitHub call and does not change the fetch that Continue shares. The read must give the null case to the repository change only, because Continue also uses `defaultBranch()`. The fake GitHub already returns a null `defaultBranchRef` at `worker/github/fake-pull-reads.ts:35`. Risk: a first push after the read gives a refusal that a retry clears. Effort: Small.
+  - **B.** Reuse the first-commit flow of New workspace, so the change can start an empty repository when the member can write to it. Effort: Medium.
+  - **C.** Open a local branch before a first commit and support a workspace with no GitHub comparison base. File comparisons and the pull request bar need rules for that state. Effort: Large.
+  - **E.** Give the repository change a closed, stored stop cause with one copy function, and add a cause for a target with no first commit. This also removes other guessed reasons. Needs an optional stored job field that the previous Worker accepts. Effort: Large.
+- **Left out:**
+  - Hide empty repositories: it breaks repository clone decision 1 C, which lists every chosen repository, at `docs/protocol/repository-change.md:67-68`. The app also stores no fact about which repositories are empty.
+  - Change nothing: it breaks the rule that the failure toast names the reason, at `docs/protocol/repository-change.md:256-257`.
+  - A menu row that is off, with a note: it breaks the rule "The menu has no notes", at `docs/protocol/repository-change.md:81`.
+  - A first commit when the org chooses the repository: it writes to repositories that no workspace uses, so B is better on every point.
+- **Wider fix:** E.
+- **Previous examples:** New workspace pushes a first commit for an empty repository, under decision 89.
+- **Related:**
+  - `plans/follow-ups/repository-change-fetch-access-hint.md` records the same guessed access reason for every fetch failure. Its answer can change the fetch words that A builds on. D does not depend on it.
+  - `plans/follow-ups/repository-change-checkout-clash-cause.md` shares the cause: `repositoryChangeFailed` picks a reason without evidence. E fixes both.
+  - `plans/follow-ups/staged-download-cleanup-shared.md` changes the same fetch command. Until that fix, a failed held-folder fetch of an empty repository leaves its stage, because that fetch has no EXIT trap.
+  - `plans/follow-ups/shared-branch-move-job.md` would give Continue and the repository change one job. One job would carry one cause type, so E fits its option A.
+  - `plans/follow-ups/continue-stop-cause-copy.md` can reserve a fetch status in `baseChangeFetchCommand` under its option C. Option A here reserves another status there, so the two statuses must differ.
+- **Recommendation:** D. It gives the recovery step from the GitHub read that the change already makes, before any wait, for held folders and clones. E best protects the codebase, because one stored cause removes every guessed reason of the repository change.
+- **Action:** ask the user, because each option adds words for the member and a requirement for empty repositories that no recorded decision covers.

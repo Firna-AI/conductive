@@ -1,10 +1,12 @@
 //! Native isolated shell reads for frozen provider settings and basic user paths.
 
 use std::collections::BTreeMap;
+use std::io::ErrorKind;
 use std::path::PathBuf;
 use std::process::Stdio;
 
 use async_trait::async_trait;
+use cnd_runner::config::repository_variable;
 use tokio::process::Command;
 
 use crate::environment::Settings;
@@ -16,6 +18,8 @@ const BASE_PATH: &str = "/home/user/.local/bin:/home/user/.cargo/bin:/usr/local/
 pub struct NativeSettings {
     /// Frozen startup settings. Production uses /run/ascii-secrets/env.sh.
     pub path: PathBuf,
+    /// Folder variables from the current workspace's saved repository locations.
+    pub repository_folders: PathBuf,
 }
 
 fn shell(program: &str) -> Command {
@@ -44,6 +48,32 @@ fn entries(bytes: &[u8]) -> BTreeMap<String, String> {
         .collect()
 }
 
+fn repository_folders(record: &str) -> BTreeMap<String, String> {
+    record
+        .lines()
+        .filter_map(|line| {
+            let (name, path) = line.split_once('=')?;
+            (repository_variable(name) && repository_folder(path))
+                .then(|| (name.into(), path.into()))
+        })
+        .collect()
+}
+
+fn repository_folder(path: &str) -> bool {
+    let Some((parent, name)) = path.rsplit_once('/') else {
+        return false;
+    };
+    let punctuation: &[u8] = match parent {
+        "/home/user/code" => b"._-",
+        "/home/user/conductive/repositories" => b"._-%~!'()*",
+        _ => return false,
+    };
+    !matches!(name, "" | "." | "..")
+        && name
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || punctuation.contains(&byte))
+}
+
 #[async_trait]
 impl Settings for NativeSettings {
     async fn frozen(&self) -> Result<BTreeMap<String, String>> {
@@ -66,7 +96,16 @@ impl Settings for NativeSettings {
                 "frozen service settings could not load",
             ));
         }
-        Ok(entries(&output.stdout))
+        let mut values = entries(&output.stdout);
+        let metadata = match tokio::fs::symlink_metadata(&self.repository_folders).await {
+            Err(error) if error.kind() == ErrorKind::NotFound => return Ok(values),
+            result => result.internal()?,
+        };
+        if metadata.is_file() {
+            let record = tokio::fs::read(&self.repository_folders).await.internal()?;
+            values.extend(repository_folders(&String::from_utf8_lossy(&record)));
+        }
+        Ok(values)
     }
 
     async fn basic(&self) -> Result<BTreeMap<String, String>> {
@@ -91,3 +130,7 @@ impl Settings for NativeSettings {
             .collect())
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/settings_tests.rs"]
+mod settings_tests;

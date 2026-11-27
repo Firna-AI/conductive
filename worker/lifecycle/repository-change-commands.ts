@@ -17,6 +17,8 @@ import {
   CONTEXT_COPY_FAILED,
 } from './repository-change-errors'
 import type { RepositoryChangeJob } from './repository-change-types'
+import { writeRepositoryFolderRecord } from './repository-folder-file'
+import type { RepositoryLocation } from './repository-locations'
 
 /** The changed files of the new folder, which the checkout carries. */
 export function carriedWorkCommand(directory: string): string {
@@ -46,9 +48,14 @@ export function repositoryChangeMoveCommand(
     RepositoryChangeJob,
     'id' | 'baseBranch' | 'directory' | 'branch' | 'target'
   >,
+  recordedFolders: readonly string[] = [],
 ): string {
   if (job.target.clone)
-    return repositoryCloneMoveCommand(job, continueStagingDirectory(job.id))
+    return repositoryCloneMoveCommand(
+      job,
+      continueStagingDirectory(job.id),
+      recordedFolders,
+    )
   const stage = shellQuote(continueStagingDirectory(job.id))
   const base = shellQuote(`refs/remotes/origin/${job.baseBranch}`)
   return isolatedSourceCommand(
@@ -119,7 +126,10 @@ done`
  * moves each idle shell of the old folder to the new folder.
  */
 export function repositoryChangeSettleCommand(
-  job: Pick<RepositoryChangeJob, 'directory' | 'target'>,
+  job: Pick<RepositoryChangeJob, 'directory'> & {
+    target: Pick<RepositoryChangeJob['target'], 'directory' | 'clone'>
+  },
+  locations?: readonly RepositoryLocation[],
 ): string {
   const folder = shellQuote(job.target.directory)
   const file = shellQuote(TERMINAL_FOLDER_FILE)
@@ -127,6 +137,9 @@ export function repositoryChangeSettleCommand(
   const tmux = `/usr/bin/tmux -S ${shellQuote(`${TERMINAL_RUNTIME}/tmux.sock`)}`
   const setVariable = (variable: string) =>
     `${tmux} set-environment -g ${shellQuote(variable)} ${folder} 2>/dev/null || true`
+  const writeFolders = locations
+    ? `${writeRepositoryFolderRecord(locations)} || { echo 'conductive: the repository folder record was not written' >&2; conductive_status=1; }`
+    : ''
   return `conductive_status=0
 ( set -eu
 umask 077
@@ -138,6 +151,7 @@ if [ -d /run/conductive ]; then
   printf '%s\\n' ${folder} > "$conductive_file"
   mv -f -- "$conductive_file" ${file}
   ) || { echo 'conductive: the terminal folder was not written' >&2; conductive_status=1; }
+  ${writeFolders}
 fi
 ${setVariable('CONDUCTIVE_REPOSITORY_DIR')}
 ${job.target.clone ? `${setVariable(job.target.clone.variable)}\n` : ''}${idleShellMove(job.directory, job.target.directory)}

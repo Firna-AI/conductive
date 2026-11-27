@@ -4,11 +4,11 @@ output=$1
 staging=$(mktemp -d)
 trap 'rm -rf "$staging"' EXIT
 mkdir -p "$output"
-for file in runner-start.sh preview-relay-start.sh github-cli.sh 60-conductive-disk-cache.rules install-system.sh conductive-preview-relay.socket conductive-update-check.service conductive-update-check.timer; do
+for file in runner-start.sh repository-folders.sh preview-relay-start.sh github-cli.sh 60-conductive-disk-cache.rules install-system.sh conductive-preview-relay.socket conductive-update-check.service conductive-update-check.timer; do
   cp "image/$file" "$staging/$file"
 done
 cp image/release/* "$staging/"
-npx --no-install esbuild worker/terminal/scripts.ts --bundle --platform=node --format=esm --outfile="$staging/terminal.mjs"
+npx --no-install esbuild worker/terminal/scripts.ts --bundle --platform=node --format=esm --loader:.sh=text --outfile="$staging/terminal.mjs"
 npx --no-install esbuild worker/terminal/bridge-files.ts --bundle --platform=node --format=esm --outfile="$staging/bridge-files.mjs"
 npx --no-install esbuild src/shared/agent-tools.ts --bundle --platform=node --format=esm --outfile="$staging/paths.mjs"
 node --input-type=module - "$staging" <<'JS'

@@ -2,7 +2,9 @@ import { HttpError } from '../http'
 import { providerForAccount } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
 import { lifecycleCommand } from './command-intents'
+import { continueStagingDirectory } from './continue-commands'
 import { workspaceAutoStopSeconds } from './idle-stop'
+import { isolatedSourceCommand } from './image-sources/native-command'
 import {
   repositoryChangeBranchCommand,
   repositoryChangeFetchCommand,
@@ -18,7 +20,35 @@ import type {
   RepositoryChangeJob,
   RepositoryChangeOptions,
 } from './repository-change-types'
-import { recordClonedRepositoryLocation } from './repository-location-data'
+import {
+  recordClonedRepositoryLocation,
+  workspaceRepositoryLocations,
+} from './repository-location-data'
+import { removeCloneStage } from './repository-clone-stage'
+
+/** Reclaim space after a failed clone. The next clone sweeps an unreachable stage. */
+export async function discardFailedCloneStage(
+  options: RepositoryChangeOptions,
+  job: RepositoryChangeJob,
+): Promise<void> {
+  if (
+    !job.target.clone ||
+    !(job.commandStarted || job.phase === 'move' || job.phase === 'publish')
+  )
+    return
+  try {
+    await providerForAccount(
+      options.env,
+      options.dependencies.fetch,
+      job.providerAccount,
+    ).runCommand(
+      job.sandboxId,
+      isolatedSourceCommand(removeCloneStage(continueStagingDirectory(job.id))),
+    )
+  } catch {
+    // An unavailable computer may still hold the stage when it resumes.
+  }
+}
 
 /**
  * The fetch and the move run detached, as in Continue. Once a command
@@ -105,8 +135,13 @@ async function step(
 ): Promise<boolean> {
   if (job.processId === null) {
     const recoverOnly = job.commandStarted
+    let recordedFolders: readonly string[] = []
     if (!recoverOnly) {
       await options.run(() => authorizeRepositoryChange(options, job))
+      if (job.phase === 'move' && job.target.clone)
+        recordedFolders = (
+          await workspaceRepositoryLocations(options.env.DB, job.binding.id)
+        ).map(({ directory }) => directory)
       await provider.setAutoStop(
         job.sandboxId,
         await workspaceAutoStopSeconds(options.env.DB),
@@ -118,7 +153,7 @@ async function step(
     const command =
       job.phase === 'fetch'
         ? repositoryChangeFetchCommand(job)
-        : repositoryChangeMoveCommand(job)
+        : repositoryChangeMoveCommand(job, recordedFolders)
     try {
       if (!recoverOnly && job.phase === 'fetch') progress.scope = job.fetchId
       const started = await provider.startCommand(

@@ -4,6 +4,8 @@ import { privilegedCommand } from '../terminal/privileged'
 import { TERMINAL_FOLDER_FILE } from '../terminal/bridge/folder'
 import { shellQuote } from './commands'
 import { packagesStep, type ImagePackages } from './image-packages'
+import { writeRepositoryFolderRecord } from './repository-folder-file'
+import type { RepositoryLocation } from './repository-locations'
 import {
   releaseInstallScript,
   startupBootstrap,
@@ -95,6 +97,7 @@ export function workspaceStartupCommand(
   owner: CommitAuthor | null,
   mode: 'workspace' | 'retention' = 'workspace',
   bootstrap?: StartupBootstrap,
+  locations: readonly RepositoryLocation[] = [],
 ): string {
   const path =
     mode === 'retention'
@@ -107,6 +110,7 @@ export function workspaceStartupCommand(
     'sudo -n install -d -m 700 -o user -g user /run/conductive',
     // A start gives the terminal the folder of its variables again.
     `rm -f -- ${shellQuote(TERMINAL_FOLDER_FILE)}`,
+    writeRepositoryFolderRecord(locations),
     savedScriptCommand(path, script, [
       'set -a',
       '. /run/ascii-secrets/env.sh',

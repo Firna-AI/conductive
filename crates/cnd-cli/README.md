@@ -74,7 +74,8 @@ same process, with no update attempt. Each round gives its helper the
 `CONDUCTIVE_REPOSITORY`, `CONDUCTIVE_REPOSITORY_DIR`,
 `CONDUCTIVE_DEFAULT_BRANCH`, and `CONDUCTIVE_WORKSPACE_BRANCH` values of
 its configuration, so agent commands get the new folder. A later process
-start reads the start variables again.
+start reads both the start variables and the recorded repository folder
+variables through the launcher.
 A shutdown received during activation prevents execution of the new release.
 Development builds disable idle swaps.
 

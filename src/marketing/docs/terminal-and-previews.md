@@ -196,7 +196,7 @@ conductive services start --name web -- npm run dev
 
 Replace `npm run dev` with your server command.
 The service uses the folder where you run the command.
-Its environment uses the org values from this computer start, plus values supplied for the service.
+Its environment uses the org values from this computer start, the recorded repository folder variables, and values supplied for the service.
 It does not inherit the agent's credentials, turn context, or secrets added to an approved command.
 [Understand service access](/docs/security#understand-services) explains the remaining credential risks.
 

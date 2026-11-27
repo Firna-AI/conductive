@@ -29,6 +29,10 @@
 - **Left out:** A shared contract test suite for both jobs, because a fix still goes to two places, and the jobs differ on purpose. "Change nothing", because Continue keeps its endless retry.
 - **Wider fix:** A. One job removes the second copy and gives both actions one end rule.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/repository-change-fetch-access-hint.md` records two guesses by phase of the repository change: the access hint of a failed fetch, and the clash reason of an index lock. Its option E gives the repository change a closed stored stop cause, as Continue has. One shared branch-move job would carry one cause type and one copy function for both jobs, so that work fits option A here. Neither item waits for the other.
+- **Related:**
+  - `plans/follow-ups/repository-change-fetch-access-hint.md` records the guessed access hint of a failed fetch in the repository change. Its option E gives the repository change a closed stored stop cause, as Continue has. One shared branch-move job would carry one cause type and one copy function for both jobs, so that work fits option A here. Neither item waits for the other.
+  - `plans/follow-ups/repository-change-checkout-clash-cause.md` records the guessed clash reason of a refused checkout, such as an index lock. Its option D is the same stored stop cause, so it also fits option A here.
+  - `plans/follow-ups/repository-change-empty-repository.md` records the guessed access reason for a repository with no first commit. Its option E is the same stored stop cause.
+  - `plans/follow-ups/staged-download-cleanup-shared.md` gives each staged download one cleanup. Its option C, a durable owner of each stage, overlaps option A here, because the shared job would own the command step.
 - **Recommendation:** A. It removes the copies, gives Continue the end rule, and needs no migration.
 - **Action:** fix after merge, apply A, because it changes the Continue job in production and is a Large change that needs its own review.

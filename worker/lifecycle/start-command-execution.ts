@@ -7,6 +7,7 @@ import {
 import { warnWorker } from '../warnings'
 import { WarningId } from '../warning-values'
 import { lifecycleCommand } from './command-intents'
+import { workspaceRepositoryLocations } from './repository-location-data'
 import { latestSoftwareRelease } from './software-release'
 import type { StartupBootstrap } from './software-bootstrap'
 import { workspacePhaseCommand } from './start-command'
@@ -78,6 +79,9 @@ export async function advanceStartCommand(
       await endpoint.lifecycleStep(job.phase, label, 'running')
     let bootstrap: StartupBootstrap | undefined
     if (job.phase === 'startup') {
+      job.repositoryLocations ??= await call(() =>
+        workspaceRepositoryLocations(env.DB, job.workspaceId),
+      )
       try {
         bootstrap = {
           release: await latestSoftwareRelease(env, dependencies.fetch),

@@ -151,8 +151,12 @@ held folder with the isolated source command, in this order:
 
 For a clone, [the clone command](repository-change-clone-command.ts)
 sets up `origin`, the remote-tracking branches, and the tags from the stage.
+It removes the stage after it imports those references.
 It checks out the new branch and copies the context into the temporary
 folder. The final rename refuses an occupied name.
+Each clone sweeps old stages at fetch and old temporary folders at move.
+The sweep preserves recorded repository folders. A failed clone also
+removes its stage when the command or the Worker finishes a failed step.
 
 After a lost process or a failed exit, `repositoryChangeBranchCommand`
 reads the branch of the new folder. On the new branch it repairs the base
@@ -197,7 +201,8 @@ runs after a good move. It never runs Git again.
   that a turn attached during the change. It writes the new folder to
   `/run/conductive/repository` for new terminals, and sets
   `CONDUCTIVE_REPOSITORY_DIR` in the global tmux environment. It also sets
-  the variable of a cloned folder.
+  the variable of a cloned folder. It writes the recorded folders and
+  variables to the memory folder for later software starts.
 - It schedules a GitHub read of the new binding and ends the reservation.
   The job then sends `repository.move` to a connected runner, as
   [the runner check](../chat/key-code.md) says, and flushes the held turns.

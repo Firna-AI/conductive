@@ -3,6 +3,7 @@ import { lifecycleCommand } from './command-intents'
 import type { DiskRetentionResult } from './durable-types'
 import { workspaceStartupCommand } from './image-software'
 import { JobTimeLimit } from './job-time-limit'
+import { workspaceRepositoryLocations } from './repository-location-data'
 import { setRetention } from './retention-data'
 import { ownerCommitAuthor } from './sandbox-environment'
 import { readImageSettings } from './settings-data'
@@ -47,6 +48,11 @@ export async function advanceRetentionCommand(
             settings.startupScript,
             await ownerCommitAuthor(context.env.DB, ownerUserId),
             'retention',
+            undefined,
+            await workspaceRepositoryLocations(
+              context.env.DB,
+              context.workspaceId,
+            ),
           ),
         ),
       )

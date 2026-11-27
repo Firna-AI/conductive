@@ -13,7 +13,7 @@ The [agent runner](README.md) reads these variables when the service starts.
 | `CONDUCTIVE_WORKSPACE_TOKEN`         | Yes      | The workspace token. The runner sends it as a bearer token.           |
 | `CONDUCTIVE_RUNNER_URL`              | Yes      | The `https:` or `wss:` URL of the runner route.                       |
 | `CONDUCTIVE_REPOSITORY`              | Yes      | The folder of the workspace repository.                               |
-| `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | No       | The folder of each repository of the image, with one variable each.   |
+| `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | No       | The folder of each repository that the workspace's computer holds.    |
 | `CONDUCTIVE_DEFAULT_BRANCH`          | Yes      | The workspace base branch, as a name that Git resolves in that folder.       |
 | `CONDUCTIVE_WORKSPACE_BRANCH`        | No       | The workspace branch that the app tracks, from the Worker's record.   |
 | `CONDUCTIVE_SKILLS_REPOSITORY`       | No       | One public GitHub skills repository as `owner/name`, or empty.         |
@@ -26,11 +26,12 @@ The [agent runner](README.md) reads these variables when the service starts.
   the hostname for machines, `api.conductive.build`.
 - No variable configures the computer tools. The runner reads the entry
   that Boat writes, as [Computer tools](agent-tools.md#computer-tools) says.
-- `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` gives the folder of each repository
-  of the image, as
+- `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` gives the folder of each recorded
+  repository, including a repository cloned during a repository change, as
   [Folder variables](../docs/protocol/repository-folders.md#folder-variables)
-  says. The runner reads each such variable that has a value, and makes its
-  folder absolute. `CONDUCTIVE_REPOSITORY_DIR` has no folder part, so it is
+  says. The launcher loads the record after the start settings. The runner
+  reads each such variable that has a value, and makes its folder absolute.
+  `CONDUCTIVE_REPOSITORY_DIR` has no folder part, so it is
   not one of them. The start script maps it to `CONDUCTIVE_REPOSITORY`, as
   [Start in a workspace](../image/README.md#start-in-a-workspace) says.
 - `CONDUCTIVE_DEFAULT_BRANCH` names the base branch of the workspace at the

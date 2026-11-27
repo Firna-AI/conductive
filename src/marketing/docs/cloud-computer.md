@@ -184,7 +184,7 @@ Values and marks apply at the next start of each workspace's computer.
 Every workspace receives the org's environment values, except values with a name that Conductive sets itself.
 Agents and members with terminal access can read the values that the computer receives.
 
-Services use the org values installed at this computer start, plus values supplied for the service.
+Services use the org values installed at this computer start, the recorded repository folder variables, and values supplied for the service.
 They do not inherit the agent's credentials, turn context, or secrets added to an approved command.
 They still share the computer's files and available credentials, as [Understand services](/docs/security#understand-services) says.
 

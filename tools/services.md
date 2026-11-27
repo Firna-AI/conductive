@@ -17,8 +17,9 @@ Start preserves the exact name and argv. Empty names and spaces remain exact.
 The CLI uses its current folder. MCP takes `command` as an argv array and
 an optional `folder`. Its omission uses the MCP process's current folder.
 MCP `env` is an object of explicit string values.
-The clean service environment uses frozen org settings and basic user/project
-variables. It inherits no caller credentials, turn context, or secret-run additions.
+The clean service environment uses frozen org settings, recorded repository
+folder variables, and basic user variables. It inherits no caller credentials,
+turn context, or secret-run additions.
 Definitions and environment maps remain local. Results show the actual saved
 command and folder, without environment maps.
 

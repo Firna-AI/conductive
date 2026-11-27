@@ -72,7 +72,10 @@ export function runnerControls(
       processStartId?: RunnerHello['processStartId'],
       capabilities: Pick<
         RunnerHello,
-        'repositoryFolder' | 'loginKinds' | 'fileServer'
+        | 'repositoryFolder'
+        | 'addsRepositoryFolder'
+        | 'loginKinds'
+        | 'fileServer'
       > = {},
     ) => {
       const response = await runtime.dispatchFetch(

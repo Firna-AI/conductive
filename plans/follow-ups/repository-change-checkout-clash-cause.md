@@ -1,0 +1,72 @@
+# Checkout clash reasons do not match Git's refusals
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-27, from the branch `calummoore/add-repo-not-added-faoc`, review finding 5. It also takes over the lock clash defect from `plans/follow-ups/repository-change-fetch-access-hint.md`. On the same day, it took in the two Git refusals that Continue misses, which a finding check of review finding 5 found.
+- **Location:** The repository change: the held-folder checkout at `worker/lifecycle/repository-change-commands.ts:69`, the fresh clone checkout at `worker/lifecycle/repository-change-clone-command.ts:83`, the clone context copy at `:86`, and `CHECKOUT_REFUSED` and `repositoryChangeFailed` at `worker/lifecycle/repository-change-errors.ts:8` and `:26`. Continue: `nextBranchCommands` at `worker/lifecycle/base-change-commands.ts:81-93`, with its match at `:87`, and the exit codes at `worker/lifecycle/continue-stop-causes.ts:16-20`. The queue head sync: its copy of the match at `worker/lifecycle/queue-head-command.ts:53-60`, and `syncResult` at `worker/lifecycle/queue-head-sync.ts:26-30`. The native tests: `worker/lifecycle/continue-native.test.ts:70`, `worker/lifecycle/queue-head-command.test.ts:10`, `worker/lifecycle/repository-change-native.test.ts:99`, and `worker/lifecycle/repository-change-clone-native.test.ts`.
+- **Reason:** The failures need an unusual checkout condition, and the shared classifier reaches Continue and the queue head sync, outside the branch that found it.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Repository change:** the action that moves an existing workspace to a new branch of another chosen repository, in a held folder or in a new clone.
+  - **Continue:** the action after a merge that moves the workspace to a new branch from the latest default branch.
+  - **Queue head sync:** the merge queue job in `worker/lifecycle/queue-head-sync.ts` that moves a local branch to the new head after GitHub rebases it.
+  - **Reserved status:** an exit code that a move command keeps for one known cause, which the Worker maps to a known result.
+  - **Context folder:** the `.context/` folder of a repository folder, which holds the notes and the attached files of the workspace.
+- **Background:**
+  - The move commands discard all Git output, so only the exit code reaches the Worker. `isolatedSourceCommand` at `worker/lifecycle/image-sources/native-command.ts:23-28` sends all output to `/dev/null`.
+  - The saved result of a detached command keeps its exit status across a deploy. So a reserved status must keep its meaning.
+  - Git refuses a checkout over local work with four messages. Git's text starts with `error: `, then one of these:
+    - "Your local changes to the following files would be overwritten by checkout:"
+    - "The following untracked working tree files would be overwritten by checkout:"
+    - "Updating the following directories would lose untracked files in them:". An untracked or ignored file in a folder that the target replaces with a file gives this message.
+    - "The following untracked working tree files would be removed by checkout:". A file that was removed only from the index, and that the target does not have, gives this message.
+  - A check with Git 2.43 on 27 November 2026 gave the last two messages in these cases. Git exited with status 1.
+  - The repository change:
+    - A held folder is a repository folder that the cloud computer already has. A fresh clone is a new folder that the change clones from GitHub.
+    - Both checkouts run `git checkout ... || exit 82`. Status 82 means a clash with changed files.
+    - The toast reason of status 82 is "Changed files in {repository} clash with its latest default branch. Commit or discard them, then try again.", at `src/ui/components/workspace/repositoryMoveCopy.ts:37-38`.
+    - In a held folder, an existing `.git/index.lock` also gives 82, so the member gets the clash reason for a lock. A read of the code shows this, and no test reproduces it.
+    - In a fresh clone, no changed files exist. But any failed checkout, such as one on a full disk, also gives 82 and the clash reason.
+    - In the clone, every failed context copy gives status 81, also on a full disk. Its toast says to check the files of both context folders. Its first sentence stays true, so the harm is small.
+  - Continue:
+    - Continue classifies its checkout from Git's text in the shell, since commit `e623b74d8`. `nextBranchCommands` keeps the text in a shell variable and matches the start of that text.
+    - Only the first two messages give status 80, the clash. An existing `.git/index.lock` gives 81. A failed write of the branch comparison gives 82.
+    - Every other refusal exits 1, which reads as the stop cause `unknown`. So the last two messages exit 1.
+    - A clash gets the clash line "Continue stopped: the changed files clash with the latest {base}. The workspace stays on {branch}.", at `worker/lifecycle/continue-failure.ts:11` and `src/ui/components/workspace/barCopy.ts:115`. The line names the cause and gives no recovery step.
+    - A move that stops with the cause `unknown` gets "Continue could not finish.", at `worker/lifecycle/continue-failure.ts:14`.
+    - Each case pattern matches the start of Git's text. So each new pattern needs the `error: ` prefix, as the patterns at `worker/lifecycle/base-change-commands.ts:87` have.
+    - The native tests of Continue are in `worker/lifecycle/continue-native.test.ts`. The clash case is at `:70`, and the lock case is at `:94`.
+  - The queue head sync:
+    - It holds a third copy of the same two-message match, at `worker/lifecycle/queue-head-command.ts:57`. A match exits 42, `HEAD_SYNC_NEEDS_TURN`, and the queue then sends a restack turn.
+    - The sync first checks that `git status` shows no change. An ignored file does not show there. So an ignored file in a folder that the new head replaces with a file still stops the checkout with the folder message.
+    - That refusal exits 1. `syncResult` reads it as a retry, and the restack layer retries the sync, at `worker/merge-queue/restack-layer.ts:110`.
+    - `docs/protocol/base-branches.md:150-155` says that the queue sends a restack turn when the sync cannot move the branch. `worker/lifecycle/moved-bases.md:42-44` says the same.
+    - Its native test is `worker/lifecycle/queue-head-command.test.ts`, which uses the Continue native fixture.
+  - Git's message for a failed file write, "unable to write file", gives no system error. So the text of Git cannot tell a full disk from other write failures.
+- **Problem:** A failed checkout in the repository change names a clash with changed files when Git reported no clash. Continue and the queue head sync miss two Git messages that refuse a checkout over local work. Continue then shows "Continue could not finish.", and the queue head sync retries instead of sending a restack turn.
+- **Screenshot:** After a lock or a full disk stops the checkout of a repository change, the toast tells the member to commit or discard changed files.
+- **Impact if no action:** The member gets a recovery step that cannot fix a lock or a full disk. A real clash gets no clash reason in Continue, and a queued workspace keeps its old local branch.
+- **Root question:** How does each branch move report a clash exactly when Git refuses a checkout over local work, and otherwise only a known reason?
+- **Options:**
+  - **A.** Let the fresh checkout exit with the general failure. This leaves the held-folder lock case and the two messages that Continue and the queue head sync miss. Effort: Small.
+  - **B.** Give a failed fresh checkout its own result and new words. This leaves the same two cases, and the user must approve the words. Effort: Small.
+  - **C.** Share one shell classifier between the checkouts of the repository change, Continue, and the queue head sync. A checkout reports a clash only when Git's text starts with `error: ` and one of the four messages above. Every other result keeps the general result of its job. For the repository change, that is the existing text "The repository change could not finish. Try again.", also for each failed fresh checkout and an index lock. The classifier takes the reserved statuses of each job: 82 for the repository change, 80 and 81 for Continue, and 42 for the queue head sync. Add native tests for each new message in Continue, for an ignored file in the queue head sync, and for an index lock in a held folder. Cost: the change reaches three jobs, and two of them are outside the branch that found it. Effort: Medium.
+  - **D.** Give the repository change a closed, stored stop cause with one copy function, as Continue has. This is option E of `plans/follow-ups/repository-change-fetch-access-hint.md`. It leaves the two missing messages, and the user must approve the words of each cause. Effort: Large.
+  - **E.** Name a full disk: on a failed Git step, read the free space of the code folder, and exit with a new status below a floor. It needs new words, and it leaves the lock case and the two missing messages. Effort: Medium.
+- **Left out:**
+  - Keep the clash reason for a fresh checkout: it fails the goal.
+  - A free-space check before the clone: it adds a new refusal, which needs the user. Every other cause also still gets the clash reason.
+  - Classify in the Worker from Git's output: C gives the same result in the shell. C also keeps all Git text in the cloud computer, so C is better on every point.
+  - Add only the two missing messages to the match of Continue: it fails the goal, because the repository change keeps its guessed clash. C includes that change.
+- **Wider fix:** C. One classifier serves every checkout that copies it, and a clash needs a positive Git match. So each new checkout failure gets the general result. D also covers the guessed reasons outside the checkout.
+- **Previous examples:** Commit `e623b74d8` made Continue tell a checkout clash from other failures. The queue head sync holds a copy of its two-message match, at `worker/lifecycle/queue-head-command.ts:57`.
+- **Related:**
+  - `plans/follow-ups/repository-change-fetch-access-hint.md` shares the cause: `repositoryChangeFailed` picks a reason without evidence. Its option E is D here.
+  - `plans/follow-ups/repository-change-empty-repository.md` shares that cause in the `fetch` phase.
+  - `plans/follow-ups/continue-stop-cause-copy.md` decides the stop words of Continue. C moves two refusals from "Continue could not finish." to the clash line, which that item keeps exact. Neither item waits for the other.
+  - `plans/follow-ups/shared-branch-move-job.md` would give Continue and the repository change one job. One job would carry one cause type, so D fits its option A.
+  - `plans/follow-ups/staged-download-cleanup-shared.md` changes the same commands. Its EXIT traps must keep each reserved status of C.
+- **Recommendation:** C. One classifier ties the clash reason to a known Git refusal in all three jobs, with no new words.
+- **Action:** fix after merge, apply C, because the failures need an unusual checkout condition, and C reaches two jobs outside the branch that found it.

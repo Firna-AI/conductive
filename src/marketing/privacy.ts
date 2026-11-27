@@ -216,8 +216,9 @@ export const privacyDocument: LegalDocument = {
             member with a terminal, can read it then. The command can also
             write it to a file on the disk of the cloud computer.`,
           text`A service uses the org environment values installed at this
-            computer start, plus values supplied for that service. It does
-            not inherit the agent's credentials, turn context, or secrets
+            computer start, the recorded repository folder variables, and
+            values supplied for that service. It does not inherit the agent's
+            credentials, turn context, or secrets
             added to an approved command. It runs as the same computer user
             as other programs and can still read available files and
             credentials, including those of later turns.`,

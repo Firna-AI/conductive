@@ -92,7 +92,7 @@ Real systemd and command behavior needs a native smoke check.
 - [Runtime files](src/files.rs) stores private definitions, results, registry state, and the manager lock.
 - [Logs](src/logs/rotating.rs) applies rotating retention through locked file effects.
 - [Environment](src/environment.rs) keeps frozen org values and removes fixed app/turn context.
-- [Native settings](src/settings.rs) reads saved settings with an empty inherited environment.
+- [Native settings](src/settings.rs) reads saved settings with an empty inherited environment and adds the recorded repository folder variables.
 - [Ownership](src/ownership.rs) matches eligible listeners to the exact cgroup and its descendants.
 - [Port reports](src/port_reports.rs) adds ownership without suppressing ordinary ports when service lookup fails.
 - [Socket server](src/socket/server.rs) exposes the single manager to local callers.

@@ -15,7 +15,7 @@ function repositoryUnavailable(): HttpError {
   return new HttpError(
     404,
     'repository_unavailable',
-    "This cloud computer doesn't have this repository. Create a new workspace to use it.",
+    "This workspace can't change to this repository. Create a new workspace to use it.",
   )
 }
 

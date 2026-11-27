@@ -13,6 +13,7 @@ import {
   type RepositoryChangeJob,
   type RepositoryChangeOptions,
 } from './repository-change-types'
+import { workspaceRepositoryLocations } from './repository-location-data'
 import { workspaceRecord } from './workspace-data'
 
 /** The move is already durable. Publication repairs it without running Git again. */
@@ -103,12 +104,21 @@ async function settle(
   options: RepositoryChangeOptions,
   job: RepositoryChangeJob,
 ): Promise<void> {
-  const settled = await providerForAccount(
+  const provider = providerForAccount(
     options.env,
     options.dependencies.fetch,
     job.providerAccount,
   )
-    .runCommand(job.sandboxId, repositoryChangeSettleCommand(job))
+  const settled = await workspaceRepositoryLocations(
+    options.env.DB,
+    job.binding.id,
+  )
+    .then((locations) =>
+      provider.runCommand(
+        job.sandboxId,
+        repositoryChangeSettleCommand(job, locations),
+      ),
+    )
     .then(
       (result) => result.exitCode === 0 && !result.timedOut,
       () => false,

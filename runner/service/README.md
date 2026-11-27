@@ -12,6 +12,7 @@ starts from the org image.
 The unit is [conductive-runner.service](../../image/release/conductive-runner.service).
 It runs as `user`, after the network and the local update-apply unit.
 Its launcher is [runner-start.sh](../../image/runner-start.sh).
+The launcher loads recorded repository folder variables after the start settings.
 The launcher loads `/run/ascii-secrets/env.sh`, the file of the variables
 of the sandbox. Boat writes it on Boat, and the Worker writes it on E2B at
 each create and resume. The launcher then checks the workspace-ready

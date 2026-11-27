@@ -131,8 +131,9 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         the value of each secret that the session of that turn may use.`,
       text`A service is a named program that runs outside an agent turn.
         Its environment uses the org values installed at this computer
-        start, plus values supplied for the service. It does not inherit
-        the agent's credentials, turn context, or secrets added to an
+        start, the recorded repository folder variables, and values
+        supplied for the service. It does not inherit the agent's credentials,
+        turn context, or secrets added to an
         approved command. Services run as the same computer user as other
         programs. Their code can still read available files and credentials,
         including those of later turns.`,

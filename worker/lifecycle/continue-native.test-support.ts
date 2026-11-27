@@ -194,6 +194,7 @@ export async function continueNativeFixture(trackIgnored = false) {
     },
     stageConfig: () =>
       readFile(join(map(continueStagingDirectory(job.id)), 'config'), 'utf8'),
+    stagePath: (id = job.id) => map(continueStagingDirectory(id)),
     command: () => continueFetchCommand(job),
     execute,
     quote: shellQuote,

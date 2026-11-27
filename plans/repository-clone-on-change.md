@@ -96,6 +96,13 @@ test of the `decisions-and-findings` skill.
 13. **No mockup changes.** The menu mockup already lists every repository
     of its fixture, with no notes. The button and its spinner do not
     change.
+14. **A record file gives every recorded folder variable to restarted
+    processes.** Each start writes the record from the Worker's folder
+    record, and the settle step of a clone updates it. A runner restart, a
+    restarted terminal server, and a new service read it after the start
+    settings. Reason: review round 1 found that a software Restart lost the
+    variable of a cloned folder. The runner also accepts a new variable for
+    a folder that an org variable already names. Made on 27 November 2026.
 
 Contract owners:
 
@@ -214,6 +221,10 @@ Depends on: every other milestone
 - [ ] Run the targeted tests and the complete gate named in `CLAUDE.md`,
       and the Rust checks.
 - [ ] Commit with Conventional Commits and push the branch.
+      Review round 1 on `9b2ddc7ce` gave six findings. Its checks
+      confirmed all six. Findings 1, 2, 3, 6 and a refusal text fixed in
+      round 1. Finding 4, an empty repository, waits for Cal. Finding 5
+      deferred. Record: `.context/reviews/calummoore/add-repo-not-added-faoc/findings.md`.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record

@@ -87,7 +87,10 @@ That mode writes the owner's commit author and runs the startup script,
 but it writes no ready marker and does not restart the runner service.
 
 Otherwise, `runner-start.sh` runs `/opt/conductive/current/conductive runner`
-in the repository folder. The Rust runner starts the SDK helper through
+in the repository folder. The workspace start writes a credential-free
+folder record in `/run/conductive/repository-folders`. The launcher reads
+the record after the startup variables, including on a software restart.
+The Rust runner starts the SDK helper through
 the private Node part. It confirms a pending release only after its first
 valid Worker `welcome`. The runner unit restarts its service after
 a failure. The terminal backend describes its launcher, its shell server,

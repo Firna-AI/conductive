@@ -1,0 +1,51 @@
+# Staged downloads lack one shared cleanup
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-27, from the branch `calummoore/add-repo-not-added-faoc`, the wider fix of review finding 2.
+- **Location:** The shared commands in `worker/lifecycle/base-change-commands.ts`: `baseChangeFetchCommand` at `:19-54`, `baseReferenceCommands` at `:57-74`, and `baseChangeInstallCommand` at `:107-134`. `continueStagingDirectory` at `worker/lifecycle/continue-commands.ts:11-13`. The saved base change at `worker/lifecycle/workspace-base.ts:103-141`. The queue head sync at `worker/lifecycle/queue-head-sync.ts:74-110` and `worker/lifecycle/queue-head-command.ts:39-65`. The two moves of the repository change at `worker/lifecycle/repository-change-commands.ts:46-75` and `worker/lifecycle/repository-change-clone-command.ts:44-96`. The clone cleanup in `worker/lifecycle/repository-clone-stage.ts` and at `worker/lifecycle/repository-change-command.ts:29-51`.
+- **Reason:** The direct fix of the clone is in the branch, and this shared fix reaches three other jobs outside its diff.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Stage:** a temporary bare Git repository that a trusted fetch fills with a GitHub token, before a second command imports its objects with no token.
+  - **Continue:** the action after a merge that moves the workspace to a new branch from the latest default branch.
+  - **Repository change:** the action that moves an existing workspace to a new branch of another chosen repository, in a held folder or in a new clone.
+  - **Saved base change:** the stored job in `worker/lifecycle/workspace-base.ts` that moves the base of a workspace in its cloud computer, as `worker/lifecycle/moved-bases.md` says.
+  - **Queue head sync:** the merge queue job in `worker/lifecycle/queue-head-sync.ts` that moves a local branch to the new head after GitHub rebases it.
+- **Background:**
+  - Four jobs fetch into a stage, then import from it. Their paths, tokens, and job IDs differ:
+    - Continue uses `/tmp/conductive-continue/<job id>/source.git`. It fetches with the token of the member who pressed Continue. Each Continue gets a new random job ID, at `worker/lifecycle/continue-admission.ts:82`.
+    - The repository change uses the same path with its own job ID. Each repository change gets a new random job ID, at `worker/lifecycle/repository-change-admission.ts:128`. It fetches with the token of the member who changes the repository.
+    - The saved base change uses `/tmp/conductive-base-change/<job id>/<revision>/source.git`, at `worker/lifecycle/workspace-base.ts:104`. It fetches with the token of the workspace owner.
+    - The queue head sync uses `/tmp/conductive-base-change/<binding id>/sync-<new head>.git`, at `worker/lifecycle/queue-head-sync.ts:74`. It also fetches with the token of the workspace owner.
+    - For the last two jobs, `credentialSender` at `worker/lifecycle/base-change-fetch.ts:32-40` names the workspace owner.
+  - A held folder is a repository folder that the cloud computer already has. The repository change clones a repository that the computer does not hold.
+  - Each try of Continue or of the repository change is a new job. So their stages add up over retries.
+  - The saved base change keeps its job ID and its revision on a retry, at `worker/lifecycle/workspace-base.ts:183-197`. So a retry reuses its stage. A new base change or a new revision gets a new stage.
+  - A retry of the queue head sync for the same head reuses its stage. Each new head gets a new stage.
+  - The clone of a repository change removes its own stage after the import, and at each failed end of a command, through an EXIT trap.
+  - At its next fetch, the clone sweeps every other stage under `/tmp/conductive-continue/`, also a stale stage of Continue. The sweep is safe, because Continue and the repository change hold the same workspace reservation. So only one of them runs, as the comment at `worker/lifecycle/repository-clone-stage.ts:7` says.
+  - A clone job that ends between the fetch and the import runs no command. So the Worker removes its stage at the failed end, through `discardFailedCloneStage` at `worker/lifecycle/repository-change-command.ts:29-51`. `worker/lifecycle/repository-change.ts:151` calls it. It skips a job that is not a clone, at `worker/lifecycle/repository-change-command.ts:34-38`.
+  - Continue, the held-folder repository change, the saved base change, and the queue head sync remove their stage only at the end of a good import. The removals are at `worker/lifecycle/base-change-commands.ts:131`, `worker/lifecycle/repository-change-commands.ts:72`, and `worker/lifecycle/queue-head-command.ts:62`.
+  - The held-folder move and the clone move of the repository change import with their own commands. Continue, the saved base change, and the queue head sync import through `baseReferenceCommands`.
+  - The saved base change and the queue head sync share `/tmp/conductive-base-change/`. No check shows that they never run at the same time.
+  - Ubuntu 24.04 clears `/tmp` at each boot, so a stop and resume of the cloud computer probably removes old stages. This was not checked on a live computer.
+- **Problem:** A failed or cancelled job can leave a full copy of the fetched branch in `/tmp` while the computer runs. This holds for Continue, the held-folder repository change, the saved base change, and the queue head sync.
+- **Impact if no action:** Failed jobs can take disk space that agents and Git need, until the next stop.
+- **Root question:** How does every staged download leave the disk as soon as no step needs it, however its job ends?
+- **Options:**
+  - **A.** Copy the clone's removal into the commands of each job. Cost: four copies of one cleanup, which can drift apart. Effort: Medium.
+  - **F.** Put the removal in the shared commands `baseChangeFetchCommand` and `baseReferenceCommands`, and in the two moves of the repository change, which import on their own. Remove the stage after the import, and in an EXIT trap on every other exit. For a job that ends between the fetch and the import, remove the stage from the Worker at the failed end, as `discardFailedCloneStage` does. Sweep stale stages only under `/tmp/conductive-continue/`, where one job runs at a time. Sweep `/tmp/conductive-base-change/` only after a check shows that its two jobs never overlap. Cost: each trap must keep the reserved exit status of its command. Effort: Medium.
+  - **C.** Give each job a durable owner of its stage through recovery, and a cleanup that retries. Cost: new stored state in four jobs, and a compatible path for the previous Worker. Effort: Large.
+- **Left out:** Cleanup only at the next start: it fails the goal, because the stage stays on a running computer that needs the space.
+- **Wider fix:** F.
+- **Previous examples:** The clone of the repository change, fixed in the branch `calummoore/add-repo-not-added-faoc`. Its helpers are in `worker/lifecycle/repository-clone-stage.ts`.
+- **Related:**
+  - `plans/follow-ups/repository-change-checkout-clash-cause.md` changes the checkouts in the same commands. Each EXIT trap of F must keep its reserved statuses.
+  - `plans/follow-ups/repository-change-fetch-access-hint.md` and `plans/follow-ups/continue-stop-cause-copy.md` can add a reserved status to `baseChangeFetchCommand` under their option C. The EXIT trap of F must keep that status.
+  - `plans/follow-ups/repository-change-empty-repository.md` changes the same fetch under its option A. Today a failed held-folder fetch of an empty repository leaves its stage.
+  - `plans/follow-ups/shared-branch-move-job.md` would give Continue and the repository change one job. Option C here overlaps its option A, because that job would own the command step.
+- **Recommendation:** F. One place covers every staged download, at Medium effort.
+- **Action:** fix after merge, apply F, because it changes the commands of Continue, base changes, and the queue head sync outside the clone branch.

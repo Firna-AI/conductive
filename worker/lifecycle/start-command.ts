@@ -32,7 +32,13 @@ export function workspacePhaseCommand(
               baseBranch: row.baseBranch ?? job.baseBranch ?? job.defaultBranch,
             })} || :`,
           ]),
-      workspaceStartupCommand(job.startupScript, owner, 'workspace', bootstrap),
+      workspaceStartupCommand(
+        job.startupScript,
+        owner,
+        'workspace',
+        bootstrap,
+        job.repositoryLocations,
+      ),
     ].join('\n')
   const startBranch = job.startBranch ?? job.baseBranch ?? job.defaultBranch
   if (job.phase === 'fetch') {

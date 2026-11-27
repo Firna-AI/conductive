@@ -91,7 +91,13 @@ it('changes the repository through real routes: refusals, a runner that cannot m
     const error = async (response: { json(): Promise<unknown> }) =>
       record(record(await response.json()).error)
     expect((await post(undefined, f.cookies.outsiderCookie)).status).toBe(404)
-    expect((await post('unheld')).status).toBe(404)
+    const unavailable = await post('unheld')
+    expect(unavailable.status).toBe(404)
+    expect(await error(unavailable)).toMatchObject({
+      code: 'repository_unavailable',
+      message:
+        "This workspace can't change to this repository. Create a new workspace to use it.",
+    })
     const bad = await f.request(path, { method: 'POST', body: '{}' })
     expect(bad.status).toBe(400)
     await bad.arrayBuffer()

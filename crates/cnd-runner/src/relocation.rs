@@ -54,7 +54,7 @@ pub enum MoveCheck {
     Move(RepositoryTarget),
 }
 
-/// The folders that a move may name: the current folder and each folder variable.
+/// Configuration and disk checks for the folders a move may name.
 pub struct RepositoryFolders {
     current: PathBuf,
     known: BTreeMap<String, PathBuf>,
@@ -84,8 +84,7 @@ impl RepositoryFolders {
             None if registered => None,
             Some(name) if self.known.get(name) == Some(&folder) => None,
             Some(name)
-                if !registered
-                    && repository_variable(name)
+                if repository_variable(name)
                     && !self.known.contains_key(name)
                     && code_child(&folder) =>
             {
@@ -93,7 +92,7 @@ impl RepositoryFolders {
             }
             _ => return MoveCheck::Refused(RunnerRepositoryMoveRefusal::UnknownFolder),
         };
-        if folder == self.current {
+        if folder == self.current && addition.is_none() {
             return MoveCheck::Current;
         }
         if addition.is_some()

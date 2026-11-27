@@ -5,6 +5,7 @@ import {
   sourceRepositoryUrl,
 } from './image-sources/native-command'
 import { CONTINUE_EXIT_CODES } from './continue-stop-causes'
+import { removeCloneStage, sweepCloneStages } from './repository-clone-stage'
 
 export const BASE_CHANGE_GIT =
   '/usr/bin/git -c core.hooksPath=/dev/null -c core.askPass= -c credential.helper= -c http.followRedirects=false -c protocol.ext.allow=never -c submodule.recurse=false'
@@ -27,12 +28,19 @@ export function baseChangeFetchCommand(
   const url = shellQuote(sourceRepositoryUrl(input.fullName))
   const credential =
     '-c credential.helper=/usr/local/bin/conductive-git-credential'
+  const prepare = `mkdir -p ${stage}`
   const fetch = input.allBranchesAndTags
     ? [
+        sweepCloneStages(input.stage),
+        `trap ${shellQuote(`${removeCloneStage(input.stage)} || :`)} EXIT`,
+        "trap 'exit 1' HUP INT TERM",
+        prepare,
         `${BASE_CHANGE_GIT} ${credential} clone --bare --tags --quiet --no-recurse-submodules --template= -- ${url} ${stage}`,
         `${BASE_CHANGE_GIT} --git-dir=${stage} rev-parse --verify ${shellQuote(`refs/heads/${input.baseBranch}^{commit}`)}`,
+        'trap - EXIT HUP INT TERM',
       ]
     : [
+        prepare,
         `${BASE_CHANGE_GIT} init --bare --quiet --template= ${stage}`,
         `${BASE_CHANGE_GIT} --git-dir=${stage} ${credential} fetch --quiet --no-tags --no-recurse-submodules -- ${url} ${shellQuote(`+refs/heads/${input.baseBranch}:refs/heads/continue-base`)}`,
       ]
@@ -40,7 +48,6 @@ export function baseChangeFetchCommand(
     [
       'cd /tmp',
       `export CONDUCTIVE_TURN_ID=${shellQuote(input.fetchId)}`,
-      `mkdir -p ${stage}`,
       ...fetch,
     ].join('\n'),
   )

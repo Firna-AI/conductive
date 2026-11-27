@@ -217,7 +217,7 @@ fn required(env: &BTreeMap<String, String>, name: &'static str) -> Result<String
 }
 
 /// Check the name of a repository folder variable.
-pub(crate) fn repository_variable(name: &str) -> bool {
+pub fn repository_variable(name: &str) -> bool {
     name.strip_prefix("CONDUCTIVE_REPOSITORY_")
         .and_then(|s| s.strip_suffix("_DIR"))
         .is_some_and(|s| {

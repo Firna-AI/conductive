@@ -1,5 +1,5 @@
 import { mkdir, readFile, readdir, symlink, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 
 import { expect, it } from 'vitest'
 
@@ -39,7 +39,8 @@ async function cloneFixture() {
     directory,
     names: () => execute(repositoryCloneNamesCommand),
     fetch: () => execute(repositoryChangeFetchCommand(job)),
-    move: () => execute(repositoryChangeMoveCommand(job)),
+    move: (recordedFolders?: readonly string[]) =>
+      execute(repositoryChangeMoveCommand(job, recordedFolders)),
     branch: () => execute(repositoryChangeBranchCommand(job)),
     git: (...args: string[]) => f.git('-C', directory, ...args),
     read: (path: string) => readFile(join(directory, path), 'utf8'),
@@ -97,4 +98,37 @@ it('refuses a name that appeared on disk and removes the temporary clone', async
   expect(await f.move()).toMatchObject({ exitCode: 1 })
   expect(await f.branch()).toMatchObject({ exitCode: 0, stdout: '\n' })
   expect(await readdir(f.code)).toEqual(['Repository'])
+  await expect(f.stageConfig()).rejects.toMatchObject({ code: 'ENOENT' })
+})
+
+it('sweeps abandoned clone stages and work trees while keeping recorded folders', async () => {
+  const f = await cloneFixture()
+  const staleStage = f.stagePath('earlier-job')
+  const unrelated = join(dirname(dirname(staleStage)), 'unrelated')
+  const staleWorkTree = `.conductive-clone-${'a'.repeat(43)}.stale1`
+  const held = `.conductive-clone-${'b'.repeat(43)}.saved1`
+  await mkdir(staleStage, { recursive: true })
+  await mkdir(unrelated)
+  await mkdir(join(f.code, staleWorkTree), { recursive: true })
+  await mkdir(join(f.code, held))
+
+  expect(await f.fetch()).toMatchObject({ exitCode: 0 })
+  await expect(readdir(staleStage)).rejects.toMatchObject({ code: 'ENOENT' })
+  expect(await readdir(unrelated)).toEqual([])
+  expect(await f.move([`${REPOSITORY_CODE_DIRECTORY}/${held}`])).toMatchObject({
+    exitCode: 0,
+  })
+  expect((await readdir(f.code)).sort()).toEqual([held, 'repository'])
+})
+
+it('keeps unrelated stages when the staging root is a link', async () => {
+  const f = await cloneFixture()
+  const staged = join(f.root, 'linked-stages')
+  const previous = join(staged, 'earlier-job', 'source.git')
+  await mkdir(previous, { recursive: true })
+  await symlink(staged, dirname(dirname(f.stagePath())))
+
+  expect(await f.fetch()).toMatchObject({ exitCode: 0 })
+  expect(await f.move()).toMatchObject({ exitCode: 0 })
+  expect(await readdir(staged)).toEqual(['earlier-job'])
 })

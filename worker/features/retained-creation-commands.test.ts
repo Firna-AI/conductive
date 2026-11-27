@@ -182,6 +182,9 @@ it('runs interrupted saved startup after Restore instead of following its dead j
   expect(results.map((result) => result.exitCode)).toEqual([125, 0])
   expect(await sandbox.file('completed')).toBe('continued\n')
   expect(await sandbox.ready()).toBe('')
+  expect(await sandbox.repositoryFolders()).toBe(
+    `CONDUCTIVE_REPOSITORY_REPOSITORY_DIR=${sandbox.directory}/code/repository\n`,
+  )
   expect(await sandbox.runnerCalls()).toBe('runner-restarted\n')
   const commands = active.boat.commandRequests
     .slice(commandsBefore)

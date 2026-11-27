@@ -62,6 +62,7 @@ it.each([
         folder: MOVED_FOLDER,
         branches: { workspaceBranch: 'owner/billing', targetBranch: 'trunk' },
       })
+      expect(move).not.toHaveProperty('variable')
       const before = record((await controls.request('settled')).runner)
       const woke = await controls.hibernate()
       expect(record(woke.runner).ready).toBe(readyAtWake)
@@ -123,6 +124,35 @@ it.each([
     }
   },
 )
+
+it('sends the recorded folder variable on the same runner socket after wake', async () => {
+  const { runtime, headers } = await createAdapterRuntime(
+    'worker/chat/runner-entry.test-support.ts',
+  )
+  const controls = runnerControls(runtime, headers)
+  const sockets: WebSocket[] = []
+  try {
+    await seedMoveFolders(runtime)
+    const runner = await controls.connect('clone-after-wake', 0, 2, undefined, {
+      repositoryFolder: ORIGINAL_FOLDER,
+      addsRepositoryFolder: true,
+    })
+    sockets.push(runner.socket)
+    const woke = await controls.hibernate()
+    expect(woke.hello).toBe(1)
+    expect(record(woke.runner).addsRepositoryFolder).toBe(true)
+    await moveRepositoryRecord(runtime)
+    await controls.request('check-repository')
+    expect(await runner.inbox.next()).toMatchObject({
+      type: 'repository.move',
+      folder: MOVED_FOLDER,
+      variable: 'CONDUCTIVE_REPOSITORY_BILLING_DIR',
+      branches: { workspaceBranch: 'owner/billing', targetBranch: 'trunk' },
+    })
+  } finally {
+    await disposeRunners(runtime, sockets)
+  }
+})
 
 it('keeps a refused move through the original socket wake and fails a later held turn', async () => {
   const { runtime, headers } = await createAdapterRuntime(

@@ -197,6 +197,7 @@ A build, a disk retention restart, and an unfinished start launch no runner.
 - [Update engine](../crates/cnd-cli/README.md): stages downloads and applies or restores releases.
 - [`runner-start.sh`](runner-start.sh) and
   [`conductive-runner.service`](release/conductive-runner.service): start the Rust runner and map its environment.
+- [`repository-folders.sh`](repository-folders.sh) reads the recorded folder variables for the runner and terminal scripts.
 - [`preview-relay-start.sh`](preview-relay-start.sh), the
   [relay service](release/conductive-preview-relay.service), and
   [relay socket](conductive-preview-relay.socket): start the Rust preview relay with its inherited listener.

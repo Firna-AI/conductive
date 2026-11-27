@@ -44,6 +44,7 @@ pub(crate) fn manager(
         environment: Arc::new(CleanEnvironment {
             settings: Arc::new(NativeSettings {
                 path: PathBuf::from("/run/ascii-secrets/env.sh"),
+                repository_folders: PathBuf::from("/run/conductive/repository-folders"),
             }),
         }),
         runtime: Arc::new(NativeRuntime::default()),

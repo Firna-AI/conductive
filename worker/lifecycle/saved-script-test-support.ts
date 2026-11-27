@@ -2,6 +2,7 @@ import { execFile } from 'node:child_process'
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
+import { REPOSITORY_FOLDERS_FILE } from '../../src/shared/restore-marker'
 import type { CommandResult } from '../sandbox/provider'
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
 import { testDirectory } from '../test-support/test-directory'
@@ -216,6 +217,7 @@ export async function localSavedScriptFixture(
         : { text, mode: (await stat(path)).mode & 0o777 }
     },
     ready: () => readOptional(join(runtime, 'workspace-ready')),
+    repositoryFolders: () => readOptional(mapPath(REPOSITORY_FOLDERS_FILE)),
     runnerCalls: () => readOptional(runnerCalls),
     /** The Git system settings that the scripts wrote, as `git config --list` gives them. */
     systemGitSettings: async () =>

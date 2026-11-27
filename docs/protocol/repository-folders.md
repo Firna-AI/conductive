@@ -80,7 +80,9 @@ number names a dated record, as
   a recorded folder would move the work of the agents and the terminals in
   it.
 - Each command of a later agent turn gets the new variable at once, with
-  no new start of the sandbox. Each new terminal gets it too.
+  no new start of the sandbox.
+- A runner restart, a new terminal, and a new service get the folder
+  variables from the workspace's record.
 - Each later start gives the new variable from the record, also to the
   startup script. A process that already runs does not get it.
 

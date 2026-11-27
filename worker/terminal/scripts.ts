@@ -1,7 +1,9 @@
 import {
+  REPOSITORY_FOLDERS_FILE,
   TERMINAL_RESTORE_MARKER,
   TERMINAL_RUNTIME,
 } from '../../src/shared/restore-marker'
+import readRepositoryFolders from '../../image/repository-folders.sh?raw'
 import {
   FIRST_TERMINAL_ID,
   TERMINAL_ID_PATTERN,
@@ -27,6 +29,7 @@ export interface TerminalScriptOptions {
   runtimeDirectory: string
   restoreMarker: string
   environmentFile: string
+  repositoryFoldersFile: string
   owner: string
   group: string
   entropyCommand: readonly string[]
@@ -34,6 +37,14 @@ export interface TerminalScriptOptions {
   multiplexerCommand: readonly string[]
   /** The private Node and the path of the bridge program. */
   bridgeCommand: readonly string[]
+}
+
+function readFolderVariables(
+  options: TerminalScriptOptions,
+  apply: string,
+): string {
+  const file = options.repositoryFoldersFile
+  return `${readRepositoryFolders.trimEnd()}\nconductive_read_repository_folders ${shellArgument(file)} ${apply}`
 }
 
 /**
@@ -60,6 +71,7 @@ const terminalScriptDefaults: TerminalScriptOptions = {
   runtimeDirectory: TERMINAL_RUNTIME,
   restoreMarker: TERMINAL_RESTORE_MARKER,
   environmentFile: '/run/ascii-secrets/env.sh',
+  repositoryFoldersFile: REPOSITORY_FOLDERS_FILE,
   owner: 'user',
   group: 'user',
   entropyCommand: ['od', '-An', '-v', '-N32', '-tx1', '/dev/urandom'],
@@ -132,6 +144,10 @@ case "$#" in
     ;;
   *) exit 2 ;;
 esac
+conductive_terminal_repository_folder() {
+  ${shellArgument(tmux)} -N -S ${socket} set-environment -g "$1" "$2" 2>/dev/null || :
+}
+${readFolderVariables(options, 'conductive_terminal_repository_folder')}
 node=${shellArgument(node)}
 bridge=${shellArgument(bridge)}
 if [ -x "$node" ] && [ -f "$bridge" ]; then
@@ -176,6 +192,7 @@ set -eu
 set -a
 . ${shellArgument(options.environmentFile)}
 set +a
+${readFolderVariables(options, 'conductive_export_repository_folder')}
 cd "$CONDUCTIVE_REPOSITORY_DIR"
 exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} -f /dev/null start-server ';' set-option -s exit-empty off ';' set-option -g mouse on ';' set-option -g history-limit ${TERMINAL_HISTORY_LINES} ';' set-environment -g PROMPT_COMMAND ${shellArgument(terminalPromptCommand(options.restoreMarker))}
 `

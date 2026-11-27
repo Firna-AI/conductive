@@ -195,7 +195,7 @@ async fn replies_only_to_a_refused_move() {
 const ADDED_FOLDER: &str = "/home/user/code/ledger";
 const ADDED_VARIABLE: &str = "CONDUCTIVE_REPOSITORY_LEDGER_DIR";
 
-fn addition_folders(work_tree: bool) -> RepositoryFolders {
+fn addition_folders(configuration: &Configuration, work_tree: bool) -> RepositoryFolders {
     let io = Unimock::new((
         RepositoryIoMock::kind
             .some_call(matching!((path) if path.to_str() == Some(ADDED_FOLDER)))
@@ -207,12 +207,28 @@ fn addition_folders(work_tree: bool) -> RepositoryFolders {
             .some_call(matching!((path) if path.to_str() == Some(ADDED_FOLDER)))
             .returns(work_tree),
     ));
-    RepositoryFolders::new(&configuration(), Arc::new(io))
+    RepositoryFolders::new(configuration, Arc::new(io))
 }
 
 #[tokio::test]
 async fn registers_a_new_work_tree_for_the_next_round() {
-    let check = addition_folders(true)
+    check_work_tree_addition(None).await;
+}
+
+#[tokio::test]
+async fn gives_a_work_tree_with_an_org_alias_its_recorded_variable() {
+    check_work_tree_addition(Some("CONDUCTIVE_REPOSITORY_ORG_LEDGER_DIR")).await;
+}
+
+async fn check_work_tree_addition(alias: Option<&str>) {
+    let mut original = configuration();
+    if let Some(alias) = alias {
+        original
+            .repository_directories
+            .insert(alias.into(), ADDED_FOLDER.into());
+    }
+    let folders = addition_folders(&original, true);
+    let check = folders
         .check(ADDED_FOLDER, &branches(), Some(ADDED_VARIABLE))
         .await;
     let target = RepositoryTarget {
@@ -222,7 +238,6 @@ async fn registers_a_new_work_tree_for_the_next_round() {
         variable: Some(ADDED_VARIABLE.into()),
     };
     assert_eq!(check, MoveCheck::Move(target.clone()));
-    let original = configuration();
     let mut moved = original.clone();
     target.apply(&mut moved);
     let mut expected = original.repository_directories;
@@ -251,7 +266,10 @@ async fn refuses_invalid_additions_and_directories_that_are_not_work_trees() {
         (ADDED_FOLDER, "CONDUCTIVE_REPOSITORY_BILLING_DIR"),
         ("/home/user/ledger", ADDED_VARIABLE),
         ("/home/user/code/billing/ledger", ADDED_VARIABLE),
-        ("/home/user/code/billing", ADDED_VARIABLE),
+        (
+            "/home/user/code/billing",
+            "CONDUCTIVE_REPOSITORY_STOREFRONT_DIR",
+        ),
         ("/home/user/code/../ledger", ADDED_VARIABLE),
         ("/home/user/code/ledger/.", ADDED_VARIABLE),
     ] {
@@ -265,7 +283,7 @@ async fn refuses_invalid_additions_and_directories_that_are_not_work_trees() {
         .some_call(matching!((path) if path.to_str() == Some(ADDED_FOLDER)))
         .returns(Ok(PathKind::Link));
     let linked = RepositoryFolders::new(&configuration(), Arc::new(Unimock::new(symlink)));
-    for folders in [linked, addition_folders(false)] {
+    for folders in [linked, addition_folders(&configuration(), false)] {
         assert_eq!(
             folders
                 .check(ADDED_FOLDER, &branches(), Some(ADDED_VARIABLE))
