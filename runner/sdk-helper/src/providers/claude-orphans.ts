@@ -4,7 +4,7 @@ import { orphanNote, type OrphanTask } from './claude-orphan-note'
  * The grace time after the work of a parked subagent ends. The agent program
  * wakes such a subagent itself, and retries a failed wake for about a minute.
  */
-export const ORPHAN_GRACE_MS = 120_000
+const ORPHAN_GRACE_MS = 120_000
 
 /** One entry of `system/background_tasks_changed`. */
 export interface ListedTask {
