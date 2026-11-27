@@ -261,7 +261,8 @@ Depends on: every other milestone
 - [x] Record a follow-up item for the activation pull request and for a check in a live sandbox.
   The items are `plans/follow-ups/changes-costs-per-read-and-connect.md`, one item with the three costs as options, and `plans/follow-ups/changes-deltas-activation.md`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings, then apply the fix rule: fix the `fix now` findings, record follow-up items under `plans/follow-ups/` for the rest, re-review once, and report.
+- [x] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings, then apply the fix rule: fix the `fix now` findings, record follow-up items under `plans/follow-ups/` for the rest, re-review once, and report.
+  Review summary, 27 November 2026. Round 1 found 11 findings in three areas. Their checks removed 1 and confirmed 10. Nine were fixed in `cb75b4aae`, and 1 went to a follow-up item. Round 2 found 3 findings. Their checks removed 1, and the other 2 were fixed in `dec22469f`. The complete gate then passed: 6,182 tests in 1,789 files, and 195 runner tests in 58 files. The findings file is `.context/reviews/calummoore/changes-list-deltas-aedi/findings.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the plan".
 - [ ] Open the pull request. Its description gives the decisions and the design calls of this plan with their dates, a permalink to this plan, the follow-up items that the change adds, and the rollback rule.
 
