@@ -1,6 +1,9 @@
 import type { FilesError, FilesResult } from '../api/files-errors'
 
-/** The read of one file or one diff, for one path. */
+/**
+ * The read of one resource, such as a file, a diff, or the text of a skill,
+ * for one key.
+ */
 export type Loaded<T> =
   | { status: 'loading'; key: string }
   | { status: 'ready'; key: string; value: T; refreshing: boolean }
@@ -9,9 +12,17 @@ export type Loaded<T> =
 type Load<T> = (key: string, signal: AbortSignal) => Promise<FilesResult<T>>
 
 /**
+ * Whether a refresh that fails with `error` keeps the value that shows. A
+ * refresh is a read of the key whose value shows.
+ */
+type KeepsValue = (error: FilesError) => boolean
+
+/**
  * Reads one resource at a time. A newer request replaces an older one, so
- * a slow reply for a path that the user left never shows. A new version of
- * the same path keeps the old value on screen while it reads again.
+ * a slow reply for a key that the user left never shows. A new version of
+ * the same key keeps the old value on screen while it reads again. A
+ * refresh that fails takes the place of the value, unless `keepsValue`
+ * keeps the value for its error.
  */
 export class ResourceLoader<T> {
   private state: Loaded<T> | null = null
@@ -20,9 +31,11 @@ export class ResourceLoader<T> {
   private token = 0
   private readonly listeners = new Set<() => void>()
   private readonly load: Load<T>
+  private readonly keepsValue: KeepsValue
 
-  constructor(load: Load<T>) {
+  constructor(load: Load<T>, keepsValue: KeepsValue = () => false) {
     this.load = load
+    this.keepsValue = keepsValue
   }
 
   /** Reads `key` when the key or its version changed since the last call. */
@@ -63,11 +76,8 @@ export class ResourceLoader<T> {
     this.controller = controller
     const token = ++this.token
     const shown = this.state
-    this.set(
-      shown?.key === key && shown.status === 'ready'
-        ? { ...shown, refreshing: true }
-        : { status: 'loading', key },
-    )
+    const kept = shown?.key === key && shown.status === 'ready' ? shown : null
+    this.set(kept ? { ...kept, refreshing: true } : { status: 'loading', key })
     const settle = (result: FilesResult<T>) => {
       if (token !== this.token) return
       this.controller = null
@@ -79,7 +89,11 @@ export class ResourceLoader<T> {
           refreshing: false,
         })
       } else if (result.error.kind !== 'aborted') {
-        this.set({ status: 'failed', key, error: result.error })
+        this.set(
+          kept && this.keepsValue(result.error)
+            ? { ...kept, refreshing: false }
+            : { status: 'failed', key, error: result.error },
+        )
       }
     }
     this.load(key, controller.signal).then(settle, () =>

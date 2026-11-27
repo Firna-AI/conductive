@@ -1,7 +1,10 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import { classes } from '../../ui/components/common/classes'
 import { guideClasses } from '../../ui/components/workspaces/guideLines'
-import { WorkspaceMark } from '../../ui/components/workspaces/WorkspaceMark'
+import {
+  markOf,
+  WorkspaceMark,
+} from '../../ui/components/workspaces/WorkspaceMark'
 import {
   WorkspaceName,
   type EmphasisClasses,
@@ -59,7 +62,7 @@ export function RowContent(props: {
   const { workspace } = props
   return (
     <>
-      <WorkspaceMark github={workspace.github} status={workspace.state} />
+      <WorkspaceMark {...markOf(workspace)} />
       <WorkspaceName
         className={styles.name}
         emphasis={nameEmphasis}

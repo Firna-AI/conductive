@@ -177,6 +177,7 @@ export const paths = {
   runTurnFailed: 'app/automations/run-workspace/turn-failed',
   retrying: 'app/new-workspace/retrying',
   orgSettings: 'app/org-settings',
+  settings: 'app/settings',
   repositories: 'app/org-settings/repositories',
   cloudComputer: 'app/org-settings/cloud-computer',
   firstBuildComputer: 'app/org-settings/cloud-computer/first-build',

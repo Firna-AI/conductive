@@ -48,7 +48,7 @@ it('closes each open mark at the end of live text, only in the paragraph, headin
         items: [{ checked: false, blocks: [p('<b>Push the branch</b>')] }],
       },
     ],
-    code: [p('**Note'), { kind: 'code', text: 'npm ci' }],
+    code: [p('**Note'), { kind: 'code', text: 'npm ci', label: null }],
     paired: [p('<b>a *b/</b>/c')],
   })
 })

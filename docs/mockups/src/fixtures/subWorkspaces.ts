@@ -49,6 +49,7 @@ const rateLimitLoadTest = workspace(
     repository: 'storefront',
     section: 'checkout',
     status: 'starting',
+    messageWaiting: true,
     github: null,
     updated: 'now',
   },

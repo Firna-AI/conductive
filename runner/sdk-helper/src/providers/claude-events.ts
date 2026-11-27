@@ -94,12 +94,19 @@ export class ClaudeEvents {
       reply = this.reply.uuids.includes(continuation.uuid)
         ? this.reply
         : this.association(completed)
+    // The reply to a note of the runner is a wake-up reply in the same turn.
+    const note =
+      input.type === 'result' &&
+      uuids.length > 0 &&
+      uuids.every((uuid) => this.background.isNote(uuid))
     const wake =
       input.type === 'result' &&
       (continuation
         ? continuation.wake && !reply.userMessageIds.length
-        : !this.answersOutstandingInput(input))
-    if (wake && !this.background.waited && !continuation) return
+        : note || !this.answersOutstandingInput(input))
+    if (input.type === 'result') this.background.answered(uuids)
+    // The runner sent the note, so its result stays current after member input.
+    if (wake && !this.background.waited && !continuation && !note) return
     if (
       this.background.waited &&
       input.type === 'system' &&

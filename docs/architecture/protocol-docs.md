@@ -183,8 +183,11 @@ This page lists each protocol doc and what it covers.
   - [Keyboard shortcuts: the hosts](../protocol/keyboard-shortcuts-hosts.md)
   - [Keyboard shortcuts: matching a press](../protocol/keyboard-shortcuts-matching.md)
   - [Keyboard shortcuts: the settings tab](../protocol/keyboard-shortcuts-tab.md)
-- [Account stats](../protocol/account-stats.md): the Stats tab of the
-  Account page, its counts of the person signed in, and its reads.
+- [Settings](../protocol/settings.md): the one place for Account settings
+  and the org settings, as a dialog on a desktop and as screens on a
+  phone, with its addresses and its ways in.
+- [Account stats](../protocol/account-stats.md): the Stats tab of
+  Account settings, its counts of the person signed in, and its reads.
 - [Org image](../protocol/org-image.md): the org image, its builds and its
   refreshes, and the first build of a new org.
   - [Repository changes of the org image](../protocol/org-image-repositories.md):
@@ -202,6 +205,9 @@ This page lists each protocol doc and what it covers.
     text, its key, the written prompt, the explanation and its anchor, the
     marks in the parent chat, the popover, a closed explanation, and
     read-only workspaces.
+    - [The Explain popover](../protocol/explain-popover.md): the place of
+      the popover, its follow-up field, Expand and Close, its keys and
+      focus, and its size on a computer.
 - [Model favourites](../protocol/model-favourites.md): the favourites of
   each member, the rows and the marks of the model menu, All models, the
   hidden favourites, and the Favourites section of Preferences.
@@ -218,9 +224,12 @@ This page lists each protocol doc and what it covers.
   - [Chat links](../protocol/chat-links.md): the links of agent messages
     and of sent messages, the labels of Markdown links, the images of
     agent messages, local addresses, and links in code.
+  - [Chat code blocks](../protocol/chat-code-blocks.md): the colours of
+    the code blocks of agent messages and of the file preview, from their
+    fence labels, and the Copy code button.
   - [Chat message lines](../protocol/chat-message-lines.md): how each agent
     message shows as one line in the work of a turn, closed and open, with
-    its tables, headings, quotes, rules, and line breaks.
+    its tables, headings, quotes, rules, code blocks, and line breaks.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
   scope of a cloud computer, the author of each commit in a sandbox, the copy
   and lookup of the skills repository, and the GitHub actions of the

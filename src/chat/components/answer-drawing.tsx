@@ -19,9 +19,9 @@ function ShowsWords(props: { text: InlineText; children: ReactNode }) {
  * How the chat draws the shared blocks of the agent message with the ID
  * `message`: each text through `AnswerText`, where the Markdown image of a
  * picture file can show as its picture, read for that message, each code
- * block through `CodeBlock`, and each heading only while it shows words.
- * A view keeps one drawing for each ID, so the blocks of a live message
- * draw again only when their data changes.
+ * block through `CodeBlock`, in the colours of its fence label, and each
+ * heading only while it shows words. A view keeps one drawing for each ID,
+ * so the blocks of a live message draw again only when their data changes.
  */
 export function answerDrawing(message: string): AgentDrawing {
   const pictures = { message }
@@ -33,7 +33,7 @@ export function answerDrawing(message: string): AgentDrawing {
         text={text}
       />
     ),
-    code: (text) => <CodeBlock text={text} />,
+    code: (text, label) => <CodeBlock label={label} text={text} />,
     ShowsWords,
   }
 }

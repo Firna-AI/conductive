@@ -6,10 +6,7 @@ import {
   type ReactNode,
 } from 'react'
 import type { WindowMode } from '../../ui/components/mac/MacApp'
-import { keptOrg } from '../../app/kept-org'
 import { useStore, type Readable } from '../../app/store'
-import type { OrgSummary } from '../../shared/orgs'
-import { useApp } from '../context'
 import mac from './mac.module.css'
 
 /** What the page of the Mac app knows about its window. */
@@ -82,20 +79,6 @@ export function useMacWindow(): MacWindowState | null {
  */
 export function useMacBar(): string | undefined {
   return useMacApp() ? mac.bar : undefined
-}
-
-/**
- * The org whose sidebar the account of the Mac app keeps, as `keptOrg`
- * says, among the orgs of `AppModel.activeOrgs`. A browser shows the
- * account without a sidebar.
- */
-export function useKeptOrg(): OrgSummary | undefined {
-  const chrome = useMacApp()
-  const app = useApp()
-  const orgs = useStore(app.activeOrgs)
-  const last = useStore(app.lastOrg)
-  if (!chrome) return undefined
-  return keptOrg(orgs, last)
 }
 
 /** Below this width the sidebar hides, as the container query of `AppFrame.module.css` says. */

@@ -1,3 +1,5 @@
+import type { ExplainSize } from '../../app/explain-size'
+import { useExplainSize } from '../../shell/layout/panels'
 import { markMenuTitle } from '../../ui/components/explain/explainCopy'
 import { MarkGlyph } from '../../ui/components/explain/MarkGlyph'
 import type { MenuEntry } from '../ui/Menu'
@@ -51,6 +53,7 @@ function Popover(props: {
   state: ExplainState
   chat: LayerChat
   stopAt: HTMLElement | null
+  size: ExplainSize
 }) {
   const { popover, state, chat } = props
   const { snapshot, controller } = chat
@@ -71,6 +74,7 @@ function Popover(props: {
         show(shown)
       }}
       quote={props.explanation.anchor.quote}
+      size={props.size}
       stopAt={props.stopAt}
       title={props.explanation.title}
       waits={waitsForMember(snapshot, shown)}
@@ -96,7 +100,9 @@ function Popover(props: {
  * the open explanation, and the menu of overlapping marks, at the press on
  * a computer and in a sheet on a phone. A press anywhere in this layer
  * keeps the popover, also in the menu, which lies in a portal of its own,
- * because React gives the press to the root of the layer first.
+ * because React gives the press to the root of the layer first. Each
+ * popover opens at the size that the member chose last, from
+ * `useExplainSize`.
  */
 export function ExplainLayer(props: {
   state: ExplainState
@@ -105,6 +111,7 @@ export function ExplainLayer(props: {
 }) {
   const { state } = props
   const { popover, menu } = state
+  const size = useExplainSize()
   const explanation =
     popover &&
     state.explanations.find((item) => item.id === popover.explanationId)
@@ -119,6 +126,7 @@ export function ExplainLayer(props: {
           explanation={explanation}
           key={popover.explanationId}
           popover={popover}
+          size={size}
           state={state}
           stopAt={props.stopAt}
         />

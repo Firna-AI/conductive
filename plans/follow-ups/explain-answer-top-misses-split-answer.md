@@ -1,0 +1,33 @@
+# Popover answer top misses a split answer
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from the branch `calummoore/auto-scroll-final-message-knfd`, finding 1 of review round 1.
+- **Location:** `src/shared/transcript/turn-work.ts`, `newestAnswer` and `answerOf`. `src/shared/transcript/transcript-entries.ts`, `groupEntries`. `src/chat/explain/PopoverChat.tsx`, where it gives `answer` to `ChatPane`. `src/chat/components/reading-place.ts`, `answerTop`. `src/chat/components/chat-place.ts`, `showPlace`.
+- **Reason:** Normal use does not meet the case, because the tool call of a Mac command usually sits between the two agent messages.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Explain popover:** the small chat panel by a marked quote, which shows the chat of an explanation session.
+  - **Work fold:** the one line that holds the work of an ended turn before its answer: earlier agent messages, tool calls, and their cards.
+  - **Insert:** a part that the chat adds among the transcript items, such as the card of a Mac command. `TranscriptInsert.after` names the item that it follows.
+- **Background:**
+  - When a turn ends, or the popover opens on an ended turn, the popover chat shows the top of the answer, while the chat is at the bottom. `docs/protocol/explain.md` states this rule. The user asked for it on 24 November 2026.
+  - `newestAnswer(transcript)` gives the first message of the answer of the last part of the newest ended turn. `PopoverChat` gives that ID to `ChatPane` as `answer`, and the reading-place keeper scrolls to the row with the key `item:<id>`.
+  - The answer of a part starts at its last agent message, or at the agent messages directly before it. An insert between two of them ends the answer, so the earlier message folds. `foldedWork(transcript, followed)` uses the set `followed` of the items that an insert follows. `src/chat/components/WorkFold.dom.test.tsx` tests this layout.
+  - `newestAnswer` calls `answerOf` with an empty `followed` set, because the inserts of the popover (`parts.inserts` from `useSessionParts`) do not reach it.
+- **Problem:** When an insert follows the first of two adjacent agent messages, `newestAnswer` gives the first message. That message is in the work fold and has no row. `showPlace` finds no row with its key and keeps the bottom, so the popover shows the end of the answer. A scratch script confirmed this: with a Mac command card after the first of two agent messages, `newestAnswer` gave the first message, and `groupEntries` put that message and the card into the work fold.
+- **Impact if no action:** In this case, the member must scroll up to find the start of the answer.
+- **Root question:** How can the popover find the start of the answer that the member can actually read?
+- **Options:**
+  - **A.** Give `newestAnswer` the same `followed` set that the renderer uses, built from `parts.inserts` in `PopoverChat`. This keeps two calculations of one boundary. Effort: Small.
+  - **B.** Select the target from the rows that the popover renders. No row says where the answer starts, so this needs a mark from the grouping or the data of A. Effort: Medium.
+  - **C.** Compute the answer start and the work folds together, in one shared calculation that gives the grouped entries and the ID of the newest answer row. `PopoverChat` calls it with `parts.inserts`. Effort: Medium.
+  - **D.** Stop the split: an insert no longer ends the answer, so the card between two agent messages stays in view. This changes the shipped fold rule of 9 November 2026 (`src/chat/transcript.md`, `docs/protocol/chat-and-events.md`, `docs/mockups/src/components/chat/groupItems.ts`, the Markdown copy of a session), so it needs the user. Effort: Medium.
+  - **E.** Mark the answer on its row: `groupEntries` flags the entry where the newest answer starts, `TranscriptRows` writes it as an attribute, and `answerTop` shows the row with the attribute. Effort: Medium.
+- **Left out:** Always scrolling to the last agent message, because it hides the start of an answer that spans several messages. A fallback in `showPlace`, because the keeper cannot tell which fold took the row, and a session tab needs the bottom when its read row is gone.
+- **Wider fix:** C. The renderer and the popover then use one answer boundary, also when the fold rule changes shape.
+- **Previous examples:** Commit `97f90da1b`, which made an insert end the answer.
+- **Related:** `plans/follow-ups/explain-answer-top-after-resize.md` changes the same placement, when it runs. One change can do both.
+- **Recommendation:** C. One calculation gives both the folds and the target. Add a popover test with a card between two agent messages and a long last message, in `src/chat/explain/PopoverAnswerTop.dom.test.tsx`. Keep the existing test of an answer of two adjacent messages in that file, which checks that the popover shows the first of them: the new test of a split answer starts at the last message, so it cannot catch a selector that gives only the last message.
+- **Action:** fix after merge, apply C, because the defect needs an insert between two otherwise adjacent agent messages, which is rare.

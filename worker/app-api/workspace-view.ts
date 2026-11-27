@@ -10,9 +10,13 @@ import {
 } from '../../src/shared/workspace-view-wire'
 import { identifier, record } from '../chat/inputs'
 import { HttpError } from '../http'
-import { activeOrgIdPredicate } from '../data/org-access'
 import { requireActiveOrg } from '../data/user-access'
 import { isTerminalId } from '../../src/shared/terminal'
+import {
+  withWorkspaceSkills,
+  workspaceSkillPatch,
+} from './workspace-view-skills'
+import { SAVE_WORKSPACE_VIEW } from './workspace-view-sql'
 
 function invalidView(): never {
   throw new HttpError(
@@ -94,28 +98,34 @@ function previewPlaces(value: unknown): PreviewTabPlace[] {
   })
 }
 
-/**
- * A save of the view route, as `WorkspaceViewWire` says. A save without
- * `previewTabs` comes from an older copy of the app, which knows no Preview
- * tab. It keeps `stored`, the Preview tabs of the saved view, at their
- * places, so an older copy erases no Preview tab.
- */
-export function workspaceViewSave(
-  value: unknown,
-  stored: readonly PreviewTabPlace[],
-): WorkspaceView {
+function workspaceViewPatch(value: unknown) {
   const body = record(value)
   const base = workspaceViewInput(body)
-  const places =
-    body.previewTabs === undefined ? stored : previewPlaces(body.previewTabs)
-  const active = body.activePreview ?? null
-  if (active !== null && !isTabPort(active)) return invalidView()
-  return viewFromWire(base, places, active)
+  const keepsPreviews = body.previewTabs === undefined
+  const places = keepsPreviews ? [] : previewPlaces(body.previewTabs)
+  const activePreview = body.activePreview ?? null
+  if (activePreview !== null && !isTabPort(activePreview)) return invalidView()
+  const skills = workspaceSkillPatch(body) ?? invalidView()
+  return {
+    keepsPreviews,
+    activePreview,
+    patch: {
+      ...viewFromWire(base, places, activePreview),
+      ...skills,
+      terminal: base.terminal ?? null,
+    },
+  }
 }
 
-/** Whether a save of the view route comes from an older copy of the app. */
-export function keepsStoredPreviewTabs(value: unknown): boolean {
-  return record(value).previewTabs === undefined
+function readSavedView(json: string): WorkspaceView {
+  const value = record(JSON.parse(json))
+  const base = workspaceViewInput(value)
+  const skillBase = Array.isArray(value.skillBaseTabs)
+    ? value.skillBaseTabs.map((tab: unknown) =>
+        tab === null ? null : viewTab(tab),
+      )
+    : base.tabs
+  return withWorkspaceSkills(base, value, skillBase) ?? invalidView()
 }
 
 export async function savedWorkspaceView(
@@ -137,8 +147,7 @@ export async function savedWorkspaceView(
       fileList: 'all',
       tool: 'terminal',
     }
-  const value: unknown = JSON.parse(row.viewJson)
-  return workspaceViewInput(value)
+  return readSavedView(row.viewJson)
 }
 
 export async function saveWorkspaceView(
@@ -147,25 +156,24 @@ export async function saveWorkspaceView(
     workspaceId: string
     orgId: string
     userId: string
-    view: WorkspaceView
+    view: unknown
     now: number
   },
-): Promise<void> {
-  await db
-    .prepare(
-      `INSERT INTO workspace_views (workspace_id, org_id, user_id, view_json, updated_at)
-     SELECT ?, ?, ?, ?, ? WHERE ${activeOrgIdPredicate('?')}
-     ON CONFLICT(workspace_id, user_id) DO UPDATE SET
-     view_json = excluded.view_json, updated_at = excluded.updated_at`,
-    )
+): Promise<WorkspaceView> {
+  const { patch, keepsPreviews, activePreview } = workspaceViewPatch(input.view)
+  const row = await db
+    .prepare(SAVE_WORKSPACE_VIEW)
     .bind(
       input.workspaceId,
       input.orgId,
       input.userId,
-      JSON.stringify(input.view),
+      JSON.stringify(patch),
       input.now,
-      input.orgId,
+      keepsPreviews ? 1 : 0,
+      activePreview,
     )
-    .run()
+    .first<{ viewJson: string }>()
   await requireActiveOrg(db, input.orgId)
+  if (!row) throw new Error('The workspace view write returned no row.')
+  return readSavedView(row.viewJson)
 }

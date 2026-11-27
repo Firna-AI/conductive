@@ -8,6 +8,17 @@ export interface ChatWorkspaceSummary {
   throughEventNumber: number
   lastOutputEventNumber: number
   working: boolean
+  /**
+   * Whether a message waits in the queue, as `oldestWaitingMessageAt`
+   * says. Only a read that asks for it sets it. An object that runs older
+   * code leaves it out.
+   */
+  messageWaiting?: boolean
+}
+
+/** What a summary read adds to the summary. */
+export interface ChatWorkspaceSummaryOptions {
+  messageWaiting?: boolean
 }
 
 interface SummaryProjection {

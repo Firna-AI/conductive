@@ -1,6 +1,6 @@
 import { useState, type RefCallback } from 'react'
 import { usePointerDrag, type PointerDragProps } from '../../app/pointer-drag'
-import { useEscapeLayer } from './Overlay'
+import { useEscapeLayer } from './escape-layer'
 
 /** An item of a list that moves by drag: its ID and its spoken name. */
 export interface MovableItem {

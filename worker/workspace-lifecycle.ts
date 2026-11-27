@@ -4,7 +4,8 @@ import type { UserMessage } from '../src/shared/generated/UserMessage'
 import type { StartStep } from '../src/shared/generated/StartStep'
 import type { WorkspaceStart } from '../src/shared/generated/WorkspaceStart'
 import type { RunnerLifecycleEvent } from './lifecycle/runner-lifecycle'
-import type { ChatWorkspaceSummary } from './chat/workspace-summary'
+import type { ChatWorkspaceSummaryOptions } from './chat/workspace-summary'
+import { waitingSummary } from './lifecycle/waiting-summary'
 import { WorkspaceChat } from './chat/backend'
 import { runWorkspaceLifecycle } from './chat/lifecycle-queue'
 import type { QueueTurn } from './chat/queue-turn'
@@ -136,8 +137,8 @@ export class WorkspaceLifecycle
     })
   }
 
-  async readChatWorkspaceSummary(): Promise<ChatWorkspaceSummary> {
-    return this.chat.workspaceSummary()
+  readChatWorkspaceSummary(options?: ChatWorkspaceSummaryOptions) {
+    return waitingSummary(this.chat, () => this.readLifecycle(), options)
   }
 
   async waitLifecycleStart() {

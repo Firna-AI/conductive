@@ -13,6 +13,7 @@ import {
 } from '../../../../src/ui/components/explain/explainCopy'
 import { ExplainPopover } from '../components/explain/ExplainPopover'
 import { FollowUpField } from '../components/explain/FollowUpField'
+import type { ResizedPanel } from '../components/explain/PopoverResize'
 import { replacesComposer } from '../../../../src/ui/components/workspace/sandboxNoticeState'
 import {
   explanationChats,
@@ -34,6 +35,13 @@ import { sandboxNotice } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 
 const { count } = explanations
+
+/**
+ * The size that Cal chose for the popover of a computer with its handles,
+ * wider and higher than the default 400 px by 420 px, with the focus on
+ * the height handle after its keys moved it.
+ */
+const resizedByCal: ResizedPanel = { width: 560, height: 600, focus: 'height' }
 
 /**
  * The chat of the explanation of Cal in its popover. It leaves out the
@@ -67,6 +75,7 @@ function popoverChat(
     <ChatPane
       compact
       field={field}
+      fromTop={!starting && !explainRuns(session)}
       hide={promptId}
       items={starting ? [queuedPrompt] : explanationChats[session]}
       notice={reopens}
@@ -115,12 +124,16 @@ export function explainOverlay(
   switch (state.explainOpen) {
     case 'popover':
     case 'popover-full':
+    case 'popover-resized':
       return (
         <ExplainPopover
           closeTo={parentPage(state)}
           expandTo={expandPage(state, readOnly)}
           height={sheetHeight(state)}
           quote={count.text}
+          resized={
+            state.explainOpen === 'popover-resized' ? resizedByCal : undefined
+          }
           title={nameLabel(count.title)}
           viewport={viewport}
         >

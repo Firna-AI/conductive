@@ -24,6 +24,13 @@ export const followUpLabel = 'Follow-up'
 /** The spoken name of the chat of the explanation in its popover. */
 export const popoverChatLabel = 'Chat of the explanation'
 
+/**
+ * The spoken names of the handles on the free edges of the popover of a
+ * computer: the edge above or below the chat, and the edge at its side.
+ */
+export const resizeHeightLabel = 'Resize the height of the panel'
+export const resizeWidthLabel = 'Resize the width of the panel'
+
 /** The notice of the parent chat when a press on Explain started nothing. */
 export const explainFailedTitle = "The explanation didn't start"
 

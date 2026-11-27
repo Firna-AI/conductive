@@ -45,7 +45,7 @@ Terminal tool, as [Terminal](terminal.md) says.
 | --- | --- | --- | --- | --- |
 | General | Command palette | ⌘K | Ctrl+K | Every page |
 | General | Keyboard shortcuts | ⌥⌘/ | Alt+Shift+/ | Palette |
-| General | Account page | ⌘, | Ctrl+, | Every page |
+| General | Settings | ⌘, | Ctrl+, | Every page |
 | General | Create org | – | – | Palette |
 | General | Send feedback | ⌥⌘F | Alt+Shift+F | Palette |
 | View | Hide or show the sidebar | ⌘B, [ | Ctrl+B, [ | Palette |

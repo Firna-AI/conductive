@@ -1,3 +1,4 @@
+import type { SkillIdentity } from './skills'
 import type { WorkspaceViewWire } from './workspace-view-wire'
 import { workspacePath } from './workspaces'
 
@@ -5,12 +6,22 @@ export function workspaceViewPath(orgId: string, workspaceId: string): string {
   return `${workspacePath(orgId, workspaceId)}/view`
 }
 
+/**
+ * The skill tab of one skill of one agent. Only the app keeps it among the
+ * tabs of its view. The view route and the stored view keep each skill tab
+ * in the skill fields of `WorkspaceView`, never in `tabs`, `activeTab`, or
+ * `temporaryTab`, because an older app and the previous Worker refuse a tab
+ * kind that they do not know.
+ */
+export type SkillTab = { kind: 'skill' } & SkillIdentity
+
 export type WorkspaceTab =
   | { kind: 'session'; sessionId: string }
   | { kind: 'file'; path: string; mode: 'preview' | 'source' }
   | { kind: 'diff'; path: string }
   /** The Preview tab of one port of the sandbox. A port has at most one. */
   | { kind: 'preview'; port: number }
+  | SkillTab
 
 /** Whether a value is a port that a Preview tab can name: 1 to 65535. */
 export function isTabPort(value: unknown): value is number {
@@ -22,7 +33,13 @@ export function isTabPort(value: unknown): value is number {
   )
 }
 
-export type TemporaryTab = { kind: 'file' | 'diff'; path: string }
+/** The mark of the temporary tab. Only the app marks a skill tab here. */
+export type TemporaryTab = { kind: 'file' | 'diff'; path: string } | SkillTab
+
+export interface SkillTabPlace extends SkillIdentity {
+  /** The index of the skill tab in the whole tab row, from 0. */
+  place: number
+}
 
 /**
  * The server keeps view state. Only the panel sizes and the last workspace
@@ -31,8 +48,12 @@ export type TemporaryTab = { kind: 'file' | 'diff'; path: string }
 export interface WorkspaceView {
   tabs: readonly WorkspaceTab[]
   activeTab: WorkspaceTab | null
-  /** The temporary file or diff tab, in either display mode, or null. */
+  /** The temporary file, diff, or skill tab, in either display mode, or null. */
   temporaryTab: TemporaryTab | null
+  /** These fields are also the saved JSON and HTTP representation. */
+  skillTabs?: readonly SkillTabPlace[]
+  activeSkill?: SkillIdentity | null
+  temporarySkill?: SkillIdentity | null
   fileList: 'all' | 'changes' | 'checks'
   tool: 'terminal' | 'preview' | 'desktop'
   terminal?: string

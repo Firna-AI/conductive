@@ -41,7 +41,7 @@ You can keep a draft there while you wait.
 After the first successful build, use these steps to change its repositories:
 
 1. Open the org's **Settings**.
-2. Select **Repositories**.
+2. Select **Repositories** under the org's name.
 3. Select **Edit**.
 4. Add or remove the repositories you want in its setup.
 5. Select **Done**.
@@ -62,7 +62,8 @@ Select **Remove** to confirm, or **Cancel** to keep the repository.
 The removal saves at once and starts no build.
 
 Selecting **Done** after you add repositories starts one build automatically, so you can add many repositories first.
-If a build or refresh is running, one more build usually starts after it succeeds.
+If a build is running, one more build usually starts after it succeeds.
+If a refresh is running, the build starts when the refresh ends.
 When the repository notice offers **Try again**, the last build failed, and the repository waits for it.
 Select **Try again** to build it.
 A newly added repository goes at the end of the order.
@@ -121,7 +122,7 @@ Outside **Edit**, move a repository in one of these ways:
 
 ## Install software
 
-1. Open **Cloud computer** in the org's **Settings**.
+1. Open **Cloud computer** under the org's name in **Settings**.
 2. Enter an install script under **Install software**.
 3. Select **Save script**.
 4. Select **Build computer**.
@@ -143,7 +144,7 @@ Folders normally use `~/code/<repo>`.
 Repeated repository names get an owner prefix, such as `~/code/acme-storefront`.
 A remaining folder-name collision adds a numeric suffix.
 
-The page lists the software included before your install script runs.
+**Cloud computer** lists the software included before your install script runs.
 Builds do not get your org's environment variable values.
 Use startup commands for work that needs those values.
 
@@ -199,7 +200,7 @@ The author of a commit does not prove who made it.
 
 The **Secret** mark hides exact copies of a value in displayed agent output and start logs.
 It also hides them in server and service details and service logs in **Preview**.
-The same rule covers skill names and descriptions in the message box.
+The same rule covers skill names and descriptions in the message box, and the text of a skill that you open.
 It does not hide values in file content, pictures in agent replies, diffs, or Terminal.
 
 ## Share agent skills across the org
@@ -359,7 +360,7 @@ Use **Secrets** for a key that an agent should use only with a member's approval
 Use environment variables for values that every computer needs at each start.
 
 1. Open the org's **Settings**.
-2. Select **Secrets**.
+2. Select **Secrets** under the org's name.
 3. Select **Add secret**.
 4. Enter its **Name**, **Description**, and **Value**.
 5. Select **Save secret**.
@@ -460,6 +461,11 @@ New workspaces can keep using the last successful setup while a later build runs
 Changes during the first successful build get one extra build automatically.
 If that first build fails, **Try again** uses the saved settings.
 The build action stays unavailable while a build is running.
+
+While a refresh runs after a successful build, **Cloud computer** shows **Refreshing**, and **Build computer** stays available.
+Select it to build after the refresh ends.
+After a failed build, **Try again** during a refresh also builds after the refresh ends.
+The tab then says that a build starts when the refresh ends.
 
 ## Recover from a failed build
 

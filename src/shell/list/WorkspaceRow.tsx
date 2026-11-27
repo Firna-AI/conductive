@@ -11,7 +11,10 @@ import {
 } from 'react'
 import { Archive, ArchiveRestore } from 'lucide-react'
 import { classes } from '../../ui/components/common/classes'
-import { WorkspaceMark } from '../../ui/components/workspaces/WorkspaceMark'
+import {
+  markOf,
+  WorkspaceMark,
+} from '../../ui/components/workspaces/WorkspaceMark'
 import styles from '../../ui/components/workspaces/WorkspaceRow.module.css'
 import { routes } from '../../app/router'
 import { ownPress } from '../../app/pointer-drag'
@@ -144,7 +147,7 @@ export function WorkspaceRow({
           nested,
         )}
       >
-        <WorkspaceMark github={workspace.github} status={workspace.state} />
+        <WorkspaceMark {...markOf(workspace)} />
         <WorkspaceNameField
           name={workspace.name}
           page={page}

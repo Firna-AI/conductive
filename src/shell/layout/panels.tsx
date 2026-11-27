@@ -1,4 +1,5 @@
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useState } from 'react'
+import { ExplainSize } from '../../app/explain-size'
 import type { PanelLayout } from '../../app/panels'
 import { useStore, type Readable } from '../../app/store'
 
@@ -27,4 +28,16 @@ const shownAlways: Readable<boolean> = {
 export function useRightShown(): boolean {
   const layout = useContext(PanelContext)
   return useStore(layout?.rightShown ?? shownAlways)
+}
+
+/**
+ * The size of the Explain popovers that the member chose, which the panel
+ * layout keeps in the browser. A screen without the panel layout, such as
+ * the chat development page or a test of the chat, keeps a size of its own
+ * until it closes.
+ */
+export function useExplainSize(): ExplainSize {
+  const layout = useContext(PanelContext)
+  const [own] = useState(() => new ExplainSize(null))
+  return layout?.explain ?? own
 }

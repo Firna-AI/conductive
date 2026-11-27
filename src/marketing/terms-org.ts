@@ -98,7 +98,7 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         endpoint, it starts on. An own endpoint can use personal
         subscriptions. Other members can spend those subscriptions until
         you turn sharing off. When you replace a login with one of the same
-        kind, the setting stays. You can change it on your account page.
+        kind, the setting stays. You can change it in Account settings.
         Share a login only when its provider's terms allow that use.`,
       text`Codex can use your ChatGPT plan through device code sign-in.
         ${productName} stores and renews that sign-in. OpenAI sends hosted

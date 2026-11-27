@@ -23,7 +23,7 @@ import {
 import { completeBuildPhase } from './build-phase-data'
 import { recoverImageBuildForCleanup } from './image-allocation'
 import { liveBuildComputers } from './computer-ledger'
-import { startAddedImageBuild } from './first-image-build'
+import { startFollowingBuild } from './first-image-build'
 import { imageIsPublished } from './org-image-data'
 
 export async function advanceBuildCommand(
@@ -189,7 +189,7 @@ export async function cleanupBuild(
   }
   await updateBuildJob(runtime.env.DB, job.buildId, 'done')
   await scheduleIdleImage(runtime, job.orgId, jobSoftware(job))
-  await startAddedImageBuild(runtime, job)
+  await startFollowingBuild(runtime, job)
   return true
 }
 

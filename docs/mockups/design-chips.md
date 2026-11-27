@@ -101,9 +101,12 @@ the chat.
   - `MentionChip` in `src/components/chat/` draws the chip of a `FilePart`
     of the app, with its line target and the page that a press opens.
 - `CodeBlock` in `src/components/chat/` draws a code block of an answer
-  with the look of a code block of a Markdown file. On a phone a Copy code
-  button shows in its top corner. With a mouse the button shows only while
-  the pointer is on the block, so a desktop view draws none.
+  with the look of a code block of a Markdown file. A block with the fence
+  label of a known language shows the colours of a file tab of that
+  language, and a block without a label stays plain, as
+  [Code blocks](design-markdown.md#code-blocks) gives. On a phone a Copy
+  code button shows in its top corner. With a mouse the button shows only
+  while the pointer is on the block, so a desktop view draws none.
 - `FileMentionList` in `src/components/chat/` draws the list of `@` above
   the message box: the icon, the name, and the folder of each entry that
   matches the query, with the first row highlighted. One line takes the
@@ -122,8 +125,14 @@ the chat.
   because `/` opens the list of skills. Its title is the description of
   the skill, and screen readers hear "Skill" before the name. In a message
   box it has the cell of its icon and the × of `ChipRemove.tsx`, as a file
-  chip does. A sent message shows it without a ×, and a press opens
-  nothing. The app uses `SkillChip` too.
+  chip does, and its `onOpen` makes the name a button that opens the skill
+  tab, as the name of a file chip opens its file. In a view, its name link
+  makes the name a link to the skill tab screen. A view cannot hover, so
+  its `namePointer` draws the pointer over the name, which is then
+  underlined, and its `pointer` draws a sent chip under the pointer with
+  the fill of the shared hover rule. A sent message shows it without a ×,
+  and a press opens the skill tab, from skill tab decision 1 B. The app
+  uses `SkillChip` too.
 - `SkillMentionList` in `src/components/chat/` draws the list of `/` above
   the message box, in the place of the list of `@`. It renders through
   `MentionList`: each row gives the name and a `description`, which shows

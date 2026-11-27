@@ -1,0 +1,50 @@
+# Catalogue tab links drop the row state
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 1, the wider fix of finding 63, and review round 2, the wider fix of finding 92.
+- **Location:** `docs/mockups/src/screens/workspaceTemporaryTab.ts:58-74` (`keptTabOf`), `:89-104` (`readmeBesideKeptSkill`), and `withTemporaryTab`, `docs/mockups/src/screens/workspaceTabs.ts` (`tabsFor`), `docs/mockups/src/screens/workspaceSkillTab.ts:77-88` (`keptSkillTab`), `docs/mockups/src/components/files/FileTree.tsx` (`Row`), `docs/mockups/src/components/files/previewPaths.ts:3-11`, `docs/mockups/src/components/files/FilesPanel.tsx:217` (`diffTo`).
+- **Reason:** The skill screens got their direct fix in this branch, and the resolver also changes the file and diff examples of the catalogue on `origin/main`.
+
+- **Source:** Review. **Category:** Mockup.
+- **Terms:**
+  - **Catalogue:** the Mokly mockups under `docs/mockups/`, which are the visual spec of the app. Each screen is a fixed state, and a link leads to another screen.
+  - **Temporary tab:** the one tab of the row that the next look at a file, a diff, or a skill without a tab replaces. Its title shows in italics.
+  - **Kept tab:** a tab that the next look leaves open.
+- **Background:**
+  - In the app, a press on a file, a diff, or a skill that has a tab shows that tab. The temporary tab stays as it is (`docs/protocol/temporary-tabs.md:51-52`, `withActiveTab` in `src/shell/workspace/files/view-tabs.ts:89-104`).
+  - In the catalogue, each tab and each list row leads to one fixed screen, whatever the row of the screen holds:
+    - `tabsFor` in `docs/mockups/src/screens/workspaceTabs.ts` gives each tab its screen, such as `app/files/markdown` for README.md.
+    - `keptTabOf` gives the kept file of a temporary-tab screen the screen `app/files/markdown` or `app/files/diff`.
+    - A row of All files leads to the screen of its kind of file, from `previewPaths`, through `Row` in `FileTree.tsx`.
+    - A row of Changes leads to `app/files/diff`, the `diffTo` that `FilesPanel.tsx:217` gives the Changes list.
+  - These fixed screens show their own row, without the temporary tab of the screen that the press came from.
+  - On 25 November 2026, the skill tabs change gave its own screens explicit links. The kept `plans` tab leads to `app/skill-mentions/tab/temporary/return` (`keptSkillTab`, commit `d6e125954`).
+  - README.md leads to `app/skill-mentions/tab/temporary/kept`, from its tab and from its row in All files. Commit `c459e6971` did this with `readmeBesideKeptSkill` (`workspaceTemporaryTab.ts:89-104`) and the `markdownTo` property of `FileTree` and `FilesPanel`.
+- **Problem:**
+  - A press on a kept tab, or on the row of a file with a tab, can show a row that the app never shows.
+  - An example is the variant "Keep it, then press another file" of `app/files/temporary`. Its kept README.md tab leads to `app/files/markdown`. There, README.md is the temporary tab, and the temporary diff of AddressForm.tsx is gone.
+  - In the app, README.md shows as a kept tab, and the diff stays the temporary tab.
+- **Impact if no action:** A reviewer who follows the links sees a press close the temporary tab, against the rule of the app. Each new example needs explicit links of its own.
+- **Root question:** How does a press on a tab or a list row in the catalogue keep the row, as the app does?
+- **Options:**
+  - **A.** Give the file examples of `app/files/temporary` explicit links, as the skill tabs change did for its screens.
+    - Add a variant where the kept README.md shows and the diff stays the temporary tab. Link the kept README.md tab and its row in All files there.
+    - Cost: each later example needs links of its own.
+    - Effort: Small.
+  - **B.** Give the catalogue one destination resolver.
+    - A function in `docs/mockups/src/screens/` takes the state of a screen and a tab or a row. It returns the screen of a press, by the rule of `withActiveTab`.
+    - A file, a diff, or a skill with a tab leads to the state where that tab shows in the same row. One without a tab leads to the state where it opens in the temporary tab.
+    - `tabsFor`, `withTemporaryTab`, `keptTabOf`, `keptSkillTab`, the rows of `FileTree`, and the Changes rows of `FilesPanel` use it. It takes the place of the explicit links of the skill screens: `readmeBesideKeptSkill` and the `markdownTo` property.
+    - Add each missing state, such as the kept README.md that shows with the temporary diff after it.
+    - Run `npm run mockups:check`.
+    - Effort: Medium.
+- **Left out:**
+  - Change nothing. The catalogue then keeps showing rows that the app never shows.
+  - Tree rows that lead where the tab of their file leads. The kept tabs of `keptTabOf` still lead to the fixed screens.
+  - A rule in `docs/mockups/README.md` alone, that each link keeps the row. Only a review then finds a wrong link, and the current wrong links stay.
+  - So two approaches remain: a fix of each link, or one resolver for all of them.
+- **Wider fix:** B. Each tab and row of every example then gets its screen from one rule, so a new example cannot drop the row.
+- **Previous examples:** Commits `d6e125954` and `c459e6971` gave the kept `plans` tab and README.md beside it screens of their own, for the same cause. `keptTabOf` on `origin/main` gives the kept file tabs the fixed screens.
+- **Recommendation:** B. One rule keeps each press of the catalogue in line with the app, and it removes the explicit links. Choose A for the current file examples only.
+- **Action:** fix after merge, apply B, because the skill screens have their direct fix, and B also changes the file examples on `origin/main`.

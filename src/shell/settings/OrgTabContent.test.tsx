@@ -1,0 +1,260 @@
+import { describe, expect, test } from 'vitest'
+import { ComputerModel } from '../../app/computer-model'
+import type { SettingsTab } from '../../app/router'
+import { flushMicrotasks, ManualDelay } from '../../app/test-kit'
+import { ORG_COLORS } from '../../shared/org-colors'
+import {
+  buildPath,
+  orgSettingsPaths,
+  type ImageBuild,
+} from '../../shared/org-settings'
+import { FakeApiServer } from '../../test-support/fake-api'
+import { serveSuspendedAcme } from '../../test-support/suspended-org'
+import {
+  coreFixtures,
+  FAKE_IDS,
+  FAKE_TIME,
+} from '../../test-support/fixtures/core'
+import { renderScreen, startedApp, textOf } from '../test-render'
+import { gatewayLogin, noLogin, serveOrgLogins } from './agents-test-kit'
+import { ComputerSettings } from './ComputerTab'
+import { OrgTabContent } from './OrgTabContent'
+
+const minute = 60_000
+const hour = 60 * minute
+
+/** The started app, with the org of the fake API and the person signed in. */
+async function signedIn(server: FakeApiServer) {
+  const app = await startedApp(server)
+  const boot = app.boot.get()
+  const org = app.orgs.get().find((item) => item.id === FAKE_IDS.org)
+  if (boot.state !== 'ready' || !org) throw new Error('The app did not start.')
+  return { app, org, user: boot.user, model: app.org(org.id) }
+}
+
+/** The good build that new workspaces start from, built 3 hours ago. */
+const goodBuild: ImageBuild = {
+  id: 'build-good',
+  orgId: FAKE_IDS.org,
+  kind: 'build',
+  state: 'succeeded',
+  startedAt: FAKE_TIME - 3 * hour,
+  completedAt: FAKE_TIME - 3 * hour + 401_000,
+  durationMs: 401_000,
+  error: null,
+  storageTotalBytes: null,
+  storageFreeBytes: null,
+}
+
+/**
+ * The Cloud computer tab as text, when `newest` is the newest build and
+ * `goodBuild` the one that workspaces start from. `log` gives the texts of
+ * the log events of the newest build, in their order. `refresh` is a
+ * refresh that runs after the newest build.
+ */
+async function computerText(
+  server: FakeApiServer,
+  newest: ImageBuild,
+  log: readonly string[],
+  refresh?: ImageBuild,
+): Promise<string> {
+  server.json('GET', orgSettingsPaths.builds(FAKE_IDS.org), {
+    builds: refresh ? [refresh, newest, goodBuild] : [newest, goodBuild],
+    currentImageBuildId: goodBuild.id,
+    changes: {
+      installScript: false,
+      addedRepositories: [],
+      removedRepositories: [],
+    },
+  })
+  server.json('GET', buildPath(FAKE_IDS.org, newest.id), {
+    build: newest,
+    log: log.map((text, index) => ({
+      eventNumber: index + 1,
+      occurredAt: newest.startedAt + index,
+      text,
+    })),
+  })
+  const { app, org, model } = await signedIn(server)
+  await model.reload('builds')
+  // The model follows the log of the newest build. Its timer waits on a
+  // manual delay, so the clock of the test stands still.
+  const computer = new ComputerModel(model, new ManualDelay().delay)
+  computer.start()
+  await flushMicrotasks()
+  const text = textOf(
+    renderScreen(app, <ComputerSettings computer={computer} org={org} />),
+  )
+  computer.stop()
+  return text
+}
+
+/** A refresh that runs, during which an admin selected Build computer. */
+const requestedRefresh: ImageBuild = {
+  ...goodBuild,
+  id: 'refresh-running',
+  kind: 'refresh',
+  state: 'running',
+  startedAt: FAKE_TIME - 134_000,
+  completedAt: null,
+  durationMs: null,
+  buildRequested: true,
+}
+
+describe('OrgTabContent', () => {
+  test('an admin gets fields for the name and the initials, and the colour swatches on General', async () => {
+    const { app, org, user } = await signedIn(new FakeApiServer())
+    const html = renderScreen(
+      app,
+      <OrgTabContent org={org} tab="general" user={user} />,
+    )
+    expect(
+      [...html.matchAll(/<input[^>]*value="([^"]*)"/g)].map(
+        ([, value]) => value,
+      ),
+    ).toEqual(['Acme', 'AC', ...ORG_COLORS])
+  })
+
+  test('a suspended org shows its notice above each tab, and no edit control, also for its only admin', async () => {
+    const server = new FakeApiServer()
+    serveSuspendedAcme(server)
+    serveOrgLogins(server, [gatewayLogin('claude'), noLogin('codex')])
+    const { app, org, user, model } = await signedIn(server)
+    await model.reload('repositories')
+    await model.reload('builds')
+    await model.reload('agentLogins')
+    const computer = new ComputerModel(model, new ManualDelay().delay)
+    await computer.load()
+    const screen = (tab: SettingsTab) =>
+      renderScreen(app, <OrgTabContent org={org} tab={tab} user={user} />)
+    const notice =
+      'Acme is suspended Its workspaces and settings are read-only. For questions, write to abuse@conductive.build.'
+    const tabs = {
+      general: screen('general'),
+      repositories: screen('repositories'),
+      'cloud computer': screen('cloud-computer'),
+      agents: screen('agents'),
+      members: screen('members'),
+    }
+    for (const [tab, html] of Object.entries(tabs)) {
+      expect(textOf(html), tab).toContain(notice)
+    }
+    const pages = {
+      general: tabs.general,
+      repositories: tabs.repositories,
+      'cloud computer': tabs['cloud computer'],
+      agents: tabs.agents,
+    }
+    for (const [page, html] of Object.entries(pages)) {
+      expect(html, page).not.toMatch(/<button|<input|<textarea|role="switch"/)
+      expect(textOf(html), page).not.toMatch(
+        /Save|Build computer|Delete org|Leave org|Only an admin/,
+      )
+    }
+  })
+
+  test('an older settings reply without the base image names no software', async () => {
+    const server = new FakeApiServer()
+    const { installScript, startupScript, envVars, updatedAt } =
+      coreFixtures().settings.settings
+    server.json('GET', orgSettingsPaths.settings(FAKE_IDS.org), {
+      settings: {
+        installScript,
+        startupScript,
+        envVars,
+        updatedAt,
+      },
+    })
+    const { app, org, model } = await signedIn(server)
+    const computer = new ComputerModel(model, new ManualDelay().delay)
+    await computer.load()
+    const text = textOf(
+      renderScreen(app, <ComputerSettings computer={computer} org={org} />),
+    )
+    expect(text).toContain(
+      'Install software The install script runs only when you build the computer.',
+    )
+    expect(text).not.toContain('Cloud computers run')
+  })
+
+  test.each([
+    [
+      undefined,
+      'Last build 12 minutes ago Failed after 2m 18s Try again The install script stopped with exit code 1. Running the install script npm error code ERESOLVE The install script stopped with exit code 1. Workspaces still start from the build of 3 hours ago. History (2)',
+    ],
+    [
+      requestedRefresh,
+      'Last build 12 minutes ago Failed after 2m 18s Try again The install script stopped with exit code 1. Running the install script npm error code ERESOLVE The install script stopped with exit code 1. A build starts when this refresh ends. Workspaces still start from the build of 3 hours ago. History (2)',
+    ],
+  ])(
+    'a failed newest build shows its saved message, the end of its log, Try again, and the good build that workspaces still start from, during a refresh: %o',
+    async (refresh, expected) => {
+      const server = new FakeApiServer()
+      const failed: ImageBuild = {
+        ...goodBuild,
+        id: 'build-failed',
+        state: 'failed',
+        startedAt: FAKE_TIME - 12 * minute,
+        completedAt: FAKE_TIME - 12 * minute + 138_000,
+        durationMs: 138_000,
+        error: 'The install script stopped with exit code 1.',
+      }
+      const text = await computerText(
+        server,
+        failed,
+        [
+          'Running the ',
+          'install script\nnpm error code ERESOLVE\n',
+          'The install script stopped with exit code 1.\n',
+        ],
+        refresh,
+      )
+      expect(text).toContain(expected)
+    },
+  )
+
+  test('a running build names its 60-minute limit under its log', async () => {
+    const server = new FakeApiServer()
+    const running: ImageBuild = {
+      ...goodBuild,
+      id: 'build-running',
+      state: 'running',
+      startedAt: FAKE_TIME - 134_000,
+      completedAt: null,
+      durationMs: null,
+    }
+    const text = await computerText(server, running, [
+      'Running the install script\n',
+    ])
+    expect(text).toContain(
+      'Building · 2m 14s Build computer Running the install script Workspaces start from the build of 3 hours ago until this one finishes. Each build has a 60-minute limit.',
+    )
+  })
+
+  test.each([
+    [false, 'Refreshing · 2m 14s Build computer History (1)'],
+    [
+      true,
+      'Refreshing · 2m 14s Build computer A build starts when this refresh ends. History (1)',
+    ],
+  ])(
+    'a running refresh names itself, with a requested build: %s',
+    async (buildRequested, expected) => {
+      const server = new FakeApiServer()
+      const refresh: ImageBuild = {
+        ...goodBuild,
+        id: 'refresh-running',
+        kind: 'refresh',
+        state: 'running',
+        startedAt: FAKE_TIME - 134_000,
+        completedAt: null,
+        durationMs: null,
+        ...(buildRequested ? { buildRequested } : {}),
+      }
+      const text = await computerText(server, refresh, [
+        'Updating the repositories\n',
+      ])
+      expect(text).toContain(expected)
+    },
+  )
+})

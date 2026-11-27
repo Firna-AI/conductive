@@ -1,0 +1,41 @@
+# Panel sizes have CSS and TypeScript copies
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from branch `calummoore/resize-popup-kd67`, review round 1, finding 4. That branch gave the default size of the Explain popover one source and split off this wider fix.
+- **Location:** `src/ui/design/metrics.ts:46` and `:48`, the design tokens of the column widths. `src/ui/components/layout/ResizeHandle.tsx:8` and `:11`, the default widths and the drag ranges of the columns. `src/ui/components/explain/ExplainPopover.module.css`, the `margin` and the `max-height` of the rule `.panel`. `src/chat/explain/popover-edges.ts:10`, the `margin` of the popover.
+- **Reason:** The fix changes the sidebar, the right column, and the design tokens on origin/main, outside the diff of the branch that found it.
+
+- **Terms:**
+  - **Design tokens:** the `--ui-*` CSS custom properties that `tokensCss` writes from `src/ui/design/metrics.ts`.
+  - **Explain popover:** the panel that `src/chat/explain/ExplainPopover.tsx` draws by the marked text in the workspace chat, with the chat of an explanation.
+  - **Range:** a `PanelWidth` value with the default size of a panel and the smallest and largest size of a drag.
+- **Background:**
+  - `tokensCss` in `src/ui/theme.ts` writes the design tokens for the app, the mockups, and the development pages. `tokensCss` in `src/marketing/tokens.ts` writes them for the marketing site, and `astro.config.ts` calls it.
+  - `sidebarWidth: '232px'` at `metrics.ts:46` becomes `--ui-sidebar-width`. `src/ui/components/layout/AppFrame.module.css` uses it at lines 19, 64, and 89. The docs grid of the marketing site uses it at `src/marketing/styles/docs-layout.css:17`.
+  - `rightWidth: '440px'` at `metrics.ts:48` becomes `--ui-right-width`. `src/ui/components/workspace/RightColumn.module.css:7` draws the right column with it.
+  - `sidebarWidth` and `rightColumnWidth` in `src/ui/components/layout/ResizeHandle.tsx` hold the same defaults as ranges. The sidebar is 232 px, with a drag from 200 px to 360 px. The right column is 440 px, with a drag from 320 px to 640 px.
+  - `src/app/panels.ts`, the column handles, `src/ui/components/workspace/RightColumn.tsx`, and the mockups read these ranges. `PanelLayout.width` in `src/app/panels.ts` falls back on the default of the range.
+  - Until the member drags a column, the CSS token gives its width. `src/shell/layout/frames.tsx:36` and `src/shell/workspace/WorkspaceColumns.tsx:76` set a width only after the member chose one.
+  - The rule `.panel` of the popover CSS has `margin: 6px 0`, so it keeps 6 px above and below the panel. At commit `7d82811e9`, its highest height also leaves 12 px for the two margins, as the fallback of `--explain-gap`.
+  - `margin` in `src/chat/explain/popover-edges.ts` is 6 px too. It sets the rooms of the popover handles. It also sets the place that `placePanel` in `src/chat/explain/popover-place.ts` gives in a browser without CSS anchor positioning.
+  - The review of the branch that added this item found the same class in the default size of the popover. The CSS held 400 px and 420 px beside `popoverWidth` and `popoverHeight` in `src/ui/components/explain/popoverSize.ts`. The default mockup drew the CSS copy, and its handle values read the TypeScript copy.
+  - That branch gave the popover size one source. `popoverSizeStyle` in `popoverSize.ts` now supplies the defaults to the CSS as custom properties.
+- **Problem:** The default widths of the sidebar and the right column, and the margin of the popover, each have a CSS copy and a TypeScript copy. No code ties the two copies, so a change of one copy leaves the other.
+- **Impact if no action:** A new default width then draws one width, while the handles, `PanelLayout`, and the mockups use the other. A new popover margin draws one gap, while the rooms of the handles and the fallback place use the other.
+- **Root question:** How can each size of a panel have one source that both the CSS and the TypeScript read?
+- **Options:**
+  - **D.** Keep each size as a design token in `metrics.ts`, which `tokensCss` already writes for the CSS. Make the TypeScript read the number from the token. Add a token for the popover margin. The TypeScript then parses CSS text such as `232px`, and a token that is not plain px breaks the parse. Effort: Medium.
+  - **E.** Keep each size once as a CSS Modules `@value`, which the TypeScript imports as text. The TypeScript still parses that text. The marketing site builds its tokens from `metrics.ts` in `astro.config.ts`, outside CSS Modules, so the sidebar token needs a check of that path. Effort: Medium.
+  - **F.** Keep each size in TypeScript, and build its CSS from it. Move the two column ranges to a plain module under `src/ui/design/`. The marketing site builds its tokens from `metrics.ts`, so `metrics.ts` must not import a React component such as `ResizeHandle.tsx`. Make `metrics.ts` build `sidebarWidth` and `rightWidth` from the defaults of the ranges. Move the popover `margin` into `popoverSize.ts`, and let `popoverSizeStyle` hand it to the CSS as a custom property. Effort: Medium.
+- **Left out:**
+  - A test that compares the two copies. Both copies stay in use.
+  - Read the sizes from the drawn style. The stores need the defaults before a page draws.
+  - Change nothing. The copies can drift apart.
+- **Wider fix:** F. Each size has one TypeScript source, and the CSS reads what the TypeScript builds.
+- **Previous examples:**
+  - The branch that added this item gave the default size of the popover one source in `src/ui/components/explain/popoverSize.ts`.
+  - `src/ui/theme.ts:45` builds `--ui-control-height` from `control.height` in `src/ui/design/metrics.ts`. So the CSS and the controls read one number.
+- **Related:** `plans/follow-ups/explain-popover-placement-paths-flip-apart.md`: the same code. That item compares how the two placement paths use the 6 px margin. Its option B adds a side margin to the rule `.panel`.
+- **Recommendation:** F. It builds the CSS from the TypeScript numbers that the stores and the handles need, as the app does for the control height.
+- **Action:** fix after merge, apply F, because F changes the column sizes and the design tokens outside the change that found it.

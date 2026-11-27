@@ -217,15 +217,44 @@ previews.
   leaves out the written prompt, which still starts the first turn, so the
   work of that turn folds. While the cloud computer starts, the steps of
   the start show in place of the turn.
-  - On a computer the popover is a panel 400 px wide by its mark, over the
-    app frame. It keeps to the anchor of the open mark through CSS anchor
+  - On a computer the popover is a panel by its mark, over the app frame.
+    It keeps to the anchor of the open mark through CSS anchor
     positioning. It opens below the mark, from the start of the mark, and
     above the mark when the frame has more room there, so it never covers
-    the marked text. Its highest height is 420 px, or the room on its side
-    of the mark less its 6 px margins. Its chat scrolls inside it, and its
-    newest line stays in view. It has the full hairline outline of a card
-    and the shadow of a menu. No dim lies over the app, because the parent
-    chat stays live around it.
+    the marked text. By default it is 400 px wide and at most 420 px high.
+    The room on its side of the mark, less its 6 px margins, also caps its
+    height. Its chat scrolls inside it. While a turn runs, its newest line
+    stays in view. When the turn has ended, the chat shows the top of the
+    answer, so the screens of an ended turn start at the top of the chat.
+    It has the full hairline outline of a card and the shadow of a menu.
+    No dim lies over the app, because the parent chat stays live around
+    it.
+  - `PopoverResize` draws the handles on the free edges of the panel, the
+    edges away from its mark: the edge above or below the chat, the edge
+    at its side, and the corner between them. A drag of a handle changes
+    the size of the panel: the width from 320 px to 720 px, and the
+    highest height from 200 px to 960 px. The browser keeps one size for
+    all popovers. From the first move of its height, by the edge above or
+    below the chat or by the corner, until the popover closes, the panel
+    keeps the moved height. A move starts from the size that shows, and
+    the room by the mark stops a move of the height. Each
+    edge handle is a separator in the order of Tab, after the follow-up
+    field. Its name is "Resize the height of the panel" or "Resize the
+    width of the panel". Up and Down move the height handle, and Left and
+    Right move the width handle. Shift takes a larger step, and Home and
+    End go to the ends of the range. The corner takes only the pointer.
+  - A handle lies inside the card, because the card cuts off what passes
+    its edge, and the pointer over it shows the resize cursor of its edge.
+    At rest it draws nothing. On hover, on focus, and while a drag runs,
+    it draws a hairline on its edge and a grip in its middle, as the
+    column handles do. Neither takes the accent, because they lie on the
+    edge of a card. The hairline takes the strong neutral border colour.
+    The grip takes the muted ink, so a handle with the focus stands out
+    from the card. The grip of an edge is a pill on the hairline, as the
+    handle of a sheet, and the grip of the corner follows the round corner
+    of the card. The panel of a computer below its mark has handles on its
+    bottom edge, its right edge, and their corner, as
+    `app/chat/explain/popover/resized` shows.
   - On a phone the popover is a sheet at half the height of the screen,
     with no dim, so the marked text stays in view above it. A drag of its
     handle takes it to full height, where it stops under the tab row.

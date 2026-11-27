@@ -10,6 +10,7 @@ const tabKinds = [
   'diff',
   'terminal',
   'preview',
+  'skill',
 ] as const satisfies readonly TabKind[]
 
 /** A tab of the centre column as JSON, with the fields of `WorkspaceTab`. */

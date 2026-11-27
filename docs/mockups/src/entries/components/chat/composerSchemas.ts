@@ -109,6 +109,8 @@ export const composerStateProperties = {
   skills: { enum: skillSources },
   /** The pointer over the icon of the first chip of the text. */
   pointer: { type: 'boolean' },
+  /** The pointer over the name of the first chip, a skill chip. */
+  namePointer: { type: 'boolean' },
   /** The Capabilities icon beside the attach button. */
   capabilities: capabilitiesSchema,
   /** The menu of the one button of a phone, with Attach files. */

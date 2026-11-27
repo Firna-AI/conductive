@@ -8,6 +8,7 @@ const implicitRoles: Readonly<Record<string, string>> = {
   BUTTON: 'button',
   DIALOG: 'dialog',
   INPUT: 'textbox',
+  NAV: 'navigation',
   SECTION: 'region',
   TEXTAREA: 'textbox',
   UL: 'list',

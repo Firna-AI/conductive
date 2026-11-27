@@ -1,6 +1,7 @@
 import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRunner'
 import { CONNECTION_CHECK_MS } from '../security/connection-access'
 import { RunnerAccessDenied } from './login-access'
+import type { RunnerReadDispatch } from './runner-read-requests'
 import type {
   ChatDependencies,
   RunnerPeer,
@@ -50,6 +51,22 @@ export class AuthenticatedRunner {
   async send(message: WorkspaceToRunner): Promise<void> {
     if (!(await this.authorize())) throw new RunnerAccessDenied()
     this.source.send(message)
+  }
+
+  async sendRead(
+    message: WorkspaceToRunner,
+    read: RunnerReadDispatch,
+  ): Promise<boolean> {
+    if (!read.isPending() || !(await this.authorize())) return false
+    await read.authorize()
+    if (this.closed || !read.isPending()) return false
+    try {
+      this.source.send(message)
+      return true
+    } catch {
+      this.close()
+      return false
+    }
   }
 
   close(): void {

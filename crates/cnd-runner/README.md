@@ -18,6 +18,7 @@ The `conductive runner` command composes this crate. The installed service runs 
 - Stream repository files and system fonts over private loopback HTTP for HTML file previews.
 - Send bounded file reports, stable listening-port reports, and agent skill reports.
 - Keep private skill paths in memory and supply explicit Codex skills on each send.
+- Read skill text by agent and name through the private SDK helper.
 - Watch recursive repository changes and repair watches after a restore.
 - Prepare ignored context storage, including linked Git worktrees.
 - Run independent sessions through private Node SDK helper processes.
@@ -187,6 +188,9 @@ copy, which the scanner leases for each scan. The engine and the scanner
 share one `SkillsCopy`, and each new copy signals one more skills scan. Rust filters whole skill sources, applies name,
 count, and byte limits, and saves the report and refresh receipt together.
 The store retains the latest skill metadata without private paths.
+Skill reads use the requested agent's latest scan. For an org skill, the
+scanner leases the current copy until the helper finishes the read. The
+runner filters the text and sends the result outside the numbered outbox.
 
 Native watches debounce file and skill events by 100 ms. One file scan can
 run while one watch refresh waits. Later watch refreshes share that waiting

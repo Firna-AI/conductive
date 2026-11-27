@@ -6,6 +6,7 @@ import type {
   TextTable,
 } from '../../../chat/markdown/agent-blocks'
 import type { InlineText } from '../../../chat/markdown/agent-inline'
+import { FenceText } from '../../../files/code/CodeText'
 import { classes } from '../common/classes'
 import prose from '../common/MarkdownProse.module.css'
 import { TaskBox } from '../common/TaskBox'
@@ -175,16 +176,19 @@ function LineHeading(props: { text: InlineText; drawing: AgentDrawing }) {
  * workspace chips, and links. A `<summary>` holds only phrasing content and
  * headings, and no paragraph, list, quote, rule, or table. So each block is
  * a span, which CSS shows as a block while the line is open. A code block
- * takes the look of an answer's code block only while the line is open, so
- * the closed line shows its text in the line. A table shows as its cells,
- * so the closed line stays one line. A heading is a span in the weight of
- * a heading too: the closed line stays one line, and the button role of a
- * summary hides a heading from the heading list of a screen reader. A
- * quote and a rule are spans with the look of `MarkdownProse.module.css`:
- * closed, a quote shows its text in the muted colour of a quote, and a
- * rule shows as a middle dot, as `chat-message-lines.md` says. In the same
- * way as a code block, the Markdown image of a picture file in a paragraph
- * or a list item shows as its picture only while the line is open.
+ * takes the look of an answer's code block, and the colours of its fence
+ * label from `FenceText`, only while the line is open, so the closed line
+ * shows its plain text in the line. Its span holds no `<pre>` and no Copy
+ * code button, because the line is a button itself. A table shows as its
+ * cells, so the closed line stays one line. A heading is a span in the
+ * weight of a heading too: the closed line stays one line, and the button
+ * role of a summary hides a heading from the heading list of a screen
+ * reader. A quote and a rule are spans with the look of
+ * `MarkdownProse.module.css`: closed, a quote shows its text in the muted
+ * colour of a quote, and a rule shows as a middle dot, as
+ * `chat-message-lines.md` says. In the same way as a code block, the
+ * Markdown image of a picture file in a paragraph or a list item shows as
+ * its picture only while the line is open.
  */
 function LineBlock(props: { block: TextBlock; state: LineState }) {
   const { block, state } = props
@@ -210,7 +214,11 @@ function LineBlock(props: { block: TextBlock; state: LineState }) {
               state.open && markdown.block,
             )}
           >
-            {block.text}
+            {state.open ? (
+              <FenceText label={block.label} text={block.text} />
+            ) : (
+              block.text
+            )}
           </span>{' '}
         </>
       )

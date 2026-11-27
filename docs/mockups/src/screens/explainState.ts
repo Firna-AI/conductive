@@ -39,8 +39,11 @@ export const explainStateProperties = {
    * What lies open: a selection in the answer or in the first message of
    * Cal with Explain, the menu of the overlapping marks, or the popover of
    * the explanation of Cal. A phone shows the popover as a sheet at half
-   * height, and `popover-full` drags it to full height. A read-only
-   * workspace shows a selection with no button.
+   * height, and `popover-full` drags it to full height. `popover-resized`
+   * has the panel of a computer at the size that Cal chose with its
+   * handles, with the focus on its height handle. A phone has no handles,
+   * so its sheet stays at half height. A read-only workspace shows a
+   * selection with no button.
    */
   explainOpen: {
     enum: [
@@ -50,6 +53,7 @@ export const explainStateProperties = {
       'menu',
       'popover',
       'popover-full',
+      'popover-resized',
     ],
   },
 } as const

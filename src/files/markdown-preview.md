@@ -20,7 +20,9 @@ on screen until its own parse arrives.
 
 When no worker can start or parse, the preview shows that the file didn't
 open, with Try again, as a failed read does. Try again parses the text in
-a new worker. A static render, as in a test, cannot wait for a worker. It
+a new worker. A page that shows no file, such as a skill tab, gives the
+wait and the failure its own words with `states` of `MarkdownView`. A
+static render, as in a test, cannot wait for a worker. It
 passes `previewDocument` as `markdownParser` of `FileContent`, or as
 `parser` of `MarkdownView`, and the parse runs on the calling thread.
 
@@ -60,6 +62,15 @@ the preview:
   as CommonMark draws it, and the rule counts nothing for it.
 - A soft line break stays a line of the text, so the browser shows it as
   a space.
+- A fence keeps its `label`, which `fenceLabel` of
+  `src/markdown/fence-label.ts` reads, as for the chat. An indented code
+  block has no label. The parse in the worker also colours the lines of a
+  block whose label names a language, with `languageOfLabel` and
+  `highlightLines` of `src/files/code/`. So the colours of a long or
+  crafted file stay off the thread of the page too. `MarkdownView` draws
+  the coloured lines with `CodeText` of `src/files/code/`. Any other block
+  shows plain text, as
+  [Colours](../../docs/protocol/chat-code-blocks.md#colours) says.
 - Each row that the parser reads stays in its table, also a line without
   a pipe, within the table budget below.
 

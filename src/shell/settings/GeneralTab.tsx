@@ -117,7 +117,7 @@ function ColorSection(props: { org: OrgSummary }) {
  * cloud computer stops and the org hides at once, and everything is
  * deleted after 7 days unless an admin restores it. The answer takes the
  * org out of the rail, and the app opens the next org that is not deleted,
- * from `AppModel.activeOrgs`, else Get started. The Account page lists the
+ * from `AppModel.activeOrgs`, else Get started. Account settings list the
  * org, with Restore.
  */
 function DeleteSection(props: { org: OrgSummary }) {

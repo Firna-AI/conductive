@@ -151,6 +151,8 @@ export function startWorkspace(
     branch,
     choice: first.choice,
     state: 'starting',
+    // The first message waits for the start, as the Worker reads it.
+    messageWaiting: true,
     github: null,
     createdAt: at,
     updatedAt: at,

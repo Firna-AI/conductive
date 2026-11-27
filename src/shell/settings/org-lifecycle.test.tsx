@@ -39,7 +39,7 @@ function railOrgs(view: HTMLElement): string[] {
 }
 
 describe('the end of an org in the app', () => {
-  test('Delete org takes the org out of the rail and opens the next org, and Restore on the Account page brings it back', async () => {
+  test('Delete org takes the org out of the rail and opens the next org, and Restore in Account settings brings it back', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
     const app = await startedApp(server)
@@ -67,7 +67,7 @@ describe('the end of an org in the app', () => {
     await press(byRole('link', 'Account', view))
     const section = await waitFor(
       () => view.querySelector('ul[aria-label="Deleted orgs"]'),
-      'the Deleted orgs section of the Account page',
+      'the Deleted orgs section of Account settings',
     )
     const row = section.textContent
     await press(byRole('button', 'Restore Acme', view))

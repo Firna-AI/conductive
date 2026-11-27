@@ -96,7 +96,7 @@ function ListPopoverSurface(props: {
   const { tile, close } = props
   const surface = useRef<HTMLElement | null>(null)
   const navigation = useNavigation()
-  const width = useStore(usePanelLayout().widths).sidebar
+  const width = useStore(usePanelLayout().chosenWidth.sidebar)
   const mac = useMacApp()
   const [parts] = useState(() => [surface, tile])
   const [current] = useState(() => ({

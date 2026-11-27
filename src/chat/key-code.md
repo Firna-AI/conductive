@@ -215,14 +215,18 @@ is relative to `src/chat/`, the folder of this guide.
   place. A new message that the user sends from the chat, which shows as a
   pending message of the session, takes the chat to its bottom. At each
   note it writes the place of the shown session, and a new keeper shows the
-  place that the session kept.
+  place that the session kept. Each new `answer` of `ChatPane`, which only
+  the popover of an explanation gives, shows the top of that message while
+  the chat is at the bottom.
 - `components/scrolled-up.ts`: `useScrolledUp` says whether the reader
   reads at least `scrolledUpFrom` above the bottom. While they do,
   `ChatPane` shows the shared `ToBottomButton` above the footer, and a
   press calls `bottom` of the keeper.
 - `components/chat-place.ts`: the place of a session tab, at the bottom or
   at a row by its `data-row` key, which `components/transcript-rows.tsx`
-  gives each row.
+  gives each row. `showPlace` shows a kept place exactly, and
+  `revealRowTop` shows the top of a row only when it is above the box, as
+  the answer of the popover needs.
   `ChatController.places` keeps the place of each session tab.
 - `components/useFold.ts`: `useFold` opens and closes a fold on a click on
   its line, and gives the line to the keeper, also at the bottom of the

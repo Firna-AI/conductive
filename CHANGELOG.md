@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.37.0](https://github.com/Firna-AI/conductive/compare/v0.36.0...v0.37.0) (2026-11-27)
+
+
+### Features
+
+* **builds:** show the free storage after a build ([#692](https://github.com/Firna-AI/conductive/issues/692)) ([032953e](https://github.com/Firna-AI/conductive/commit/032953efaf3947fb146fef2c28c2417c9bae0dba))
+* **chat:** colour code blocks by their language ([#699](https://github.com/Firna-AI/conductive/issues/699)) ([3592536](https://github.com/Firna-AI/conductive/commit/35925365ae15bca0f5e5bc1f9489a30f340ea693))
+* **explain:** resize the Explain popover from its free edges ([#688](https://github.com/Firna-AI/conductive/issues/688)) ([e61b336](https://github.com/Firna-AI/conductive/commit/e61b33679c1e6a0286308b7e6076e060f146fbc6))
+* **explain:** show the top of the answer in the popover ([#682](https://github.com/Firna-AI/conductive/issues/682)) ([0d2dc3d](https://github.com/Firna-AI/conductive/commit/0d2dc3db3c08765e4d18f97ba372282bf3ed483b))
+* **list:** run the light of a starting mark only while a message waits ([#696](https://github.com/Firna-AI/conductive/issues/696)) ([2c723fa](https://github.com/Firna-AI/conductive/commit/2c723fa5d640888b23a12e795710c9a6cf64c512))
+* open a skill chip as a skill tab ([#690](https://github.com/Firna-AI/conductive/issues/690)) ([f5933c3](https://github.com/Firna-AI/conductive/commit/f5933c3c41063a62e05849387914cfb863ee8715))
+* **settings:** one Settings dialog for the account and the org ([#569](https://github.com/Firna-AI/conductive/issues/569)) ([0b04e4d](https://github.com/Firna-AI/conductive/commit/0b04e4d547583a7c237523ed7b6e899968794205))
+* **worker:** warn when a session names a turn that does not run ([#691](https://github.com/Firna-AI/conductive/issues/691)) ([d39eadc](https://github.com/Firna-AI/conductive/commit/d39eadc9081c275defea833b0dd3e470435d1189))
+
+
+### Bug Fixes
+
+* **images:** start the build that Build computer asks for during a refresh ([#698](https://github.com/Firna-AI/conductive/issues/698)) ([56e8a86](https://github.com/Firna-AI/conductive/commit/56e8a86509e5d85e86491d92484e58d82fabc07a))
+* **start:** create the workspace branch with no upstream ([#694](https://github.com/Firna-AI/conductive/issues/694)) ([54755dd](https://github.com/Firna-AI/conductive/commit/54755dd22b534d2ff00c0ddf521bc17cbc20b14d))
+
 ## [0.36.0](https://github.com/Firna-AI/conductive/compare/v0.35.0...v0.36.0) (2026-11-26)
 
 

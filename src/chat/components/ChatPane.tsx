@@ -19,6 +19,8 @@ import { useScrolledUp } from './scrolled-up'
  * `place` keeps the reader's place in the shown session while another tab
  * shows, and gives it back when the session shows again. While the reader
  * reads higher up, a round button above the footer shows the bottom.
+ * Each new `answer`, such as the answer of an explanation in its popover,
+ * shows the top of its message while the chat is at the bottom.
  */
 export function ChatPane({
   ref,
@@ -30,6 +32,11 @@ export function ChatPane({
   sent: readonly string[]
   /** The kept place of the shown session. */
   place?: PlaceMemory | null
+  /**
+   * The ID of the first message of the newest answer whose top the chat
+   * shows when it comes, or null. A tab leaves it out and keeps the bottom.
+   */
+  answer?: string | null
   children?: ReactNode
   footer: ReactNode
   /** The name of the chat for screen readers, "Chat" by default. */
@@ -50,6 +57,7 @@ export function ChatPane({
     !props.empty,
     props.sent,
     props.place,
+    props.answer,
   )
   const scrolledUp = useScrolledUp(scroller, !props.empty)
   return (

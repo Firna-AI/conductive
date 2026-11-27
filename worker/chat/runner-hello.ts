@@ -40,6 +40,7 @@ export async function acceptRunnerHello(
   active.state.loginKinds = message.loginKinds
   active.state.repositoryFolder = message.repositoryFolder
   active.state.fileServer = message.fileServer
+  active.state.skillReads = message.skillReads
   active.state.capabilityNotices = message.capabilityNotices
   await context.services.negotiate(active, message.services === true)
   active.state.ready =

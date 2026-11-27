@@ -3,11 +3,12 @@
 This doc holds the requirements and the decisions in force for the
 message lines of the work of a turn. It belongs to
 [Chat Markdown](chat-markdown.md), which defines an agent message and
-holds the other Markdown of agent messages. Chat Markdown also says which
-code blocks of a message line have a Copy code button. The terms are
-those of the [architecture doc](../architecture.md#terms). A Markdown
-parser decision, such as Markdown parser decision 14 B, is a decision of
-the change that reads Markdown with one parser, as Chat Markdown says. The
+holds the other Markdown of agent messages. Its linked page
+[Chat code blocks](chat-code-blocks.md) says which code blocks of a
+message line have a Copy code button. The terms are those of the
+[architecture doc](../architecture.md#terms). A Markdown parser decision,
+such as Markdown parser decision 14 B, is a decision of the change that
+reads Markdown with one parser, as Chat Markdown says. The
 [mockup catalogue](../mockups/catalogue.md) draws message lines in the
 open work of a turn at `app/chat/work`. It draws their tables at
 `app/chat/work/table`, their lists at `app/chat/lists/work`, and their
@@ -51,6 +52,12 @@ boxes at `app/chat/lists/tasks-work`.
   rule after the first table shows as in an answer.
 - Reason: the closed line stays one line, as for a table. The colour shows
   where a quote ends, so the words after it read as new text.
+- A closed message line shows the text of each code block in the line,
+  with no colours.
+- An open message line shows each code block as a block, with the colours
+  of an answer, as [Colours](chat-code-blocks.md#colours) says.
+- Reason: an open line draws its blocks as an answer does. The closed line
+  stays one line, and the work stays quieter than the answer.
 - A closed message line shows the Markdown image of a picture file of the
   workspace as its link. An open message line shows its picture, as
   [Pictures in answers](file-mentions-answers.md#pictures-in-answers)

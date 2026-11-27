@@ -3,7 +3,8 @@
 Explain in the chat: Explain by a finished selection of text, its key, the
 marks of the explanations in the chat of their parent session, the menu of
 overlapping marks, and the popover of an explanation with its follow-up
-field. See [the chat](../README.md) for the whole chat,
+field and the handles that resize it. See [the chat](../README.md) for the
+whole chat,
 [Explain](../../../docs/protocol/explain.md) for the requirements, and the
 `app/chat/explain` pages of the
 [mockup catalogue](../../../docs/mockups/catalogue-chat-and-automations.md)
@@ -93,9 +94,50 @@ for the screens.
   a computer, CSS anchor positioning keeps it at the box of the open mark,
   and a browser without it gets the same place from `placePanel`. On a
   phone it is a sheet, which stops at the top of the chat at full height.
+- On a computer, `PopoverResize` draws the handles on the free edges of
+  the panel and their corner, as
+  [The size on a computer](../../../docs/protocol/explain-popover.md#the-size-on-a-computer)
+  says. `popover-edges.ts` finds the free edges from the boxes of the
+  panel, the mark, and the frame. It also finds the room for the width on
+  the side of the mark, where a move of the width stops, and the room for
+  the height. `usePopoverLayout` finds them again in the next frame after
+  each change of the size of the panel or of the mark, each scroll, and
+  each resize of the window, so no callback of a `ResizeObserver` changes
+  the layout. It places the panel first through `placePanel` in a browser
+  without anchor positioning. Each move finds them at once. The edge
+  handles take the pointer drag and the keys from `useResizeHandle` in
+  `src/shell/layout/`, which the column handles and the split use too, and
+  the corner takes only the drag from it. So a change of the steps, the
+  keys, or the end of a drag reaches every handle of the app. The handles
+  lie inside the panel, so a press on one is a press in the popover. The
+  shared CSS of `ExplainPopover` draws them, for the app and the mockups.
+- One store, `ExplainSize` in `src/app/explain-size.ts`, holds the chosen
+  width and height of all popovers. The panel layout holds it as
+  `PanelLayout.explain`, and `useExplainSize` gives it. A page without the
+  panel layout, such as a test kit or the chat development page, gets a
+  store of its own from `useExplainSize`. It keeps the size in the browser
+  through `StoredSize` of `src/app/stored-size.ts`, which the column widths
+  and the split use too. `PopoverSize` holds the moves of one open
+  popover. `usePopoverResize` sets the size on the panel as
+  `--explain-width` and `--explain-height`, through `popoverSizeStyle`,
+  with the width at most the larger room beside the mark, and `placePanel`
+  uses the chosen height in place of a fixed one. It also sets
+  `--explain-foot-gap` from `footGap` of `popover-edges.ts`, so the CSS of
+  a panel with no shown mark and the room of its height handle keep one
+  space under the panel. Each move starts from the size that the panel
+  shows, which is also the value of its handle. From the first move of the
+  height until the popover closes, the class `fixedHeight` keeps the moved
+  height. Each move of the width keeps the side of the mark that the panel
+  shows: on the end of the mark, the class `endFirst` makes the panel try
+  that side first, and `placePanel` does the same.
 - The popover shows the chat of the explanation with the parts of a tab,
   through `useSessionParts` and `TranscriptView`, with `hide` for the
-  written prompt: its first message. Its follow-up field edits the draft of the
+  written prompt: its first message. When a turn ends, and when the
+  popover opens on an ended turn, its chat shows the top of the answer:
+  `newestAnswer` of `turn-work.ts` gives the first message of the answer
+  of the last part of the newest ended turn, and `ChatPane` shows its top
+  through `answer`, only while the chat is at the bottom and the top of
+  the answer is above the box. Its follow-up field edits the draft of the
   session, which its tab shows too. A follow-up of a closed explanation
   reopens it first, with no change of the shown tab. A follow-up or a Try
   again that the Worker puts in a linked session shows that session in the
@@ -139,10 +181,30 @@ for the screens.
 - `PopoverChat.dom.test.tsx` shows the bar of a stopped cloud computer in
   place of the follow-up field, and moves the time of a running
   explanation on with a fake clock while its parent session is idle.
+- `PopoverAnswerTop.dom.test.tsx` lays the chat of the popover out with
+  `layOutChat`. It shows the top of the first message of a long answer of
+  two messages when the popover opens on an ended turn, and the top of a
+  long answer when the turn ends. It keeps the place of a reader higher
+  up, and the bottom for a newer short answer whose top shows within the
+  room above the rows, under an older long answer.
 - `PopoverLinked.dom.test.tsx` follows a linked session with the text that
   the member typed while the reply waited, follows the linked session of
   Try again, and keeps the popover of another explanation that the member
   opened while the reply waited.
+- `PopoverResize.dom.test.tsx` lays the popover out with fake boxes. It
+  shows the handles after the follow-up field on a computer and none on a
+  phone. The keys move each free edge in the direction of its arrow, from
+  the size that shows, up to the room by the mark, and the browser keeps
+  the size. Escape on a handle closes the popover. End stops the width at
+  the room on the side of the mark, also where the other side has more
+  room. A press on a handle keeps the popover open and stores nothing, and
+  a drag of the corner moves both free edges. In a browser without anchor
+  positioning, `placePanel` keeps the panel to the chosen height, and a
+  panel at the end of its mark stays there as it narrows.
+- `popover-edges.test.ts` finds the free edges and the rooms of each
+  place of the panel by its mark, and of a panel with no shown mark.
+  `../../app/explain-size.test.ts` holds the steps, the drags, the room
+  that stops the height, and the storage of the chosen size.
 - `explain-test-kit.tsx` and `popover-test-kit.ts` hold the chat, the
   explanations, the selection, the highlights, the press on a mark that
   opens a popover, a follow-up, and the replies of the Worker.
@@ -165,8 +227,19 @@ for the screens.
 - `ExplainButton.tsx`: Explain by the selection and above a phone composer.
 - `ExplainLayer.tsx`, `ExplainPopover.tsx`, `PopoverChat.tsx`,
   `PopoverParts.tsx`, `FollowUpField.tsx`: the menu, the popover, its chat,
-  its header and handle, and its field. `popover-place.ts` places it, and
-  `press-outside.ts` marks the presses that keep it open.
+  its header and the handle of the sheet, and its field.
+  `popover-place.ts` places it and finds its layout with
+  `usePopoverLayout`, and `press-outside.ts` marks the presses that keep
+  it open.
+- `PopoverResize.tsx`: the handles on the free edges of the panel and
+  their corner. `usePopoverResize.ts`: the size of the panel and the moves
+  of its handles. `popover-edges.ts`: the free edges, and the rooms of the
+  panel on the side of the mark.
+- `../../app/explain-size.ts`: `ExplainSize`, the chosen size of all
+  popovers, which the browser keeps, and `PopoverSize`, the moves of one
+  open popover. `useExplainSize` of `../../shell/layout/panels.tsx` gives
+  the chosen size. The handles take the drag and the keys from
+  `useResizeHandle` of `../../shell/layout/useResizeHandle.ts`.
 - `explain.module.css`: only the rules of the app, such as the highlights,
   the slots, and the places.
 - `../state/explain-actions.ts`: `explainQuote` and `sendFollowUp`.

@@ -33,6 +33,7 @@ import {
   type CapabilitiesChangedItem,
 } from './capabilityConversations'
 import { chatLinkConversations } from './chatLinkConversations'
+import { codeBlockConversations } from './codeBlockConversations'
 import type { ChangedFile } from './files'
 import { formattingConversations } from './formattingConversations'
 import { headingConversations } from './headingConversations'
@@ -77,6 +78,8 @@ export type ChatItem =
       queued?: boolean
       /** Sent while a turn runs: it joins that turn as a new part. */
       during?: true
+      /** The pointer is over its first skill chip, as a view cannot hover. */
+      pointer?: true
     }
   | {
       kind: 'agent'
@@ -254,6 +257,7 @@ export const conversations: Readonly<
   ...taskListConversations,
   ...headingConversations,
   ...formattingConversations,
+  ...codeBlockConversations,
   /** The chat of the removed workspace that a chip opens. */
   'postcode-history': postcodeHistory,
   ...chatLinkConversations(history),

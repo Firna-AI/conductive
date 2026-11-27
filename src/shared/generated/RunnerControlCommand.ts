@@ -2,6 +2,7 @@
 import type { RunnerChangeModel } from './RunnerChangeModel.js'
 import type { RunnerFileCommand } from './RunnerFileCommand.js'
 import type { RunnerInterrupt } from './RunnerInterrupt.js'
+import type { RunnerReadSkill } from './RunnerReadSkill.js'
 import type { RunnerReportRefresh } from './RunnerReportRefresh.js'
 import type { RunnerRepositoryMove } from './RunnerRepositoryMove.js'
 
@@ -12,5 +13,6 @@ export type RunnerControlCommand =
   | RunnerInterrupt
   | RunnerChangeModel
   | RunnerFileCommand
+  | RunnerReadSkill
   | RunnerReportRefresh
   | RunnerRepositoryMove

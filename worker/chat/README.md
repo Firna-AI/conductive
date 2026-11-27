@@ -73,8 +73,14 @@ gives their rules.
   a create. A repeat returns the same message and adds no history.
   Admission cleans an optional `firstSessionTitle` once and saves it before
   the message, in the same transaction.
-- `readChatWorkspaceSummary()` returns the last event number, the last
-  event number with visible output, and whether a dispatched turn runs.
+- `readChatWorkspaceSummary(options?)` returns the last event number, the
+  last event number with visible output, and whether a dispatched turn
+  runs. With `{ messageWaiting: true }`, it also says whether a message
+  waits: a queued message that the runner has not received, or the first
+  message of a create that the chat has not accepted yet. The list read
+  asks this for each starting workspace. An object that runs older code
+  ignores the option and leaves the answer out, which reads as no waiting
+  message.
 - `readChatWorkspaceResponse(orgId, workspaceId, appOrigin, includeSeed)`
   returns the ordered workspace reply and its chat summary. GET sets
   `includeSeed`. [Browser routes](../lifecycle/routes.md#browser-routes)
@@ -327,7 +333,7 @@ The shared builder refuses every IPv4 and IPv6 address, the product domain, and 
 Dispatch still decrypts and checks the full saved address before it sends a turn.
 `session-login.ts` treats a refused endpoint as an unusable login for linked-session admission and dispatch.
 Its failed-turn cause requires a public HTTPS endpoint with a host name and names the owner and agent.
-A personal endpoint cause points to the account page.
+A personal endpoint cause points to Account settings.
 An org endpoint cause points to the Agents tab of the org settings.
 Runner delivery maps a valid endpoint to an API-key turn-token credential.
 `runner-gateway-command.ts` adds `promptCacheTtl: '1h'` only for a Claude own endpoint turn.

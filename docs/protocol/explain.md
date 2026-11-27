@@ -5,13 +5,14 @@ member selects text in the chat of a session and presses Explain. The app
 writes a prompt and sends it at once, in a new session. The answer shows in
 a popover by the text, and the text keeps a mark. This doc covers the
 selection, the keyboard start, the written prompt, the explanation, its
-anchor, its mark, the popover, closed explanations, and read-only
-workspaces.
+anchor, its mark, the popover and its size, closed explanations, and
+read-only workspaces.
 
 It belongs to [Agents and sessions](agents-and-sessions.md#explain). The
 terms are those of the [architecture doc](../architecture.md#terms) and the
 terms below. A decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says. The
+[Decision numbers](../architecture.md#decision-numbers) says. [The Explain
+popover](explain-popover.md) holds the rules of the popover. The
 [mockup catalogue](../mockups/catalogue-chat-and-automations.md) draws
 Explain at `app/chat/explain`, and its flow at
 `user-flows/explain-chat-text`. [Explain](../mockups/design-chat.md#explain)
@@ -31,6 +32,9 @@ in the design of the chat gives the look of each part.
 - **Popover:** the small panel by a mark that shows the chat of its
   explanation. On a phone, it is a sheet. The docs do not call it a
   preview, because that word names a [port preview](port-previews.md).
+- **Free edge:** an edge of the popover on a computer that is not at its
+  mark. Below the mark, the bottom edge is free, and above the mark, the
+  top edge. The side edge that does not line up with the mark is free too.
 - **Written prompt:** the first message of an explanation, which the app
   writes.
 
@@ -212,82 +216,9 @@ in the design of the chat gives the look of each part.
 
 ## The popover
 
-- A press on Explain opens the popover of the new explanation. A press on a
-  mark opens the popover of its explanation.
-- Reason: the answer shows by the text, and the parent chat stays in view
-  around it. The user chose a small popover by the mark on 20 November
-  2026. A large overlay over the chat was rejected.
-- On a computer, the popover is a panel by the mark. It is 400 px wide. It
-  is at most 420 px high, or less when the room by the mark is smaller.
-- It opens below the mark, or above the mark when it has more room there.
-  So it never covers the marked text.
-- It puts no dim over the app. Reason: the parent chat stays live.
-- On a phone, the popover is a sheet at half the height of the screen, with
-  no dim. A drag of its handle takes it to full height, where it stops
-  under the tab row.
-- When the sheet opens, the chat scrolls the mark into view above it.
-- While a request waits for a member, the sheet opens at full height. So
-  the request card and the chat above it both have room.
-- The header shows the quote, cut to two lines, then Expand and Close. The
-  popover has no title of its own.
-- Under the header, the popover shows the chat of the explanation as its
-  tab shows it. This covers the work of each turn, the answers, the
-  follow-up messages, the notice of a failed turn with Try again, and the
-  line of a stopped turn.
-- While the cloud computer starts, the steps of the start show in place of
-  the turn.
-- A request of the agent that waits for a member, such as a secret request,
-  shows in the popover as it shows at the end of a session tab.
-- The chat scrolls inside the popover, and its newest line stays in view.
-- The popover leaves out the written prompt. The tab of the explanation
-  shows it as a normal message, so nothing is hidden. Reason: the quote in
-  the header names what the chat is about.
-
-### The follow-up field
-
-- The foot of the popover holds the follow-up field. It grows from one line
-  to four. It has Stop while a turn runs, and Send.
-- A follow-up is a message of the explanation, so it follows the rules of
-  [Messages](messages-and-attachments.md#messages). During a turn, it
-  steers that turn, as each message of a session does.
-- The field has no model picker and no attach button. Reason: Expand gives
-  the whole composer of the tab.
-- While the cloud computer does not run, the bar that takes the place of the
-  composer in a tab, such as the bar with Resume, takes the place of the
-  follow-up field. Reason: the popover and the tab of the explanation then
-  behave the same, and a follow-up never waits with no start.
-
-### Expand and Close
-
-- Expand shows the tab of the explanation. When the tab is closed, Expand
-  reopens it first, as [A closed explanation](#a-closed-explanation) says.
-- Close closes the popover. The explanation goes on as it is, and its mark
-  shows its state.
-- On a computer, a press outside the popover closes it too. A press on a
-  mark keeps it, because the mark then opens its own popover or menu. A
-  press in a part that the popover opens, such as a menu, keeps it too.
-  The user chose this on 23 November 2026. Reason: the popover then closes
-  as the other panels and menus of the app do.
-
-### Keys and focus
-
-- At most one popover is open. The popover of another mark replaces the
-  open popover when it opens, from a press on the mark or from a row of
-  the menu. The open popover stays while the menu of overlapping marks
-  shows. A press on Explain closes the open popover first.
-- The popover takes the focus when it opens. Escape closes it, and the
-  focus returns to its mark.
-- A follow-up from a member who cannot use the login of the explanation
-  starts a new session, as
-  [Messages](messages-and-attachments.md#messages) says. That session has
-  no anchor. Its tab opens, and the popover shows the line that links to
-  it, as the chat of a tab does.
-- This holds for Try again in the popover too. The popover then shows the
-  new session, and the text in its field moves with it, as a tab does.
-  Reason: the answer shows where the member asked for it.
-- The popover follows the new session only while it still shows the
-  session that took the request. Reason: a late reply never changes the
-  popover of another explanation.
+[The Explain popover](explain-popover.md) holds the requirements of the
+popover: its place, its follow-up field, Expand and Close, its keys and
+focus, and its size on a computer.
 
 ## A closed explanation
 
@@ -308,5 +239,7 @@ in the design of the chat gives the look of each part.
   Reason: an explanation starts a session, and a read-only workspace takes
   no message.
 - The popover there has no follow-up field and no Stop.
+- The popover there keeps the handles of its free edges. Reason: a resize
+  changes nothing in the workspace.
 - No turn runs there, so each mark shows an ended turn. A mark whose newest
   turn failed keeps its alert.

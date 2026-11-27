@@ -30,7 +30,7 @@ it('reads lists by the list rules of CommonMark, so an item holds the paragraphs
         [
           p('Install the packages from the lockfile.'),
           p('Run this in the root:'),
-          { kind: 'code', text: 'npm ci' },
+          { kind: 'code', text: 'npm ci', label: 'sh' },
         ],
         [
           p('Check the sizes:'),
@@ -74,7 +74,7 @@ it('ends a list item at an unindented line after a code block or a table, or an 
     {
       kind: 'ol',
       start: 1,
-      items: [[p('Run this:'), { kind: 'code', text: 'npm ci' }]],
+      items: [[p('Run this:'), { kind: 'code', text: 'npm ci', label: 'sh' }]],
     },
     p('Done.'),
     {

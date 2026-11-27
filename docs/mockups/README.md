@@ -152,7 +152,7 @@ as [`src/ui/components/chat/`](../../src/ui/components/chat/).
 | `src/components/`         | Layout and parts that only the mockups use, where `@firna/ui` has none |
 | `src/fixtures/`           | The sample orgs, members, workspaces, agents, chats, and files, and the drawn screenshots of the image files |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
-| `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, `src/servicePaths.ts` for the services of the Preview tool, `src/queuePaths.ts` for the merge queue, and `src/limitedListPaths.ts` for the limited page of each file page |
+| `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, `src/servicePaths.ts` for the services of the Preview tool, `src/queuePaths.ts` for the merge queue, `src/limitedListPaths.ts` for limited file lists, and `src/skillPaths.ts` for the skill tab |
 | `src/defined.ts`, `src/instanceKey.ts` | Helpers for the wrappers of registered parts: props without undefined values, and instance names |
 | `../../src/ui/`           | The shared UI: the parts that the app uses too, with the screen styles and words, the design tokens in `design/`, the theme in `theme.ts`, the global stylesheet `render.css`, and Inter with its licence in `fonts/`. Its [README](../../src/ui/README.md) gives the folders |
 | `../../src/shared/brand.ts` | The name "Conductive", its domains, its repository, and DMG names |
@@ -172,7 +172,9 @@ as [`src/ui/components/chat/`](../../src/ui/components/chat/).
   of New workspace from the states of those two screens. The tab and
   composer states of the workspace screen live in
   `src/screens/chatStates.ts`. `tabStates` covers the session, file,
-  image, HTML, and Preview tabs of the centre column. `temporaryTabStates` covers the
+  image, HTML, Preview, and skill tabs of the centre column.
+  `src/screens/workspaceSkillTab.ts` draws the skill tab in the row and
+  chooses its view. `temporaryTabStates` covers the
   temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
   row. `composerStates` covers the composer, with its links, mentions,
   skills, attached files, drops, the chip of Add to chat, and the
@@ -267,7 +269,7 @@ started, and the notice for an agent that is not connected.
 
 [The waitlist](orgs-and-logins.md#the-waitlist) gives the screen of a
 person without app access, the invite codes and invite links, the invite
-code on the Account page, and open sign-up.
+code in Account › General, and open sign-up.
 
 ## The Mac app
 

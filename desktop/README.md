@@ -23,7 +23,7 @@ API calls use `credentials: include`, so Chromium sends the HttpOnly desktop ses
 File uploads go to the same origin in parts. Each part is one raw `XMLHttpRequest` `PUT` with credentials and no other header than `Content-Type`, so it sends the same cookie and reports its progress.
 Workspace sockets use the same Worker origin.
 `AppServices.appOrigin` and the paths that `leave` opens, such as sign-in, use it too.
-The join links of the Account page and of the operator section start with that origin, so they name the deployment that owns their codes.
+The join links of Account settings and of the operator section start with that origin, so they name the deployment that owns their codes.
 Chat and file preview links to a page of the app at that origin open the page in the window.
 The renderer keeps its normal `fetch` function and has no OS bridge.
 
@@ -115,8 +115,8 @@ The sidebar shows no second toggle beside the Settings cog in the Mac app.
 The app disables the toggle in a window narrower than 900px and on a page without a sidebar.
 Other pages without the org rail, such as sign-in, show the bar in a 34px strip.
 That strip has no sidebar toggle.
-On the account page, the Mac app shows the sidebar of the last org that the user opened.
-The app does not save the toggle state or that org.
+Settings opens over the last page of the window, with the sidebar of its org.
+The app does not save the toggle state.
 
 The element that holds the bar has `data-desktop-chrome-slot`.
 The sidebar toggle sits in `data-desktop-panel-slot`.

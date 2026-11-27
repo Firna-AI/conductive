@@ -12,9 +12,11 @@ import { useChatWorkspaces } from './chatWorkspaces'
 import type { ChipUpload } from '../../../../../src/ui/components/chat/DraftFileChip'
 import { entryName } from '../../../../../src/ui/components/chat/entryPaths'
 import { FileChip } from '../../../../../src/ui/components/chat/FileChip'
+import { SkillChip } from '../../../../../src/ui/components/chat/SkillChip'
+import { skillTabOf } from '../../skillPaths'
+import { ScreenLink } from '../common/ScreenLink'
 import { LinkChip } from './LinkChip'
 import { iconOf } from './MentionChip'
-import { SkillChip } from '../../../../../src/ui/components/chat/SkillChip'
 import { linkTarget, type LinkTarget, type RowLinks } from './workspaceLinks'
 import styles from '../../../../../src/ui/components/chat/DraftText.module.css'
 
@@ -58,10 +60,12 @@ function skillItems(text: string, links: RowLinks): DraftItem[] {
       index += 1
       continue
     }
-    const skill = findSkill(found.name)
+    const listed = findSkill(found.name)
     items.push(
       ...linkItems(plain, links),
-      skill ? { kind: 'skill', skill } : { kind: 'text', text: found.source },
+      listed
+        ? { kind: 'skill', skill: listed.skill }
+        : { kind: 'text', text: found.source },
     )
     plain = ''
     index += found.source.length
@@ -134,13 +138,16 @@ function uploadOf(file: Attachment): ChipUpload {
  * inside the editable field. Each chip starts with the cell of its icon,
  * which a pointer turns into a × that removes it. In the app a press on
  * the name of a file chip opens the file, and a press on the name of an
- * attached file or of a skill opens nothing.
+ * attached file opens nothing. A press on the name of a skill chip opens
+ * the skill in the temporary tab, as the shared `SkillChip` says, so its
+ * name is a link to the skill tab, when the mockups draw that tab.
  *
  * `files` are the files of the draft, by the draft IDs of their marks. A
  * view runs no script, so `caret` draws the caret at that index of the
  * text: where a drop puts its files while they hover over the box, or
  * where the caret stands after a drop or a pick. A view has no pointer, so
- * `pointer` draws it over the icon of the first chip.
+ * `pointer` draws it over the icon of the first chip, and `namePointer`
+ * over the name of the first chip when that chip is a skill chip.
  *
  * The draft ID of an attached file names its chip for Mokly. A mention and
  * a link can repeat in a draft, so their chips keep the plain parts.
@@ -149,6 +156,7 @@ export function DraftText(props: {
   text: string
   files?: readonly Attachment[]
   pointer?: boolean
+  namePointer?: boolean
   caret?: number
 }) {
   const links = useChatWorkspaces()
@@ -166,7 +174,8 @@ export function DraftText(props: {
   return (
     <>
       {items.map((item, index) => {
-        const pointer = props.pointer === true && index === firstChip
+        const first = index === firstChip
+        const pointer = props.pointer === true && first
         switch (item.kind) {
           case 'text':
             return item.text
@@ -197,15 +206,21 @@ export function DraftText(props: {
                 />
               </span>
             )
-          case 'skill':
+          case 'skill': {
+            const to = skillTabOf(item.skill.name)
             return (
               <span contentEditable={false} key={index}>
                 <SkillChip
+                  nameOpener={
+                    to ? (name) => <ScreenLink {...name} to={to} /> : undefined
+                  }
+                  namePointer={props.namePointer === true && first}
                   removal={{ name: item.skill.name, pointer }}
                   skill={item.skill}
                 />
               </span>
             )
+          }
           case 'link':
             return (
               <span contentEditable={false} key={index}>

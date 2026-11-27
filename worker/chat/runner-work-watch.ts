@@ -189,6 +189,8 @@ function workValues(
     case 'file.read.result':
     case 'file.diff.result':
       return { ...empty, work: 'file_result', stage: 'file_result' }
+    case 'skill.read.result':
+      return { ...empty, work: 'skill_result', stage: 'skill_result' }
     case 'repository.move.refused':
       return { ...empty, work: 'move_refused', stage: 'event' }
     case 'event':

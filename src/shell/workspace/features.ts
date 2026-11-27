@@ -59,11 +59,21 @@ export interface WorkspaceContext {
   panel: SandboxPanelState | null
   /**
    * The open of the workspace resumes its sandbox and has not ended. The
-   * header then shows Starting, and a part that shows the state of the
-   * sandbox in place of its content shows the wait of a start, with no
-   * Resume. The lists keep their saved copy.
+   * chat then shows the composer in place of the bar, and the open of a tab
+   * sends no second Resume. `resuming` holds then too.
    */
   resumingAtOpen: boolean
+  /**
+   * A Resume of this visit runs for a stopped sandbox, or for one whose
+   * later start failed: the Resume of the open, or one that the open of a
+   * tab, or a press on Resume or Try again, sent. It ends with the reply,
+   * and with a state that the Resume does not start, such as the start that
+   * the stream shows. Meanwhile the header shows Starting, and a part that
+   * shows the state of the sandbox in place of its content shows the wait
+   * of a start, with no Resume, as `contentState` says. The lists keep their
+   * saved copy, and the bar of the chat keeps its notice.
+   */
+  resuming: boolean
   /**
    * Resume, or Try again after a failed start. A phone shows it on a part
    * that shows the state of the sandbox in place of its content.

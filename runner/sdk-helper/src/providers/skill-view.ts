@@ -3,25 +3,32 @@ import {
   lstat,
   mkdir,
   mkdtemp,
-  readFile,
   readdir,
   realpath,
   rm,
   symlink,
   writeFile,
+  type FileHandle,
 } from 'node:fs/promises'
 import { basename, dirname, join, relative, sep } from 'node:path'
 
 import type { Agent } from '../generated/Agent'
+import { readRegularSkill } from '../skill-content'
 import type { ProviderLifetime } from './lifetime'
 import { isTrustedOrgSkills } from './org-skills'
-import { safeSkillContent, safeSkillSidecar } from './skill-metadata'
+import {
+  readSkillMetadata,
+  safeSkillContent,
+  safeSkillSidecar,
+  type SkillMetadata,
+} from './skill-metadata'
 import { selectAgentSkills } from './skills'
 import type { ProviderOptions } from './types'
 
 async function replaceMetadata(
   path: string,
-  text: (content: string) => string,
+  render: (file: FileHandle) => Promise<string>,
+  source = path,
 ) {
   const info = await lstat(path).catch((error: unknown) => {
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT')
@@ -29,7 +36,8 @@ async function replaceMetadata(
     throw error
   })
   if (!info || (!info.isFile() && !info.isSymbolicLink())) return
-  const safe = text(await readFile(path, 'utf8'))
+  const safe = await readRegularSkill(source, 'org', render)
+  if (typeof safe !== 'string') throw new Error(safe.error.message)
   if (info.isSymbolicLink()) await rm(path)
   await writeFile(path, safe)
 }
@@ -39,6 +47,7 @@ async function exportSkills(
   destination: string,
   agent: Agent,
   trustedClaudeBody: boolean,
+  files: ReadonlyMap<string, SkillMetadata>,
 ) {
   await cp(source, destination, {
     recursive: true,
@@ -68,12 +77,24 @@ async function exportSkills(
   const walk = async (directory: string): Promise<void> => {
     const entries = await readdir(directory, { withFileTypes: true })
     if (entries.some((entry) => entry.name === 'SKILL.md')) {
-      await replaceMetadata(join(directory, 'SKILL.md'), (content) =>
-        safeSkillContent(content, directory, agent, trustedClaudeBody),
+      const folder = join(source, relative(destination, directory))
+      await replaceMetadata(
+        join(directory, 'SKILL.md'),
+        async (file) => {
+          const metadata =
+            files.get(folder) ?? (await readSkillMetadata(folder, agent, 'org'))
+          if (!metadata.file.ok) throw new Error(metadata.file.error.message)
+          const body = (await file.readFile()).toString(
+            'utf8',
+            metadata.file.bodyOffset,
+          )
+          return safeSkillContent(metadata, body, agent, trustedClaudeBody)
+        },
+        join(folder, 'SKILL.md'),
       )
       await replaceMetadata(
         join(directory, 'agents', 'openai.yaml'),
-        safeSkillSidecar,
+        async (file) => safeSkillSidecar(await file.readFile('utf8')),
       )
     }
     for (const entry of entries)
@@ -90,7 +111,7 @@ export async function prepareSkillView(
   const source = options.orgSkills?.directory
   if (!source) return null
   const preparation = (async () => {
-    const selected = await selectAgentSkills(options, agent)
+    const { selected, files } = await selectAgentSkills(options, agent)
     if (!selected.length) return null
     const parent = join(options.home, '.conductive', 'skill-sessions')
     await mkdir(parent, { recursive: true })
@@ -102,10 +123,13 @@ export async function prepareSkillView(
         repository,
         agent,
         isTrustedOrgSkills(options.orgSkills),
+        files,
       )
-      const skills = selected.map((skill) => ({
-        ...skill,
-        path: join(repository, relative(source, skill.path)),
+      const skills = selected.map(({ name, path, shownName, alias }) => ({
+        name,
+        path: join(repository, relative(source, path)),
+        shownName,
+        alias,
       }))
       const claudeDirectory =
         agent === 'claude' ? join(directory, 'discovery') : null

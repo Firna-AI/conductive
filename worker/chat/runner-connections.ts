@@ -1,3 +1,9 @@
+import type { SkillIdentity } from '../../src/shared/skills'
+import {
+  RunnerSkillReads,
+  skillUnavailable,
+  type SkillReadOptions,
+} from '../skills/runner'
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import {
   isSupportedRunnerVersion,
@@ -28,6 +34,7 @@ interface NativeRunnerConnections {
 
 export class RunnerConnections {
   current: ActiveRunner | null = null
+  readonly skillReads: RunnerSkillReads
   /** Memory only. A physical socket enables durable state and native alarms. */
   private retained = false
   /** Memory only. Restore rebuilds the socket-to-peer handles. */
@@ -51,6 +58,7 @@ export class RunnerConnections {
   ) {
     this.store = store
     this.dependencies = dependencies
+    this.skillReads = new RunnerSkillReads(dependencies.randomId)
     this.publish = publish
     this.bind = bind
     this.native = native
@@ -133,6 +141,7 @@ export class RunnerConnections {
           this.reportConnected(active)
           warnRunnerConnection('runner_disconnected', active.state)
           this.current = null
+          this.skillReads.detach(active.state.id)
           this.dependencies.runnerDetached(active.state.id)
           this.dependencies.waitUntil(
             Promise.all([
@@ -236,6 +245,26 @@ export class RunnerConnections {
             return false
           }
         }),
+    )
+  }
+
+  readSkill(skill: SkillIdentity, options: SkillReadOptions): Promise<string> {
+    const active = this.current
+    if (!active?.state.ready) throw skillUnavailable()
+    return this.skillReads.read(
+      active.state,
+      skill,
+      (send) =>
+        this.store.run(async () => {
+          if (
+            this.current !== active ||
+            !active.state.ready ||
+            active.state.skillReads !== true
+          )
+            return false
+          return send(active.peer)
+        }),
+      options,
     )
   }
 

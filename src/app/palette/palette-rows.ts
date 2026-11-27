@@ -196,7 +196,7 @@ export function orgSettingsLabel(org: OrgSummary): string {
   return `${org.name} settings`
 }
 
-/** The label of the group of the sections of the Account page. */
+/** The label of the group of the sections of Account settings. */
 export const accountLabel = 'Account'
 
 /** The tabs of the settings of an org. Each row opens its tab. */
@@ -218,7 +218,7 @@ export function orgSettingRows(
   }))
 }
 
-/** The tab of the Account page that holds a section, or that a row is. */
+/** The tab of Account settings that holds a section, or that a row is. */
 function accountTabOf(id: AccountSettingId): AccountTab {
   if (id === 'agents') return 'agents'
   if (id === 'favourites' || id === 'new-workspaces') return 'preferences'
@@ -228,7 +228,7 @@ function accountTabOf(id: AccountSettingId): AccountTab {
 }
 
 /**
- * The sections of the Account page, then its Keyboard shortcuts tab, then
+ * The sections of Account settings, then its Keyboard shortcuts tab, then
  * its This Mac tab in the Mac app. Each row opens the tab that holds it.
  * Keyboard shortcuts runs the command of the keys that opens the tab, whose
  * key it shows.

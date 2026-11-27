@@ -29,6 +29,7 @@ import { serveSuspendedAcme } from '../../../test-support/suspended-org'
 import { settle } from '../../test-mount'
 import { filesHref } from '../files/files-address'
 import { answer, bodiesOf, emit, here, lastEvent } from '../kept-test-kit'
+import { plans } from '../skills/skill-test-kit'
 import {
   changeBodies,
   id,
@@ -111,7 +112,7 @@ describe('the repository menu in the header', () => {
     })
   })
 
-  test('closes the file tab of the old repository, and its page goes back to the chat', async () => {
+  test('closes the file tab of the old repository, and its page goes back to the chat, and keeps the temporary skill tab after it in its new place', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
     const { view } = workspaceFixtures()
@@ -122,6 +123,8 @@ describe('the repository menu in the header', () => {
         ...view.view,
         tabs: [...view.view.tabs, file],
         activeTab: file,
+        skillTabs: [{ ...plans, place: 3 }],
+        temporarySkill: plans,
       },
       heldRepositoryIds: ['storefront', 'billing-service'],
     })
@@ -153,6 +156,9 @@ describe('the repository menu in the header', () => {
         temporaryTab: null,
         previewTabs: [],
         activePreview: null,
+        skillTabs: [{ ...plans, place: 2 }],
+        activeSkill: null,
+        temporarySkill: plans,
       },
     })
   })

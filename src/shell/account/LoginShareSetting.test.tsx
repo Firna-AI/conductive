@@ -20,7 +20,7 @@ import {
 } from '../../test-support/mount'
 import { mountScreen } from '../test-mount'
 import { startedApp } from '../test-render'
-import { AccountScreen } from './AccountScreen'
+import { AccountTabContent } from './AccountTabContent'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -60,7 +60,7 @@ async function account(server: FakeApiServer, fetch?: FetchLike) {
   const app = await startedApp(server, { fetch })
   mountScreen(
     app,
-    <AccountScreen connect={null} tab="agents" user={fakeUser} />,
+    <AccountTabContent connect={null} tab="agents" user={fakeUser} />,
   )
   return app
 }

@@ -1,10 +1,11 @@
-import { memo, useEffect, useMemo, useState } from 'react'
+import { memo, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { classes } from '../../ui/components/common/classes'
 import headingStyles from '../../ui/components/common/MarkdownHeadings.module.css'
 import prose from '../../ui/components/common/MarkdownProse.module.css'
 import { MarkdownTable } from '../../ui/components/common/MarkdownTable'
 import { MarkdownItem } from '../../markdown/MarkdownItem'
 import type { FilesError } from '../api/files-errors'
+import { CodeText } from '../code/CodeText'
 import { LoadingFile, ReadError } from '../ui/FileStates'
 import { inlineNodes } from './inline-render'
 import type {
@@ -70,7 +71,13 @@ function Block(props: { block: MdBlock }) {
         </p>
       )
     case 'code':
-      return <pre className={styles.block}>{block.text}</pre>
+      // The parse, which the worker runs, coloured the lines, so the view
+      // only draws them.
+      return (
+        <pre className={styles.block}>
+          <CodeText lines={block.lines} text={block.text} />
+        </pre>
+      )
     case 'literal':
       // Text as typed, with its line breaks, and no Markdown inside.
       return <p className={styles.literal}>{textChunks(block.text)}</p>
@@ -142,12 +149,22 @@ interface Outcome {
 }
 
 /**
+ * What a preview shows while the worker parses its text, and after the
+ * worker failed, with the Try again that `failed` gets. Without them, the
+ * preview shows the words of a file.
+ */
+export interface PreviewStates {
+  loading: ReactNode
+  failed: (onRetry: () => void) => ReactNode
+}
+
+/**
  * Posts the text to a module worker, and shows the document of its reply.
  * A new text keeps the last document on screen until its own reply. When
  * the worker fails, Try again starts a new worker for the same text.
  */
-function ParsedInWorker(props: { text: string }) {
-  const { text } = props
+function ParsedInWorker(props: { text: string; states?: PreviewStates }) {
+  const { text, states } = props
   const [attempt, setAttempt] = useState(0)
   const [outcome, setOutcome] = useState<Outcome | null>(null)
   useEffect(
@@ -158,13 +175,12 @@ function ParsedInWorker(props: { text: string }) {
     return <Document document={outcome.parse.document} />
   }
   const current = outcome?.text === text && outcome.attempt === attempt
-  if (!current) return <LoadingFile />
-  return (
-    <ReadError
-      error={parseFailed}
-      onRetry={() => setAttempt(attempt + 1)}
-      subject="file"
-    />
+  if (!current) return states?.loading ?? <LoadingFile />
+  const retry = () => setAttempt(attempt + 1)
+  return states ? (
+    states.failed(retry)
+  ) : (
+    <ReadError error={parseFailed} onRetry={retry} subject="file" />
   )
 }
 
@@ -175,12 +191,17 @@ function ParsedInWorker(props: { text: string }) {
  * link to a page of the app opens in the app, and every other link opens a
  * new tab that gets no referrer. A module worker parses the text, so a long
  * or crafted file never blocks the page. `parser` parses on the calling
- * thread instead, for a static render.
+ * thread instead, for a static render. `states` gives the parse and its
+ * failure the words of a page that shows no file, such as a skill tab.
  */
-export function MarkdownView(props: { text: string; parser?: MarkdownParser }) {
+export function MarkdownView(props: {
+  text: string
+  parser?: MarkdownParser
+  states?: PreviewStates
+}) {
   return props.parser ? (
     <ParsedNow parser={props.parser} text={props.text} />
   ) : (
-    <ParsedInWorker text={props.text} />
+    <ParsedInWorker states={props.states} text={props.text} />
   )
 }

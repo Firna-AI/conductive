@@ -4,9 +4,10 @@ This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
 Markdown of a reply of the chat and of the Markdown preview of a file: the
 tables, the headings, the quotes, the rules, the marks, the task boxes,
-the line breaks, and the pictures. It also gives how a message line in the
-work of a turn shows each part. [The chat](design-chat.md) gives the work
-fold, and [Links in text](design-links.md) gives the links.
+the line breaks, the pictures, and the code blocks. It also gives how a
+message line in the work of a turn shows each part.
+[The chat](design-chat.md) gives the work fold, and
+[Links in text](design-links.md) gives the links.
 
 The user chose one `markdown-it` parser for both views on 16 November
 2026, with item 3 C of the Markdown plan, and on 17 November 2026, with
@@ -34,8 +35,9 @@ reader of the app.
     show there.
   - `fixtureDrawing.tsx` in `src/components/chat/` gives the drawing of
     the mockups. It draws the text with `AnswerText`, a code block with
-    `CodeBlock`, and a heading only when `answerShowsWords` of the app
-    finds words in its text.
+    `CodeBlock`, in the colours that [Code blocks](#code-blocks) gives,
+    and a heading only when `answerShowsWords` of the app finds words in
+    its text.
   - `agentText.ts` in `src/fixtures/` gives the builders of the blocks and
     of the inline text, such as `p`, `heading`, `bullets`, `task`,
     `strong`, and `link`. A string is a text node with exactly its
@@ -212,6 +214,39 @@ reader of the app.
   Markdown plan of 18 November 2026. `PreviewText` draws it with
   `WebImagePart` of the chat, as the picture of the suggestions in
   `app/files/markdown` shows.
+
+## Code blocks
+
+A code block of a reply and of the Markdown preview of a file shows its
+text in a box in the mono font, with the `block` look of
+[MarkdownView.module.css](../../src/ui/components/files/MarkdownView.module.css).
+The user chose on 26 November 2026, with A of code colours decision 1,
+that the fence label of a block, the word after its opening fence, gives
+its colours.
+
+- A block whose label names a known language, such as `rust` or `ts`,
+  shows the colours of a file tab of that language. Keywords, types,
+  strings, and numbers take their code colours, and comments are italic.
+  `highlightLines` and the language families of
+  [`src/files/code/`](../../src/files/code/) give the colours, and
+  `TokenSpans` of its code view draws them, so the same code looks the
+  same in a reply and in a file tab. `app/chat/code-blocks` shows a Rust
+  block, and `app/files/markdown` shows a TypeScript block.
+- A block without a label, with a label of no known language, or with a
+  label for text, such as `text`, `console`, or `log`, stays plain, from
+  design call 4 of the code colours plan, as the requests of
+  `app/chat/code-blocks` and the test commands of `app/files/markdown`
+  show. No block shows the name of its language.
+- The colours are spans inside the one `pre` of the block, with the line
+  feeds of its text, so the block keeps its text as written, and Copy code
+  copies that text.
+- `FenceText` and `CodeText` of the app, in `src/files/code/CodeText.tsx`,
+  draw the text of a block for `CodeBlock` of the chat and for
+  `MarkdownView` of the file preview. A code block of a fixture holds its
+  fence label, such as `rust`, as the blocks of the app do.
+- An open message line in the work of a turn shows its code blocks in
+  colour too, and a closed line shows a code block as plain text in the
+  line, as the shared `LineBlocks` draws them.
 
 ## In the work of a turn
 

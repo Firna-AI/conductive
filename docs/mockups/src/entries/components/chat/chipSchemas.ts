@@ -29,6 +29,8 @@ export const chipWorkspaceSchema = {
     name: { type: 'string' },
     status: { enum: activityStatuses },
     github: githubSchema,
+    /** Whether a message waits for the cloud computer to start. */
+    messageWaiting: { type: 'boolean' },
   },
 } as const
 
@@ -47,6 +49,7 @@ export const chipSessionSchema = {
         label: { type: 'string' },
         status: { enum: activityStatuses },
         github: githubSchema,
+        messageWaiting: { type: 'boolean' },
       },
     },
     /** The title of the session, or Untitled. */

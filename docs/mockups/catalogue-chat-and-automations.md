@@ -77,6 +77,12 @@ Its variants:
   only, and the screenshot of the workspace, which shows as its picture
   and opens its file, as `app/file-mentions/answers` shows.
 
+`app/chat/code-blocks` draws the code blocks of a reply, from code colours
+decision 1 A of 26 November 2026: an answer with the example of the guide
+of the places API in a code block with the fence label `rust`, in the
+colours of a Rust file tab, and the requests of a session in a code block
+without a label, as plain text.
+
 `app/chat/links` draws the links of chat text, as the user chose on 10
 November 2026 with D of chat link decision 1, C of chat link decision 2,
 and B of chat link decision 3. Its canonical screen has an answer with the
@@ -133,6 +139,11 @@ pages:
   - `app/chat/explain/popover/long` has a long answer, which scrolls inside
     the popover at its highest height, and in the sheet of a phone at half
     height. Its `full` variant has the sheet of a phone at full height.
+  - `app/chat/explain/popover/resized` has the popover of the long answer
+    after Cal made it larger with its handles, 560 px wide and 600 px
+    high, with the focus on its height handle. The room below the mark
+    caps the height in the frame of the catalogue. A phone shows the sheet
+    at half height.
 - `app/chat/explain/marks` has four marks with no popover open: one whose
   explanation waits for a member, one that runs, one that has its answer,
   and one that failed. Each open explanation has a tab at the end of the

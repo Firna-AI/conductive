@@ -20,13 +20,13 @@ function ShowsWords(props: { text: InlineText; children: ReactNode }) {
  * How the mockups draw the shared blocks of the agent messages of their
  * fixtures: each text through the `AnswerText` of the mockups, where the
  * Markdown image of a picture file can show as its picture, each code block
- * through the `CodeBlock` of the mockups, and each heading only when its
- * text shows words.
+ * through the `CodeBlock` of the mockups, in the colours of its fence
+ * label, and each heading only when its text shows words.
  */
 export const fixtureDrawing: AgentDrawing = {
   text: (text, place) => (
     <AnswerText line={place.line} pictures={place.pictures} text={text} />
   ),
-  code: (text) => <CodeBlock text={text} />,
+  code: (text, label) => <CodeBlock label={label} text={text} />,
   ShowsWords,
 }

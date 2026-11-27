@@ -89,7 +89,7 @@ Three pages belong to this doc:
 - Only an admin changes the skills repository (skills decision 2 A).
 - Reason: the reason of decision 57 applies. A skills repository changes
   the work of every agent of the org, as a script or an env var does.
-- A skills repository that each member chooses on the Account page was
+- A skills repository that each member chooses in Account settings was
   rejected for that reason. A choice of the org together with a choice of
   each member was rejected too.
 - A member who is not an admin sees the saved repository as text, with no

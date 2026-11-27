@@ -160,6 +160,12 @@ pub struct Workspace {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub github_pull_from_fork: Option<bool>,
+    /// Whether a message waits in the queue while the workspace starts.
+    /// Each read and reply of the Worker sets it for a starting workspace.
+    /// An event record leaves it out.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub message_waiting: Option<bool>,
     /// created at.
     pub created_at: Timestamp,
     /// updated at.

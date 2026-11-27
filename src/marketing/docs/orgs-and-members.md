@@ -62,6 +62,17 @@ They stay after a reload and a restart, but not on other devices.
 When Conductive opens without a chosen org, it opens the last workspace that you opened.
 If its org is deleted, or you have no last workspace, it opens the first org in your list that is not deleted.
 
+## Open Settings
+
+**Settings** holds your account settings and the settings of the current org.
+On a computer, select **Settings** beside the org name, or your picture at the bottom of the org list.
+You can also press **⌘,** on a Mac or **Ctrl+,** on another computer.
+Settings opens over the page, with **Account** and the org's name on the left.
+Press **Escape** or select **Close** to go back to the page.
+
+On a phone, open the org switcher and select **Account**.
+Then select the setting that you want to change.
+
 ## Hide the workspace list
 
 On a computer, select **Hide the sidebar** beside **Settings** at the top of the workspace list.
@@ -133,7 +144,7 @@ An org that has no chosen colour shows blue.
 Only an admin can invite members.
 
 1. Open the org's **Settings**.
-2. Open **Members**.
+2. Select **Members** under the org's name.
 3. Enter the person's email under **Invite a member**.
 4. Select **Invite**.
 
@@ -149,7 +160,7 @@ The recipient can accept it later.
 
 ## Share access with an invite code
 
-Your **Account** page has an **Invite code** section.
+**General** under **Account** in **Settings** has an **Invite code** section.
 Use **Copy** to share its invite link while it has uses left.
 The section shows how many invites remain.
 
@@ -252,7 +263,7 @@ Use the security guide if you suspect a credential was exposed.
 
 Only an admin can delete the org.
 
-1. Open **General** in the org's **Settings**.
+1. Open **General** under the org's name in **Settings**.
 2. Select **Delete org**.
 3. Read the deletion date and consequences.
 4. Type the org's name to confirm.
@@ -265,8 +276,8 @@ Admins can restore it for seven days before deletion completes.
 
 To restore a deleted org:
 
-1. Open your **Account** settings.
-2. Find the org under **Deleted orgs** on the **General** tab.
+1. Open **Settings**.
+2. Find the org under **Deleted orgs** in **General** under **Account**.
 3. Select **Restore** beside the org.
 
 The org returns to the org list.

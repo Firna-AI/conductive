@@ -1,8 +1,10 @@
-import { useCallback, useSyncExternalStore } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
 import type { AgentSkill } from '../../shared/generated/AgentSkill'
 import type { SkillLists } from '../../shared/generated/SkillLists'
-import { useChatMentions } from './MentionsContext'
+
+// The skill lists of the workspace and the lookup of a skill in them. The
+// module holds no React, so the readers of chat text can use its types.
+// `useMentionSkills` of `MentionsContext.tsx` follows the lists.
 
 /**
  * The skill lists of the workspace as the list of `/` and the skill chips
@@ -23,22 +25,6 @@ export interface SkillsStore {
   getSnapshot: () => MentionSkills
 }
 
-function followNothing(): () => void {
-  return () => undefined
-}
-
-/**
- * The skill lists that the chat follows now, or null without mentions. A
- * reader that `follows` nothing, such as an answer, gets null and follows
- * no change.
- */
-export function useMentionSkills(follows = true): MentionSkills | null {
-  const mentions = useChatMentions()
-  const skills = follows ? (mentions?.skills ?? null) : null
-  const read = useCallback(() => skills?.getSnapshot() ?? null, [skills])
-  return useSyncExternalStore(skills?.subscribe ?? followNothing, read, read)
-}
-
 /** The skills of one agent, or none while the lists are not ready. */
 export function agentSkills(
   skills: MentionSkills,
@@ -47,17 +33,28 @@ export function agentSkills(
   return skills.state === 'ready' ? skills.lists[agent] : []
 }
 
+/** A skill of a list, with the agent whose list holds it. */
+export interface ListedSkill {
+  agent: Agent
+  skill: AgentSkill
+}
+
 /**
- * The skill of either agent that a skill text names, or undefined. The
- * list of `agent` comes first, so its description gives the title.
+ * The skill of either agent that a skill text names, with its agent, or
+ * undefined. The list of `agent` comes first, so a chip names the skill of
+ * that agent when it has one, and the skill of the other agent otherwise.
  */
-export function findSkill(
+export function findListedSkill(
   skills: MentionSkills,
   name: string,
   agent: Agent = 'claude',
-): AgentSkill | undefined {
+): ListedSkill | undefined {
   if (skills.state !== 'ready') return undefined
   const other: Agent = agent === 'claude' ? 'codex' : 'claude'
   const named = (skill: AgentSkill) => skill.name === name
-  return skills.lists[agent].find(named) ?? skills.lists[other].find(named)
+  for (const each of [agent, other]) {
+    const skill = skills.lists[each].find(named)
+    if (skill) return { agent: each, skill }
+  }
+  return undefined
 }

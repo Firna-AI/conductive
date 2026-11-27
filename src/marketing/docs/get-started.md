@@ -167,7 +167,7 @@ The connected row shows the host, including any non-default port.
 An own endpoint gets the messages, files, and command results of turns on that login.
 Model use bills where its owner runs the endpoint.
 Your personal own endpoint login starts with sharing on.
-Open **Account** to change **Let other members use this login**.
+Open **Agents** in **Settings** to change **Let other members use this login**.
 
 For a ChatGPT plan, first turn on device code sign-in in your ChatGPT security settings.
 Ask your ChatGPT admin if you cannot change that setting.
@@ -184,7 +184,7 @@ One agent with a usable personal or org login is enough to finish setup.
 You can connect the other later in **Account**.
 
 If a request on an org login reports a login error, ask an admin to check the org's **Agents** tab.
-For an error on your personal login, open **Account**.
+For an error on your personal login, open **Agents** in **Settings**.
 Remove that agent's login.
 Then connect the correct token, key, account, or endpoint.
 If the Codex row shows **Signed out**, select **Sign in again** instead.
@@ -271,7 +271,7 @@ When repository names repeat, folder names include their GitHub owner, such as `
 Use your repository's folder name in the script.
 
 1. Open the org's **Settings**.
-2. Select **Cloud computer**.
+2. Select **Cloud computer** under the org's name.
 3. Enter your install script under **Install software**.
 4. Select **Save script**.
 5. Select **Build computer** after any current build finishes.

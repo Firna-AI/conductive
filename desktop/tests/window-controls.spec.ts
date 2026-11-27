@@ -93,13 +93,16 @@ test('the bundled workspace aligns its draggable bars and keeps sidebar, right c
       .toEqual({ shown: false, gap: 0 })
     await sidebar.getByRole('link', { name: 'Settings', exact: true }).click()
     await expect(page).toHaveURL(DESKTOP_ORIGIN + routes.settings(FAKE_IDS.org))
-    const settingsTitle = page.getByRole('heading', {
-      name: 'Acme',
-      level: 1,
-      exact: true,
-    })
-    await expect(settingsTitle).toBeVisible()
-    await expectDraggableHeader(settingsTitle)
+    // Settings opens as a dialog over the workspace. The page below keeps
+    // its bar, so the window still drags by it. The page below is inert, so
+    // a CSS locator finds its heading.
+    const settings = page.getByRole('dialog', { name: 'Settings', exact: true })
+    await expect(
+      settings.getByRole('heading', { name: 'General', level: 1, exact: true }),
+    ).toBeVisible()
+    await expectDraggableHeader(
+      page.locator('header h1', { hasText: workspaceTitle }).first(),
+    )
     const deleteOrg = page.getByRole('button', {
       name: 'Delete org',
       exact: true,
@@ -122,14 +125,10 @@ test('the bundled workspace aligns its draggable bars and keeps sidebar, right c
     await page.keyboard.press('Escape')
     await expect(question).toBeHidden()
     await expect(deleteOrg).toBeFocused()
-    const back = controls.getByRole('button', { name: 'Back', exact: true })
-    const forward = controls.getByRole('button', {
-      name: 'Forward',
-      exact: true,
-    })
-    await expect(back).toBeEnabled()
-    await expect(forward).toBeDisabled()
-    await back.click()
+    // Settings dims the whole window, the window buttons too, so Escape
+    // closes it. The workspace stayed mounted below, so its terminal kept
+    // its connection and took the output that came while the column hid.
+    await page.keyboard.press('Escape')
     await expect(page).toHaveURL(DESKTOP_ORIGIN + workspacePath)
     await expect(
       page.getByRole('heading', { name: workspaceTitle, exact: true }),
@@ -137,7 +136,7 @@ test('the bundled workspace aligns its draggable bars and keeps sidebar, right c
     await expect
       .poll(() => rightColumnLayout(page, workspaceHeading))
       .toEqual({ shown: false, gap: 0 })
-    await expect.poll(() => terminal.connections).toBe(visibleConnections + 1)
+    await expect.poll(() => terminal.connections).toBe(visibleConnections)
     terminal.emit('Buffered while hidden\r\n')
     await page
       .getByRole('button', { name: 'Show the right column', exact: true })
@@ -146,11 +145,18 @@ test('the bundled workspace aligns its draggable bars and keeps sidebar, right c
     await expect(terminalRows(page)).toContainText('Buffered while hidden')
     await expect(page.getByText('Disconnected', { exact: true })).toHaveCount(0)
     await expect.poll(() => terminalMetrics(page)).toEqual(visibleTerminal)
-    await expect(forward).toBeEnabled()
-    await forward.click()
-    await expect(page).toHaveURL(DESKTOP_ORIGIN + routes.settings(FAKE_IDS.org))
+    // Back reopens Settings, and Escape closes it again.
+    const back = controls.getByRole('button', { name: 'Back', exact: true })
+    const forward = controls.getByRole('button', {
+      name: 'Forward',
+      exact: true,
+    })
+    await expect(back).toBeEnabled()
     await expect(forward).toBeDisabled()
     await back.click()
+    await expect(page).toHaveURL(DESKTOP_ORIGIN + routes.settings(FAKE_IDS.org))
+    await expect(settings).toBeVisible()
+    await page.keyboard.press('Escape')
     await expect(page).toHaveURL(DESKTOP_ORIGIN + workspacePath)
 
     await electron.evaluate(({ BrowserWindow }) => {

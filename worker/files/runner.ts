@@ -1,6 +1,7 @@
 import type { DiffResponse } from '../../src/shared/generated/DiffResponse'
 import type { FileResponse } from '../../src/shared/generated/FileResponse'
 import type { RunnerFileCommand } from '../../src/shared/generated/RunnerFileCommand'
+import { RunnerReadRequests } from '../chat/runner-read-requests'
 import { HttpError, isRecord } from '../http'
 import { parseDiff, parseFile } from './content'
 import {
@@ -11,19 +12,12 @@ import {
 import { natural } from './parsers'
 import { checkByteLimit, readFilePath } from './paths'
 
-interface PendingRequest {
-  connectionId: string
-  type: 'file.read.result' | 'file.diff.result'
-  finish(value: unknown): void
-  fail(error: unknown): void
-}
-
 export class RunnerFiles {
   private connection: {
     id: string
     send: (command: RunnerFileCommand) => void
   } | null = null
-  private readonly pending = new Map<string, PendingRequest>()
+  private readonly requests = new RunnerReadRequests(fileUnavailable)
   private readonly requestId: () => string
 
   constructor(requestId: () => string) {
@@ -41,22 +35,12 @@ export class RunnerFiles {
   detach(connectionId: string): void {
     if (this.connection?.id !== connectionId) return
     this.connection = null
-    for (const request of [...this.pending.values()])
-      request.fail(fileUnavailable())
+    this.requests.detach(connectionId)
   }
 
   /** Results bypass the owner's numbered event and chat history path. */
   receive(connectionId: string, value: unknown): boolean {
-    if (!isRecord(value) || typeof value.requestId !== 'string') return false
-    const request = this.pending.get(value.requestId)
-    if (
-      !request ||
-      request.connectionId !== connectionId ||
-      request.type !== value.type
-    )
-      return false
-    request.finish(value.result)
-    return true
+    return this.requests.receive(connectionId, value)
   }
 
   read(
@@ -93,47 +77,19 @@ export class RunnerFiles {
   ): Promise<T> | null {
     const connection = this.connection
     if (!connection) return null
-    return new Promise<T>((resolve, reject) => {
-      const clear = () => {
-        this.pending.delete(command.requestId)
-        signal?.removeEventListener('abort', abort)
-      }
-      const fail = (error: unknown) => {
-        clear()
-        reject(error)
-      }
-      const abort = () => fail(fileUnavailable())
-      this.pending.set(command.requestId, {
-        connectionId: connection.id,
-        type:
-          command.type === 'file.read'
-            ? 'file.read.result'
-            : 'file.diff.result',
-        fail,
-        finish: (value) => {
-          clear()
-          try {
-            if (!isRecord(value) || typeof value.ok !== 'boolean')
-              throw invalidFileResponse()
-            if (!value.ok) throw readError(value.error, command)
-            resolve(
-              parse(command.type === 'file.read' ? value.file : value.diff),
-            )
-          } catch (error) {
-            reject(error)
-          }
-        },
-      })
-      signal?.addEventListener('abort', abort, { once: true })
-      if (signal?.aborted) {
-        abort()
-        return
-      }
-      try {
-        connection.send(command)
-      } catch {
-        fail(fileUnavailable())
-      }
+    return this.requests.request({
+      connectionId: connection.id,
+      requestId: command.requestId,
+      resultType:
+        command.type === 'file.read' ? 'file.read.result' : 'file.diff.result',
+      send: () => connection.send(command),
+      parse: (value) => {
+        if (!isRecord(value) || typeof value.ok !== 'boolean')
+          throw invalidFileResponse()
+        if (!value.ok) throw readError(value.error, command)
+        return parse(command.type === 'file.read' ? value.file : value.diff)
+      },
+      signal,
     })
   }
 }

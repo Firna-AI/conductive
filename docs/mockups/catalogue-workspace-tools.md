@@ -232,12 +232,13 @@ lines, `app/files/code/at-line`. Then a press on the picture of the
 screenshot opens it in the file tab, `app/files/image/from-answer`.
 
 `app/skill-mentions` draws the list of `/` and the skill chip of the plan
-of the skill list. Its canonical screen has the query `/pl` at the start of
-a message in Checkout address autocomplete. The list lies above the message
-box, where the list of `@` lies. Each row has the skill icon, the name, and
-the description of a skill, muted and cut with an ellipsis. `plans` comes
-first and is highlighted, then the skills whose descriptions hold the
-query. Its child pages:
+of the skill list, and the skill tab of the skill tabs plan. Its canonical
+screen has the query `/pl` at the start of a message in Checkout address
+autocomplete. The list lies above the message box, where the list of `@`
+lies. Each row has the skill icon, the name, and the description of a
+skill, muted and cut with an ellipsis. `plans` comes first and is
+highlighted, then the skills whose descriptions hold the query. Its child
+pages:
 
 - `app/skill-mentions/list` has the list without a query, in name order.
   Its `loading` variant says "Loading skills…", its `unavailable` variant
@@ -245,9 +246,40 @@ query. Its child pages:
   "This repository has no skills" for `/` alone.
 - `app/skill-mentions/chips` has the skill chip `plans` at the start of
   the message box. Its `pointer` variant has the pointer over the icon of
-  the chip, where a × takes the place of the icon. Its `sent` variant has
-  the sent message with the chip, and the answer of the agent.
+  the chip, where a × takes the place of the icon. Its `name-pointer`
+  variant has the pointer over the name, which is underlined, as a press
+  on it opens the skill tab. Its `sent` variant has the sent message with
+  the chip, and the answer of the agent. Its `sent-pointer` variant has
+  the pointer over the sent chip, which takes the fill of a hover, as a
+  press on it opens the skill tab.
+- `app/skill-mentions/tab` has the skill tab that a press on the sent chip
+  opens, in the temporary tab at the end of the row, with the italic title
+  `plans` and the skill icon. Its header has the name of the skill in a
+  quiet chip, then "Claude skill", the agent of the skill, and the switch
+  between Preview and Source, with the description under them. Preview shows the Markdown body of the skill without its
+  front matter. On a phone the skill is a page of the Files tab, which
+  leads back to All files. The page shows only its canonical screen. Its
+  child pages:
+  - `app/skill-mentions/tab/source` has the Source view: the whole
+    `SKILL.md` with line numbers, and its line count in the header.
+  - `app/skill-mentions/tab/temporary` has the skill in the place of a
+    temporary README.md. Its `kept` variant has the kept skill tab, then
+    README.md in a new temporary tab. Its `menu` variant has the menu of
+    the temporary skill tab: Keep open, the moves, and the closes, without
+    Copy path. Its `return` variant has the kept skill shown again, with
+    README.md still in the temporary tab.
+  - `app/skill-mentions/tab/notices` has "Opening the skill" while the
+    text loads. Its `gone` variant has a skill that the list no longer
+    holds, its `too-large` variant a text over 1 MB, and its
+    `older-software` variant the notice that asks for Restart. Its
+    `failed` variant has "This skill didn't open" with Try again, for a
+    read that failed for another cause, as a file tab shows "This file
+    didn't open".
+  - `app/skill-mentions/tab/stopped` has the wait while the open starts a
+    stopped cloud computer. Its `before-text` variant has a skill tab that
+    shows no text yet when the cloud computer stops, with Resume.
 
 On a phone the skill chip keeps its icon and ends with a ×, as each chip
 of the composer does. The flow `user-flows/use-a-skill` goes from the
-query `/pl`, through the pick of `plans`, to the sent message.
+query `/pl`, through the pick of `plans` and the sent message, to the
+skill tab that a press on the sent chip opens.

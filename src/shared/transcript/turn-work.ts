@@ -119,3 +119,22 @@ export function foldedWork(
       }),
     )
 }
+
+/**
+ * The ID of the first message of the newest answer, once its turn ended:
+ * the answer of the last part of the newest turn, which stays in view when
+ * its work folds. Null while a turn runs, and when that part has no agent
+ * message, such as after a failure with no answer.
+ */
+export function newestAnswer(transcript: Transcript): string | null {
+  const newest = transcript.turns.at(-1)
+  if (transcript.turn !== null || !newest) return null
+  if (!hasEnded(transcript, newest.id)) return null
+  const { items } = transcript
+  const positions = items.flatMap((item, position) =>
+    turnOf(transcript, item) === newest.id ? [position] : [],
+  )
+  const part = partsOf(items, positions).at(-1) ?? []
+  const answer = answerOf(items, part, new Set())
+  return answer === null ? null : items[answer].id
+}

@@ -295,6 +295,7 @@ An agent powered by Claude can leave work running in the background, such as a c
 After its reply, the turn stays open while background tasks or scheduled wake-ups remain.
 The chat shows **Working**, and **Stop** stays available.
 When a task ends or a wake-up arrives, the agent continues in the same turn.
+This also holds for a task that a helper agent of the agent started. If the helper does not continue within 2 minutes, the agent picks up its result.
 The turn ends when the agent finishes and no background work remains.
 
 The time limit is 30 days from the start of the first wait.
@@ -346,6 +347,7 @@ For paths that **All files** leaves out, `@` mentions and Markdown links show as
 A Markdown image that points to one of these paths shows only its label.
 If the label is blank, chat shows nothing for the image.
 
+A code block shows syntax colours, as a file does, when the agent names its language after the opening backticks.
 To copy a code block, select **Copy code** in its top corner.
 With a mouse, the button shows when you point at the block.
 **Code copied** confirms the copy.
@@ -371,9 +373,26 @@ The new session uses your personal or org login, and the **Model and effort** of
 Its tab opens at the end of the tab row.
 The tab that you read stays shown.
 
-The answer shows in a small panel by the text.
+On a computer, the answer shows in a panel by the text.
+The panel leaves the marked text visible.
+To make the panel larger or smaller, drag an edge that is away from the marked text.
+Use the top or bottom edge to change the height.
+Use the side edge to change the width.
+Drag the corner between those edges to change both.
+
+Press **Tab** until an edge handle has focus.
+On the height handle, press **Up** or **Down**.
+On the width handle, press **Left** or **Right**.
+Hold **Shift** while you press an arrow key to move the handle further.
+Press **Home** for the smallest size or **End** for the largest.
+
+Your browser keeps the size you choose for future panels.
+
 On a phone, the panel is a sheet over half the screen.
 Drag its handle up to see more.
+
+When a turn ends, the panel shows the top of the answer, unless you read an earlier part of its chat.
+
 Ask a follow-up at the foot of the panel.
 A follow-up during a turn guides that turn.
 **Stop** ends the turn.
@@ -404,7 +423,7 @@ On a phone, use a long press.
   With either close, if the shown tab closes, this tab shows.
 - Drag a tab to place it elsewhere in the row.
 
-File and diff tabs share the row on a computer.
+File, diff, and skill tabs share the row on a computer.
 A phone shows the session tabs there.
 
 Each tab in the row keeps your place when you open another tab or another workspace.

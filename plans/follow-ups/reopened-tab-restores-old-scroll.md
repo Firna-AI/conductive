@@ -1,0 +1,47 @@
+# A reopened tab restores its old scroll offset
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 2, finding 91, and the problem outside the scope from its check.
+- **Location:** `src/shell/workspace/files/chat-files.tsx:159-167` (the `useFollowTabs` call of `useChatFiles`), `src/shell/workspace/skills/skill-views.ts:48-63` (`ForgetClosedSkillViews`), `src/shell/workspace/screen-addons.tsx:38`, `src/app/tab-places.ts:31-38` (`follow`), `src/files/model/files-store.ts:36` (`scrollPlaces`), `src/shell/workspace/WorkspaceScreen.tsx:235-260`.
+- **Reason:** The case needs two switches of layout, and the fix also moves the follow of the file and diff tabs on `origin/main`.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Kept places:** a memory store of one workspace that keeps state for each open tab, as `TabPlaces` in `src/app/tab-places.ts` does.
+  - **Scroll store:** `scrollPlaces` of the files store of the workspace (`src/files/model/files-store.ts:36`), with the scroll offset of each file, diff, and skill tab.
+  - **Skill view store:** `skillViews` in `src/shell/workspace/skills/skill-views.ts`, with the view of each skill tab, Preview or Source.
+  - **Follow:** `useFollowTabs` gives a store each list of the open tabs, and the store forgets each tab that left the list (`follow`, `tab-places.ts:31-38`).
+- **Background:**
+  - A tab that leaves the open tabs forgets its places, so it starts afresh when it opens again (`tab-places.ts:8-13`).
+  - Only the desktop pages keep a scroll offset: `FilesCenter` (`src/shell/workspace/files/files-features.tsx:219-238`) and `SkillCentrePage` (`src/shell/workspace/skills/skill-centre.tsx:93-109`). The phone pages give no `KeptScroll` (`files-features.tsx:165-183`).
+  - The chat follows the tab list for the scroll store, in `useChatFiles` (`chat-files.tsx:159-167`).
+  - A phone shows one of Chat, Files, and the tool at a time (`WorkspaceScreen.tsx:235-260`). So the chat and its follow unmount while Files shows.
+  - The skill view store had the same gap. On 25 November 2026, the skill tabs change moved its follow to `ForgetClosedSkillViews`. The workspace screen draws it in each layout (`skill-views.ts:48-63`, `screen-addons.tsx:38`).
+- **Problem:**
+  - A tab that closes and opens again while no follow runs never leaves a list that the scroll store sees. So it keeps its old offset.
+  - An example:
+    - On a desktop, scroll the text of a temporary skill tab down.
+    - Narrow the window to the phone layout. The skill shows under Files.
+    - Go back to All files, and press a file there, so that it replaces the skill in the temporary tab.
+    - Open the skill again while Files shows, such as with the Back of the browser.
+    - Widen the window. The skill shows at the old offset, not at the top.
+  - File and diff tabs on `origin/main` have the same gap, because the same call follows their offsets in the scroll store.
+- **Impact if no action:** A tab that the member opened again can start in the middle of its text. One scroll up reaches the top.
+- **Root question:** How does each kept place of a tab end when the tab closes, in every layout?
+- **Options:**
+  - **A.** Move the follow of the scroll store alone into a second part of `ScreenAddons`, beside `ForgetClosedSkillViews`. Cost: two parts then follow the same list, and a new store needs a third. Effort: Small.
+  - **B.** Let one part of the workspace screen follow the tab list for every kept place of the tabs.
+    - It gives the list to the skill view store and to the scroll store. It takes the place of `ForgetClosedSkillViews`.
+    - Remove the follow from `useChatFiles`.
+    - It passes `null` while the saved view is not known, so a load forgets nothing.
+    - Test: keep an offset on a desktop, and switch to the phone layout with Files shown. Replace the tab and open it again, then switch back. The tab starts at the top, and a skill tab in Preview.
+    - Effort: Medium.
+  - **C.** Let each store follow the saved view itself. Its owner subscribes to the saved view of the workspace and gives each list to `follow`, with no React part. Cost: each store then needs the saved view and the end of its subscription. Effort: Medium.
+  - **D.** Give each open of a tab an identity of its own, and key the places on it. A tab that opens again then never finds the places of its last open. Cost: a new field for each open tab in the state of the app. Effort: Large.
+- **Left out:** Forget the offset when the page of a tab unmounts. A desktop tab that stays open would then lose its offset each time that another tab shows.
+- **Wider fix:** B. One part of the workspace screen ends the kept places of each closed tab in each layout, so a new store cannot miss a layout. C also prevents the class, with a larger change of the stores.
+- **Previous examples:** Commit `d6e125954` moved the follow of the skill view store from the chat to the workspace screen, for the same cause. Commit `974690bf0` added the kept places and their follow in the chat.
+- **Related:** `plans/follow-ups/tab-places-reload-guard.md` names the `useFollowTabs` call of `chat-files.tsx`, which B moves. Its option B gives each owner one function that returns the open tabs or `null`. Use that function in the new part, or move its test with the call. No options conflict.
+- **Recommendation:** B. One part covers both stores and every layout, and it keeps the `null` guard in one place.
+- **Action:** fix after merge, apply B, because the case is rare, and B also moves the follow of the file and diff tabs on `origin/main`.

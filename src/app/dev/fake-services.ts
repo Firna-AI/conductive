@@ -44,6 +44,7 @@ import { seedState } from './seed'
 import { sessionLoginRoutes } from './session-login-routes'
 import { settingsRoutes } from './settings-routes'
 import { seedSkills, skillsRoutes } from './skills-routes'
+import { seedSkillChips, skillTabRoutes } from './skill-tab-routes'
 import { admitOpenSignup, waitlistRoutes } from './waitlist-routes'
 import { workspaceRoutes } from './workspace-routes'
 
@@ -75,6 +76,7 @@ export function createFakeServices(search: string): AppServices {
   const backend = createBackend(state, server.events, now, newId)
   seedSecretRequests(backend, server.events, options.secrets)
   seedCapabilityNotes(server.events, options.capabilities)
+  seedSkillChips(server.events, options.skillChips, options.skillRead)
   const signedOut: Route[] = options.signedOut
     ? [
         {
@@ -103,6 +105,7 @@ export function createFakeServices(search: string): AppServices {
     ...attachmentFileRoutes(backend),
     ...settingsRoutes(backend),
     ...skillsRoutes(backend, options.skills),
+    ...skillTabRoutes(backend, options.skillRead),
     ...orgLoginRoutes(backend),
     ...secretRoutes(backend),
     ...secretRequestRoutes(backend),

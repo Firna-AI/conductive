@@ -265,7 +265,7 @@ The author of a commit does not prove who made it.
 
 The **Secret** mark hides exact copies of a value in displayed agent output and start logs.
 It also hides them in server and service details and service logs in **Preview**.
-The same rule covers skill names and descriptions in the message box.
+The same rule covers skill names and descriptions in the message box, and the text of a skill that you open.
 It starts on for a new variable.
 Conductive hides these values before shortening program names, folders, and service details for display.
 Values and marks changed in settings apply at the computer's next start.

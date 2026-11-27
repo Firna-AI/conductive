@@ -10,7 +10,7 @@ import { holdAnimationFrames } from '../../test-support/mount'
 import { fieldNamed } from '../workspace/kept-test-kit'
 import { click, mountScreen, settle, typeText } from '../test-mount'
 import { startedApp } from '../test-render'
-import { OrgSettingsScreen } from './OrgSettingsScreen'
+import { OrgTabContent } from './OrgTabContent'
 
 export const { org } = FAKE_IDS
 
@@ -91,7 +91,7 @@ export async function openAgentsTab(
   if (boot.state !== 'ready' || !acme) throw new Error('The app did not start.')
   const view = mountScreen(
     app,
-    <OrgSettingsScreen org={acme} tab="agents" user={boot.user} />,
+    <OrgTabContent org={acme} tab="agents" user={boot.user} />,
   )
   await settle()
   return { app, view }

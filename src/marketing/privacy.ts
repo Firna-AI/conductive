@@ -191,7 +191,8 @@ export const privacyDocument: LegalDocument = {
             or on a screen, it hides each exact copy of a secret value in it.
             It also hides such a copy in each start log that it shows, in
             the server and service details that it lists, in service logs,
-            and in the names and descriptions of the skills that it lists. It does not
+            in the names and descriptions of the skills that it lists, and
+            in the text of a skill that you open. It does not
             hide a changed or encoded value, or a value in a picture that an
             agent answer shows. A change of the mark applies at the next start
             of a cloud computer.`,
@@ -204,7 +205,8 @@ export const privacyDocument: LegalDocument = {
             browser gets and sends (decision 145).`,
           text`Agent output, start logs, and service logs can show the value
             of an env var that is not secret. The lists of servers, services,
-            and skills can show it too. Each member who reads them then sees
+            and skills, and the text of a skill that you open, can show it
+            too. Each member who reads them then sees
             that value. The agents and each member with a terminal can read every
             env var value in the cloud computers. Secret values can also stay
             on the disk of a cloud computer, for example in its agent sessions

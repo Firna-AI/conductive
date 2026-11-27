@@ -70,10 +70,10 @@ function dragOf(
 }
 
 /**
- * The tab whose menu is open: the shown file or diff tab, such as the
- * temporary tab, or else the first session. A phone row and the row of an
- * archived workspace show no file tabs, so they open no menu for a shown
- * file.
+ * The tab whose menu is open: the shown file, diff, or skill tab, such as
+ * the temporary tab, or else the first session. A phone row and the row of
+ * an archived workspace show no file or skill tabs, so they open no menu
+ * for a shown file or skill.
  */
 function menuTabOf(
   state: WorkspaceState,

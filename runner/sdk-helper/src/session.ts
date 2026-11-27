@@ -5,6 +5,8 @@ import { failureCause } from './providers/failure'
 import { ProviderLifetime } from './providers/lifetime'
 import type { ProviderFactory, ProviderProcess } from './providers/types'
 import type { SkillInputs } from './providers/skill-input'
+import { readSkillContent } from './skill-content'
+import { readOrgSkill } from './skill-org'
 import { SkillScanner } from './skills'
 
 /** Owns one agent start, including cancellation while setup is pending. */
@@ -73,6 +75,19 @@ export class HelperSession {
           this.output({ type: 'skills', requestId: request.requestId, skills })
           return
         }
+        if (request.type === 'skill.read') {
+          const { source, maxBytes } = request
+          const result =
+            source.type === 'file'
+              ? await readSkillContent(source.path, maxBytes)
+              : await readOrgSkill(source, maxBytes)
+          this.output({
+            type: 'skill.read.result',
+            requestId: request.requestId,
+            result,
+          })
+          return
+        }
         const result = await this.run(request)
         this.output({ type: 'response', requestId: request.requestId, result })
         if (request.type === 'warm') {
@@ -103,7 +118,10 @@ export class HelperSession {
   }
 
   private async run(
-    request: Exclude<HelperRequest, { type: 'close' | 'skills' }>,
+    request: Exclude<
+      HelperRequest,
+      { type: 'close' | 'skills' | 'skill.read' }
+    >,
   ) {
     if (request.type === 'warm') {
       await this.warm()

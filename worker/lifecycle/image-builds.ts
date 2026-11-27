@@ -36,6 +36,7 @@ import { handleImageBuildFailure } from './image-build-failure'
 import { firstOrgAdmin, type SelectedRepository } from './settings-data'
 import type { RepositoryLocation } from './repository-locations'
 import { admitImageBuild } from './image-build-start'
+import { requestBuildAfterRefresh } from './build-request'
 import {
   waitingImageBuild,
   promoteWaitingImageBuild,
@@ -79,6 +80,11 @@ export async function startImageBuild(
     kind: ImageBuild['kind']
     software: ImageSoftwareArtifact
     dailyRefresh?: boolean
+    /**
+     * Build computer asks for this build. During a refresh, the request
+     * waits on the refresh, and the build starts when it ends.
+     */
+    requested?: boolean
   },
 ): Promise<string> {
   const { env, dependencies } = runtime
@@ -107,6 +113,14 @@ export async function startImageBuild(
     : null
   if (executing && !executing.operatorSwitchId) {
     const job = executing
+    if (
+      input.requested &&
+      job.kind === 'refresh' &&
+      !(await requestBuildAfterRefresh(env.DB, job.buildId, input.userId)) &&
+      !(await runningBuild(env.DB, input.orgId))
+    )
+      // The refresh ended after the first read, so the build starts now.
+      return admitImageBuild(runtime, input, null)
     await runtime.scheduler.schedule(
       input.orgId,
       jobSoftware(job),

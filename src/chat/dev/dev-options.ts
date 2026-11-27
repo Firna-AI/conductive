@@ -51,11 +51,19 @@ export interface DevOptions {
    * arrive one line at a time, a review under headings, with a plan under a
    * heading, quotes, a rule, marks, and line breaks, with a plan that holds
    * them too, an answer of about 100 KiB that then grows in ten parts, task
-   * lists in the plan and in the answer, or screenshots of the context
-   * folder, with a plan that holds a screenshot.
+   * lists in the plan and in the answer, screenshots of the context folder,
+   * with a plan that holds a screenshot, or code blocks with and without a
+   * fence label, with a plan that holds a Rust block.
    */
   answer:
-    'text' | 'tables' | 'headings' | 'prose' | 'long' | 'tasks' | 'pictures'
+    | 'text'
+    | 'tables'
+    | 'headings'
+    | 'prose'
+    | 'long'
+    | 'tasks'
+    | 'pictures'
+    | 'code'
   /**
    * The skill lists of the list of `/`: the sample lists, no report yet, an
    * unavailable list, or a repository without skills.
@@ -118,7 +126,16 @@ export const choices = {
   page: ['chat', 'this-mac'],
   files: ['listed', 'unread'],
   speed: ['none', 'fast', 'limit', 'older', 'other'],
-  answer: ['text', 'tables', 'headings', 'prose', 'long', 'tasks', 'pictures'],
+  answer: [
+    'text',
+    'tables',
+    'headings',
+    'prose',
+    'long',
+    'tasks',
+    'pictures',
+    'code',
+  ],
   skills: ['listed', 'loading', 'unavailable', 'none'],
 } as const satisfies Record<keyof DevOptions, readonly string[]>
 

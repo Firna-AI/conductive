@@ -20,7 +20,10 @@ describe('PanelLayout', () => {
     widths.step('sidebar', 232, { by: 999 - 232 })
     widths.step('right', 440, { by: 100 - 440 })
     const reloaded = new PanelLayout(storage)
-    expect(reloaded.widths.get()).toEqual({ sidebar: 360, right: 320 })
+    expect({
+      sidebar: reloaded.chosenWidth.sidebar.get(),
+      right: reloaded.chosenWidth.right.get(),
+    }).toEqual({ sidebar: 360, right: 320 })
   })
 
   test('a drag saves only its last width', () => {
@@ -45,14 +48,14 @@ describe('PanelLayout', () => {
     widths.step('right', 280, { by: -8 })
     widths.step('right', 280, { to: 'min' })
     expect({
-      width: widths.widths.get().right,
+      width: widths.chosenWidth.right.get(),
       stored: [...storage.values],
     }).toEqual({ width: null, stored: [] })
     // A grow starts from the width that shows, and the next page load gets it back.
     widths.step('right', 280, { by: 8 })
     expect({
-      width: widths.widths.get().right,
-      reloaded: new PanelLayout(storage).widths.get().right,
+      width: widths.chosenWidth.right.get(),
+      reloaded: new PanelLayout(storage).chosenWidth.right.get(),
     }).toEqual({ width: 288, reloaded: 288 })
   })
 
@@ -62,21 +65,21 @@ describe('PanelLayout', () => {
     const drag = widths.drag('right', 280)
     drag.move(60)
     expect({
-      width: widths.widths.get().right,
+      width: widths.chosenWidth.right.get(),
       stored: storage.values.size,
     }).toEqual({ width: 340, stored: 0 })
     drag.move(0)
     drag.end()
     expect({
-      width: widths.widths.get().right,
+      width: widths.chosenWidth.right.get(),
       stored: storage.values.size,
     }).toEqual({ width: null, stored: 0 })
     const next = widths.drag('right', 280)
     next.move(70)
     next.end()
     expect({
-      width: widths.widths.get().right,
-      reloaded: new PanelLayout(storage).widths.get().right,
+      width: widths.chosenWidth.right.get(),
+      reloaded: new PanelLayout(storage).chosenWidth.right.get(),
     }).toEqual({ width: 350, reloaded: 350 })
   })
 

@@ -20,7 +20,7 @@ export const workspaceMark = defineComponent({
   slug: 'workspace-mark',
   title: 'Workspace mark',
   description:
-    'The list mark of a workspace in the list, the command palette, and the workspace chips: the GitHub state of its pull request in the tone of its pull request bar, a light that runs around the ring while the agent works, the workspace starts, or the checks run, and a pulse while the agent needs input. Its own page shows a merged pull request of a stopped workspace, the mark of almost every list.',
+    'The list mark of a workspace in the list, the command palette, and the workspace chips: the GitHub state of its pull request in the tone of its pull request bar, a light that runs around the ring while the agent works, a message waits for the workspace to start, or the checks run, and a pulse while the agent needs input. Its own page shows a merged pull request of a stopped workspace, the mark of almost every list. A start that no message waits on shows the same still mark as a stopped workspace.',
   relatedDocs: ['docs/mockups/design-marks.md'],
   propSchema: {
     type: 'object',
@@ -29,11 +29,16 @@ export const workspaceMark = defineComponent({
     properties: {
       github: githubSchema,
       status: { enum: activityStatuses },
+      messageWaiting: { type: 'boolean' },
     },
   } as const,
   props: { github: 'merged', status: 'stopped' },
   render: (props) => (
-    <WorkspaceMark github={props.github} status={props.status} />
+    <WorkspaceMark
+      github={props.github}
+      messageWaiting={props.messageWaiting}
+      status={props.status}
+    />
   ),
   variants: [
     {
@@ -60,7 +65,7 @@ export const workspaceMark = defineComponent({
       slug: 'working',
       title: 'Agent working',
       description:
-        'An agent that works on a branch without a GitHub state: a dim grey mark with a light that runs around the ring.',
+        'An agent that works on a branch without a GitHub state: a dim grey mark with a light that runs around the ring. A start with a waiting message shows the same mark.',
       props: { github: null, status: 'working' },
     },
   ],

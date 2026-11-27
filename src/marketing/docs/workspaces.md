@@ -96,8 +96,8 @@ Select **Start from** followed by the default branch's name, or choose another b
 On a computer, a new account opens the dialog.
 Older accounts keep the page.
 
-1. Open **Account**.
-2. Open **Preferences**.
+1. Open **Settings**.
+2. Select **Preferences** under **Account**.
 3. Find **New workspaces**.
 4. Set **Open New workspace in** to **Page** or **Dialog**.
 
@@ -143,11 +143,11 @@ The list mark shows the state of the pull request bar, in the colour of the bar:
 
 Archived workspaces keep a faint grey mark.
 
-A light runs around the mark while the agent works, the workspace starts, or the checks run.
+A light runs around the mark while the agent works, a message waits for the cloud computer to start, or the checks run.
 The moving light means that you do not need to act.
 The mark turns blue and pulses when the agent needs input.
 The pull request bar still shows the state of the pull request.
-With reduced motion, a still ring means the agent works or the workspace starts.
+With reduced motion, a still ring means the agent works or a message waits for the start.
 A still blue middle column means it needs input.
 Bold workspace names mark unread output.
 
@@ -296,9 +296,9 @@ The stop ends every service and discards its saved command, settings, and logs.
 Start needed services again after **Resume**.
 
 Open a stopped workspace to start its computer again.
-If it stops while the workspace is open, select **Resume**, or open a file or a change.
+If it stops while the workspace is open, select **Resume**, or open a file, a change, or a skill.
 The history remains readable while the computer starts.
-A file or change that you open then waits for the computer, then opens.
+A file, change, or skill that you open then waits for the computer, then opens.
 One that already shows stays.
 
 A message from an agent tool also starts a stopped workspace's computer.

@@ -31,10 +31,14 @@ This page lists the protocol docs that belong to
   - [Skill sources](../protocol/skill-sources.md): the skills that each
     agent loads, the skills that the runner reports, and the order of the
     list.
+  - [Skill tabs](../protocol/skill-tabs.md): the tab that a press on a
+    skill chip opens, the read of its text with the `skill.read` command
+    of the runner, its view, its notices, and its address.
 - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
   its events and their limits, its turns, what an out-of-memory kill ends,
   the background work of Claude turns with its note and its time limit,
-  its port reports, its skills report, and the repair of lost workspace updates.
+  its port reports, its skills report, its skill reads, and the repair of
+  lost workspace updates.
   - [Background work of Claude turns](../protocol/background-work.md):
     the wait of a Claude turn for background work, its note, and its time
     limit.
