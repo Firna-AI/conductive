@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.38.0](https://github.com/Firna-AI/conductive/compare/v0.37.0...v0.38.0) (2026-11-27)
+
+
+### Features
+
+* **sandbox:** hold disk space so a workspace can always resume ([#704](https://github.com/Firna-AI/conductive/issues/704)) ([27d9595](https://github.com/Firna-AI/conductive/commit/27d9595fe1e2d3749e30f421d6087a8fcc3a29b3))
+
+
+### Bug Fixes
+
+* **runner:** keep the turn open while a parked subagent can wake ([#701](https://github.com/Firna-AI/conductive/issues/701)) ([3371d05](https://github.com/Firna-AI/conductive/commit/3371d05f22c984896056919ac7ab4b71034511a6))
+
 ## [0.37.0](https://github.com/Firna-AI/conductive/compare/v0.36.0...v0.37.0) (2026-11-27)
 
 
