@@ -108,7 +108,10 @@ pages:
   row of a section over the group, whose block takes the outline of a drop
   target, with the drop line after its last layer (decision 317 D). While
   no queue has entries, a drag shows no group, so the catalogue has no
-  drop zone of an empty queue.
+  drop zone of an empty queue. No page draws the zone of a shown group,
+  for a collapsed group or a repository without a queue, yet. The item
+  [The drop zone of a shown Merge queue group moves the list](../../plans/follow-ups/merge-queue-zone-jump.md)
+  holds that work.
 - `app/merge-queue/cannot-join` has a row whose pull request targets
   another branch over the group. The block takes a dashed outline in the
   neutral colour, with no fill and no drop line, and names the reason after

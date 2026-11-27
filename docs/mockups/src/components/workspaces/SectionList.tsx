@@ -11,7 +11,7 @@ import { mergeQueueGroup } from '../../entries/components/workspaces/MergeQueueG
 import type { DrawnRow } from './ArchivedGroup'
 import { sectionMenu, type SectionPlace } from './menus'
 import { mayArchiveWorkspace } from './permissions'
-import { queueEntries } from './queue'
+import { queueEntries, shownBlocks } from './queue'
 import {
   archivableEntries,
   groupDropOf,
@@ -176,7 +176,7 @@ export function SectionList(
   const { queue } = props
   return (
     <div className={styles.sections}>
-      {queue && queue.blocks.length > 0 ? (
+      {queue && shownBlocks(queue).length > 0 ? (
         <mergeQueueGroup.Component
           archivable={archivableEntries(queue, viewer, context.readOnly)}
           moklyInstance="merge-queue"

@@ -59,6 +59,14 @@ export type GroupDrop =
   | { kind: 'add'; row: WorkspaceRow }
   | { kind: 'refused'; row: WorkspaceRow; reason: string }
 
+/**
+ * The blocks that the group shows: each queue with entries. The group
+ * shows only while this list has a block, as in the app.
+ */
+export function shownBlocks(queue: MergeQueueList): readonly QueueBlock[] {
+  return queue.blocks.filter((block) => block.entries.length > 0)
+}
+
 /** The entries of every block, in the order of the blocks. */
 export function queueEntries(queue: MergeQueueList): QueueEntry[] {
   return queue.blocks.flatMap((block) => block.entries)

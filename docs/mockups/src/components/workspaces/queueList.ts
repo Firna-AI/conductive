@@ -2,6 +2,7 @@ import type { Membership } from '../../fixtures/members'
 import { mayArchiveWorkspace } from './permissions'
 import {
   queueEntries,
+  shownBlocks,
   type GroupDrop,
   type MergeQueueList,
   type QueueDrag,
@@ -32,7 +33,7 @@ export function groupDropOf(
   props: ListQueue & { sections: readonly SidebarSection[] },
 ): GroupDrop | undefined {
   const drag = props.queueDrag
-  if (!drag || !props.queue || props.queue.blocks.length === 0) {
+  if (!drag || !props.queue || shownBlocks(props.queue).length === 0) {
     return undefined
   }
   if (drag.kind === 'reorder') return drag

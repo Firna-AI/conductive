@@ -2,7 +2,12 @@ import { ChevronDown, ChevronRight } from 'lucide-react'
 import { queueLabels } from '../../../../../src/ui/components/workspace/queueCopy'
 import { classes } from '../../../../../src/ui/components/common/classes'
 import type { DrawnRow } from './ArchivedGroup'
-import { queueCount, type GroupDrop, type MergeQueueList } from './queue'
+import {
+  queueCount,
+  shownBlocks,
+  type GroupDrop,
+  type MergeQueueList,
+} from './queue'
 import { QueueBlockView } from './QueueBlock'
 import sectionStyles from '../../../../../src/ui/components/workspaces/SectionList.module.css'
 import styles from '../../../../../src/ui/components/workspaces/MergeQueue.module.css'
@@ -32,16 +37,19 @@ export function MergeQueueGroup(props: {
   const { queue, variant, drop } = props
   const collapsed = queue.collapsed === true
   const Chevron = collapsed ? ChevronRight : ChevronDown
+  const blocks = shownBlocks(queue)
+  // Without entries, the app shows no group.
+  if (blocks.length === 0) return null
   const body = (
     <div className={styles.blocks}>
-      {queue.blocks.map((block) => (
+      {blocks.map((block) => (
         <QueueBlockView
           archivable={props.archivable}
           block={block}
           drawn={props.drawn}
           drop={drop}
           key={block.repository}
-          named={queue.blocks.length > 1}
+          named={blocks.length > 1}
           variant={variant}
         />
       ))}
