@@ -81,16 +81,23 @@ adds the disk line.
 - A part of the [sandbox software](sandbox-software.md#the-disk-hold)
   sets the hold as root, apart from the agent runner (disk hold
   decision 1).
-- That part sets the hold at each boot of the sandbox, again every
-  5 minutes, and at once when the
-  [background restore of the disk](terminal-shell.md#the-shell) ends.
-- Reason: the hold then also covers the startup script, Docker, and a
-  restarted runner. The check every 5 minutes also sets the hold again
-  after a change, such as a change by an agent with root rights.
-- A hold that the agent runner sets was rejected, because the runner
-  starts only after the startup script. A hold that only the start command
-  of the Worker sets was rejected, because nothing then sets the hold
-  again while the sandbox runs.
+- That part sets the hold at these times:
+  - at each boot of the sandbox, and again every 5 minutes
+  - at once when the
+    [background restore of the disk](terminal-shell.md#the-shell) ends
+  - at once when a [workspace command](#when-the-line-applies) ends
+- Each time, it holds the line only when the line applies. Otherwise, it
+  releases the hold.
+- Reason: the hold then also covers Docker, the programs that the startup
+  script leaves running, and a restarted runner. The check every 5 minutes
+  also sets the hold again after a change, such as a change by an agent
+  with root rights.
+- A hold that the agent runner sets was rejected, because the runner does
+  not always run when the line applies. An example is the
+  [restart near day 14](stop-and-resume.md#the-restart-near-day-14) of a
+  stop. A hold that only the start command of the Worker sets was
+  rejected, because nothing then sets the hold again while the sandbox
+  runs.
 - An older sandbox gets that part with an update of its software. It then
   holds its line from its next boot.
 
@@ -105,19 +112,44 @@ adds the disk line.
 - Risk: the 2 GB can take a disk near the limit of its provider past that
   limit. Its next resume then fails.
 
-## Restores and starts
+## When the line applies
 
-- The hold never blocks a start or the background restore of the disk.
-- Until that restore ends, the hold lets back each disk that the provider
-  accepted. The line applies from the end of the restore.
-- Each start of the sandbox of a workspace first releases the hold that
-  its machine still has. Reason: a resume onto the same machine keeps the
-  hold of its last run, and the start must write its own files.
-- A failed hold never blocks a start. The sandbox software logs the
-  failure and tries again later. Reason: a start then fails no more often
-  than with no hold.
-- Risk: writes before the first hold of a start, such as during the
-  restore, can take the disk past the line. The first hold then treats it
-  as [a disk above the line](#a-disk-above-the-line).
+- A workspace command is a command that the app runs in the sandbox of a
+  workspace for one of these actions:
+  - a start
+  - the [restart near day 14](stop-and-resume.md#the-restart-near-day-14)
+    of a stop
+  - [Continue](continue.md)
+  - a [repository change](repository-change.md)
+- The fetch of a branch and the startup script are examples of workspace
+  commands.
+- The line applies only when the
+  [background restore of the disk](terminal-shell.md#the-shell) has ended
+  and no workspace command runs. This holds also at the restart near
+  day 14 of a stop. At other times, the hold is released, and writes can
+  pass the line.
+- So the hold never blocks a workspace command or the background restore
+  of the disk. Until the restore ends, the released hold lets back each
+  disk that the provider accepted.
+- Each workspace command releases the hold when it begins. This also
+  releases the hold that a resume onto the same machine keeps from its
+  last run. The hold stays released until the command ends, also when the
+  restore ends during the command.
+- Reason: a command at the line can then still write its files and its
+  result. Without them, a start fails, and its members cannot use their
+  workspace.
+- When a workspace command ends, the line applies again at once, unless
+  the restore has not ended or another workspace command runs.
+- A workspace command keeps the hold released for at most 25 minutes.
+  After that time, the next check applies the line, also while the command
+  still runs. Reason: a command that never ends then cannot keep the line
+  away. The limit is longer than the 20 minutes of the
+  [time limit of a start](workspace-life.md#time-limits-of-builds-and-starts).
+- A failed hold never blocks a workspace command. The sandbox software
+  logs the failure and tries again later. Reason: a command then fails no
+  more often than with no hold.
+- Risk: writes while the hold is released, such as during the restore or
+  during a workspace command, can take the disk past the line. The next
+  hold then treats it as [a disk above the line](#a-disk-above-the-line).
 - When writes fail at the line, the agent runner still saves its own
   state as a best effort, so that the chat keeps its events.

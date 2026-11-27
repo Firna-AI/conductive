@@ -179,6 +179,24 @@ My calls, all on 2026-11-26:
     the hold first, and the timer would bring it back only up to 5 minutes
     later. Found by the docs review on 2026-11-27.
 
+11. **The start lease.** Each workspace command (a start, the restart near
+    day 14, Continue, or a repository change) opens a lease in `/run` in its
+    journal's owner branch. While a lease is valid, the hold stays at the
+    default. When the command has published its result, the lease goes and
+    the hold applies again. A lease ends after 25 minutes at most. Workspace
+    journals live in `/run/conductive-lifecycle`, so a full disk cannot block
+    them. Reason: review findings 1 and 4, 2026-11-27. This replaces the
+    start-time release of design call 5 and the trailing hold of design
+    call 10.
+12. **The runner reserve.** It is `<state file>.reserve`, created exclusively
+    and marked, and the runner deletes only a reserve that it made. A
+    relative state path gets no reserve. Reason: review finding 3,
+    2026-11-27. This refines design call 7.
+13. **The build card.** A build saves the used bytes of `/`, and the free
+    storage is computed at read time from the account's current line. Older
+    rows on an account with a line show no figure. Reason: review finding 5,
+    2026-11-27.
+
 ## Milestone 1: Documentation and protocol
 
 Depends on: none

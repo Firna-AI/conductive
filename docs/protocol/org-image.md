@@ -109,17 +109,20 @@ the change that adds the [disk line](disk-line.md).
   each new cloud computer, with the size of the disk, such as "31.2 GB
   free of 68.5 GB" (storage decision 1). Reason: an admin then sees when
   the install script and the repositories fill the disk.
-- A build measures the free storage just before it saves the image, on
-  the disk of `/`. The free storage is the space that the user of the
-  cloud computer can write.
+- A build measures the disk of `/` just before it saves the image. The
+  free storage is the space that the user of the cloud computer can
+  write.
 - Reason for `/`: a build does not wait for the
   [background restore of the disk](terminal-shell.md#the-shell). Until
   that restore ends, the home folder is a separate view, not the disk
   itself.
 - On a provider with a [disk line](disk-line.md), the size is the used
   size of the disk at which the writes of the user of the cloud computer
-  stop. The free storage is that size minus the used size, and never less
-  than zero (disk hold decision 6 A).
+  stop. The free storage is that size minus the used size that the build
+  measured, and never less than zero (disk hold decision 6 A).
+- The size and the free storage follow the current line of the provider
+  account. So a change of the line changes them for each build, with no
+  new build.
 - Reason: each new workspace can write only up to the line, so the card
   shows the room that the work really gets.
 - A build gets no disk hold. So the line fails no build, and an image can
@@ -131,6 +134,10 @@ the change that adds the [disk line](disk-line.md).
 - A failed build shows no free storage, because it does not replace the
   image. A build without a measurement, such as a build from before the
   measurement, shows none either.
+- On a provider with a disk line, a build whose measurement has no used
+  size shows no free storage either. An example is a build from before the
+  disk line. Reason: its figures do not give the room under the line, and
+  they can show more room than the work gets.
 - The free storage only informs. When the measurement fails, the build
   goes on and shows no free storage. Reason: a failed measurement does not
   make the image wrong.

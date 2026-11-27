@@ -53,8 +53,8 @@ protocol docs.
     restart near day 14 of a stop.
     - [Disk line](../protocol/disk-line.md): the disk line that keeps each
       saved disk small enough to resume, the line of each provider, the
-      hold that keeps it, a disk above the line, and the restores and
-      starts.
+      hold that keeps it, a disk above the line, and when the line
+      applies.
   - [Restart the software](../protocol/restart-the-software.md): Restart
     in the workspace header, what it restarts, the download of the newest
     release before it, and the automatic restart of an agent runner that

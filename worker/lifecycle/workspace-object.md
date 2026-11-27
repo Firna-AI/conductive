@@ -311,9 +311,10 @@ create and resume. The workspace object runs that start:
   - A reply with `hydrated: false` keeps the watch.
   - A reply with `hydrated: true`, or without `hydrated`, ends the watch.
     The watch then writes the restore marker with
-    `markTerminalRestoreEnded`. The terminal and the agent runner read it.
-    Boat's schema makes the field optional, and Boat says that a sandbox
-    that restored nothing is hydrated from the start.
+    `markTerminalRestoreEnded`. The terminal, the agent runner, and the
+    [disk hold](../../docs/protocol/disk-line.md#when-the-line-applies)
+    read it. Boat's schema makes the field optional, and Boat says that a
+    sandbox that restored nothing is hydrated from the start.
   - A stopped or error state ends the watch, and the alarm applies that
     state as the provider state read does. A stopping state, such as
     `archiving`, also ends the watch. Neither writes the marker.
@@ -324,8 +325,16 @@ create and resume. The workspace object runs that start:
     the sandbox and the stop waits for a retry. The watch has no deadline
     of its own, so it can last until a stop, such as the idle stop after the
     stop time without activity.
-  - A disk retention restart starts no watch, because it starts no
-    terminal.
+  - On an account with a disk line, a start can write the marker before
+    the watch. When the ready sandbox already reports the end of the
+    restore, the first command of the start writes it, as
+    [Provider accounts](README.md#provider-accounts) says.
+  - A disk retention restart starts no watch. It starts no terminal and no
+    agent runner, and each of its steps already reads the sandbox from
+    Boat. The disk hold still needs the marker. So when such a read
+    reports a ready sandbox without `hydrated: false`, the retention writes
+    the marker once after each resume, as
+    [Provider accounts](README.md#provider-accounts) says.
 - The end of a create stores its result in the object, with the first
   retry time of its D1 publication. The create then writes that result to
   D1. A failed write retries at the publication's own due time, also while

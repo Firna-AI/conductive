@@ -56,8 +56,9 @@ The program also installs the other parts of the software:
   helper
 - a udev rule that stops disk flushes at each boot, as
   [Disk flushes](../protocol/workspaces-and-sandboxes.md#disk-flushes) says
-- the root units of the disk hold, which keep the disk under its line from
-  each boot, as [The hold](../protocol/disk-line.md#the-hold) says
+- the root units of the disk hold, which run from each boot and keep the
+  disk under its line when the line applies, as
+  [The hold](../protocol/disk-line.md#the-hold) says
 
 The image build installs the system packages, such as the terminal
 packages `ttyd` and `tmux`. It runs apt only when the image lacks a

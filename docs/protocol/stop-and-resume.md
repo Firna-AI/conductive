@@ -175,4 +175,4 @@ number names a decision of the change that adds the
   provider, when that provider has one, so that its saved disk stays small
   enough to resume (disk hold decision 1). [Disk line](disk-line.md)
   states the line of each provider, the hold that keeps it, a disk above
-  the line, and the rules for restores and starts.
+  the line, and when the line applies.
