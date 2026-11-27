@@ -1,0 +1,43 @@
+# Tests can still build hand-written chat stores
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-27, from branch `calummoore/changes-list-deltas-aedi`, review round 1, finding 104.
+- **Location:** `eslint.config.js`, `worker/chat/runner-connection-store.test.ts:7`, and `worker/chat/history-file-storage.test.ts:123`.
+- **Reason:** The fix that stops the class adds a lint rule, which the always-on rules leave to the user.
+
+- **Terms:**
+  - **Chat storage:** The `ChatStorage` type of `worker/chat/types.ts`, which `ChatStore` writes through. Its `transaction` runs the work of one change in one storage transaction.
+  - **Native storage:** The SQLite storage of the production workspace Durable Object. The chat tests reach it through `nativeChatStore` in `worker/chat/native-store.test-support.ts:20`.
+  - **Hand-written store:** A test store whose `transaction` runs the work directly on a `Map`, as in `(work) => work(data)`. It has no commit, no rollback, and no copy of the values.
+- **Background:**
+  - Since 9 November 2026, the chat tests run on the production workspace object with native storage. Commit `fb6290c24` removed the hand-written chat store `MemoryChatStorage`, so that no later test could use one.
+  - The review of this branch found three new history test cases that built a `ChatStore` over the test helper `historyMemory()` in `worker/chat/history-memory.test-support.ts`.
+  - The branch moved those cases to native storage. It also made `historyMemory()` return `ChatData` without `transaction`, so the typecheck now rejects a `ChatStore` over it.
+  - Two hand-written stores remain in the Worker tests. Both run the work directly with `transaction: (work) => work(data)`.
+  - `memory()` in `worker/chat/runner-connection-store.test.ts:7` builds one for `RunnerConnectionStore`. Commit `424bf736d` added it on 18 November 2026, after the move to native storage.
+  - `worker/chat/history-file-storage.test.ts:123` builds one for a spy on `put`. It must stay: native storage copies each value, so it cannot show that the stored and the published file event are the same frozen object.
+  - `eslint.config.js` has one `no-restricted-syntax` block, for four Worker data files. No rule covers the test files.
+- **Problem:** Nothing stops a new test from building a hand-written chat store. Such a test misses the serialization and the commit boundaries of native storage. The runner connection store test shows that the class came back nine days after the move.
+- **Impact if no action:** A storage test can pass while a real workspace fails to store, replace, or read the same records.
+- **Root question:** How do the Worker tests keep chat storage code on native storage?
+- **Options:**
+  - **A.** Move `worker/chat/runner-connection-store.test.ts` onto `nativeChatStore()`, and rely on review for new stores. Effort: Small.
+  - **B.** Do A, and add a lint for the class:
+    - Add a `no-restricted-syntax` rule for the Worker test files and test support files in `eslint.config.js`.
+    - The rule rejects a `transaction` function or method that returns a direct call of a plain name, as in `(work) => work(data)`. Wrappers that call a native `transaction` do not match.
+    - Give the spy of `worker/chat/history-file-storage.test.ts:123` a disable comment with its reason.
+    - Test the rule with `ESLint.lintText`, as the `testing` skill describes.
+    - Cost: a store that calls `work` in a longer body still passes. Effort: Medium.
+- **Left out:**
+  - Change nothing, because the runner connection store test stays on a hand-written store.
+  - A native-only brand on `ChatStorage`. Each wrapper then needs a cast to make the brand, also the product wrapper `workspaceJobChatStorage` in `worker/lifecycle/base-change-storage.ts:7`. The `typescript` skill forbids a cast that silences a type error.
+  - A parity test of a hand-written store against native storage, because the `testing` skill gives no test to the internals of a test harness.
+  - So only two approaches remain: a move of the one store, and a lint for the class.
+- **Wider fix:** B. The lint catches each new store of this shape. No structural fix stops the shape without a forbidden cast.
+- **Previous examples:** Commit `fb6290c24` removed `MemoryChatStorage` on 9 November 2026. Commit `424bf736d` added the hand-written store of `worker/chat/runner-connection-store.test.ts` on 18 November 2026. The review of this branch found three new history test cases over `historyMemory()`.
+- **Related:**
+  - `plans/follow-ups/native-long-history-fixture.md`: the same class in the long history tests. That item gives them one native seeding fixture, and it leaves out the lint because the lint needs the user. This item asks the user for that lint.
+  - `plans/follow-ups/standalone-files-transaction-tests.md`: the same class in the file projection tests. `createFilesStorage` in `worker/files/test-support/storage.ts:74` simulates its transaction in a longer body, so the rule of B does not match it.
+- **Recommendation:** B. It keeps the class out at a small cost, and A alone lets a new store in. A branch can apply A before the answer.
+- **Action:** ask the user, because B adds a lint rule, and the always-on rules reserve that choice for the user.

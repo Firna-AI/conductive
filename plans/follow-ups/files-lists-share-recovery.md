@@ -1,0 +1,39 @@
+# The two Files lists repeat their recovery logic
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-27, from branch `calummoore/changes-list-deltas-aedi`, review round 1, findings 202 and 204.
+- **Location:** `src/files/model/files-sync.ts` (`FilesSync`, `fetchedTree`, `syncRead`, `syncDelta`, and `syncEvent`), `src/files/model/files-changes-sync.ts`, `src/files/model/files-list-deltas.ts`, and the reads of `treeStale` in `src/files/model/files-store.ts`.
+- **Reason:** The shared logic changes the tree recovery that `origin/main` already has, which is outside the purpose of the changes deltas change.
+
+- **Terms:**
+  - **Recovery read:** A read of a whole list that a tab starts after it misses or cannot apply an update. The tab keeps the old list while the read runs.
+  - **Recovery mark:** The flag that says that a list waits for a recovery read: `stale` of the Changes list, and `treeStale` of the tree.
+  - **Queue:** The updates that arrive during a recovery read. The tab applies them after the cutoff of the read, the last workspace event that the read includes.
+- **Background:**
+  - The Files store in `src/files/model/files-store.ts` keeps two lists: All files, the file tree, and Changes, the branch changes list. Each list recovers through its own read.
+  - Since this branch, Changes keeps its value, its floor, its error, its recovery mark, and its queue in one state, `ChangesSync` in `src/files/model/files-changes-sync.ts`. Its one replace step, `replaceChanges`, always clears the mark and the queue.
+  - A Changes read applies its queue through `mergePendingDeltas` in `src/files/model/files-list-deltas.ts`, with `applyChangesDelta` of `src/files/model/changes-model.ts` as the apply step.
+  - `applyChangesDelta` applies a delta only at the next revision of the list, as "In the browser" in `docs/protocol/changes-deltas.md` requires.
+  - The tree keeps its mark `treeStale` and its queue `pending` as fields of `FilesSync` in `src/files/model/files-sync.ts`, beside the list. `fetchedTree`, the `files.snapshot` case of `syncEvent`, and the failed read with a cutoff in `syncRead` each set them by hand.
+  - `fetchedTree` merges the tree queue in its own loop. It skips a queued delta at or below the revision of the read, and it applies each newer one with no next-revision check.
+- **Problem:** Each tree transition copies the mark and the queue with `...sync`, so a transition that forgets to clear them still compiles. The review of this branch removed the reset of the Changes mark at a full event, and all 263 Files tests still passed. The two lists also keep two copies of the read-and-queue merge, so a fix of one list does not reach the other.
+- **Impact if no action:** A later change can leave one list in recovery after it has a usable full list. That list then starts reads that it does not need, or it drops updates that it could apply.
+- **Root question:** How do both Files lists catch up under one recovery rule, so that each replacement of a list ends its recovery?
+- **Options:**
+  - **A.** Give the tree the state shape of Changes. Keep its value, floor, error, recovery mark, and queue in one tree state. Give it one replace step for a full tree, a read, and a move, which always clears the mark and the queue. Keep `fetchedTree` as the merge of the tree. Effort: Medium.
+  - **B.** Do A, and move the tree merge onto `mergePendingDeltas`, with one list state type for both lists. Keep the apply step of each list: the rule of `fetchedTree` for the tree, and the next-revision check of `applyChangesDelta` for Changes. Keep the rules of each list for which open paths read again. Effort: Medium.
+  - **C.** Do B in the same change as option B of `plans/follow-ups/typed-files-list-state.md`. Each list then publishes one typed state for loading, saved, absent, failed, and recovering. Effort: Large.
+- **Left out:**
+  - One recovery mark for both lists. Each list recovers through its own read and its own floor, so one mark would start reads that a list does not need.
+  - A test for each exit from recovery as the only protection. The `testing` skill already asks for those tests, and a test protects only the exit that it names.
+  - A mutation-testing job. It adds a gate and a dependency, which need the user, and B is a structural fix.
+  - A shared merge that applies the tree rule to Changes too. It would apply a changes delta to a list that the delta does not fit, against "In the browser" in `docs/protocol/changes-deltas.md`.
+- **Wider fix:** B. Each replacement of each list then goes through one step that clears the mark, and one merge serves both lists.
+- **Previous examples:** Commit `4fdb5bc7d` gave the tree its queue after a read cutoff (`src/files/model/files-tree-repair.test.ts:100`). The first Changes recovery of this branch had no queue, so the tab discarded each reply while new deltas arrived. The review of this branch found that, and it found the missed reset that passed all 263 Files tests.
+- **Related:**
+  - `plans/follow-ups/typed-files-list-state.md`: the same code. Option C does both items in one change.
+  - `plans/follow-ups/failed-tree-recovery-read-stays-stale.md`: the same code, in the tree branch of `syncRead`. Make that fix on top of B, or in the same change, so that both lists keep one rule for a failed recovery read.
+  - `plans/follow-ups/git-attribute-edit-stale-diff-heading.md`: the same code for its options D and E only, which change the paths that a delta touches. Make the second change on top of the first.
+- **Recommendation:** B. With one state, one replace step, and one merge, a transition that uses the step cannot keep an old mark. The next fix of one list then reaches the other.
+- **Action:** fix after merge, apply B, because it changes the tree recovery that `origin/main` already has, outside the purpose of the changes deltas change.

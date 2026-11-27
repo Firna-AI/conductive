@@ -1,0 +1,35 @@
+# A failed tree read leaves All files stale
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-27, from branch `calummoore/changes-list-deltas-aedi`, review round 1, outside the scope.
+- **Location:** `src/files/model/files-sync.ts:118`, `src/files/model/files-store.ts:171`, and `src/files/panel/FilesPanel.tsx:95`.
+- **Reason:** `origin/main` has the same behaviour, and the changes deltas change fixed only the same case of Changes.
+
+- **Terms:**
+  - **All files:** The tab of the Files panel that shows the file tree of the branch.
+  - **Recovery read:** A read of the whole tree that a tab starts after it misses a tree update. The tab keeps the old tree while the read runs.
+  - **Cutoff:** The last workspace event that a read includes. A read that fails on the network has none.
+  - **Replay:** The stored events that the event socket sends when it connects again. It is empty when the tab already has the newest event.
+- **Background:**
+  - When a tab misses a tree update, it marks the tree stale and starts a recovery read (`syncDelta` in `src/files/model/files-sync.ts`).
+  - A failed recovery read with a cutoff drops the old tree. All files then shows "The files didn't load" with Try again.
+  - A failed recovery read without a cutoff keeps the old tree, its mark, and the error (`syncRead` in `src/files/model/files-sync.ts:118-123`).
+  - `AllFiles` (`src/files/panel/FilesPanel.tsx:95`) offers Try again only when no tree exists. The notice under the lists shows only for a failed repair or for the unavailable mark of the sandbox.
+  - Since this branch, Changes handles the same case in two ways. A failed recovery read without a cutoff drops the old list (`mergeChangesRead` in `src/files/model/files-changes-sync.ts`). A completed replay retries the stale read (`replayed` in `src/files/model/files-store.ts:171`).
+- **Problem:** After a failed tree recovery read without a cutoff, All files shows the old tree with no notice and no Try again. No new tree read starts until the next file event, and an empty replay only publishes the saved state.
+- **Impact if no action:** After the connection returns, All files can show old rows until another file event or a reload. A member can then open a file that no longer exists, or miss a new file.
+- **Root question:** How does All files become current again, or show that it is not current, after its recovery read fails?
+- **Options:**
+  - **A.** Retry a stale tree read when a replay completes, as `replayed` in `src/files/model/files-store.ts` does for Changes. Keep the old tree in view. A read that keeps failing while the socket stays open still leaves a stale tree with no notice. Effort: Small.
+  - **B.** Do A. Also drop the old tree when its recovery read fails without a cutoff, as a failed read with a cutoff already does. All files then shows "The files didn't load" with Try again, as Changes does since this branch. A short failure hides the whole tree until a read succeeds. Effort: Small.
+  - **C.** Do A. Keep the old tree. While its recovery read has failed, show the existing notice "The latest list of all files is unavailable" under the lists, with no time. `UnavailableLists` (`src/files/panel/UnavailableLists.tsx:44`) already shows that notice with no time for the unavailable mark of the sandbox. It needs a sentence in "Notices of a failed repair" of `docs/protocol/workspace-events.md`, which names only failed repairs, and a mockup variant. Effort: Medium.
+  - **D.** Give both lists one policy that retries a failed read with backoff while the socket stays open. It adds background requests, and a read that always fails still shows no notice. Effort: Medium.
+- **Left out:** Wait for the next file event, because an idle workspace then stays stale.
+- **Wider fix:** B, through the shared recovery of `plans/follow-ups/files-lists-share-recovery.md`. Both lists then keep one rule for a failed recovery read.
+- **Previous examples:** The review of this branch found the same defect in Changes, and the branch fixed it with A and B for that list.
+- **Related:**
+  - `plans/follow-ups/files-lists-share-recovery.md`: the same code. Make this fix on top of that item, or in the same change.
+  - `plans/follow-ups/typed-files-list-state.md`: the same panel code. `AllFiles` infers the state of the tree from `null` and an error, which that item replaces with one typed load state.
+- **Recommendation:** B. Both lists then show a failed recovery read in the same way, with states that exist. Choose C if members must keep the old rows in view.
+- **Action:** fix after merge, apply B, because `origin/main` has the same behaviour, and the fix changes the tree recovery outside the changes deltas change.

@@ -1,0 +1,49 @@
+# A Git attribute edit leaves diff headings stale
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-27, from branch `calummoore/changes-list-deltas-aedi`, review round 1, finding 1.
+- **Location:** `crates/cnd-runner/src/reports/changes.rs:74`, `crates/cnd-runner/src/reports/updates.rs:156`, `crates/cnd-runner/src/reports/refreshes.rs:54`, `crates/cnd-runner/src/repository/diff.rs:86`, and "When a full list goes" in `docs/protocol/changes-deltas.md`.
+- **Reason:** The bug is Low and Rare, and no user meets it while `CHANGES_DELTAS` stays `"off"`, so a later branch can fix it before the activation.
+
+- **Terms:**
+  - **Changes delta:** The runner event `changes.changed`. It carries only the rows of the branch changes list that change, as `docs/protocol/changes-deltas.md` says.
+  - **Git attribute file:** A file named `.gitattributes` in the work tree. Its rules, such as `*.rs diff=rust`, can change how Git makes the patch of other files.
+  - **Hunk heading:** The text after the second `@@` of each hunk of a patch. Git takes it from an earlier line that the diff rules of the file match.
+  - **Omitted row:** A changed file that the changes list leaves out because of its limit, `FILE_CHANGES_REPORT_MAX_FILES`.
+- **Background:**
+  - An open diff tab reads its patch again when an update names its path. A full changes list names each path of the old and the new list. A changes delta names only the paths of its removes and upserts.
+  - The tree update of the same scan names each path whose content changes (`crates/cnd-runner/src/reports/updates.rs:156`).
+  - The runner sends a full list in place of a delta after a change of the base commit or of the base branch. The baseline filter of `ChangesHistory::update` makes that choice (`crates/cnd-runner/src/reports/changes.rs:74-80`).
+  - The reason is in "When a full list goes" of `docs/protocol/changes-deltas.md`. After a change of the base, each listed diff can change with no change of its row.
+  - The diff read and the line counts use the attributes of the work tree (`crates/cnd-runner/src/repository/diff.rs:86` and `crates/cnd-runner/src/repository/changes.rs:88`).
+  - The open diff of an omitted row has the same stale heading after an attribute edit, also on `origin/main`. `omitted_diff_paths` (`crates/cnd-runner/src/reports/refreshes.rs:54`) refreshes such a diff only after a change of the base commit or of a row of the complete list.
+  - An edit of `.git/info/attributes` or of a Git setting changes no file of the work tree, so it sends no event, also on `origin/main`. This item does not cover it.
+  - `CHANGES_DELTAS` is `"off"` in `wrangler.jsonc`, so no welcome accepts deltas yet. `plans/follow-ups/changes-deltas-activation.md` turns it on.
+- **Problem:** An edit of a Git attribute file can change the hunk headings of a listed file, while its contents and its row stay the same. The changes delta then names no path of that file, and the tree update names only the attribute file. In a scratch check, the heading of one edit of `crates/cnd-runner/src/reports/files.rs` changed from `impl FileReporter {` to `async fn scan(` after `*.rs diff=rust` went into `.gitattributes`.
+- **Screenshot:** None, because no copy of the app runs with `CHANGES_DELTAS` on yet. A picture would box the stale heading of an `@@` line in a Files diff tab that stayed open during the attribute edit.
+- **Impact if no action:** After the activation, an open diff can show a stale hunk heading until a full list or a new read refreshes it. The added and removed lines, their line numbers, and the counts stay correct.
+- **Root question:** How does each open diff learn that its patch changed when its row and its contents stay the same?
+- **Options:**
+  - **A.** Refresh through the tree update each listed row, with its previous path, in the folder of the changed attribute file and below it. Keep the refresh budgets, and add a regression with a real Git diff. It can read again diffs whose patch stays the same. Effort: Medium.
+  - **B.** Send a full changes list when a Git attribute file changes. Add one condition to the baseline filter of `ChangesHistory::update` (`crates/cnd-runner/src/reports/changes.rs:74`): no path that `content_paths` returns ends in `.gitattributes`. Add the case beside the base change in "When a full list goes" of `docs/protocol/changes-deltas.md`. Add a regression with a real Git diff. It sends every row after a rare edit. Effort: Small.
+  - **C.** Record the effective Git diff settings of each listed path in each scan, and refresh each path whose settings change. It adds Git work to each scan. Effort: Large.
+  - **D.** In the browser, make each applied changes delta read each open diff again. It needs no list of the inputs of a patch. It changes the browser refresh rules of `docs/protocol/changes-deltas.md`, and each edit again reads each open diff of each tab. A Mac app with the web app of this release keeps the defect. Effort: Small.
+  - **E.** In the browser, when a delta touches a `.gitattributes` path, touch each Changes path in its folder and below it. A Git rule then lives in the browser. A Mac app with the web app of this release keeps the defect. Effort: Small.
+  - **F.** In the changes delta, upsert each unchanged listed row in the folder of the attribute file. It changes the row rule of `docs/protocol/changes-deltas.md`, and it cannot reach omitted rows. Effort: Medium.
+  - **G.** Record a digest of the patch of each listed path in each scan, and refresh each path whose digest changes. It costs one full patch of each listed path in each scan. Effort: Large.
+  - **H.** Do B with option B of `plans/follow-ups/base-rename-omitted-diff-stale.md`: one comparison value for the refresh plan, from `comparison_base` and the identities of the attribute files. A change of the value sends a full list and refreshes the omitted rows through the tree. It also closes that item. Effort: Medium.
+  - **I.** Read each patch and the line counts with the attributes of the base commit, through `git --attr-source=<base commit>`. An attribute edit on the branch then shows only after the base has it. Each sandbox needs a Git that knows `--attr-source`. Effort: Medium.
+- **Left out:**
+  - Keep the current behaviour, because the heading stays stale.
+  - Read an open diff again on focus or on a timer, because the heading stays stale while the tab stays in view.
+  - A rule in the Worker, because the Worker holds no Git state and sees the same path events as the browser.
+  - A new header field that tells tabs to read the listed diffs again. It adds a wire field, Worker storage, and a browser rule, and B needs no new field.
+- **Wider fix:** D. It needs no list of the inputs of a patch, so it also covers a later input. It changes a browser requirement of `docs/protocol/changes-deltas.md`, which needs the user, and it brings back a read of each open diff for each edit.
+- **Previous examples:** Commit `d0801ded8` added the refreshes of omitted diffs after a base change, in `crates/cnd-runner/src/reports/refreshes.rs`. `plans/follow-ups/base-rename-omitted-diff-stale.md` records a missed refresh after a rename of the base branch. `plans/follow-ups/reverted-file-tab-stays-stale.md` records an open file whose refresh never comes.
+- **Related:**
+  - `plans/follow-ups/changes-deltas-activation.md`: work that waits for this fix. Release the fix to the sandboxes before the activation pull request sets `CHANGES_DELTAS` to `"on"`, or the activation ships the defect.
+  - `plans/follow-ups/base-rename-omitted-diff-stale.md`: the same class and the same function, `omitted_diff_paths`. Option H fixes both items.
+  - `plans/follow-ups/files-lists-share-recovery.md`: the same browser code for options D and E only, in `src/files/model/files-changes-sync.ts` and `src/files/model/files-sync.ts`. Make the second change on top of the first.
+- **Recommendation:** B. One condition in the runner puts the rare attribute edit under the full-list rule of a base change, which every reader already follows. H best protects the codebase, because it also refreshes the omitted rows and closes `plans/follow-ups/base-rename-omitted-diff-stale.md`.
+- **Action:** fix after merge, apply B, because the bug is Low and Rare, and `CHANGES_DELTAS` stays `"off"` until the activation pull request.

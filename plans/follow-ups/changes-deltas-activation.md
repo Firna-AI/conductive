@@ -16,5 +16,6 @@
   - Open the same workspace in a tab without `forms` in its event socket address, or in an older Mac app. Confirm that it gets `changes.updated` with the complete list and the same event number.
   - Reconnect the cloud computer. Confirm that the runner sends a full changes list and that both tabs keep the right list.
 - **Impact if no action:** Every edit keeps sending the complete changes list, so the cost of each edit still grows with the list size.
-- **Needs:** The compatibility release deployed for at least one hour, and a sandbox after its normal runner update.
+- **Needs:** The compatibility release deployed for at least one hour, and a sandbox after its normal runner update. The fix of `plans/follow-ups/git-attribute-edit-stale-diff-heading.md` in the runner release that the sandboxes run.
 - **Done when:** `CHANGES_DELTAS` is `"on"` in production, and each check above passes, or a new follow-up item records a failure.
+- **Related:** `plans/follow-ups/git-attribute-edit-stale-diff-heading.md`: work that this task waits for. Without that fix, an open diff keeps a stale hunk heading after an edit of a `.gitattributes` file once deltas are on.

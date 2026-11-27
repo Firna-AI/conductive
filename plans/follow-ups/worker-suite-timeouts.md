@@ -10,6 +10,7 @@
   Also `worker/lifecycle/completed-retry-first-message.test.ts`.
   Also `worker/lifecycle/workspace-base.test.ts`.
   Also `worker/chat/history-order.test.ts`.
+  Also `worker/app-api/boot.test.ts:138`, `worker/chat/stop-queue.test.ts:22`, `worker/lifecycle/continue-concurrency.test.ts:20`, `worker/lifecycle/disk-retention.test.ts:103`, `worker/members/archive-cleanup.test.ts:45`, `worker/operator/lift-native.test.ts:28`, and `worker/operator/native-suspension.test.ts:25`.
 - **Reason:** The failures occur on main or in code that matches it. Several focused reruns pass without source changes. Other cases also fail in focused runs of untouched main. The blocked awaits and causes remain unconfirmed.
 
 - **Background:**
@@ -143,7 +144,27 @@
   - A related rerun with `--maxWorkers=3` had 24 timeouts in 17 of 112 files.
   - A reviewer saw these tests time out and then pass in a focused rerun: `worker/lifecycle/image-build-recovery.test.ts` ("keeps the good image across build and provider failures and publishes a successful retry"), `worker/lifecycle/image-sources/deadline.test.ts` ("returns each alarm while native Git runs and renews the builder before allowing install after revocation"), two tests of `worker/lifecycle/image-sources/parallel.test.ts`, and `worker/lifecycle/image-sources/poll-recovery.test.ts` ("keeps a native source fetch after a temporary status error and resumes without repeating commands").
   - Suspected sources: resource contention, and a slow cloud computer for the two files that time out alone.
+- On 27 November 2026, branch `calummoore/changes-list-deltas-aedi` at `0c487ddf1` ran `npm --prefix desktop ci`, `npm ci --prefix runner`, and `npm run check` on one local machine.
+  - All static checks passed. The test step ran all 1,786 files in one unsharded run of 2,867.01 seconds, about 48 minutes.
+  - It passed 6,149 tests and failed 10, with no skips. Each failure was `Error: Test timed out in 15000ms.`
+  - Nine of the failed files are outside the diff of that branch:
+    - `worker/app-api/boot.test.ts:138`: `keeps account data and Get started isolated from other users and deleted orgs`.
+    - `worker/chat/history-order.test.ts:16`: `keeps live item order and first times in compacted pages and old or new caches`.
+    - `worker/chat/stop-queue.test.ts:22`: `messages after Stop > keeps post-Stop messages queued until stopped, failed, and finished turns end`.
+    - `worker/lifecycle/continue-concurrency.test.ts:20`: `holds dispatch and a second Continue until cancelled fetch or move commands settle`.
+    - `worker/lifecycle/disk-retention.test.ts:103`: `ends failed maintenance and refuses destructive resume of a normal errored workspace`.
+    - `worker/members/archive-cleanup.test.ts:45`: `continues expired deletes and disk retention after an Archive Delete fails, then recovers without dispatch after lease loss`.
+    - `worker/operator/lift-native.test.ts:28`: `restores a native disk alarm after a user lift and restart while preserving its revoked token`.
+    - `worker/operator/native-suspension.test.ts:25`: `retries a suspended native workspace stop after a runtime restart without a resume`.
+    - `worker/operator/ownership-stop-race.test.ts:68`: `leaves eligible pending starts intact and reports a skipped access stop as incomplete`.
+  - The tenth failure was `worker/chat/runner-file-parts.test.ts`: `refuses inconsistent changes metadata and empty multipart reports`. The branch changes one line of that file.
+  - One rerun of the ten failed files together, at the same path and commit, passed all 27 of their tests in 26.03 seconds. No source, assertion, or timeout changed.
+  - The suspected source is the load of the unsharded local run, which runs every test file on one machine. CI splits the files into four shards. The blocked awaits and the cause remain unknown.
 - **Task:** Find the source of these timeouts. Compare focused and full runs at the same path, then compare paths with the same test set. Make the tests deterministic with readiness signals, event order, or isolated state. Keep each assertion. Add no retry, sleep, skip, or longer timeout.
 - **Impact if no action:** A complete check can fail while a focused run passes. This can hide a real regression or delay another branch.
 - **Needs:** Node 24 and a Conductive workspace that can run the full suite.
 - **Done when:** The source is recorded, the tests have a deterministic fix, and the full suite passes without a timeout change.
+- **Related:**
+  - `plans/follow-ups/tests-time-out-under-machine-load.md`: the same class, and some of the same tests, such as those of `worker/lifecycle/disk-retention.test.ts`. That item records timeouts under the load of other work on the machine. One source can explain both items.
+  - `plans/follow-ups/disk-retention-time-limit-timeout.md`: the same test, `worker/lifecycle/disk-retention-time-limit.test.ts`, which timed out in several full runs that this item records.
+  - `plans/follow-ups/watch-resume-test-timeout.md`: a newer test whose timeout may share a cause. That link is unconfirmed.

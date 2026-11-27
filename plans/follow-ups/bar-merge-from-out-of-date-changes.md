@@ -1,0 +1,33 @@
+# An out-of-date Changes list can offer Merge
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-27, from branch `calummoore/changes-list-deltas-aedi`, review round 1, outside the scope.
+- **Location:** `src/shell/workspace/github/bar-controls.ts:96`, `src/github/barView.ts:146`, and `src/files/model/files-snapshot.ts:28`.
+- **Reason:** `origin/main` has the same behaviour, and the changes deltas change does not touch the pull request bar.
+
+- **Terms:**
+  - **Pull request bar:** The bar of a workspace that shows the state of its pull request and its next action, such as Merge or Commit and push.
+  - **Local work:** The changed files that are not committed and the commits that no remote branch holds. The bar reads them from the Changes list.
+  - **Failed repair:** The workspace refused an update of the Changes list, and then refused the fresh full list that it asked for. Changes then keeps its old rows under a notice.
+- **Background:**
+  - `useScreenControls` in `src/shell/workspace/github/bar-controls.ts:96-98` reads the local work with `localWorkOf(files.getSnapshot().changes)`.
+  - `localWorkOf` (`src/github/barView.ts:146`) gives `unknown` only for a missing list. With unknown local work, the bar offers no Merge (`src/github/barView.ts:224-229`).
+  - "Actions" in `docs/protocol/github-banner.md` states decision 228: local work comes first. While an open pull request has local work, Commit and push or Push takes the place of Merge. The reason: no merge leaves work behind in the sandbox.
+  - Under a failed repair, the Files store keeps the old list. It records the failure in `FilesSnapshot.failedRepairs` under the key `changes.updated` (`src/files/model/files-snapshot.ts:28`).
+  - The notice "The latest list of changes is unavailable" then shows under the Files lists.
+- **Problem:** The bar ignores the failed repair and takes its local work from the old list. When the old list had no local work and the lost updates added some, the bar offers Merge.
+- **Impact if no action:** A member can merge a pull request while the branch has work that is not committed or not pushed, against decision 228. That work stays behind in the sandbox.
+- **Root question:** How does the pull request bar know the local work of the branch when the Changes list is not the latest?
+- **Options:**
+  - **A.** In `useScreenControls`, take the local work as `unknown` while `failedRepairs['changes.updated']` is set. The bar then offers no Merge until a newer full list ends the failed repair. Add the case to the tests of the bar controls. Effort: Small.
+  - **B.** Do option B of `plans/follow-ups/typed-files-list-state.md`, with one more state for a list that is not the latest. Each reader of a list must then handle that state, and the bar reads it as unknown local work. Effort: Medium.
+- **Left out:**
+  - Keep the bar as it is and rely on the notice under the lists, because the bar still offers Merge against decision 228.
+  - Read the local work from GitHub, because GitHub cannot see work that is not pushed.
+  - So only two places can carry the fact that the list is old: the reader in the bar, or the state of the Files store.
+- **Wider fix:** B. A typed state makes each reader of a list handle an old list, not only the bar.
+- **Previous examples:** The review of this branch found the same defect after a failed recovery read of Changes. Since this branch, such a read drops the old list, so the bar takes the local work as unknown.
+- **Related:** `plans/follow-ups/typed-files-list-state.md`: the wider fix of this item. That item must add the state of a list that is not the latest.
+- **Recommendation:** A. It stops the wrong Merge with one condition, and it stays correct after B. B best protects the codebase, because each later reader of the list then handles an old list too.
+- **Action:** fix after merge, apply A, because `origin/main` has the same behaviour, and the bar is outside the changes deltas change.

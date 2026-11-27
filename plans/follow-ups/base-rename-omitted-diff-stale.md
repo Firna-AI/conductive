@@ -24,6 +24,6 @@
 - **Left out:** A fix only in the app, because older Mac apps bundle their own web app.
 - **Wider fix:** B. A new input to the comparison then reaches the refresh plan with no second change.
 - **Previous examples:** Commit `c41f62825` fixed diffs that used the wrong base after a default-branch rename.
-- **Related:** None.
+- **Related:** `plans/follow-ups/git-attribute-edit-stale-diff-heading.md`: the same class and the same function, `omitted_diff_paths` in `crates/cnd-runner/src/reports/refreshes.rs`. A Git attribute edit is another input of a diff that reaches no refresh. Option H of that item does option B of this item with the identities of the attribute files, and closes both items.
 - **Recommendation:** B.
 - **Action:** fix after merge, apply B, because the bug is Rare and Medium and Try again recovers it.

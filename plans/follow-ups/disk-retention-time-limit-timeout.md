@@ -17,5 +17,6 @@
 - **Left out:** A higher time limit, because the `testing` skill reserves that change for the user.
 - **Wider fix:** None.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/worker-suite-timeouts.md`: the same test timed out in several full runs that that item records, and passed in focused runs.
 - **Recommendation:** A, because it finds the cause before it changes the test.
 - **Action:** fix after merge, apply A, because the test is outside the scope of the branch.

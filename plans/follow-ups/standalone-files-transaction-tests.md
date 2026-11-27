@@ -27,6 +27,8 @@
 
 **Wider fix:** B removes the simulation for every caller.
 
+**Related:** `plans/follow-ups/hand-written-chat-store-lint.md`: the same class in the chat tests, a test store that skips native transactions. Its lint matches a `transaction` that returns a direct call, so it does not match the longer staged transaction of `createFilesStorage`.
+
 **Recommendation:** A, then B when another storage detail changes.
 
 **Action:** fix after merge.
