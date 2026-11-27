@@ -32,6 +32,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     chat_events::TurnEventContext::export_all(&cfg)?;
     commit_author::CommitAuthor::export_all(&cfg)?;
     file_changes::BranchChangedFile::export_all(&cfg)?;
+    file_changes::BrowserChangesResponse::export_all(&cfg)?;
     file_changes::ChangeKind::export_all(&cfg)?;
     file_changes::ChangedFile::export_all(&cfg)?;
     file_changes::ChangesResponse::export_all(&cfg)?;

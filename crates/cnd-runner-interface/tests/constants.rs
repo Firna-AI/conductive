@@ -86,6 +86,11 @@ fn typescript_and_rust_share_protocol_version_and_budgets() {
         ),
         (
             file,
+            "FILE_CHANGES_DELTA_MAX_CHANGES",
+            file_changes::FILE_CHANGES_DELTA_MAX_CHANGES,
+        ),
+        (
+            file,
             "FILE_CHANGES_REPORT_MAX_FILES",
             file_changes::FILE_CHANGES_REPORT_MAX_FILES,
         ),

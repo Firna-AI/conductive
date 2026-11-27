@@ -56,4 +56,8 @@ export type RunnerHello = {
    * Offer independent service traffic. Absent means no service support.
    */
   services?: boolean
+  /**
+   * Offer changes deltas. Absent means full changes lists only.
+   */
+  changesDeltas?: boolean
 }

@@ -41,7 +41,10 @@ const changed: ChangesResponse = {
 }
 
 /** Browser events contain the joined tree and changes reports. */
-const browserFileEvents: readonly FileEvent[] = [
+const browserFileEvents: readonly Exclude<
+  FileEvent,
+  { type: 'changes.changed' }
+>[] = [
   { type: 'files.snapshot', tree: data.files },
   { type: 'changes.updated', changes: data.changes },
   {
@@ -84,9 +87,14 @@ const browserFileEvents: readonly FileEvent[] = [
   { type: 'changes.updated', changes: changed },
 ]
 
+type RecordedRunnerFileEvent = Exclude<
+  RunnerFileEvent,
+  { type: 'changes.changed' }
+>
+
 /** Complete reports for readers that do not yet join runner parts. */
-export const recordedRunnerFileEvents: readonly RunnerFileEvent[] =
-  browserFileEvents.map((event): RunnerFileEvent => {
+export const recordedRunnerFileEvents: readonly RecordedRunnerFileEvent[] =
+  browserFileEvents.map((event): RecordedRunnerFileEvent => {
     if (event.type === 'files.changed' || event.type === 'files.unavailable')
       return event
     if (event.type === 'files.snapshot')

@@ -81,6 +81,14 @@ pub enum RunnerHello {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         services: Option<bool>,
+        /// Offer changes deltas. Absent means full changes lists only.
+        #[serde(
+            default,
+            skip_serializing_if = "Option::is_none",
+            with = "changes_deltas"
+        )]
+        #[ts(optional, type = "boolean")]
+        changes_deltas: Option<bool>,
     },
 }
 
@@ -149,7 +157,43 @@ pub enum RunnerWelcome {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         services: Option<bool>,
+        /// Accept changes deltas only when hello also offered them.
+        #[serde(
+            default,
+            skip_serializing_if = "Option::is_none",
+            with = "changes_deltas"
+        )]
+        #[ts(optional, type = "boolean")]
+        changes_deltas: Option<bool>,
     },
+}
+
+/// Read a non-boolean changes delta capability as absent.
+mod changes_deltas {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer, de::IgnoredAny};
+
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum Capability {
+        Boolean(bool),
+        Other(IgnoredAny),
+    }
+
+    pub(super) fn deserialize<'de, D: Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Option<bool>, D::Error> {
+        Ok(match Capability::deserialize(deserializer)? {
+            Capability::Boolean(flag) => Some(flag),
+            Capability::Other(_) => None,
+        })
+    }
+
+    pub(super) fn serialize<S: Serializer>(
+        flag: &Option<bool>,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
+        flag.serialize(serializer)
+    }
 }
 
 /// A confirm covers contiguous stored events or their stored refusal markers.

@@ -21,6 +21,11 @@ complete tool-detail source. Only the first part carries the turn and the
 tool metadata.
 The hello has an optional `fileServer` capability. A listening file server
 sets it to true. Older runners omit it. The protocol version stays 2.
+The hello and welcome have an optional `changesDeltas` field. Both values
+must be true for a connection to agree on deltas.
+The `changes.changed` event carries a `ChangesDelta` with the next changes
+revision, a complete header, paths to remove, and rows with their new positions.
+`BrowserChangesResponse` gives a complete list with an optional changes revision.
 `runner_skills` holds `skill.read` and `skill.read.result`. A runner with
 `skillReads: true` in its hello accepts reads by agent and skill name.
 The result stays outside the numbered outbox.
@@ -112,6 +117,7 @@ let hello = RunnerHello::Hello {
     skill_reads: Some(true),
     capability_notices: None,
     services: None,
+    changes_deltas: None,
 };
 ```
 
@@ -150,7 +156,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 - [Chat events](src/chat_events.rs) defines agent events and tool output.
 - [Tool details](src/runner_tool_detail.rs) defines the private parts of a complete tool-detail source.
 - [File reports](src/file_tree.rs) defines report parts, deltas, and their identities.
-- Defines changed rows and the separate totals for listed and omitted files. [file_changes.rs](src/file_changes.rs)
+- Defines changed rows, listed and omitted totals, changes deltas, and the browser revision. [file_changes.rs](src/file_changes.rs)
 - [File results](src/runner_files.rs) defines read commands and their results.
 - [Skill reports](src/skills.rs) defines public metadata and private discovery/input records.
 - [Helper messages](src/sdk_helper.rs) defines JSON line requests and outputs.
@@ -176,6 +182,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
 - [File server protocol](../../docs/protocol/file-server.md)
 - [File report protocol](../../docs/protocol/file-reports.md)
+- [Changes delta protocol](../../docs/protocol/changes-deltas.md)
 - [Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Agent tools](../../docs/protocol/agent-tools.md)
 - [Services](../../docs/protocol/services.md) and

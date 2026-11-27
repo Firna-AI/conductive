@@ -104,7 +104,8 @@ async fn keeps_refresh_groups_whole_at_both_delta_budgets() {
                         parts: tree.part.part_count,
                     });
                 }
-                RunnerFileEvent::ChangesUpdated { .. } => {}
+                RunnerFileEvent::ChangesUpdated { .. } | RunnerFileEvent::ChangesChanged { .. } => {
+                }
                 RunnerFileEvent::FilesUnavailable {} => {
                     panic!("{}: file reports unavailable", case.name)
                 }

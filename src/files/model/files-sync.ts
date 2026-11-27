@@ -213,6 +213,8 @@ export function syncEvent(
         touched: listedPaths(sync.changes.value, event.changes),
         allTouched: sync.changes.value === null,
       }
+    case 'changes.changed':
+      return unchanged(sync)
   }
 }
 

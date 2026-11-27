@@ -2,8 +2,10 @@ import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
 import type { TurnEventContext } from '../../src/shared/generated/TurnEventContext'
 import { isRecord } from '../http'
 
+type KnownRunnerEventType = Exclude<RunnerEvent['type'], 'changes.changed'>
+
 type RunnerEventContextSources = {
-  [Type in RunnerEvent['type']]: Extract<
+  [Type in KnownRunnerEventType]: Extract<
     RunnerEvent,
     { type: Type }
   > extends TurnEventContext
@@ -14,7 +16,7 @@ type RunnerEventContextSources = {
 }
 
 type RunnerEventScopes = {
-  [Type in RunnerEvent['type']]: RunnerEventContextSources[Type] extends 'none'
+  [Type in KnownRunnerEventType]: RunnerEventContextSources[Type] extends 'none'
     ? 'workspace'
     : 'turn'
 }
@@ -60,8 +62,8 @@ const eventContextSources = {
 } satisfies RunnerEventContextSources
 
 export interface RunnerEventIdentity {
-  type: Exclude<RunnerEvent['type'], 'tool.detail.part'> | null
-  scope: RunnerEventScopes[RunnerEvent['type']] | 'unknown'
+  type: Exclude<KnownRunnerEventType, 'tool.detail.part'> | null
+  scope: RunnerEventScopes[KnownRunnerEventType] | 'unknown'
   sessionId: string | null
   turnId: string | null
   revision: number | null
@@ -124,6 +126,6 @@ export function readRunnerEventIdentity(value: unknown): RunnerEventIdentity {
   }
 }
 
-function isRunnerEventType(type: unknown): type is RunnerEvent['type'] {
+function isRunnerEventType(type: unknown): type is KnownRunnerEventType {
   return typeof type === 'string' && Object.hasOwn(eventScopes, type)
 }

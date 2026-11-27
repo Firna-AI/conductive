@@ -54,7 +54,9 @@ export interface RunnerEventRefused {
   type: 'runner.event-refused'
   streamId: string
   runnerEventNumber: number
-  runnerEventType: Exclude<RunnerEvent['type'], 'tool.detail.part'> | 'unknown'
+  runnerEventType:
+    | Exclude<RunnerEvent['type'], 'tool.detail.part' | 'changes.changed'>
+    | 'unknown'
   reason: RunnerEventRefusalReason
   sessionId: string | null
   turnId: string | null

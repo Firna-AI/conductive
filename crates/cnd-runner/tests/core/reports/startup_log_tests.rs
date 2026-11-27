@@ -103,6 +103,7 @@ async fn logs_startup_milliseconds_and_file_count_once_across_reconnects() {
             confirmed_through: 0,
             complete_tool_details: None,
             services: None,
+            changes_deltas: None,
         }))
         .await;
     scan.arrived.notified().await;

@@ -152,5 +152,6 @@ pub(super) fn split(event: RunnerFileEvent) -> Result<Option<Vec<RunnerFileEvent
             ))
         }
         RunnerFileEvent::FilesChanged { delta } => Ok(split_delta(delta, 0..0)?.ok()),
+        RunnerFileEvent::ChangesChanged { .. } => Ok(None),
     }
 }

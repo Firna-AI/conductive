@@ -155,7 +155,9 @@ export function parseChanges(value: unknown): ChangesResponse {
   }
 }
 
-export function parseFileEvent(value: unknown): FileEvent {
+export function parseFileEvent(
+  value: unknown,
+): Exclude<FileEvent, { type: 'changes.changed' }> {
   if (!isRecord(value)) throw invalidFileResponse()
   if (value.type === 'files.unavailable') return { type: value.type }
   if (value.type === 'files.snapshot')

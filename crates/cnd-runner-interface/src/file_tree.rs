@@ -3,18 +3,18 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-use crate::file_changes::{ChangeKind, RunnerChangesPart};
+use crate::file_changes::{ChangeKind, ChangesDelta, RunnerChangesPart};
 use crate::wire::{ReadonlyVec, WireTrue};
 
 /// Each payload obeys FILE_EVENT_MAX_BYTES. Its complete runner envelope also
 /// obeys RUNNER_EVENT_MAX_BYTES.
 /// Tree deltas follow the last applied tree revision, increasing by exactly 1.
 /// A split update uses several bounded deltas with consecutive revisions.
-/// Changes report revisions increase by 1 for each new full changes report.
+/// Changes revisions increase by 1 for each new full changes report or delta.
 /// A full report has a newer revision than the last applied report of its kind.
 /// A full report can skip unapplied revisions to recover missing or refused data.
 /// Missing parts and revision gaps must never produce a partial full report.
-/// Browser file responses and FileEvent retain their complete-report meaning.
+/// Browser file responses and full report events carry complete reports.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(tag = "type", rename_all_fields = "camelCase")]
 pub enum RunnerFileEvent {
@@ -38,6 +38,12 @@ pub enum RunnerFileEvent {
     ChangesUpdated {
         /// changes.
         changes: RunnerChangesPart,
+    },
+    /// changes.changed.
+    #[serde(rename = "changes.changed")]
+    ChangesChanged {
+        /// The next changes revision with the new header and row changes.
+        delta: ChangesDelta,
     },
 }
 

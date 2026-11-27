@@ -1,5 +1,6 @@
 import type { FileTreeResponse } from './generated/FileTreeResponse'
 import type { FileTreeDelta } from './generated/FileTreeDelta'
+import type { ChangesDelta } from './generated/ChangesDelta'
 import type { ChangesResponse } from './generated/ChangesResponse'
 import { workspacePath } from './workspaces'
 
@@ -20,12 +21,13 @@ export const filePaths = {
     `${workspacePath(orgId, id)}/attachments`,
 } as const
 
-/** Browser events carry complete reports or unavailable marks. Runner parts use RunnerFileEvent. */
+/** Browser file events carry complete reports, deltas, or unavailable marks. Runner parts use RunnerFileEvent. */
 export type FileEvent =
   | { type: 'files.snapshot'; tree: FileTreeResponse }
   | { type: 'files.unavailable' }
   | { type: 'files.changed'; delta: FileTreeDelta }
   | { type: 'changes.updated'; changes: ChangesResponse }
+  | { type: 'changes.changed'; delta: ChangesDelta }
 
 /**
  * Maximum UTF-8 bytes of JSON.stringify(one complete RunnerFileEvent).
@@ -40,6 +42,9 @@ export const FILE_TREE_DELTA_MAX_CHANGES = 512
 
 /** Maximum entries in a complete file tree report from a new runner. */
 export const FILE_TREE_REPORT_MAX_ENTRIES = 50_000
+
+/** Maximum removes and upserts together in one changes delta. */
+export const FILE_CHANGES_DELTA_MAX_CHANGES = 512
 
 /** Maximum changed files in a complete changes report from a new runner. */
 export const FILE_CHANGES_REPORT_MAX_FILES = 1_000

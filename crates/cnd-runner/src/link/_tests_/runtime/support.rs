@@ -183,6 +183,7 @@ pub(super) fn welcome() -> WorkspaceToRunner {
         confirmed_through: 0,
         complete_tool_details: None,
         services: None,
+        changes_deltas: None,
     })
 }
 

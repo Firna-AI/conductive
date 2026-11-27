@@ -169,11 +169,11 @@ Depends on: 1
 
 Add the shared types in Rust and generate their TypeScript. Nothing sends or reads them yet.
 
-- [ ] Add `changes.changed` with its delta types to the runner events and to the browser file events in `crates/cnd-runner-interface/`, with `FILE_CHANGES_DELTA_MAX_CHANGES`.
-- [ ] Add the optional `changesDeltas` to the hello and the welcome, and the optional `revision` to `ChangesResponse`.
-- [ ] Add wire cases for absent fields, a delta with no rows, and a full delta.
-- [ ] Run `cargo run -p cnd-runner-interface --example export_bindings`. Commit the generated files without hand edits. Mirror the constant in `src/shared/files.ts`.
-- [ ] Run `cargo test -p cnd-runner-interface` and `npm run typecheck`.
+- [x] Add `changes.changed` with its delta types to the runner events and to the browser file events in `crates/cnd-runner-interface/`, with `FILE_CHANGES_DELTA_MAX_CHANGES`.
+- [x] Add the optional `changesDeltas` to the hello and the welcome, and the optional `revision` to `ChangesResponse`.
+- [x] Add wire cases for absent fields, a delta with no rows, and a full delta.
+- [x] Run `cargo run -p cnd-runner-interface --example export_bindings`. Commit the generated files without hand edits. Mirror the constant in `src/shared/files.ts`.
+- [x] Run `cargo test -p cnd-runner-interface` and `npm run typecheck`.
 
 ## Milestone 3: Worker applies and stores deltas
 

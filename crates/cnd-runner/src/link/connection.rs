@@ -179,6 +179,7 @@ impl RunnerLink for SavedRunnerLink {
             complete_tool_details: Some(true),
             capability_notices: Some(true),
             services: self.services_offered.then_some(true),
+            changes_deltas: None,
         };
         if let Err(error) = socket.send(&RunnerToWorkspace::RunnerHello(hello)).await {
             self.disconnect(generation).await;

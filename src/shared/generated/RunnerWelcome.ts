@@ -34,4 +34,8 @@ export type RunnerWelcome = {
    * Accept independent services only when hello also offered them.
    */
   services?: boolean
+  /**
+   * Accept changes deltas only when hello also offered them.
+   */
+  changesDeltas?: boolean
 }

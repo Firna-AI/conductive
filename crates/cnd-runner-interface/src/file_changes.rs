@@ -115,6 +115,20 @@ pub struct ChangesResponse {
     pub omitted: Option<ChangesResponseSummary>,
 }
 
+/// A complete changes list for a browser read or a `changes.updated` event.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct BrowserChangesResponse {
+    /// Shared fields of the complete list.
+    #[serde(flatten)]
+    pub changes: ChangesResponse,
+    /// The changes revision of the runner stream.
+    /// Absent when unknown, as from an older Worker or runner.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional, type = "number")]
+    pub revision: Option<u64>,
+}
+
 /// Includes changes in the index and working tree, also untracked files.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -125,6 +139,57 @@ pub struct BranchChangedFile {
     /// Includes changes in the index and working tree, also untracked files.
     pub uncommitted: bool,
 }
+
+/// The complete header and row changes for the next changes revision.
+/// The total number of removes and upserts is at most `FILE_CHANGES_DELTA_MAX_CHANGES`.
+/// The event must also fit within `FILE_EVENT_MAX_BYTES`.
+/// Remove each removed path and each upserted path from the previous list.
+/// Then insert the upserts in ascending `index` order.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct ChangesDelta {
+    /// The next changes revision of the runner stream.
+    #[ts(type = "number")]
+    pub revision: u64,
+    /// The base branch of the new list.
+    pub base_branch: String,
+    /// The filtered display label of the base branch.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub display_base_branch: Option<String>,
+    /// Current-branch commits held by no remote branch.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional, type = "number")]
+    pub unpushed_commits: Option<u64>,
+    /// Raw status entries, including untracked files.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional, type = "number")]
+    pub uncommitted_file_count: Option<u64>,
+    /// File and line totals for the listed changes after the delta.
+    pub summary: ChangesResponseSummary,
+    /// File and line totals for the omitted changes after the delta.
+    pub omitted: ChangesResponseSummary,
+    /// Paths to remove from the previous list.
+    #[ts(as = "ReadonlyVec<String>")]
+    pub removes: Vec<String>,
+    /// New or changed rows in ascending index order.
+    #[ts(as = "ReadonlyVec<ChangesDeltaUpsert>")]
+    pub upserts: Vec<ChangesDeltaUpsert>,
+}
+
+/// A changed-file row and its position in the new list.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct ChangesDeltaUpsert {
+    /// Zero-based index of the row in the new list.
+    #[ts(type = "number")]
+    pub index: u64,
+    /// The row to insert at this index.
+    pub file: BranchChangedFile,
+}
+
+/// Maximum removes and upserts together in one changes delta.
+pub const FILE_CHANGES_DELTA_MAX_CHANGES: u64 = 512;
 
 /// Maximum changed files in a complete changes report from a new runner.
 pub const FILE_CHANGES_REPORT_MAX_FILES: u64 = 1_000;
