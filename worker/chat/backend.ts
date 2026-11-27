@@ -23,7 +23,6 @@ import { authorizeChatRunner } from './runner-authorization'
 import { WorkspaceTitles } from './workspace-titles'
 import { WorkspaceOperations } from './workspace-operations'
 import { ChatWorkspaceBinding } from './workspace-binding'
-import type { ChatWorkspaceSummary } from './workspace-summary'
 import { ChatOperation } from './operation'
 import { RunnerChannel } from './runner-channel'
 import type { ChatStore, ChatTransaction, QueuedWorkspaceRead } from './store'
@@ -56,8 +55,8 @@ export class WorkspaceChat {
   private readonly titles: WorkspaceTitles
   private readonly binding: ChatWorkspaceBinding
 
-  async workspaceSummary(workspaceId?: string): Promise<ChatWorkspaceSummary> {
-    return this.operations.summary(workspaceId)
+  workspaceSummary(...input: Parameters<WorkspaceOperations['summary']>) {
+    return this.operations.summary(...input)
   }
 
   runLifecycle<T>(operation: (turn: QueueTurn) => Promise<T>): Promise<T> {

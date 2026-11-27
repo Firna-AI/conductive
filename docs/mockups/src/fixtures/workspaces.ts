@@ -80,6 +80,7 @@ export const savedCarts: Workspace = {
   section: 'general',
   choice: defaultChoice,
   status: 'starting',
+  messageWaiting: true,
   github: null,
   updated: 'now',
   owner: 'cal',
@@ -94,7 +95,13 @@ export const codex: AgentChoice = {
 
 type Details = Pick<
   Workspace,
-  'number' | 'repository' | 'section' | 'status' | 'github' | 'updated'
+  | 'number'
+  | 'repository'
+  | 'section'
+  | 'status'
+  | 'messageWaiting'
+  | 'github'
+  | 'updated'
 > & {
   /** The ID of the workspace in its link. */
   id: string
@@ -140,6 +147,7 @@ export const workspaceList: readonly Workspace[] = [
     repository: 'marketing-site',
     section: 'general',
     status: 'starting',
+    messageWaiting: true,
     github: null,
     updated: 'now',
   }),

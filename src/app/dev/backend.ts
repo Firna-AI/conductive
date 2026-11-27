@@ -126,10 +126,10 @@ export function changeWorkspace(
   org: OrgState,
   workspace: Workspace,
 ): void {
-  org.workspaces = replaceWorkspace(
-    org.workspaces,
-    workspace.id,
-    () => workspace,
-  )
-  backend.emit(workspace.id, { type: 'workspace.updated', workspace })
+  // Only a starting workspace keeps its waiting answer, so a later start
+  // never shows the answer of an earlier one.
+  const stored = { ...workspace }
+  if (stored.state !== 'starting') delete stored.messageWaiting
+  org.workspaces = replaceWorkspace(org.workspaces, workspace.id, () => stored)
+  backend.emit(workspace.id, { type: 'workspace.updated', workspace: stored })
 }

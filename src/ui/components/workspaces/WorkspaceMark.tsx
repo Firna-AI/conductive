@@ -1,4 +1,5 @@
 import type { GitHubSummary } from '../../../shared/generated/GitHubSummary'
+import type { Workspace } from '../../../shared/generated/Workspace'
 import type { ActivityStatus } from './activityStatus'
 import { classes } from '../common/classes'
 import { MarkGrid, ring, ringDelay, type MarkCell } from './MarkGrid'
@@ -35,32 +36,74 @@ function toneOf(github: GitHubSummary | null, status: ActivityStatus) {
   return github === null ? styles.none : colours[github]
 }
 
+/** Every input of the mark of a workspace. */
+export type MarkState = {
+  /** The GitHub state of its pull request, or `null` without one. */
+  github: GitHubSummary | null
+  /** The state of its agent and its cloud computer. */
+  status: ActivityStatus
+  /**
+   * Whether a message waits for its cloud computer to start. Without it,
+   * the mark of a start stays still.
+   */
+  messageWaiting?: boolean
+}
+
 /**
- * Whether a light runs around the ring: while the agent works, while the
- * cloud computer starts, and while the checks run, so that the mark waits
- * on something and the user does not need to act. Needs input keeps its
- * pulse, because the user must act. An archived mark stays still.
+ * The inputs of the mark of a workspace record. Each place that draws the
+ * mark of a record takes them from here, so that it gets every input. A
+ * record without a waiting answer gives no `messageWaiting`.
  */
-function chases(github: GitHubSummary | null, status: ActivityStatus) {
-  if (status === 'working' || status === 'starting') return true
+export function markOf(
+  workspace: Pick<Workspace, 'github' | 'state' | 'messageWaiting'>,
+): MarkState {
+  const { github, state, messageWaiting } = workspace
+  return {
+    github,
+    status: state,
+    ...(messageWaiting !== undefined && { messageWaiting }),
+  }
+}
+
+/**
+ * Whether the agent is busy for the mark: it works, or a message waits for
+ * the cloud computer to start. A start that no message waits on is not.
+ */
+function busy(status: ActivityStatus, messageWaiting: boolean) {
+  return status === 'working' || (status === 'starting' && messageWaiting)
+}
+
+/**
+ * Whether a light runs around the ring: while the agent is busy, and while
+ * the checks run, so that the mark waits on something and the user does
+ * not need to act. Needs input keeps its pulse, because the user must act.
+ * An archived mark stays still.
+ */
+function chases(
+  github: GitHubSummary | null,
+  status: ActivityStatus,
+  messageWaiting: boolean,
+) {
+  if (busy(status, messageWaiting)) return true
   if (status === 'input' || status === 'archived') return false
   return github === 'checks-running'
 }
 
 /**
- * How one cell looks. While the agent works, the cloud computer starts, or
- * the checks run, a light runs around the ring and the centre stays dim.
- * While the agent needs input, the whole grid pulses in blue. Without
- * motion, the ring of a working agent or a start, or the middle column,
- * stays lit, and running checks light the whole grid. Every other state is
- * still: lit in the colour of the GitHub state, or dim.
+ * How one cell looks. While the agent is busy or the checks run, a light
+ * runs around the ring and the centre stays dim. While the agent needs
+ * input, the whole grid pulses in blue. Without motion, the ring of a busy
+ * agent, or the middle column, stays lit, and running checks light the
+ * whole grid. Every other state is still: lit in the colour of the GitHub
+ * state, or dim. A start that no message waits on is still too.
  */
 function cellOf(
   github: GitHubSummary | null,
   status: ActivityStatus,
+  messageWaiting: boolean,
   cell: number,
 ): MarkCell {
-  if (chases(github, status)) {
+  if (chases(github, status, messageWaiting)) {
     return ring.includes(cell)
       ? {
           className: classes(styles.cell, styles.lit, styles.chase),
@@ -69,9 +112,7 @@ function cellOf(
       : {
           className: classes(
             styles.cell,
-            status !== 'working' &&
-              status !== 'starting' &&
-              styles.litWhenStill,
+            !busy(status, messageWaiting) && styles.litWhenStill,
           ),
         }
   }
@@ -86,12 +127,12 @@ function cellOf(
       }
     case 'unread':
     case 'ready':
+    case 'starting':
     case 'stopped':
     case 'error':
       return { className: classes(styles.cell, github !== null && styles.lit) }
-    // `chases` already took the working agent and the start.
+    // `chases` already took the working agent.
     case 'working':
-    case 'starting':
     case 'archived':
       return { className: styles.cell }
   }
@@ -104,20 +145,20 @@ function cellOf(
  * purple a merge, and amber a merge conflict, requested changes, or a
  * block. Running checks and a draft are grey. A mark without a GitHub state
  * is dim grey.
- * A light runs around the ring while the agent works, the cloud computer
- * starts, or the checks run.
+ * A light runs around the ring while the agent works, a message waits for
+ * the cloud computer to start, or the checks run. `messageWaiting` comes
+ * from the Worker, and a mark without it stays still while the cloud
+ * computer starts.
  * While the agent needs input, the mark turns blue and pulses, whatever the
  * GitHub state. Every other mark is still. It imports no fixture value, so
  * the app uses it too.
  */
-export function WorkspaceMark(props: {
-  github: GitHubSummary | null
-  status: ActivityStatus
-}) {
+export function WorkspaceMark(props: MarkState) {
   const { github, status } = props
+  const messageWaiting = props.messageWaiting === true
   return (
     <MarkGrid
-      cell={(cell) => cellOf(github, status, cell)}
+      cell={(cell) => cellOf(github, status, messageWaiting, cell)}
       className={classes(styles.mark, toneOf(github, status))}
     />
   )

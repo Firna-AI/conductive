@@ -10,6 +10,7 @@ import { guideClasses } from '../../../../../src/ui/components/workspaces/guideL
 import { rowPointMenu } from '../../entries/components/workspaces/RowMenu.mockup'
 import type { RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
+import { rowMarkOf } from './rowMark'
 import { listMarkLabel } from '../../../../../src/ui/components/workspaces/status'
 import type { RowIndent } from './trees'
 import {
@@ -73,7 +74,7 @@ function RenameRow(props: {
         nestedClasses(row.indent, row.lines),
       )}
     >
-      <workspaceMark.Component github={row.github} status={row.status} />
+      <workspaceMark.Component {...rowMarkOf(row)} />
       <span
         aria-label="Workspace name"
         className={classes(rowMenu.field, page && rowMenu.fieldPage)}
@@ -169,7 +170,7 @@ export function WorkspaceRowView(props: {
   )
   const content = (
     <>
-      <workspaceMark.Component github={row.github} status={row.status} />
+      <workspaceMark.Component {...rowMarkOf(row)} />
       <WorkspaceName
         className={styles.name}
         emphasis={nameEmphasis}

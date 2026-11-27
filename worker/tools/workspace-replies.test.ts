@@ -11,6 +11,9 @@ it('keeps optional archived computer evidence in tool create replies without rej
   const fields = {
     workspace: {
       ...created.workspace,
+      // An archived record has no waiting answer, and the tool reply
+      // leaves the answer out.
+      messageWaiting: undefined,
       owner: senderSnapshot(created.workspace.owner),
       state: 'archived',
       archivedAt: 1_800_000_000_000,

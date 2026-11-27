@@ -101,6 +101,8 @@ export const workspaceSchema = {
     section: { enum: sectionKeys },
     choice: agentChoiceSchema,
     status: { enum: activityStatuses },
+    /** Whether a message waits for the cloud computer to start. */
+    messageWaiting: { type: 'boolean' },
     github: githubSchema,
     /** The time since the last activity, such as `2h`. */
     updated: { type: 'string' },

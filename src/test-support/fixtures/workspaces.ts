@@ -61,6 +61,9 @@ export function workspaceRecord(
     choice: { ...workspace.choice, fast: workspace.choice.fast ?? false },
     state: workspace.status,
     github: workspace.github,
+    ...(workspace.messageWaiting !== undefined && {
+      messageWaiting: workspace.messageWaiting,
+    }),
     ...times,
     restoreUntil: null,
     archivedAt: null,
@@ -214,6 +217,8 @@ export function workspaceFixtures(
     branch: 'calummoore/lisbon-7k2q',
     sectionId: 'general',
     state: 'starting',
+    // The first message waits for the start, as the Worker reads it.
+    messageWaiting: true,
     github: null,
     createdAt: FAKE_TIME,
     updatedAt: FAKE_TIME,

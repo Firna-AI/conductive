@@ -26,8 +26,8 @@ This page belongs to [Workspace life](workspace-life.md).
 - The motion of the mark shows whether the agent works (list mark
   decision 1). A light runs around the outer ring of cells while the agent
   works. The whole mark pulses slowly while the agent needs input. In each
-  other state, the mark is still, unless the workspace starts or the
-  checks run.
+  other state, the mark is still, unless a message waits for the start or
+  the checks run.
 - Reason: the pulse keeps needs input in the list, as decision 68 requires.
   A still middle column for needs input was rejected, because the user
   asked for a mark of one full colour.
@@ -44,18 +44,25 @@ This page belongs to [Workspace life](workspace-life.md).
   the light means that the workspace waits on something and the user does
   not need to act. While the agent needs input, the mark pulses, whatever
   the checks. An archived mark stays still.
-- The light also runs around the ring while the workspace is starting,
-  also while a message waits for the start (the user's decision of 23
-  November 2026). Reason: the start is activity, and a still mark made a
-  workspace with a queued message look idle. A still mark while the
-  workspace starts was rejected for the same reason.
-- With reduced motion, the ring stays lit while the agent works or the
-  workspace starts. The middle column stays lit in blue while the agent
-  needs input. The other cells stay dim, so the state of the agent stays
+- The light also runs around the ring while the workspace is starting
+  and a message waits in its queue (the user's decision of 26 November
+  2026). A start that no message waits on shows the still mark of the
+  other states. Reason: a message that waits for the start is work in
+  progress, but a start because a member opened the workspace is not, and
+  a moving light then looked busy. A light for every start was rejected
+  for that reason. A still mark for every start was rejected, because a
+  workspace with a queued message then looked idle.
+- A waiting message is a message that the agent has not received yet,
+  also the first message of a new workspace. Every member sees the same
+  mark in the list, the command palette, and the chips. The mark can show
+  a new waiting message one list read late.
+- With reduced motion, the ring stays lit while the agent works or a
+  message waits for the start. The middle column stays lit in blue while
+  the agent needs input. The other cells stay dim, so the state of the agent stays
   visible without motion. While only the checks run, every cell stays lit,
   so the mark does not read as an agent that works.
-- With reduced motion, a starting workspace shows the ring of a working
-  agent (the user's decision of 24 November 2026). Reason: a full grid
+- With reduced motion, a starting workspace with a waiting message shows
+  the ring of a working agent (the user's decision of 24 November 2026). Reason: a full grid
   matched a ready workspace with a pull request, so the start looked
   idle, and it matched a draft when the workspace had no pull request.
   A full grid and a new still shape for the start were rejected.

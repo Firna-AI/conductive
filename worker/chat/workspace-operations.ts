@@ -8,6 +8,10 @@ import {
 } from './first-message'
 import type { ChatStore } from './store'
 import type { ChatDependencies } from './types'
+import type {
+  ChatWorkspaceSummary,
+  ChatWorkspaceSummaryOptions,
+} from './workspace-summary'
 import { stopDispatchedTurns } from './workspace-stop'
 import { manageToolSession } from './tool-session-management'
 import type { ToolSessionManagement } from '../tools/services'
@@ -74,7 +78,7 @@ export class WorkspaceOperations {
     })
   }
 
-  summary(workspaceId?: string) {
+  summary(workspaceId?: string, options?: ChatWorkspaceSummaryOptions) {
     const { store, bind, publish } = this.options
     return store.run(async () => {
       const id =
@@ -86,7 +90,16 @@ export class WorkspaceOperations {
           working: false,
         }
       bind(id)
-      return store.change(id, (view) => view.workspaceSummary(), publish)
+      return store.change(
+        id,
+        async (view): Promise<ChatWorkspaceSummary> => {
+          const summary = await view.workspaceSummary()
+          if (!options?.messageWaiting) return summary
+          const waitingAt = await view.oldestWaitingMessageAt()
+          return { ...summary, messageWaiting: waitingAt !== undefined }
+        },
+        publish,
+      )
     })
   }
 

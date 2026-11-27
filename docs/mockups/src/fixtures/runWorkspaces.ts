@@ -75,6 +75,9 @@ const reviewRun: Workspace = {
   section: review.section,
   choice: review.choice,
   status: 'working',
+  // The first message of the run waits while its cloud computer starts.
+  // The mark reads this only during a start.
+  messageWaiting: true,
   github: null,
   updated: 'now',
   owner: 'cal',
