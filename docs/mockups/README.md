@@ -44,7 +44,9 @@ gives, 1280 × 800 px, and it shows the full desktop layout. The desktop
 layout narrows with its app frame, which fills the window: below 1280 px
 the sidebar and the right column get narrower, and below 900 px the
 sidebar hides. To see a narrower layout, open a built desktop view from
-`mokly-static/` in a browser, and make the window narrower. The org rail stays. The tile
+`mokly-static/` in a browser, and make the window narrower. The tab row of
+a mockup cannot scroll, so a narrower view can cut off the shown tab or
+its menu. The desktop frame shows them. The org rail stays. The tile
 of the current org opens the workspace list as a popover on each page that
 has a sidebar and shows no list, as `app/panels/list-popover` shows. The
 list page of an org shows the list in its main area. The number of a pull request in the bar opens it on GitHub, with
