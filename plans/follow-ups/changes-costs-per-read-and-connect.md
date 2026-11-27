@@ -19,6 +19,8 @@
 - **Left out:** A lower limit. It undoes the goal of the changes deltas change, which is to let a later change raise the limit.
 - **Wider fix:** C, because it bounds each of the three costs.
 - **Previous examples:** `plans/follow-ups/large-changed-folder-first-draw.md`, the same drawing cost in All files.
-- **Related:** `plans/follow-ups/large-changed-folder-first-draw.md`, the same cause in the tree. One virtual list component can serve both panels.
+- **Related:**
+  - `plans/follow-ups/large-changed-folder-first-draw.md`, the same cause in the tree. One virtual list component can serve both panels.
+  - `plans/follow-ups/diff-read-loads-whole-changes-list.md`, the same cause in the diff read. Each diff read loads the whole saved list only to take its base branch. That item removes this read cost.
 - **Recommendation:** A. It removes the cost that a member feels most, and B and C wait for a higher limit.
 - **Action:** fix after merge, apply A, because the current limit keeps these costs bounded until a later change raises it.

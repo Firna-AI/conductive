@@ -29,5 +29,6 @@
 - **Related:**
   - `plans/follow-ups/new-workspace-branch-names-unmasked.md`: New workspace names the same branch before the create, also without a label.
   - `plans/follow-ups/fetch-step-names-its-branch.md`: its option B names a branch in each fetch step, so this fix should come first.
+  - `plans/follow-ups/diff-and-file-labels-miss-used-secrets.md`: a shared fix. Its option B gives each screen label of a workspace one filter reader with the running secrets and each value that a run with secrets used. Label the start steps with that reader too.
 - **Recommendation:** B. It covers every step text in one place.
 - **Action:** fix after merge, apply B, because the same gap is on `main` for the runs of automations, and one change to the shared publication covers both.

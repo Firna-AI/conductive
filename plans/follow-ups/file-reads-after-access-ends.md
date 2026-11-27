@@ -3,7 +3,7 @@
 - **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 1, a problem outside the scope from the check of finding 21.
-- **Location:** `worker/files/handlers.ts:39`, `:62`, `:80-105`, `:118-147`, `worker/files/access.ts:8-24`, `worker/files/runner.ts:73-94`, `worker/files/boat.ts:18` (`readBoatFile`).
+- **Location:** `worker/files/handlers.ts:39`, `:62`, `:77-102`, `:115-144`, `worker/files/access.ts:8-24`, `worker/files/runner.ts:73-94`, `worker/files/boat.ts:18` (`readBoatFile`).
 - **Reason:** The file routes on `origin/main` have this start check, and each option that closes the window adds a new refusal.
 
 - **Source:** Review. **Category:** Security.
@@ -49,5 +49,6 @@
   - `plans/follow-ups/file-reads-have-no-time-limit.md`: option A here needs that time limit.
   - `plans/follow-ups/ended-reads-reach-the-runner.md` changes the same send of the runner reads. No options conflict.
   - `plans/follow-ups/skill-read-recheck-refusals.md`: after a failed recheck, its option A runs the admission checks of the skill route again, so the refusal equals the reply to a new request. With B here, give the recheck of the file and diff reads the same rerun. No options conflict.
+  - `plans/follow-ups/diff-read-loads-whole-changes-list.md` and `plans/follow-ups/diff-and-file-labels-miss-used-secrets.md`: the same code in the diff and file branches of `createFilesHandler` in `worker/files/handlers.ts`. No options conflict. Make the second change on top of the first.
 - **Recommendation:** B. It puts both checks where the Worker acts for the caller, for every read through the runner, as for the skill reads. Choose A if the user accepts a documented window for the file and diff reads.
 - **Action:** ask the user, because B, C, and D add a new refusal, and A adds a new requirement to a protocol doc.

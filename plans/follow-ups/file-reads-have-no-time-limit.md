@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-25, from branch `calummoore/skill-widget-tab-page-dtzl` (skill tabs), review round 1, a problem outside the scope from the check of finding 23.
-- **Location:** `worker/files/runner.ts:73-94`, `worker/chat/runner-read-requests.ts:27-34`, `worker/files/handlers.ts:86-91` and `:118-122`, `src/files/api/files-client.ts:52-90`.
+- **Location:** `worker/files/runner.ts:73-94`, `worker/chat/runner-read-requests.ts:27-34`, `worker/files/handlers.ts:83-88` and `:118-122`, `src/files/api/files-client.ts:52-90`.
 - **Reason:** The file and diff reads on `origin/main` had no time limit before the skill tabs change, which bounded only its own skill reads.
 
 - **Source:** Review. **Category:** Product bug.
@@ -34,5 +34,6 @@
 - **Related:**
   - `plans/follow-ups/file-reads-after-access-ends.md`: its option A needs this limit. A limit of 30 seconds or less keeps the window of decision 70 for an open tab.
   - `plans/follow-ups/ended-reads-reach-the-runner.md`: its option B checks the time limit and the cancel of each read right before the write to the socket. With both, a file or diff read past its limit never reaches the runner. No options conflict.
+  - `plans/follow-ups/diff-read-loads-whole-changes-list.md` and `plans/follow-ups/diff-and-file-labels-miss-used-secrets.md`: the same code in the diff and file branches of `createFilesHandler` in `worker/files/handlers.ts`. No options conflict. Make the second change on top of the first.
 - **Recommendation:** A. It ends each pending read at its owner, with the failure notice that the tabs already have.
 - **Action:** fix after merge, apply A, because the problem is on `origin/main`, a stalled read is rare, and the fix costs the same later.

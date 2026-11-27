@@ -1,0 +1,45 @@
+# Tree deltas leave a damaged order unread
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-27, from branch `calummoore/changes-list-deltas-aedi`, review round 2, outside the scope.
+- **Location:** `writeTreeDelta` at `worker/files/bucket-delta.ts:144`, its order guard at `worker/files/bucket-delta.ts:170`, `readOrderText` at `worker/files/bucket-write.ts:122`, and the tree read of `workspaceFileLists` in `worker/files/list-reads.ts`.
+- **Reason:** `origin/main` has the same code, and the fix waits for the open decision of `plans/follow-ups/failing-file-event-blocks-runner-events.md`.
+
+- **Terms:**
+  - **Tree delta:** The runner event `files.changed`. It carries only the entries of the file tree that change. An upsert of an unchanged entry reports a content edit of that path.
+  - **Saved tree:** The copy of the file tree that the workspace Durable Object stores and serves. A manifest, an order text, and 64 buckets of entries hold it (`worker/files/bucket-layout.ts`).
+  - **Order text:** One symbol for each saved entry, in list order. Each symbol names the bucket that holds the next entry. With at most 50,000 entries, it fits one stored chunk.
+  - **All files:** The tab of the Files panel that shows the file tree of the branch.
+- **Background:**
+  - `writeTreeDelta` reads the buckets that the delta edits, or each bucket when the delta removes a path (`worker/files/bucket-delta.ts:153-168`).
+  - It reads the order text only when the delta adds or removes an entry (`worker/files/bucket-delta.ts:170`). A delta that only edits the content of existing files adds and removes none.
+  - The tree read reads the whole order text and checks its length against the entry count (`readOrderText`, `worker/files/bucket-write.ts:122-133`). A missing order chunk makes it throw HTTP 502 `file_unavailable`.
+  - All files then shows "The files didn't load" with Try again.
+  - A full tree rebuilds an unreadable order text (`writeBucketList`, `worker/files/bucket-write.ts:184-195`). The runner sends a full tree after each connect.
+  - The receipt refuses a file event only for `InvalidRunnerReport`. It rethrows each other error, so the runner connection closes, and each resend fails again. `plans/follow-ups/failing-file-event-blocks-runner-events.md` records that block.
+  - Since this branch, each changes delta reads the order text of the Changes list, also a delta with no rows. On damage, it drops the list and gets a refusal with its repair. The tree has no such drop.
+- **Problem:** While edits only change the content of existing files, the Worker takes each tree delta over a damaged order text. Each All files read fails with HTTP 502 meanwhile. The first delta that adds or removes an entry then throws, and every later runner event of the workspace waits behind it. If no such delta comes first, the full tree after the next connect rebuilds the order text.
+- **Screenshot:** None, because the problem needs damaged stored data in a live workspace. A picture would box "The files didn't load" in All files after an edit that the workspace took.
+- **Impact if no action:** One missing order chunk keeps All files unavailable until the next connect of the cloud computer. A new or removed file before that connect stops all runner output of the workspace, also agent text and turn ends.
+- **Root question:** How does the workspace find and repair a damaged tree order text while edits continue?
+- **Options:**
+  - **A.** Read the order text on each tree delta, as each changes delta does since this branch.
+    - Remove the guard at `worker/files/bucket-delta.ts:170`, so that `retainOrder` checks each symbol on each delta. `writeOrder` already skips the write of an unchanged order.
+    - Apply A only with or after the fix of `plans/follow-ups/failing-file-event-blocks-runner-events.md`. Alone, A makes each edit over a damaged order block the runner stream, not only an edit that adds or removes an entry.
+    - Add a damage case with a missing tree order chunk and a delta that only edits content.
+    - Cost: one small read for each tree delta. Effort: Small.
+  - **B.** Drop the saved tree at a failed tree read, as `plans/follow-ups/damaged-changes-list-stays-after-reads.md` proposes for the Changes list. The next tree delta then finds no saved tree, and today such a delta blocks the runner stream (`worker/files/runner-reports.ts:107`). So B also waits for `plans/follow-ups/failing-file-event-blocks-runner-events.md`. It extends a drop rule to the tree, which needs the user. It also repairs a damaged tree bucket that no delta reads. Effort: Medium.
+  - **C.** Keep the tree order text in the manifest record, which each tree delta already reads and writes. A separate order chunk then cannot go missing. Each manifest write grows by one character for each entry, up to 50,000. The previous Worker reads the order from its own records, so the change needs two releases. It does not cover a damaged bucket. Effort: Large.
+- **Left out:**
+  - Change nothing, because All files stays unavailable until the next connect, and the next new or removed file blocks the runner stream.
+  - A read of every saved bucket on each tree delta, because each edit then costs the whole tree.
+  - A periodic full tree from the runner, because A finds the damage at the next delta for one small read.
+- **Wider fix:** B. It drops each damaged tree that a read finds, whatever part is damaged, with one rule for both lists.
+- **Previous examples:** This branch removed the same guard from the changes delta, so that a delta with no rows also reads the order text (`applyChangesDelta` in `worker/files/bucket-changes-delta.ts`). Commit `45d1ce51e` made a full tree rebuild an unreadable order text.
+- **Related:**
+  - `plans/follow-ups/failing-file-event-blocks-runner-events.md`: work that waits for the answer. Until that item is fixed, a tree delta that finds damage blocks the runner stream. Apply this fix with or after that fix.
+  - `plans/follow-ups/damaged-changes-list-stays-after-reads.md`: the same class in the Changes list. Option B here is the tree form of its option A.
+  - `plans/follow-ups/bounded-legacy-chunk-reads.md`: the same code. `retainOrder` and `readOrderText` hold the order checks that that item shares with the reader. Make the second change on top of the first.
+- **Recommendation:** A. One small read at each edit finds the damage at once, and the fix of the blocking item then repairs it with a full tree. B best protects the codebase, because it also repairs a damaged tree bucket that no delta reads.
+- **Action:** ask the user, because no option is clearly best before the answer to `plans/follow-ups/failing-file-event-blocks-runner-events.md`.

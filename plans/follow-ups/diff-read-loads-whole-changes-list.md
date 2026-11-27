@@ -1,0 +1,47 @@
+# Each diff read loads the whole Changes list
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-27, from branch `calummoore/changes-list-deltas-aedi`, review round 2, outside the scope.
+- **Location:** the diff branch of `createFilesHandler` at `worker/files/handlers.ts:83-87`, `FilesState.changes` at `worker/files/state.ts:152`, `readFileList` at `worker/files/storage.ts:138`, and `parseDiff` at `worker/files/content.ts:70`.
+- **Reason:** `origin/main` has the same diff read, and the changes deltas change does not change the diff route.
+
+- **Terms:**
+  - **Saved Changes list:** The copy of the branch changes list that the workspace Durable Object stores and serves. A manifest, an order text, and 64 buckets of rows hold it (`worker/files/bucket-layout.ts`).
+  - **Manifest:** The stored record `files:state:v1` that describes the saved lists. In the bucket layout, it keeps the header fields of the Changes list, such as `baseBranch`, in `changes.fields`.
+  - **Base branch:** The branch that Changes compares with. The runner reads it from the Git setting `branch.<name>.gh-merge-base`, and it sends it in each Changes report.
+- **Background:**
+  - A diff read asks the runner for the patch of one path against a base branch. The diff branch of `createFilesHandler` takes that base from the saved Changes list: `changes?.baseBranch ?? workspace.defaultBranch` (`worker/files/handlers.ts:83-87`).
+  - `workspace.defaultBranch` is the base of the workspace in D1, or else the default branch of the repository (`worker/files/data.ts:22`).
+  - `files.changes()` runs `FilesState.changes` (`worker/files/state.ts:152`). It reads each stored chunk of the list, the order text and each bucket of rows. Then it parses and checks every row.
+  - The manifest already holds `baseBranch` for the bucket layout. Each full list and each changes delta writes it. In the old layout, the fields live in the list chunks.
+  - `parseDiff` refuses a runner reply that names another base than the request, with HTTP 502 (`worker/files/content.ts:78`). Commit `c41f62825` keeps each diff on the base of the saved list, also after a rename of the default branch.
+  - `worker/files/base-branch.test.ts:27` checks that a diff read sends the stored workspace base to the runner.
+  - A full list is about 0.1 MB at the current limit of 1,000 rows, `FILE_CHANGES_REPORT_MAX_FILES`, and about 0.6 MB at 5,000 rows.
+- **Problem:** Each diff read loads and checks the whole saved Changes list only to take one header field. So damage anywhere in the list fails every diff read with HTTP 502. Each diff read also costs a read of the whole list.
+- **Screenshot:** None, because the damage case needs damaged stored data in a live workspace. A picture would box "This diff didn't open" in a diff tab of a file whose row the damage does not touch.
+- **Impact if no action:** One damaged bucket of the saved list makes every diff tab of the workspace fail, also for rows that the damage does not touch. A later change that raises the row limit makes each diff read cost more.
+- **Root question:** How does a diff read learn the base of the saved Changes list without a read of the whole list?
+- **Options:**
+  - **A.** Read the base from the manifest.
+    - Add a reader beside `readFileList` in `worker/files/storage.ts` that reads only the manifest and returns `changes.fields.baseBranch` of the bucket layout.
+    - Give the old layout the full read of today, because its fields live in the list chunks.
+    - Give a field that is not a string `invalidFileResponse()`, as `parseChanges` does.
+    - Expose the reader through `FilesState` and `WorkspaceFilesPort` (`worker/files/workspace.ts`), and use it in the diff branch of `createFilesHandler`. Keep the fallback to `workspace.defaultBranch` for a workspace with no saved list.
+    - Keep `worker/files/base-branch.test.ts:27`. Add a diff read that works over a damaged bucket of the saved list.
+    - Effort: Small.
+- **Left out:**
+  - The base of D1 for each diff read. The base of the runner can differ from it, such as after a rename of the default branch, and `parseDiff` then refuses the reply. Commit `c41f62825` fixed that wrong base.
+  - A diff command with no base, so that the runner uses its own. It changes a runner command that older runners need, and A gives the same base with no wire change.
+  - A full read that falls back to the base of D1 on damage. It keeps the cost, and the fallback base can be wrong.
+  - A copy of the base in the memory of the Durable Object. The object loses it at each restart, and the manifest read is one small read.
+  - Only one option remains. Only the saved list and its manifest hold the base of the runner, and only the manifest gives it in one small read.
+- **Wider fix:** None, because the diff read is the only reader that reads the whole saved list for a header field. A search for `baseBranch` in `worker/` finds no other such reader.
+- **Previous examples:** `readCompleteChanges` in `worker/chat/browser-changes.ts` already reads the revision of the list from the manifest before it reads the rows. `plans/follow-ups/changes-costs-per-read-and-connect.md` records the other reads whose cost grows with the list.
+- **Related:**
+  - `plans/follow-ups/changes-costs-per-read-and-connect.md`: the same cause. That item lists the reads and sends whose cost grows with the list. The diff read is one more such read, and A removes it.
+  - `plans/follow-ups/damaged-changes-list-stays-after-reads.md`: options that interact. Its option A drops a damaged list at each reader, the diff read among them. After A here, the diff read reads only the manifest, so it finds no damage in the rows.
+  - `plans/follow-ups/diff-and-file-labels-miss-used-secrets.md`: the same code, the diff branch of `createFilesHandler`. Make the second change on top of the first.
+  - `plans/follow-ups/file-reads-have-no-time-limit.md` and `plans/follow-ups/file-reads-after-access-ends.md`: the same code in `createFilesHandler`. No options conflict. Make the second change on top of the first.
+- **Recommendation:** A. One small manifest read gives the same base, and damage in the rows no longer fails each diff.
+- **Action:** fix after merge, apply A, because `origin/main` has the same diff read, outside the purpose of the changes deltas change.

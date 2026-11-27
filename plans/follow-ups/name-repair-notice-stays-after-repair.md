@@ -12,7 +12,7 @@
   - **Failed repair marker:** a stored `runner.event-refused` event with `repairFailed: true` and no session. The Worker stores it when it refuses the fresh full report that a repair asked for.
   - **Name notice:** the bar below the workspace header that says that the workspace name is out of date, with the time since its repair failed. `src/shell/workspace/repair-notices.md` describes it.
 - **Background:**
-  - The runner reports the workspace name with a `workspace.title` event. The Worker also makes a name itself, from the first message, through `worker/chat/workspace-titles.ts:98`. Both paths call `storeWorkspaceTitle`. The runner path is `worker/chat/runner-receipt.ts:195`.
+  - The runner reports the workspace name with a `workspace.title` event. The Worker also makes a name itself, from the first message, through `worker/chat/workspace-titles.ts:98`. Both paths call `storeWorkspaceTitle`. The runner path is `worker/chat/runner-receipt.ts:270`.
   - When the Worker refuses a `workspace.title` report, it asks the runner once for a fresh full report. When it refuses that report too, it stores a failed repair marker, and the repair record becomes `failed`.
   - `HeaderNotices` reads the workspace stream. A failed repair marker of the kind `workspace.title` adds the name notice. Only a later `workspace.title` event in the stream removes it.
   - `docs/protocol/lost-workspace-updates.md` says that a stored complete report of a kind ends its repair, also a failed one, and that a newer complete report of that kind clears the notice. It also says that a name report sets the name only while the workspace has no name.

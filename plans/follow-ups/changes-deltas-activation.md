@@ -18,4 +18,6 @@
 - **Impact if no action:** Every edit keeps sending the complete changes list, so the cost of each edit still grows with the list size.
 - **Needs:** The compatibility release deployed for at least one hour, and a sandbox after its normal runner update. The fix of `plans/follow-ups/git-attribute-edit-stale-diff-heading.md` in the runner release that the sandboxes run.
 - **Done when:** `CHANGES_DELTAS` is `"on"` in production, and each check above passes, or a new follow-up item records a failure.
-- **Related:** `plans/follow-ups/git-attribute-edit-stale-diff-heading.md`: work that this task waits for. Without that fix, an open diff keeps a stale hunk heading after an edit of a `.gitattributes` file once deltas are on.
+- **Related:**
+  - `plans/follow-ups/git-attribute-edit-stale-diff-heading.md`: work that this task waits for. Without that fix, an open diff keeps a stale hunk heading after an edit of a `.gitattributes` file once deltas are on.
+  - `plans/follow-ups/open-tab-labels-miss-new-secrets.md`: the same rollout. Once deltas are on, a current tab that stays open keeps the old label of an unchanged row after a run first uses a secret value. That item waits for the user's answer.

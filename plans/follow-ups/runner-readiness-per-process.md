@@ -3,7 +3,7 @@
 - **Severity:** High. **Likelihood:** Rare. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-21, from branch `calummoore/no-response-issue-l1pn`: the wider fix of review finding 1, and a problem outside the scope that the check of that finding found.
-- **Location:** `worker/chat/runner-handshake.ts:69` (`prepareRunnerHello` reads the saved flag), `worker/chat/runner-channel.ts:114` and `:135` (the hello sets `active.ready` and calls `runnerReady`), `worker/chat/runner-receipt.ts:161` (`saveStreamReady`), `worker/chat/chat-records.ts:32-36`, `worker/chat/runner-delivery.ts:58`, `worker/lifecycle/durable-start.ts:70` (`readyLifecycle`), `worker/lifecycle/durable-restart.ts:71` (`requiresFreshRunnerReady`), `crates/cnd-runner/src/state/store.rs:91`, `docs/protocol/runner-warnings.md` (Process starts), `docs/protocol/agent-runner.md` (The agent runner).
+- **Location:** `worker/chat/runner-handshake.ts:69` (`prepareRunnerHello` reads the saved flag), `worker/chat/runner-channel.ts:114` and `:135` (the hello sets `active.ready` and calls `runnerReady`), `worker/chat/runner-receipt.ts:235` (`saveStreamReady`), `worker/chat/chat-records.ts:32-36`, `worker/chat/runner-delivery.ts:58`, `worker/lifecycle/durable-start.ts:70` (`readyLifecycle`), `worker/lifecycle/durable-restart.ts:71` (`requiresFreshRunnerReady`), `crates/cnd-runner/src/state/store.rs:91`, `docs/protocol/runner-warnings.md` (Process starts), `docs/protocol/agent-runner.md` (The agent runner).
 - **Reason:** Readiness for each runner process crosses the runner protocol and needs a compatible path for older runners. It also changes Restart and each resume on `origin/main`.
 
 - **Source:** Review. **Category:** Product bug.
@@ -15,7 +15,7 @@
   - **Starting:** the state that the header shows during a start, a resume, Restart, and the automatic restart, until the runner is ready.
 - **Background:**
   - The runner keeps the same stream ID across process restarts, because each start loads the saved state file (`DurableStore::load` in `crates/cnd-runner/src/state/store.rs:91`).
-  - The Worker saves one ready flag for each stream ID, not for each process (`saveStreamReady` in `worker/chat/runner-receipt.ts:161`, `streamReady` in `worker/chat/chat-records.ts:32`).
+  - The Worker saves one ready flag for each stream ID, not for each process (`saveStreamReady` in `worker/chat/runner-receipt.ts:235`, `streamReady` in `worker/chat/chat-records.ts:32`).
   - At each `hello`, `prepareRunnerHello` reads that flag (`worker/chat/runner-handshake.ts:69`). When it is set, the connection counts as ready at once.
   - A ready connection gets the waiting commands (`worker/chat/runner-delivery.ts:58`). The Worker also calls `runnerReady`, which runs `readyLifecycle`. That ends Starting, clears the restart time limit, and ends the away period of the runner.
   - A new runner process starts with an empty hash cache, so its first scan reads every file. Its ready event comes after that scan. In workspace W-153 on 20 November 2026, that scan took 25 to 30 seconds.

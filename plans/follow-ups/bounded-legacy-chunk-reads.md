@@ -28,7 +28,7 @@
 
 **Wider fix:** A shares bounded chunk reads across both projection layouts and runner report parts.
 
-**Related:** `plans/follow-ups/failing-file-event-blocks-runner-events.md`: the same code. Its option A reads the damage checks of `readTreeBucket`, `retainOrder`, and `readOrderText` as one result for unreadable data. Share those checks first, or in the same change.
+**Related:** `plans/follow-ups/failing-file-event-blocks-runner-events.md`: the same code. Its option A reads the damage checks of `readTreeBucket`, `retainOrder`, and `readOrderText` as one result for unreadable data. Share those checks first, or in the same change. `plans/follow-ups/tree-delta-skips-damaged-order.md`: the same code. Its option A makes `retainOrder` and `readOrderText` run on each tree delta. Make the second change on top of the first.
 
 **Recommendation:** A.
 

@@ -1,0 +1,62 @@
+# A damaged Changes list stays after failed reads
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-27, from branch `calummoore/changes-list-deltas-aedi`, review round 2, finding 302.
+- **Location:** `workspaceFileLists` in `worker/files/list-reads.ts`, `FilesState.changes` at `worker/files/state.ts:152`, `queueLocalClean` at `worker/merge-queue/local-work.ts:34`, `presentCompleteChanges` in `worker/chat/browser-changes.ts`, `dropSavedChanges` at `worker/files/storage.ts:161`, `writeBucket` at `worker/files/bucket-write.ts:94`, and "Checks and repairs" in `docs/protocol/changes-deltas.md`.
+- **Reason:** The fix extends the drop rule of `docs/protocol/changes-deltas.md` from a delta to a read, and no user decision covers that change.
+
+- **Terms:**
+  - **Changes delta:** The runner event `changes.changed`. It carries only the rows of the branch changes list that change, as `docs/protocol/changes-deltas.md` says.
+  - **Saved Changes list:** The copy of the branch changes list that the workspace Durable Object stores and serves. A manifest, an order text, and 64 buckets of rows hold it (`worker/files/bucket-layout.ts`).
+  - **Damage:** Saved data that a read cannot use, such as a missing chunk or a wrong digest. The reader then throws `InvalidFileResponse`, which answers HTTP 502 `file_unavailable`.
+  - **Drop:** `dropSavedChanges` (`worker/files/storage.ts:161`) deletes the saved Changes list and sets its manifest entry to null. The workspace then holds no Changes list.
+  - **Repair:** The one `report.refresh` request for a full changes list after the workspace refuses a changes delta, as `docs/protocol/lost-workspace-updates.md` says.
+- **Background:**
+  - Cal decided on 27 November 2026 that the workspace refuses a changes delta that breaks the contract. A refused delta asks the runner for one full changes list.
+  - Since this branch, a delta that finds the saved list damaged drops it and gets that refusal and its repair (`commitRunnerReceipt` in `worker/chat/runner-receipt.ts`).
+  - The rule is in "Checks and repairs" of `docs/protocol/changes-deltas.md`. It says: "When a delta finds the saved changes list damaged, the workspace drops that list and refuses the delta." It also says that a failed storage operation is not damage, so it stays retryable.
+  - A delta reads the order text and only the buckets that it edits (`applyChangesDelta` in `worker/files/bucket-changes-delta.ts`). It reads the whole list only while an older tab or an older Mac app is open, to send that tab a complete list.
+  - A full list does not rewrite a bucket whose digest, chunk count, and row count match the new rows (`writeBucket`, `worker/files/bucket-write.ts:107-118`). So a damaged bucket with unchanged rows stays damaged after a full list.
+  - Four readers read the whole saved list, so they find such damage:
+    - the Changes read, `workspaceFileLists` in `worker/files/list-reads.ts`
+    - the diff read, through `FilesState.changes` at `worker/files/state.ts:152`
+    - the merge queue, through the same `FilesState.changes`
+    - the replay for older tabs, `presentCompleteChanges` in `worker/chat/browser-changes.ts`
+  - The merge queue reads the list only for a stopped workspace or a workspace in error (`queueLocalClean` at `worker/merge-queue/local-work.ts:34`).
+  - The Changes read and the diff read then answer HTTP 502. The replay leaves the event out. No reader drops the list.
+  - The test case "missing untouched bucket chunk" (`worker/chat/runner-changes-damage.test.ts:63`) passes only with an older tab open, because the receipt then reads the whole list.
+- **Problem:** With only current tabs open, no delta reads a damaged bucket that the delta does not edit. So each Changes read and each diff read fail with HTTP 502 while edits succeed. The failure lasts until a delta edits that bucket, or until a delta comes while an older tab is open. A full list after a connect leaves the bucket damaged while its rows stay the same.
+- **Screenshot:** None, because the problem needs damaged stored data in a live workspace. A picture would box "The changes didn't load" in the Changes panel of a current tab after an edit that the workspace took.
+- **Impact if no action:** One damaged bucket can keep Changes and each diff unavailable for each member of the workspace. A restart of the cloud computer does not end it while the rows of that bucket stay the same.
+- **Root question:** How does the workspace repair a saved Changes list that a reader finds damaged, when no delta reads the damaged part?
+- **Options:**
+  - **A.** Drop the list at the read.
+    - When a reader of the saved Changes list gets `InvalidFileResponse`, drop the list in a new serial write through `changeWorkspace` (`worker/chat/backend.ts`).
+    - Drop it only while the manifest still holds the same list descriptor, so that a full list that came after the read stays.
+    - Reuse `dropSavedChanges`. A failed storage operation is not damage, so it stays retryable.
+    - Apply it at the Changes read, at `FilesState.changes` for the diff read and the merge queue, and at the replay for older tabs.
+    - The next delta then gets the existing refusal for a workspace with no Changes list, and its repair. A full list that comes first writes each bucket from empty.
+    - Test with a current tab only: a failed read, a delta, the refusal, the repair, and the rebuilt list. Test also a full list that replaces the list between the read and the drop.
+    - Extend the drop rule of "Checks and repairs" in `docs/protocol/changes-deltas.md` from a delta to a read. Read both legal pages and each public guide in full, as `CLAUDE.md` asks for each change of a protocol fact.
+    - Cost: a GET request can write. After the first failed read, the Changes read answers HTTP 503 for no saved list in place of HTTP 502, until the next full list. While the cloud computer runs, the Changes panel shows "The changes didn't load" with Try again for both.
+    - Effort: Medium.
+  - **B.** Drop the list at the read, and ask for a full list at once. Do A. Then send the connected runner one `report.refresh` for `changes.updated`, with no refusal marker. An idle workspace then gets its list back before the next edit or connect. It adds a request cause at the read to `docs/protocol/lost-workspace-updates.md`, which asks for a report only after a refusal today. Effort: Medium.
+- **Left out:**
+  - A record of the damage that the next delta reads and that a full list clears. A full list can leave a damaged bucket in place, so the clear step can end the record over damage that stays. With a drop first, it is A with one more record.
+  - A repair request at the read with no drop. The full list that answers it leaves a damaged bucket with unchanged rows in place.
+  - A read of every saved row on each delta. It fails the goal of changes deltas, that the cost of each edit does not grow with the list.
+  - A periodic full list from the runner. It costs a full list, and it leaves a damaged bucket with unchanged rows in place.
+  - A repair request from the browser after a failed read. B does the same in the Worker with no new API route.
+  - A full list that rewrites each damaged bucket. `plans/follow-ups/failing-file-event-blocks-runner-events.md` records that writer gap, and no full list comes while edits send only deltas.
+  - Only two options remain, because each repair without a drop meets the writer gap above.
+- **Wider fix:** A. It drops each damaged list that a reader finds, whatever part is damaged, and it needs no new record. The same drop for the tree waits for `plans/follow-ups/failing-file-event-blocks-runner-events.md`, because a tree delta with no saved tree blocks the runner stream (`worker/files/runner-reports.ts:107`).
+- **Previous examples:** Commit `45d1ce51e` made a full list rebuild an unreadable order text (`worker/files/bucket-write.ts:184-195`). This branch made a changes delta drop a damaged list and take a refusal. It also made each changes delta read the order text, also a delta with no rows.
+- **Related:**
+  - `plans/follow-ups/failing-file-event-blocks-runner-events.md`: the same cause. That item records the full list that leaves a damaged bucket in place. Its option A gives the tree the drop and the refusal that a changes delta has since this branch. A drop of the tree at a read waits for that item.
+  - `plans/follow-ups/tree-delta-skips-damaged-order.md`: the same class in the tree. Its option B is the tree form of option A here. Give both lists one rule.
+  - `plans/follow-ups/diff-read-loads-whole-changes-list.md`: options that interact. Its fix makes the diff read read only the manifest. Then the diff read finds no damage in the rows, and the other three readers still drop the list.
+  - `plans/follow-ups/typed-files-list-state.md`: the same damaged list, seen in the browser. After a drop, the Changes read answers HTTP 503 in place of HTTP 502. The panel checks only the error code `file_unavailable`, so it shows both in the same way.
+  - `plans/follow-ups/open-tab-labels-miss-new-secrets.md`: the same code for option B only. Option B of that item also sends a `report.refresh` with no refusal, so both need one request record apart from the repair.
+- **Recommendation:** A. It drops each damaged list that a reader finds, so the next delta or full list rebuilds it through the repair that exists. Choose B if an idle workspace must get its list back before the next edit or connect.
+- **Action:** ask the user, because A extends the drop rule of `docs/protocol/changes-deltas.md` from a delta to a read, and no user decision covers that change.

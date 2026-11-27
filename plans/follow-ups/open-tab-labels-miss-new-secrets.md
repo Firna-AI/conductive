@@ -1,0 +1,65 @@
+# Open tabs show a newly used secret value
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-27, from branch `calummoore/changes-list-deltas-aedi`, review round 2, finding 301.
+- **Location:** `src/files/model/files-sync.ts:201`, `worker/secrets/run-values.ts:122`, `worker/secrets/request-answer.ts:157`, `worker/secrets/request-records.ts:125` and `:148`, `worker/chat/repair-refusal.ts:28`, "Lost workspace updates" in `docs/protocol/lost-workspace-updates.md`, "The exact-copy filter" in `docs/protocol/secret-requests.md`, and "Events" in `docs/protocol/workspace-events.md`.
+- **Reason:** Each option changes a rule of a protocol doc, and only the user can change such a rule.
+
+- **Terms:**
+  - **Changes delta:** The runner event `changes.changed`. It carries only the rows of the branch changes list that change, as `docs/protocol/changes-deltas.md` says.
+  - **Current tab:** A tab whose event socket names the delta form with `forms=changes.changed`. It gets each changes delta. An older tab or an older Mac app gets the complete list instead.
+  - **Label:** The text that screens show for a path or a branch name, such as the `displayPath` of a row. The file API uses the real path.
+  - **Exact-copy filter:** The Worker filter that hides each exact copy of a secret value in the text that screens show, as "The exact-copy filter" in `docs/protocol/secret-requests.md` says.
+  - **Repair:** The one `report.refresh` request for a full report after the workspace refuses a report, as `docs/protocol/lost-workspace-updates.md` says.
+- **Background:**
+  - Cal chose changes deltas on 26 November 2026, with one stream and two forms. A current tab gets each delta. An older tab gets the complete list under the same event number.
+  - "Events" in `docs/protocol/workspace-events.md` says: "Both forms give the same changes list at each event number."
+  - `CHANGES_DELTAS` is `"off"` in `wrangler.jsonc`, so no welcome accepts deltas yet. `plans/follow-ups/changes-deltas-activation.md` turns it on.
+  - The exact-copy filter has three sources. `runnerOutputSecretValues` in `worker/chat/runner-output.ts` joins them:
+    - the secret env vars of the last start
+    - each org secret that a run with secrets used
+    - each temporary value that has not expired
+  - The sources grow when a run first uses an org secret, at `view.secrets.use` (`worker/secrets/run-values.ts:122`). They also grow when a member gives a temporary value, at `view.secrets.saveValue` (`worker/secrets/request-answer.ts:157`).
+  - The Worker filters the labels of each runner event when it takes the event. A delta carries only the rows that change, so an unchanged row keeps the label of its receipt.
+  - Since this branch, the Worker filters with the current values each list that it builds from the saved rows. These are the complete list for older tabs, live and in replay, and the tree and Changes reads. A replay also filters each stored full list again.
+  - A replay sends each stored delta as the Worker stored it.
+  - A current tab applies a delta only to the rows that the delta names (`syncEvent` at `src/files/model/files-sync.ts:201`).
+  - On `origin/main`, each Changes update was a full list. So the next update after a new value masked every row again.
+- **Problem:** A current tab that stays open keeps the old label of each unchanged Changes row after a new value joins the filter. So that tab can show a secret value that each new read hides. Each open tab keeps the old labels of unchanged tree entries in the same way. This is also so on `origin/main`, because tree deltas carry only the entries that change. A tab that replays a stored delta from before the new value gets the old labels of its rows too.
+- **Screenshot:** None, because no copy of the app gets deltas while `CHANGES_DELTAS` stays `"off"`. A picture would box a Changes row whose label shows a synthetic secret value. The current tab stayed open while a run first used that value.
+- **Impact if no action:** After the activation, a tab that stays open can show a secret value in Changes. All files can already show it on `origin/main`. This lasts until the tab reloads or gets a full list. The next full list comes at the latest after the next connect of the cloud computer. The two forms then differ in that label.
+- **Root question:** How does a label that an open tab already holds come to hide a secret value that becomes active later?
+- **Options:**
+  - **A.** Accept the gap and state it.
+    - Add a risk to "Secrets that users enter" in `docs/protocol/tokens-and-secrets.md`. The risk says that an open tab keeps a label from before a value joined the filter. The label stays until the next read or full list of the tab.
+    - Add the exception to "Events" in `docs/protocol/workspace-events.md`.
+    - Reason: the tab showed that label before. The browser also gets the real path in any case, as "Secrets that users enter" in `docs/protocol/tokens-and-secrets.md` says.
+    - The Privacy page says that screens hide each exact copy of a secret value in paths and names. Change that sentence too. Read both legal pages and each public guide in full, as `CLAUDE.md` asks for each change of a protocol fact.
+    - Effort: Small.
+  - **B.** Ask the connected runner for full lists. When the exact-copy filter gets a new value, send the connected runner one `report.refresh` for `changes.updated` and one for `files.snapshot`. Give each a new command ID and no refusal marker.
+    - Send the requests after the commit of each change that adds a value: `worker/secrets/run-values.ts:122` and `worker/secrets/request-answer.ts:157`. A secret env var changes only at a start, and each connect already sends full lists.
+    - Keep each request in a record apart from the repair record of `refuseReportRepair` (`worker/chat/repair-refusal.ts:28`). A refused answer then gets the normal repair, and no failed-repair notice shows for the request itself.
+    - Send no request of a kind while a pending repair of that kind waits for its full list. That full list also passes the new filter. A failed repair sends no new request, so it does not count.
+    - The full lists pass the receipt filter with the new value. So the saved lists, the stored history, each open tab of both forms, and each later read get the masked labels.
+    - A runner that is not connected sends full lists after its next connect, as "When a full list goes" in `docs/protocol/changes-deltas.md` says.
+    - Add the new request cause to `docs/protocol/lost-workspace-updates.md`, which asks for a report only after a refusal today. Add the trigger to "The exact-copy filter" in `docs/protocol/secret-requests.md`. Read both legal pages and each public guide in full.
+    - Test a value that joins the filter between a full list and a delta, with a current tab open. The tab must get the full list with the masked label. `worker/secrets/file-list-output-filter.test.ts` gives the pattern.
+    - Cost: one full tree and one full changes list for each new value. After a full list, each open file and diff of each listed path reads again. Until the lists arrive, the open tab still shows the old label.
+    - Effort: Medium.
+  - **C.** Tell open tabs to read both lists again. When the exact-copy filter gets a new value, store and send a new browser event. The event makes a current tab read the tree and the Changes list again. Since this branch, both reads hide each current value. A tab of an earlier release ignores an unknown file event type (`src/files/api/parse-events.ts:41`), so it keeps the old label. It adds an event to "Events" in `docs/protocol/workspace-events.md`, and it costs two reads for each open tab. Effort: Medium.
+  - **D.** Send masked complete lists from the Worker. When the exact-copy filter gets a new value, the Worker builds the complete tree and Changes list from the saved rows with the new filter. It stores and sends them as new `files.snapshot` and `changes.updated` events at the saved revisions. It needs no runner. But a tab ends its failed-repair notice at each complete list (`src/files/model/failed-repairs.ts:41`), so such an event hides a repair that stays failed. It also adds a full list to the history and to each socket for each new value. Effort: Large.
+- **Left out:**
+  - A filter in the browser, because the browser gets no secret value.
+  - A label that the Worker builds again from the real path at each send. It would show each run of 21 or more characters of a token that the runner hid, against "Secrets that users enter" in `docs/protocol/tokens-and-secrets.md`.
+  - The runner filter, because the runner does not know the values of org secrets or of temporary values.
+  - Full lists for every tab while an older tab is open, because Cal rejected them on 26 November 2026.
+  - A full list in place of each delta, because it brings back the cost of each edit that changes deltas remove.
+- **Wider fix:** B. It reuses a request, full reports, and readers that every runner and every tab already have. So each copy of a label gets the new filter. Mark the refresh in `use` and `saveValue` of `SecretRequestRecords` (`worker/secrets/request-records.ts`), the two writers of the value records. Each later caller of them is then covered.
+- **Previous examples:** Commit `b3bba92fe` added masked path and branch labels at the browser boundaries. Commit `10184854a` moved fresh labels into the shared event path. This branch filters each list that the Worker builds from saved rows with the current values.
+- **Related:**
+  - `plans/follow-ups/changes-deltas-activation.md`: the same rollout. The gap of this item starts with that activation. Answer this item before the activation, or accept the gap until its fix ships.
+  - `plans/follow-ups/diff-and-file-labels-miss-used-secrets.md`: work that option B needs. After a full list, each open file and diff reads again. Those reads hide a newly used value only after that fix.
+  - `plans/follow-ups/damaged-changes-list-stays-after-reads.md`: the same code for option B only. Option B of that item also sends a `report.refresh` with no refusal, so both need one request record apart from the repair.
+- **Recommendation:** B. It masks the label in each open tab of both forms and in the stored history. Each runner and each tab already handle its request and its full lists. Choose A if a full tree and a full list for each new value cost too much for this rare case.
+- **Action:** ask the user, because B adds a request cause to `docs/protocol/lost-workspace-updates.md`, and no user decision covers that change.

@@ -24,5 +24,6 @@
   - `plans/follow-ups/bar-merge-from-out-of-date-changes.md`: this item is the wider fix of that item. It then needs one more state, for a list that is not the latest, which the pull request bar reads as unknown local work.
   - `plans/follow-ups/failed-tree-recovery-read-stays-stale.md`: the same panel code. A tree whose recovery read failed must fit the typed load state.
   - `plans/follow-ups/failing-file-event-blocks-runner-events.md`: the same damaged saved list. A bucket that a full report never rewrites keeps the HTTP 502 read, which `notSaved` shows as no saved copy.
+  - `plans/follow-ups/damaged-changes-list-stays-after-reads.md`: the same damaged saved list. Its option A drops such a list at a failed read, so the next Changes read answers HTTP 503 in place of HTTP 502. Option B here then shows the dropped list as `absent`, not as `failed`.
 - **Recommendation:** B. It removes the wrong case for each screen that reads a list.
 - **Action:** fix after merge, apply B, because it changes the files store outside the branch, the direct fix already ends the common defect, and the 502 case needs an unreadable saved copy.

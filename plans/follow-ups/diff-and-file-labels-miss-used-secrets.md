@@ -1,0 +1,55 @@
+# Diff and file labels miss used secret values
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-27, from branch `calummoore/changes-list-deltas-aedi`, review round 2, outside the scope.
+- **Location:** `worker/files/handlers.ts:74-75`, `:102`, and `:131`. For the wider fix also `worker/chat/workspace-labels.ts:15`, `worker/github/output.ts:24`, `worker/lifecycle/continue-output.ts:15`, and `worker/lifecycle/repository-change-output.ts:20`.
+- **Reason:** `origin/main` has the same filters, and the changes deltas change fixed only the tree and Changes reads.
+
+- **Terms:**
+  - **Label:** The text that screens show for a path or a branch name, such as `displayPath` and `displayBaseBranch`. The file API uses the real path and the real branch name.
+  - **Exact-copy filter:** The Worker filter that hides each exact copy of a secret value in the text that screens show, as "The exact-copy filter" in `docs/protocol/secret-requests.md` says.
+  - **Used values:** The current value of each org secret that a run with secrets used in the workspace. Also each temporary value that a member gave, until it expires.
+- **Background:**
+  - "Secrets that users enter" in `docs/protocol/tokens-and-secrets.md` says: "Screens show a separate label of each path and branch name. The label hides each exact copy of a secret value."
+  - The same section says that the Durable Object also hides each value that a run with secrets used, as "The exact-copy filter" in `docs/protocol/secret-requests.md` says.
+  - The Privacy page says: "Screens hide each exact copy of a secret value in these paths and names" (`src/marketing/privacy.ts`).
+  - `runnerOutputSecretValues` (`worker/chat/runner-output.ts`) joins the secret env vars of the last start with the used values. The runner receipt filters each runner event with it.
+  - Since this branch, the tree and Changes reads build their label filter from these values in the workspace Durable Object, through `runnerOutputLabelFilter` (`worker/files/list-reads.ts`). So the fix of this branch covers the tree read fully.
+  - The diff read and the file read still build their filter from `runningOutputSecrets` only, the secret env vars of the last start (`worker/files/handlers.ts:74-75`). The filter labels a diff at `:102` and a file at `:131`.
+  - A file page and a diff page show the label of their read in their header (`pageLabel` at `src/files/model/file-labels.ts:59`, used by `src/files/page/FilePage.tsx:88` and `src/files/page/DiffPage.tsx:69`).
+  - Four other screen labels use the same filter of the env vars only:
+    - the labels of workspace events, at `worker/chat/workspace-labels.ts:15`
+    - the GitHub banner and the merge queue branch labels, at `worker/github/output.ts:24`
+    - the continue reply, at `worker/lifecycle/continue-output.ts:15`
+    - the repository change reply, at `worker/lifecycle/repository-change-output.ts:20`
+  - `worker/files/secret-path-labels.test.ts:25` checks the labels of runner reads and diffs with the values of the start capture only.
+- **Problem:** A path that holds a used value shows that value in the header of its file page and its diff page. Changes and All files hide the same value since this branch. A command that runs with an org secret can write a file whose path holds the value.
+- **Screenshot:** None, because the review ran no app for this path. A picture would box the header of a file page whose path holds a synthetic secret value that a run with secrets used.
+- **Impact if no action:** Each member who opens such a file or its diff sees the secret value on the screen, against the requirement and the Privacy page. The four other screen labels show such a value in the same way.
+- **Root question:** How does each path and branch label of a workspace hide each value that a run with secrets used?
+- **Options:**
+  - **A.** Build the filter of the diff and file reads from the same values as the tree and Changes reads. Read `runnerOutputLabelFilter` in a read of the workspace Durable Object, as `workspaceFileLists` in `worker/files/list-reads.ts` does since this branch. Expose it through `WorkspaceFileLists`, and use it in place of the filter at `worker/files/handlers.ts:74-75`. Extend `worker/files/secret-path-labels.test.ts` with a used org secret and a temporary value, for a diff read and a file read. Cost: each diff and file read also reads and decrypts the used values. Effort: Small.
+  - **B.** Give every screen label of a workspace one filter reader.
+    - Make one reader, such as `runnerOutputLabelFilter`, the only way to build a screen label filter of a workspace.
+    - Move the diff and file reads onto it, as A does.
+    - Move the four other screen labels onto it: `worker/chat/workspace-labels.ts:15`, `worker/github/output.ts:24`, `worker/lifecycle/continue-output.ts:15`, and `worker/lifecycle/repository-change-output.ts:20`.
+    - A caller outside the workspace Durable Object reads the used values through one call into it.
+    - Keep `runningOutputSecrets` for the callers that join it with the used values themselves, such as `worker/services/filter.ts`.
+    - Test each moved label with a used value.
+    - Effort: Medium.
+- **Left out:**
+  - A filter in the browser, because the browser gets no secret value.
+  - A filter in the runner, because the runner does not know the used values.
+  - A lint that rejects a screen filter from `runningOutputSecrets` alone, because a new lint needs the user, and B removes the case.
+  - A filter of file content and diff content too, because "Secrets that users enter" in `docs/protocol/tokens-and-secrets.md` says that they hide no value.
+  - Only two options remain, because the values exist only in the workspace Durable Object, so each fix reads them there.
+- **Wider fix:** B. One reader for each screen label of a workspace removes the filter of the env vars only. A new screen label then cannot miss the used values.
+- **Previous examples:** This branch moved the tree and Changes reads onto the used values, in `worker/files/list-reads.ts`. `plans/follow-ups/start-step-branch-labels-unmasked.md` records start steps that show a branch name with no label. Commit `b3bba92fe` added masked path and branch labels at the browser boundaries.
+- **Related:**
+  - `plans/follow-ups/open-tab-labels-miss-new-secrets.md`: work that waits for this fix. Its option B makes each open file and diff read again after a full list. Those reads hide a newly used value only after this fix.
+  - `plans/follow-ups/diff-read-loads-whole-changes-list.md`: the same code, the diff branch of `createFilesHandler`. Make the second change on top of the first.
+  - `plans/follow-ups/file-reads-have-no-time-limit.md` and `plans/follow-ups/file-reads-after-access-ends.md`: the same code in the diff and file branches of `createFilesHandler`. No options conflict. Make the second change on top of the first.
+  - `plans/follow-ups/start-step-branch-labels-unmasked.md`: a shared fix. That item labels the start steps with the secret env vars of the last start only. With B here, label them with the one filter reader too.
+- **Recommendation:** B. One filter reader for each screen label hides the used values on every screen of a workspace, and a new label cannot miss them. A alone fixes only the file and diff pages.
+- **Action:** fix after merge, apply B, because `origin/main` has the same filters, and B reaches screens outside the changes deltas change.

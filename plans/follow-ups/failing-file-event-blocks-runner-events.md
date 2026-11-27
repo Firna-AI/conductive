@@ -3,7 +3,7 @@
 - **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-27, from branch `calummoore/changes-list-deltas-aedi`, review round 1, finding 102.
-- **Location:** `worker/chat/runner-receipt.ts:247`, `worker/chat/runner-connections.ts:71`, `worker/files/bucket-delta.ts:156`, `worker/files/bucket-write.ts:107`, "The agent runner" in `docs/protocol/agent-runner.md`, and "Runner work that did not finish" in `docs/protocol/runner-warnings.md`.
+- **Location:** `worker/chat/runner-receipt.ts:259`, `worker/chat/runner-connections.ts:71`, `worker/files/bucket-delta.ts:156`, `worker/files/bucket-write.ts:107`, "The agent runner" in `docs/protocol/agent-runner.md`, and "Runner work that did not finish" in `docs/protocol/runner-warnings.md`.
 - **Reason:** The fix that ends the class breaks the rule of `docs/protocol/agent-runner.md` that a storage failure stays retryable, and only the user can change that rule.
 
 - **Terms:**
@@ -13,7 +13,7 @@
   - **Bucket:** One of the 64 stored parts of the saved file tree or of the saved changes list. An order text and a manifest join the buckets into one list.
 - **Background:**
   - The workspace takes runner events only in event-number order (`worker/chat/runner-receipt.ts:48`).
-  - It refuses a file event only when a contract check throws `InvalidRunnerReport`, in the file report branch of `applyRunnerEvent` (`worker/chat/runner-receipt.ts:247-250`). It rethrows each other error.
+  - It refuses a file event only when a contract check throws `InvalidRunnerReport`, in the file report branch of `applyRunnerEvent` (`worker/chat/runner-receipt.ts:259-250`). It rethrows each other error.
   - A rethrown error rolls back the receipt, and the runner connection closes with no confirmation (`worker/chat/runner-connections.ts:71-75`). After its next hello, the runner sends the same events again from its outbox (`crates/cnd-runner/src/link/connection.rs:134`).
   - "The agent runner" in `docs/protocol/agent-runner.md` says: "A storage or network failure closes the connection without a confirmation. It remains retryable. It never becomes a permanent refusal."
   - The rule before it rejects the refusal of late chat events, because that refusal lost real agent text. The same page says that one bad event must not stop all later events (decision 76).
@@ -46,5 +46,7 @@
 - **Related:**
   - `plans/follow-ups/bounded-legacy-chunk-reads.md`: the same code. `readTreeBucket` and `retainOrder` in `worker/files/bucket-delta.ts` and `readOrderText` in `worker/files/bucket-write.ts` hold the damage checks that option A must read as one result. Share those checks first, or in the same change.
   - `plans/follow-ups/typed-files-list-state.md`: the same damaged saved list, seen in the browser. While the sandbox starts, the browser shows the HTTP 502 read of such a list as "Waiting for the sandbox".
+  - `plans/follow-ups/damaged-changes-list-stays-after-reads.md`: the same cause. That item drops a damaged saved Changes list when a read finds the damage. The same drop for the tree waits for this item, because a tree delta with no saved tree blocks the runner stream.
+  - `plans/follow-ups/tree-delta-skips-damaged-order.md`: work that waits for the answer. Its fix reads the tree order text on each tree delta. Until this item is fixed, that read makes each edit over a damaged order block the runner stream.
 - **Recommendation:** B. It ends the block for each file event that fails on every retry. Its cost is one extra full report in a long storage outage. Choose A if the retry rule must stay, because A keeps that rule and ends the known damage cases.
 - **Action:** ask the user, because B changes the retry rule of `docs/protocol/agent-runner.md`, and no user decision covers that change.
