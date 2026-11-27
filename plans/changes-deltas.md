@@ -1,6 +1,6 @@
 # Changes deltas
 
-Status: Active. On branch `calummoore/changes-list-deltas-aedi`, no pull request yet. Decision 2 waits for Cal. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `calummoore/changes-list-deltas-aedi`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Today the runner sends the complete branch changes list after each agent edit.
 The workspace Durable Object joins its parts, stores it, saves it in the chat history, and sends it on each browser socket.
@@ -78,6 +78,7 @@ Replaced ways: none. The full list stays for older runners, older readers, each 
 - **Previous examples:** The tree delta refusal and its repair, decision 96.
 - **Recommendation:** A. It reuses the repair that the tree delta has, and no tab shows a wrong list.
 - **Action:** ask the user, because the recommended option adds a new refusal, which the repository rules reserve for Cal.
+- **Answer:** **Cal, 27 November 2026: A.** Cal approved the plan the same day.
 
 ## Design
 
@@ -111,7 +112,7 @@ The brainstorm report gives the checked facts behind each call.
 ### Worker checks, storage, and repair
 
 - **Orchestrator call:** The Worker applies a delta only at the next changes revision of the stream, and only when no full changes list is incomplete. Reason: the tree delta has the same rule (`worker/files/runner-reports.ts:177`).
-- **Open, decision 2 A recommended:** The Worker refuses a delta that breaks the contract: a revision that is not the next one, no stored changes list, such as after a repository move (`worker/files/storage.ts:194`), a remove of a path that the list does not hold, an `index` that is not ascending or not inside the new list, a repeated path, or a `summary` that does not equal the totals of the listed rows after the delta. A refused delta asks the runner for one full changes list, as decision 96 says.
+- **Cal, 27 November 2026, decision 2 = A:** The Worker refuses a delta that breaks the contract: a revision that is not the next one, no stored changes list, such as after a repository move (`worker/files/storage.ts:194`), a remove of a path that the list does not hold, an `index` that is not ascending or not inside the new list, a repeated path, or a `summary` that does not equal the totals of the listed rows after the delta. A refused delta asks the runner for one full changes list, as decision 96 says.
 - **Orchestrator call:** A delta is never a replacement, and it never ends or fails an open repair. Reason: the tree delta has the same rules.
 - **Orchestrator call:** The projection keeps its 64-bucket layout. A delta reads and writes only the touched buckets, the order text, and the manifest. The changes manifest gains an optional `revision`. A list without it has an unknown revision. Reason: no migration, and a previous Worker that writes a full list leaves the field absent.
 - **Orchestrator call:** The history keeps the newest full changes list and the newest delta after it. A new delta deletes the earlier delta. A new full list deletes both. Reason: the history keeps only the newest changes list today, because earlier lists fill it (`docs/protocol/chat-history.md:13`). The history then also keeps an older full list beside the newest delta, so Milestone 1 checks the Privacy sentence "It keeps the last file list and the last summary of changes". A change of that sentence waits for Cal, as `plans/follow-ups/privacy-omits-kept-tree-deltas.md` says for the legal pages.
