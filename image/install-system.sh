@@ -14,8 +14,7 @@ git config --system --replace-all credential.helper /usr/local/bin/conductive-gi
 git config --system credential.useHttpPath true
 rm -f /etc/systemd/system/conductive-update-confirm.service
 systemctl daemon-reload
-systemctl enable conductive-runner.service conductive-preview-relay.socket conductive-preview-relay.service \
-  conductive-update-check.timer conductive-terminal.service conductive-disk-hold.timer conductive-disk-hold.path
+systemctl enable conductive-runner.service conductive-preview-relay.socket conductive-preview-relay.service conductive-update-check.timer conductive-disk-hold.timer conductive-disk-hold.path conductive-terminal.service
 # Boat starts the relay at boot, before the runner's pre-start step applies a
 # release. A running relay restarts here, so it runs the active release too.
 # The socket holds the port meanwhile. A stopped relay stays stopped.

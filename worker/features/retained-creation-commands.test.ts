@@ -137,7 +137,7 @@ it('runs interrupted saved startup after Restore instead of following its dead j
   }))
   const sandbox = (local = await localSavedScriptFixture(OUTER_REPOSITORY))
   const marker = shellQuote(`${sandbox.directory}/interrupted`)
-  const journal = shellQuote(`${sandbox.directory}/command-journal/workspace`)
+  const journal = shellQuote(`${sandbox.directory}/workspace-journal/workspace`)
   const script = [
     'set -eu',
     `if [ ! -f ${marker} ]; then`,

@@ -55,7 +55,7 @@ it('restores an interrupted replacement create with its pinned data and a fresh 
   expect(active.boat.deletedIds).toEqual(['bx_1'])
 
   const marker = shellQuote(`${sandbox.directory}/interrupted`)
-  const journal = shellQuote(`${sandbox.directory}/command-journal/workspace`)
+  const journal = shellQuote(`${sandbox.directory}/workspace-journal/workspace`)
   const script = [
     'set -eu',
     `if [ ! -f ${marker} ]; then`,

@@ -3,7 +3,7 @@ import { warnWorker } from '../warnings'
 import { DEFAULT_PROVIDER_ACCOUNT } from './account-identity'
 import { validDomain } from './e2b/identity'
 
-export interface ProviderDiskLine {
+interface ProviderDiskLine {
   readonly bytes: number
 }
 
