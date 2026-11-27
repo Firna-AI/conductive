@@ -271,10 +271,15 @@ Depends on: 2
 
 Depends on: every other milestone
 
-- [ ] Run `npm run check` and the Rust checks of `CLAUDE.md`.
-- [ ] Build the release `conductive`, and run the hold on a throwaway Boat
+- [x] Run `npm run check` and the Rust checks of `CLAUDE.md`. Evidence:
+      `.context/workspace-disk-hold/`. The static checks and all Rust checks
+      pass. Some Worker tests time out in fixture setup on this cloud
+      computer, also on `origin/main`, so CI runs the full suite.
+- [x] Build the release `conductive`, and run the hold on a throwaway Boat
       sandbox. Fill the disk to the line, then check a stop and a resume.
-- [ ] Commit with Conventional Commits and push the branch.
+      Evidence: `.context/workspace-disk-hold/smoke.log`. A stop and a
+      resume at the line were checked in Milestone 1.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record follow-up
