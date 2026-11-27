@@ -25,6 +25,8 @@ export const buildSection = defineComponent({
       readOnly: { type: 'boolean' },
       /** A saved change waits for a build, so the history stays closed. */
       changeWaits: { type: 'boolean' },
+      /** A refresh that runs, after a good build or a failed build. */
+      refresh: { enum: ['running', 'requested'] },
     },
   } as const,
   props: { state: 'ready', builds: acmeBuilds },
@@ -33,6 +35,7 @@ export const buildSection = defineComponent({
       builds={props.builds}
       changeWaits={props.changeWaits}
       readOnly={props.readOnly}
+      refresh={props.refresh}
       state={props.state}
     />
   ),
@@ -45,11 +48,32 @@ export const buildSection = defineComponent({
       props: { state: 'building' },
     },
     {
+      slug: 'refreshing',
+      title: 'Refreshing',
+      description:
+        'A refresh that runs after a good build, such as after a push. A refresh only fetches commits, so Build computer stays on.',
+      props: { refresh: 'running' },
+    },
+    {
+      slug: 'refreshing-requested',
+      title: 'Refreshing, build requested',
+      description:
+        'An admin selected Build computer while a refresh ran, after a change of the install script. The build starts when the refresh ends.',
+      props: { refresh: 'requested', changeWaits: true },
+    },
+    {
       slug: 'failed',
       title: 'Failed',
       description:
         'A failed build: its saved message above the end of its log, Try again, and the good build that workspaces still start from.',
       props: { state: 'failed' },
+    },
+    {
+      slug: 'failed-requested',
+      title: 'Failed, build requested',
+      description:
+        'A failed build while a refresh runs, after an admin selected Try again. The card keeps the failed build, and a build starts when the refresh ends.',
+      props: { state: 'failed', refresh: 'requested' },
     },
     {
       slug: 'none',

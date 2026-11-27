@@ -77,11 +77,26 @@ settings. A successful build or refresh also gets an added build when its
 repositories lack a chosen repository and the newest build succeeded.
 Its `cleanup-build` phase keeps that work through coordinator
 reconstruction. `cleanupBuild` in [`build-execution.ts`](build-execution.ts)
-finishes resource cleanup before `startAddedImageBuild` in
+finishes resource cleanup before `startFollowingBuild` in
 [`first-image-build.ts`](first-image-build.ts) starts the added build.
 The added build uses the first admin who is not suspended. A failed start
 keeps the published image and writes one fixed warning. A failed build
 starts no added build. A refresh after a failed build gets none either.
+
+Build computer, Try again, and Done pass `requested: true` to `startImageBuild`.
+During a refresh, `requestBuildAfterRefresh` in
+[`build-request.ts`](build-request.ts) saves the admin in
+`image_build_jobs.requested_build_user_id`, only while the refresh runs.
+When the refresh ended after the first read, the click starts the build at
+once. `startFollowingBuild` in [`first-image-build.ts`](first-image-build.ts)
+runs where a job becomes `done`: at the end of `cleanupBuild`, and in the
+failure path without a provider. It takes the request once and starts the
+build for that admin, else the added build. A failed start writes the
+`requested_image_build_start_failed` warning. A new build that is not a
+switch build clears each saved request of the org in its insert batch, in
+`insertBuild` of [`build-admission-data.ts`](build-admission-data.ts), so a
+refresh that ends later starts no second build. The build readers return
+`buildRequested: true` for a running refresh with a request.
 
 A job that fails while the image coordinator advances it writes the
 `image_build_failed` warning, in `handleImageBuildFailure` of

@@ -11,6 +11,7 @@ import {
   updateBuildJob,
 } from './build-data'
 import { cleanupBuild } from './build-execution'
+import { startFollowingBuild } from './first-image-build'
 import type { ImageRuntime } from './image-builds'
 import { cleanupBuildImageSources } from './image-sources/cleanup'
 import { ImageSourceFailure } from './image-sources/materialize'
@@ -130,6 +131,7 @@ export async function handleImageBuildFailure(
       return false
     await updateBuildJob(env.DB, buildId, 'done')
     await scheduleIdleImage(runtime, orgId, jobSoftware(job))
+    await startFollowingBuild(runtime, job)
     return true
   }
   return await cleanupBuild(

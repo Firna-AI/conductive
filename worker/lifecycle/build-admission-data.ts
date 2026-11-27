@@ -8,6 +8,7 @@ import type { RepositoryLocation } from './repository-locations'
 import type { ImageSoftwareArtifact } from './image-software'
 import { serializeSavedScript, type SavedScript } from './saved-script'
 import { writeBuildEnd } from './build-end-data'
+import { clearBuildRequestsStatement } from './build-request'
 import { endedSwitchRepairStatements } from './provider-switch-repair-data'
 import {
   switchAdmission,
@@ -124,6 +125,9 @@ export async function insertBuild(
         input.nextImageRefreshAt ?? null,
         input.id,
       ),
+    ...(input.kind === 'build' && !input.operatorSwitchId
+      ? [clearBuildRequestsStatement(db, input.orgId, input.id)]
+      : []),
     ...switchAdmissionStatements(db, input),
   ])
   await requireActiveOrg(db, input.orgId)

@@ -87,6 +87,7 @@ export async function handleLifecycleRequest(
         orgId,
         userId: context.user.id,
         kind: 'build',
+        requested: true,
         software: await latestSoftwareRelease(
           runtime.env,
           runtime.dependencies.fetch,

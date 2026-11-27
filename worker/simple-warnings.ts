@@ -63,6 +63,8 @@ export const SIMPLE_WARNINGS = {
     'Could not start the first cloud computer build.',
   added_image_build_start_failed:
     'Could not start the added cloud computer build.',
+  requested_image_build_start_failed:
+    'Could not start the build that an admin asked for during a refresh.',
   repository_image_build_start_failed:
     'Could not start the cloud computer build for the added repository.',
   repository_change_wake_failed:
