@@ -27,7 +27,7 @@ async function build(fixture: ReturnType<typeof backendFixture>) {
   return id
 }
 
-it('stores the free storage under the workspace disk line before the image saves', async () => {
+it('measures before the image saves and reports the current writable space', async () => {
   const fixture = backendFixture()
   const { boat, org, runtime } = fixture
   const id = await build(fixture)
@@ -49,6 +49,23 @@ it('stores the free storage under the workspace disk line before the image saves
   expect(boat.commands[measured]).toMatch(/ -- \/ \|/)
   expect(boat.starts[0]).toHaveProperty('env')
   expect(boat.starts[0]).not.toHaveProperty('env.CONDUCTIVE_DISK_LINE_BYTES')
+
+  const diskLines = new Map([
+    ['boat', { bytes: 70_000_000_000, rootReserveBytes: 4_000_000_000 }],
+  ])
+  const changedStorage = {
+    storageTotalBytes: 66_000_000_000,
+    storageFreeBytes: 29_000_000_000,
+  }
+  const changedHistory = await readBuildHistory(
+    runtime.env.DB,
+    org.id,
+    diskLines,
+  )
+  expect.soft(changedHistory.builds[0]).toMatchObject({ id, ...changedStorage })
+  expect(
+    (await readBuild(runtime.env.DB, org.id, id, diskLines)).build,
+  ).toMatchObject(changedStorage)
 })
 
 it('finishes a build past the workspace disk line and reports zero free storage', async () => {
@@ -91,11 +108,20 @@ it('stores the root disk size and available bytes when the account has no disk l
 
   const id = await build(fixture)
 
-  expect((await readBuild(runtime.env.DB, org.id, id)).build).toMatchObject({
+  const storage = {
     state: 'succeeded',
     storageTotalBytes: 50_100_000_000,
     storageFreeBytes: 31_200_000_000,
-  })
+  }
+  const db = runtime.env.DB
+  expect((await readBuild(db, org.id, id)).build).toMatchObject(storage)
+  await db
+    .prepare(
+      'UPDATE image_builds SET storage_root_used_bytes = NULL WHERE id = ?',
+    )
+    .bind(id)
+    .run()
+  expect((await readBuild(db, org.id, id)).build).toMatchObject(storage)
   expect(server.envd.commands).toContainEqual(
     expect.objectContaining({ command: STORAGE_COMMAND }),
   )
@@ -164,7 +190,7 @@ it.each([
   ['100 120 0\n', null],
   ['100 70 40\n', null],
   ['1e3 10 20\n', null],
-  [' 100  50  40\n', { totalBytes: 100, freeBytes: 40 }],
+  [' 100  50  40\n', { totalBytes: 100, usedBytes: 50, freeBytes: 40 }],
 ])('reads the df line %j', (stdout, storage) => {
   expect(readImageStorage(stdout)).toEqual(storage)
 })

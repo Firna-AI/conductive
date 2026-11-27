@@ -179,14 +179,16 @@ fixes such a shell, and it moves a shell only for the restore.
 
 Call `markTerminalRestoreEnded(provider, sandboxId)` when Boat reports the
 end of the restore of a create or a resume. It writes the restore marker
-`/run/conductive-terminal/restore-ended`. It runs `touch` as root, through
-the privileged-command helper and the provider's `runCommand`. It throws a
-provider error when the command fails or times out. The
+`/run/conductive-terminal/restore-ended`. It creates the terminal runtime
+directory if necessary, then runs `touch` as root. The privileged-command
+helper and the provider's `runCommand` run these steps. The function throws
+a provider error when the command fails or times out. The
 [restore watch](../lifecycle/workspace-object.md#creates-and-resumes) of
-the workspace object calls it. `/run` is memory, so each start begins
-without the marker. The agent runner reads the same marker to watch the
-live repository folder again, as the [runner guide](../../runner/README.md)
-says. The path lives in
+the workspace object calls it. The [workspace lifecycle](../lifecycle/README.md#provider-accounts)
+can write the marker before the terminal starts. The marker stays in memory
+on a kept machine and starts empty on a new machine. The agent runner reads
+the same marker to watch the live repository folder again, as the
+[runner guide](../../runner/README.md) says. The path lives in
 [`src/shared/restore-marker.ts`](../../src/shared/restore-marker.ts).
 E2B boots from the saved disk and omits the optional `hydrated` field.
 The common restore check then writes this marker as soon as the sandbox reports ready.

@@ -35,8 +35,13 @@ call and keeps its pending changes. Later saves write the complete pending
 state. Sends and resends read only committed events. A confirmation removes
 an accepted turn record only when it covers the turn's end.
 
-The runner allocates a 256 MiB `disk-reserve` file beside its state file.
-If a state save fails with ENOSPC, the runner deletes the reserve and
+For an absolute state file path, the runner allocates a 256 MiB reserve at
+`<state file>.reserve`. It creates the file exclusively and marks the file
+with an extended attribute. Only a file with the runner's ownership marker
+can be removed or resized. A name collision logs a warning once and
+disables the reserve for that runner instance.
+
+If a state save fails with ENOSPC, the runner removes its reserve and
 retries the save once. A later successful save can rebuild the reserve
 when at least 1 GiB is available on that filesystem. Reserve maintenance
 is best effort.

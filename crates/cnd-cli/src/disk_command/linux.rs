@@ -4,12 +4,15 @@ use std::fs::{self, File, Permissions, TryLockError};
 use std::io::{self, ErrorKind, Write};
 use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
 use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use rustix::fs::statvfs;
-use rustix::process::geteuid;
+use rustix::io::Errno;
+use rustix::process::{Pid, geteuid, test_kill_process};
 use tempfile::NamedTempFile;
 
 use super::hold::{EXT4, SAVED_LINE, SETTING, Space};
+use super::leases;
 use super::{DiskError, DiskIo, DiskResult, HoldLock, IoContext};
 
 pub(super) struct LinuxDisk;
@@ -70,11 +73,7 @@ impl DiskIo for LinuxDisk {
     }
 
     fn remove_line(&self) -> io::Result<()> {
-        match fs::remove_file(SAVED_LINE) {
-            Ok(()) => Ok(()),
-            Err(error) if error.kind() == ErrorKind::NotFound => Ok(()),
-            Err(error) => Err(error),
-        }
+        remove_if_exists(Path::new(SAVED_LINE))
     }
 
     fn settings(&self) -> io::Result<Vec<PathBuf>> {
@@ -99,5 +98,47 @@ impl DiskIo for LinuxDisk {
 
     fn write_hold(&self, path: &Path, clusters: u64) -> io::Result<()> {
         fs::write(path, format!("{clusters}\n"))
+    }
+
+    fn lease_paths(&self) -> io::Result<Vec<PathBuf>> {
+        let entries = match fs::read_dir(leases::DIRECTORY) {
+            Ok(entries) => entries,
+            Err(error) if error.kind() == ErrorKind::NotFound => return Ok(Vec::new()),
+            Err(error) => return Err(error),
+        };
+        let mut paths = Vec::new();
+        for entry in entries {
+            let entry = entry?;
+            if entry.file_type()?.is_file() {
+                paths.push(entry.path());
+            }
+        }
+        Ok(paths)
+    }
+
+    fn remove_lease(&self, path: &Path) -> io::Result<()> {
+        remove_if_exists(path)
+    }
+
+    fn unix_seconds(&self) -> io::Result<u64> {
+        match SystemTime::now().duration_since(UNIX_EPOCH) {
+            Ok(time) => Ok(time.as_secs()),
+            Err(error) => Err(io::Error::other(error)),
+        }
+    }
+
+    fn process_exists(&self, pid: Pid) -> io::Result<bool> {
+        match test_kill_process(pid) {
+            Ok(()) | Err(Errno::PERM) => Ok(true),
+            Err(Errno::SRCH) => Ok(false),
+            Err(error) => Err(error.into()),
+        }
+    }
+}
+
+fn remove_if_exists(path: &Path) -> io::Result<()> {
+    match fs::remove_file(path) {
+        Err(error) if error.kind() == ErrorKind::NotFound => Ok(()),
+        result => result,
     }
 }

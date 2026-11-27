@@ -39,6 +39,10 @@ export async function localSavedScriptFixture(
   const software = join(directory, 'software')
   const mappedPaths = new Map([
     [legacyRepositoryDirectory(repositoryId), repository],
+    ['/run/conductive-disk-hold.lock', join(directory, 'disk-hold.lock')],
+    ['/run/conductive-disk', join(directory, 'disk')],
+    ['/run/conductive-lifecycle', join(directory, 'workspace-journal')],
+    ['/run/conductive-terminal', join(directory, 'terminal-runtime')],
     ['/run/conductive', runtime],
     ['/opt/conductive', software],
     ['/run/ascii-secrets/env.sh', environment],
@@ -122,6 +126,7 @@ export async function localSavedScriptFixture(
           `printf "%s\\n" runner-restarted >> "${runnerCalls}"`,
         )
         .replaceAll('sudo -n -- /bin/sh -c ', '/bin/sh -c ')
+        .replaceAll('install -d -m 700 -o user -g user ', 'install -d -m 700 ')
         .replaceAll(
           'sudo -n git config --system ',
           `git config --file ${shellQuote(systemGitConfig)} `,

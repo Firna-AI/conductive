@@ -232,14 +232,24 @@ The [provider account settings](../sandbox/accounts.ts) set a disk line
 for Boat. [Sandbox variables](sandbox-environment.ts) pass it as
 `CONDUCTIVE_DISK_LINE_BYTES` at create and resume, including disk
 retention. The Worker drops any org value with that name for every account.
-The [startup journal command](command-intents.ts) releases the disk hold
-before its first write for a workspace or retention start.
-It uses the kernel setting directly, so older sandbox software can start.
-The [startup command](image-software.ts) calls `conductive disk hold` as
-its final step. The hold uses the restore-safe value while the restore
-marker is missing. A start continues if either disk command fails.
-[Free storage](image-builds.md#free-storage) describes how builds use the
-line for their storage measurement.
+
+The [command journal](command-intents.ts) uses `/run/conductive-lifecycle`
+for workspace commands. It can still recover existing journals in
+`/tmp/conductive-lifecycle`, which also holds image build journals.
+The owner of a workspace journal opens a root-owned lease for up to
+25 minutes under `/run/conductive-disk/leases`. It then releases the disk
+hold directly through the kernel setting, which also works with older
+sandbox software. After it publishes the command result, the owner removes
+the lease and calls `conductive disk hold`. A replay reads the journal
+without changing the hold. The disk commands are best effort.
+
+If the provider reports a completed restore at readiness, the first
+workspace command writes the restore marker on accounts with a disk line.
+Disk retention uses its existing provider status checks to mark a completed
+restore. The terminal restore watch can still mark a restore after startup.
+
+[Free storage](image-builds.md#free-storage) describes how build reads
+use the current disk line to calculate writable space.
 
 ## Development
 

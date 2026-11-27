@@ -90,11 +90,6 @@ function ownerGitSettingsCommand(owner: CommitAuthor): string {
   ].join('\n')
 }
 
-/** The startup journal runs this before it creates any files. */
-export const RELEASE_WORKSPACE_DISK_HOLD = `${privilegedCommand(
-  'for setting in /sys/fs/ext4/*/reserved_clusters; do [ -f "$setting" ] || continue; echo 4096 > "$setting"; done',
-)} 2>/dev/null || true`
-
 export function workspaceStartupCommand(
   script: SavedScript,
   owner: CommitAuthor | null,
@@ -125,6 +120,5 @@ export function workspaceStartupCommand(
           'sudo -n flock /run/conductive/bootstrap-activate.lock systemctl restart conductive-runner.service',
         ]
       : []),
-    `${privilegedCommand('/opt/conductive/current/conductive disk hold')} 2>/dev/null || true`,
   ].join('\n')
 }

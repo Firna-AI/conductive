@@ -27,9 +27,8 @@ pub trait Disk: Send + Sync {
 /// The Node-compatible state file and its adjacent `.next` file.
 pub struct AtomicDisk {
     path: PathBuf,
-    reserve: Option<PathBuf>,
+    reserve: Mutex<Option<PathBuf>>,
     files: Box<dyn StateFiles>,
-    writes: Mutex<()>,
 }
 
 impl AtomicDisk {
@@ -39,13 +38,12 @@ impl AtomicDisk {
     }
 
     fn with_files(path: PathBuf, files: Box<dyn StateFiles>) -> Self {
-        let reserve = path.with_file_name("disk-reserve");
-        let reserve = (reserve != path).then_some(reserve);
+        let reserve = (path.is_absolute() && path.file_name().is_some())
+            .then(|| path.with_added_extension("reserve"));
         Self {
             path,
-            reserve,
+            reserve: Mutex::new(reserve),
             files,
-            writes: Mutex::new(()),
         }
     }
 
@@ -53,11 +51,9 @@ impl AtomicDisk {
         if self.files.reserve_ready(reserve).await? {
             return Ok(());
         }
-        let folder = reserve
-            .parent()
-            .filter(|folder| !folder.as_os_str().is_empty())
-            .unwrap_or(Path::new("."));
-        if self.files.available_bytes(folder).await? >= REBUILD_MIN_BYTES {
+        if let Some(folder) = reserve.parent()
+            && self.files.available_bytes(folder).await? >= REBUILD_MIN_BYTES
+        {
             self.files.allocate_reserve(reserve, RESERVE_BYTES).await?;
         }
         Ok(())
@@ -75,22 +71,33 @@ impl Disk for AtomicDisk {
     }
 
     async fn write(&self, bytes: &[u8]) -> Result<()> {
-        let _guard = self.writes.lock().await;
+        let mut reserve = self.reserve.lock().await;
         match self.files.replace(&self.path, bytes).await {
             Ok(()) => {
-                if let Some(reserve) = &self.reserve {
-                    let _ = self.replenish_reserve(reserve).await;
+                if let Some(path) = reserve.as_deref() {
+                    let result = self.replenish_reserve(path).await;
+                    disable_reserve_on_collision(&mut reserve, result);
                 }
                 Ok(())
             }
             Err(error) if error.kind() == ErrorKind::StorageFull => {
-                if let Some(reserve) = &self.reserve {
-                    let _ = self.files.remove_reserve(reserve).await;
+                if let Some(path) = reserve.as_deref() {
+                    let result = self.files.remove_reserve(path).await;
+                    disable_reserve_on_collision(&mut reserve, result);
                 }
                 self.files.replace(&self.path, bytes).await.internal()
             }
             Err(error) => Err(error).internal(),
         }
+    }
+}
+
+fn disable_reserve_on_collision(reserve: &mut Option<PathBuf>, result: io::Result<()>) {
+    if let Err(error) = result
+        && error.kind() == ErrorKind::AlreadyExists
+        && let Some(path) = reserve.take()
+    {
+        tracing::warn!(path = %path.display(), "Runner state reserve path is already in use");
     }
 }
 

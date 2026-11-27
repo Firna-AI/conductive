@@ -1,6 +1,7 @@
 import { requireActiveStartUsers } from './start-access'
 import { providerState } from './provider-state'
 import type { AppDependencies, AppEnv } from '../env'
+import { configuredProviderAccount } from '../sandbox/accounts'
 import type { SandboxProvider } from '../sandbox/provider'
 import type { WorkspaceRow } from './workspace-row'
 import { allocateWorkspace } from './start-allocation'
@@ -35,6 +36,7 @@ export async function advanceStartMachine(
 ): Promise<{
   phase: WorkspaceMachinePhase
   environmentCiphertext: string | null
+  markRestoreEnded?: boolean
 } | null> {
   const sandboxId = row.sandboxId
   if (job.phase === 'machine') {
@@ -168,6 +170,9 @@ export async function advanceStartMachine(
       phase:
         job.afterReadyPhase ?? (job.kind === 'create' ? 'fetch' : 'startup'),
       environmentCiphertext: job.environmentCiphertext,
+      markRestoreEnded:
+        machine.hydrated !== false &&
+        Boolean(configuredProviderAccount(env, row.providerAccount).diskLine),
     }
   }
   return null

@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 
 use clap::{Args, Subcommand};
 use cnd_runner::config::DISK_LINE_ENV;
+use rustix::process::Pid;
 use thiserror::Error;
 
 use crate::error::{Error, Result};
@@ -14,6 +15,7 @@ use self::hold::Space;
 use self::linux::LinuxDisk;
 
 mod hold;
+mod leases;
 mod linux;
 mod settings;
 
@@ -60,7 +62,8 @@ trait HoldLock: Send + Sync {}
     test,
     unimock::unimock(api = [
         MockLock, MockRead, MockReadLink, MockExists, MockSpace, MockSaveLine, MockRemoveLine,
-        MockSettings, MockWriteHold
+        MockSettings, MockWriteHold, MockLeasePaths, MockRemoveLease, MockUnixSeconds,
+        MockProcessExists
     ])
 )]
 trait DiskIo {
@@ -73,6 +76,10 @@ trait DiskIo {
     fn remove_line(&self) -> io::Result<()>;
     fn settings(&self) -> io::Result<Vec<PathBuf>>;
     fn write_hold(&self, path: &Path, clusters: u64) -> io::Result<()>;
+    fn lease_paths(&self) -> io::Result<Vec<PathBuf>>;
+    fn remove_lease(&self, path: &Path) -> io::Result<()>;
+    fn unix_seconds(&self) -> io::Result<u64>;
+    fn process_exists(&self, pid: Pid) -> io::Result<bool>;
 }
 
 /// A disk command failure, with a diagnostic that contains no environment values.

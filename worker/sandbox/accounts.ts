@@ -1,5 +1,6 @@
 import { isRecord } from '../http'
 import { warnWorker } from '../warnings'
+import { DEFAULT_PROVIDER_ACCOUNT } from './account-identity'
 import { validDomain } from './e2b/identity'
 
 export interface ProviderDiskLine {
@@ -12,6 +13,12 @@ const BOAT_DISK_LINE: ProviderDiskLine = {
   // Boat's default ext4 disk keeps these blocks for root.
   rootReserveBytes: 846_051 * 4_096,
 }
+
+export type ProviderDiskLines = ReadonlyMap<string, ProviderDiskLine>
+
+export const DEFAULT_PROVIDER_DISK_LINES: ProviderDiskLines = new Map([
+  [DEFAULT_PROVIDER_ACCOUNT, BOAT_DISK_LINE],
+])
 
 export type ProviderAccountConfiguration =
   | {
@@ -61,8 +68,20 @@ export function configuredProviderAccounts(
   if (invalid) warnWorker({ kind: 'provider_accounts_invalid' })
   return {
     ...Object.fromEntries(entries),
-    boat: boatAccount(env.BOAT_API_KEY, env.BOAT_ORG_ID),
+    [DEFAULT_PROVIDER_ACCOUNT]: boatAccount(env.BOAT_API_KEY, env.BOAT_ORG_ID),
   }
+}
+
+export function configuredProviderDiskLines(
+  env: ProviderAccountEnvironment,
+): ProviderDiskLines {
+  const lines = new Map<string, ProviderDiskLine>()
+  for (const [id, { diskLine }] of Object.entries(
+    configuredProviderAccounts(env),
+  )) {
+    if (diskLine) lines.set(id, diskLine)
+  }
+  return lines
 }
 
 function boatAccount(

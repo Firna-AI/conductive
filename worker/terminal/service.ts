@@ -45,10 +45,20 @@ export async function markTerminalRestoreEnded(
 ): Promise<void> {
   const result = await provider.runCommand(
     sandboxId,
-    privilegedCommand(`touch ${shellArgument(TERMINAL_RESTORE_MARKER)}`),
+    terminalRestoreMarkerCommand(),
   )
   if (result.exitCode !== 0 || result.timedOut)
     throw new ProviderError('unavailable', 502)
+}
+
+/** The restore can finish before the terminal creates its runtime directory. */
+export function terminalRestoreMarkerCommand(): string {
+  const runtime = shellArgument(TERMINAL_RUNTIME)
+  return privilegedCommand(`set -eu
+if [ ! -d ${runtime} ]; then
+  install -d -m 700 -o user -g user ${runtime}
+fi
+touch ${shellArgument(TERMINAL_RESTORE_MARKER)}`)
 }
 
 /** Read and cache the password only after the detached setup command succeeds. */

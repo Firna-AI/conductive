@@ -1,4 +1,6 @@
 import type { ImageBuild } from '../../src/shared/org-settings'
+import type { ProviderDiskLines } from '../sandbox/accounts'
+import { readBuildStorage, type BuildStorageRow } from './image-storage'
 
 /**
  * A Build computer click during a refresh saves a request on the refresh.
@@ -87,12 +89,36 @@ export function buildRequestedColumn(build: string): string {
 }
 
 /** A build row as D1 returns it, with the request as a number. */
-export type BuildRow = Omit<ImageBuild, 'buildRequested'> & {
-  buildRequested: number | null
-}
+export type BuildRow = Omit<
+  ImageBuild,
+  keyof BuildStorageRow | 'buildRequested'
+> &
+  BuildStorageRow & {
+    buildRequested: number | null
+  }
 
 /** The build of a row. Only a running refresh with a request names it. */
-export function readBuildRow(row: BuildRow): ImageBuild {
-  const { buildRequested, ...build } = row
+export function readBuildRow(
+  row: BuildRow,
+  diskLines: ProviderDiskLines,
+): ImageBuild {
+  const {
+    buildRequested,
+    storageAccount,
+    storageRootUsedBytes,
+    storageTotalBytes,
+    storageFreeBytes,
+    ...fields
+  } = row
+  const storage = readBuildStorage(
+    {
+      storageAccount,
+      storageRootUsedBytes,
+      storageTotalBytes,
+      storageFreeBytes,
+    },
+    diskLines,
+  )
+  const build = { ...fields, ...storage }
   return buildRequested === 1 ? { ...build, buildRequested: true } : build
 }

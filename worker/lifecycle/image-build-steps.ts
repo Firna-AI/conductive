@@ -1,5 +1,4 @@
 import { publishBuild } from './build-admission-data'
-import { configuredProviderAccount } from '../sandbox/accounts'
 import type { SandboxProvider } from '../sandbox/provider'
 import { requireActiveOrg, requireActiveUser } from '../data/user-access'
 import { assignBuildSnapshot, readBuildJob, type BuildJob } from './build-data'
@@ -61,12 +60,7 @@ export async function advanceBuildStep(
   if (job.phase === 'snapshot') {
     if (job.snapshotName === null) {
       await clearImageCommands(provider, job.sandboxId)
-      const { diskLine } = configuredProviderAccount(env, job.providerAccount)
-      const storage = await measureImageStorage(
-        provider,
-        job.sandboxId,
-        diskLine,
-      )
+      const storage = await measureImageStorage(provider, job.sandboxId)
       if (storage) await saveImageStorage(env.DB, buildId, storage)
     }
     await requireActiveOrg(env.DB, orgId)

@@ -2,6 +2,7 @@ import type { AppDependencies, AppEnv } from '../env'
 import type { SandboxProvider } from '../sandbox/provider'
 import {
   startWorkspaceTerminal,
+  terminalRestoreMarkerCommand,
   terminalStartCommand,
 } from '../terminal/service'
 import { warnWorker } from '../warnings'
@@ -101,8 +102,20 @@ export async function advanceStartCommand(
                 settleWorkspaceBranch(env.DB, job.workspaceId),
               )) ?? row.branch,
           }
-    const started = await call(async () =>
-      provider.startCommand(
+    const started = await call(async () => {
+      const command =
+        phase === 'terminal'
+          ? terminalStartCommand()
+          : workspacePhaseCommand(
+              commandRow,
+              job,
+              phase === 'startup'
+                ? await ownerCommitAuthor(env.DB, row.ownerUserId)
+                : null,
+              preserveBase,
+              bootstrap,
+            )
+      return provider.startCommand(
         sandboxId,
         lifecycleCommand(
           {
@@ -111,20 +124,12 @@ export async function advanceStartCommand(
             attempt: job.commandAttempt ?? job.attempt,
           },
           phase,
-          job.phase === 'terminal'
-            ? terminalStartCommand()
-            : workspacePhaseCommand(
-                commandRow,
-                job,
-                job.phase === 'startup'
-                  ? await ownerCommitAuthor(env.DB, row.ownerUserId)
-                  : null,
-                preserveBase,
-                bootstrap,
-              ),
+          job.markRestoreEnded
+            ? `${terminalRestoreMarkerCommand()} 2>/dev/null || true\n${command}`
+            : command,
         ),
-      ),
-    )
+      )
+    })
     await storage.update({ ...job, processId: started.processId })
     await storage.retry(job.attempt, 'progress')
     return false
@@ -174,6 +179,7 @@ export async function nextStartCommand(
       job.kind === 'create' && phase === 'terminal'
         ? 'startup'
         : job.afterReadyPhase,
+    markRestoreEnded: undefined,
     providerRetry: null,
     processId: null,
     stdoutOffset: 0,

@@ -8,23 +8,36 @@ import {
   type BuildRow,
 } from './build-request'
 import { HttpError } from '../http'
+import {
+  DEFAULT_PROVIDER_DISK_LINES,
+  type ProviderDiskLines,
+} from '../sandbox/accounts'
 import { BUILD_STORAGE_COLUMNS } from './image-storage'
+
+export const BUILD_READ_COLUMNS = `id, org_id AS orgId, kind, state, started_at AS startedAt,
+  completed_at AS completedAt, CASE WHEN completed_at IS NULL THEN NULL
+  ELSE completed_at - started_at END AS durationMs, error, ${BUILD_STORAGE_COLUMNS},
+  ${buildRequestedColumn('image_builds')} AS buildRequested`
 
 /** D1 batches keep the completion state and the last log in one snapshot. */
 export async function readBuildSnapshot(
   db: D1Database,
   orgId: string,
   buildId: string,
-  after = 0,
-  limit = -1,
+  {
+    after = 0,
+    limit = -1,
+    diskLines = DEFAULT_PROVIDER_DISK_LINES,
+  }: {
+    after?: number
+    limit?: number
+    diskLines?: ProviderDiskLines
+  } = {},
 ): Promise<BuildResponse> {
   const [header, events] = await db.batch<BuildRow | BuildLogEvent>([
     db
       .prepare(
-        `SELECT id, org_id AS orgId, kind, state, started_at AS startedAt, completed_at AS completedAt,
-     CASE WHEN completed_at IS NULL THEN NULL ELSE completed_at - started_at END AS durationMs,
-     error, ${BUILD_STORAGE_COLUMNS},
-     ${buildRequestedColumn('image_builds')} AS buildRequested
+        `SELECT ${BUILD_READ_COLUMNS}
      FROM image_builds WHERE org_id = ? AND id = ? AND operator_switch_id IS NULL`,
       )
       .bind(orgId, buildId),
@@ -45,5 +58,5 @@ export async function readBuildSnapshot(
     if (!('eventNumber' in event)) throw new Error('Invalid build log row')
     return event
   })
-  return { build: readBuildRow(build), log }
+  return { build: readBuildRow(build, diskLines), log }
 }

@@ -132,10 +132,14 @@ exports in `/run/ascii-secrets/env.sh`. The line sets where root writes
 stop, in bytes used on the root filesystem. The command skips the hold if the
 line is absent or the root filesystem uses a type other than ext4.
 
-On ext4 it uses the default hold of 4,096 clusters until the
-`/run/conductive-terminal/restore-ended` marker exists. It then sets
-`reserved_clusters` from the line and the free space on `/`. When disk
-usage is above the configured line, the command can save a higher line in
+On ext4 it uses the default hold of 4,096 clusters while the
+`/run/conductive-terminal/restore-ended` marker is missing or a workspace
+command holds a valid lease. The command reads leases in
+`/run/conductive-disk/leases`. It removes a lease if its owner has exited
+or its deadline has passed. Once the marker exists and the last lease has
+ended, the command sets `reserved_clusters` from the line and the free
+space on `/`. When disk usage is above the configured line, the command
+can save a higher line in
 `/var/lib/conductive/disk-line`. The saved line can fall as space returns.
 When usage is at or below the configured line, the command removes the
 saved line.

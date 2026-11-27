@@ -2,6 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
+use super::leases;
 use super::settings::decimal_line;
 use super::{DiskError, DiskIo, DiskResult, IoContext, read_optional};
 
@@ -45,9 +46,10 @@ pub(super) fn apply(disk: &dyn DiskIo, line: u64) -> DiskResult<()> {
         return Ok(());
     };
     let _lock = disk.lock()?;
-    let hold = if disk
-        .exists(Path::new(RESTORE_MARKER))
-        .during("check the restore marker")?
+    let hold = if !leases::any_active(disk)?
+        && disk
+            .exists(Path::new(RESTORE_MARKER))
+            .during("check the restore marker")?
     {
         let space = disk
             .space()

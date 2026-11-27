@@ -1,18 +1,48 @@
-import type { ProviderDiskLine } from '../sandbox/accounts'
+import type { ImageBuild } from '../../src/shared/org-settings'
+import type { ProviderDiskLines } from '../sandbox/accounts'
 import type { SandboxProvider } from '../sandbox/provider'
 import { warnWorker } from '../warnings'
 
 /**
- * The free storage columns of a build row of `image_builds`, for the
- * browser. Only a good build of the current provider account of its org
- * gives them, because a build of another account measured another disk.
+ * Only a good build of the org's current provider account can show storage.
  */
-export const BUILD_STORAGE_COLUMNS = `CASE WHEN image_builds.state = 'succeeded'
-    AND image_builds.provider_account = (SELECT provider_account FROM orgs WHERE orgs.id = image_builds.org_id)
-    THEN image_builds.storage_total_bytes END AS storageTotalBytes,
+export const BUILD_STORAGE_COLUMNS = `image_builds.storage_total_bytes AS storageTotalBytes,
+  image_builds.storage_free_bytes AS storageFreeBytes,
+  image_builds.storage_root_used_bytes AS storageRootUsedBytes,
   CASE WHEN image_builds.state = 'succeeded'
     AND image_builds.provider_account = (SELECT provider_account FROM orgs WHERE orgs.id = image_builds.org_id)
-    THEN image_builds.storage_free_bytes END AS storageFreeBytes`
+    THEN image_builds.provider_account END AS storageAccount`
+
+type BuildStorage = Pick<ImageBuild, 'storageTotalBytes' | 'storageFreeBytes'>
+
+export type BuildStorageRow = BuildStorage & {
+  storageAccount: string | null
+  storageRootUsedBytes: number | null
+}
+
+export function readBuildStorage(
+  row: BuildStorageRow,
+  diskLines: ProviderDiskLines,
+): BuildStorage {
+  if (row.storageAccount !== null) {
+    const line = diskLines.get(row.storageAccount)
+    if (!line) {
+      const { storageTotalBytes, storageFreeBytes } = row
+      return { storageTotalBytes, storageFreeBytes }
+    }
+    if (row.storageRootUsedBytes !== null) {
+      const storageTotalBytes = line.bytes - line.rootReserveBytes
+      return {
+        storageTotalBytes,
+        storageFreeBytes: Math.max(
+          0,
+          storageTotalBytes - row.storageRootUsedBytes,
+        ),
+      }
+    }
+  }
+  return { storageTotalBytes: null, storageFreeBytes: null }
+}
 
 /**
  * Measure the root file system before the home folder restore can finish.
@@ -23,14 +53,12 @@ export const STORAGE_COMMAND =
 
 export interface ImageStorage {
   totalBytes: number
+  usedBytes: number
   freeBytes: number
 }
 
 /** Reads the last line of `STORAGE_COMMAND`, or null when it is not valid. */
-export function readImageStorage(
-  stdout: string,
-  diskLine?: ProviderDiskLine,
-): ImageStorage | null {
+export function readImageStorage(stdout: string): ImageStorage | null {
   const match = /^\s*(\d+)\s+(\d+)\s+(\d+)\s*$/.exec(stdout)
   if (!match) return null
   const totalBytes = Number(match[1])
@@ -45,12 +73,7 @@ export function readImageStorage(
     freeBytes > totalBytes - usedBytes
   )
     return null
-  if (!diskLine) return { totalBytes, freeBytes }
-  const writableBytes = diskLine.bytes - diskLine.rootReserveBytes
-  return {
-    totalBytes: writableBytes,
-    freeBytes: Math.max(0, writableBytes - usedBytes),
-  }
+  return { totalBytes, usedBytes, freeBytes }
 }
 
 /**
@@ -61,13 +84,12 @@ export function readImageStorage(
 export async function measureImageStorage(
   provider: SandboxProvider,
   sandboxId: string,
-  diskLine: ProviderDiskLine | undefined,
 ): Promise<ImageStorage | null> {
   try {
     const result = await provider.runCommand(sandboxId, STORAGE_COMMAND)
     const storage =
       result.exitCode === 0 && !result.timedOut
-        ? readImageStorage(result.stdout, diskLine)
+        ? readImageStorage(result.stdout)
         : null
     if (storage) return storage
   } catch {
@@ -77,7 +99,7 @@ export async function measureImageStorage(
   return null
 }
 
-/** Saves the free storage of a build. A repeat writes the same row again. */
+/** Saves the root disk measurement. A repeat writes the same row again. */
 export async function saveImageStorage(
   db: D1Database,
   buildId: string,
@@ -85,8 +107,9 @@ export async function saveImageStorage(
 ): Promise<void> {
   await db
     .prepare(
-      'UPDATE image_builds SET storage_total_bytes = ?, storage_free_bytes = ? WHERE id = ?',
+      `UPDATE image_builds SET storage_total_bytes = ?, storage_free_bytes = ?,
+       storage_root_used_bytes = ? WHERE id = ?`,
     )
-    .bind(storage.totalBytes, storage.freeBytes, buildId)
+    .bind(storage.totalBytes, storage.freeBytes, storage.usedBytes, buildId)
     .run()
 }

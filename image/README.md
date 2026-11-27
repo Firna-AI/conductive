@@ -99,7 +99,9 @@ The root `conductive-disk-hold.service` sets the hold when the sandbox
 has a configured disk line. Its timer schedules a run 20 seconds after
 boot and every five minutes. Its path unit runs the service when the
 restore marker is created or touched. The timer covers a marker that
-exists before the path unit starts.
+exists before the path unit starts. A valid workspace command lease in
+`/run/conductive-disk/leases` keeps the default hold. The journal removes
+the lease and runs the hold command after it records the result.
 
 A running runner also applies a staged release when its workspace is idle,
 as the [runner service guide](../runner/service/README.md) describes. It

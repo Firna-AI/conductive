@@ -12,12 +12,15 @@ use unimock::{Clause, MockFn, Unimock, matching};
 use super::hold::{MOUNT_INFO, RESTORE_MARKER, SAVED_LINE, Space, apply, release};
 use super::settings::{ENV_FILE, configured_line};
 use super::{
-    DiskError, HoldLock, MockExists, MockLock, MockRead, MockReadLink, MockRemoveLine,
-    MockSaveLine, MockSettings, MockSpace, MockWriteHold,
+    DiskError, HoldLock, MockExists, MockLeasePaths, MockLock, MockRead, MockReadLink,
+    MockRemoveLine, MockSaveLine, MockSettings, MockSpace, MockWriteHold,
 };
 
 const VDA_SETTING: &str = "/sys/fs/ext4/vda1/reserved_clusters";
 const CONFIGURED: &str = "72000000000";
+
+#[path = "disk_lease_tests.rs"]
+mod disk_lease_tests;
 
 impl HoldLock for () {}
 
@@ -46,6 +49,12 @@ fn restore_ended(ended: bool) -> impl Clause {
         .returns(Ok(ended))
 }
 
+fn no_leases() -> impl Clause {
+    MockLeasePaths
+        .some_call(matching!())
+        .returns(Ok(Vec::new()))
+}
+
 fn root_space(free: u64) -> impl Clause {
     MockSpace.some_call(matching!()).returns(Ok(Space {
         blocks: 20_000_000,
@@ -72,6 +81,7 @@ fn reads_the_exported_line_applies_the_hold_and_clears_saved_headroom() {
                           export CONDUCTIVE_DISK_LINE_BYTES='72000000000'\n"
                 .to_vec())),
         ext4_root(),
+        no_leases(),
         restore_ended(true),
         root_space(2_650_000),
         MockRemoveLine.some_call(matching!()).returns(Ok(())),
@@ -85,6 +95,7 @@ fn reads_the_exported_line_applies_the_hold_and_clears_saved_headroom() {
 fn clears_saved_headroom_when_usage_equals_the_line() {
     let disk = Unimock::new((
         ext4_root(),
+        no_leases(),
         restore_ended(true),
         root_space(2_421_875),
         MockRemoveLine.some_call(matching!()).returns(Ok(())),
@@ -97,6 +108,7 @@ fn clears_saved_headroom_when_usage_equals_the_line() {
 fn saves_headroom_when_usage_is_one_byte_above_the_line() {
     let disk = Unimock::new((
         ext4_root(),
+        no_leases(),
         restore_ended(true),
         root_space(2_421_875),
         MockRead
@@ -112,7 +124,12 @@ fn saves_headroom_when_usage_is_one_byte_above_the_line() {
 
 #[test]
 fn uses_the_environment_and_restores_the_default_before_hydration() {
-    let disk = Unimock::new((ext4_root(), restore_ended(false), write_hold(4096)));
+    let disk = Unimock::new((
+        ext4_root(),
+        no_leases(),
+        restore_ended(false),
+        write_hold(4096),
+    ));
     let line = configured_line(&disk, Some(OsStr::new(CONFIGURED)))
         .unwrap()
         .unwrap();
@@ -170,6 +187,7 @@ fn saves_headroom_once_and_reduces_it_as_the_disk_frees_space() {
     ] {
         let reads_and_hold = (
             ext4_root(),
+            no_leases(),
             restore_ended(true),
             root_space(free),
             MockRead
