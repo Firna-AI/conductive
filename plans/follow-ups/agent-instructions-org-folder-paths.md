@@ -1,0 +1,35 @@
+# Agent instructions resolve org folder variables
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-27, from the branch `calummoore/add-repo-not-added-faoc`, a finding check of review finding 11.
+- **Location:** the folder lines in `crates/cnd-runner/src/engine/instructions.rs:63-65`, the parse of `repository_directories` in `crates/cnd-runner/src/config.rs:131-135`, `NodeHelpers::workspace_environment` in `crates/cnd-runner/src/helper/process.rs:35-60`, the move check `RepositoryFolders::new` in `crates/cnd-runner/src/relocation.rs:69-75`, and the launcher `image/runner-start.sh:3-7` and `:14-15`.
+- **Reason:** The behaviour is on `origin/main`, outside the branch that found it.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Folder variable:** a variable such as `CONDUCTIVE_REPOSITORY_API_DIR` that names a repository folder on the cloud computer. An org admin can also save an org variable with this name pattern.
+  - **Org variable:** an env var that an org admin saves in the org settings. Each cloud computer of the org gets it at each start, in `/run/ascii-secrets/env.sh`.
+  - **Agent instructions:** the fixed workspace facts that the runner gives each new agent session. The session keeps them for its life.
+  - **Record copy:** the file `/run/conductive/repository-folders`, where the Worker writes the folder variables that the app records. Each value is an absolute path.
+- **Background:**
+  - `image/runner-start.sh` loads the org variables and the app's own variables from `/run/ascii-secrets/env.sh`. Then it exports the folder variables of the record copy. So the runner cannot tell an org variable from a folder that the app records.
+  - The runner reads every variable of its environment that matches `CONDUCTIVE_REPOSITORY_*_DIR`. It resolves a relative value against its current folder, which is the repository folder. It lists each one in the agent instructions.
+  - Agent commands, terminals, and services get the value that the org saved. `workspace_environment` sets only the folder variables that a repository move registered, in `registered_repository_variables`. The helper inherits every other value from the runner.
+  - The move check of the runner also reads `repository_directories`. So a change of the parsed values also changes which moves the runner accepts.
+  - Commit `de367388a` added the resolved folder lines to the instructions of the Node runner on 9 November 2026. Commit `a20746b99` kept them in the Rust runner.
+- **Problem:** For an org variable saved with a relative value, such as `../api`, the agent instructions show an absolute path, while commands get the relative value. `config.rs:134` resolves the value, and `instructions.rs:63-65` lists the resolved path.
+- **Impact if no action:** An agent can read a path in its instructions that differs from the value its commands see.
+- **Root question:** Which value do the agent instructions show for an org variable with the folder name pattern?
+- **Options:**
+  - **A.** List the saved value of an inherited variable, and the resolved path only for folders that the app records. The runner needs no new source for this. The record copy holds only absolute paths, so the runner can list each value as its environment gives it. A variable that a move registered lists the folder of the move. Change only the instruction lines, not the parsed values. Cost: the agent must resolve a relative org value itself. Effort: Small.
+  - **B.** Take the app folders for the instructions from the record copy, and list org variables as saved. Also list each variable that a move registered, because a failed write can leave it out of the copy. Cost: the runner reads one more file for each new session. Effort: Medium.
+- **Left out:**
+  - Rejecting org variables with this name pattern breaks saved settings and needs the user.
+  - Giving agent commands the resolved path, as the instructions show it. Terminals and services still get the saved value, so commands would then differ from them. The review of this branch rejected this approach before the merge.
+- **Wider fix:** B. One source names the app folders.
+- **Previous examples:** None found.
+- **Related:** `plans/follow-ups/repository-folder-record-refresh.md` keeps the record copy current after a clone. Option B here reads that copy, so a copy that a failed write left stale also leaves a folder out of the instructions.
+- **Recommendation:** A. It aligns the text with what commands see, with a small change. B best protects the codebase, because one source then names the app folders.
+- **Action:** fix after merge, apply A, because the behaviour is on `origin/main`.

@@ -9,6 +9,7 @@ import {
 import { WarningId } from '../warning-values'
 import { repositoryChangeFixture } from './repository-change.test-support'
 import { AFTER_MOVE_LIMIT_MS } from './repository-change-end'
+import { recordedRepositoryLocations } from './repository-location-data'
 import { readWorkspace } from './workspace-data'
 
 let harness: TestHarness
@@ -125,6 +126,42 @@ it('ends a move whose branch read keeps failing after the limit, and keeps the o
       phase: 'move',
     }),
   )
+})
+
+it('releases the workspace when saving a completed clone folder fails until the limit', async () => {
+  const f = await repositoryChangeFixture(harness)
+  f.controls.runner = {
+    state: 'hello',
+    canMove: true,
+    addsRepositoryFolder: true,
+  }
+  const pending = await f.start({ repositoryId: 'unheld', allowWork: true })
+  if (pending.state !== 'pending') throw new Error('Expected a change.')
+  const locations = () => recordedRepositoryLocations(f.env.DB, WORKSPACE_ID)
+  const original = await locations()
+  await f.advanceTo('move')
+  await f.coordinator.advance()
+  await f.env.DB.prepare(
+    `CREATE TRIGGER fail_clone_folder_save
+    BEFORE UPDATE OF repository_locations_json ON workspace_runtime
+    BEGIN SELECT RAISE(ABORT, 'Injected clone folder save failure'); END`,
+  ).run()
+  try {
+    await f.coordinator.advance()
+    const statusRequests = f.boat.statusRequests.length
+    const detached = f.detached()
+    f.reconstruct()
+    await expectEndAtLimit(f, 'move')
+    expect(f.boat.statusRequests).toHaveLength(statusRequests)
+    expect(f.detached()).toEqual(detached)
+    await expectOldRecord(f, pending.changeId)
+    expect(await locations()).toEqual(original)
+    expect(await f.start({ allowWork: true })).toMatchObject({
+      state: 'pending',
+    })
+  } finally {
+    await f.env.DB.prepare('DROP TRIGGER fail_clone_folder_save').run()
+  }
 })
 
 it('keeps the retry of a publication after the limit once the record names the new repository', async () => {

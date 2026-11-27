@@ -7,6 +7,8 @@ use std::path::{Path, PathBuf};
 
 use crate::config::{Configuration, is_skills_repository};
 use crate::error::Error;
+use crate::helper::process::NodeHelpers;
+use crate::relocation::RepositoryTarget;
 
 #[test]
 fn parses_required_settings_and_only_named_repository_folders() {
@@ -61,6 +63,48 @@ fn parses_required_settings_and_only_named_repository_folders() {
             name: "CONDUCTIVE_WORKSPACE_TOKEN"
         })
     ));
+}
+
+#[test]
+fn agent_commands_keep_relative_org_values_and_export_registered_folders() {
+    let mut environment = BTreeMap::from([
+        ("CONDUCTIVE_WORKSPACE_ID".into(), "workspace".into()),
+        ("CONDUCTIVE_WORKSPACE_TOKEN".into(), "token".into()),
+        (
+            "CONDUCTIVE_RUNNER_URL".into(),
+            "https://machines.test/v1/runner".into(),
+        ),
+        (
+            "CONDUCTIVE_REPOSITORY".into(),
+            "/home/user/code/storefront".into(),
+        ),
+        ("CONDUCTIVE_DEFAULT_BRANCH".into(), "main".into()),
+        ("CONDUCTIVE_REPOSITORY_API_DIR".into(), "../api".into()),
+    ]);
+    let mut configuration = Configuration::parse(
+        &environment,
+        Path::new("/home/user/code/storefront"),
+        Path::new("/home/user"),
+    )
+    .unwrap();
+    RepositoryTarget {
+        folder: "/home/user/code/ledger".into(),
+        default_branch: "trunk".into(),
+        workspace_branch: "alice/moved".into(),
+        variable: Some("CONDUCTIVE_REPOSITORY_LEDGER_DIR".into()),
+    }
+    .apply(&mut configuration);
+
+    environment.extend(NodeHelpers::workspace_environment(&configuration));
+    assert_eq!(environment["CONDUCTIVE_REPOSITORY_API_DIR"], "../api");
+    assert_eq!(
+        environment["CONDUCTIVE_REPOSITORY_LEDGER_DIR"],
+        "/home/user/code/ledger"
+    );
+    assert_eq!(
+        configuration.repository_directories["CONDUCTIVE_REPOSITORY_API_DIR"],
+        Path::new("/home/user/code/api")
+    );
 }
 
 #[test]

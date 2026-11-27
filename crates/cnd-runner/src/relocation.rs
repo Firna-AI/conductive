@@ -39,6 +39,9 @@ impl RepositoryTarget {
             configuration
                 .repository_directories
                 .insert(variable.clone(), self.folder.clone());
+            configuration
+                .registered_repository_variables
+                .insert(variable.clone());
         }
     }
 }

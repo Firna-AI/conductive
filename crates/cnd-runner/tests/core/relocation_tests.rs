@@ -103,6 +103,7 @@ async fn start(root: tempfile::TempDir) -> Harness {
                 current.clone(),
             ),
         ]),
+        registered_repository_variables: Default::default(),
         workspace_context: None,
         state_path: root.path().join("state.json"),
     };

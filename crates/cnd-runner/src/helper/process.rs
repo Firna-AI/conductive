@@ -31,7 +31,7 @@ pub struct NodeHelpers {
 }
 
 impl NodeHelpers {
-    /// The folder and branch variables of a configuration, for agent commands.
+    /// The current repository, branches, and folder variables registered by moves.
     pub fn workspace_environment(configuration: &Configuration) -> BTreeMap<String, String> {
         let folder = configuration.cwd.to_string_lossy().into_owned();
         let mut environment = BTreeMap::from([
@@ -49,6 +49,11 @@ impl NodeHelpers {
             configuration
                 .repository_directories
                 .iter()
+                .filter(|(name, _)| {
+                    configuration
+                        .registered_repository_variables
+                        .contains(*name)
+                })
                 .map(|(name, directory)| (name.clone(), directory.to_string_lossy().into_owned())),
         );
         environment

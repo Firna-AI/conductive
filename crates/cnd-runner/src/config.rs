@@ -1,6 +1,6 @@
 //! Service settings, parsed without reading the process environment.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Component, Path, PathBuf};
 
 use url::Url;
@@ -61,6 +61,8 @@ pub struct Configuration {
     pub workspace_context: Option<WorkspaceContext>,
     /// Repository folder variables in name order.
     pub repository_directories: BTreeMap<String, PathBuf>,
+    /// Variables that a repository move registered in this process.
+    pub registered_repository_variables: BTreeSet<String>,
     /// State file path, with the Node runner's default.
     pub state_path: PathBuf,
 }
@@ -131,6 +133,7 @@ impl Configuration {
                 .filter(|(name, value)| repository_variable(name) && !value.is_empty())
                 .map(|(name, value)| (name.clone(), absolute(cwd, Path::new(value))))
                 .collect(),
+            registered_repository_variables: BTreeSet::new(),
         })
     }
 }

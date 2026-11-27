@@ -15,12 +15,16 @@ import { readWorkspace } from './workspace-data'
 /** A step after the move that fails for this time ends the change. */
 export const AFTER_MOVE_LIMIT_MS = 10 * 60 * 1_000
 
-/** A failed publication, or a failed branch read of the new folder. */
+/** Errors while reading a moved branch, recording a clone, or publishing. */
 export function failedAfterMove(
   job: RepositoryChangeJob,
   error: unknown,
 ): boolean {
-  return job.phase === 'publish' || error instanceof BranchReadFailed
+  return (
+    job.phase === 'publish' ||
+    job.cloneInstalled === true ||
+    error instanceof BranchReadFailed
+  )
 }
 
 /**

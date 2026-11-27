@@ -75,6 +75,8 @@ cargo clippy --workspace --all-targets -- -D warnings
 ```
 
 Unit tests use `unimock` for units, files, time, environment, and listeners.
+Native settings tests read temporary files and check the saved settings
+with a present, missing, or unreadable repository folder record.
 Real systemd and command behavior needs a native smoke check.
 
 ### Key Code

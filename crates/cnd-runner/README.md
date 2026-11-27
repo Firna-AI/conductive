@@ -250,7 +250,9 @@ Compose `AgentEngine` with `EngineDependencies` and the loaded state.
 Supply `CredentialFilter` to reports and `FilteredEmitter` around the saving
 emitter. Supply `NodeHelpers`, `GitTurnRepositories`, and `RunnerStartup`.
 `NodeHelpers::workspace_environment` gives each helper, and so each agent
-command, the folder and branch variables of the current round.
+command, the current repository and branch variables and the folder
+variables that a move registered. The helper inherits other values from
+the runner's environment.
 Use the engine as the next handler of `ReportCommandHandler`.
 
 Each session pins its agent, instructions, branch context, and the

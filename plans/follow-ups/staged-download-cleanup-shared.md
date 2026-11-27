@@ -47,5 +47,6 @@
   - `plans/follow-ups/repository-change-fetch-access-hint.md` and `plans/follow-ups/continue-stop-cause-copy.md` can add a reserved status to `baseChangeFetchCommand` under their option C. The EXIT trap of F must keep that status.
   - `plans/follow-ups/repository-change-empty-repository.md` changes the same fetch under its option A. Today a failed held-folder fetch of an empty repository leaves its stage.
   - `plans/follow-ups/shared-branch-move-job.md` would give Continue and the repository change one job. Option C here overlaps its option A, because that job would own the command step.
+  - `plans/follow-ups/repository-change-clone-folder-fate.md` can add the removal of an unrecorded clone folder to the failure step where `discardFailedCloneStage` runs, under its option D. A change of that cleanup must keep a place for that removal.
 - **Recommendation:** F. One place covers every staged download, at Medium effort.
 - **Action:** fix after merge, apply F, because it changes the commands of Continue, base changes, and the queue head sync outside the clone branch.

@@ -1,8 +1,8 @@
 //! Native isolated shell reads for frozen provider settings and basic user paths.
 
 use std::collections::BTreeMap;
-use std::io::ErrorKind;
-use std::path::PathBuf;
+use std::io::{self, ErrorKind};
+use std::path::{Path, PathBuf};
 use std::process::Stdio;
 
 use async_trait::async_trait;
@@ -74,6 +74,14 @@ fn repository_folder(path: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || punctuation.contains(&byte))
 }
 
+async fn read_folder_record(path: &Path) -> io::Result<String> {
+    if tokio::fs::symlink_metadata(path).await?.is_file() {
+        tokio::fs::read_to_string(path).await
+    } else {
+        Ok(String::new())
+    }
+}
+
 #[async_trait]
 impl Settings for NativeSettings {
     async fn frozen(&self) -> Result<BTreeMap<String, String>> {
@@ -97,13 +105,13 @@ impl Settings for NativeSettings {
             ));
         }
         let mut values = entries(&output.stdout);
-        let metadata = match tokio::fs::symlink_metadata(&self.repository_folders).await {
-            Err(error) if error.kind() == ErrorKind::NotFound => return Ok(values),
-            result => result.internal()?,
-        };
-        if metadata.is_file() {
-            let record = tokio::fs::read(&self.repository_folders).await.internal()?;
-            values.extend(repository_folders(&String::from_utf8_lossy(&record)));
+        match read_folder_record(&self.repository_folders).await {
+            Ok(record) => values.extend(repository_folders(&record)),
+            Err(error) if error.kind() == ErrorKind::NotFound => {}
+            Err(error) => tracing::warn!(
+                kind = ?error.kind(),
+                "The repository folder record could not be read."
+            ),
         }
         Ok(values)
     }

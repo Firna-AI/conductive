@@ -60,6 +60,10 @@ export async function advanceRepositoryChangeCommand(
   progress: RepositoryChangeProgress,
   job: RepositoryChangeJob,
 ): Promise<void> {
+  if (job.cloneInstalled) {
+    await completeCommand(options, progress, job)
+    return
+  }
   if (job.commandStarted) {
     try {
       await options.run(() => authorizeRepositoryChange(options, job))
@@ -91,6 +95,11 @@ async function completeCommand(
 ) {
   progress.scope = null
   const clone = job.phase === 'move' ? job.target.clone : undefined
+  if (clone && !job.cloneInstalled) {
+    job.cloneInstalled = true
+    delete job.failingSince
+    await progress.save(job)
+  }
   const sandboxChanged =
     clone &&
     !(await recordClonedRepositoryLocation(
@@ -118,8 +127,9 @@ async function completeCommand(
     return
   }
   job.phase = job.phase === 'fetch' ? 'move' : 'publish'
-  // The publication gets its own time limit, after a branch read that failed.
-  delete job.failingSince
+  // For a clone, the folder save and publication share the time limit.
+  if (!job.cloneInstalled) delete job.failingSince
+  delete job.cloneInstalled
   job.processId = null
   job.commandStarted = false
   job.stdoutOffset = 0
@@ -183,8 +193,10 @@ async function step(
   if (status.state !== 'running') progress.scope = null
   job.stdoutOffset = status.stdoutNextOffset
   job.stderrOffset = status.stderrNextOffset
-  await progress.save(job)
-  if (status.more || status.running) return false
+  const pending = status.more || status.running
+  if (pending || job.phase === 'fetch' || !job.target.clone)
+    await progress.save(job)
+  if (pending) return false
   if (status.state === 'lost') {
     if (job.phase === 'move' && (await switchedBranch(provider, job)))
       return true

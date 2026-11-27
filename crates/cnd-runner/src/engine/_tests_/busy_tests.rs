@@ -36,6 +36,7 @@ fn engine(state: RunnerState) -> AgentEngine {
                 trusted_skills_repository: None,
                 workspace_context: None,
                 repository_directories: BTreeMap::new(),
+                registered_repository_variables: Default::default(),
                 state_path: "/state".into(),
             },
             store: Arc::new(Unimock::new(

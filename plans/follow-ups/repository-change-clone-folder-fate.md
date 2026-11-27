@@ -1,0 +1,40 @@
+# Unrecorded clone folder after a failed change
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-27, from the branch `calummoore/add-repo-not-added-faoc`, review finding 9. That branch fixed the hold. This item keeps the open question of that finding.
+- **Location:** `completeCommand` in `worker/lifecycle/repository-change-command.ts:91-138`, with the folder save at `:103-117`, the folder save `recordClonedRepositoryLocation` in `worker/lifecycle/repository-location-data.ts:88-131`, `AFTER_MOVE_LIMIT_MS`, `failedAfterMove`, and `endAfterMove` in `worker/lifecycle/repository-change-end.ts:16-80`, `finish` and `retries` in `worker/lifecycle/repository-change.ts:146-161` and `:208-227`, `discardFailedCloneStage` in `worker/lifecycle/repository-change-command.ts:30-51`, `chooseCloneLocation` in `worker/lifecycle/repository-change-progress.ts:122-162`, `repositoryCloneBranchGuard` in `worker/lifecycle/repository-change-clone-command.ts:99-107`, and the rules in `docs/protocol/repository-change.md` ("A change in place" and "A failed change") and `docs/protocol/repository-change-clone.md`.
+- **Reason:** The option that best keeps the record equal to the disk removes a folder, and two rules on `origin/main` say that a change deletes nothing and never undoes a move.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Clone change:** a repository change that first clones a chosen repository into a new folder `~/code/<name>`, because the cloud computer does not hold it (repository clone decision 1 C, 27 November 2026).
+  - **Folder record:** the saved list of repository folders and their variables in D1. Each start gives the folders of this list their variables.
+  - **End rule after a move:** a step after the move that keeps failing ends the change about 10 minutes after its first failure. It ends the change only while the workspace row in D1 still names the old repository and branch.
+- **Background:**
+  - After the clone checkout, the folder takes its name. Then the Worker saves it to the folder record, then publishes the change.
+  - The branch `calummoore/add-repo-not-added-faoc` routes a failed folder save through the end rule after a move. `failedAfterMove` sends the failure there once the job marks the clone as installed. The job retries each second and ends at the first retry 10 minutes after the first failure. The folder save and publication share these 10 minutes.
+  - The workspace is then released. The folder stays on disk, but the record does not hold it.
+  - The job already holds the folder and its variable, in `target.directory` and `target.clone.variable`. `chooseCloneLocation` saves them before the clone command starts. After a failed job ends, its record keeps them, but no later job can find that record.
+  - `finish` calls `discardFailedCloneStage` for each failed job. It removes the fetched stage of a clone, not the folder.
+  - A later clone of the same repository then sees the name in use on disk and picks `<name>-2`. `chooseCloneLocation` reads the names on disk for this. The first folder stays as an orphan copy.
+  - The new folder holds no local work: the clone made it, and its context folder is a copy. The clone writes the job ID to its Git config as `conductive.cloneJob`. `repositoryCloneBranchGuard` already compares that value with the job ID.
+  - `docs/protocol/repository-change.md` says that the change deletes nothing in the sandbox, and that a change never runs Git again to undo a move, because an undo can lose moved files.
+  - `docs/protocol/repository-change-clone.md` says that a failed clone leaves no folder under the name. It also says: "When the new folder has its name, the record of the folders holds it with its variable." Its reason is that the record must match the disk. This branch added that page, and the current behaviour breaks that rule.
+- **Problem:** When the folder save keeps failing, the change ends with a folder on disk that the record does not hold, so the record and the disk differ. `failedAfterMove` at `worker/lifecycle/repository-change-end.ts:23-27` sends each such failure to `endAfterMove`, and no step then records or removes the folder.
+- **Impact if no action:** A later clone makes a second copy under another name, and the first copy takes disk space with no variable.
+- **Root question:** What happens to a finished clone folder when its change ends before the record holds it?
+- **Options:**
+  - **A.** Keep the folder, as the branch does now. Write in `docs/protocol/repository-change-clone.md` that such a folder stays unrecorded. Cost: it changes the rule that the record holds each named folder, and each later clone of that repository adds one more copy. Effort: Small.
+  - **B.** Keep the folder. When the end rule ends a clone change, keep its job ID, folder, and variable in a stored value of the workspace. That value outlives the job. Before another clone in the same cloud computer, adopt the stored folder into the record when its `conductive.cloneJob` matches. Add a recovery test. Cost: one more stored value, and the folder has no variable until that clone, also after a start. Effort: Medium.
+  - **D.** Remove the folder when the end rule ends a clone change and the record still does not hold it. A guarded command checks the job ID in `conductive.cloneJob`, no commit beyond the base, and no changed, untracked, or ignored file outside `.context/`, and keeps the folder when a check fails. The removal can run where `finish` calls `discardFailedCloneStage`. Changes two rules on `origin/main`. Effort: Medium.
+- **Left out:** Writing the record before the rename makes a failed fetch leave a record of a missing folder. Adopting any folder with a clone marker at the next start trusts data that sandbox code can write. Retrying with no limit holds the workspace.
+- **Wider fix:** D. The record then always equals the disk when a change ends.
+- **Previous examples:** `sweepCloneWorkTrees` in `worker/lifecycle/repository-change-clone-command.ts:32-41` removes, at the next clone, the temporary work trees that a failed clone leaves under `~/code`. `plans/follow-ups/staged-download-cleanup-shared.md` records the fetched stages that a failed job leaves in `/tmp`.
+- **Related:**
+  - `plans/follow-ups/repository-folder-record-refresh.md` keeps the copy of the folder record on the cloud computer current. Under B, the adopt step must also refresh that copy. Its option C writes the copy before the folder save, so the copy can name a folder that this item leaves unrecorded.
+  - `plans/follow-ups/shared-branch-move-job.md` gives Continue and the repository change one job, with one end rule after the move. B and D change what that end rule does for a clone change. Neither item waits for the other.
+  - `plans/follow-ups/staged-download-cleanup-shared.md` changes the cleanup after a failed clone, which `discardFailedCloneStage` does today. The removal of D runs in the same failure step.
+- **Recommendation:** D. It leaves a record that matches the disk with less new code than B, and the folder holds no local work. B is best if the rule that a change deletes nothing must stay.
+- **Action:** ask the user, because D changes two rules on `origin/main`, and B and D have real trade-offs.

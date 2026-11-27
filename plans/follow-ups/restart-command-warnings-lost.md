@@ -20,5 +20,6 @@
 - **Left out:** Failing the Restart for a failed relay or terminal step. The protocol says that the Restart then still succeeds.
 - **Wider fix:** B. Each later step of the command gets the same report.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/repository-folder-record-refresh.md` adds an update of the folder record copy before a software Restart, under its options B and F. A failed update is one more step whose warning must reach the operators.
 - **Recommendation:** B.
 - **Action:** fix after merge, apply B, because the gap is on main too and costs no user any function.

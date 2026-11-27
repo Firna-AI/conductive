@@ -16,7 +16,7 @@
   - The repository change job copies the Continue job. These methods are line-for-line copies: `result`, `response`, `save`, `finish`, `advance`, `advanceOwned`, `credentialSender`, and `cancel`. The command step, the settle step, the lost-result logic, and the replay loop of the publication are copies too.
   - The copies have intended differences: the branch read after a lost result, the exit codes of the move, the runner move at the end, the file-report reset at publication, and the repeat check in `start`.
   - In Continue, a step after the move that fails for good retries every second with no end. An example is a branch read that keeps failing because the folder was removed. The reservation then holds the workspace forever.
-  - PR #423 added an end rule only to the repository change job: after 10 minutes of a failed publication or a failed branch read after the move, the job ends with a failure and a warning, while the D1 row still names the old repository and branch.
+  - PR #423 added an end rule only to the repository change job: after 10 minutes of a failed publication, a failed branch read after the move, or a failed save of a clone's folder record, the job ends with a failure and a warning, while the D1 row still names the old repository and branch.
   - Neither job ends when a started move command keeps failing at the provider, for example when the cloud computer is gone and each status read fails. The repository change end rule does not cover these errors.
 - **Problem:** A fix of the reservation, the credential scope, the command recovery, or the publication replay must be made in two places. Continue still has no end rule after the move, so it can hold a workspace forever.
 - **Impact if no action:** A fix in one job can miss the other, and a Continue whose branch read keeps failing blocks Continue, Restart, Archive, and every new message of its workspace.
@@ -34,5 +34,7 @@
   - `plans/follow-ups/repository-change-checkout-clash-cause.md` records the guessed clash reason of a refused checkout, such as an index lock. Its option D is the same stored stop cause, so it also fits option A here.
   - `plans/follow-ups/repository-change-empty-repository.md` records the guessed access reason for a repository with no first commit. Its option E is the same stored stop cause.
   - `plans/follow-ups/staged-download-cleanup-shared.md` gives each staged download one cleanup. Its option C, a durable owner of each stage, overlaps option A here, because the shared job would own the command step.
+  - `plans/follow-ups/repository-folder-record-refresh.md` adds a retried update of the folder record copy on the cloud computer after the steps after the move. When the shared job lands first, that update goes in it. Neither item waits for the other.
+  - `plans/follow-ups/repository-change-clone-folder-fate.md` decides what the end rule after the move does with a clone folder that the record does not hold. Its options B and D change that end rule for a clone change, so they must fit option A here. Neither item waits for the other.
 - **Recommendation:** A. It removes the copies, gives Continue the end rule, and needs no migration.
 - **Action:** fix after merge, apply A, because it changes the Continue job in production and is a Large change that needs its own review.

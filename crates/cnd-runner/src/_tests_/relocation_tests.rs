@@ -42,6 +42,7 @@ fn configuration() -> Configuration {
                 PathBuf::from("/home/user/code/storefront"),
             ),
         ]),
+        registered_repository_variables: Default::default(),
         workspace_context: None,
         state_path: "/state".into(),
     }
@@ -98,14 +99,6 @@ async fn moves_to_a_known_work_tree_with_the_new_branches() {
                 (
                     "CONDUCTIVE_REPOSITORY_DIR".into(),
                     "/home/user/code/billing".into()
-                ),
-                (
-                    "CONDUCTIVE_REPOSITORY_BILLING_DIR".into(),
-                    "/home/user/code/billing".into()
-                ),
-                (
-                    "CONDUCTIVE_REPOSITORY_STOREFRONT_DIR".into(),
-                    "/home/user/code/storefront".into()
                 ),
                 (
                     "CONDUCTIVE_WORKSPACE_BRANCH".into(),

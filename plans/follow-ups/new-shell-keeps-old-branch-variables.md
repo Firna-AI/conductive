@@ -17,5 +17,6 @@
 - **Left out:** A restart of the terminal service, because it shows Reconnect in each open terminal tab.
 - **Wider fix:** A, in one shared helper that both actions call.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/repository-folder-record-refresh.md` has the same cause for the current folder and the folder variables of new shells after a repository change. Its option F keeps one cloud computer state that new shells read, and that state can also hold the branch variables. One branch can fix both items.
 - **Recommendation:** A. It fixes both actions with one helper.
 - **Action:** fix after merge, apply A, because the gap is on `origin/main` too.

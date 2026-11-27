@@ -71,10 +71,11 @@ export interface RepositoryChangeJob {
   stderrOffset: number
   publication?: { after: number; through: number }
   failure?: { status: number; code: string; message: string }
+  /** The clone reached its final folder and only its record needs saving. */
+  cloneInstalled?: true
   /**
-   * When the first failed step after the move happened: a failed branch
-   * read of the new folder, or a failed publication. A job of an older
-   * deploy has no value, and its next failure sets it.
+   * When a branch read, clone folder save, or publication first failed.
+   * A job of an older deploy can lack this value. Its next failure sets it.
    */
   failingSince?: number
   cancelled?: true

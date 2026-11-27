@@ -103,7 +103,8 @@ in [`repository-change-data.ts`](repository-change-data.ts): the member
 still has access, the record still names the old repository, branch,
 sandbox, and provider account, and the org still chose the new repository.
 Once the fetch or the move started, a failed check only saves the error,
-and the command still settles.
+and the command still settles. A confirmed clone checkout can then retry
+its folder record directly.
 
 1. `verify` reads the default branch of the new repository, and the open
    pull request and the pushed commits of the old branch, as the member.
@@ -124,7 +125,8 @@ and the command still settles.
    [The git credential sender](git-credentials.md#continue) gives the fetch
    the GitHub credential of the member who started the change.
 6. `move` checks out the new branch. For a clone, it prepares a temporary
-   folder and moves it to the saved name once it is ready.
+   folder and moves it to the saved name. The job saves that the clone
+   reached its final folder before it records the folder and variable.
 7. `publish` stores and publishes the change.
 
 ## The move
@@ -172,8 +174,9 @@ and retries until the end rule of
 [`repository-change-publication.ts`](repository-change-publication.ts)
 runs after a good move. It never runs Git again.
 
-- A successful clone move records the directory and variable in
-  `workspace_runtime` before publication. A retry keeps the single entry.
+- A clone move records the directory and variable in `workspace_runtime`
+  before it goes to `publish`. A retry uses the saved checkout and keeps
+  the single entry.
 - `storeChangedRepository` writes the new repository, branch, and base
   branch, sets `github_summary` to NULL, and adds 1 to the task number. It
   writes only while the row still names the old repository and branch,
@@ -251,12 +254,11 @@ The repository change adds an end rule for the steps after the move, in
 [`repository-change-end.ts`](repository-change-end.ts). Continue does not
 have it.
 
-- A failed publication and a failed branch read of the new folder are the
-  steps after the move. The first such failure saves its time in
-  `failingSince` of the job. A job of an older deploy has no
-  `failingSince`, and its next failure saves it.
-- The time starts again when the move is done and the job goes to
-  `publish`.
+- The end rule covers a failed branch read, a failed save of a completed
+  clone's folder record, and a failed publication. The first such failure
+  saves its time in `failingSince` of the job.
+- The time starts again once the checkout is confirmed. The clone folder
+  save and publication share the new limit.
 - While less than 10 minutes passed, the step retries after one second.
 - After 10 minutes, the job reads the record. When the record still names
   the old repository and the old branch, the job ends with its saved
@@ -268,7 +270,8 @@ have it.
   already changed, so the chat must still get the change. A failed read
   of the record also keeps the retry.
 - A job that ended this way can leave the new folder on the new branch,
-  while the record keeps the old repository.
+  while the record keeps the old repository. A completed clone stays on
+  disk when its folder record cannot be saved.
 
 ## Tests
 
@@ -286,9 +289,9 @@ have it.
 - [`repository-change-recovery.test.ts`](repository-change-recovery.test.ts):
   a change that publishes after an admin unchose the new repository during
   the move, the end after 10 minutes of a publication whose guard never
-  matches and of a failed branch read, the retry of a publication whose
-  record already changed, and the new time of the publication after a
-  failed branch read.
+  matches, a failed branch read, and a failed clone folder save. It also
+  checks the retry of a publication whose record already changed and the
+  new time of the publication after a failed branch read.
 - [`repository-change-concurrency.test.ts`](repository-change-concurrency.test.ts):
   the hold of turns, Continue, Restart, and Archive, and the runner move
   after publication.
