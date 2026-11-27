@@ -205,6 +205,23 @@ Design calls of the agent, on 24 November 2026:
     server error counts as started, so its popover opens and no notice
     shows. Reason: the start did happen.
 
+The user answered two more questions on 25 November 2026:
+
+- **The popover of an Ask after Send: A.** The popover keeps hiding the
+  written prompt, as for Explain. The question shows in the title of the
+  tab, in the tooltip of the mark, and in the tab. Rejected: B, the whole
+  written prompt in the popover, which fills it with context lines. Not
+  chosen: C, only the question as the first message of the popover chat,
+  and D, the question under the quote in the header. The mockups raised
+  this question.
+- **A repeated start with another model: A.** A repeat of a start under
+  the same `promptId` that names another model, effort, or fast mode gets
+  409 `message_id_conflict`, as a repeated message does. A repeat that
+  names none gets the first explanation. Rejected: B, a stored copy of
+  each start request, which adds stored data. Rejected: C, no change,
+  which answers success for a model that the Worker did not use. Review
+  round 2 raised this question.
+
 Contract owners:
 
 - [Explain](../docs/protocol/explain.md).
@@ -232,7 +249,7 @@ an Ask from the selection to the answer.
 - [x] Update the Explain part of `docs/mockups/catalogue-chat-and-automations.md`
       and [Explain](../docs/mockups/design-chat.md#explain).
 - [x] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that the
+- [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
 
 The screenshots and the logs of the checks of this milestone are in
@@ -292,9 +309,9 @@ Depends on: 3
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and `npm run check`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
