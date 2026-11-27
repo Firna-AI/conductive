@@ -107,6 +107,10 @@ protocol docs.
     entries and changes, the omitted totals, the parts, the revisions,
     the tree updates, the repairs, and the rollout of the runner's
     reports of the file tree and the branch changes.
+    - [Changes deltas](../protocol/changes-deltas.md): the updates of the
+      changes list that carry only the rows that change, when a full list
+      goes instead, the agreement on deltas, their checks and repair, and
+      how a tab applies them.
   - [Port previews](../protocol/port-previews.md): detected servers, manual
     opening, the open from a local address in the chat, preview tabs,
     and the relay requirement.

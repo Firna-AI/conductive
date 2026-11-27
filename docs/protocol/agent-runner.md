@@ -14,11 +14,9 @@ dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A gateway decision number names a decision of the change that adds
 the [model gateway](model-gateway.md), as that doc says. A background work
 decision number, such as background work decision 1, names a decision of
-the change that keeps a turn open for background work. An out-of-memory
-decision number, such as out-of-memory decision 1, names a decision of the
-change that keeps the runner and the terminal shells running after an
-out-of-memory kill. [Services](services.md) gives the named programs that
-run outside every turn, in units of their own.
+the change that keeps a turn open for background work.
+[Services](services.md) gives the named programs that run outside every
+turn, in units of their own.
 
 ## The agent runner
 
@@ -54,6 +52,9 @@ run outside every turn, in units of their own.
   Any other hello announces no skill reads, also the hello of an older
   runner. A value of another type does not refuse the hello. This field
   needs no new protocol version either.
+- A hello and a welcome can also agree on changes deltas, each with
+  `changesDeltas: true`, as [The agreement](changes-deltas.md#the-agreement)
+  says. This field needs no new protocol version either.
 - Each build of the org image installs the newest runner. Each sandbox then
   updates its runner itself, at a later start or when its workspace is
   idle, as [Updates](sandbox-software.md#updates) says. Reason: a fix of
@@ -206,25 +207,8 @@ run outside every turn, in units of their own.
 
 ## Out of memory
 
-- When the sandbox has no free memory, the kernel ends one process. Such
-  an end is an out-of-memory kill.
-- An out-of-memory kill of a process that an agent started ends only that
-  process (out-of-memory decision 1). An example is a large build.
-- The runner, the other processes of the agents, and each running turn
-  keep running. The agent sees its command fail.
-- A process of a [service](services.md#out-of-memory) is the one
-  exception. Such a kill stops the whole service, which then shows Failed.
-- Reason: one command that uses too much memory must not end each running
-  turn of the workspace and its background work.
-- A stop and a restart of the whole runner at such a kill was rejected.
-  Reason: it ends each running turn in each session, and the chat gives no
-  cause.
-- A memory limit for the processes of the agents, below the size of the
-  sandbox, was not chosen. Reason: the kernel ends the process that uses
-  the most memory, and that is almost always the command.
-- Risk: the kernel can also end an agent program or the runner. That still
-  ends the turns of that program, or each running turn, as at a crash of
-  the runner.
+[Out of memory](out-of-memory.md) states what an out-of-memory kill in
+the sandbox ends, and its risks.
 
 ## Background work
 

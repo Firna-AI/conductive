@@ -38,6 +38,22 @@ the change that gives a new tab the state of a workspace from reads.
 - Reason: one event type serves both agents, and the web app needs no
   change when an SDK changes its events.
 - Every open tab of a workspace gets the same events in the same order.
+  The form of a [changes delta](changes-deltas.md) is the one exception.
+- A socket names the event forms that it reads, with the `forms`
+  parameter of its address, such as `forms=changes.changed`. Each event
+  socket of the current app names the delta form.
+- A socket that does not name the delta form gets each changes delta as
+  the complete changes list, with the same event number. This holds live
+  and in replays, as [Chat history](chat-history.md) says.
+- Both forms give the same changes list at each event number.
+- Reason: each edit then costs a current tab only the rows that change,
+  and an older tab or an older Mac app keeps a live Changes panel (Cal,
+  26 November 2026). Each delta for every tab, with a full list at the end
+  of each turn, was rejected, because older copies then lag during a
+  turn, and every tab pays one full list for each turn. Full lists for
+  every tab while an older tab is open were rejected, because one older
+  Mac app then keeps the cost of full lists for every tab of its
+  workspace, and each connect of a socket then writes an event.
 - A tab that shows a session gets the newest part of its stored history
   first. The live events start after that part, and the earlier history
   loads above it (decision 280).
@@ -102,6 +118,9 @@ the change that gives a new tab the state of a workspace from reads.
   repair of that list, and the repository of the workspace. When the
   workspace has no report of that list yet, the read still gives its
   cutoff, its failed repair, and the repository.
+- The changes read also gives the revision of its list. A tab reads the
+  list again after a gap in the revisions, as
+  [In the browser](changes-deltas.md#in-the-browser) says.
 - Each read gives its state together with its cutoff. The state includes
   each event through the cutoff and no later event.
 - A read never leaves the state out to answer sooner. When the workspace

@@ -4,13 +4,17 @@ This page belongs to [Files and changes](workspace-tools.md#files-and-changes).
 It states the limits, the parts, the revisions, and the repairs of the
 runner's reports of the file tree and the branch changes. It also states
 which entries and changes a report keeps, the totals of the rest, the
-updates of the tree, and the rollout to older runners and readers. The
-terms are those of the [architecture doc](../architecture.md#terms). A
-decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+updates of the tree, and the rollout to older runners and readers.
+[Changes deltas](changes-deltas.md) states the updates of the changes
+list. The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says.
 
 ## Terms
 
+- **Changes delta:** an update of the changes list that carries only the
+  rows that change, as [Changes deltas](changes-deltas.md) says.
 - **Listed:** an entry of the tree, or a changed file, that a complete
   report holds.
 - **Omitted:** an entry or a changed file that the scan of the runner
@@ -38,10 +42,12 @@ decision number names a dated record, as
   published, or replayed them (Cal, 20 November 2026).
 - These ways were not chosen:
   - A changes list at most once in N seconds. The panel then lags.
-  - Deltas of the changes list. They change the runner, the Worker, the
-    browser, and the protocol.
   - A tree without the ignored folders under `.context/`. The entry limit
     covers them too.
+- Most updates of the changes list send only the rows that change, as
+  [Changes deltas](changes-deltas.md) says (Cal, 26 November 2026). The
+  deltas do not replace the limit, because each connect still sends a
+  full changes list.
 - The limits apply only to the reports. The files on disk, Git, the read
   of a path, and the access checks do not change.
 - The count limits do not replace the 256 KiB event budget or the
@@ -56,6 +62,10 @@ decision number names a dated record, as
   Every path and entry stays whole. Each path appears once in the complete report.
 - Tree reports and branch changes reports have independent revision sequences within one runner stream.
   A new stream starts both at revision 1 with full reports.
+- The runner sends a full tree and a full changes list after each connect,
+  also on a reconnect of the same stream. Reason: the workspace then gets
+  complete reports again soon after each connect, also when an earlier
+  update was lost.
 - Each part gives its revision, part number, and total part count as positive safe integers.
   Part numbers start at 1 and end at the fixed total part count.
 - The runner sends parts in order from one consistent captured state.
@@ -78,29 +88,32 @@ decision number names a dated record, as
   It can skip unapplied revisions to recover missing or refused data.
 - After a refused tree report or tree delta, the workspace asks for one full file tree, as
   [Lost workspace updates](agent-runner.md#lost-workspace-updates) says (decision 96).
-  After a refused changes report, it asks for one full changes list.
+  After a refused changes report or changes delta, it asks for one full changes list.
 - After the refused update, each part of that kind belongs to a replacement.
   The only exception is a remaining part of the refused report or of an earlier report.
 - A stored new part 1 after the refused update starts a replacement, also at the revision of the refused report.
 - An invalid part counts as a replacement unless its stream, revision, and part number show a remaining part.
-  A tree delta is never a replacement, and it never ends or fails an open tree repair.
+  A tree delta or a changes delta is never a replacement. It never ends or fails an open repair of its kind.
 - Each tree delta holds at most 512 changes and meets the same 256 KiB event budget.
   A large update uses several deltas, each with the next consecutive tree revision, except as
   [Updates and refreshes](#updates-and-refreshes) says.
 - Reason: the count cap also bounds the tree work of each event.
-- A delta applies only after its previous tree revision is complete.
-  The runner increases the branch changes revision by 1 for each new full changes report.
-- A browser file event and a browser file response contain complete reports.
-  They never expose a runner part as a full tree or changes list.
+- A tree delta applies only after its previous tree revision is complete.
+  The runner increases the branch changes revision by 1 for each new full changes report and for each changes delta.
+- A browser file event and a browser file response never expose a runner part as a full tree or changes list.
+  A browser file event holds a complete report, a tree delta, or a changes delta. A browser file response holds a complete report.
+- A changes delta reaches each tab in one of two forms: the delta, or the complete changes list with the same event number.
+  [Events](workspace-events.md#events) says which tab gets which form.
 
 ## Omitted totals
 
 - Each part of a full tree, each tree delta, and the tree that the
   workspace serves can carry `omittedEntryCount`, the number of omitted
   entries.
-- Each part of a full changes list, and the changes list that the
-  workspace serves, can carry `omitted`. It gives the omitted files and
-  the lines that they add and remove, as `files`, `added`, and `removed`.
+- Each part of a full changes list, each changes delta, and the changes
+  list that the workspace serves, can carry `omitted`. It gives the
+  omitted files and the lines that they add and remove, as `files`,
+  `added`, and `removed`.
 - The `summary` of a changes report counts only its listed changes.
   Reason: the previous Worker checks the summary against the listed files,
   so it still accepts the report of a new runner.
@@ -108,7 +121,7 @@ decision number names a dated record, as
   with zeros when the report omits nothing.
 - Omitted totals that a full report or a saved list does not carry are
   unknown, not zero. A later full tree sets the tree count. A later full
-  changes list sets the changes totals. A tree delta with
+  changes list or changes delta sets the changes totals. A tree delta with
   `omittedEntryCount` sets the tree count.
 - Every part of one report repeats the same omitted totals.
 - The workspace publishes the omitted totals only with the complete
@@ -203,11 +216,12 @@ decision number names a dated record, as
 - A full tree after a repair makes every reader read each open file and
   diff again, including older readers.
 - In each scan that sends both reports, the runner sends every part of the
-  changes report before the tree update.
+  full changes list, or the changes delta, before the tree update.
 - Reason: the workspace then stores the new base branch before a refresh
   makes a diff read again.
 - The runner compares the complete changes scan before it cuts the list.
-  So an edit of only omitted files still sends a new changes report.
+  So an edit of only omitted files still sends a full changes list or a
+  changes delta.
 
 ## Older runners and readers
 
@@ -226,3 +240,16 @@ decision number names a dated record, as
 - An example: a list that the previous Worker saved during a rollback
   carries no omitted totals. After the next upgrade, they are unknown,
   not zero, as [Omitted totals](#omitted-totals) says.
+- An older runner offers no changes deltas, so it sends a full changes
+  list after each update. Each reader gets that list.
+- A Worker whose welcome accepts no changes deltas, such as the previous
+  Worker, gets full changes lists from a new runner. This holds also
+  during a deploy and after a rollback.
+- An older tab and an older Mac app do not name the delta form. So each
+  gets the complete changes list after each update, as
+  [Events](workspace-events.md#events) says.
+- Risk: an older runner cannot start when its saved events hold a changes
+  delta. This happens only when a new release saves a delta and then
+  counts as a failed start, so that the previous release runs again, as
+  [Updates](sandbox-software.md#updates) says. Each new type of runner
+  event has the same risk.

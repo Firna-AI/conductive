@@ -8,9 +8,10 @@
 
 **Terms**
 - **Tree delta:** a `files.changed` event, one change set to the stored file tree of a workspace.
+- **Changes delta:** a `changes.changed` event, one change set to the stored changes list of a workspace. It carries only the rows that change.
 - **Stored chat history:** the events that the workspace Durable Object keeps, so that the chat survives a stop of the sandbox.
 
-**Background:** The Privacy page says that Conductive "keeps the last file list and the last summary of changes of each workspace". `docs/protocol/chat-history.md` says that the stored history keeps each tree delta, the newest full tree, and the newest changes list. Tree deltas were kept before 23 November 2026 too. Cal checked on 23 November 2026 that the sentence agrees with the retention change.
+**Background:** The Privacy page says that Conductive "keeps the last file list and the last summary of changes of each workspace". `docs/protocol/chat-history.md` says that the stored history keeps each tree delta and the newest full tree. It also keeps the newest full changes list and the newest changes delta after that list. Tree deltas were kept before 23 November 2026 too. Cal checked on 23 November 2026 that the sentence agrees with the retention change. The changes deltas change adds the half about the summary of changes, and this item holds both halves of that Privacy sentence until Cal answers.
 
 **Problem:** The sentence does not say that each change to the file list is also kept in the stored chat history.
 
@@ -20,7 +21,7 @@
 
 **Options:**
 - **A.** Keep the sentence. It describes the projection, not the history. Effort: Small.
-- **B.** Change it to "It keeps the last file list, each change to that list, and the last summary of changes of each workspace." Update the effective date as the Privacy notice says in [Changes to this notice](../../src/marketing/privacy.ts#L263). Effort: Small.
+- **B.** Change it to "It keeps the last file list, each change to that list, and the last summary of changes of each workspace. It can also keep an earlier summary of changes, with the newest change after that summary." Update the effective date as the Privacy notice says in [Changes to this notice](../../src/marketing/privacy.ts#L263). Effort: Small.
 
 **Left out:** A full rewrite of the data section. The rest of the section is accurate.
 

@@ -10,9 +10,9 @@
 - **Previous Worker:** the Worker version that was live before a deploy. It runs again after a rollback.
 - **Two-PR rule:** a change that the previous Worker cannot read ships first as a reader, and the writer merges only after the reader has been live for at least one hour.
 
-**Background:** "Keep the previous Worker working" in `migrations/README.md` covers D1 schema changes only. The workspace object memory work changed Durable Object storage formats: the file projection, the runner report assembly state, and the history index. Cal approved a two-PR rollout for the file projection on 23 November 2026, by analogy with that rule.
+**Background:** "Keep the previous Worker working" in `migrations/README.md` covers D1 schema changes only. The workspace object memory work changed Durable Object storage formats: the file projection, the runner report assembly state, and the history index. Cal approved a two-PR rollout for the file projection on 23 November 2026, by analogy with that rule. The changes deltas change adds a new stored history event, the changes delta, which a Worker from before it cannot read when it is large. It ships in two releases with the Worker variable `CHANGES_DELTAS`, as "When a deploy fails" in `docs/automatic-deploys.md` says.
 
-**Problem:** No doc says that a Durable Object storage format change must keep the previous Worker working, or how to ship one.
+**Problem:** No doc gives a general rule that a Durable Object storage format change keeps the previous Worker working, with the way to ship it. `docs/automatic-deploys.md` gives only the rollouts of single changes, such as changes deltas.
 
 **Impact if no action:** A later change can write a storage format that the previous Worker cannot read, and a rollback then breaks workspaces.
 

@@ -148,15 +148,20 @@ Depends on: none
 
 State the requirements of deltas, the two forms, the history rule, the repair, and the rollout.
 
-- [ ] Update `docs/protocol/file-reports.md`: the delta event, its header, its order rule, its size limit, when a full list goes instead, the hello and welcome agreement, and the older runners and readers. Change the sentence that browser file events contain complete reports. Keep the limit text of change A as it is.
-- [ ] State in `docs/protocol/file-reports.md` that the runner sends a full tree and a full changes list after each connect. Delete `plans/follow-ups/full-reports-after-connect.md`, which asks for this.
-- [ ] Update `docs/protocol/lost-workspace-updates.md` and `docs/protocol/agent-runner.md` for the refused delta and the welcome field.
-- [ ] Update `docs/protocol/chat-history.md` for the newest delta.
-- [ ] Update `docs/protocol/workspace-events.md` with the one exception to "every open tab gets the same events": the two forms of a changes delta under one event number.
-- [ ] Update `docs/automatic-deploys.md` with the two releases and the rollback rule. Add the row of `CHANGES_DELTAS` to "Public variables" in `docs/deployment.md`.
-- [ ] Read the Terms page and the Privacy page in full, with their imported sections. Bring each sentence that restates a changed fact to Cal, with a proposed text, because a change of a legal page needs his review. Check the Privacy sentence about the last file list and the last summary of changes.
-- [ ] Read each guide under `src/marketing/docs/` in full. Update each sentence that restates a changed fact.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Update `docs/protocol/file-reports.md`: the delta event, its header, its order rule, its size limit, when a full list goes instead, the hello and welcome agreement, and the older runners and readers. Change the sentence that browser file events contain complete reports. Keep the limit text of change A as it is.
+- [x] State in `docs/protocol/file-reports.md` that the runner sends a full tree and a full changes list after each connect. Delete `plans/follow-ups/full-reports-after-connect.md`, which asks for this.
+- [x] Update `docs/protocol/lost-workspace-updates.md` and `docs/protocol/agent-runner.md` for the refused delta and the welcome field.
+- [x] Update `docs/protocol/chat-history.md` for the newest delta.
+- [x] Update `docs/protocol/workspace-events.md` with the one exception to "every open tab gets the same events": the two forms of a changes delta under one event number.
+- [x] Update `docs/automatic-deploys.md` with the two releases and the rollback rule. Add the row of `CHANGES_DELTAS` to "Public variables" in `docs/deployment.md`.
+- [x] Read the Terms page and the Privacy page in full, with their imported sections. Bring each sentence that restates a changed fact to Cal, with a proposed text, because a change of a legal page needs his review. Check the Privacy sentence about the last file list and the last summary of changes.
+- [x] Read each guide under `src/marketing/docs/` in full. Update each sentence that restates a changed fact.
+- [x] Check each relative link of each changed Markdown file.
+- Note: the delta requirements live on the new page `docs/protocol/changes-deltas.md`, which belongs to File reports, so that `file-reports.md` stays near the length target.
+- Note: for the length target, `docs/protocol/out-of-memory.md`, `docs/deployment/deploy-token.md`, `docs/deployment/attachment-bucket.md`, and `docs/deployment/frame-sources.md` hold moved sections, with a stub heading at each old place.
+- Note: one Privacy sentence restates the history rule, in the "Your work" item of `src/marketing/privacy-uses.ts`. Its proposed text is option B of `plans/follow-ups/privacy-omits-kept-tree-deltas.md`, and it waits for Cal. No guide restates a changed fact.
+- Note: nine follow-up items under `plans/follow-ups/` got the facts and the line references that this milestone moved or changed.
+- Note: the link check is `.context/changes-deltas/link-check.txt`.
 
 ## Milestone 2: Wire types
 

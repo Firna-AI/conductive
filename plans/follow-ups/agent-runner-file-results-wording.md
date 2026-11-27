@@ -7,7 +7,7 @@
 - **Reason:** The sentence is older than the history retention change and changes no requirement of that change.
 
 **Terms**
-- **File report:** a full tree (`files.snapshot`), a tree delta (`files.changed`), or a changes list (`changes.updated`) that the runner sends. The stored chat history keeps some of them, as `docs/protocol/chat-history.md` says.
+- **File report:** a full tree (`files.snapshot`), a tree delta (`files.changed`), a changes list (`changes.updated`), or a changes delta (`changes.changed`) that the runner sends. The stored chat history keeps some of them, as `docs/protocol/chat-history.md` says.
 - **File read:** the content of one file or one diff that the runner sends on request.
 
 **Background:** `docs/protocol/agent-runner.md` says: "The runner also reports the file tree and the changes of its workspace, and reads files and diffs on request, as Files and changes says. File results are not part of the chat history." Cal read it on 23 November 2026 as the results of direct file and diff reads.

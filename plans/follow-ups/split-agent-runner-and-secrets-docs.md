@@ -8,8 +8,8 @@
 
 - **Source:** Implementation.
 - **Category:** Docs or spec.
-- **Background:** The `documentation` skill sets a target of about 250 lines for each protocol doc. It says to split a doc that passes the target into linked pages when you touch it. The skill tabs change added only pointer lines to these two docs, and put the details in `docs/protocol/skill-tabs.md`.
-- **Problem:** `agent-runner.md` has about 271 lines and `tokens-and-secrets.md` has about 255 lines. Both pass the target.
+- **Background:** The `documentation` skill sets a target of about 250 lines for each protocol doc. It says to split a doc that passes the target into linked pages when you touch it. The skill tabs change added only pointer lines to these two docs, and put the details in `docs/protocol/skill-tabs.md`. The changes deltas change moved the section "Out of memory" of `agent-runner.md` to `docs/protocol/out-of-memory.md`, with a stub heading at its old place.
+- **Problem:** `agent-runner.md` has about 256 lines and `tokens-and-secrets.md` has about 255 lines. Both still pass the target.
 - **Impact if no action:** The two docs get harder to read and to review, and each new rule makes the later split larger.
 - **Root question:** How do these two docs return under the length target without breaking the links into them?
 - **Options:**

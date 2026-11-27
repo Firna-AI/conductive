@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-20, from the approved services scope on `calummoore/run-dev-servers-as-services-55oo`.
-- **Location:** `docs/protocol/services.md`, `docs/protocol/agent-runner.md`, and `crates/cnd-runner/`.
+- **Location:** `docs/protocol/services.md`, `docs/protocol/out-of-memory.md`, and `crates/cnd-runner/`.
 - **Reason:** Cal deferred memory caps and changed memory-victim preferences from the first release on 20 November 2026.
 
 - **Terms:**

@@ -35,6 +35,6 @@
 - **Needs:**
   - The merged change on the test deployment. Each push to `main` deploys it, as `docs/automatic-deploys.md` says.
   - Read access to the Durable Object metrics of the Cloudflare account of the Worker. `CLOUDFLARE_ACCOUNT_ID` of the deploy environment names that account, as `docs/automatic-deploys.md` says.
-  - The deploy token of that doc lists no analytics permission. So read the metrics in the Cloudflare dashboard, as a member of that account.
+  - The deploy token that `docs/deployment/deploy-token.md` gives lists no analytics permission. So read the metrics in the Cloudflare dashboard, as a member of that account.
 - **Done when:** A report gives each object role, window, workload, duration, request count, and storage activity. It keeps the observed values apart from the estimates. It states the bridge limit and each other idle blocker that it found. It claims no saving that it did not measure.
 - **Related:** [verify-deployed-hibernation-compatibility.md](verify-deployed-hibernation-compatibility.md): the other post-merge task of the same change. The two tasks need no fixed order.

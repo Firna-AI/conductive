@@ -8,9 +8,11 @@ accounts of the sandbox providers, Boat and E2B.
 [Architecture](architecture.md) describes the Worker and its hostnames.
 The [Worker README](../worker/README.md#routes) lists the routes that the
 Worker serves now. [Automatic deploys](automatic-deploys.md) says how each
-push to `main` deploys the production deployment. Two linked pages hold the
-[model inputs](deployment/models.md) and the
-[Conductive releases and software image](deployment/runner-archive.md).
+push to `main` deploys the production deployment. Linked pages hold the
+[model inputs](deployment/models.md), the
+[Conductive releases and software image](deployment/runner-archive.md),
+the [attachment bucket](deployment/attachment-bucket.md), and the
+[frame sources](deployment/frame-sources.md).
 
 Each input names the routes that read it. A route that does not read an
 input works without it. Keep secrets out of the repository and out of
@@ -100,7 +102,7 @@ examples.
 | `DB` | D1 database | Every route that reads users, orgs, or workspaces | The production database. Apply the migrations with `npx wrangler d1 migrations apply DB --remote`. |
 | `ASSETS` | Static assets | The pages of the web app | The client build of `npm run build`. |
 | `WORKSPACES` | Durable Object namespace | Chat, the events socket, the runner socket, Mac commands, the workspace routes, the workspace list, the read mark, the git credential route, and image builds | The `Workspace` class of `worker/workspace.ts`. |
-| `CHAT_ATTACHMENTS` | R2 bucket | Chat attachments: each upload, each message or create with files, the copy of the files when a turn starts, and their deletion | The bucket `conductive-chat-attachments`, as [The attachment bucket](#the-attachment-bucket) says. |
+| `CHAT_ATTACHMENTS` | R2 bucket | Chat attachments: each upload, each message or create with files, the copy of the files when a turn starts, and their deletion | The bucket `conductive-chat-attachments`, as [The attachment bucket](deployment/attachment-bucket.md) says. |
 | `AI` | Workers AI | The title of a workspace that has no name | Workers AI on the Cloudflare account of the Worker, as [The title model](deployment/models.md#the-title-model) says. |
 | `CHATGPT_EGRESS` | Service binding | The ChatGPT requests of the model gateway | The Worker `conductive-chatgpt-egress`, as the [ChatGPT egress README](../worker/chatgpt-egress/README.md) says. It must exist before the first deploy of the Worker. |
 | `CF_VERSION_METADATA` | Version metadata | The software image route of the deploy run | The ID, the tag, and the creation time of the running Worker version. `wrangler.jsonc` sets it. Without it, the route answers 404, as [The software image](deployment/runner-archive.md#the-software-image) says. |
@@ -122,8 +124,9 @@ examples.
 | `CONDUCTIVE_TITLE_MODEL` | The title of a workspace that has no name | Optional. The Workers AI model ID of the title model, as [The title model](deployment/models.md#the-title-model) says. Without it, the app shows "Untitled" until a name is set. It is not a secret. |
 | `CONDUCTIVE_RELEASE_SERVER` | Image builds, refreshes, and workspace bootstrap | Optional release base URL. The default is `https://runner.conductive.build`. |
 | `CONDUCTIVE_DEPLOY_TOKEN_SHA256` | The software image route of the deploy run | The SHA-256 digest of the deploy token of the deploy run that made the Worker version, as 64 hexadecimal characters. Each deploy from `main` sets it, as [The software image](deployment/runner-archive.md#the-software-image) says. It is not a secret. |
-| `CONDUCTIVE_FRAME_SOURCES` | The Desktop tab, through the content security policy of each page of the app | Optional. The trusted HTTPS origins of the desktop streams, separated by spaces, as [Frame sources](#frame-sources) says. It is not a secret. |
+| `CONDUCTIVE_FRAME_SOURCES` | The Desktop tab, through the content security policy of each page of the app | Optional. The trusted HTTPS origins of the desktop streams, separated by spaces, as [Frame sources](deployment/frame-sources.md) says. It is not a secret. |
 | `OPERATOR_GITHUB_IDS` | The operator section and the suspension of users and orgs | Optional. The numeric GitHub user IDs of the operators, separated by commas. It is not a secret. Without it, each operator request gets `403 operator_required`, as the [operator area](../worker/operator/README.md#overview) says. |
+| `CHANGES_DELTAS` | The welcome of each runner connection | Optional. With `"on"`, the welcome accepts changes deltas from each runner that offers them, as [The agreement](protocol/changes-deltas.md#the-agreement) says. Without it, or with any other value, the welcome accepts none, and each runner sends full changes lists. `wrangler.jsonc` sets `"off"` until activation, as [When a deploy fails](automatic-deploys.md#when-a-deploy-fails) says. It is not a secret. |
 
 - Without `MACHINE_ORIGIN`, the Worker refuses each request on the machine
   hostname. Each sandbox gets the value as `CONDUCTIVE_MACHINE_ORIGIN`. Both
@@ -155,33 +158,9 @@ examples.
 
 ## The attachment bucket
 
-`CHAT_ATTACHMENTS` holds the files that users attach to chat messages, as
-[Attachments](protocol/messages-and-attachments.md#attachments) says. One bucket
-serves every org.
-
-- Create the private bucket once, before the first deploy that declares
-  the binding:
-  `npx wrangler r2 bucket create conductive-chat-attachments --location weur`.
-  The primary orchestrator does this at the next deployment.
-- The location hint puts the bucket in Western Europe, near the production
-  database and the workspace objects. A bucket keeps the location of its
-  first creation.
-- Without the bucket, `wrangler deploy` creates it with no location hint.
-  So create it first.
-- Keep public access off. Add no custom domain, no `r2.dev` address, and
-  no CORS rule. Only the Worker reads and writes the bucket, as
-  [Orgs and workspaces](protocol/isolation.md#orgs-and-workspaces)
-  says.
-- Add no lifecycle rule that deletes files by age. The Worker keeps each
-  accepted file until its transfer and the cloud computer's first start
-  succeed. Then it deletes the stored bytes and keeps the file record.
-  An age rule could delete bytes that a failed first start still needs.
-- The cloud computer downloads each attached file with a detached command.
-  The Boat key needs `exec` for this transfer, as
-  [The app's Boat account](sandbox-provider-accounts.md#the-apps-boat-account)
-  says.
-- Local development and the Worker tests use local R2 storage. They need no
-  Cloudflare account and no bucket.
+[The attachment bucket](deployment/attachment-bucket.md) gives the R2
+bucket of `CHAT_ATTACHMENTS`: its creation, its location, and the
+settings that it must not have.
 
 ## The GitHub App
 
@@ -234,36 +213,9 @@ the software image that each deploy builds.
 
 ## Frame sources
 
-`CONDUCTIVE_FRAME_SOURCES` lists the origins that the pages of the app can
-show in a frame, in addition to the port previews. The Desktop tab shows
-the desktop stream of a sandbox in such a frame.
-
-- The value is a list of HTTPS origins, separated by spaces. An origin is
-  `https://`, a host, and an optional port, with no path. A host can start
-  with `*.` to cover each subdomain.
-- List the desktop stream hosts as `https://*.on.boat.dev`, the domain of
-  Boat's sandbox hosts. Boat's [desktop guide](https://docs.boat.dev/desktop-streaming/urls-and-security)
-  shows the stream host only as `<sandbox-desktop-host>`, and Boat
-  generates it for each running sandbox. A list of exact hosts was
-  rejected, because it fails for each new workspace.
-- A sandbox on E2B has no desktop stream, so E2B needs no entry.
-- The wildcard also lets the pages of the app frame any other page on a
-  Boat sandbox host, also a page of another Boat customer. To use this, an
-  attacker first needs a way to put HTML into a page of the app.
-- A desktop URL carries its token in the fragment. Put no token or other
-  secret in the value.
-- The Worker gives each page of the app a content security policy. Its
-  frame sources are the page's own origin, `https://*.<PREVIEW_DOMAIN>`,
-  and each origin of the value. The Worker leaves out each entry that is
-  not an HTTPS origin, such as an `http://` address or an address with a
-  path.
-- Without the variable, a page frames only its own origin and the port
-  previews. The Desktop tab then cannot show a stream.
-- The Mac build reads its own `CONDUCTIVE_FRAME_SOURCES`, as the
-  [Mac app README](../desktop/README.md#development) says. It does not add
-  the preview domain itself. So give the Worker and the Mac build the same
-  value: `https://*.<PREVIEW_DOMAIN> https://*.on.boat.dev`. The Worker
-  lists the preview origin only once.
+[Frame sources](deployment/frame-sources.md) gives the origins of
+`CONDUCTIVE_FRAME_SOURCES`, which let the Desktop tab show the desktop
+stream of a sandbox.
 
 ## Settings of each workspace sandbox
 

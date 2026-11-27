@@ -25,7 +25,9 @@ decision number names a dated record, as
 - The request is a `report.refresh` command with a `commandId` and a `kind`.
   The kind is `files.snapshot`, `changes.updated`, `start.updated`,
   `workspace.title`, `ports.updated`, or `skills.updated`.
-- The workspace asks for a full file tree after a refused tree delta. It asks
+- The workspace asks for a full file tree after a refused tree delta. It
+  asks for a full changes list, of the kind `changes.updated`, after a
+  refused [changes delta](changes-deltas.md#checks-and-repairs). It asks
   for no report after a refused event of any other type.
 - Each kind has at most one open request. After a further refusal of that
   kind, the workspace sends no second request.
