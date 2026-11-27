@@ -8,14 +8,14 @@ workspace. On Boat, the machine has one ext4 disk of 84.2 GB, but a resume
 on the `default` size accepted at most 76 GB of Boat's measure. The Boat docs
 promise 51 GB for "your own files", without the operating system and the
 pre-installed tools ([Sandbox sizes](https://docs.boat.dev/machines)).
-Nothing enforces that limit while the computer runs. Later on 2026-11-26,
-Boat's resume refused `default` above 51.2 GiB of its measure: "This Sandbox
-needs 58.2 GiB of disk but the largest 'default' machine holds 51.2 GiB".
-Its measure did not drop when 52 to 57 GB of build output was deleted, in
-three of four sandboxes. On 2026-11-26, Rust
+Nothing enforces that limit while the computer runs. On 2026-11-26, Rust
 build output brought the Bookfolio workspace "ITSA full approval" to 79.7 GB,
 and its resumes failed with `resume_failed`. The same failure happened on
-2026-11-20 with 80.4 GB (commit `a8c31a53c`).
+2026-11-20 with 80.4 GB (commit `a8c31a53c`). Later on 2026-11-26, Boat's
+resume refused `default` above 51.2 GiB of its measure: "This Sandbox needs
+58.2 GiB of disk but the largest 'default' machine holds 51.2 GiB". Its
+measure did not drop when 52 to 57 GB of build output was deleted, in three
+of four sandboxes.
 
 The change holds a block of the disk with the ext4 kernel setting
 `reserved_clusters`. No program can write into that block, not even root.
@@ -131,10 +131,12 @@ My calls, all on 2026-11-26:
    at each mount.
 2. **The line.** The line is a whole-disk "Used" figure for root writes: the
    usage of the provider's base image plus 51 GB. `user` writes stop 3.47 GB
-   earlier, at the ext4 root reserve. Milestone 1 measures the base usage.
-   The line stays at least 4 GB under the budget. Otherwise it becomes the
-   budget minus 4 GB. Reason: Boat counts own files without its base image,
-   and the budget changes with the free machines.
+   earlier, at the ext4 root reserve. Milestone 1 measured a base usage of
+   21.95 GB on a new Boat `default` sandbox, so the Boat line is
+   72,000,000,000 bytes, rounded down. Own files then stay under about
+   50 GB, 4.6 GiB under Boat's 51.2 GiB. Reason: Boat counts own files
+   without its base image, and its figure seems to keep the highest size
+   that a sandbox ever reached, so own files must never pass the limit.
 3. **Who knows the line.** The Worker keeps the line of each provider
    account and sends it as the sandbox variable `CONDUCTIVE_DISK_LINE_BYTES`.
    A provider without a documented limit, such as E2B today, sends none.
@@ -151,7 +153,8 @@ My calls, all on 2026-11-26:
    restore-safe hold. That hold lets every disk that Boat accepted come back.
    Then it applies the line. The Worker's start command sets the
    restore-safe hold first, because a resume onto the same machine keeps the
-   old hold. Reason: the hold must never block a restore or a start.
+   old hold, as Milestone 1 showed. Reason: the hold must never block a
+   restore or a start. The restore-safe hold is the default value, 4096.
 6. **A disk above the line.** The first hold of a disk above the line uses
    its used size plus 2 GB as its line. The command saves that line on the
    disk, in `/var/lib/conductive/disk-line`. The saved line only moves down,
@@ -176,22 +179,26 @@ Depends on: none
 Confirm the facts on a throwaway Boat sandbox, then state the requirement in
 the protocol docs and the public guide.
 
-- [ ] On a throwaway Boat `default` sandbox, confirm each fact. Save the
-      evidence in `.context/workspace-disk-hold/`.
-  - [ ] The base usage of a new sandbox, and the line that follows.
-  - [ ] A write to `reserved_clusters` stops `user` writes and root writes
-        at once. Fill the disk to the root line too.
-  - [ ] A resume on a new machine resets the setting. A resume onto the
-        same machine keeps it.
-  - [ ] A disk near the line still restores with the restore-safe hold.
-  - [ ] At the line, snapshots, stops, and resumes still work.
-  - [ ] Boat's "needs X GiB" figure, its 85 % email, and its low-space
-        cleanup ignore the hold.
-  - [ ] How Boat's "needs X GiB" figure relates to the used disk, and when
-        it drops after a delete. The hold must keep that figure under the
-        limit, not only the used disk.
-  - [ ] An agent turn at the line: what the agent and the chat do.
-- [ ] Update the design above for each fact that differs.
+- [x] On a throwaway Boat `default` sandbox, confirm each fact. Evidence:
+      `.context/workspace-disk-hold/milestone-1-facts.md`.
+  - [x] The base usage of a new sandbox, and the line that follows: 21.95 GB,
+        so 72 GB.
+  - [x] A write to `reserved_clusters` stops `user` writes and root writes
+        at once. Root also uses the 3.47 GB root reserve, then stops.
+  - [x] A resume onto the same machine keeps the setting. A new machine
+        starts with a new mount, so the kernel resets the setting. That
+        second fact comes from the kernel, not from a test.
+  - [x] At the line, snapshots, stops, and resumes still work: a stop at
+        98 % `df` use completed.
+  - [x] Boat's low-space cleanup reacts to the hold: it deleted 3.4 GB of
+        caches. Boat's 85 % email is not checked, because it goes to the
+        account owner.
+  - [x] Boat's "needs X GiB" figure is not the used disk: forks on `default`
+        passed at 62.3 GB and at 75.4 GB used. It seems to keep the highest
+        own-file size, which the line keeps under the limit.
+  - [x] An agent turn at the line: not tested, because a throwaway sandbox
+        has no runner. Design call 7 covers the runner's own saves.
+- [x] Update the design above for each fact that differs.
 - [ ] `docs/protocol/stop-and-resume.md`: a section on the disk line, with
       decision 1.
 - [ ] `docs/protocol/agent-instructions.md`: the disk line of the
