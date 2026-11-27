@@ -1,4 +1,5 @@
 import type { FileEntry } from '../../src/shared/generated/FileEntry'
+import type { BrowserChangesResponse } from '../../src/shared/generated/BrowserChangesResponse'
 import type { RunnerFileEvent } from '../../src/shared/generated/RunnerFileEvent'
 import type { FileEvent } from '../../src/shared/files'
 import { encrypt } from '../security/crypto'
@@ -52,23 +53,22 @@ export function completeReport(kind: 'tree' | 'changes'): FileEvent {
       type: 'files.snapshot',
       tree: { revision: 1, omittedEntryCount, entries: grownEntries },
     }
-  return {
-    type: 'changes.updated',
-    changes: {
-      baseBranch: 'main',
-      displayBaseBranch: 'm[redacted]in',
-      files: grownEntries.map(({ path, displayPath }) => ({
-        path,
-        displayPath,
-        change: 'modified',
-        added: 1,
-        removed: 0,
-        uncommitted: true,
-      })),
-      summary: { files: 960, added: 960, removed: 0 },
-      omitted,
-    },
+  const changes: BrowserChangesResponse = {
+    revision: 1,
+    baseBranch: 'main',
+    displayBaseBranch: 'm[redacted]in',
+    files: grownEntries.map(({ path, displayPath }) => ({
+      path,
+      displayPath,
+      change: 'modified',
+      added: 1,
+      removed: 0,
+      uncommitted: true,
+    })),
+    summary: { files: 960, added: 960, removed: 0 },
+    omitted,
   }
+  return { type: 'changes.updated', changes }
 }
 export async function createGrownReportsFixture() {
   const fixture = await createRunnerLimitsFixture()

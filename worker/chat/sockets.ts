@@ -6,6 +6,18 @@ import type { BrowserAccess } from './browser-authorization'
 import { closeTab } from './browser-subscription'
 import { afterNumber } from './http-routes'
 import type { BrowserPeer } from './types'
+import {
+  readBrowserEventForms,
+  type BrowserEventsCursor,
+} from './browser-event-forms'
+
+function browserEventsCursor(request: Request): BrowserEventsCursor {
+  const url = new URL(request.url)
+  return {
+    after: afterNumber(url),
+    forms: readBrowserEventForms(url.searchParams.get('forms')?.split(',')),
+  }
+}
 
 export async function openBrowser(
   chat: WorkspaceChat,
@@ -15,7 +27,7 @@ export async function openBrowser(
   const access = await chat.authorizeBrowser(request)
   if (access.suffix !== '/events')
     throw new HttpError(404, 'not_found', 'The page is not available.')
-  return chat.subscribe(access, afterNumber(new URL(request.url)), peer)
+  return chat.subscribe(access, browserEventsCursor(request), peer)
 }
 
 function socketPair(request: Request) {
@@ -45,7 +57,7 @@ export async function browserUpgrade(
   access: BrowserAccess,
 ): Promise<Response> {
   const { client, server } = socketPair(request)
-  const after = afterNumber(new URL(request.url))
+  const cursor = browserEventsCursor(request)
   const peer = {
     send: (message: WorkspaceSocketMessage) =>
       server.send(JSON.stringify(message)),
@@ -55,7 +67,9 @@ export async function browserUpgrade(
   const ready = new Promise<void>((resolve) => {
     registered = resolve
   })
-  const replay = chat.subscribe(access, after, peer, server, () => registered())
+  const replay = chat.subscribe(access, cursor, peer, server, () =>
+    registered(),
+  )
   try {
     await Promise.race([ready, replay])
   } catch (error) {

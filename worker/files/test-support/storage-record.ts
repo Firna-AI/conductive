@@ -1,4 +1,4 @@
-import type { ChangesResponse } from '../../../src/shared/generated/ChangesResponse'
+import type { BrowserChangesResponse } from '../../../src/shared/generated/BrowserChangesResponse'
 import type { FileTreeResponse } from '../../../src/shared/generated/FileTreeResponse'
 import { BUCKET_LAYOUT } from '../bucket-layout'
 import { readFileList, readFilesManifest, type FilesStorage } from '../storage'
@@ -7,7 +7,7 @@ export interface StoredFiles {
   connectionId: string | null
   hasSnapshot: boolean
   tree: FileTreeResponse | null
-  changes: ChangesResponse | null
+  changes: BrowserChangesResponse | null
 }
 
 export async function readStoredFiles(

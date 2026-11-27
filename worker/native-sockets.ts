@@ -1,4 +1,8 @@
 import type { WorkspaceLinkContext } from './data/workspace-link'
+import {
+  readBrowserEventForms,
+  type BrowserEventForm,
+} from './chat/browser-event-forms'
 
 export type NativeSocketRole = 'device' | 'browser' | 'runner'
 
@@ -14,6 +18,7 @@ export type NativeSocketAttachment = NativeSocketIdentity &
     | {
         role: 'browser'
         presentation: Pick<WorkspaceLinkContext, 'origin' | 'number'>
+        forms?: readonly BrowserEventForm[]
       }
   )
 
@@ -57,6 +62,9 @@ function attachment(value: unknown): NativeSocketAttachment | null {
       typeof presentation.number !== 'number'
     )
       return null
+    const forms = readBrowserEventForms(
+      'forms' in value ? value.forms : undefined,
+    )
     return {
       version: 1,
       role,
@@ -66,6 +74,7 @@ function attachment(value: unknown): NativeSocketAttachment | null {
         origin: presentation.origin,
         number: presentation.number,
       },
+      ...(forms.length ? { forms } : {}),
     }
   }
   return { version: 1, role, id: value.id, generation: value.generation }

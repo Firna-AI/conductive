@@ -68,6 +68,7 @@ export function parseRunnerTransport(
       ...(input.skillReads === true ? { skillReads: true } : {}),
       ...(input.capabilityNotices === true ? { capabilityNotices: true } : {}),
       ...(input.services === true ? { services: true } : {}),
+      ...(input.changesDeltas === true ? { changesDeltas: true } : {}),
       ...(input.loginKinds === undefined
         ? {}
         : { loginKinds: parseLoginKinds(input.loginKinds) }),
@@ -142,7 +143,8 @@ export function parseRunnerOutputEnvelope(
   if (
     parsed.event.type !== 'files.snapshot' &&
     parsed.event.type !== 'files.changed' &&
-    parsed.event.type !== 'changes.updated'
+    parsed.event.type !== 'changes.updated' &&
+    parsed.event.type !== 'changes.changed'
   )
     checkRunnerEnvelopeBytes(input)
   return parsed

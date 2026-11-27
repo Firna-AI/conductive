@@ -8,6 +8,7 @@ import { NativeCloseProbe } from '../test-support/native-close.test-support'
 import { RunnerConnectionStore } from './runner-connection-store'
 import { nativeWarningObservation } from '../test-support/native-warnings'
 import { RUNNER_WORK_MARK_KEY } from './runner-work-watch'
+import { markFilesMoved } from '../files/storage'
 
 const CLOCK = '__test:runner-clock'
 
@@ -160,6 +161,10 @@ export class Workspace extends ProductionWorkspace {
       await this.chat.store.settled()
     } else if (action === 'check-repository') {
       await this.chat.store.run(() => this.chat.runner.checkRepository())
+    } else if (action === 'mark-files-moved') {
+      await this.chat.changeWorkspace(string(input.workspaceId), (view) =>
+        markFilesMoved(view.files),
+      )
     } else if (action === 'alarm') {
       await this.alarm()
       await this.settledAlarms()

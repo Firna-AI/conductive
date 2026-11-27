@@ -5,6 +5,7 @@ import {
   TURN_COMPLETED_MAX_FILES,
 } from '../../src/shared/chat-events'
 import {
+  FILE_CHANGES_DELTA_MAX_CHANGES,
   FILE_EVENT_MAX_BYTES,
   FILE_TREE_DELTA_MAX_CHANGES,
 } from '../../src/shared/files'
@@ -36,7 +37,8 @@ export function checkRunnerEnvelopeBytes(value: unknown): void {
   if (
     value.event.type === 'files.snapshot' ||
     value.event.type === 'files.changed' ||
-    value.event.type === 'changes.updated'
+    value.event.type === 'changes.updated' ||
+    value.event.type === 'changes.changed'
   )
     within(value.event, FILE_EVENT_MAX_BYTES)
   if (value.event.type === 'turn.completed' && Array.isArray(value.event.files))
@@ -59,6 +61,12 @@ export function checkRunnerEventLimits(event: RunnerEvent): void {
       invalidInput()
   } else if (event.type === 'files.changed') {
     if (event.delta.changes.length > FILE_TREE_DELTA_MAX_CHANGES) tooLarge()
+  } else if (event.type === 'changes.changed') {
+    if (
+      event.delta.removes.length + event.delta.upserts.length >
+      FILE_CHANGES_DELTA_MAX_CHANGES
+    )
+      tooLarge()
   } else if (event.type === 'skills.updated') {
     for (const skills of [event.claude, event.codex]) {
       if (skills.length > SKILL_REPORT_MAX_SKILLS) tooLarge()

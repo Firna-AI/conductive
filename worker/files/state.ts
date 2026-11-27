@@ -1,4 +1,4 @@
-import type { ChangesResponse } from '../../src/shared/generated/ChangesResponse'
+import type { BrowserChangesResponse } from '../../src/shared/generated/BrowserChangesResponse'
 import type { FileTreeResponse } from '../../src/shared/generated/FileTreeResponse'
 import {
   convertFilesProjection,
@@ -60,6 +60,7 @@ export async function applyFilesEvent(
   const previous = await readFilesManifest(transaction)
   if (previous.connectionId !== connectionId) return false
   const event = parseFileEvent(value)
+  if (event.type === 'changes.changed') throw invalidFileResponse()
   if (event.type === 'files.changed' || event.type === 'files.snapshot') {
     const revision = previous.hasSnapshot
       ? await treeRevision(transaction, previous)
@@ -148,7 +149,7 @@ export class FilesState {
     )
   }
 
-  changes(): Promise<ChangesResponse | null> {
+  changes(): Promise<BrowserChangesResponse | null> {
     return this.serialize(async () =>
       readFileList(
         this.storage,

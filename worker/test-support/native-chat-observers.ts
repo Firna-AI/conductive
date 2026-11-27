@@ -30,10 +30,10 @@ export function nativeChatObservers() {
     callbacks,
     observePublications: (chat: WorkspaceChat) => {
       const publish = chat.browsers.publish.bind(chat.browsers)
-      chat.browsers.publish = (events) => {
+      chat.browsers.publish = (events, completeChanges) => {
         if (publicationFailure && events.length)
           throw new Error(publicationFailure)
-        publish(events)
+        publish(events, completeChanges)
         publications.push(...structuredClone(events))
       }
       const change = chat.store.change.bind(chat.store)

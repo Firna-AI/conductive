@@ -174,6 +174,7 @@ it('refuses inconsistent changes metadata and empty multipart reports', async ()
     }),
   )
   const stored = {
+    revision: 1,
     baseBranch: 'main',
     unpushedCommits: 3,
     uncommittedFileCount: 4,

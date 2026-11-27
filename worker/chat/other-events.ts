@@ -53,6 +53,7 @@ export function parseOtherEvent(value: unknown): RunnerEvent | null {
     case 'files.unavailable':
     case 'files.changed':
     case 'changes.updated':
+    case 'changes.changed':
       try {
         return parseRunnerFileEvent(value)
       } catch (error) {

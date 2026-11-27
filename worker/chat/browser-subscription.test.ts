@@ -1,8 +1,14 @@
 import { expect, it } from 'vitest'
+import {
+  changedRow,
+  changesDelta,
+  fullChanges,
+} from '../files/changes-delta.test-support'
+import { RunnerFileReports } from '../files/runner-reports'
 import { HttpError } from '../http'
 import { BrowserTabs } from './browser-tabs'
 import { subscribeBrowser } from './browser-subscription'
-import { seedLegacyHistory } from './history-memory.test-support'
+import { historyMemory, seedLegacyHistory } from './history-memory.test-support'
 import { nativeChatStore } from './native-store.test-support'
 import { ChatStore } from './store'
 import type {
@@ -166,4 +172,53 @@ it('refuses a tab without a grant before its first history page, with no unhandl
   } finally {
     process.off('unhandledRejection', listener)
   }
+})
+
+it('charges the complete changes event to the replay budget of an older tab', async () => {
+  const { storage } = historyMemory()
+  const store = new ChatStore(storage, () => 25)
+  const file = { ...changedRow('file.txt'), displayPath: 'x'.repeat(6_000) }
+  await store.change(
+    'workspace',
+    async (view) => {
+      const reports = new RunnerFileReports(view.files)
+      await reports.beginStream('stream')
+      const full = await reports.accept(fullChanges({ files: [file] }))
+      const delta = await reports.accept(changesDelta())
+      if (!full || !delta) throw new Error('The test reports did not apply.')
+      await view.emit(full)
+      await view.emit(delta)
+      await view.emit({ type: 'workspace.title', name: 'After the delta' })
+    },
+    () => undefined,
+  )
+
+  const older = tab()
+  const browsers = grants()
+  const options = { store, browsers, operation: logins, access, budget: 1_000 }
+  await subscribeBrowser({ ...options, after: 1, peer: older.peer })
+  expect(pages(older.state.messages)).toEqual([
+    { numbers: [2], through: 3, next: 2 },
+  ])
+  expect(older.state.closed).toBe(1)
+  expect(older.state.messages[0]).toMatchObject({
+    type: 'history',
+    history: {
+      events: [
+        {
+          event: {
+            type: 'changes.updated',
+            changes: { revision: 2, files: [file] },
+          },
+        },
+      ],
+    },
+  })
+
+  const resumed = tab()
+  await subscribeBrowser({ ...options, after: 2, peer: resumed.peer })
+  expect(pages(resumed.state.messages)).toEqual([
+    { numbers: [3], through: 3, next: null },
+  ])
+  expect(resumed.state.closed).toBe(0)
 })

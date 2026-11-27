@@ -1,15 +1,16 @@
 import type { RunnerFileCommand } from '../../src/shared/generated/RunnerFileCommand'
-import type { WorkspaceEventEnvelope } from './workspace-events'
+import type { PublishWorkspaceEvents } from './workspace-events'
 import { HttpError } from '../http'
 import { RunnerConnections } from './runner-connections'
 import type { NativeBrowserConnections } from './browser-connections'
+import type { BrowserTabs } from './browser-tabs'
 import { RunnerDelivery } from './runner-delivery'
 import { parseRunnerTransport } from './runner-input'
 import { receiveRunnerMessage } from './runner-receive'
 import { RunnerWorkWatch, type RunnerProgress } from './runner-work-watch'
 import type { ChatStore } from './store'
 import type { WorkspaceTurnTokens } from '../model-gateway/workspace'
-import { storeRunnerReceipt } from './runner-receipt'
+import { commitRunnerReceipt } from './runner-receipt'
 import { RepairDelivery } from './repair-delivery'
 import { acceptRunnerHello } from './runner-hello'
 import { WorkspaceServices } from '../services/runtime'
@@ -33,24 +34,29 @@ export class RunnerChannel {
   private readonly watch: RunnerWorkWatch
   private readonly store: ChatStore
   private readonly dependencies: ChatDependencies
-  private readonly publish: (events: readonly WorkspaceEventEnvelope[]) => void
+  private readonly acceptsChangesDeltas: () => boolean
+  private readonly publish: PublishWorkspaceEvents
+  private readonly browsers: Pick<BrowserTabs, 'needsCompleteChanges'>
 
   constructor(
     store: ChatStore,
     dependencies: ChatDependencies,
-    publish: (events: readonly WorkspaceEventEnvelope[]) => void,
+    publish: PublishWorkspaceEvents,
     forRunningTurn: WorkspaceTurnTokens['forRunningTurn'],
     bind: (id: string) => void,
     options: {
       native?: NativeBrowserConnections
+      browsers: Pick<BrowserTabs, 'needsCompleteChanges'>
       env: AppEnv
       storage: ChatStorage
     },
   ) {
-    const { native, env, storage } = options
+    const { native, browsers, env, storage } = options
     this.store = store
     this.dependencies = dependencies
+    this.acceptsChangesDeltas = () => env.CHANGES_DELTAS === 'on'
     this.publish = publish
+    this.browsers = browsers
     this.services = new WorkspaceServices(
       storage,
       env,
@@ -139,6 +145,7 @@ export class RunnerChannel {
           repairs: this.repairs,
           moves: this.moves,
           services: this.services,
+          changesDeltas: this.acceptsChangesDeltas(),
           publisher: (id) => this.publisher(id),
         }))
       )
@@ -185,27 +192,15 @@ export class RunnerChannel {
         'runner_stream_mismatch',
         'The connection is not available.',
       )
-    let stored: WorkspaceEventEnvelope[] = []
-    let becameReady = false
-    const cursor = await this.store.change(
-      active.state.workspace.id,
-      async (transaction) => {
-        stored = []
-        becameReady = false
-        const through = await transaction.cursor(message.streamId)
-        if (message.eventNumber !== through + 1) return through
-        const receipt = await storeRunnerReceipt(
-          transaction,
-          active.state.workspace,
-          message,
-          this.dependencies,
-        )
-        becameReady = receipt.ready
-        stored = receipt.stored
-        await transaction.saveCursor(message.streamId, message.eventNumber)
-        return message.eventNumber
+    const { cursor, ready, stored } = await commitRunnerReceipt(
+      this.store,
+      active.state.workspace,
+      message,
+      this.dependencies,
+      {
+        publish: this.publish,
+        needsCompleteChanges: () => this.browsers.needsCompleteChanges(),
       },
-      this.publish,
     )
     progress.stage = 'after_commit'
     await progress.mark?.stage('after_commit')
@@ -225,7 +220,7 @@ export class RunnerChannel {
     })
     await this.store.reportTurnEnds()
     const publish = this.publisher(active.state.workspace.id)
-    if (becameReady) {
+    if (ready) {
       active.state.ready = true
       await this.connections.persist(active)
       this.connections.attachFiles(active)

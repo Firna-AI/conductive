@@ -11,6 +11,8 @@ function reportKind(
   switch (type) {
     case 'files.changed':
       return 'files.snapshot'
+    case 'changes.changed':
+      return 'changes.updated'
     case 'files.snapshot':
     case 'changes.updated':
     case 'start.updated':

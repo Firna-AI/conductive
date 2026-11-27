@@ -192,33 +192,37 @@ export function filterFileReport(
   event: RunnerFileEvent,
   text: FilterText,
 ): RunnerFileEvent {
+  return filterFileFields(event, text) ?? event
+}
+
+function filterFileFields(event: RunnerEvent, text: FilterText) {
   if (event.type === 'files.snapshot')
-    return {
-      ...event,
-      tree: filterTree(event.tree, text),
-    }
+    return { ...event, tree: filterTree(event.tree, text) }
   if (event.type === 'files.changed')
     return {
       ...event,
       delta: {
         ...event.delta,
-        changes: event.delta.changes.map((change) => {
-          if (change.operation === 'remove') return change
-          if (change.operation === 'move')
-            return {
-              ...change,
-              entry: fileEntry(change.entry, text),
-            }
-          return { ...change, entry: fileEntry(change.entry, text) }
-        }),
+        changes: event.delta.changes.map((change) =>
+          change.operation === 'remove'
+            ? change
+            : { ...change, entry: fileEntry(change.entry, text) },
+        ),
       },
     }
   if (event.type === 'changes.updated')
+    return { ...event, changes: filterChanges(event.changes, text) }
+  if (event.type === 'changes.changed')
     return {
       ...event,
-      changes: filterChanges(event.changes, text),
+      delta: {
+        ...baseLabel(event.delta, text),
+        upserts: event.delta.upserts.map((upsert) => ({
+          ...upsert,
+          file: changedFile(upsert.file, text),
+        })),
+      },
     }
-  return event
 }
 
 export function filterRetainedReport(
@@ -244,13 +248,6 @@ export function filterOutput(
   event: RunnerEvent,
   text: FilterText,
 ): RunnerEvent {
-  if (
-    event.type === 'files.snapshot' ||
-    event.type === 'files.changed' ||
-    event.type === 'files.unavailable' ||
-    event.type === 'changes.updated'
-  )
-    return filterFileReport(event, text)
   if (event.type === 'workspace.title' || event.type === 'start.updated')
     return filterRetainedReport(event, text)
   if (event.type === 'ports.updated')
@@ -289,7 +286,7 @@ export function filterOutput(
       ...event,
       error: { ...event.error, message: text(event.error.message) },
     }
-  return event
+  return filterFileFields(event, text) ?? event
 }
 type RetainedReport = Extract<
   RunnerEvent,

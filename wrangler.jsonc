@@ -34,6 +34,7 @@
     "MACHINE_ORIGIN": "https://api.conductive.build",
     "PREVIEW_DOMAIN": "conductive.page",
     "PROVIDER_SWITCH": "off",
+    "CHANGES_DELTAS": "off",
     "CONDUCTIVE_TITLE_MODEL": "@cf/ibm-granite/granite-4.0-h-micro",
     "CONDUCTIVE_SYMBOLIC_ANSWER_STATE": "true",
     // The model readers expect JSON encoded as text, not JSON bindings.

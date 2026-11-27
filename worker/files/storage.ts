@@ -1,4 +1,4 @@
-import type { ChangesResponse } from '../../src/shared/generated/ChangesResponse'
+import type { BrowserChangesResponse } from '../../src/shared/generated/BrowserChangesResponse'
 import type { FileTreeResponse } from '../../src/shared/generated/FileTreeResponse'
 import { isRecord } from '../http'
 import { convertFilesProjection } from './bucket-convert'
@@ -120,25 +120,25 @@ async function readChunks(
 }
 
 export function readFileList(
-  storage: FilesStorage,
+  storage: FilesReader,
   manifest: FilesManifest,
   kind: 'tree',
 ): Promise<FileTreeResponse | null>
 export function readFileList(
-  storage: FilesStorage,
+  storage: FilesReader,
   manifest: FilesManifest,
   kind: 'changes',
-): Promise<ChangesResponse | null>
+): Promise<BrowserChangesResponse | null>
 export function readFileList(
-  storage: FilesStorage,
+  storage: FilesReader,
   manifest: FilesManifest,
   kind: ListKind,
-): Promise<FileTreeResponse | ChangesResponse | null>
+): Promise<FileTreeResponse | BrowserChangesResponse | null>
 export async function readFileList(
-  storage: FilesStorage,
+  storage: FilesReader,
   manifest: FilesManifest,
   kind: ListKind,
-): Promise<FileTreeResponse | ChangesResponse | null> {
+): Promise<FileTreeResponse | BrowserChangesResponse | null> {
   let value: unknown
   if (manifest.layout === BUCKET_LAYOUT) {
     const list = manifest[kind]

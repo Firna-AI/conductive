@@ -1,4 +1,5 @@
 import { jsonBytes } from '../../src/shared/event-limits'
+import { isRecord } from '../http'
 import { parseFileEvent } from '../files/parsers'
 import { normalizeSession } from './session-storage'
 import type { ChatData } from './types'
@@ -18,11 +19,12 @@ const encoder = new TextEncoder()
 const chunkKey = (eventNumber: number, part: number) =>
   `chat:v1:history-chunk:${eventNumber}:${part}`
 
-export function isFileEventWithPayload(event: WorkspaceEvent): boolean {
+export function isFileEventWithPayload(type: string): boolean {
   return (
-    event.type === 'files.snapshot' ||
-    event.type === 'files.changed' ||
-    event.type === 'changes.updated'
+    type === 'files.snapshot' ||
+    type === 'files.changed' ||
+    type === 'changes.updated' ||
+    type === 'changes.changed'
   )
 }
 
@@ -32,7 +34,8 @@ export async function saveHistoryEvent(
   key: string,
   envelope: WorkspaceEventEnvelope,
 ): Promise<void> {
-  if (!isFileEventWithPayload(envelope.event)) return data.put(key, envelope)
+  if (!isFileEventWithPayload(envelope.event.type))
+    return data.put(key, envelope)
   const text = JSON.stringify(envelope.event)
   const envelopeBytes = jsonBytes({ ...envelope, event: 0 }) - 1
   if (
@@ -90,10 +93,17 @@ export async function loadHistoryEvent(
     chunks.push(text)
   }
   const value: unknown = JSON.parse(chunks.join(''))
+  if (!isRecord(value) || typeof value.type !== 'string')
+    throw new Error('Stored file event has no type.')
+  // Keep the payload of a newer event type, as for inline history.
+  const event =
+    isFileEventWithPayload(value.type) || value.type === 'files.unavailable'
+      ? parseFileEvent(value)
+      : (value as WorkspaceEvent)
   return {
     workspaceId: stored.workspaceId,
     eventNumber: stored.eventNumber,
     occurredAt: stored.occurredAt,
-    event: parseFileEvent(value),
+    event,
   }
 }

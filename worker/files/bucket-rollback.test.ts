@@ -132,7 +132,7 @@ const projectionWrites: ProjectionWrite[] = [
         type: 'changes.updated',
         changes: { ...nextChanges, revision: 1, partNumber: 1, partCount: 1 },
       }),
-    expected: { changes: nextChanges },
+    expected: { changes: { ...nextChanges, revision: 1 } },
   },
 ]
 

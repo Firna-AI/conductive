@@ -243,8 +243,20 @@ A chat without that alarm, as in some tests, gives the error to the caller, whic
 runner for one fresh full report after it refuses an update. It describes
 the stored records, the refusal checks, and the sends before each confirm.
 
+## Browser sockets
+
 `workspace-events.ts` defines the private saved event shape and presents browser events.
 Each authorized tab socket keeps its app origin and immutable workspace number in its attachment.
+`sockets.ts` reads the `forms` query parameter as a comma list.
+The attachment keeps the recognized forms across a wake.
+The socket gets `changes.changed` when it names that form.
+Each other socket gets a complete `changes.updated` list with the same event number.
+When an older socket is open, the runner receipt reads that list once from the projection in its commit task.
+The publisher sends it after the commit.
+For an older socket replay, the history reader uses the list only at the stored delta's revision.
+The replay byte budget counts the form that the socket receives.
+[Workspace events](../../docs/protocol/workspace-events.md#events)
+
 Replay and live events get the same fields before they reach the browser.
 Older saved workspace updates can omit number and link.
 Presentation fills both fields while it keeps each saved name, state, time, and event number.

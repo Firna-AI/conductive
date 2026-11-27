@@ -23,6 +23,7 @@ export async function acceptRunnerHello(
     repairs: RepairDelivery
     moves: RepositoryMoves
     services: WorkspaceServices
+    changesDeltas: boolean
     publisher(workspaceId: string): ChatCallbackPublisher
   },
 ): Promise<boolean> {
@@ -55,6 +56,9 @@ export async function acceptRunnerHello(
     streamId: message.streamId,
     confirmedThrough: welcome.cursor,
     ...(active.state.services === true ? { services: true } : {}),
+    ...(context.changesDeltas && message.changesDeltas === true
+      ? { changesDeltas: true }
+      : {}),
     ...(message.completeToolDetails === true
       ? { completeToolDetails: true }
       : {}),

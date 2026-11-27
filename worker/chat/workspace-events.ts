@@ -10,6 +10,7 @@ import {
   type WorkspaceLinkContext,
   type WorkspaceSnapshot,
 } from '../data/workspace-link'
+import type { BrowserEventForm } from './browser-event-forms'
 
 type WorkspaceUpdate = Extract<PublicEvent, { type: 'workspace.updated' }>
 export type WorkspaceEvent =
@@ -19,6 +20,11 @@ export type WorkspaceEvent =
 export interface WorkspaceEventEnvelope extends Omit<PublicEnvelope, 'event'> {
   event: WorkspaceEvent
 }
+
+export type PublishWorkspaceEvents = (
+  events: readonly WorkspaceEventEnvelope[],
+  completeChanges?: WorkspaceEventEnvelope,
+) => void
 
 type SavedHistory<Page> = Page extends unknown
   ? Omit<Page, 'events'> & { events: readonly WorkspaceEventEnvelope[] }
@@ -32,6 +38,7 @@ export type WorkspaceSocketMessage =
   | { type: 'event'; envelope: WorkspaceEventEnvelope }
 
 export interface WorkspaceEventPeer {
+  forms?: readonly BrowserEventForm[]
   send(message: WorkspaceSocketMessage): void
   close(): void
 }

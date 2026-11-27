@@ -1,4 +1,4 @@
-import type { ChangesResponse } from '../../src/shared/generated/ChangesResponse'
+import type { BrowserChangesResponse } from '../../src/shared/generated/BrowserChangesResponse'
 import type { FileTreeResponse } from '../../src/shared/generated/FileTreeResponse'
 import type { FilesStateRead } from '../../src/shared/workspace-state-read'
 import type { WorkspaceChat } from '../chat/backend'
@@ -16,7 +16,7 @@ export interface FilesListRead<List> {
 
 export interface WorkspaceFileLists {
   tree(workspaceId: string): Promise<FilesListRead<FileTreeResponse>>
-  changes(workspaceId: string): Promise<FilesListRead<ChangesResponse>>
+  changes(workspaceId: string): Promise<FilesListRead<BrowserChangesResponse>>
 }
 
 export function workspaceFileLists(chat: WorkspaceChat): WorkspaceFileLists {

@@ -33,7 +33,11 @@ export async function createRunnerLimitsFixture(
     published.push(...events)
     hooks.push(...(await actor.api.controls.takeStoredEvents()))
   }
-  const connect = async (stream = streamId, restart = false) => {
+  const connect = async (
+    stream = streamId,
+    restart = false,
+    changesDeltas?: unknown,
+  ) => {
     streamId = stream
     if (restart) await actor.restart()
     peer = `runner-${++connection}`
@@ -46,6 +50,7 @@ export async function createRunnerLimitsFixture(
       protocolVersion: 2,
       workspaceId: 'workspace',
       streamId,
+      changesDeltas,
     })
     await collect()
   }

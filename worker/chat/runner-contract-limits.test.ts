@@ -6,9 +6,11 @@ import {
   TURN_COMPLETED_MAX_FILES,
 } from '../../src/shared/chat-events'
 import {
+  FILE_CHANGES_DELTA_MAX_CHANGES,
   FILE_EVENT_MAX_BYTES,
   FILE_TREE_DELTA_MAX_CHANGES,
 } from '../../src/shared/files'
+import { changedRow, changesDelta } from '../files/changes-delta.test-support'
 import { parseRunnerEnvelope } from './runner-input'
 import {
   context,
@@ -161,5 +163,28 @@ it('counts discarded fields in the serialized raw turn file list', () => {
   ])
   expect(() =>
     parseRunnerEnvelope(numberedRunnerInput(envelope(event))),
+  ).toThrowError(expect.objectContaining({ code: 'runner_event_too_large' }))
+})
+
+it('bounds a changes delta by its raw event bytes and the combined operation count', () => {
+  const removes = Array.from({ length: 300 }, (_, index) => `old-${index}`)
+  const upserts = Array.from(
+    { length: FILE_CHANGES_DELTA_MAX_CHANGES - removes.length },
+    (_, index) => ({ index, file: changedRow(`file-${index}`) }),
+  )
+  const event = changesDelta({ removes, upserts })
+  const bytes = new TextEncoder().encode(
+    JSON.stringify({ ...event, extra: '' }),
+  ).length
+  const extra = 'x'.repeat(FILE_EVENT_MAX_BYTES - bytes)
+  const read = (value: unknown) =>
+    parseRunnerEnvelope(numberedRunnerInput(envelope(value)))
+
+  expect(read({ ...event, extra })).toEqual(envelope(event))
+  expect(() => read({ ...event, extra: extra + 'x' })).toThrowError(
+    expect.objectContaining({ code: 'runner_event_too_large' }),
+  )
+  expect(() =>
+    read(changesDelta({ removes: [...removes, 'other'], upserts })),
   ).toThrowError(expect.objectContaining({ code: 'runner_event_too_large' }))
 })

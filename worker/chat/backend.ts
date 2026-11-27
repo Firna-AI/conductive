@@ -1,6 +1,6 @@
 import type { UserMessage } from '../../src/shared/generated/UserMessage'
 import type { RunnerFileCommand } from '../../src/shared/generated/RunnerFileCommand'
-import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
+import type { PublishWorkspaceEvents, WorkspaceEvent } from './workspace-events'
 import type {
   ToolSessionAccess,
   ToolSessionWrite,
@@ -32,6 +32,7 @@ import { workspaceOperationRunner } from './workspace-operation'
 import { openBrowser } from './sockets'
 import { acceptSecretNotice } from './secret-notice'
 import type { StoredSecretRequest } from '../secrets/request-records'
+import type { BrowserEventsCursor } from './browser-event-forms'
 import type {
   BrowserPeer,
   ChatDependencies,
@@ -162,10 +163,10 @@ export class WorkspaceChat {
     this.runner = new RunnerChannel(
       this.store,
       this.dependencies,
-      (events) => this.publish(events),
+      this.publish,
       (id, turnId, kind) => this.turnTokens.forRunningTurn(id, turnId, kind),
       (id) => this.binding.bind(id),
-      { native, env, storage },
+      { native, env, storage, browsers: this.browsers },
     )
     this.operations = new WorkspaceOperations({
       env,
@@ -273,12 +274,12 @@ export class WorkspaceChat {
 
   subscribe(
     access: BrowserAccess,
-    after: number,
+    cursor: BrowserEventsCursor,
     peer: BrowserPeer,
     socket?: WebSocket,
     registered?: () => void,
   ): Promise<() => void> {
-    return this.browsers.subscribe(access, after, peer, socket, registered)
+    return this.browsers.subscribe(access, cursor, peer, socket, registered)
   }
 
   operation(workspaceId: string): ChatOperation {
@@ -291,8 +292,8 @@ export class WorkspaceChat {
     )
   }
 
-  private publish = (events: readonly WorkspaceEventEnvelope[]): void => {
-    this.browsers.publish(events)
+  private publish: PublishWorkspaceEvents = (events, completeChanges) => {
+    this.browsers.publish(events, completeChanges)
     this.titles.accepted(events)
   }
 }

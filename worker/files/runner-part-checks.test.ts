@@ -6,7 +6,7 @@ import {
   reportPartUpdates,
   REPORT_KEY,
 } from './report-storage'
-import { InvalidRunnerReport } from './runner-reports'
+import { InvalidRunnerReport } from './errors'
 import { FilesState } from './state'
 import {
   changesPart,

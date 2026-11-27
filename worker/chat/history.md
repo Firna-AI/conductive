@@ -43,9 +43,10 @@ streams, and the order of the runner commands.
   workspace event number in `chat:v1:history-index:changes-cutover`.
   Preparation preserves changes lists through that number.
   `chat:v1:history-index:changes` points to the newest indexed changes list
-  after that number. A newer list deletes the prior indexed list and its
-  chunks. These deletions can leave gaps in stored event numbers. An older
-  Worker can leave extra changes lists during a rollback.
+  after that number. A new delta replaces the previous indexed delta.
+  A newer list deletes the prior indexed list and delta with their chunks.
+  These deletions can leave gaps in stored event numbers. An older Worker
+  can leave extra changes lists during a rollback.
 - A tab connects with `after`, the last event number that it has. It gets
   the stored events after that number in one or more `history` pages, in
   the shape of `ChatHistoryResponse` in
@@ -53,6 +54,9 @@ streams, and the order of the runner commands.
   `event` message for each new event.
 - The history pages and the new subscription run in one queue task. So no
   event falls between them, and no event comes twice.
+- For a socket without the changes delta form, the replay reads the
+  complete changes list at the delta revision. If the projection has no
+  list at that revision, the replay leaves that event out.
 - The object answers the socket upgrade once the tab is registered with a
   valid grant, before the first `history` page. A refusal before then is
   the HTTP reply. The pages follow the handshake. So the tab reads each
@@ -71,9 +75,10 @@ streams, and the order of the runner commands.
   warning for an error that is not an `HttpError`.
 - The records use the `chat:v1:` key prefix of the Durable Object storage.
 - An event record holds its full envelope unless it uses a file stub.
-  A `files.snapshot`, `files.changed`, or `changes.updated` envelope above
-  4,096 UTF-8 JSON bytes uses a stub with `workspaceId`, `eventNumber`,
-  `occurredAt`, and `fileEventChunks`. Each chunk holds up to 65,536
+  A `files.snapshot`, `files.changed`, `changes.updated`, or
+  `changes.changed` envelope above 4,096 UTF-8 JSON bytes uses a stub
+  with `workspaceId`, `eventNumber`, `occurredAt`, and `fileEventChunks`.
+  Each chunk holds up to 65,536
   UTF-16 code units of the event JSON. The chunk keys start with
   `chat:v1:history-chunk:<eventNumber>:` and end with a zero-based part number.
 - Each runner stream numbers its events from 1. The Durable Object stores

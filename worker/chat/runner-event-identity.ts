@@ -2,7 +2,7 @@ import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
 import type { TurnEventContext } from '../../src/shared/generated/TurnEventContext'
 import { isRecord } from '../http'
 
-type KnownRunnerEventType = Exclude<RunnerEvent['type'], 'changes.changed'>
+type KnownRunnerEventType = RunnerEvent['type']
 
 type RunnerEventContextSources = {
   [Type in KnownRunnerEventType]: Extract<
@@ -37,6 +37,7 @@ const eventScopes = {
   'files.unavailable': 'workspace',
   'files.changed': 'workspace',
   'changes.updated': 'workspace',
+  'changes.changed': 'workspace',
   'ports.updated': 'workspace',
   'skills.updated': 'workspace',
 } satisfies RunnerEventScopes
@@ -57,6 +58,7 @@ const eventContextSources = {
   'files.unavailable': 'none',
   'files.changed': 'none',
   'changes.updated': 'none',
+  'changes.changed': 'none',
   'ports.updated': 'none',
   'skills.updated': 'none',
 } satisfies RunnerEventContextSources
@@ -98,7 +100,9 @@ export function readRunnerEventIdentity(value: unknown): RunnerEventIdentity {
       ? value.tree
       : type === 'changes.updated'
         ? value.changes
-        : null
+        : type === 'changes.changed'
+          ? value.delta
+          : null
   let revision: number | null = null
   let partNumber: number | null = null
   if (isRecord(report)) {
@@ -109,6 +113,7 @@ export function readRunnerEventIdentity(value: unknown): RunnerEventIdentity {
     )
       revision = report.revision
     if (
+      type !== 'changes.changed' &&
       typeof report.partNumber === 'number' &&
       Number.isSafeInteger(report.partNumber) &&
       report.partNumber > 0

@@ -44,13 +44,20 @@ export function browserControls(
       await asleep?.()
       return request('inspect')
     },
-    open: async (origin = TEST_ORIGIN) => {
-      const response = await runtime.dispatchFetch(
-        `${origin}${workspaceEventsPath('org', WORKSPACE_ID)}`,
-        {
-          headers: { ...headers, Origin: origin, Upgrade: 'websocket' },
-        },
+    open: async (
+      origin = TEST_ORIGIN,
+      options: { after?: number; forms?: string | null } = {},
+    ) => {
+      const address = new URL(
+        workspaceEventsPath('org', WORKSPACE_ID, options.after),
+        origin,
       )
+      if (options.forms === null) address.searchParams.delete('forms')
+      else if (options.forms !== undefined)
+        address.searchParams.set('forms', options.forms)
+      const response = await runtime.dispatchFetch(address.toString(), {
+        headers: { ...headers, Origin: origin, Upgrade: 'websocket' },
+      })
       if (response.status !== 101 || !response.webSocket)
         throw new Error(`Browser upgrade returned ${response.status}`)
       const socket = response.webSocket

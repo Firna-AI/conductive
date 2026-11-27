@@ -12,6 +12,10 @@ import type { BrowserPeer, ChatDependencies } from './types'
 import type { WorkspaceEventLabels } from './workspace-event-labels'
 import { presentWorkspaceMessage } from './workspace-events'
 import { browserRegistration } from './browser-registration'
+import type {
+  BrowserEventForm,
+  BrowserEventsCursor,
+} from './browser-event-forms'
 
 export interface NativeBrowserConnections {
   sockets: WorkspaceSockets
@@ -47,14 +51,14 @@ export class BrowserConnections extends BrowserTabs {
 
   async subscribe(
     access: BrowserAccess,
-    after: number,
+    { after, forms }: BrowserEventsCursor,
     peer: BrowserPeer,
     socket?: WebSocket,
     registered?: () => void,
   ): Promise<() => void> {
     return this.store.run(async () => {
       const labels = await this.store.eventLabels(access.workspace.id).prepare()
-      const presented = this.present(peer, access.presentation, labels)
+      const presented = this.present(peer, access.presentation, labels, forms)
       let persist:
         | ((registration: BrowserRegistration | null) => Promise<void>)
         | undefined
@@ -71,6 +75,7 @@ export class BrowserConnections extends BrowserTabs {
             origin: access.presentation.origin,
             number: access.presentation.number,
           },
+          forms,
         })
         this.connections.set(socket, presented)
         persist = this.stateWriter(id)
@@ -92,8 +97,10 @@ export class BrowserConnections extends BrowserTabs {
     peer: BrowserPeer,
     presentation: WorkspaceLinkContext,
     labels: WorkspaceEventLabels,
+    forms?: readonly BrowserEventForm[],
   ) {
     return {
+      forms,
       send: (message: Parameters<typeof presentWorkspaceMessage>[0]) =>
         peer.send(
           presentWorkspaceMessage(labels.message(message), presentation),
@@ -121,6 +128,7 @@ export class BrowserConnections extends BrowserTabs {
     this.bind(registration.identity.workspaceId)
     return {
       registration,
+      forms: state.forms,
       presentation: {
         ...state.presentation,
         orgId: registration.identity.orgId,
@@ -145,6 +153,7 @@ export class BrowserConnections extends BrowserTabs {
       },
       saved.presentation,
       labels,
+      saved.forms,
     )
     this.connections.set(socket, peer)
     await this.restore(peer, saved.registration, this.stateWriter(state.id))

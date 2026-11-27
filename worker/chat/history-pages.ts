@@ -34,6 +34,7 @@ const INDEX_THROUGH = chatKey('history-index', 'through')
 const POSITION_THROUGH = chatKey('history-index', 'positions-through')
 const NEWEST_TREE = chatKey('history-index', 'tree')
 const NEWEST_CHANGES = chatKey('history-index', 'changes')
+const NEWEST_CHANGES_DELTA = chatKey('history-index', 'changes-delta')
 const CHANGES_CUTOVER = chatKey('history-index', 'changes-cutover')
 const NEWEST_SKILLS = chatKey('history-index', 'skills')
 
@@ -54,6 +55,10 @@ export interface SessionPage {
 export interface ReadScope {
   /** The session whose events the page shows. Without it, every event shows. */
   sessionId?: string
+  /** A workspace replay can choose the form of an event before counting bytes. */
+  present?: (
+    envelope: WorkspaceEventEnvelope,
+  ) => Promise<WorkspaceEventEnvelope | null>
   /**
    * The UTF-8 JSON bytes that the reads may still show. Each read lowers it,
    * and ends its page after the shown event that uses it up.
@@ -92,6 +97,8 @@ export class HistoryPages {
       await this.replace(NEWEST_TREE, envelope.eventNumber)
     if (event.type === 'changes.updated')
       await this.indexChanges(envelope.eventNumber)
+    if (event.type === 'changes.changed')
+      await this.replace(NEWEST_CHANGES_DELTA, envelope.eventNumber)
     // Only the latest skills event holds the lists of the workspace.
     if (event.type === 'skills.updated')
       await this.replace(NEWEST_SKILLS, envelope.eventNumber)
@@ -108,6 +115,11 @@ export class HistoryPages {
       await this.data.put(CHANGES_CUTOVER, cutover)
     }
     if (eventNumber > cutover) await this.replace(NEWEST_CHANGES, eventNumber)
+    const delta = await this.data.get<number>(NEWEST_CHANGES_DELTA)
+    if (delta !== undefined && delta < eventNumber) {
+      await deleteHistoryEvent(this.data, chatEventKey(delta))
+      await this.data.delete(NEWEST_CHANGES_DELTA)
+    }
   }
 
   /** Deletes the older event that a newer full event replaces. */
@@ -224,7 +236,13 @@ export class HistoryPages {
       after,
       through,
       (last, limit) => this.list(last, through, limit),
-      (stored) => this.shown(stored, through, sessionId),
+      async (stored) => {
+        const event = await this.shown(stored, through, sessionId)
+        if (!event || !scope.present) return event
+        const envelope = await scope.present(event.envelope)
+        if (envelope === null) return null
+        return envelope === event.envelope ? event : { envelope }
+      },
       scope.budget,
     )
   }

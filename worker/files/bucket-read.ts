@@ -1,17 +1,19 @@
 import {
   BUCKET_SYMBOLS,
+  bucketKey,
   bucketListChunkKeys,
   type BucketInfo,
   type BucketList,
   type ListKind,
 } from './bucket-layout'
 import { invalidFileResponse } from './errors'
-import type { FilesStorage } from './storage'
+import type { FilesReader } from './storage'
+import { chunkKeys, readStoredText } from './stored-chunks'
 
 const CHUNKS_PER_READ = 64
 
 async function appendChunks(
-  storage: FilesStorage,
+  storage: FilesReader,
   keys: readonly string[],
   chunks: string[],
 ): Promise<void> {
@@ -24,7 +26,7 @@ async function appendChunks(
 }
 
 async function readChunks(
-  storage: FilesStorage,
+  storage: FilesReader,
   keys: Iterable<string>,
 ): Promise<string[]> {
   const chunks: string[] = []
@@ -53,8 +55,21 @@ function parseBucket(text: string, info: BucketInfo): unknown[] {
   return items
 }
 
+export async function readBucket(
+  storage: FilesReader,
+  kind: ListKind,
+  bucket: number,
+  info: BucketInfo,
+): Promise<unknown[]> {
+  const text = await readStoredText(
+    storage,
+    chunkKeys(info.chunks, (index) => bucketKey(kind, bucket, index)),
+  )
+  return parseBucket(text, info)
+}
+
 export async function readBucketList(
-  storage: FilesStorage,
+  storage: FilesReader,
   kind: ListKind,
   list: BucketList,
 ): Promise<unknown> {

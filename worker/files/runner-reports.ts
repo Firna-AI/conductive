@@ -1,5 +1,8 @@
 import type { RunnerFileEvent } from '../../src/shared/generated/RunnerFileEvent'
+import type { BrowserChangesResponse } from '../../src/shared/generated/BrowserChangesResponse'
 import type { FileEvent } from '../../src/shared/files'
+import { applyChangesDelta } from './bucket-changes-delta'
+import { invalidRunnerReport as invalid } from './errors'
 import {
   emptySequence,
   loadReportState,
@@ -15,11 +18,6 @@ import {
 } from './report-storage'
 import { applyFilesEvent, beginFilesConnection } from './state'
 import type { FilesReader, FilesStorage, FilesTransaction } from './storage'
-
-export class InvalidRunnerReport extends Error {}
-const invalid = (): never => {
-  throw new InvalidRunnerReport('The runner report is invalid.')
-}
 
 function checkPaths(entries: readonly { path: string }[], partCount: number) {
   if (entries.length === 0 && partCount !== 1) invalid()
@@ -78,24 +76,23 @@ function joinReport(parts: readonly RunnerFileEvent[]): FileEvent {
     reported.removed !== summary.removed
   )
     invalid()
-  return {
-    type: first.type,
-    changes: {
-      baseBranch: first.changes.baseBranch,
-      ...(first.changes.unpushedCommits === undefined
-        ? {}
-        : { unpushedCommits: first.changes.unpushedCommits }),
-      ...(first.changes.uncommittedFileCount === undefined
-        ? {}
-        : { uncommittedFileCount: first.changes.uncommittedFileCount }),
-      ...(first.changes.displayBaseBranch === undefined
-        ? {}
-        : { displayBaseBranch: first.changes.displayBaseBranch }),
-      summary,
-      ...(omitted === undefined ? {} : { omitted }),
-      files,
-    },
+  const changes: BrowserChangesResponse = {
+    revision: first.changes.revision,
+    baseBranch: first.changes.baseBranch,
+    ...(first.changes.unpushedCommits === undefined
+      ? {}
+      : { unpushedCommits: first.changes.unpushedCommits }),
+    ...(first.changes.uncommittedFileCount === undefined
+      ? {}
+      : { uncommittedFileCount: first.changes.uncommittedFileCount }),
+    ...(first.changes.displayBaseBranch === undefined
+      ? {}
+      : { displayBaseBranch: first.changes.displayBaseBranch }),
+    summary,
+    ...(omitted === undefined ? {} : { omitted }),
+    files,
   }
+  return { type: first.type, changes }
 }
 
 async function applyReport(
@@ -147,7 +144,7 @@ export class RunnerFileReports {
 
   async refuse(type: string): Promise<void> {
     const kind =
-      type === 'changes.updated'
+      type === 'changes.updated' || type === 'changes.changed'
         ? 'changes'
         : type === 'files.snapshot' || type === 'files.changed'
           ? 'tree'
@@ -174,8 +171,9 @@ export class RunnerFileReports {
       if (event.type === 'files.snapshot' || event.type === 'changes.updated')
         return this.acceptPart(transaction, state, event)
 
-      if (event.type === 'files.changed') {
-        const sequence = state.tree
+      if (event.type === 'files.changed' || event.type === 'changes.changed') {
+        const sequence =
+          event.type === 'files.changed' ? state.tree : state.changes
         if (
           !sequence.appliedRevision ||
           event.delta.revision !== sequence.appliedRevision + 1 ||
@@ -185,7 +183,9 @@ export class RunnerFileReports {
           invalid()
         sequence.appliedRevision = event.delta.revision
       }
-      await applyReport(transaction, state.streamId, event)
+      if (event.type === 'changes.changed')
+        await applyChangesDelta(transaction, state.streamId, event.delta)
+      else await applyReport(transaction, state.streamId, event)
       await transaction.put(REPORT_KEY, state)
       return event
     })

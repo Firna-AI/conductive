@@ -45,6 +45,6 @@ it('reads both projected lists in the chat queue without a new transaction', asy
   )
   await expect(read).resolves.toStrictEqual({
     tree: { revision: 1, entries: [file('z'), file('a')] },
-    changes,
+    changes: { ...changes, revision: 1 },
   })
 })

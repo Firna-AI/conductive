@@ -1,6 +1,12 @@
 import type { FileTooLargeResponse } from '../../src/shared/files'
 import { HttpError } from '../http'
 
+export class InvalidRunnerReport extends Error {}
+
+export function invalidRunnerReport(): never {
+  throw new InvalidRunnerReport('The runner report is invalid.')
+}
+
 export function fileUnavailable(): HttpError {
   return new HttpError(
     503,

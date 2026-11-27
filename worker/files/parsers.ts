@@ -1,6 +1,8 @@
 import type { BranchChangedFile } from '../../src/shared/generated/BranchChangedFile'
+import type { BrowserChangesResponse } from '../../src/shared/generated/BrowserChangesResponse'
 import type { ChangeKind } from '../../src/shared/generated/ChangeKind'
-import type { ChangesResponse } from '../../src/shared/generated/ChangesResponse'
+import type { ChangesDelta } from '../../src/shared/generated/ChangesDelta'
+import type { ChangesDeltaUpsert } from '../../src/shared/generated/ChangesDeltaUpsert'
 import type { ChangesResponseSummary } from '../../src/shared/generated/ChangesResponseSummary'
 import type { FileEntry } from '../../src/shared/generated/FileEntry'
 import type { FileTreeChange } from '../../src/shared/generated/FileTreeChange'
@@ -82,7 +84,7 @@ function treeChange(value: unknown): FileTreeChange {
   throw invalidFileResponse()
 }
 
-function changedFile(value: unknown): BranchChangedFile {
+export function parseChangedFile(value: unknown): BranchChangedFile {
   if (
     !isRecord(value) ||
     !isFilePath(value.path) ||
@@ -124,14 +126,14 @@ export function parseChangesSummary(
   return { files: value.files, added: value.added, removed: value.removed }
 }
 
-export function parseChanges(value: unknown): ChangesResponse {
+function changesHeader(
+  value: Record<string, unknown>,
+): Omit<BrowserChangesResponse, 'revision' | 'files'> {
   if (
-    !isRecord(value) ||
     typeof value.baseBranch !== 'string' ||
     (value.unpushedCommits !== undefined && !natural(value.unpushedCommits)) ||
     (value.uncommittedFileCount !== undefined &&
-      !natural(value.uncommittedFileCount)) ||
-    !Array.isArray(value.files)
+      !natural(value.uncommittedFileCount))
   )
     throw invalidFileResponse()
   const summary = parseChangesSummary(value.summary)
@@ -149,21 +151,63 @@ export function parseChanges(value: unknown): ChangesResponse {
     ...(typeof value.displayBaseBranch === 'string'
       ? { displayBaseBranch: value.displayBaseBranch }
       : {}),
-    files: value.files.map(changedFile),
     summary,
     ...(omitted === undefined ? {} : { omitted }),
   }
 }
 
-export function parseFileEvent(
-  value: unknown,
-): Exclude<FileEvent, { type: 'changes.changed' }> {
+export function parseChanges(value: unknown): BrowserChangesResponse {
+  if (
+    !isRecord(value) ||
+    (value.revision !== undefined && !natural(value.revision)) ||
+    !Array.isArray(value.files)
+  )
+    throw invalidFileResponse()
+  return {
+    ...changesHeader(value),
+    ...(value.revision === undefined ? {} : { revision: value.revision }),
+    files: value.files.map(parseChangedFile),
+  }
+}
+
+function removePath(value: unknown): string {
+  if (!isFilePath(value)) throw invalidFileResponse()
+  return value
+}
+
+function changesUpsert(value: unknown): ChangesDeltaUpsert {
+  if (!isRecord(value) || !natural(value.index)) throw invalidFileResponse()
+  return { index: value.index, file: parseChangedFile(value.file) }
+}
+
+function parseChangesDelta(value: unknown): ChangesDelta {
+  if (
+    !isRecord(value) ||
+    !natural(value.revision) ||
+    !Array.isArray(value.removes) ||
+    !Array.isArray(value.upserts)
+  )
+    throw invalidFileResponse()
+  const header = changesHeader(value)
+  if (!header.omitted) throw invalidFileResponse()
+  return {
+    ...header,
+    revision: value.revision,
+    omitted: header.omitted,
+    removes: value.removes.map(removePath),
+    upserts: value.upserts.map(changesUpsert),
+  }
+}
+
+export function parseFileEvent(value: unknown): FileEvent {
   if (!isRecord(value)) throw invalidFileResponse()
   if (value.type === 'files.unavailable') return { type: value.type }
   if (value.type === 'files.snapshot')
     return { type: value.type, tree: parseTree(value.tree) }
   if (value.type === 'changes.updated')
     return { type: value.type, changes: parseChanges(value.changes) }
+  if (value.type === 'changes.changed')
+    return { type: value.type, delta: parseChangesDelta(value.delta) }
   if (
     value.type === 'files.changed' &&
     isRecord(value.delta) &&

@@ -1,22 +1,67 @@
 import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
-import type { WorkspaceEventEnvelope } from './workspace-events'
+import type {
+  PublishWorkspaceEvents,
+  WorkspaceEventEnvelope,
+} from './workspace-events'
 import { HttpError } from '../http'
-import { InvalidRunnerReport, RunnerFileReports } from '../files/runner-reports'
+import { InvalidRunnerReport } from '../files/errors'
+import { RunnerFileReports } from '../files/runner-reports'
 import {
   parseRunnerEnvelope,
   parseRunnerOutputEnvelope,
   type IncomingRunnerEnvelope,
 } from './runner-input'
 import { refuseRunnerEvent } from './runner-refusal'
-import type { ChatTransaction } from './store'
+import type { ChatStore, ChatTransaction } from './store'
 import { prepareAgentEvent } from './turn-events'
 import { observeRepairPart } from './repair-refusal'
 import { storeWorkspaceTitle } from './workspace-title'
 import type { ChatDependencies, RunnerWorkspaceRecord } from './types'
 import type { FilteredRunnerOutput } from './runner-output'
 import { invalidInput } from './inputs'
+import { presentCompleteChanges } from './browser-changes'
+
+interface ReceiptPublication {
+  needsCompleteChanges(): boolean
+  publish: PublishWorkspaceEvents
+}
+
+export function commitRunnerReceipt(
+  store: ChatStore,
+  workspace: RunnerWorkspaceRecord,
+  message: IncomingRunnerEnvelope,
+  dependencies: ChatDependencies,
+  publication: ReceiptPublication,
+) {
+  let completeChanges: WorkspaceEventEnvelope | undefined
+  return store.change(
+    workspace.id,
+    async (transaction) => {
+      completeChanges = undefined
+      const cursor = await transaction.cursor(message.streamId)
+      if (message.eventNumber !== cursor + 1)
+        return { cursor, ready: false, stored: [] }
+      const receipt = await storeRunnerReceipt(
+        transaction,
+        workspace,
+        message,
+        dependencies,
+      )
+      const delta = receipt.stored.find(
+        ({ event }) => event.type === 'changes.changed',
+      )
+      if (delta && publication.needsCompleteChanges())
+        completeChanges =
+          (await presentCompleteChanges(transaction.files, delta)) ?? undefined
+      await transaction.saveCursor(message.streamId, message.eventNumber)
+      return { ...receipt, cursor: message.eventNumber }
+    },
+    (events) => publication.publish(events, completeChanges),
+  )
+}
+
 /** Only validation errors become permanent refusals. Storage and sends must retry. */
-export async function storeRunnerReceipt(
+async function storeRunnerReceipt(
   transaction: ChatTransaction,
   workspace: RunnerWorkspaceRecord,
   message: IncomingRunnerEnvelope,
@@ -166,7 +211,8 @@ async function applyRunnerEvent(
     event.type === 'files.snapshot' ||
     event.type === 'files.unavailable' ||
     event.type === 'files.changed' ||
-    event.type === 'changes.updated'
+    event.type === 'changes.updated' ||
+    event.type === 'changes.changed'
   ) {
     try {
       const complete = await new RunnerFileReports(transaction.files).accept(

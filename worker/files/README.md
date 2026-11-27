@@ -48,6 +48,11 @@ A tree delta reads buckets one at a time. A delta with one or more removes visit
 A delta of absent-path removes leaves the row and order chunks alone.
 An empty delta reads no row bucket. It can set the omitted entry count in the manifest.
 A delta without a count keeps a valid saved count and advances its revision with the tree.
+A changes manifest keeps the revision of its list when the revision is known.
+A changes delta reads the touched buckets and the order text.
+It checks the new summary from the previous summary and the affected rows.
+It writes changed buckets, changed order text, and the new manifest.
+A delta with only a header reads and writes no list chunks.
 A connection reset updates the manifest. An unavailable-tree mark and a repository move update the manifest of a bucket projection without reading list items.
 The first list write or tree mark of an old projection converts retained lists one entry at a time.
 It reads the old chunks in bounded batches.
@@ -74,6 +79,8 @@ On each `hello`, the chat backend calls `beginStream(streamId)`.
 A new stream discards the stored parts of the old stream and starts both revision sequences again.
 The last complete tree and changes stay, and the projection then belongs to the new stream.
 A reconnect of the same stream keeps its revisions and pending parts.
+The runner welcome accepts the changes delta offer when `CHANGES_DELTAS` is `"on"`.
+Both settings allow a valid delta from the runner's outbox. [The agreement](../../docs/protocol/changes-deltas.md#the-agreement)
 
 Each new file event that passes the event checks goes to `accept(event)`.
 It checks each part's revision, part number, and part count on arrival.
@@ -103,12 +110,15 @@ It also refuses the last part if the report is empty and has more than one part.
 For a changes report, it checks that the summary counts the listed files and their added and removed lines.
 `accept` then applies the complete report to the projection and returns it for the history and the browser tabs.
 It returns `null` while parts are pending and for an identical repeated part.
-It applies a tree delta only when the delta has the next tree revision and no tree report is incomplete.
+It applies a delta only when the delta has the next revision of its kind and no full report of that kind is incomplete.
+A changes delta needs the stored changes list of its stream.
+The stream sequence gives the previous revision when an older list omits it.
+The delta checks cover the paths, upsert indexes, and new summary. [Changes deltas](../../docs/protocol/changes-deltas.md#checks-and-repairs)
 It throws `InvalidRunnerReport` for a part or a delta that breaks the shared contract.
 Other errors are not refusals. The chat backend then closes the runner connection without a confirm.
 
 For each refused file event, the chat backend stores a refusal marker and calls `refuse(type)`.
-That call discards the incomplete report of the refused kind. A tree delta has the tree kind.
+That call discards the incomplete report of the refused kind. Each delta has the kind of its full report.
 `storedReportGenerations` gives the newest applied or incomplete revision of a kind, and the revision of its incomplete report.
 The chat backend reads it and the refused report identity before that call.
 The [report repairs](../chat/report-repairs.md) compare its stream, revision, and part number with the stored revisions.
@@ -144,7 +154,7 @@ It sends the accepted event to browser tabs only when the hook returns `true`.
 The hook rejects a malformed payload and ignores an old connection or stale tree revision.
 It keeps the last tree until the current connection sends its new full snapshot.
 Tree revisions can restart on a new connection.
-The owner handles duplicate `changes.updated` envelopes because the complete browser payload has no revision.
+The owner handles duplicate `changes.updated` envelopes through the runner stream cursor.
 
 ### File and diff results
 
@@ -177,6 +187,7 @@ They wait for the shared read-state recovery when it must run.
 One chat-queued view gives the list and its `stateRead`.
 This field gives the event number, the first open repair failure of that list, and the repository ID at that event number.
 Omission metadata is part of the list payload.
+The changes payload also gives the list revision when it is known.
 The handler filters the list after the queued read.
 A missing list gives HTTP 503 `file_unavailable` with `stateRead`.
 For the tree, this can occur before the first tree report or unavailable-tree mark.
@@ -278,6 +289,7 @@ The D1 workspace schema holds the base branch.
 - [bucket-read.ts](bucket-read.ts) reads one list of the bucket layout from its buckets and its order text.
 - `writeBucketList` writes changed buckets and list order. [bucket-write.ts](bucket-write.ts)
 - `writeTreeDelta` applies an ordered tree delta. [bucket-delta.ts](bucket-delta.ts)
+- `applyChangesDelta` checks and applies an ordered changes delta. [bucket-changes-delta.ts](bucket-changes-delta.ts)
 - `convertFilesProjection` converts old lists during the transaction that changes the projection. [bucket-convert.ts](bucket-convert.ts)
 - [runner.ts](runner.ts) matches file and diff commands to their results.
 - [boat.ts](boat.ts) converts the provider's file read result for the browser.

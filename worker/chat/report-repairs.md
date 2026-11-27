@@ -10,28 +10,32 @@ one `RunnerReportKind`.
 - `ReportRepairs` on `ChatTransaction.repairs` keeps one record for each kind
   under the `chat:v1:report-repair:` prefix.
 - Refusal checks use one identity reader. It reads only the event type,
-  session and turn IDs, and the revision and part number of a full file report.
+  session and turn IDs, the revision and part number of a full file report,
+  and the revision of a changes delta.
   Each unreadable field is null. The checks use this identity, the envelope
   stream, and the stored records. Part count and payload contents do not
   identify an old tail.
 - A record holds its command, its cause, its state, a `sent` flag, and a
   `replacementRevision`. The cause is the stream and the event number of the
   first refusal. For a file kind, it also holds the newest applied,
-  incomplete, or refused full-report revision. The state is `pending` or
+  incomplete, or refused revision. The state is `pending` or
   `failed`.
 - `refuseRunnerEvent` calls `refuseReportRepair` before `refuse(type)`
   discards the incomplete file report. So the check still reads the revision
   of that report.
 - The first refusal of a kind saves a `pending` record with a new command ID.
   A later refusal of a replacement sets `failed`, and its marker gets
-  `repairFailed`. A remaining part or a tree delta changes nothing.
+  `repairFailed`. A remaining part or a delta keeps the repair open.
+- A refused `changes.changed` event keeps that type in its marker.
+  Its repair requests `changes.updated`. The same mapping applies after a
+  repository move clears the changes list.
 - A stored new part 1 of a multipart report on the cause stream sets
   `replacementRevision`. So the later parts of a reused revision count as a
   replacement.
 - The record, the marker, and the cursor commit in the receipt transaction.
 - A complete tree, changes list, start steps, name, port list, or skills
-  report removes the record of its kind in the same transaction. A tree
-  delta and a pending part do not.
+  report removes the record of its kind in the same transaction. A delta
+  or pending part leaves the record in place.
 - The read state keeps the first failed marker of each notice window.
   A stored full report or a repair removal ends that window in the same
   transaction. An unchanged workspace name removes its repair with no event.

@@ -4,6 +4,7 @@ import type { BrowserTabs, BrowserPersistence } from './browser-tabs'
 import type { SessionLogins } from './session-login'
 import type { ChatStore } from './store'
 import type { WorkspaceEventPeer } from './workspace-events'
+import { presentCompleteChanges } from './browser-changes'
 
 /**
  * The most UTF-8 JSON bytes of events that the history pages of one
@@ -101,7 +102,12 @@ async function replay({
   let through: number | undefined
   while (true) {
     const history = await store.read(access.workspace.id, (view) =>
-      view.history(after, through, { budget: left }),
+      view.history(after, through, {
+        budget: left,
+        present: peer.forms?.includes('changes.changed')
+          ? undefined
+          : (envelope) => presentCompleteChanges(view.files, envelope),
+      }),
     )
     browsers.check(peer)
     peer.send({ type: 'history', history })

@@ -30,6 +30,7 @@ it('joins a changes report with empty first and last parts', async () => {
   ).resolves.toEqual({
     type: 'changes.updated',
     changes: {
+      revision: 1,
       baseBranch: 'main',
       unpushedCommits: 3,
       summary,
@@ -55,13 +56,15 @@ it('clears saved changes with a newer empty one-part report', async () => {
   ])
 
   const empty = {
+    revision: 2,
     baseBranch: 'main',
     unpushedCommits: 3,
     summary: { files: 0, added: 0, removed: 0 },
     files: [],
   }
-  await expect(
-    reports.accept(changesPart(1, 1, { ...empty, revision: 2 })),
-  ).resolves.toEqual({ type: 'changes.updated', changes: empty })
+  await expect(reports.accept(changesPart(1, 1, empty))).resolves.toEqual({
+    type: 'changes.updated',
+    changes: empty,
+  })
   expect(await projection.changes()).toEqual(empty)
 })

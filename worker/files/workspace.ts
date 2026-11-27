@@ -1,4 +1,4 @@
-import type { ChangesResponse } from '../../src/shared/generated/ChangesResponse'
+import type { BrowserChangesResponse } from '../../src/shared/generated/BrowserChangesResponse'
 import type { DiffResponse } from '../../src/shared/generated/DiffResponse'
 import type { FileResponse } from '../../src/shared/generated/FileResponse'
 import type { FileTreeResponse } from '../../src/shared/generated/FileTreeResponse'
@@ -10,7 +10,7 @@ import type { FilesStorage } from './storage'
 /** The HTTP layer can use a Durable Object RPC adapter for this interface. */
 export interface WorkspaceFilesPort {
   tree(): Promise<FileTreeResponse | null>
-  changes(): Promise<ChangesResponse | null>
+  changes(): Promise<BrowserChangesResponse | null>
   read(
     path: string,
     maxBytes: number,

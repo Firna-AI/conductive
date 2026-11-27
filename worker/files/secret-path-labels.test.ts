@@ -77,6 +77,7 @@ it('joins distinct real paths and labels runner reads, diffs, and provider fallb
     })),
   )
   expect(await files.changes()).toEqual({
+    revision: 1,
     baseBranch: 'main',
     displayBaseBranch: 'm[redacted]in',
     files: [

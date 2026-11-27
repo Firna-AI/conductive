@@ -104,12 +104,32 @@ export class BrowserTabs {
     }
   }
 
-  publish(events: readonly WorkspaceEventEnvelope[]): void {
+  needsCompleteChanges(): boolean {
+    const now = this.dependencies.now()
+    for (const [peer, registration] of this.peers)
+      if (
+        registration.deadline > now &&
+        !peer.forms?.includes('changes.changed')
+      )
+        return true
+    return false
+  }
+
+  publish(
+    events: readonly WorkspaceEventEnvelope[],
+    completeChanges?: WorkspaceEventEnvelope,
+  ): void {
     for (const envelope of events)
       for (const peer of this.peers.keys()) {
         try {
           this.check(peer)
-          peer.send({ type: 'event', envelope })
+          const outgoing =
+            envelope.event.type === 'changes.changed' &&
+            !peer.forms?.includes('changes.changed')
+              ? completeChanges
+              : envelope
+          if (outgoing?.eventNumber === envelope.eventNumber)
+            peer.send({ type: 'event', envelope: outgoing })
         } catch {
           this.close(peer)
         }

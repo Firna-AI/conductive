@@ -169,7 +169,7 @@ export class ChatTransaction extends ChatRecords {
     occurredAt = this.now,
     late?: true,
   ): Promise<WorkspaceEventEnvelope> {
-    const fileEvent = isFileEventWithPayload(event)
+    const fileEvent = isFileEventWithPayload(event.type)
     if (fileEvent) deepFreeze(event)
     const labeled =
       !fileEvent && this.labels ? await this.labels.event(event) : event
