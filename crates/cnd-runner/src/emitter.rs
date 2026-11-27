@@ -15,6 +15,10 @@ use crate::link::ports::RunnerLink;
 #[cfg_attr(test, unimock::unimock(api = EventEmitterMock))]
 #[async_trait]
 pub trait EventEmitter: Send + Sync {
+    /// Generation of the latest welcome when it accepts changes deltas.
+    async fn changes_delta_generation(&self) -> Option<u64> {
+        None
+    }
     /// Retry pending state without assigning another event number.
     async fn persist(&self) -> Result<()> {
         Ok(())
@@ -42,6 +46,10 @@ impl SavingEmitter {
 
 #[async_trait]
 impl EventEmitter for SavingEmitter {
+    async fn changes_delta_generation(&self) -> Option<u64> {
+        self.link.changes_delta_generation().await
+    }
+
     async fn persist(&self) -> Result<()> {
         self.link.persist().await
     }

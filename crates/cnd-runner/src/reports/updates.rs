@@ -182,15 +182,3 @@ impl TreeHistory {
         }
     }
 }
-
-/// Compare complete history even when the wire selection itself stays the same.
-pub(super) fn changes_updated(
-    previous: Option<&RepositorySnapshot>,
-    current: &RepositorySnapshot,
-) -> bool {
-    previous.is_none_or(|previous| {
-        previous.identities != current.identities
-            || previous.base_commit != current.base_commit
-            || previous.changes != current.changes
-    })
-}

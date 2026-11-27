@@ -87,7 +87,7 @@ impl Fixture {
     }
 
     pub(super) fn with_filter(current: RepositorySnapshot, filter: Arc<dyn ReportFilter>) -> Self {
-        Self::build(current, filter, None)
+        Self::build(current, filter, None, None)
     }
 
     pub(super) fn with_limits(current: RepositorySnapshot, limits: ReportLimits) -> Self {
@@ -99,13 +99,22 @@ impl Fixture {
         filter: Arc<dyn ReportFilter>,
         limits: ReportLimits,
     ) -> Self {
-        Self::build(current, filter, Some(limits))
+        Self::build(current, filter, Some(limits), None)
+    }
+
+    pub(super) fn with_changes_deltas(
+        current: RepositorySnapshot,
+        filter: Arc<dyn ReportFilter>,
+        limits: ReportLimits,
+    ) -> Self {
+        Self::build(current, filter, Some(limits), Some(1))
     }
 
     fn build(
         current: RepositorySnapshot,
         filter: Arc<dyn ReportFilter>,
         limits: Option<ReportLimits>,
+        generation: Option<u64>,
     ) -> Self {
         let current = Arc::new(Mutex::new(Some(current)));
         let events = Arc::new(Mutex::new(vec![]));
@@ -122,17 +131,24 @@ impl Fixture {
                         .ok_or(crate::repository::error::Error::Unavailable)
                 })),
         ));
-        let emitter: Arc<dyn EventEmitter> = Arc::new(Unimock::new(
-            EventEmitterMock::emit
-                .each_call(matching!(_, _))
-                .answers_arc(Arc::new(move |_, events, receipt| {
-                    captured
-                        .lock()
-                        .unwrap()
-                        .extend(events.into_iter().map(|event| (event, receipt.clone())));
-                    Ok(())
-                })),
-        ));
+        let emit = EventEmitterMock::emit
+            .each_call(matching!(_, _))
+            .answers_arc(Arc::new(move |_, events, receipt| {
+                captured
+                    .lock()
+                    .unwrap()
+                    .extend(events.into_iter().map(|event| (event, receipt.clone())));
+                Ok(())
+            }));
+        let emitter: Arc<dyn EventEmitter> = Arc::new(match generation {
+            Some(generation) => Unimock::new((
+                EventEmitterMock::changes_delta_generation
+                    .each_call(matching!())
+                    .returns(Some(generation)),
+                emit,
+            )),
+            None => Unimock::new(emit),
+        });
         let mut reporter = FileReporter::new(
             repository,
             "main".into(),

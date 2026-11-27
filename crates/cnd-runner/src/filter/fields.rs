@@ -57,7 +57,13 @@ pub(super) fn file(mut event: RunnerFileEvent, text: &dyn Fn(&str) -> String) ->
                 changed(&mut file.changed_file, text);
             }
         }
-        _ => {}
+        RunnerFileEvent::ChangesChanged { delta } => {
+            label(&delta.base_branch, &mut delta.display_base_branch, text);
+            for upsert in &mut delta.upserts {
+                changed(&mut upsert.file.changed_file, text);
+            }
+        }
+        RunnerFileEvent::FilesUnavailable {} => {}
     }
     event
 }

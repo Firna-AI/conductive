@@ -2,6 +2,7 @@
 
 use std::ops::Range;
 
+use cnd_runner_interface::file_changes::FILE_CHANGES_DELTA_MAX_CHANGES;
 use cnd_runner_interface::file_tree::{
     FILE_EVENT_MAX_BYTES, FILE_TREE_DELTA_MAX_CHANGES, FileTreeDelta, RunnerFileEvent,
 };
@@ -152,6 +153,13 @@ pub(super) fn split(event: RunnerFileEvent) -> Result<Option<Vec<RunnerFileEvent
             ))
         }
         RunnerFileEvent::FilesChanged { delta } => Ok(split_delta(delta, 0..0)?.ok()),
-        RunnerFileEvent::ChangesChanged { .. } => Ok(None),
+        RunnerFileEvent::ChangesChanged { ref delta } => {
+            if delta.removes.len() + delta.upserts.len() > FILE_CHANGES_DELTA_MAX_CHANGES as usize
+                || codec::encode(&event)?.len() > FILE_EVENT_MAX_BYTES as usize
+            {
+                return Ok(None);
+            }
+            Ok(Some(vec![event]))
+        }
     }
 }

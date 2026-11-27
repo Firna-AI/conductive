@@ -44,6 +44,10 @@ pub trait RunnerLink: Send + Sync {
     /// Process one message. A single runtime owner drives this method.
     /// Keep this future until it finishes or the connection ends: receipt precedes processing.
     async fn step(&self) -> Result<LinkUpdate>;
+    /// Generation of the latest welcome when it accepts changes deltas.
+    async fn changes_delta_generation(&self) -> Option<u64> {
+        None
+    }
     /// Bound, number, and save an already filtered event before sending it.
     async fn emit(&self, event: RunnerEvent, report_command_id: Option<String>) -> Result<()>;
     /// Save all pending state and replay only committed events.

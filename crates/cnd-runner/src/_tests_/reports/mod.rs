@@ -2,6 +2,8 @@
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+mod changes_delta_budget_tests;
+mod changes_delta_tests;
 mod diff_refresh_tests;
 mod filter_tests;
 mod limited_updates_tests;

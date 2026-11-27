@@ -1,6 +1,7 @@
 //! Typed fields of the existing runner-state.json format.
 
 use cnd_runner_interface::agents::Agent;
+use cnd_runner_interface::file_tree::RunnerFileEvent;
 use cnd_runner_interface::ports::{PORT_REPORT_MAX_PORTS, RunnerPortsUpdated};
 use cnd_runner_interface::runner::{RunnerEvent, RunnerStartUpdated, RunnerWorkspaceTitle};
 use cnd_runner_interface::runner_commands::RunnerBranches;
@@ -95,6 +96,21 @@ pub struct FileRevisions {
     pub tree: u64,
     /// Last changes revision.
     pub changes: u64,
+}
+
+impl FileRevisions {
+    /// Record the revision of a prepared file event.
+    pub(crate) fn record(&mut self, event: &RunnerFileEvent) {
+        match event {
+            RunnerFileEvent::FilesSnapshot { tree } => self.tree = tree.part.revision,
+            RunnerFileEvent::FilesChanged { delta } => self.tree = delta.revision,
+            RunnerFileEvent::ChangesUpdated { changes } => {
+                self.changes = changes.runner_file_revision_part.revision;
+            }
+            RunnerFileEvent::ChangesChanged { delta } => self.changes = delta.revision,
+            RunnerFileEvent::FilesUnavailable {} => {}
+        }
+    }
 }
 
 /// Only conversation metadata is saved. A turn token cannot enter this type.

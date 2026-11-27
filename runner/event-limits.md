@@ -27,6 +27,11 @@ complete tool details.
   full tree or changes report goes as numbered parts of one revision. A
   large tree update goes as deltas of at most `FILE_TREE_DELTA_MAX_CHANGES`
   changes, with consecutive revisions.
+- A negotiated `changes.changed` event fits `FILE_EVENT_MAX_BYTES` after
+  credential filtering and holds at most `FILE_CHANGES_DELTA_MAX_CHANGES`
+  removes and upserts together. An update that exceeds either budget
+  sends one full changes report. See
+  [Changes deltas](../docs/protocol/changes-deltas.md#when-a-full-list-goes).
 - A full tree keeps at most 50,000 entries, and a full changes report at
   most 1,000 changed files. Every part repeats the omitted totals of its
   report. [Updates and refreshes](../docs/protocol/file-reports.md#updates-and-refreshes)

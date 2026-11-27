@@ -96,6 +96,10 @@ impl FilteredEmitter {
 
 #[async_trait]
 impl EventEmitter for FilteredEmitter {
+    async fn changes_delta_generation(&self) -> Option<u64> {
+        self.next.changes_delta_generation().await
+    }
+
     async fn persist(&self) -> Result<()> {
         self.next.persist().await
     }

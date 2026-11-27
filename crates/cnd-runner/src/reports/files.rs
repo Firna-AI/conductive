@@ -4,8 +4,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use async_trait::async_trait;
-use cnd_runner_interface::file_changes::RunnerChangesPart;
-use cnd_runner_interface::file_tree::{FileEntryKind, RunnerFileEvent, RunnerFileRevisionPart};
+use cnd_runner_interface::file_tree::{FileEntryKind, RunnerFileEvent};
 use cnd_runner_interface::runner::RunnerEvent;
 use cnd_runner_interface::runner_files::{RunnerFileCommand, RunnerFileResponse};
 use futures_util::future::BoxFuture;
@@ -15,16 +14,17 @@ use tokio::time::Instant;
 use crate::emitter::EventEmitter;
 use crate::error::Result;
 use crate::repository::error::Error;
-use crate::repository::service::{Repository, RepositorySnapshot};
+use crate::repository::service::Repository;
 use crate::startup_log::StartupLog;
 use crate::state::records::FileRevisions;
 
-use super::parts::split;
+use super::changes::ChangesUpdate;
+use super::history::History;
 use super::prepare::ReportFilter;
 use super::queue::SerialQueue;
 use super::requests::respond;
 use super::selection::{ReportLimits, select_changes};
-use super::updates::{TreeHistory, changes_updated};
+use super::updates::TreeHistory;
 
 /// Select only one kind for a report request.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -52,17 +52,6 @@ pub trait FileReports: Send + Sync {
     async fn close(&self);
     /// File reads and diffs bypass the scan queue.
     async fn request(&self, command: RunnerFileCommand) -> RunnerFileResponse;
-}
-
-struct History {
-    revisions: FileRevisions,
-    /// Last scan whose tree data readers hold, including a scan that
-    /// reused the existing report because its tree data stayed the same.
-    tree: Option<TreeHistory>,
-    /// Last scan whose Changes data readers hold, including a scan that
-    /// reused the existing report because its Changes data stayed the same.
-    changes: Option<Arc<RepositorySnapshot>>,
-    unavailable: bool,
 }
 
 /// Reporter with separate last-tree and last-changes comparisons.
@@ -98,9 +87,7 @@ impl FileReporter {
             limits: ReportLimits::default(),
             history: Arc::new(Mutex::new(History {
                 revisions,
-                tree: None,
-                changes: None,
-                unavailable: false,
+                ..History::default()
             })),
             queue: Arc::new(SerialQueue::default()),
             stopped: Arc::new(AtomicBool::new(false)),
@@ -161,8 +148,6 @@ impl FileReporter {
                     .await;
             }
         };
-        let send_changes = kind != Some(FileReportKind::Tree)
-            && (full || changes_updated(state.changes.as_deref(), &current));
         let changes = select_changes(&current.changes, self.limits.changed_files)?;
         let planned_tree = if kind == Some(FileReportKind::Changes) {
             None
@@ -171,7 +156,7 @@ impl FileReporter {
             let previous = state.tree.as_ref().filter(|_| !full && !state.unavailable);
             let Some(parts) = tree.parts(
                 previous,
-                state.changes.as_deref(),
+                state.changes.source.as_deref(),
                 state.revisions.tree + 1,
                 self.filter.as_ref(),
             )?
@@ -181,68 +166,39 @@ impl FileReporter {
             };
             Some((tree, parts))
         };
-        if send_changes {
-            let event = RunnerFileEvent::ChangesUpdated {
-                changes: RunnerChangesPart {
-                    changes_response: changes.response,
-                    runner_file_revision_part: RunnerFileRevisionPart {
-                        revision: state.revisions.changes + 1,
-                        part_number: 1,
-                        part_count: 1,
-                    },
-                },
-            };
-            let Some(parts) = split(self.filter.file_report(event)?)? else {
-                tracing::warn!("The file report contains an entry that exceeds its byte limit.");
-                return Ok(());
-            };
-            self.emit_parts(state, parts, command_id.clone()).await?;
-        }
-        let emitted_tree = match planned_tree {
-            Some((tree, parts)) => self
-                .emit_parts(state, parts, command_id)
-                .await
-                .map(|()| Some(tree)),
-            None => Ok(None),
-        };
         if kind != Some(FileReportKind::Tree) {
-            state.changes = Some(current);
+            let generation = self.emitter.changes_delta_generation().await;
+            match state.changes.update(
+                &current,
+                changes.response,
+                state.revisions.changes + 1,
+                full,
+                generation,
+                self.filter.as_ref(),
+            )? {
+                ChangesUpdate::Unchanged => {}
+                ChangesUpdate::Oversized => {
+                    tracing::warn!(
+                        "The file report contains an entry that exceeds its byte limit."
+                    );
+                    return Ok(());
+                }
+                ChangesUpdate::Report { parts, baseline } => {
+                    state.changes.baseline = None;
+                    state
+                        .emit_parts(self.emitter.as_ref(), parts, command_id.clone())
+                        .await?;
+                    state.changes.baseline = baseline;
+                }
+            }
+            state.changes.source = Some(current);
         }
-        if let Some(tree) = emitted_tree? {
+        if let Some((tree, parts)) = planned_tree {
+            state
+                .emit_parts(self.emitter.as_ref(), parts, command_id)
+                .await?;
             state.tree = Some(tree);
             state.unavailable = false;
-        }
-        Ok(())
-    }
-
-    async fn emit_parts(
-        &self,
-        state: &mut History,
-        parts: Vec<RunnerFileEvent>,
-        command_id: Option<String>,
-    ) -> Result<()> {
-        let total = parts.len();
-        for (index, part) in parts.into_iter().enumerate() {
-            match &part {
-                RunnerFileEvent::FilesSnapshot { tree } => {
-                    state.revisions.tree = tree.part.revision
-                }
-                RunnerFileEvent::FilesChanged { delta } => state.revisions.tree = delta.revision,
-                RunnerFileEvent::ChangesUpdated { changes } => {
-                    state.revisions.changes = changes.runner_file_revision_part.revision
-                }
-                _ => {}
-            }
-            self.emitter
-                .emit(
-                    vec![RunnerEvent::RunnerFileEvent(part)],
-                    if index + 1 == total {
-                        command_id.clone()
-                    } else {
-                        None
-                    },
-                )
-                .await?;
         }
         Ok(())
     }

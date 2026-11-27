@@ -107,6 +107,22 @@ scan still sends `files.unavailable` before `runner.ready`.
   report from an older runner can lack either count. The Worker and the
   browser keep that absence as unknown, rather than reporting zero.
 
+## Changes updates
+
+The runner offers `changesDeltas: true` in `hello`. It reads the latest
+welcome when it prepares a changes update. An accepting welcome lets the
+reporter compare the new listed rows with the last emitted list of that
+connection. The reporter compares the display labels after credential
+filtering. The delta carries the complete new header and the positions of
+the new and changed rows. A content edit can produce an empty delta.
+
+Each connection starts its new reports with full lists. A base change or
+a request to repair the changes list also sends a full list. A resend
+uses the saved event payload. For a scan that sends both reports, the
+changes delta or all full changes parts precede the tree update.
+[Changes deltas](../docs/protocol/changes-deltas.md) gives the agreement
+and the fallback rules.
+
 ## File reads and diffs
 
 - File reads and diffs use the shared UTF-8 decoder and keep a leading byte
@@ -138,7 +154,7 @@ scan still sends `files.unavailable` before `runner.ready`.
 - [snapshot.rs](../crates/cnd-runner/src/repository/snapshot.rs) captures complete scans and content identities.
 - [changes.rs](../crates/cnd-runner/src/repository/changes.rs) computes branch changes and status counts.
 - [checkpoint.rs](../crates/cnd-runner/src/repository/checkpoint.rs) compares turn baselines.
-- [reports](../crates/cnd-runner/src/reports/) serializes scans and writes bounded report parts.
+- [reports](../crates/cnd-runner/src/reports/) serializes scans and writes changes deltas and bounded report parts.
 - [index.rs](../crates/cnd-runner/src/repository/index.rs) and
   [diff.rs](../crates/cnd-runner/src/repository/diff.rs) use private Git indexes and objects.
 - [access.rs](../crates/cnd-runner/src/repository/access.rs) and

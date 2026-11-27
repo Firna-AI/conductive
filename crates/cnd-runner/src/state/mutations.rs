@@ -36,6 +36,7 @@ pub(super) fn append(
             RunnerFileEvent::FilesSnapshot { .. }
                 | RunnerFileEvent::FilesChanged { .. }
                 | RunnerFileEvent::ChangesUpdated { .. }
+                | RunnerFileEvent::ChangesChanged { .. }
         )
     );
     if codec::encode(&envelope)?.len() as u64 > RUNNER_EVENT_MAX_BYTES
@@ -56,15 +57,7 @@ pub(super) fn append(
 
 pub(super) fn retain_revision(state: &mut RunnerState, event: &RunnerEvent) {
     match event {
-        RunnerEvent::RunnerFileEvent(RunnerFileEvent::FilesSnapshot { tree }) => {
-            state.file_revisions.tree = tree.part.revision
-        }
-        RunnerEvent::RunnerFileEvent(RunnerFileEvent::FilesChanged { delta }) => {
-            state.file_revisions.tree = delta.revision
-        }
-        RunnerEvent::RunnerFileEvent(RunnerFileEvent::ChangesUpdated { changes }) => {
-            state.file_revisions.changes = changes.runner_file_revision_part.revision
-        }
+        RunnerEvent::RunnerFileEvent(event) => state.file_revisions.record(event),
         RunnerEvent::RunnerStartUpdated(report) => {
             state.reports.latest.start = Some(report.clone())
         }

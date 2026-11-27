@@ -26,6 +26,7 @@ pub(super) struct Connection {
     pub(super) socket: Option<Arc<dyn Socket>>,
     pub(super) welcomed: bool,
     pub(super) complete_tool_details: bool,
+    pub(super) changes_delta_generation: Option<u64>,
     pub(super) services: bool,
 }
 
@@ -70,6 +71,7 @@ impl SavedRunnerLink {
                 socket: None,
                 welcomed: false,
                 complete_tool_details: false,
+                changes_delta_generation: None,
                 services: false,
             }),
             connecting: Mutex::new(()),
@@ -179,7 +181,7 @@ impl RunnerLink for SavedRunnerLink {
             complete_tool_details: Some(true),
             capability_notices: Some(true),
             services: self.services_offered.then_some(true),
-            changes_deltas: None,
+            changes_deltas: Some(true),
         };
         if let Err(error) = socket.send(&RunnerToWorkspace::RunnerHello(hello)).await {
             self.disconnect(generation).await;
@@ -190,6 +192,10 @@ impl RunnerLink for SavedRunnerLink {
 
     async fn step(&self) -> Result<LinkUpdate> {
         self.next_message().await
+    }
+
+    async fn changes_delta_generation(&self) -> Option<u64> {
+        self.connection.lock().await.changes_delta_generation
     }
 
     async fn emit(&self, event: RunnerEvent, report_command_id: Option<String>) -> Result<()> {

@@ -21,6 +21,7 @@ fn filters_reports_tools_errors_and_labels_without_changing_metadata() -> TestRe
         json!({"type":"tool.updated","sessionId":"secret-session","turnId":"secret-turn","tool":{"id":"secret-tool","kind":"read","target":"secret.txt","detail":"secret body","omittedDetailBytes":12,"state":"done"}}),
         json!({"type":"turn.failed","sessionId":"secret-session","turnId":"secret-turn","error":{"code":"secret-code","message":"secret error"},"retryMessageId":"secret-message","durationMs":125}),
         json!({"type":"files.snapshot","tree":{"revision":1,"partNumber":1,"partCount":1,"entries":[{"path":"secret-abcdefghijklmnopqrstu.txt","name":"secret-abcdefghijklmnopqrstu.txt","kind":"file","change":"untracked"}]}}),
+        json!({"type":"changes.changed","delta":{"revision":2,"baseBranch":"secret-base","summary":{"files":1,"added":0,"removed":0},"omitted":{"files":0,"added":0,"removed":0},"removes":["gone-secret.txt"],"upserts":[{"index":0,"file":{"path":"secret.txt","previousPath":"old-secret.txt","change":"renamed","added":0,"removed":0,"uncommitted":true}}]}}),
     ];
     let mut expected = sources.clone();
     expected[0]["name"] = json!("[redacted] title [redacted]");
@@ -32,6 +33,9 @@ fn filters_reports_tools_errors_and_labels_without_changing_metadata() -> TestRe
     expected[4]["error"]["message"] = json!("[redacted] error");
     expected[5]["tree"]["entries"][0]["displayPath"] = json!("[redacted][redacted].txt");
     expected[5]["tree"]["entries"][0]["name"] = json!("[redacted][redacted].txt");
+    expected[6]["delta"]["displayBaseBranch"] = json!("[redacted]-base");
+    expected[6]["delta"]["upserts"][0]["file"]["displayPath"] = json!("[redacted].txt");
+    expected[6]["delta"]["upserts"][0]["file"]["previousDisplayPath"] = json!("old-[redacted].txt");
     for (source, expected) in sources.iter().zip(&expected) {
         let event: RunnerEvent = serde_json::from_value(source.clone())?;
         assert_eq!(&serde_json::to_value(filter.report(event)?)?, expected);

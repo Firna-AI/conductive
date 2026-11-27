@@ -47,6 +47,7 @@ impl SavedRunnerLink {
                 stream_id,
                 confirmed_through,
                 complete_tool_details,
+                changes_deltas,
                 services,
                 ..
             }) => {
@@ -61,6 +62,8 @@ impl SavedRunnerLink {
                     }
                     active.welcomed = true;
                     active.complete_tool_details = complete_tool_details == Some(true);
+                    active.changes_delta_generation =
+                        (changes_deltas == Some(true)).then_some(generation);
                     active.services = self.services_offered && services == Some(true);
                 }
                 self.resend(confirmed_through + 1).await;
