@@ -37,16 +37,19 @@ Git ignores the build output, `mokly-static/` and
 `.mokly-export-reservations/`. Each built view is at
 `mokly-static/static/mokly-generated/<path>/index.{mobile,desktop}[.dark].html`.
 
-The catalogue shows the desktop view beside the phone, in a frame narrower
-than a laptop screen. The desktop layout narrows with its app frame, which
-fills the window: below 1280 px the sidebar and the right column get
-narrower, and below 900 px the sidebar hides. The org rail stays. The tile
+The catalogue shows the desktop view beside the phone. The desktop frame
+has the fixed size that the
+[Mokly Browse guide](https://github.com/mokly-ai/mokly/blob/v0.22.0/docs/guides/catalogue/browse.md#look-at-a-screen)
+gives, 1280 × 800 px, and it shows the full desktop layout. The desktop
+layout narrows with its app frame, which fills the window: below 1280 px
+the sidebar and the right column get narrower, and below 900 px the
+sidebar hides. To see a narrower layout, open a built desktop view from
+`mokly-static/` in a browser, and make the window narrower. The org rail stays. The tile
 of the current org opens the workspace list as a popover on each page that
 has a sidebar and shows no list, as `app/panels/list-popover` shows. The
 list page of an org shows the list in its main area. The number of a pull request in the bar opens it on GitHub, with
 an arrow. A narrow right column hides the detail of the pull request bar.
 When the bar shows an action, a column narrower than 520 px does the same.
-Use the expand control of the frame to see the full desktop layout.
 
 ## The design
 
