@@ -15,12 +15,22 @@ export function fileUnavailable(): HttpError {
   )
 }
 
-export function invalidFileResponse(): HttpError {
-  return new HttpError(
-    502,
-    'file_unavailable',
-    'The file could not be read. Try again.',
-  )
+export class InvalidFileResponse extends HttpError {
+  constructor() {
+    super(502, 'file_unavailable', 'The file could not be read. Try again.')
+  }
+}
+
+export function invalidFileResponse(): InvalidFileResponse {
+  return new InvalidFileResponse()
+}
+
+export class UnreadableChanges extends Error {}
+
+export function throwUnreadableChanges(error: unknown): never {
+  if (error instanceof InvalidFileResponse)
+    throw new UnreadableChanges(error.message, { cause: error })
+  throw error
 }
 
 export class FileTooLargeError extends HttpError {

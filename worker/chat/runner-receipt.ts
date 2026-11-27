@@ -4,8 +4,13 @@ import type {
   WorkspaceEventEnvelope,
 } from './workspace-events'
 import { HttpError } from '../http'
-import { InvalidRunnerReport } from '../files/errors'
+import {
+  InvalidRunnerReport,
+  UnreadableChanges,
+  throwUnreadableChanges,
+} from '../files/errors'
 import { RunnerFileReports } from '../files/runner-reports'
+import { dropSavedChanges } from '../files/storage'
 import {
   parseRunnerEnvelope,
   parseRunnerOutputEnvelope,
@@ -19,14 +24,14 @@ import { storeWorkspaceTitle } from './workspace-title'
 import type { ChatDependencies, RunnerWorkspaceRecord } from './types'
 import type { FilteredRunnerOutput } from './runner-output'
 import { invalidInput } from './inputs'
-import { presentCompleteChanges } from './browser-changes'
+import { readCompleteChanges } from './browser-changes'
 
 interface ReceiptPublication {
   needsCompleteChanges(): boolean
   publish: PublishWorkspaceEvents
 }
 
-export function commitRunnerReceipt(
+export async function commitRunnerReceipt(
   store: ChatStore,
   workspace: RunnerWorkspaceRecord,
   message: IncomingRunnerEnvelope,
@@ -34,30 +39,42 @@ export function commitRunnerReceipt(
   publication: ReceiptPublication,
 ) {
   let completeChanges: WorkspaceEventEnvelope | undefined
-  return store.change(
-    workspace.id,
-    async (transaction) => {
-      completeChanges = undefined
-      const cursor = await transaction.cursor(message.streamId)
-      if (message.eventNumber !== cursor + 1)
-        return { cursor, ready: false, stored: [] }
-      const receipt = await storeRunnerReceipt(
-        transaction,
-        workspace,
-        message,
-        dependencies,
-      )
-      const delta = receipt.stored.find(
-        ({ event }) => event.type === 'changes.changed',
-      )
-      if (delta && publication.needsCompleteChanges())
-        completeChanges =
-          (await presentCompleteChanges(transaction.files, delta)) ?? undefined
-      await transaction.saveCursor(message.streamId, message.eventNumber)
-      return { ...receipt, cursor: message.eventNumber }
-    },
-    (events) => publication.publish(events, completeChanges),
-  )
+  const commit = (discardChanges: boolean) =>
+    store.change(
+      workspace.id,
+      async (transaction) => {
+        completeChanges = undefined
+        const cursor = await transaction.cursor(message.streamId)
+        if (message.eventNumber !== cursor + 1)
+          return { cursor, ready: false, stored: [] }
+        if (discardChanges) await dropSavedChanges(transaction.files)
+        const receipt = await storeRunnerReceipt(
+          transaction,
+          workspace,
+          message,
+          dependencies,
+        )
+        const delta = receipt.stored.find(
+          ({ event }) => event.type === 'changes.changed',
+        )
+        if (delta && publication.needsCompleteChanges())
+          completeChanges =
+            (await readCompleteChanges(transaction.files, delta).catch(
+              throwUnreadableChanges,
+            )) ?? undefined
+        await transaction.saveCursor(message.streamId, message.eventNumber)
+        return { ...receipt, cursor: message.eventNumber }
+      },
+      (events) => publication.publish(events, completeChanges),
+    )
+  try {
+    return await commit(false)
+  } catch (error) {
+    if (!(error instanceof UnreadableChanges)) throw error
+    // The first transaction rolled back. The new one discards the list
+    // and records the missing-list refusal together.
+    return commit(true)
+  }
 }
 
 /** Only validation errors become permanent refusals. Storage and sends must retry. */

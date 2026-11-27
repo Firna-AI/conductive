@@ -87,8 +87,11 @@ npm run typecheck
   Pure storage owners can run locally over that native storage.
   `history-session-pages.test.ts` reads session pages of `HistoryPages` there with small limits, and checks where each limit ends a page.
   `browser-subscription.test.ts` seeds multibyte events there in batches and replays them to a tab. Its two cases use up the UTF-8 byte budget inside the short second page, after a first page that reaches 4 MiB, and at the last event of a full storage list. Each checks the pages, one close, and that a tab after the last event gets the rest. A refused tab gets no page, one close, and no unhandled rejection.
+  The same file checks the byte budget for the complete changes event an older tab receives. It checks that a damaged changes list leaves the older tab connected and its replay continues.
   `history-forward-limits.test.ts` also seeds native records in batches. It checks the exact 4 MiB limit with an emoji that crosses a storage chunk boundary.
   `history-changes.test.ts` checks stored history, the newest changes key, and the old list's chunks after faults on both sides of commit and an eviction.
+  It also checks both commit boundaries when a delta replaces a delta and when a full list replaces both. It checks that an unknown chunked file event stays readable.
+  `historyMemory()` stages records for native storage seeds as `ChatData`.
 - `outputFixture` in `runner-output.test-support.ts` seeds an encrypted environment capture in D1 and starts a turn.
   `runner-output-durability.test.ts` fails the native commit of held text.
   It retries on the live object, then checks eviction, replay, and a gap.

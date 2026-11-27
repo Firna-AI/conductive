@@ -13,6 +13,7 @@ export class FilesStream {
     events: readonly StreamEnvelope[],
     history: boolean,
   ) => void
+  private readonly replayed: () => void
   private last = 0
   private replaying = false
   private waiting: StreamEnvelope[] = []
@@ -22,9 +23,11 @@ export class FilesStream {
   constructor(
     subscribe: FilesSubscribe,
     apply: (events: readonly StreamEnvelope[], history: boolean) => void,
+    replayed: () => void,
   ) {
     this.subscribe = subscribe
     this.apply = apply
+    this.replayed = replayed
   }
 
   start(after = this.last): void {
@@ -77,6 +80,7 @@ export class FilesStream {
       this.live(envelope)
       if (subscription !== this.subscription) break
     }
+    if (subscription === this.subscription) this.replayed()
   }
 
   private live(envelope: StreamEnvelope): void {

@@ -196,10 +196,10 @@ Content and diff replies carry the same optional labels for direct opens.
 The field policy in `output-fields.ts` fills these labels on both runtimes.
 A move names its old path and its new entry.
 A directory move includes updates for its descendants.
-`FileEvent` contains complete browser reports and unavailable-tree marks.
-`RunnerFileEvent` sends full reports as numbered parts of one revision.
-Each part has a 256 KiB event payload budget.
-Tree deltas have the same byte budget and at most 512 changes.
+For the forms of `FileEvent` and `RunnerFileEvent` and the limits named by
+the constants in [`files.ts`](files.ts), see
+[Parts and revisions](../../docs/protocol/file-reports.md#parts-and-revisions)
+and [The delta](../../docs/protocol/changes-deltas.md#the-delta).
 Tree and changes revisions have independent sequences within each runner stream.
 A new stream starts with full reports. A reconnect keeps its revisions and parts.
 The workspace joins all parts before it publishes a full browser report.
@@ -300,6 +300,7 @@ per-target outer alias and no credential.
 
 ### Key Code
 
+- [Changes delta paths](changes-delta-paths.ts) checks path uniqueness and upsert order for the Worker and browser. It returns the paths named by removes and upserts.
 - [Workspace lifecycle helpers](workspaces.ts) share `WORKSPACE_RESTORE_MS`,
   `workspaceRestoreUntil`, and `workspaceRemovedAt` between the Worker and
   the app. `workspaceRemovedAt(archivedAt, now)` returns the removal time

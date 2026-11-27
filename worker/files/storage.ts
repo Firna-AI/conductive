@@ -3,6 +3,7 @@ import type { FileTreeResponse } from '../../src/shared/generated/FileTreeRespon
 import { isRecord } from '../http'
 import { convertFilesProjection } from './bucket-convert'
 import {
+  BUCKET_COUNT,
   BUCKET_LAYOUT,
   FILES_KEY,
   parseBucketManifest,
@@ -154,6 +155,29 @@ export async function readFileList(
   return parseTree({
     ...value,
     omittedEntryCount: validTreeOmissionCount(value),
+  })
+}
+
+export function dropSavedChanges(storage: FilesStorage): Promise<void> {
+  return storage.transaction(async (transaction) => {
+    const value = await transaction.get(FILES_KEY)
+    if (!isRecord(value)) throw invalidFileResponse()
+    const manifest = parseBucketManifest({ ...value, changes: null })
+    const changes = value.changes
+    // A damaged descriptor can still contain usable chunk counts.
+    if (isRecord(changes)) {
+      const buckets = Array.isArray(changes.buckets)
+        ? changes.buckets.slice(0, BUCKET_COUNT).map((bucket: unknown) => ({
+            chunks:
+              isRecord(bucket) && natural(bucket.chunks) ? bucket.chunks : 0,
+          }))
+        : []
+      await deleteBucketList(transaction, 'changes', {
+        orderChunks: natural(changes.orderChunks) ? changes.orderChunks : 0,
+        buckets,
+      })
+    }
+    await transaction.put(FILES_KEY, manifest)
   })
 }
 

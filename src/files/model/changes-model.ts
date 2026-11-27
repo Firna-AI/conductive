@@ -1,3 +1,4 @@
+import { readChangesDeltaPaths } from '../../shared/changes-delta-paths'
 import type { BrowserChangesResponse } from '../../shared/generated/BrowserChangesResponse'
 import type { ChangesDelta } from '../../shared/generated/ChangesDelta'
 
@@ -13,15 +14,10 @@ export function applyChangesDelta(
     return null
 
   const { removes, upserts, ...header } = delta
+  const changedPaths = readChangesDeltaPaths(delta)
+  if (!changedPaths) return null
   const missingRemoves = new Set(removes)
-  if (missingRemoves.size !== removes.length) return null
-  const changedPaths = new Set(missingRemoves)
-  let lastIndex = -1
-  for (const { index, file } of upserts) {
-    if (index <= lastIndex || changedPaths.has(file.path)) return null
-    lastIndex = index
-    changedPaths.add(file.path)
-  }
+  const lastIndex = upserts.at(-1)?.index ?? -1
 
   const touched = new Set(changedPaths)
   let { added, removed } = before.summary

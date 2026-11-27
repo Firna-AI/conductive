@@ -1,5 +1,6 @@
 import {
   BUCKET_SYMBOLS,
+  bucketDigest,
   bucketKey,
   bucketListChunkKeys,
   type BucketInfo,
@@ -42,7 +43,11 @@ async function readChunks(
   return chunks
 }
 
-function parseBucket(text: string, info: BucketInfo): unknown[] {
+async function parseBucket(
+  text: string,
+  info: BucketInfo,
+  kind: ListKind,
+): Promise<unknown[]> {
   if (info.count === 0 && info.chunks === 0) return []
   let items: unknown
   try {
@@ -51,6 +56,8 @@ function parseBucket(text: string, info: BucketInfo): unknown[] {
     throw invalidFileResponse()
   }
   if (!Array.isArray(items) || items.length !== info.count)
+    throw invalidFileResponse()
+  if (kind === 'changes' && (await bucketDigest(text)) !== info.digest)
     throw invalidFileResponse()
   return items
 }
@@ -65,7 +72,7 @@ export async function readBucket(
     storage,
     chunkKeys(info.chunks, (index) => bucketKey(kind, bucket, index)),
   )
-  return parseBucket(text, info)
+  return parseBucket(text, info, kind)
 }
 
 export async function readBucketList(
@@ -78,12 +85,14 @@ export async function readBucketList(
   if (order.length !== list.count) throw invalidFileResponse()
 
   let chunkIndex = list.orderChunks
-  const buckets = list.buckets.map((info) => {
-    const end = chunkIndex + info.chunks
-    const text = chunks.slice(chunkIndex, end).join('')
-    chunkIndex = end
-    return parseBucket(text, info)
-  })
+  const buckets = await Promise.all(
+    list.buckets.map((info) => {
+      const end = chunkIndex + info.chunks
+      const text = chunks.slice(chunkIndex, end).join('')
+      chunkIndex = end
+      return parseBucket(text, info, kind)
+    }),
+  )
   const offsets = buckets.map(() => 0)
   const items: unknown[] = []
   for (const symbol of order) {

@@ -27,7 +27,7 @@ import { natural } from './parsers'
  * array. It matches the list count against the order length and the sum of
  * bucket counts. Each known order symbol takes the next item from its bucket
  * until it has used exactly that bucket's declared count. The reader checks
- * digest syntax and follows the order symbols for placement. The existing
+ * digest syntax and verifies the digest of stored Changes chunks. The existing
  * list parsers validate the reconstructed fields and items. Damage gives
  * the same error as damage in the old layout.
  */

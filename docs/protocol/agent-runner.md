@@ -145,6 +145,8 @@ turn, in units of their own.
   A refusal of these events was rejected, because it lost real agent text.
 - A storage or network failure closes the connection without a confirmation.
   It remains retryable. It never becomes a permanent refusal.
+  Saved data that the workspace can read but that is damaged is not a
+  storage failure, as [Changes deltas](changes-deltas.md#checks-and-repairs) says.
 - The Durable Object forwards each message, each message during a turn,
   each interrupt, and each change of the model, the effort, or the fast
   mode to the runner.

@@ -2,7 +2,10 @@ import type { RunnerFileEvent } from '../../src/shared/generated/RunnerFileEvent
 import type { BrowserChangesResponse } from '../../src/shared/generated/BrowserChangesResponse'
 import type { FileEvent } from '../../src/shared/files'
 import { applyChangesDelta } from './bucket-changes-delta'
-import { invalidRunnerReport as invalid } from './errors'
+import {
+  invalidRunnerReport as invalid,
+  throwUnreadableChanges,
+} from './errors'
 import {
   emptySequence,
   loadReportState,
@@ -143,19 +146,20 @@ export class RunnerFileReports {
   }
 
   async refuse(type: string): Promise<void> {
-    const kind =
+    const kind: ReportKind | null =
       type === 'changes.updated' || type === 'changes.changed'
         ? 'changes'
         : type === 'files.snapshot' || type === 'files.changed'
           ? 'tree'
           : null
     if (!kind) return
+    const fullReport = type === 'files.snapshot' || type === 'changes.updated'
     await this.storage.transaction(async (transaction) => {
       const state = await requireReportState(transaction)
       const sequence = state[kind]
       const report = sequence.report
       const removals =
-        report && report.through < report.partCount
+        fullReport && report && report.through < report.partCount
           ? await storedReportKeys(transaction, kind, report)
           : []
       if (removals.length) sequence.report = null
@@ -184,7 +188,9 @@ export class RunnerFileReports {
         sequence.appliedRevision = event.delta.revision
       }
       if (event.type === 'changes.changed')
-        await applyChangesDelta(transaction, state.streamId, event.delta)
+        await applyChangesDelta(transaction, state.streamId, event.delta).catch(
+          throwUnreadableChanges,
+        )
       else await applyReport(transaction, state.streamId, event)
       await transaction.put(REPORT_KEY, state)
       return event

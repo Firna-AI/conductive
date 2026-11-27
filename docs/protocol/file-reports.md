@@ -110,10 +110,10 @@ says.
 - Each part of a full tree, each tree delta, and the tree that the
   workspace serves can carry `omittedEntryCount`, the number of omitted
   entries.
-- Each part of a full changes list, each changes delta, and the changes
-  list that the workspace serves, can carry `omitted`. It gives the
-  omitted files and the lines that they add and remove, as `files`,
-  `added`, and `removed`.
+- Each complete changes list and each of its parts can carry `omitted`.
+  It gives the omitted files and the lines that they add and remove as
+  `files`, `added`, and `removed`. See [The delta](changes-deltas.md#the-delta)
+  for the required field of each changes delta.
 - The `summary` of a changes report counts only its listed changes.
   Reason: the previous Worker checks the summary against the listed files,
   so it still accepts the report of a new runner.

@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest'
+import { orderKey } from '../files/bucket-layout'
 import {
   changedRow,
   changesDelta,
@@ -8,7 +9,7 @@ import { RunnerFileReports } from '../files/runner-reports'
 import { HttpError } from '../http'
 import { BrowserTabs } from './browser-tabs'
 import { subscribeBrowser } from './browser-subscription'
-import { historyMemory, seedLegacyHistory } from './history-memory.test-support'
+import { seedLegacyHistory } from './history-memory.test-support'
 import { nativeChatStore } from './native-store.test-support'
 import { ChatStore } from './store'
 import type {
@@ -174,16 +175,20 @@ it('refuses a tab without a grant before its first history page, with no unhandl
   }
 })
 
-it('charges the complete changes event to the replay budget of an older tab', async () => {
-  const { storage } = historyMemory()
-  const store = new ChatStore(storage, () => 25)
-  const file = { ...changedRow('file.txt'), displayPath: 'x'.repeat(6_000) }
+const changesReplayFile = {
+  ...changedRow('file.txt'),
+  displayPath: 'x'.repeat(6_000),
+}
+
+async function seedChangesReplay(store: ChatStore) {
   await store.change(
     'workspace',
     async (view) => {
       const reports = new RunnerFileReports(view.files)
       await reports.beginStream('stream')
-      const full = await reports.accept(fullChanges({ files: [file] }))
+      const full = await reports.accept(
+        fullChanges({ files: [changesReplayFile] }),
+      )
       const delta = await reports.accept(changesDelta())
       if (!full || !delta) throw new Error('The test reports did not apply.')
       await view.emit(full)
@@ -192,6 +197,12 @@ it('charges the complete changes event to the replay budget of an older tab', as
     },
     () => undefined,
   )
+}
+
+it('charges the complete changes event to the replay budget of an older tab', async () => {
+  const { storage } = await nativeChatStore()
+  const store = new ChatStore(storage, () => 25)
+  await seedChangesReplay(store)
 
   const older = tab()
   const browsers = grants()
@@ -208,7 +219,7 @@ it('charges the complete changes event to the replay budget of an older tab', as
         {
           event: {
             type: 'changes.updated',
-            changes: { revision: 2, files: [file] },
+            changes: { revision: 2, files: [changesReplayFile] },
           },
         },
       ],
@@ -221,4 +232,28 @@ it('charges the complete changes event to the replay budget of an older tab', as
     { numbers: [3], through: 3, next: null },
   ])
   expect(resumed.state.closed).toBe(0)
+})
+
+it('omits a changes delta from older-tab replay when its saved list is unreadable', async () => {
+  const { storage } = await nativeChatStore()
+  const store = new ChatStore(storage, () => 25)
+  await seedChangesReplay(store)
+  await storage.delete(orderKey('changes', 0))
+  const older = tab()
+  const browsers = grants()
+
+  await subscribeBrowser({
+    store,
+    browsers,
+    operation: logins,
+    access,
+    after: 1,
+    peer: older.peer,
+  })
+  browsers.publish([live])
+  expect(pages(older.state.messages)).toEqual([
+    { numbers: [3], through: 3, next: null },
+    { live: 1_026 },
+  ])
+  expect(older.state.closed).toBe(0)
 })

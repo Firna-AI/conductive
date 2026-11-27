@@ -60,11 +60,14 @@ export class WorkspaceFiles {
   }
   /** A repository change dropped the changes, so the route reads again. */
   private changesMoved = false
+  private retryChangesAfterRead = false
 
   constructor(options: { client: FilesClient; subscribe: FilesSubscribe }) {
     this.client = options.client
-    this.stream = new FilesStream(options.subscribe, (events, history) =>
-      this.receive(events, history),
+    this.stream = new FilesStream(
+      options.subscribe,
+      (events, history) => this.receive(events, history),
+      () => this.replayed(),
     )
     this.reads = new FilesReads(this.client)
   }
@@ -91,15 +94,17 @@ export class WorkspaceFiles {
   }
 
   /** Reads the tree and the changes again where they failed. */
-  retry(): void {
+  retry(list?: FileList): void {
     if (!this.running) return
     if (
+      list !== 'changes' &&
       (!this.sync.tree.value || this.sync.treeStale) &&
       !this.reads.has('tree')
     )
       this.read('tree')
     if (
-      (!this.sync.changes.value || this.sync.changesStale) &&
+      list !== 'tree' &&
+      (!this.sync.changes.value || this.sync.changes.stale) &&
       !this.reads.has('changes')
     )
       this.read('changes')
@@ -163,6 +168,12 @@ export class WorkspaceFiles {
     else if (history) this.publish({})
   }
 
+  private replayed(): void {
+    if (!this.sync.changes.stale) return
+    this.retryChangesAfterRead = this.reads.has('changes')
+    this.retry('changes')
+  }
+
   /** Takes an ordered event that passes the floor of its list. */
   private take(
     envelope: StreamEnvelope,
@@ -205,6 +216,7 @@ export class WorkspaceFiles {
 
   private apply(step: SyncStep, invalidation: FilesInvalidation): void {
     this.sync = step.sync
+    if (!this.sync.changes.stale) this.retryChangesAfterRead = false
     invalidation.add(step)
   }
 
@@ -216,13 +228,14 @@ export class WorkspaceFiles {
     if (this.changesMoved) {
       this.changesMoved = false
       this.read('changes', false)
-    } else if (this.sync.changesStale && !this.reads.has('changes')) {
+    } else if (this.sync.changes.stale && !this.reads.has('changes')) {
       this.read('changes', false)
     }
     this.publish(invalidation.apply(this.snapshot))
   }
 
   private read(list: FileList, publishStart = true): void {
+    if (list === 'changes') this.retryChangesAfterRead = false
     this.reads.read(
       list,
       (reply) => this.acceptRead(reply),
@@ -242,7 +255,7 @@ export class WorkspaceFiles {
     const step = syncRead(this.sync, read)
     if (!step) {
       const stale =
-        list === 'tree' ? this.sync.treeStale : this.sync.changesStale
+        list === 'tree' ? this.sync.treeStale : this.sync.changes.stale
       if (stale) this.read(list, false)
       this.publish({})
       return
@@ -262,6 +275,8 @@ export class WorkspaceFiles {
     const invalidation = new FilesInvalidation()
     this.apply(step, invalidation)
     this.publish(invalidation.apply(this.snapshot))
+    if (list === 'changes' && !read.result.ok && this.retryChangesAfterRead)
+      this.retry('changes')
   }
 }
 

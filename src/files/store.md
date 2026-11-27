@@ -22,15 +22,24 @@ list needs a read after a delta, a reply at its floor also applies. It
 includes the event that set the floor. If a reply has a cutoff below the
 floor and the list still needs a read, the store reads it again after that
 reply. A legacy reply can fill a missing list or recover a list after a
-delta. A read error without a cutoff leaves recovery to the next stream
-update or an explicit retry.
+delta.
 
 The changes list takes its revision from its read or the last complete
 event. A missing revision is unknown. A changes delta applies only at
 the next revision and when its rows fit the list. Otherwise the store
-keeps the list and reads it again. Each skipped delta advances the floor
-while the read waits. A full list from the stream can replace the list
-at once. [Changes deltas](../../docs/protocol/changes-deltas.md#in-the-browser)
+keeps the list while it reads again. During recovery, it queues deltas up
+to a fixed limit. If it drops a delta, the read must include that event.
+The store applies the queued deltas after the read's cutoff in revision
+order. It reads again if it cannot apply all of them. A full list from
+the stream ends recovery and clears the queue. See
+[Changes deltas](../../docs/protocol/changes-deltas.md#in-the-browser).
+
+When a Changes recovery read fails without a cutoff, the store drops the
+old list and keeps the queue. Changes can show Try again. The store also
+retries a stale Changes read when a replay completes, including an empty
+replay. If a read is pending then, it gets one retry if it fails and the
+list is still stale. A tree read error without a cutoff leaves recovery
+to the next stream update or an explicit retry.
 
 The stream reads stored history in pages, then applies live events.
 The pages share one cutoff and can omit event numbers. Live events wait
@@ -136,10 +145,12 @@ totals. The tree keeps the count of its report in
 `BrowserChangesResponse.omitted`. Each report replaces or keeps them, as
 [Omitted totals](../../docs/protocol/file-reports.md#omitted-totals) and
 [Updates and refreshes](../../docs/protocol/file-reports.md#updates-and-refreshes)
-say. A missing total is unknown, so no notice shows.
+say. A complete list without a total has an unknown count, so no notice
+shows.
 
-- The parsers keep a total that is a safe count. They drop any other
-  value, and they refuse no reply because of it.
+- The parsers keep safe counts and drop invalid totals from complete
+  lists and tree updates. A changes delta without valid totals is
+  malformed, so the store reads the list again.
 - A tree update that waits for a tree read applies its count over that
   tree, as it applies its entries.
 - The unavailable mark, a failed repair, and a repository move keep the

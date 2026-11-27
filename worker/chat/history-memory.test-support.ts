@@ -4,12 +4,12 @@ import { SESSION_INDEX_THROUGH } from './history-session-keys'
 import { saveHistoryEvent } from './history-storage'
 import { CHAT_META, chatEventKey } from './storage-keys'
 import type { ChatMetadata } from './store-metadata'
-import type { ChatStorage } from './types'
+import type { ChatData } from './types'
 import type { WorkspaceEvent } from './workspace-events'
 
 export function historyMemory() {
   const records = new Map<string, unknown>()
-  const storage: ChatStorage = {
+  const storage: ChatData = {
     async get<T>(key: string) {
       return records.get(key) as T | undefined
     },
@@ -25,7 +25,7 @@ export function historyMemory() {
       end,
       reverse,
       limit,
-    }: Parameters<ChatStorage['list']>[0]) {
+    }: Parameters<ChatData['list']>[0]) {
       const keys = [...records.keys()]
         .filter(
           (key) =>
@@ -39,7 +39,6 @@ export function historyMemory() {
         keys.slice(0, limit).map((key) => [key, records.get(key) as T]),
       )
     },
-    transaction: (work) => work(storage),
   }
   return { records, storage }
 }

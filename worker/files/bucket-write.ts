@@ -40,10 +40,15 @@ export function emptyBucketManifest({
   }
 }
 
+interface BucketListChunks {
+  orderChunks: number
+  buckets: readonly Pick<BucketInfo, 'chunks'>[]
+}
+
 export async function deleteBucketList(
   transaction: FilesTransaction,
   kind: ListKind,
-  list: BucketList | null,
+  list: BucketListChunks | null,
 ): Promise<void> {
   if (!list) return
   await deleteStoredChunks(

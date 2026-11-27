@@ -112,7 +112,7 @@ says.
   - a delta whose revision is not the next one, or that comes while a full
     changes list is incomplete
   - a delta when the workspace holds no changes list, such as after a move
-    to another repository
+    to another repository, or when it cannot read its saved changes list
   - a delta that removes a path that the list does not hold
   - a delta whose upserts do not ascend by `index`, or that has an upsert
     with an `index` outside the new list
@@ -128,6 +128,14 @@ says.
   was rejected, because a tab then shows a wrong list until the next full
   list. A summary that the workspace counts itself was rejected, because
   a wrong summary of the runner then stays hidden.
+- When a delta finds the saved changes list damaged, the workspace drops
+  that list and refuses the delta. The next full changes list replaces
+  the list in full. A failed storage operation is not damage, so it stays
+  retryable, as [The agent runner](agent-runner.md#the-agent-runner) says.
+- Reason: a damaged list would otherwise fail the delta on each resend,
+  and each later runner event would wait behind it.
+- While the saved changes list is damaged, a tab that does not name the
+  delta form gets no complete list for that delta.
 - The marker of a refused delta names `changes.changed` as its event
   type. Reason: the marker has no session, so no copy of the app shows it,
   also an older one.
@@ -149,9 +157,9 @@ says.
 - Each open file and diff of a path that a delta removes or upserts reads
   again. This includes the previous path of each renamed row.
 - After a full changes list, each open file and diff of each path of the
-  old and the new list reads again. Reason: a change of the base sends a
-  full list, the one case in which a listed diff can change with no change
-  of its row.
+  old and the new list reads again. A change of the base sends a full list
+  because it can change each listed diff without changing its row. A Git
+  attribute edit can also change a listed diff without changing its row.
 - [Chat history](chat-history.md) states which deltas the stored history
   keeps.
   [Older runners and readers](file-reports.md#older-runners-and-readers)

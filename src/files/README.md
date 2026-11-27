@@ -40,13 +40,14 @@ app shell mounts them, as
 development pages and the tests run them against the fake API of
 [the browser fakes](../test-support/README.md).
 
-The files store keeps `ChangesResponse.unpushedCommits` and
-`ChangesResponse.uncommittedFileCount` from HTTP replies and events,
-including updates that change only a count. `parseChanges` refuses a reply
-whose count is present but is not a whole number. An older runner can omit
-either count. The store keeps it absent, so callers can distinguish an
-unknown count from zero. The store keeps the omitted totals of a limited
-report the same way, as [Omitted totals](store.md#omitted-totals) says.
+The files store keeps the Changes list as a `BrowserChangesResponse`.
+Its `unpushedCommits` and `uncommittedFileCount` come from HTTP replies
+and events, including updates that change only a count. `parseChanges`
+refuses a reply whose count is present but is not a whole number. An older
+runner can omit either count. The store keeps it absent, so callers can
+distinguish an unknown count from zero. The store keeps the omitted totals
+of a limited report the same way, as [Omitted totals](store.md#omitted-totals)
+says.
 
 ## Integration
 

@@ -1,3 +1,4 @@
+import { readChangesDeltaPaths } from '../../src/shared/changes-delta-paths'
 import type { BranchChangedFile } from '../../src/shared/generated/BranchChangedFile'
 import type { ChangesDelta } from '../../src/shared/generated/ChangesDelta'
 import type { ChangesDeltaUpsert } from '../../src/shared/generated/ChangesDeltaUpsert'
@@ -13,7 +14,7 @@ import {
 import { readBucket } from './bucket-read'
 import { readOrderText, writeBucket, writeOrder } from './bucket-write'
 import { invalidFileResponse, invalidRunnerReport } from './errors'
-import { parseChangedFile, parseChangesSummary } from './parsers'
+import { natural, parseChangedFile, parseChangesSummary } from './parsers'
 import { readFilesManifest, type FilesTransaction } from './storage'
 
 interface ChangedBucket {
@@ -30,20 +31,16 @@ async function readEdits(
   delta: ChangesDelta,
 ) {
   const { removes, upserts: operations, ...fields } = delta
-  const paths = new Set(removes)
-  if (paths.size !== removes.length) invalidRunnerReport()
-  const missing = new Set(paths)
+  const paths = readChangesDeltaPaths(delta)
+  if (!paths) invalidRunnerReport()
+  const missing = new Set(removes)
   const touched = new Set(removes.map(bucketOf))
-  let lastIndex = -1
   const upserts = operations.map((upsert): BucketUpsert => {
-    const { index, file } = upsert
-    if (index <= lastIndex || paths.has(file.path)) invalidRunnerReport()
-    lastIndex = index
-    paths.add(file.path)
-    const bucket = bucketOf(file.path)
+    const bucket = bucketOf(upsert.file.path)
     touched.add(bucket)
     return { ...upsert, bucket }
   })
+  const lastIndex = upserts.at(-1)?.index ?? -1
 
   const summary = parseChangesSummary(list.fields.summary)
   if (!summary || summary.files !== list.count) throw invalidFileResponse()
@@ -129,8 +126,10 @@ export async function applyChangesDelta(
     return invalidRunnerReport()
   const list = manifest.changes
   const previousRevision = list.fields.revision
-  if (previousRevision !== undefined && previousRevision !== delta.revision - 1)
-    invalidRunnerReport()
+  if (previousRevision !== undefined) {
+    if (!natural(previousRevision)) throw invalidFileResponse()
+    if (previousRevision !== delta.revision - 1) invalidRunnerReport()
+  }
   const { edits, upserts, fields } = await readEdits(transaction, list, delta)
   const buckets = [...list.buckets]
   let orderChunks = list.orderChunks

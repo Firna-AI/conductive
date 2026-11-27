@@ -1,74 +1,14 @@
-import { expect, it, onTestFinished } from 'vitest'
-import { HeldRequests } from '../../app/test-kit'
-import type { WorkspaceEvent } from '../../shared/events'
-import { filePaths } from '../../shared/files'
+import { expect, it } from 'vitest'
 import type { BranchChangedFile } from '../../shared/generated/BranchChangedFile'
 import type { BrowserChangesResponse } from '../../shared/generated/BrowserChangesResponse'
-import type { ChangesDelta } from '../../shared/generated/ChangesDelta'
-import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
-import { nextEnvelope } from '../../test-support/recorded-repairs'
-import { emptyChanges, observeFileReads } from '../files-test-kit'
-
-const { org, workspace: id } = FAKE_IDS
-const changesPath = filePaths.changes(org, id)
-const zero = { files: 0, added: 0, removed: 0 }
-
-function row(path: string): BranchChangedFile {
-  return { path, change: 'modified', uncommitted: true, added: 1, removed: 0 }
-}
-
-function delta(revision: number, fields: Partial<ChangesDelta> = {}) {
-  return {
-    type: 'changes.changed',
-    delta: {
-      revision,
-      baseBranch: 'main',
-      summary: zero,
-      omitted: zero,
-      removes: [],
-      upserts: [],
-      ...fields,
-    },
-  } satisfies WorkspaceEvent
-}
-
-async function startChanges(initial: BrowserChangesResponse) {
-  const server = new FakeApiServer()
-  const held = new HeldRequests(server)
-  const reads = observeFileReads(
-    (cursor, listener) => server.events.subscribe(cursor, listener, id),
-    held.fetch,
-  )
-  function reply(
-    list: BrowserChangesResponse,
-    eventNumber = server.events.last(id),
-  ) {
-    server.json('GET', changesPath, {
-      ...list,
-      stateRead: { eventNumber, repositoryId: null, failure: null },
-    })
-  }
-  function emit(event: WorkspaceEvent) {
-    const envelope = nextEnvelope(server.events, event, FAKE_TIME)
-    server.events.emit(envelope)
-  }
-  onTestFinished(() => {
-    reads.files.stop()
-    held.release('GET', changesPath)
-    held.release('GET', changesPath)
-  })
-  reply(initial)
-  reads.files.start()
-  await Promise.all([reads.tree[0], reads.changes[0]])
-  return {
-    ...reads,
-    emit,
-    held,
-    reply,
-    nextNumber: () => server.events.last(id) + 1,
-  }
-}
+import { emptyChanges } from '../files-test-kit'
+import {
+  changesPath,
+  delta,
+  row,
+  startChanges,
+  zero,
+} from './files-changes.test-support'
 
 it('inserts changes by index and touches only removed, upserted, and renamed paths', async () => {
   const initial: BrowserChangesResponse = {
@@ -141,14 +81,22 @@ it('inserts changes by index and touches only removed, upserted, and renamed pat
   expect(changes).toHaveLength(1)
 })
 
-it('updates the header without touching paths after a full event starts a new revision', async () => {
+it('takes a full event and its next delta while an older recovery read waits', async () => {
   const initial = {
     ...emptyChanges,
     revision: 6,
     files: [row('keep.ts')],
     summary: { files: 1, added: 1, removed: 0 },
   }
-  const { files, changes, emit } = await startChanges(initial)
+  const { files, changes, emit, held, reply, nextNumber } =
+    await startChanges(initial)
+  const oldCutoff = nextNumber()
+  reply({ ...initial, revision: 8, unpushedCommits: 8 }, oldCutoff)
+  held.holdAnswer('GET', changesPath)
+  emit(delta(8, { summary: initial.summary }))
+  emit(delta(9, { summary: initial.summary }))
+  expect(changes).toHaveLength(2)
+
   const full = { ...initial, revision: 1, unpushedCommits: 2 }
   emit({ type: 'changes.updated', changes: full })
   const before = files.getSnapshot()
@@ -169,7 +117,11 @@ it('updates the header without touching paths after a full event starts a new re
   })
   expect(after.epoch).toBe(before.epoch)
   expect(after.versions).toBe(before.versions)
-  expect(changes).toHaveLength(1)
+  held.release('GET', changesPath)
+  const older = await changes[1]
+  expect(older.stateRead?.eventNumber).toBe(oldCutoff)
+  expect(files.getSnapshot().changes).toBe(after.changes)
+  expect(changes).toHaveLength(2)
 })
 
 it.each([
@@ -217,7 +169,7 @@ it.each([
   },
 )
 
-it('keeps the list after a revision gap until a read covers the newest rejected delta', async () => {
+it('applies queued changes in revision order after the recovery read cutoff', async () => {
   const { files, changes, emit, held, reply, nextNumber } = await startChanges({
     ...emptyChanges,
     revision: 2,
@@ -227,27 +179,38 @@ it('keeps the list after a revision gap until a read covers the newest rejected 
   reply(older, nextNumber())
   held.holdAnswer('GET', changesPath)
   emit(delta(4))
-  const newest = { ...emptyChanges, revision: 5, unpushedCommits: 5 }
-  reply(newest, nextNumber())
-  held.holdAnswer('GET', changesPath)
-  emit(delta(5))
+  const summary = { files: 1, added: 1, removed: 0 }
+  emit(delta(5, { summary, upserts: [{ index: 0, file: row('first.ts') }] }))
+  emit(
+    delta(6, {
+      summary,
+      removes: ['first.ts'],
+      upserts: [{ index: 0, file: row('newest.ts') }],
+      unpushedCommits: 6,
+    }),
+  )
 
   expect(changes).toHaveLength(2)
   expect(files.getSnapshot().changes).toBe(saved)
+  held.hold('GET', changesPath)
   held.release('GET', changesPath)
   await changes[1]
-  expect(changes).toHaveLength(3)
-  expect(files.getSnapshot().changes).toBe(saved)
-  held.release('GET', changesPath)
-  await changes[2]
-  expect(files.getSnapshot().changes).toEqual(newest)
-
-  emit(delta(6, { unpushedCommits: 6 }))
-  expect(files.getSnapshot().changes).toEqual({
-    ...newest,
+  const newest = {
+    ...emptyChanges,
     revision: 6,
+    files: [row('newest.ts')],
+    summary,
     unpushedCommits: 6,
     omitted: zero,
+  }
+  expect(files.getSnapshot().changes).toEqual(newest)
+  expect(changes).toHaveLength(2)
+
+  emit(delta(7, { summary, unpushedCommits: 7 }))
+  expect(files.getSnapshot().changes).toEqual({
+    ...newest,
+    revision: 7,
+    unpushedCommits: 7,
   })
-  expect(changes).toHaveLength(3)
+  expect(changes).toHaveLength(2)
 })

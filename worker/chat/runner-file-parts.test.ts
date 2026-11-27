@@ -1,9 +1,11 @@
 import { expect, it } from 'vitest'
 
+import { changedRow, changesDelta } from '../files/changes-delta.test-support'
 import { FilesState } from '../files/state'
 import type { FilesStorage } from '../files/storage'
 import { createRunnerLimitsFixture } from './runner-limits.test-support'
-import { snapshot } from './runner-fixtures.test-support'
+import { file, snapshot } from './runner-fixtures.test-support'
+import { fullReport, oversizedReport } from './runner-repairs.test-support'
 function fileStorage(
   fixture: Awaited<ReturnType<typeof createRunnerLimitsFixture>>,
 ): FilesStorage {
@@ -91,6 +93,58 @@ it('refuses inconsistent parts, duplicate paths, and gaps or interleaving in tre
     })),
   ])
 })
+
+it.each([
+  {
+    kind: 'files.snapshot',
+    list: 'tree',
+    delta: { type: 'files.changed', delta: { revision: 2, changes: [] } },
+    replacement: { revision: 2, entries: [file('file-1'), file('file-2')] },
+  },
+  {
+    kind: 'changes.updated',
+    list: 'changes',
+    delta: changesDelta(),
+    replacement: {
+      revision: 2,
+      baseBranch: 'main',
+      files: [changedRow('file-1'), changedRow('file-2')],
+      summary: { files: 2, added: 2, removed: 0 },
+    },
+  },
+] as const)(
+  'completes a multipart $kind repair after an intervening refused delta',
+  async ({ kind, list, delta, replacement }) => {
+    const fixture = await createRunnerLimitsFixture()
+    const repair = () => fixture.read((view) => view.repairs.get(kind))
+    await fixture.receive(1, fullReport(kind))
+    await fixture.receive(2, oversizedReport(kind, 2))
+    expect(await repair()).toMatchObject({ state: 'pending' })
+
+    await fixture.receive(3, fullReport(kind, 2, 1, 2))
+    await fixture.receive(4, delta)
+    expect(fixture.published.at(-1)?.event).toMatchObject({
+      type: 'runner.event-refused',
+      runnerEventType: delta.type,
+      runnerEventNumber: 4,
+      reason: 'invalid',
+    })
+    expect(await repair()).toMatchObject({
+      state: 'pending',
+      replacementRevision: 2,
+    })
+
+    await fixture.receive(5, fullReport(kind, 2, 2, 2))
+    await expect(
+      fixture.actor.api.controls.fileProjection(list),
+    ).resolves.toEqual(replacement)
+    expect(await repair()).toBeUndefined()
+    expect(
+      fixture.sent.filter(({ type }) => type === 'report.refresh'),
+    ).toHaveLength(1)
+  },
+)
+
 it('rolls back file part assembly and projection when the receipt commit fails', async () => {
   const fixture = await createRunnerLimitsFixture()
   await fixture.receive(1, snapshot(1, 1, 2, ['first']))

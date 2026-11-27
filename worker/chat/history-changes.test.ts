@@ -1,12 +1,13 @@
 import { expect, it } from 'vitest'
 import type { BranchChangedFile } from '../../src/shared/generated/BranchChangedFile'
 import type { FileEvent } from '../../src/shared/files'
+import { changedRow, changesDelta } from '../files/changes-delta.test-support'
 import { checkCommitBoundaries } from './commit-boundary.test-support'
 import { SESSION_INDEX_THROUGH } from './history-session-keys'
 import { legacyHistory } from './history-session-index.test-support'
 import { nativeChatStore } from './native-store.test-support'
 import { grownEntries } from './runner-grown-reports.test-support'
-import { chatEventKey, chatKey } from './storage-keys'
+import { CHAT_META, chatEventKey, chatKey } from './storage-keys'
 import type { ChatStore } from './store'
 import type { ChatData } from './types'
 
@@ -14,6 +15,7 @@ const NEWEST_CHANGES = chatKey('history-index', 'changes')
 const CHANGES_CUTOVER = chatKey('history-index', 'changes-cutover')
 const INDEX_THROUGH = chatKey('history-index', 'through')
 const POSITION_THROUGH = chatKey('history-index', 'positions-through')
+const chunkPrefix = chatKey('history-chunk', '')
 
 function changesList(
   baseBranch: string,
@@ -77,7 +79,6 @@ it('replaces a changes list and its chunks in one commit while keeping the tree 
     const retained = [delta(2, 'old.txt'), tree(3), delta(4, 'new.txt')]
     await append(store, [tree(1), oldChanges, ...retained])
 
-    const chunkPrefix = chatKey('history-chunk', '')
     return {
       failNextCommit,
       clearFaults,
@@ -113,6 +114,96 @@ it('replaces a changes list and its chunks in one commit while keeping the tree 
       },
       restart: actor.crash,
     }
+  })
+})
+
+function largeChangesDelta(revision: number): FileEvent {
+  return changesDelta({
+    revision,
+    upserts: [
+      {
+        index: 0,
+        file: { ...changedRow('file.txt'), displayPath: 'x'.repeat(70_000) },
+      },
+    ],
+  })
+}
+
+function envelope(eventNumber: number, event: FileEvent) {
+  return { workspaceId: 'workspace', eventNumber, occurredAt: 25, event }
+}
+
+const firstList = envelope(1, changesList('main', [changedRow('file.txt')]))
+const firstDelta = envelope(2, largeChangesDelta(2))
+const nextDelta = envelope(3, largeChangesDelta(3))
+const nextList = envelope(4, changesList('new-main', [changedRow('file.txt')]))
+const afterFirstDelta = {
+  history: { events: [firstList, firstDelta], throughEventNumber: 2 },
+  chunks: [`${chunkPrefix}2:0`, `${chunkPrefix}2:1`],
+}
+const afterNextDelta = {
+  history: { events: [firstList, nextDelta], throughEventNumber: 3 },
+  chunks: [`${chunkPrefix}3:0`, `${chunkPrefix}3:1`],
+}
+
+it.each([
+  {
+    update: 'delta that replaces the previous delta and keeps the full list',
+    seed: [firstList, firstDelta],
+    next: nextDelta,
+    before: afterFirstDelta,
+    after: afterNextDelta,
+  },
+  {
+    update: 'full list that replaces both the previous full list and its delta',
+    seed: [firstList, firstDelta, nextDelta],
+    next: nextList,
+    before: afterNextDelta,
+    after: {
+      history: { events: [nextList], throughEventNumber: 4 },
+      chunks: [],
+    },
+  },
+])('commits a $update', async ({ seed, next, before, after }) => {
+  await checkCommitBoundaries(async () => {
+    const { actor, storage, store, failNextCommit, clearFaults } =
+      await nativeChatStore()
+    await append(
+      store,
+      seed.map(({ event }) => event),
+    )
+    return {
+      failNextCommit,
+      clearFaults,
+      action: async (error) => {
+        await expect(append(store, [next.event])).rejects.toThrow(error)
+      },
+      read: async () => ({
+        history: await store.read('workspace', (view) => view.history(0)),
+        chunks: [...(await storage.list({ prefix: chunkPrefix })).keys()],
+      }),
+      before,
+      after,
+      restart: actor.crash,
+    }
+  })
+})
+
+it('passes a chunked file event with a future type through the history reader', async () => {
+  const { storage, store } = await nativeChatStore()
+  const metadata = { workspaceId: 'workspace', eventNumber: 1, occurredAt: 25 }
+  const event = { type: 'files.future', details: ['file.txt'] }
+  await storage.put({
+    [CHAT_META]: { workspaceId: 'workspace', through: 1, commandThrough: 0 },
+    [chatEventKey(1)]: { ...metadata, fileEventChunks: 1 },
+    [`${chunkPrefix}1:0`]: JSON.stringify(event),
+  })
+
+  await expect(
+    store.read('workspace', (view) => view.history(0)),
+  ).resolves.toEqual({
+    events: [{ ...metadata, event }],
+    throughEventNumber: 1,
   })
 })
 

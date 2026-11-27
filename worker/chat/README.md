@@ -254,6 +254,7 @@ Each other socket gets a complete `changes.updated` list with the same event num
 When an older socket is open, the runner receipt reads that list once from the projection in its commit task.
 The publisher sends it after the commit.
 For an older socket replay, the history reader uses the list only at the stored delta's revision.
+It leaves the delta out when the saved list is unreadable.
 The replay byte budget counts the form that the socket receives.
 [Workspace events](../../docs/protocol/workspace-events.md#events)
 

@@ -50,6 +50,7 @@ An empty delta reads no row bucket. It can set the omitted entry count in the ma
 A delta without a count keeps a valid saved count and advances its revision with the tree.
 A changes manifest keeps the revision of its list when the revision is known.
 A changes delta reads the touched buckets and the order text.
+It checks the digests of the buckets that it reads.
 It checks the new summary from the previous summary and the affected rows.
 It writes changed buckets, changed order text, and the new manifest.
 A delta with only a header reads and writes no list chunks.
@@ -101,7 +102,7 @@ Each chunk has at most 65,536 JavaScript string characters.
 The chat backend applies the byte limits to the raw runner event.
 Its filter can then add masked display labels, so a stored part can be larger than those limits.
 A part stored as one value, without a manifest, stays readable.
-A newer revision, a refusal, and a new stream remove each obsolete part with its chunks.
+A newer full report, a refused full report, and a new stream remove each obsolete part with its chunks.
 When the last part arrives, `accept` loads the stored parts once.
 It joins all entries in part order.
 It checks the saved parts for matching omission metadata because a previous Worker can have stored parts during a rollback.
@@ -114,15 +115,20 @@ It applies a delta only when the delta has the next revision of its kind and no 
 A changes delta needs the stored changes list of its stream.
 The stream sequence gives the previous revision when an older list omits it.
 The delta checks cover the paths, upsert indexes, and new summary. [Changes deltas](../../docs/protocol/changes-deltas.md#checks-and-repairs)
+When the delta reads a damaged saved list, its transaction rolls back.
+This also applies when a live conversion for an older tab reads the damage.
+The refusal transaction drops that list and records the repair and cursor together.
+The next complete changes report writes its buckets from an empty projection.
 It throws `InvalidRunnerReport` for a part or a delta that breaks the shared contract.
-Other errors are not refusals. The chat backend then closes the runner connection without a confirm.
+A storage failure closes the runner connection without a confirm, so the runner can resend the event.
 
 For each refused file event, the chat backend stores a refusal marker and calls `refuse(type)`.
-That call discards the incomplete report of the refused kind. Each delta has the kind of its full report.
+That call discards the incomplete report of the same kind after a refused `files.snapshot` or `changes.updated` event.
+A refused `files.changed` or `changes.changed` keeps the parts of an incomplete report.
 `storedReportGenerations` gives the newest applied or incomplete revision of a kind, and the revision of its incomplete report.
 The chat backend reads it and the refused report identity before that call.
 The [report repairs](../chat/report-repairs.md) compare its stream, revision, and part number with the stored revisions.
-The last complete tree and changes stay in the projection while parts are pending or refused.
+The projection keeps the last complete lists while replacement parts are pending.
 The chat backend's `runnerEventStored` hook is a notification after the commit and the confirm.
 It must not apply a file report again.
 
@@ -284,7 +290,7 @@ The D1 workspace schema holds the base branch.
   Its `storedReportKeys` lists each part key and chunk key that a removal needs.
 - [report-generation.ts](report-generation.ts) reads the newest stored revision and the incomplete revision of a report kind for repair checks.
 - [runner-input.ts](runner-input.ts) parses a runner file event with its revision and part fields.
-- `readFilesManifest` and `readFileList` read the manifest and one list in either layout. `markFilesMoved` marks the projection after a repository move. [storage.ts](storage.ts)
+- `readFilesManifest` and `readFileList` read the manifest and one list in either layout. `markFilesMoved` marks the projection after a repository move. `dropSavedChanges` removes a damaged changes list during a refusal. [storage.ts](storage.ts)
 - [bucket-layout.ts](bucket-layout.ts) defines the bucket layout in its doc comment and parses the bucket manifest.
 - [bucket-read.ts](bucket-read.ts) reads one list of the bucket layout from its buckets and its order text.
 - `writeBucketList` writes changed buckets and list order. [bucket-write.ts](bucket-write.ts)
