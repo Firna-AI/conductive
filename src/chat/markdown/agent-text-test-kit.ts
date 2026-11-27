@@ -55,7 +55,7 @@ export type ShortBlock =
   | { kind: 'heading'; level: HeadingLevel; text: string }
   | { kind: 'ul'; items: ShortItem[] }
   | { kind: 'ol'; start: number; items: ShortItem[] }
-  | { kind: 'code'; text: string }
+  | Extract<TextBlock, { kind: 'code' }>
   | { kind: 'quote'; blocks: ShortBlock[] }
   | { kind: 'rule' }
   | { kind: 'table'; head: string[]; rows: string[][]; align: CellAlign[] }

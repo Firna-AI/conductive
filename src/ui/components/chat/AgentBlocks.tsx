@@ -100,7 +100,7 @@ const Block = memo(function Block(props: {
         </ol>
       )
     case 'code':
-      return drawing.code(block.text)
+      return drawing.code(block.text, block.label)
     case 'quote':
       return (
         <blockquote>

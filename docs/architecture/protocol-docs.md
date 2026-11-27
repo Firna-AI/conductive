@@ -224,9 +224,12 @@ This page lists each protocol doc and what it covers.
   - [Chat links](../protocol/chat-links.md): the links of agent messages
     and of sent messages, the labels of Markdown links, the images of
     agent messages, local addresses, and links in code.
+  - [Chat code blocks](../protocol/chat-code-blocks.md): the colours of
+    the code blocks of agent messages and of the file preview, from their
+    fence labels, and the Copy code button.
   - [Chat message lines](../protocol/chat-message-lines.md): how each agent
     message shows as one line in the work of a turn, closed and open, with
-    its tables, headings, quotes, rules, and line breaks.
+    its tables, headings, quotes, rules, code blocks, and line breaks.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
   scope of a cloud computer, the author of each commit in a sandbox, the copy
   and lookup of the skills repository, and the GitHub actions of the

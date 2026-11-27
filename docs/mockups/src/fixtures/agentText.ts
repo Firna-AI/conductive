@@ -129,9 +129,16 @@ export function quote(...blocks: TextBlock[]): TextBlock {
 /** A rule, such as `---`. */
 export const rule: TextBlock = { kind: 'rule' }
 
-/** A code block, with its text as the agent wrote it. */
-export function codeBlock(text: string): TextBlock {
-  return { kind: 'code', text }
+/**
+ * A code block, with its text as the agent wrote it, and its fence label in
+ * lower case, such as `rust` for ```rust. A block without a label, as after
+ * a bare ```, has none.
+ */
+export function codeBlock(
+  text: string,
+  label: string | null = null,
+): TextBlock {
+  return { kind: 'code', text, label }
 }
 
 /** A cell of a table: one part, or the parts of its inline text. */

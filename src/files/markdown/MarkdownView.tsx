@@ -5,6 +5,7 @@ import prose from '../../ui/components/common/MarkdownProse.module.css'
 import { MarkdownTable } from '../../ui/components/common/MarkdownTable'
 import { MarkdownItem } from '../../markdown/MarkdownItem'
 import type { FilesError } from '../api/files-errors'
+import { CodeText } from '../code/CodeText'
 import { LoadingFile, ReadError } from '../ui/FileStates'
 import { inlineNodes } from './inline-render'
 import type {
@@ -70,7 +71,13 @@ function Block(props: { block: MdBlock }) {
         </p>
       )
     case 'code':
-      return <pre className={styles.block}>{block.text}</pre>
+      // The parse, which the worker runs, coloured the lines, so the view
+      // only draws them.
+      return (
+        <pre className={styles.block}>
+          <CodeText lines={block.lines} text={block.text} />
+        </pre>
+      )
     case 'literal':
       // Text as typed, with its line breaks, and no Markdown inside.
       return <p className={styles.literal}>{textChunks(block.text)}</p>

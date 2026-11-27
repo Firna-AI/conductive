@@ -8,11 +8,13 @@ page with rendered Markdown or text with line numbers and syntax colours.
 An image file, which is a PNG, JPEG, GIF, or WebP file, opens as a
 picture, which zooms and expands. An HTML file opens its page in a frame
 from the files preview of the workspace. A changed file opens its unified
-diff, with the same syntax colours. A skill tab shows the text of one
-skill with the parts of a file page, as [The screens](screens.md) says.
-The requirements are in
-[Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
-and [HTML file preview](../../docs/protocol/html-file-preview.md).
+diff, with the same syntax colours. A code block of rendered Markdown
+takes the same colours from its fence label. A skill tab shows the text
+of one skill with the parts of a file page, as [The screens](screens.md)
+says. The requirements are in
+[Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes),
+[HTML file preview](../../docs/protocol/html-file-preview.md), and
+[Chat code blocks](../../docs/protocol/chat-code-blocks.md#colours).
 The visual spec is the `app/files` page of the
 [mockup catalogue](../../docs/mockups/README.md), `app/files/html` for the
 tab of an HTML file, `app/chat/unavailable-files` for a tree that the
@@ -23,6 +25,14 @@ cloud computer could not read, and `app/files/limited` and
 file tab with other screens. `CodeField` is a field for code, and
 `CodeBlock` shows code to read. The Cloud computer tab uses them for the
 install script and the startup script.
+
+`code/` also gives the syntax colours of a file tab to the code blocks of
+chat answers and of the Markdown preview. `languageOfLabel` of
+`code/fence-languages.ts` gives the language of a fence label, by the name
+of the language or by the extension of its files. `CodeText` of `code/`
+draws the coloured lines of a block, with a line feed between two lines.
+So the same code looks the same in an answer, in the preview, and in a
+file tab.
 
 The screens render data from the Worker only. The workspace screen of the
 app shell mounts them, as
@@ -201,8 +211,9 @@ Markdown image shows its alt text, and no picture loads. Only absolute
 `http`, `https`, and `mailto` addresses become links. An image at an
 `http` or `https` address shows its alt text as a link. A bare address in
 the text stays text. Quotes and lists nest at most 16 levels deep, and
-deeper content shows as text. The parse runs in the worker, off the thread
-of the page, so a long or crafted file cannot stop the page.
+deeper content shows as text. The parse, with the colours of its code
+blocks, runs in the worker, off the thread of the page, so a long or
+crafted file cannot stop the page.
 
 Each link of the preview has the look of the shared `TextLink`, and its
 title gives its whole address. The link opener of the app shell opens

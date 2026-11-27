@@ -4,6 +4,51 @@ import { previewDocument } from './preview-blocks'
 const text = (value: string) => ({ kind: 'text', text: value }) as const
 const lineBreak = { kind: 'break' } as const
 
+it('keeps fence labels and uses null for unlabelled and indented preview code, and colours the lines of a block whose label names a language', () => {
+  const source = [
+    '```Rust,ignore',
+    'fn main() {}',
+    '```',
+    '',
+    '```',
+    'command output',
+    '```',
+    '',
+    '    indented',
+    '',
+    '~~~TS title="example"',
+    'let count = 1',
+    '~~~',
+  ].join('\n')
+  expect(previewDocument(source).blocks).toEqual([
+    {
+      kind: 'code',
+      text: 'fn main() {}',
+      label: 'rust',
+      lines: [
+        [
+          { kind: 'keyword', text: 'fn' },
+          { kind: 'plain', text: ' main() {}' },
+        ],
+      ],
+    },
+    { kind: 'code', text: 'command output', label: null, lines: null },
+    { kind: 'code', text: 'indented', label: null, lines: null },
+    {
+      kind: 'code',
+      text: 'let count = 1',
+      label: 'ts',
+      lines: [
+        [
+          { kind: 'keyword', text: 'let' },
+          { kind: 'plain', text: ' count = ' },
+          { kind: 'number', text: '1' },
+        ],
+      ],
+    },
+  ])
+})
+
 it('draws a line-break tag as a line break, also in a table cell, with no break at the edge of a block and at most one empty line', () => {
   const source = [
     '<br>',

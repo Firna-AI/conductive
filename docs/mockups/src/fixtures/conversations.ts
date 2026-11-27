@@ -33,6 +33,7 @@ import {
   type CapabilitiesChangedItem,
 } from './capabilityConversations'
 import { chatLinkConversations } from './chatLinkConversations'
+import { codeBlockConversations } from './codeBlockConversations'
 import type { ChangedFile } from './files'
 import { formattingConversations } from './formattingConversations'
 import { headingConversations } from './headingConversations'
@@ -256,6 +257,7 @@ export const conversations: Readonly<
   ...taskListConversations,
   ...headingConversations,
   ...formattingConversations,
+  ...codeBlockConversations,
   /** The chat of the removed workspace that a chip opens. */
   'postcode-history': postcodeHistory,
   ...chatLinkConversations(history),

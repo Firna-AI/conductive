@@ -346,6 +346,7 @@ For paths that **All files** leaves out, `@` mentions and Markdown links show as
 A Markdown image that points to one of these paths shows only its label.
 If the label is blank, chat shows nothing for the image.
 
+A code block shows syntax colours, as a file does, when the agent names its language after the opening backticks.
 To copy a code block, select **Copy code** in its top corner.
 With a mouse, the button shows when you point at the block.
 **Code copied** confirms the copy.

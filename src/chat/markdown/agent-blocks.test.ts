@@ -10,7 +10,32 @@ import {
 
 it('keeps the tabs of a code block outside a list', () => {
   expect(blocksOf('```make', 'build:', '\tgo build ./...', '```')).toEqual([
-    { kind: 'code', text: 'build:\n\tgo build ./...' },
+    { kind: 'code', text: 'build:\n\tgo build ./...', label: 'make' },
+  ])
+})
+
+it('keeps fence labels and uses null for unlabelled and indented chat code', () => {
+  expect(
+    blocksOf(
+      '```RuST,ignore',
+      'fn main() {}',
+      '```',
+      '',
+      '```',
+      'command output',
+      '```',
+      '',
+      '    indented',
+      '',
+      '~~~TS title="example"',
+      'let count = 1',
+      '~~~',
+    ),
+  ).toEqual([
+    { kind: 'code', text: 'fn main() {}', label: 'rust' },
+    { kind: 'code', text: 'command output', label: null },
+    { kind: 'code', text: 'indented', label: null },
+    { kind: 'code', text: 'let count = 1', label: 'ts' },
   ])
 })
 
@@ -118,7 +143,7 @@ it('reads an underline under the text of a paragraph as a heading once a line br
     atEnd: [p('The tests pass. ---')],
     inQuoteAtEnd: [{ kind: 'quote', blocks: [p('The tests pass. ---')] }],
     quote: [{ kind: 'quote', blocks: [p('Note')] }, { kind: 'rule' }],
-    code: [{ kind: 'code', text: 'npm ci' }, p('===')],
+    code: [{ kind: 'code', text: 'npm ci', label: null }, p('===')],
     lazy: [{ kind: 'ul', items: [[p('Plan ===')]] }],
     mixedEndings: [
       p('Before.'),
@@ -161,7 +186,7 @@ it('reads a quote with each block that it holds, each rule, and the own cells of
         blocks: [
           p('<b>Note:</b> the tests pass.'),
           { kind: 'ul', items: [[p('one')], [p('two')]] },
-          { kind: 'code', text: 'npm ci' },
+          { kind: 'code', text: 'npm ci', label: null },
           { kind: 'quote', blocks: [p('Each key press sends a lookup.')] },
         ],
       },

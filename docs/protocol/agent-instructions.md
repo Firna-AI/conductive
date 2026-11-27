@@ -24,7 +24,10 @@ of agents as pictures in their answers, as
 [File mentions: files in answers](file-mentions-answers.md) says. A
 capability prompts decision number names a decision of the change that
 tells each agent the capabilities of its session, as
-[Capabilities: what agents learn](capabilities-agents.md) says.
+[Capabilities: what agents learn](capabilities-agents.md) says. A code
+colours decision number names a decision of the change that colours code
+blocks by their fence labels, as [Chat code blocks](chat-code-blocks.md)
+says.
 
 ## Terms
 
@@ -141,6 +144,14 @@ tells each agent the capabilities of its session, as
   - In commits, pull requests, issues, and files, the agent writes paths
     in backticks. Reason: GitHub reads `@` and a name as a mention of a
     person or a team, and notifies them.
+  - In a reply, the agent writes the name of the language after the
+    opening fence of each code block, such as `rust`, and `text` for
+    command output (code colours decision 2 B, 26 November 2026). The
+    chat colours the code by that name, as
+    [Colours](chat-code-blocks.md#colours) says. Reason: a code block
+    without a label shows plain text, so this guidance raises the share of
+    coloured blocks. Instructions without this guidance were rejected for
+    that reason.
   - Several members can write in one session. The sender line of each
     message names its sender, with the member ID of that member.
   - The agent gives the member ID of a sender to the owner filter of the

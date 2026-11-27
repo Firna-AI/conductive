@@ -122,6 +122,8 @@ shows its quote, rule, and line break in the folded work. With
 answer of about 100 KiB. With `answer=tasks`, each part is one line or one
 blank line, and the folded work shows the boxes of the plan in its
 message line, as `app/chat/lists/tasks-work` of the mockups does. With
+`answer=code`, the plan and the answer hold a Rust code block, and the
+answer also holds a code block without a label and inline code. With
 `answer=pictures`, the plan holds a screenshot. So its closed message line
 in the folded work shows the link, and the open line shows the picture.
 

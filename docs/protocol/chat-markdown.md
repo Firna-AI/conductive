@@ -6,6 +6,8 @@ quotes, and line breaks. Its linked page [Chat tables](chat-tables.md)
 holds the rules of their tables. Its linked page
 [Chat links](chat-links.md) holds the rules of the links of chat text,
 and of the images of agent messages. Its linked page
+[Chat code blocks](chat-code-blocks.md) holds the rules of their code
+blocks: their colours and their Copy code button. Its linked page
 [Chat message lines](chat-message-lines.md) holds the rules of the
 message lines of the work of a turn. [Chat and events](chat-and-events.md)
 holds the messages, the live text, and the work of a turn. The terms are
@@ -49,7 +51,8 @@ images at `app/chat/formatting`, and links at `app/chat/links`.
     [Lists](#lists) says
   - quotes and rules, as [Quotes and rules](#quotes-and-rules) says
   - code blocks, between two lines of three or more backticks or tildes,
-    or indented by four spaces
+    or indented by four spaces, as [Chat code blocks](chat-code-blocks.md)
+    says
   - inline code between backticks, strong text between `**` or `__`
     marks, emphasis between `*` or `_` marks, and strikethrough between
     `~~` marks
@@ -106,19 +109,10 @@ images at `app/chat/formatting`, and links at `app/chat/links`.
   the chat.
 - Inline code, strong text, emphasis, strikethrough, line breaks, links,
   workspace chips, and file chips also show in headings, list items,
-  quotes, and table cells. A code block shows its text with no formatting.
-- Each code block of an agent message has a Copy code button in its top
-  corner. The button copies the text of the code block exactly as the
-  agent wrote it, with its tabs and blank lines, and without the fence
-  lines. A toast says whether the copy worked, as for Copy link.
-- With a mouse, the button shows while the pointer is on the code block,
-  or while the button has the focus. On a touch screen, it always shows.
-- Reason: a reader copies a command or a file from an answer often. A
-  selection by hand can miss a line or take text around the block.
-- A code block in the line of a message in the work of a turn has no Copy
-  code button. That line is a button that opens and closes, and a button
-  cannot hold another button. A code block under an open line, after a
-  table, has the button.
+  quotes, and table cells.
+- A code block shows its text as the agent wrote it, with no marks, links,
+  or chips. [Chat code blocks](chat-code-blocks.md) holds the rules of its
+  colours and of its Copy code button.
 - HTML in an agent message shows as text, also in a table, apart from a
   line-break tag, as [Line breaks](#line-breaks) says.
 - Reason: sandbox code is untrusted, as
@@ -274,16 +268,17 @@ images at `app/chat/formatting`, and links at `app/chat/links`.
 ## Saved history
 
 - The events and the saved history carry the text of each agent message.
-  They carry no heading data, no table data, and no link data.
+  They carry no heading data, no table data, no link data, and no colour
+  data.
 - An agent message from the saved history shows the same formatting, the
   same tables, and the same links as a live tab shows once the agent
   message is complete.
 - The text keeps the cells that a table does not show, such as the cells
   past the width of its header.
-- Reason: headings, tables, and links need no change to the events or to
-  the saved history. Table data or link data in the events was rejected,
-  because it changes the events and the saved history. The browser still
-  lays out each table and checks each link.
+- Reason: headings, tables, links, and colours need no change to the
+  events or to the saved history. Table data or link data in the events
+  was rejected, because it changes the events and the saved history. The
+  browser still lays out each table and checks each link.
 
 ## In the work of a turn
 
