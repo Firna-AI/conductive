@@ -103,7 +103,11 @@ export function acme(
   const active = workspaces.find(
     (workspace) => workspace.id === 'email-dark-mode',
   )
-  if (active) active.state = 'working'
+  if (active) {
+    active.state = 'working'
+    // Only a starting workspace has a waiting answer, as the Worker sends.
+    delete active.messageWaiting
+  }
   const fixtures = automationFixtures(summary.id)
   const starting = workspaceFixtures('starting').detail.start
   const failed = workspaceFixtures('error').detail.error

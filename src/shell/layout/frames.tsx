@@ -25,7 +25,7 @@ interface FrameProps {
  * hidden sidebar stays mounted, so its list keeps its state.
  */
 function SidebarPanel(props: { children: ReactNode; hidden: boolean }) {
-  const widths = useStore(usePanelLayout().widths)
+  const width = useStore(usePanelLayout().chosenWidth.sidebar)
   const sidebar = useRef<HTMLElement>(null)
   return (
     <aside
@@ -33,7 +33,7 @@ function SidebarPanel(props: { children: ReactNode; hidden: boolean }) {
       className={frame.sidebar}
       hidden={props.hidden}
       ref={sidebar}
-      style={widths.sidebar === null ? undefined : { width: widths.sidebar }}
+      style={width === null ? undefined : { width }}
     >
       {props.children}
       <ResizeHandle

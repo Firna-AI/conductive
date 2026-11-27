@@ -49,15 +49,17 @@ const goodBuild: ImageBuild = {
 /**
  * The Cloud computer tab as text, when `newest` is the newest build and
  * `goodBuild` the one that workspaces start from. `log` gives the texts of
- * the log events of the newest build, in their order.
+ * the log events of the newest build, in their order. `refresh` is a
+ * refresh that runs after the newest build.
  */
 async function computerText(
   server: FakeApiServer,
   newest: ImageBuild,
   log: readonly string[],
+  refresh?: ImageBuild,
 ): Promise<string> {
   server.json('GET', orgSettingsPaths.builds(FAKE_IDS.org), {
-    builds: [newest, goodBuild],
+    builds: refresh ? [refresh, newest, goodBuild] : [newest, goodBuild],
     currentImageBuildId: goodBuild.id,
     changes: {
       installScript: false,
@@ -85,6 +87,18 @@ async function computerText(
   )
   computer.stop()
   return text
+}
+
+/** A refresh that runs, during which an admin selected Build computer. */
+const requestedRefresh: ImageBuild = {
+  ...goodBuild,
+  id: 'refresh-running',
+  kind: 'refresh',
+  state: 'running',
+  startedAt: FAKE_TIME - 134_000,
+  completedAt: null,
+  durationMs: null,
+  buildRequested: true,
 }
 
 describe('OrgTabContent', () => {
@@ -163,26 +177,41 @@ describe('OrgTabContent', () => {
     expect(text).not.toContain('Cloud computers run')
   })
 
-  test('a failed newest build shows its saved message, the end of its log, Try again, and the good build that workspaces still start from', async () => {
-    const server = new FakeApiServer()
-    const failed: ImageBuild = {
-      ...goodBuild,
-      id: 'build-failed',
-      state: 'failed',
-      startedAt: FAKE_TIME - 12 * minute,
-      completedAt: FAKE_TIME - 12 * minute + 138_000,
-      durationMs: 138_000,
-      error: 'The install script stopped with exit code 1.',
-    }
-    const text = await computerText(server, failed, [
-      'Running the ',
-      'install script\nnpm error code ERESOLVE\n',
-      'The install script stopped with exit code 1.\n',
-    ])
-    expect(text).toContain(
+  test.each([
+    [
+      undefined,
       'Last build 12 minutes ago Failed after 2m 18s Try again The install script stopped with exit code 1. Running the install script npm error code ERESOLVE The install script stopped with exit code 1. Workspaces still start from the build of 3 hours ago. History (2)',
-    )
-  })
+    ],
+    [
+      requestedRefresh,
+      'Last build 12 minutes ago Failed after 2m 18s Try again The install script stopped with exit code 1. Running the install script npm error code ERESOLVE The install script stopped with exit code 1. A build starts when this refresh ends. Workspaces still start from the build of 3 hours ago. History (2)',
+    ],
+  ])(
+    'a failed newest build shows its saved message, the end of its log, Try again, and the good build that workspaces still start from, during a refresh: %o',
+    async (refresh, expected) => {
+      const server = new FakeApiServer()
+      const failed: ImageBuild = {
+        ...goodBuild,
+        id: 'build-failed',
+        state: 'failed',
+        startedAt: FAKE_TIME - 12 * minute,
+        completedAt: FAKE_TIME - 12 * minute + 138_000,
+        durationMs: 138_000,
+        error: 'The install script stopped with exit code 1.',
+      }
+      const text = await computerText(
+        server,
+        failed,
+        [
+          'Running the ',
+          'install script\nnpm error code ERESOLVE\n',
+          'The install script stopped with exit code 1.\n',
+        ],
+        refresh,
+      )
+      expect(text).toContain(expected)
+    },
+  )
 
   test('a running build names its 60-minute limit under its log', async () => {
     const server = new FakeApiServer()
@@ -201,4 +230,31 @@ describe('OrgTabContent', () => {
       'Building · 2m 14s Build computer Running the install script Workspaces start from the build of 3 hours ago until this one finishes. Each build has a 60-minute limit.',
     )
   })
+
+  test.each([
+    [false, 'Refreshing · 2m 14s Build computer History (1)'],
+    [
+      true,
+      'Refreshing · 2m 14s Build computer A build starts when this refresh ends. History (1)',
+    ],
+  ])(
+    'a running refresh names itself, with a requested build: %s',
+    async (buildRequested, expected) => {
+      const server = new FakeApiServer()
+      const refresh: ImageBuild = {
+        ...goodBuild,
+        id: 'refresh-running',
+        kind: 'refresh',
+        state: 'running',
+        startedAt: FAKE_TIME - 134_000,
+        completedAt: null,
+        durationMs: null,
+        ...(buildRequested ? { buildRequested } : {}),
+      }
+      const text = await computerText(server, refresh, [
+        'Updating the repositories\n',
+      ])
+      expect(text).toContain(expected)
+    },
+  )
 })

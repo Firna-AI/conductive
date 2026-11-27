@@ -5,19 +5,24 @@
  * opens below the mark, from the start of the mark, so it never covers the
  * marked text. Where the frame has more room above the mark, it opens
  * above it, and where it would pass the end of the frame, it ends at the
- * end of the mark. It has a fixed width and a highest height, and its chat
- * scrolls inside it. In a low frame it takes only the room on its side of
- * the mark, less its margins. It has the full hairline outline of every
- * card of the app and the shadow of a menu. It takes the focus as it opens,
- * as a dialog does, with no ring around the whole card.
+ * end of the mark. Its width and its highest height are `--explain-width`
+ * and `--explain-height`, which each caller sets with `popoverSizeStyle`:
+ * the size that the member chose with its handles, or the default size. Its
+ * chat scrolls inside it. In a low frame it takes only the room on its side
+ * of the mark, less the 12 px of its margins, `--explain-gap`. It has the
+ * full hairline outline of every card of the app and the shadow of a menu.
+ * It takes the focus as it opens, as a dialog does, with no ring around the
+ * whole card. The app sets `--explain-gap` and `--explain-area`, the side of
+ * the mark that the panel tries first, for the places of its own, whatever
+ * the order of the style sheets.
  */
 .panel {
   display: flex;
   position: absolute;
   z-index: 20;
   flex-direction: column;
-  width: 400px;
-  max-height: min(420px, calc(100% - 12px));
+  width: var(--explain-width);
+  max-height: min(var(--explain-height), calc(100% - var(--explain-gap, 12px)));
   margin: 6px 0;
   overflow: hidden;
   border: 1px solid var(--ui-border2);
@@ -27,7 +32,7 @@
   box-sizing: border-box;
   outline: none;
   position-anchor: --explain-mark;
-  position-area: block-end span-inline-end;
+  position-area: var(--explain-area, block-end span-inline-end);
   position-try-fallbacks:
     flip-block,
     flip-inline,
@@ -74,6 +79,176 @@
   flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
+}
+
+/*
+ * From the first move of its height until the popover closes, the panel
+ * keeps the moved height, so its edge follows the pointer and the keys
+ * also over a short chat. The room on its side of the mark still caps it.
+ */
+.fixedHeight {
+  height: var(--explain-height);
+}
+
+/*
+ * The handles on the free edges of the panel, the edges away from its
+ * mark. Each lies inside the card, because the card cuts off what passes
+ * its edge, and shows the resize cursor of its edge. At rest it draws
+ * nothing. On hover, on focus, and while a drag runs, it draws a hairline
+ * on its edge and a grip in its middle, as the column handles do. Neither
+ * takes the accent, because they lie on the edge of a card. The hairline
+ * takes the strong neutral border colour. The grip takes the muted ink,
+ * so a handle with the focus stands out from the card.
+ */
+.edge {
+  display: flex;
+  position: absolute;
+  z-index: 2;
+  justify-content: center;
+  align-items: center;
+  border: 0 solid transparent;
+  box-sizing: border-box;
+  touch-action: none;
+}
+
+/* The handle above or below the chat changes the height. */
+.edgeTop,
+.edgeBottom {
+  right: 0;
+  left: 0;
+  height: 7px;
+  cursor: ns-resize;
+}
+
+.edgeTop {
+  top: 0;
+  align-items: flex-start;
+  border-top-width: 1px;
+}
+
+.edgeBottom {
+  bottom: 0;
+  align-items: flex-end;
+  border-bottom-width: 1px;
+}
+
+/* The handle at the side of the panel changes the width. */
+.edgeLeft,
+.edgeRight {
+  top: 0;
+  bottom: 0;
+  width: 7px;
+  cursor: ew-resize;
+}
+
+.edgeLeft {
+  left: 0;
+  justify-content: flex-start;
+  border-left-width: 1px;
+}
+
+.edgeRight {
+  right: 0;
+  justify-content: flex-end;
+  border-right-width: 1px;
+}
+
+/*
+ * The grip is a pill in the middle of the edge, as the handle of a sheet.
+ * It lies on the hairline, so it keeps clear of the follow-up field.
+ */
+.edge::after {
+  flex: none;
+  border-radius: 2px;
+  background: var(--ui-muted);
+  content: '';
+  opacity: 0;
+}
+
+.edgeTop::after,
+.edgeBottom::after {
+  width: 36px;
+  height: 4px;
+}
+
+.edgeLeft::after,
+.edgeRight::after {
+  width: 4px;
+  height: 36px;
+}
+
+/*
+ * The corner between the two free edges moves both. It takes only the
+ * pointer, so it has no place in the order of Tab. It lies over the ends
+ * of both edge handles. Its grip follows the round corner of the card at
+ * the bottom right, and each other corner shows it mirrored.
+ */
+.corner {
+  position: absolute;
+  z-index: 3;
+  width: 12px;
+  height: 12px;
+  touch-action: none;
+}
+
+.corner::after {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 10px;
+  height: 10px;
+  border: solid var(--ui-muted);
+  border-width: 0 3px 3px 0;
+  border-bottom-right-radius: 5px;
+  box-sizing: border-box;
+  content: '';
+  opacity: 0;
+}
+
+.cornerTopLeft {
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+  transform: scale(-1);
+}
+
+.cornerTopRight {
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+  transform: scaleY(-1);
+}
+
+.cornerBottomLeft {
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
+  transform: scaleX(-1);
+}
+
+.cornerBottomRight {
+  right: 0;
+  bottom: 0;
+  cursor: nwse-resize;
+}
+
+/*
+ * A handle that a drag moves now, `resizing`, shows its hairline and grip
+ * as on hover and on focus. The hairline and the grip are the focus mark
+ * of an edge handle, so it draws no ring.
+ */
+.edge:hover,
+.edge:focus-visible,
+.edge.resizing {
+  border-color: var(--ui-border2);
+  outline: none;
+}
+
+.edge:hover::after,
+.edge:focus-visible::after,
+.corner:hover::after,
+.resizing::after {
+  opacity: 1;
 }
 
 /*

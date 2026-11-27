@@ -2,6 +2,7 @@ import type { Workspace } from '../../shared/generated/Workspace'
 import { createContext, useContext, type ReactNode } from 'react'
 import type { ChipWorkspace } from '../../ui/components/chat/WorkspaceChip'
 import { workspaceLabel } from '../../ui/components/workspaces/label'
+import { markOf } from '../../ui/components/workspaces/WorkspaceMark'
 import { nameLabel } from '../../shared/name-label'
 
 import type { SessionLinks } from './session-links'
@@ -52,13 +53,13 @@ export function useChatLinks(): ChatLinks {
 
 /**
  * What a chip shows of its workspace now: the label, the name, the state,
- * and the GitHub state of its pull request.
+ * whether a message waits for the start, and the GitHub state of its pull
+ * request.
  */
 export function chipOf(workspace: Workspace): ChipWorkspace {
   return {
     label: workspaceLabel(workspace.number),
     name: nameLabel(workspace.name),
-    status: workspace.state,
-    github: workspace.github,
+    ...markOf(workspace),
   }
 }

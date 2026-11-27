@@ -205,6 +205,9 @@ This page lists each protocol doc and what it covers.
     text, its key, the written prompt, the explanation and its anchor, the
     marks in the parent chat, the popover, a closed explanation, and
     read-only workspaces.
+    - [The Explain popover](../protocol/explain-popover.md): the place of
+      the popover, its follow-up field, Expand and Close, its keys and
+      focus, and its size on a computer.
 - [Model favourites](../protocol/model-favourites.md): the favourites of
   each member, the rows and the marks of the model menu, All models, the
   hidden favourites, and the Favourites section of Preferences.

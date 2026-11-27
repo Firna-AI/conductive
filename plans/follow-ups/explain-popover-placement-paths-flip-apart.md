@@ -1,0 +1,45 @@
+# Placement paths choose the side 6 px apart
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-24, from branch `calummoore/resize-popup-kd67`, a problem outside the scope of review round 1.
+- **Location:** `src/chat/explain/popover-place.ts:58-63`, the fit tests and the clamp of `placePanel`, and its comment at lines 35-42. `src/ui/components/explain/ExplainPopover.module.css`, the `margin`, the `position-area`, and the `position-try-fallbacks` of the rule `.panel`. `src/chat/explain/README.md:94-95`.
+- **Reason:** Both rules came with the first popover in commit `335942653`, and they are on origin/main, outside the change that found them.
+
+- **Terms:**
+  - **Explain popover:** the panel that `src/chat/explain/ExplainPopover.tsx` draws by the marked text in the workspace chat, with the chat of an explanation.
+  - **Mark:** the lasting highlight of an explained quote in the parent chat, with a box that the popover keeps to.
+  - **CSS anchor positioning:** the CSS that keeps the panel at the box of its mark, and moves it to another side where it does not fit.
+  - **Fallback path:** `placePanel` in `src/chat/explain/popover-place.ts`, which places the panel from the boxes in a browser without CSS anchor positioning.
+  - **Frame:** the box that holds the place of the panel, its offset parent, which is the app frame on a computer.
+- **Background:**
+  - `docs/protocol/explain-popover.md` says: "The panel starts at the start of the mark. Where it would then pass the end of the window, it ends at the end of the mark instead."
+  - The rule `.panel` has `margin: 6px 0`. So it keeps 6 px above and below the panel, and no margin at its sides.
+  - By default, `position-area` starts the panel at the start of its mark. `position-try-fallbacks` with `flip-inline` moves the panel to the end of the mark where it does not fit its area. That area ends at the edge of the frame.
+  - `placePanel` keeps the start side only while `mark.left + width <= outer.right - margin`. `margin` is 6 px, from `src/chat/explain/popover-edges.ts`. So the fallback path ends the panel at the end of the mark once it comes within 6 px of the frame edge.
+  - The clamp of `placePanel` also keeps the panel 6 px inside both side edges of the frame.
+  - The comment of `placePanel` says that it places the panel "as the CSS anchor positioning of the panel would". `src/chat/explain/README.md` says that a browser without anchor positioning "gets the same place from `placePanel`".
+  - `popoverLayout` in `src/chat/explain/popover-edges.ts` gives the width rooms of the handles with 6 px at the side edges of the frame.
+- **Problem:** In a band 6 px wide at the end of the frame, the two paths put the panel on different sides of its mark. There, the fallback path breaks the protocol sentence. The comment of `placePanel` and the README are then not true.
+- **Evidence:**
+  - The example has a frame 1000 px wide, a mark from 597 px to 697 px, and a 400 px panel.
+  - The CSS path keeps the start side, from 597 px to 997 px, because the panel does not pass 1000 px. The CSS gives the panel no side margin, so the browser flips only where the panel would pass its area. Nobody checked this band in a browser.
+  - The fallback path moves the panel to the end side, from 297 px to 697 px, because 997 px passes 994 px. The formula of `placePanel` gives these numbers.
+  - A Node run of `popoverLayout` at commit `7d82811e9` measured both boxes. The CSS box gets a free right edge and a width room of 397 px. The fallback box gets a free left edge and a width room of 691 px.
+  - In the CSS path, the width room of 397 px is less than the shown 400 px. So Right does not grow the panel there.
+- **Impact if no action:** In a browser without CSS anchor positioning, a panel in the band opens at the end of its mark. Its free edges, its handles, and its rooms then differ from a browser with anchor positioning.
+- **Root question:** How can every browser put the panel on the same side of its mark, as the protocol says?
+- **Options:**
+  - **A.** Make `placePanel` test the side edges of the frame with no margin, as the CSS does. Use no side margin in its clamp either, so the panel stays at its mark. Correct its comment. The rooms of `popoverLayout` keep 6 px at the sides, so in the band the width handle still cannot grow the panel. Effort: Small.
+  - **B.** Give the CSS panel a 6 px margin at its inline end. The browser then also flips 6 px inside the frame. `flip-inline` moves that margin to the other side, and the class `endFirst` in `src/chat/explain/explain.module.css` must move it too. This changes the place in browsers with anchor positioning, against the protocol sentence. So it needs the user's decision and a protocol change. Effort: Small.
+  - **C.** Decide the side once in TypeScript with one fit test, and give it to both paths. The fit test and the side rooms of `popoverLayout` follow the protocol sentence, at the edge of the frame. This is option C of `plans/follow-ups/explain-popover-equal-width-side.md`. Effort: Medium.
+- **Left out:** Change nothing, or correct only the comment and the README. The fallback path then keeps breaking the protocol sentence in the band.
+- **Wider fix:** C. One fit test for both paths removes the second copy of the rule.
+- **Previous examples:** The default size of the popover had a CSS copy and a TypeScript copy. The branch that added this item gave it one source in `src/ui/components/explain/popoverSize.ts`. `plans/follow-ups/panel-default-sizes-one-source.md` holds other sizes with two copies.
+- **Related:**
+  - `plans/follow-ups/explain-popover-equal-width-side.md`: a shared wider fix. Its option C is option C here, so one branch can fix both items.
+  - `plans/follow-ups/explain-popover-side-change-reverses-keys.md`: the same code. Its option C changes both placement paths too.
+  - `plans/follow-ups/panel-default-sizes-one-source.md`: the same code. That item gives the 6 px popover margin one source, and option B here adds a side margin to the same rule.
+  - `plans/follow-ups/explain-popover-fallback-edge-lags-width.md`: the same code. Its option B must keep the clamp that `placePanel` has at that time.
+- **Recommendation:** C. One fit test ends the difference for good, and it is the same change as option C of the equal-width item.
+- **Action:** fix after merge, apply C, because both rules are on origin/main outside the change that found them, and the equal-width item makes the same change.

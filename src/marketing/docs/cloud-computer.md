@@ -66,7 +66,8 @@ Select **Remove** to confirm, or **Cancel** to keep the repository.
 The removal saves at once and starts no build.
 
 Selecting **Done** after you add repositories starts one build automatically, so you can add many repositories first.
-If a build or refresh is running, one more build usually starts after it succeeds.
+If a build is running, one more build usually starts after it succeeds.
+If a refresh is running, the build starts when the refresh ends.
 When the repository notice offers **Try again**, the last build failed, and the repository waits for it.
 Select **Try again** to build it.
 A newly added repository goes at the end of the order.
@@ -464,6 +465,11 @@ New workspaces can keep using the last successful setup while a later build runs
 Changes during the first successful build get one extra build automatically.
 If that first build fails, **Try again** uses the saved settings.
 The build action stays unavailable while a build is running.
+
+While a refresh runs after a successful build, **Cloud computer** shows **Refreshing**, and **Build computer** stays available.
+Select it to build after the refresh ends.
+After a failed build, **Try again** during a refresh also builds after the refresh ends.
+The tab then says that a build starts when the refresh ends.
 
 ## Recover from a failed build
 

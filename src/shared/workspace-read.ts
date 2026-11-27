@@ -61,6 +61,13 @@ export function createWorkspaceReader(read: WorkspaceFieldReaders) {
       typeof source.githubPullFromFork === 'boolean'
         ? source.githubPullFromFork
         : undefined
+    // A read or a reply sets it for a starting workspace, and an event
+    // leaves it out. A malformed value reads as no answer, so the mark
+    // stays still.
+    const messageWaiting =
+      typeof source.messageWaiting === 'boolean'
+        ? source.messageWaiting
+        : undefined
     return {
       id: read.text(source, 'id'),
       number: read.count(source, 'number'),
@@ -84,6 +91,7 @@ export function createWorkspaceReader(read: WorkspaceFieldReaders) {
       ...(githubCanWrite !== undefined && { githubCanWrite }),
       ...(githubPullBase !== undefined && { githubPullBase }),
       ...(githubPullFromFork !== undefined && { githubPullFromFork }),
+      ...(messageWaiting !== undefined && { messageWaiting }),
       createdAt: read.count(source, 'createdAt'),
       updatedAt: read.count(source, 'updatedAt'),
       archivedAt: read.nullableCount(source, 'archivedAt'),

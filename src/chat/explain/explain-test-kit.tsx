@@ -5,6 +5,8 @@ import type { SessionAnchor } from '../../shared/generated/SessionAnchor'
 import type { WorkspaceEvent } from '../../shared/events'
 import { buildShortcutKeymap } from '../../app/shortcuts/keymap'
 import { createApiClient } from '../../app/api/client'
+import type { PanelLayout } from '../../app/panels'
+import { PanelContext } from '../../shell/layout/panels'
 import { ShortcutContext } from '../../shell/shortcuts/shortcut-context'
 import { ShortcutOffers } from '../../shell/shortcuts/shortcut-offers'
 import { FakeApiServer, type FakeApiOptions } from '../../test-support/fake-api'
@@ -72,7 +74,8 @@ export const recordEvent = (session: Session): WorkspaceEvent => ({
  * The chat of the recorded conversation on a computer or a phone, with the
  * shortcut layer whose offers a test reads. `stored` goes into the history
  * of the fake after its recorded events, such as the records of
- * explanations. `clock` gives the time of the chat.
+ * explanations. `clock` gives the time of the chat. `panels` gives the
+ * panel layout of the app, whose storage keeps the size of the popover.
  */
 export async function mountChat(
   options: FakeApiOptions & {
@@ -80,6 +83,7 @@ export async function mountChat(
     viewport?: 'desktop' | 'mobile'
     readOnly?: boolean
     clock?: Clock
+    panels?: PanelLayout
     setup?: (server: FakeApiServer) => void
   } = {},
 ) {
@@ -101,7 +105,9 @@ export async function mountChat(
   }
   const element = (children: ReactNode) => (
     <ShortcutContext.Provider value={layer}>
-      {children}
+      <PanelContext.Provider value={options.panels ?? null}>
+        {children}
+      </PanelContext.Provider>
     </ShortcutContext.Provider>
   )
   const view = await mount(

@@ -92,6 +92,7 @@ function selectionOf(
     case 'menu':
     case 'popover':
     case 'popover-full':
+    case 'popover-resized':
       return undefined
   }
 }

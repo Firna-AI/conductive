@@ -135,7 +135,10 @@ export function readSkillsLookup(
 
 function readBuild(value: unknown): ImageBuild {
   const build = record(value, 'build')
+  const requested =
+    build.buildRequested === true ? { buildRequested: true } : {}
   return {
+    ...requested,
     id: text(build, 'id'),
     orgId: text(build, 'orgId'),
     kind: choice(build, 'kind', ['build', 'refresh']),

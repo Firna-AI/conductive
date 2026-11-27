@@ -15,6 +15,7 @@ import a11y from '../../../../../src/ui/components/common/a11y.module.css'
 import { classes } from '../../../../../src/ui/components/common/classes'
 import { orgTile } from '../../entries/components/orgs/OrgTile.mockup'
 import { listMarkLabel } from '../../../../../src/ui/components/workspaces/status'
+import { rowMarkOf } from '../workspaces/rowMark'
 import {
   WorkspaceName,
   type EmphasisClasses,
@@ -124,9 +125,8 @@ function Row(props: {
         <span className={styles.lead}>
           {/* Each workspace shows once in a tab, so its key names its mark. */}
           <workspaceMark.Component
-            github={github}
+            {...rowMarkOf(row.row)}
             moklyInstance={`palette-${workspace.key}`}
-            status={status}
           />
         </span>
         {row.number ? (

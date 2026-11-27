@@ -9,9 +9,14 @@ import type { ActivityStatus } from '../../ui/components/workspaces/activityStat
 function cellClasses(
   github: GitHubSummary | null,
   status: ActivityStatus,
+  messageWaiting?: boolean,
 ): string[][] {
   const html = renderToStaticMarkup(
-    <WorkspaceMark github={github} status={status} />,
+    <WorkspaceMark
+      github={github}
+      messageWaiting={messageWaiting}
+      status={status}
+    />,
   )
   // The grid puts `aria-hidden` before its class, so only the cells match.
   const cells = [...html.matchAll(/<span class="([^"]*)"/g)]
@@ -33,9 +38,9 @@ describe('WorkspaceMark', () => {
   })
 
   test.each([null, 'ready-to-merge'] as const)(
-    'runs a light around the ring while the cloud computer starts, with %s',
+    'runs a light around the ring while a message waits for the start, with %s',
     (github) => {
-      const cells = cellClasses(github, 'starting')
+      const cells = cellClasses(github, 'starting', true)
       expect(count(cells, styles.chase)).toBe(8)
       expect(cells[4]).not.toContain(styles.chase)
       // Without motion, the start shows the ring of a working agent: the ring
@@ -46,7 +51,21 @@ describe('WorkspaceMark', () => {
     },
   )
 
-  test.each(['ready', 'unread', 'stopped'] as const)(
+  test.each([
+    [null, 0],
+    ['ready-to-merge', 9],
+  ] as const)(
+    'stays still while the cloud computer starts and no message waits, with %s',
+    (github, lit) => {
+      for (const messageWaiting of [false, undefined]) {
+        const cells = cellClasses(github, 'starting', messageWaiting)
+        expect(count(cells, styles.chase)).toBe(0)
+        expect(count(cells, styles.lit)).toBe(lit)
+      }
+    },
+  )
+
+  test.each(['ready', 'unread', 'stopped', 'starting'] as const)(
     'runs a light around the ring while the checks run and the agent is %s',
     (status) => {
       const cells = cellClasses('checks-running', status)

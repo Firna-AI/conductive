@@ -7,12 +7,13 @@ import {
   type ChipOpener,
   type ChipWorkspace,
 } from './WorkspaceChip'
+import type { MarkState } from '../workspaces/WorkspaceMark'
 import styles from './SessionChip.module.css'
 
 /** What a session chip shows: its workspace now, and the session title. */
 export type ChipSession = {
-  /** The label, state, and GitHub state of the workspace of the session. */
-  workspace: Pick<ChipWorkspace, 'label' | 'status' | 'github'>
+  /** The label, states, and GitHub state of the workspace of the session. */
+  workspace: Pick<ChipWorkspace, 'label'> & MarkState
   /**
    * The title of the session, or Untitled for a session without one, as
    * `nameLabel` in `src/shared/` gives it.

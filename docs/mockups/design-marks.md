@@ -19,15 +19,16 @@ with Copy link.
   a draft, the cells are lit grey. Without a GitHub state, every cell is
   dim grey. An archived workspace keeps faint grey cells, whatever its
   GitHub state. A light runs around the ring while the agent works, the
-  workspace starts, or the checks run, and the centre cell stays dim. The
-  whole square turns the `primary` blue and pulses while the agent waits
-  for the user, such as for the approval of a command, whatever the GitHub
-  state. Every other mark
-  is still, so only bold text marks unread output. With reduced motion,
-  the ring or the blue middle column stays lit, and the other cells stay
-  dim. A workspace that starts keeps the lit ring of a working agent. A
-  mark whose checks run while the agent does not work stays fully lit
-  without motion.
+  workspace starts with a message in its queue, or the checks run, and
+  the centre cell stays dim. The whole square turns the `primary` blue
+  and pulses while the agent waits for the user, such as for the approval
+  of a command, whatever the GitHub state. Every other mark is still, so
+  only bold text marks unread output. A start that no message waits on is
+  still too. With reduced motion, the ring or the blue middle column stays
+  lit, and the other cells stay dim. A workspace that starts with a
+  waiting message keeps the lit ring of a working agent. A mark whose
+  checks run while the agent does not work stays fully lit without
+  motion.
   `listMarkLabel` in `status.ts` beside it gives the words that screen
   readers hear, such as "Checks failed, Working". The mark imports no
   fixture value, so the app uses it too.

@@ -1,0 +1,31 @@
+# A start racing a new refresh drops the request
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-26, finding 8 of review round 1, branch `calummoore/computer-build-not-working-i7cz`, plan `plans/build-after-refresh.md`.
+- **Location:** `startImageBuild` in `worker/lifecycle/image-builds.ts` (the fallback after `requestBuildAfterRefresh`), the catch path of `admitImageBuild` in `worker/lifecycle/image-build-start.ts`, `startRequestedBuild` in `worker/lifecycle/first-image-build.ts`.
+- **Reason:** the race needs a job admission in the same moment as the start, and normal use does not meet it.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Request:** the admin that Build computer or Try again saves on a running refresh, in `image_build_jobs.requested_build_user_id`. The build starts for that admin when the refresh ends.
+  - **Admission:** the step in `admitImageBuild` that inserts a new job. The unique index `image_builds_running` rejects the insert while another job of the org runs.
+- **Background:**
+  - Build computer and Try again call `startImageBuild` with `requested: true`. When a refresh runs, it saves the request on that refresh. When no job runs, it calls `admitImageBuild`.
+  - A push webhook can admit a refresh between that read and the insert. The insert then throws, and the catch path of `admitImageBuild` returns the new refresh without a request.
+  - When the request matches no row because the refresh ended, and another job already runs, `startImageBuild` returns the refresh that ended.
+  - `startRequestedBuild` takes the request before it calls `startImageBuild`, so the requested start at the end of a refresh meets the same paths. It then counts the start as done and skips the added build.
+  - The `!inserted` path of `admitImageBuild` already calls `startImageBuild` again.
+- **Problem:** A click, or the requested start at the end of a refresh, can meet a refresh that starts at the same moment. The Worker then saves no request on the new refresh, and no build follows.
+- **Impact if no action:** The build is lost, and the tab shows the refresh without the line "A build starts when this refresh ends." The admin must notice and click again.
+- **Root question:** How does a requested start that meets a job admitted at the same moment still take effect?
+- **Options:**
+  - **A.** When the insert fails or the request matches no row, call `startImageBuild` again. Its one decision then saves the request on the new refresh, joins a build, or waits for a switch build. Effort: Small.
+  - **B.** Make the insert skip, without an error, when a job runs. Save the request on the running refresh in the same D1 batch. No window remains, but the batch needs conditional statements. Effort: Medium.
+  - **C.** Keep the request on the org, not on a job. A start then never depends on which job runs. It replaces the column `image_build_jobs.requested_build_user_id`. Effort: Large.
+- **Left out:** A lock in the image coordinator for each admission, because B closes the same window inside D1.
+- **Wider fix:** A. Every fallback then goes through the one decision in `startImageBuild`, so no fallback answers for a job that it did not check.
+- **Previous examples:** `plans/follow-ups/added-build-can-be-lost.md`: a refresh at the end of cleanup takes the place of the added build, because `startImageBuild` returns the running job.
+- **Related:** `plans/follow-ups/added-build-can-be-lost.md`, same cause. Its option D removes the race at the end of a refresh, but not the race of a click.
+- **Recommendation:** A. It reuses the decision that already exists and removes the special fallback.
+- **Action:** fix after merge, apply A, because the race needs an admission in the same moment as the start.

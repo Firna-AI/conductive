@@ -3,13 +3,13 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-10, during documentation integration on `calummoore/github-status-bar-actions`.
-- **Location:** `worker/app-api/README.md` and `src/app/screens.md`.
+- **Location:** `worker/app-api/README.md`, `src/app/screens.md`, and `src/app/key-code.md`.
 - **Reason:** These guides already exceed the target on the incoming main branch. Their structure needs a separate documentation change.
 
 - **Terms:**
   - **Pointer section:** A retained heading with a link to content moved to another page. It keeps an existing anchor valid.
 - **Background:** The repository asks agents to keep files near 200 lines and split files that pass 300. These guides combine several topics. The deployment guide already passed 300 lines before the latest main integration. Main's provider-account work grew the sandbox guide from 219 to 304 lines. Its computer ledger work grew the member guide from 299 to 303 lines. Its software-image work grew the image guide past the target.
-- **Problem:** `worker/app-api/README.md` has 317 lines and `src/app/screens.md` has 320 after integration with main at `d789f9e9`. Both already passed 300 lines on that main snapshot. The earlier 405-line deployment guide and 302-line image guide now have 259 and 223 lines, so both observations are closed. Captured main `6fd184c53e77dee208687512244ebcaf5fa120e9` shortened the sandbox guide to 251 lines and the member guide to 273. Those two observations are also closed. The file-length rule of `npm run lint` checks JavaScript, TypeScript, and Astro files, so it does not report these Markdown files.
+- **Problem:** `worker/app-api/README.md` has 317 lines and `src/app/screens.md` has 320 after integration with main at `d789f9e9`. Both already passed 300 lines on that main snapshot. On 24 November 2026, `src/app/screens.md` had 409 lines and `src/app/key-code.md` had 325 on main at `b2ff01c55`. The branch `calummoore/resize-popup-kd67` took them to 413 and 330 lines. The earlier 405-line deployment guide and 302-line image guide now have 259 and 223 lines, so both observations are closed. Captured main `6fd184c53e77dee208687512244ebcaf5fa120e9` shortened the sandbox guide to 251 lines and the member guide to 273. Those two observations are also closed. The file-length rule of `npm run lint` checks JavaScript, TypeScript, and Astro files, so it does not report these Markdown files.
 - **Impact if no action:** Readers must scan long guides. New changes must maintain several topics in each file. The files remain above the repository target.
 - **Root question:** How can these guides stay short while keeping their facts and working links?
 - **Options:**
