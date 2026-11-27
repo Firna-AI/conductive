@@ -52,7 +52,8 @@ export async function explainQuote(
  * Worker. A start whose written prompt a transcript already shows did
  * start, so it gives its session and no notice. Else the notice names the
  * written prompt, so it goes when the chat shows it later, as
- * `withLateSends` says.
+ * `withLateSends` says. Each notice names its start in `startId`, so a later
+ * start of the same Ask takes it away, as `dismissStartNotice` says.
  */
 function failedStart(
   context: ChatContext,
@@ -60,22 +61,37 @@ function failedStart(
   promptId: string,
   error: unknown,
 ): ExplainOutcome {
-  if (isRefusal(error)) {
-    showNotice(context, parentId, explainFailedTitle, error)
-    return { kind: 'refused' }
-  }
-  const shown = sessionShowing(context.store.get(), promptId)
+  const refused = isRefusal(error)
+  const shown = refused ? null : sessionShowing(context.store.get(), promptId)
   if (shown !== null) return { kind: 'started', sessionId: shown }
   if (context.live()) {
     const notice = {
       sessionId: parentId,
       title: explainFailedTitle,
       message: messageOf(error),
-      messageId: promptId,
+      startId: promptId,
+      ...(refused ? {} : { messageId: promptId }),
     }
     context.store.update((snapshot) => ({ ...snapshot, notice }))
   }
-  return { kind: 'unknown' }
+  return { kind: refused ? 'refused' : 'unknown' }
+}
+
+/**
+ * Takes away the notice of a failed start while it shows, such as when a
+ * later Send of the same Ask starts its explanation. A notice of anything
+ * else stays.
+ */
+export function dismissStartNotice(
+  context: ChatContext,
+  promptId: string,
+): void {
+  if (!context.live()) return
+  context.store.update((snapshot) =>
+    snapshot.notice?.startId === promptId
+      ? { ...snapshot, notice: null }
+      : snapshot,
+  )
 }
 
 /**

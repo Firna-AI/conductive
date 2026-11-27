@@ -42,6 +42,11 @@ export interface UnsentAsk {
   kept: KeptQuote
   text: string
   start: AskStart | null
+  /**
+   * The prompt ID of the last start that failed, whose notice the parent
+   * chat can still show, so the start of the explanation takes it away.
+   */
+  failed: string | null
   open: boolean
 }
 
@@ -76,6 +81,7 @@ export function pressedAsk(
     kept: { messageId, quote, before, after, range: range.cloneRange() },
     text: '',
     start: null,
+    failed: null,
     open: true,
   }
 }
@@ -118,13 +124,15 @@ export function askRequest(
  * goes back into the field, before the text typed during the wait, as a
  * refused message goes back into the composer. A refused start goes. Any
  * other failed start stays, because it can still have reached the Worker.
+ * The Ask keeps the prompt ID of the failed start, which names its notice.
  */
 export function failedAsk(ask: UnsentAsk, refused: boolean): UnsentAsk {
   const parts = [ask.start?.question ?? '', ask.text].filter(
     (part) => part !== '',
   )
   const start = ask.start && !refused ? { ...ask.start, waits: false } : null
-  return { ...ask, text: parts.join('\n'), start, open: true }
+  const failed = ask.start?.promptId ?? ask.failed
+  return { ...ask, text: parts.join('\n'), start, failed, open: true }
 }
 
 /**

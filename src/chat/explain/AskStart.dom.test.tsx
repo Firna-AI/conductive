@@ -16,7 +16,7 @@ import {
   typeText,
   waitFor,
 } from '../../test-support/mount'
-import { answerStarts, startBodies } from './ask-start-kit'
+import { answerStarts, startBodies, streamComputerStart } from './ask-start-kit'
 import {
   askBody,
   askQuote,
@@ -24,6 +24,7 @@ import {
   question,
   questionField,
   selectQuote,
+  workspaceFiles,
 } from './ask-test-kit'
 import { mountChat, readHighlights } from './explain-test-kit'
 
@@ -161,7 +162,27 @@ describe('Ask by a selection', () => {
     })
   })
 
-  it('keeps the field of the question while the cloud computer is stopped, and Send starts the explanation', async () => {
+  it('sends a question with an @ that names no file at Enter, in a workspace with files, and names no list of files', async () => {
+    const asked = 'Does manual entry come from @nowhere'
+    const { server } = await mountChat({
+      mentions: workspaceFiles(),
+      setup: (fake) => answerStarts(fake, [{ ends: 'started' }]),
+    })
+    const field = questionField(await openAsk())
+    await typeText(field, asked)
+    const list = field.getAttribute('aria-controls')
+    pressInField(field, 'Enter')
+    await waitFor(
+      () => queryByRole('dialog', question),
+      'the popover of the new explanation',
+    )
+    expect({ list, bodies: await startBodies(server) }).toEqual({
+      list: null,
+      bodies: [{ ...askBody, question: asked }],
+    })
+  })
+
+  it('keeps the field of the question while the cloud computer is stopped, Send starts the explanation, and its follow-up field takes the focus when it takes the place of the bar', async () => {
     const { server } = await mountChat({
       workspaceState: 'stopped',
       setup: (fake) => answerStarts(fake, [{ ends: 'started' }]),
@@ -174,10 +195,27 @@ describe('Ask by a selection', () => {
     }).toEqual({ field: true, bar: null, resume: null })
     await typeText(questionField(popover), question)
     await press(byRole('button', 'Send', popover))
-    await waitFor(
+    const explained = await waitFor(
       () => queryByRole('dialog', question),
       'the popover of the new explanation',
     )
-    expect(await startBodies(server)).toEqual([askBody])
+    const stopped = {
+      resume: queryByRole('button', 'Resume', explained) !== null,
+      field: queryByRole('textbox', 'Follow-up', explained),
+    }
+    await act(async () => streamComputerStart(server))
+    const followUp = await waitFor(
+      () => queryByRole('textbox', 'Follow-up', explained),
+      'the follow-up field after the cloud computer starts',
+    )
+    expect({
+      bodies: await startBodies(server),
+      stopped,
+      focus: document.activeElement === followUp,
+    }).toEqual({
+      bodies: [askBody],
+      stopped: { resume: true, field: null },
+      focus: true,
+    })
   })
 })

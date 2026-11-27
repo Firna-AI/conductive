@@ -1,6 +1,12 @@
 import { act } from 'react'
 import { byRole, queryByRole } from '../../test-support/dom-queries'
 import { press, waitFor } from '../../test-support/mount'
+import {
+  FakeFiles,
+  sampleTree,
+} from '../components/chip-field/mention-field-test-kit'
+import type { ChatMentions } from '../mentions/MentionsContext'
+import { FakeSkills } from '../mentions/skills-test-kit'
 import { answer, selectText, textNodeWith } from './explain-test-kit'
 import { messageAttributes } from './selection'
 
@@ -59,6 +65,17 @@ export function parentAnswer(): HTMLElement {
   const element = queryAnswer()
   if (!element) throw new Error('The chat shows no recorded answer.')
   return element
+}
+
+/** The files of the workspace, as the shell gives them, so `@` finds files. */
+export function workspaceFiles(): ChatMentions {
+  return {
+    files: new FakeFiles(sampleTree),
+    skills: new FakeSkills(),
+    openFile: () => undefined,
+    showFolder: () => undefined,
+    href: (item) => `/files/${item.path}`,
+  }
 }
 
 /** Presses the pointer on `target`, as a mouse does. */

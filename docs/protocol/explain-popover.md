@@ -78,6 +78,11 @@ marks and the popover at `app/chat/explain`.
 - The popover leaves out the written prompt. The tab of the explanation
   shows it as a normal message, so nothing is hidden. Reason: the quote in
   the header names what the chat is about.
+- This holds for an Ask too. Its question shows in the title of its tab,
+  in the tooltip of its mark, and in its tab, not in the popover. The user
+  chose this on 25 November 2026. A popover that shows the question as the
+  first message, under the quote in the header, or in the whole written
+  prompt was not chosen.
 
 ### The follow-up field
 

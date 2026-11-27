@@ -19,6 +19,39 @@ import styles from './explain.module.css'
 import { PopoverHeader, SheetHandle } from './PopoverParts'
 import { keepsPopover } from './press-outside'
 
+/** A field that a popover gives the focus to, such as its follow-up field. */
+type FocusField = RefObject<{ focus: () => void } | null>
+
+/**
+ * The one focus request of a popover: as it opens, the focus goes to `field`
+ * when it shows, else to the popover. A field that shows later, such as a
+ * follow-up field that takes the place of the bar of a stopped cloud
+ * computer, takes the focus when it shows, but only while the popover still
+ * holds the focus. So a later choice of the member stays. The parts inside
+ * lay out first, so a field of the first render shows by then.
+ */
+function useOpeningFocus(
+  popover: RefObject<HTMLElement | null>,
+  field: FocusField | undefined,
+): void {
+  const request = useRef(field ?? null)
+  const opened = useRef(false)
+  useLayoutEffect(() => {
+    const root = popover.current
+    const shown = request.current?.current
+    const opening = !opened.current
+    opened.current = true
+    if (shown) {
+      request.current = null
+      if (opening || root?.contains(root.ownerDocument.activeElement)) {
+        shown.focus()
+      }
+    } else if (opening) {
+      root?.focus({ preventScroll: true })
+    }
+  })
+}
+
 /**
  * The popover of an explanation. On a computer it is a panel 400 px wide by
  * its mark: below the mark, or above it when the frame has more room there,
@@ -29,8 +62,8 @@ import { keepsPopover } from './press-outside'
  * to full height, where it stops under the tab row. It opens at full height
  * while a request waits for a member, and the chat scrolls its mark into
  * view above it. The parent chat stays live, so no dim lies over the app.
- * The popover takes the focus when it opens, or gives it to `field` when
- * that field shows. Escape and Close call `onClose`, which gives the focus
+ * The popover takes the focus when it opens, or gives it to `field`, as
+ * `useOpeningFocus` says. Escape and Close call `onClose`, which gives the focus
  * back to the mark of an explanation. On a computer, a press outside it
  * closes it too, and the focus goes where the press puts it. A press in
  * the Explain layer or on a mark keeps it, as `keepPopover` says.
@@ -46,8 +79,8 @@ export function ExplainPopover(props: {
   waits: boolean
   /** The chat, whose top the sheet stops at at full height. */
   stopAt: HTMLElement | null
-  /** The field that takes the focus as the popover opens, if it shows. */
-  field?: RefObject<{ focus: () => void } | null>
+  /** The field that takes the focus as it shows, as `useOpeningFocus` says. */
+  field?: FocusField
   /** Shows the tab of the explanation. An unsent Ask has none. */
   onExpand?: () => void
   onClose: () => void
@@ -58,14 +91,7 @@ export function ExplainPopover(props: {
   const ref = useRef<HTMLElement>(null)
   const [height, setHeight] = useState<'half' | 'full' | null>(null)
   const full = height === 'full' || (height === null && props.waits)
-  // The popover takes the focus once, as it opens, so the field of the
-  // first render counts. The parts inside lay out first, so it shows by now.
-  const opening = useRef(props.field)
-  useLayoutEffect(() => {
-    const field = opening.current?.current
-    if (field) field.focus()
-    else ref.current?.focus({ preventScroll: true })
-  }, [])
+  useOpeningFocus(ref, props.field)
   usePanelPlace(ref, props.anchor, !props.mobile && !anchorsInCss())
   useMarkAboveSheet(ref, props.anchor, props.mobile)
   useSheetTop(ref, props.stopAt, props.mobile && full)

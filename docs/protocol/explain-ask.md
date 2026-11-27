@@ -59,6 +59,8 @@ at `app/chat/explain/ask`, with its flow at
   takes text only, with no attach button and no model picker. Reason: the
   follow-up field has neither, and after Send, Expand gives the whole
   composer of the tab.
+- An `@` in the field is text. It opens no list of files, so Enter sends
+  the question, and Tab and Escape act as in a field without the list.
 - Send stays off while the field holds no text. White space alone counts
   as no text.
 - The field stays while the cloud computer does not run, and no bar takes
@@ -82,6 +84,11 @@ at `app/chat/explain/ask`, with its flow at
 - When the explanation starts, the quote takes its mark, and the unsent
   popover becomes the popover of the new explanation. Its header then
   shows Expand.
+- When the unsent popover showed at the start, the follow-up field of the
+  new popover takes the focus. While the cloud computer does not run, the
+  bar takes the place of that field, and the popover takes the focus. The
+  field takes it when it shows, while the popover still has the focus.
+  Reason: the member types on, and a later choice of the member stays.
 - Text that the member typed while the start waited goes into the draft of
   the new explanation, before any text that the draft already holds. The
   files of that draft stay. So the follow-up field of its popover shows
@@ -103,6 +110,16 @@ at `app/chat/explain/ask`, with its flow at
   again, so no second explanation starts when the first start reached the
   Worker. A start that the Worker refused is a real failure, so the next
   Send is a new start.
+- A repeat of a start that names another model, effort, or fast mode than
+  the first start fails as a conflict, as a repeated message does. A
+  repeat that names none gets the first explanation, also after a change
+  of the saved default. The user chose this on 25 November 2026.
+- When a later Send of the same Ask starts the explanation, the notice of
+  the earlier failure goes, also after a refusal. It goes at the reply or
+  when the chat shows the start, whichever comes first. A notice of
+  anything else stays.
+  Reason: the notice would tell the member that the question did not go
+  through.
 - Close and Escape close the unsent popover. On a computer, a press
   outside it closes it too, as
   [Expand and Close](explain-popover.md#expand-and-close) says for each

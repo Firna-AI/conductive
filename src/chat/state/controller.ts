@@ -29,6 +29,7 @@ import { chooseModel } from './model-actions'
 import { draftFileSource } from './draft-file-source'
 import {
   addEarlierText,
+  dismissStartNotice,
   explainQuote,
   sendFollowUp,
   type ExplainOutcome,
@@ -141,6 +142,9 @@ export class ChatController extends ChatRuns {
   /** Puts late text before the draft of a session, as `addEarlierText` says. */
   readonly addEarlierText = (sessionId: string, text: string) =>
     addEarlierText(this.context, sessionId, text)
+  /** Takes away the notice of a failed start, as `dismissStartNotice` says. */
+  readonly dismissStartNotice = (promptId: string) =>
+    dismissStartNotice(this.context, promptId)
   /**
    * Sends the draft of a session from the popover of an explanation, `view`,
    * as `sendFollowUp` says.

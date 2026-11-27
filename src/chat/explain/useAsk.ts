@@ -62,7 +62,9 @@ export interface AskState {
  * and `onStarted` opens its popover while the parent session shows. A
  * failed start puts the question back before that text, and the popover
  * opens again. A start that failed with no answer or a server error still
- * settles when a transcript shows its written prompt later. A move away
+ * settles when a transcript shows its written prompt later. A start that
+ * settles takes away the notice of an earlier failure of the same Ask, also
+ * of a refused start, and other notices stay. A move away
  * from the session of an Ask closes its popover, as `closedAsk` says. The
  * popover shows only over the chat of that session, so a failed start
  * while another session shows opens it when that session shows again.
@@ -111,6 +113,8 @@ export function useAsk(props: AskProps): AskState {
     if (text !== '') {
       controller.addEarlierText(explanationId, literalText(text))
     }
+    // The question went through, so the notice of its failure goes.
+    if (ask.failed !== null) controller.dismissStartNotice(ask.failed)
     setAsks((current) =>
       withAsk(current, parentId, (now) =>
         now?.start?.promptId === promptId ? null : now,

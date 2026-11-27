@@ -95,6 +95,8 @@ export interface ChatNotice {
    * transcript shows that message, as `withLateSends` says.
    */
   messageId?: string
+  /** The prompt ID of a failed start of an explanation, as `failedStart` says. */
+  startId?: string
 }
 
 /**

@@ -154,6 +154,9 @@ requirements. `useAsk` holds the unsent Ask of each parent session, and
   screen readers hear `questionLabel` as its name, it takes text only, and
   it grows to four lines. Send stays off while the text holds only white
   space, as `canSend` says.
+- The field lies in a `MentionsProvider` with no mentions. So `@` opens no
+  list of files there, the field names no list, and Enter, Tab, and Escape
+  stay with the field, also in a workspace with files.
 - While the cloud computer does not run, the field stays, and the bar of
   `sandboxParts` takes no place there. Send starts the cloud computer, as
   a press on Explain does.
@@ -174,8 +177,11 @@ requirements. `useAsk` holds the unsent Ask of each parent session, and
 - The popover of the new explanation then takes the place of the unsent
   popover, only while the parent session shows, so a popover or a menu of
   another session stays. When the unsent popover still showed, its
-  follow-up field takes the focus. After a close during the wait, the new
-  popover takes the focus, as for Explain.
+  follow-up field takes the focus. While the cloud computer does not run,
+  the bar takes the place of that field, and the popover takes the focus.
+  The field then takes it when it shows, while the popover still holds it,
+  as `useOpeningFocus` of `ExplainPopover.tsx` says. After a close during
+  the wait, the new popover takes the focus, as for Explain.
 - The popover of the new explanation hides the written prompt, as for
   Explain, so it does not show the question.
 - A failed start keeps the unsent popover open. The question goes back
@@ -188,6 +194,11 @@ requirements. `useAsk` holds the unsent Ask of each parent session, and
   goes, the question leaves the field, as `movedText` says, and the rest
   of the text goes into the draft. After a refusal, the next Send is a new
   start.
+- The notice of each failed start names its prompt ID, `startId`. The Ask
+  keeps the prompt ID of its last failed start, `failed`. So the start that
+  settles takes that notice away through `ChatController.dismissStartNotice`,
+  also after a refusal and when the reply comes before the stream. Another
+  notice stays.
 - Before Send, Close, Escape, and on a computer a press outside drop the
   unsent popover with its question, and they start nothing. Another
   popover that opens in its place, and a move away from the session of the
@@ -197,8 +208,8 @@ requirements. `useAsk` holds the unsent Ask of each parent session, and
   focus.
 - A close while the start waits stops nothing: the settle opens the
   popover of the new explanation, and a failed start opens the unsent
-  popover again. The popover shows only over the chat of the session of the Ask,
-  so a failed start while another session shows opens it when that
+  popover again. The popover shows only over the chat of the session of the
+  Ask, so a failed start while another session shows opens it when that
   session shows again.
 - Each write names its parent session. A press, a change, and a close act
   on the Ask of the shown session, and the outcome of a start acts on the
@@ -231,7 +242,9 @@ requirements. `useAsk` holds the unsent Ask of each parent session, and
   phone, the sheet stays open.
 - `PopoverChat.dom.test.tsx` shows the bar of a stopped cloud computer in
   place of the follow-up field, and moves the time of a running
-  explanation on with a fake clock while its parent session is idle.
+  explanation on with a fake clock while its parent session is idle. A
+  follow-up field that takes the place of the bar after an Ask gets no
+  focus when the member moved the focus out of the popover.
 - `PopoverLinked.dom.test.tsx` follows a linked session with the text that
   the member typed while the reply waited, follows the linked session of
   Try again, and keeps the popover of another explanation that the member
@@ -243,8 +256,10 @@ requirements. `useAsk` holds the unsent Ask of each parent session, and
   of the field after a press on a focused Send, text typed while the start
   waits, which goes into the follow-up field of the new explanation, Send
   busy during the wait, and a failed start, which keeps the unsent popover
-  with the question before the typed text. While the cloud computer is
-  stopped, the field stays and Send starts.
+  with the question before the typed text. Enter sends a question with an
+  `@` that names no file, in a workspace with files. While the cloud
+  computer is stopped, the field stays and Send starts, and the follow-up
+  field takes the focus when it takes the place of the bar.
 - `AskDismiss.dom.test.tsx` drops the question at Escape, at a press
   outside, which moves no focus, when a mark opens its popover in its
   place, and at a change of the shown session, with no start. A close
@@ -256,18 +271,24 @@ requirements. `useAsk` holds the unsent Ask of each parent session, and
   reply leaves the text typed in the tab of the explanation. A server
   error after the stream showed the start shows no notice and no
   question, and a start whose reply was lost settles when the stream shows
-  it later.
+  it later. The notice of a failed start goes when a later Send starts the
+  explanation: with a new `promptId` after a refusal, and when the reply
+  comes before the stream.
 - `AskSessions.dom.test.tsx` keeps the question of a start that failed
   while another session showed, through a new Ask, a press on Explain, and
   a mark there. A start that ends while another session shows keeps the
-  popover there and gives the typed text to the new explanation.
+  popover there and gives the typed text to the new explanation. A later
+  start of a failed Ask keeps the notice of a failed Explain of another
+  session.
 - `explain-test-kit.tsx` and `popover-test-kit.ts` hold the chat, the
   explanations, the selection, the highlights, the press on a mark that
   opens a popover, a follow-up, and the replies of the Worker.
-  `ask-test-kit.ts` holds the quote, the question, and the unsent popover
-  from a selection. `ask-start-kit.ts` holds the starts of an Ask that the
-  fake answers: a start that the Worker takes shows in the stream before
-  the reply, with the `promptId` of the request, as the Worker does.
+  `ask-test-kit.ts` holds the quote, the question, the unsent popover from
+  a selection, and the files of a workspace. `ask-start-kit.ts` holds the
+  starts of an Ask that the fake answers: a start that the Worker takes
+  shows in the stream before the reply, with the `promptId` of the request,
+  as the Worker does. A reply can also come before the stream shows the
+  start. The kit also shows the start of the cloud computer.
 
 ### Key code
 

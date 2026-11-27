@@ -11,6 +11,7 @@ import { FakeApiServer, type FakeApiOptions } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { holdAnimationFrames, mount } from '../../test-support/mount'
+import type { ChatMentions } from '../mentions/MentionsContext'
 import { storeEvents } from '../secrets/secret-test-kit'
 import type { SubscribeToWorkspace } from '../stream/workspace-stream'
 import type { Clock } from '../ui/clock'
@@ -72,7 +73,8 @@ export const recordEvent = (session: Session): WorkspaceEvent => ({
  * The chat of the recorded conversation on a computer or a phone, with the
  * shortcut layer whose offers a test reads. `stored` goes into the history
  * of the fake after its recorded events, such as the records of
- * explanations. `clock` gives the time of the chat.
+ * explanations. `clock` gives the time of the chat. `mentions` gives the
+ * chat the files of the workspace, as the shell does.
  */
 export async function mountChat(
   options: FakeApiOptions & {
@@ -80,6 +82,7 @@ export async function mountChat(
     viewport?: 'desktop' | 'mobile'
     readOnly?: boolean
     clock?: Clock
+    mentions?: ChatMentions
     setup?: (server: FakeApiServer) => void
   } = {},
 ) {
@@ -109,6 +112,7 @@ export async function mountChat(
       <WorkspaceChat
         client={createApiClient(server.fetch)}
         clock={options.clock}
+        mentions={options.mentions}
         orgId={FAKE_IDS.org}
         readOnly={options.readOnly}
         subscribe={subscribe}

@@ -2,7 +2,12 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { UserMessage } from '../../shared/generated/UserMessage'
 import type { WorkspaceEvent } from '../../shared/events'
-import { byRole, queryByRole } from '../../test-support/dom-queries'
+import {
+  byLabel,
+  byRole,
+  queryByRole,
+  queryByText,
+} from '../../test-support/dom-queries'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { messageText } from '../../test-support/message-field'
 import {
@@ -59,12 +64,15 @@ const otherEvents: WorkspaceEvent[] = [
 
 const typedDuringWait = 'And on a phone?'
 
-/** The chat with the other session, whose Ask waits for `outcome`. */
-async function mountWithOther(outcome: StartOutcome) {
+/**
+ * The chat with the other session. The starts of an Ask end as `outcomes`
+ * say, and the other session refuses each start.
+ */
+async function mountWithOther(...outcomes: StartOutcome[]) {
   return mountChat({
     stored: otherEvents,
     setup: (fake) => {
-      answerStarts(fake, [outcome])
+      answerStarts(fake, outcomes)
       answerStarts(fake, [{ ends: 'refused' }], other.id)
     },
   })
@@ -132,4 +140,39 @@ describe('an Ask while another session shows', () => {
       followUp: messageText(byRole('textbox', 'Follow-up', explained)),
     }).toEqual({ kept: true, followUp: typedDuringWait })
   })
+
+  it('keeps the notice of a failed Explain there when a later Send of the failed Ask starts its explanation', async () => {
+    const reply = deferred()
+    await mountWithOther(
+      { accepts: reply.promise, ends: 'refused' },
+      { ends: 'started' },
+    )
+    await askThenLeave()
+    reply.resolve()
+    await settleReplies()
+    await press(await selectInOther('Explain'))
+    await settleReplies()
+    const before = showsFailedNotice()
+    await press(byRole('button', 'Address autocomplete'))
+    const back = await waitFor(
+      () => queryByRole('dialog', 'Ask'),
+      'the unsent popover of the refused start',
+    )
+    await press(byRole('button', 'Send', back))
+    await waitFor(
+      () => queryByRole('dialog', question),
+      'the popover of the new explanation',
+    )
+    await settleReplies()
+    await press(byRole('button', other.title))
+    expect({ before, after: showsFailedNotice() }).toEqual({
+      before: true,
+      after: true,
+    })
+  })
 })
+
+/** The notice of a failed start shows in the chat of the shown session. */
+function showsFailedNotice(): boolean {
+  return queryByText("The explanation didn't start", byLabel('Chat')) !== null
+}

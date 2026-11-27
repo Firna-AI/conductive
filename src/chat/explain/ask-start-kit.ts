@@ -1,5 +1,6 @@
 import { act } from 'react'
 import { flushMicrotasks } from '../../app/test-kit'
+import type { WorkspaceEvent } from '../../shared/events'
 import type { SendMessageResponse } from '../../shared/messages'
 import { explainSessionPath } from '../../shared/sessions'
 import type { FakeApiServer } from '../../test-support/fake-api'
@@ -70,6 +71,16 @@ export function streamStart(
 }
 
 /**
+ * Shows in the stream that the cloud computer starts, as after a start of an
+ * Ask in a workspace whose cloud computer was stopped.
+ */
+export function streamComputerStart(fake: FakeApiServer): void {
+  const { workspace } = workspaceFixtures('starting').detail
+  const event: WorkspaceEvent = { type: 'workspace.updated', workspace }
+  storeEvents(fake, [[event, FAKE_TIME + 130_000]])
+}
+
+/**
  * How the fake answers one start. The Worker takes the start, or refuses
  * it, after `accepts` settles. A start that it takes shows in the stream
  * before the reply, as `streamStart` says. The reply comes after `replies`
@@ -79,12 +90,13 @@ export interface StartOutcome {
   accepts?: Promise<void>
   replies?: Promise<void>
   /**
-   * `started`: the reply of the start. `lost`: the Worker takes the start,
-   * but its reply is a server error. `refused`: a refusal with 409, as for
-   * a member without a login. `failed`: a server error, and the stream
-   * shows no start.
+   * `started`: the reply of the start. `replied`: the reply of the start,
+   * before the stream shows it. `lost`: the Worker takes the start, but its
+   * reply is a server error. `refused`: a refusal with 409, as for a member
+   * without a login. `failed`: a server error, and the stream shows no
+   * start.
    */
-  ends: 'started' | 'lost' | 'refused' | 'failed'
+  ends: 'started' | 'replied' | 'lost' | 'refused' | 'failed'
 }
 
 /**
@@ -108,6 +120,10 @@ export function answerStarts(
     const reply = taken ? streamStart(fake, promptId) : null
     await outcome.replies
     if (outcome.ends === 'started') return Response.json(reply, { status: 201 })
+    if (outcome.ends === 'replied') {
+      const unseen = askStarted(nextEvent(fake), promptId)
+      return Response.json(unseen, { status: 201 })
+    }
     if (outcome.ends === 'refused') {
       const error = {
         code: 'agent_login_required',

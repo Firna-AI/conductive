@@ -134,3 +134,39 @@ describe('an Ask whose reply was lost', () => {
     })
   })
 })
+
+describe('the notice of a failed Ask at a later Send', () => {
+  it('goes when the Send after a refusal starts the explanation with a new prompt ID', async () => {
+    const { server } = await mountChat({
+      setup: (fake) =>
+        answerStarts(fake, [{ ends: 'refused' }, { ends: 'started' }]),
+    })
+    const popover = await sendQuestion()
+    await waitFor(failedNotice, 'the notice of the refused start')
+    await press(byRole('button', 'Send', popover))
+    await explainedPopover()
+    await settleReplies()
+    const [refused, started] = await startPromptIds(server)
+    expect({ fresh: refused !== started, notice: failedNotice() }).toEqual({
+      fresh: true,
+      notice: null,
+    })
+  })
+
+  it('goes when the reply of the same start comes before the stream shows it', async () => {
+    const { server } = await mountChat({
+      setup: (fake) =>
+        answerStarts(fake, [{ ends: 'failed' }, { ends: 'replied' }]),
+    })
+    const popover = await sendQuestion()
+    await waitFor(failedNotice, 'the notice of the failed start')
+    await press(byRole('button', 'Send', popover))
+    await explainedPopover()
+    await settleReplies()
+    const [failed, again] = await startPromptIds(server)
+    expect({ same: failed === again, notice: failedNotice() }).toEqual({
+      same: true,
+      notice: null,
+    })
+  })
+})
