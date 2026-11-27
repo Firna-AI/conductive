@@ -1,9 +1,11 @@
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import type { SessionAnchor } from '../../src/shared/generated/SessionAnchor'
 import type {
   ExplainSessionRequest,
   ExplainSessionResponse,
 } from '../../src/shared/sessions'
 
+import { sameChoice } from '../../src/shared/agents'
 import { sessionLink } from '../../src/shared/session-link'
 import { configuredDefaultChoice } from '../app-api/models'
 import type { WorkspaceLinkContext } from '../data/workspace-link'
@@ -82,18 +84,23 @@ async function firstAcceptedMessageId(
 
 async function existingExplanation(
   transaction: ChatTransaction,
-  promptId: string,
+  prompt: { id?: string; text: string; choice?: AgentChoice },
   userId: string,
   anchor: SessionAnchor,
-  text: string,
 ): Promise<ExplainSessionResponse | null> {
-  const message = await transaction.message(promptId)
+  if (prompt.id === undefined) return null
+  const message = await transaction.message(prompt.id)
   if (!message) return null
   const session = await transaction.session(message.sessionId)
   const stored = session?.anchor
   if (
     message.sender.id !== userId ||
-    message.text !== text ||
+    message.text !== prompt.text ||
+    (prompt.choice !== undefined &&
+      !sameChoice(
+        { ...message.choice, fast: message.choice.fast ?? false },
+        prompt.choice,
+      )) ||
     !stored ||
     stored.parentSessionId !== anchor.parentSessionId ||
     stored.messageId !== anchor.messageId ||
@@ -101,7 +108,7 @@ async function existingExplanation(
     stored.before !== anchor.before ||
     stored.after !== anchor.after ||
     // A later message from the same sender can copy the first prompt's text.
-    (await firstAcceptedMessageId(transaction, message.sessionId)) !== promptId
+    (await firstAcceptedMessageId(transaction, message.sessionId)) !== prompt.id
   ) {
     throw new HttpError(
       409,
@@ -132,12 +139,12 @@ export async function explainSession(
       parentSessionId,
     ),
   )
-  const findExisting =
-    promptId === undefined
-      ? undefined
-      : (view: ChatTransaction) =>
-          existingExplanation(view, promptId, context.user.id, anchor, text)
-  if (findExisting) {
+  const explicitChoice =
+    input.choice && dependencies.normalizeChoice(input.choice)
+  const prompt = { id: promptId, text, choice: explicitChoice }
+  const findExisting = (view: ChatTransaction) =>
+    existingExplanation(view, prompt, context.user.id, anchor)
+  if (promptId !== undefined) {
     const existing = await operation.read(findExisting)
     if (existing) return existing
   }
@@ -151,9 +158,8 @@ export async function explainSession(
   const saved =
     (await ownerPreference(env.DB, context.user.id)) ??
     configuredDefaultChoice(env)
-  const selected = dependencies.normalizeChoice(
-    input.choice ?? { ...saved, fast: false },
-  )
+  const selected =
+    explicitChoice ?? dependencies.normalizeChoice({ ...saved, fast: false })
   const resolved = await SessionLogins.resolve(
     dependencies,
     context.user.id,
@@ -166,7 +172,7 @@ export async function explainSession(
       'Connect your agent login to send a message.',
     )
   return operation.change(async (transaction) => {
-    const existing = await findExisting?.(transaction)
+    const existing = await findExisting(transaction)
     if (existing) return existing
     const session = await createSession(
       transaction,

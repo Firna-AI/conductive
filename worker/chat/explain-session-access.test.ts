@@ -10,8 +10,9 @@ import {
   TEST_TIME,
   type TestHarness,
 } from '../test-support/harness'
-import { CLAUDE, WORKSPACE_ID } from './harness.test-support'
+import { CLAUDE, CODEX, WORKSPACE_ID } from './harness.test-support'
 import {
+  ASK_INPUT,
   EXPLAIN_INPUT,
   explanationFixture,
 } from './explain-session.test-support'
@@ -49,6 +50,25 @@ it('refuses blank and malformed selections without creating a session', async ()
     })
   }
   expect((await fixture.snapshot()).records).toEqual(before)
+})
+
+it('rejects a changed explicit model choice and returns the first explanation for the original choice', async () => {
+  const { explain } = await explanationFixture(harness)
+  const input = { ...ASK_INPUT, choice: CLAUDE }
+  const started = await explain(input)
+  expect(started.status).toBe(201)
+  const first: ExplainSessionResponse = await started.json()
+  expect(first.message.choice).toEqual(CLAUDE)
+
+  const changed = await explain({ ...input, choice: CODEX })
+  expect(changed.status).toBe(409)
+  expect(await changed.json()).toMatchObject({
+    error: { code: 'message_id_conflict' },
+  })
+
+  const matching = await explain(input)
+  expect(matching.status).toBe(201)
+  expect(await matching.json()).toEqual(first)
 })
 
 it('cuts a long quote and long context so that each part stays next to the quote', async () => {
