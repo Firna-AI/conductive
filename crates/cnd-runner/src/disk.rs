@@ -1,13 +1,18 @@
 //! Atomic state-file replacement with private Unix permissions.
 
-use std::io::ErrorKind;
-use std::path::PathBuf;
+use std::io::{self, ErrorKind};
+use std::path::{Path, PathBuf};
 
 use async_trait::async_trait;
-use tokio::fs::{self, DirBuilder, OpenOptions};
-use tokio::io::AsyncWriteExt;
+use tokio::fs;
+use tokio::sync::Mutex;
 
+use crate::disk_files::{LocalStateFiles, StateFiles};
 use crate::error::{ErrorResultExt, Result};
+
+/// Real bytes reserved on the filesystem that holds the state file.
+pub(crate) const RESERVE_BYTES: u64 = 256 * 1024 * 1024;
+const REBUILD_MIN_BYTES: u64 = 1024 * 1024 * 1024;
 
 /// Read and atomically replace the runner's complete state.
 #[cfg_attr(test, unimock::unimock(api = DiskMock))]
@@ -22,12 +27,40 @@ pub trait Disk: Send + Sync {
 /// The Node-compatible state file and its adjacent `.next` file.
 pub struct AtomicDisk {
     path: PathBuf,
+    reserve: Option<PathBuf>,
+    files: Box<dyn StateFiles>,
+    writes: Mutex<()>,
 }
 
 impl AtomicDisk {
     /// Configure a state path without performing IO.
     pub fn new(path: PathBuf) -> Self {
-        Self { path }
+        Self::with_files(path, Box::new(LocalStateFiles))
+    }
+
+    fn with_files(path: PathBuf, files: Box<dyn StateFiles>) -> Self {
+        let reserve = path.with_file_name("disk-reserve");
+        let reserve = (reserve != path).then_some(reserve);
+        Self {
+            path,
+            reserve,
+            files,
+            writes: Mutex::new(()),
+        }
+    }
+
+    async fn replenish_reserve(&self, reserve: &Path) -> io::Result<()> {
+        if self.files.reserve_ready(reserve).await? {
+            return Ok(());
+        }
+        let folder = reserve
+            .parent()
+            .filter(|folder| !folder.as_os_str().is_empty())
+            .unwrap_or(Path::new("."));
+        if self.files.available_bytes(folder).await? >= REBUILD_MIN_BYTES {
+            self.files.allocate_reserve(reserve, RESERVE_BYTES).await?;
+        }
+        Ok(())
     }
 }
 
@@ -42,23 +75,25 @@ impl Disk for AtomicDisk {
     }
 
     async fn write(&self, bytes: &[u8]) -> Result<()> {
-        if let Some(parent) = self.path.parent().filter(|p| !p.as_os_str().is_empty()) {
-            let mut builder = DirBuilder::new();
-            builder.recursive(true);
-            #[cfg(unix)]
-            builder.mode(0o700);
-            builder.create(parent).await.internal()?;
+        let _guard = self.writes.lock().await;
+        match self.files.replace(&self.path, bytes).await {
+            Ok(()) => {
+                if let Some(reserve) = &self.reserve {
+                    let _ = self.replenish_reserve(reserve).await;
+                }
+                Ok(())
+            }
+            Err(error) if error.kind() == ErrorKind::StorageFull => {
+                if let Some(reserve) = &self.reserve {
+                    let _ = self.files.remove_reserve(reserve).await;
+                }
+                self.files.replace(&self.path, bytes).await.internal()
+            }
+            Err(error) => Err(error).internal(),
         }
-        let mut temporary = self.path.as_os_str().to_os_string();
-        temporary.push(".next");
-        let mut options = OpenOptions::new();
-        options.write(true).create(true).truncate(true);
-        #[cfg(unix)]
-        options.mode(0o600);
-        let mut file = options.open(&temporary).await.internal()?;
-        file.write_all(bytes).await.internal()?;
-        file.flush().await.internal()?;
-        fs::rename(&temporary, &self.path).await.internal()?;
-        Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/disk_reserve_tests.rs"]
+mod disk_reserve_tests;

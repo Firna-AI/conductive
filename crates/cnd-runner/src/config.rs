@@ -7,6 +7,9 @@ use url::Url;
 
 use crate::error::{Error, Result};
 
+/// Sandbox environment variable that supplies the disk line in bytes.
+pub const DISK_LINE_ENV: &str = "CONDUCTIVE_DISK_LINE_BYTES";
+
 /// A WebSocket request. Its token must never enter event state or diagnostics.
 #[derive(Clone)]
 pub struct ConnectionRequest {
@@ -63,6 +66,8 @@ pub struct Configuration {
     pub repository_directories: BTreeMap<String, PathBuf>,
     /// State file path, with the Node runner's default.
     pub state_path: PathBuf,
+    /// Whether the sandbox environment supplies a disk line.
+    pub disk_hold_enabled: bool,
 }
 
 impl Configuration {
@@ -120,6 +125,7 @@ impl Configuration {
                 .get("CONDUCTIVE_STATE_PATH")
                 .map(PathBuf::from)
                 .unwrap_or_else(|| home.join(".conductive/runner-state.json")),
+            disk_hold_enabled: env.contains_key(DISK_LINE_ENV),
             home,
             default_branch: required(env, "CONDUCTIVE_DEFAULT_BRANCH")?,
             workspace_branch,

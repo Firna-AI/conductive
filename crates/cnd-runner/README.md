@@ -35,6 +35,12 @@ call and keeps its pending changes. Later saves write the complete pending
 state. Sends and resends read only committed events. A confirmation removes
 an accepted turn record only when it covers the turn's end.
 
+The runner allocates a 256 MiB `disk-reserve` file beside its state file.
+If a state save fails with ENOSPC, the runner deletes the reserve and
+retries the save once. A later successful save can rebuild the reserve
+when at least 1 GiB is available on that filesystem. Reserve maintenance
+is best effort.
+
 Recovery appends one stopped end for each unfinished saved turn. A recovered
 started turn marks its files as unavailable. A saved end keeps its original
 number and payload. Recovery starts no agent.
@@ -260,6 +266,8 @@ The instructions direct agents to `get_workspace` for the current parent and dep
 At the depth limit, the instructions give the parent ID for a sibling and a short name prefix.
 Missing or malformed tree settings produce one warning and omit all tree guidance.
 Saved sessions keep their exact instructions across runner updates.
+When `CONDUCTIVE_DISK_LINE_BYTES` is set, new instructions explain the
+disk limit and tell agents to remove build output they can rebuild.
 
 Helper handoffs retain the first turn's token, author, tool context, conversation,
 and background deadline. Result lists resolve only their named inputs.
@@ -306,7 +314,8 @@ and connection drops. It does not run the Worker.
 - [instructions.rs](src/engine/instructions.rs): `build` adds validated workspace tree facts, nesting guidance, and a Services section to new session instructions.
 - [store.rs](src/state/store.rs): `EventStore` defines serialized state operations, and `append_batch` saves all parts of one update in one write.
 - [records.rs](src/state/records.rs): `RunnerState` reads the existing JSON format.
-- [disk.rs](src/disk.rs): `AtomicDisk` replaces the private state file atomically.
+- [disk.rs](src/disk.rs): `AtomicDisk` retries saves that run out of space.
+- [disk_files.rs](src/disk_files.rs): The filesystem boundary replaces state atomically and allocates the reserve.
 - [connection.rs](src/link/connection.rs): `SavedRunnerLink` sends hello and saved events.
 - [socket.rs](src/socket.rs): `WebSocketConnector` supplies the production TLS socket.
 - [emitter.rs](src/emitter.rs): `SavingEmitter` applies the failed-save retry policy.

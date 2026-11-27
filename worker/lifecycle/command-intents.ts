@@ -1,6 +1,7 @@
 import commandJournal from './command-journal.sh?raw'
 import type { SandboxProvider } from '../sandbox/provider'
 import { shellQuote } from './commands'
+import { RELEASE_WORKSPACE_DISK_HOLD } from './image-software'
 
 type CommandOwner =
   | { kind: 'build'; id: string }
@@ -29,7 +30,14 @@ export function lifecycleCommand(
   const existing = recoverOnly
     ? `test -L ${shellQuote(`${directory}/owner`)} || exit 125\n`
     : ''
-  return `${existing}bash -c ${shellQuote(commandJournal)} conductive-lifecycle ${shellQuote(directory)} ${shellQuote(command)}`
+  const journal = [
+    'set -eu',
+    ...(owner.kind === 'workspace' && phase === 'startup'
+      ? [RELEASE_WORKSPACE_DISK_HOLD]
+      : []),
+    commandJournal,
+  ].join('\n')
+  return `${existing}bash -c ${shellQuote(journal)} conductive-lifecycle ${shellQuote(directory)} ${shellQuote(command)}`
 }
 
 /**

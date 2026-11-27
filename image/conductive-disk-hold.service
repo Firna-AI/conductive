@@ -1,0 +1,7 @@
+[Unit]
+Description=Set the Conductive workspace disk hold
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/opt/conductive/current/conductive disk hold

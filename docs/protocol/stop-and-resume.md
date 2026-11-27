@@ -2,13 +2,16 @@
 
 This doc holds the requirements and the decisions in force for the stop
 and the resume of the sandbox of a workspace. It also covers the restart
-near day 14 of a stop. It belongs to
+near day 14 of a stop. [Disk line](disk-line.md) states the disk line
+that keeps each saved disk small enough to resume. It belongs to
 [Life of a workspace](workspace-life.md). The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A services decision number names a decision of the change that adds
 [services](services.md). A skill tab decision number names a decision of
-the change that adds [skill tabs](skill-tabs.md).
+the change that adds [skill tabs](skill-tabs.md). A disk hold decision
+number names a decision of the change that adds the
+[disk line](disk-line.md).
 
 ## The stop
 
@@ -165,3 +168,11 @@ the change that adds [skill tabs](skill-tabs.md).
   after an Archive loses unpushed work. A copy of the disk in the app's own
   storage was rejected, because the app would then hold a copy of each
   user's code.
+
+## The disk line
+
+- The sandbox of each workspace holds its disk under the disk line of its
+  provider, when that provider has one, so that its saved disk stays small
+  enough to resume (disk hold decision 1). [Disk line](disk-line.md)
+  states the line of each provider, the hold that keeps it, a disk above
+  the line, and the rules for restores and starts.

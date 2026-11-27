@@ -30,8 +30,8 @@ export class LifecycleBoat {
   beforeStatus?: () => Promise<void>
   synchronousExitCode = 0
   synchronousOutput = 'done\n'
-  /** The `df` line of the storage command: 50.1 GB, with 31.2 GB free. */
-  storageOutput = '50100000000 31200000000\n'
+  /** The `df` size, used and available bytes for the build disk. */
+  storageOutput = '84204138496 37000000000 43721936384\n'
   deleteFailures = 0
   failStop = false
   stopReplyState: SandboxState = 'archived'

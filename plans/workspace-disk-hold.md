@@ -29,6 +29,7 @@ and the options check is in `.context/workspace-disk-hold/options-check.md`.
 
 Contract owners:
 
+- [The disk line](../docs/protocol/disk-line.md).
 - [Stop and resume](../docs/protocol/stop-and-resume.md).
 - [Agent instructions](../docs/protocol/agent-instructions.md).
 - [The org image](../docs/protocol/org-image.md), for the free storage of a
@@ -167,10 +168,16 @@ My calls, all on 2026-11-26:
 8. **Failures.** A failed hold never blocks a start. The command logs it,
    and the timer tries again. Reason: warn and continue.
 9. **The agent line.** Only when a line is set, the agent instructions say
-   that the cloud computer keeps its own files under 51 GB, that writes fail
-   at that line, and that the agent frees build output, such as Rust
-   `target/`, and never changes the hold. Reason: agents meet the line as a
-   build error.
+   that the cloud computer keeps its files under a fixed disk limit, that
+   writes past it fail with "No space left on device", and that the agent
+   deletes build output that can be rebuilt, such as Rust `target/`
+   folders, and never changes the disk hold. Reason: agents meet the line
+   as a build error. The text names no size, because the runner gets only
+   the used-disk line, not the 51 GB of own files.
+10. **The hold after a start.** Each start also runs `conductive disk hold`
+    at its end, without failing on older software. Reason: a start releases
+    the hold first, and the timer would bring it back only up to 5 minutes
+    later. Found by the docs review on 2026-11-27.
 
 ## Milestone 1: Documentation and protocol
 
@@ -199,63 +206,65 @@ the protocol docs and the public guide.
   - [x] An agent turn at the line: not tested, because a throwaway sandbox
         has no runner. Design call 7 covers the runner's own saves.
 - [x] Update the design above for each fact that differs.
-- [ ] `docs/protocol/stop-and-resume.md`: a section on the disk line, with
-      decision 1.
-- [ ] `docs/protocol/agent-instructions.md`: the disk line of the
+- [x] `docs/protocol/disk-line.md`: the new page for the disk line, with
+      decision 1, and a section in `docs/protocol/stop-and-resume.md` that
+      links to it.
+- [x] `docs/protocol/agent-instructions.md`: the disk line of the
       instructions.
-- [ ] `docs/protocol/sandbox-software.md`: the root unit of the hold.
-- [ ] `src/marketing/docs/cloud-computer.md`: the 51 GB limit of a cloud
+- [x] `docs/protocol/sandbox-software.md`: the root unit of the hold.
+- [x] `src/marketing/docs/cloud-computer.md`: the 51 GB limit of a cloud
       computer, without a provider name, in words that are true on both
       providers.
-- [ ] Read both legal pages in full, and update each sentence that restates
-      the disk facts.
+- [x] Read both legal pages in full, and update each sentence that restates
+      the disk facts. No sentence restates them.
 
 ## Milestone 2: The Worker sends the line
 
 Depends on: 1
 
-- [ ] Keep the line of each provider account in `worker/sandbox/accounts.ts`.
+- [x] Keep the line of each provider account in `worker/sandbox/accounts.ts`.
       Boat gets the line from Milestone 1. E2B gets none.
-- [ ] Add `CONDUCTIVE_DISK_LINE_BYTES` in
+- [x] Add `CONDUCTIVE_DISK_LINE_BYTES` in
       `worker/lifecycle/sandbox-environment.ts`, and drop that name from the
       org env vars.
-- [ ] Set the restore-safe hold first in the start command of
+- [x] Set the restore-safe hold first in the start command of
       `worker/lifecycle/image-software.ts`.
-- [ ] Tests in the Worker suite for both providers.
-- [ ] Update the lifecycle README.
+- [x] Tests in the Worker suite for both providers.
+- [x] Update the lifecycle README.
+- [x] Run the hold again at the end of each start, as design call 10 says.
 
 ## Milestone 3: The root command
 
 Depends on: 1
 
-- [ ] Add `conductive disk hold` to `crates/cnd-cli/`. It reads the line,
+- [x] Add `conductive disk hold` to `crates/cnd-cli/`. It reads the line,
       finds the ext4 device of `/`, computes the hold, clamps it, and writes
       it.
-- [ ] Add the restore-safe hold and the saved line of design calls 5 and 6.
-- [ ] Unit tests with a fake disk figure, a fake settings file, and a fake
+- [x] Add the restore-safe hold and the saved line of design calls 5 and 6.
+- [x] Unit tests with a fake disk figure, a fake settings file, and a fake
       restore marker.
-- [ ] Update the CLI README.
+- [x] Update the CLI README.
 
 ## Milestone 4: The root unit and the runner
 
 Depends on: 3
 
-- [ ] Add the oneshot unit and the timer in `image/`, and install them in
+- [x] Add the oneshot unit and the timer in `image/`, and install them in
       `image/install-system.sh`.
-- [ ] Add the runner's reserve file for state saves, as design call 7 says.
-- [ ] Add the agent line in `crates/cnd-runner/src/engine/instructions.rs`,
+- [x] Add the runner's reserve file for state saves, as design call 7 says.
+- [x] Add the agent line in `crates/cnd-runner/src/engine/instructions.rs`,
       only when a line is set.
-- [ ] Tests for the reserve file and the instructions.
-- [ ] Update the runner README.
+- [x] Tests for the reserve file and the instructions.
+- [x] Update the runner README.
 
 ## Milestone 5: Image builds
 
 Depends on: 2
 
-- [ ] In `worker/lifecycle/image-storage.ts`, show the free storage under
+- [x] In `worker/lifecycle/image-storage.ts`, show the free storage under
       the line, as decision 6 says. Measure the disk of `/`, because a build
       does not wait for its restore. A build gets no hold.
-- [ ] Update `docs/protocol/org-image.md` and the guide sentence on free
+- [x] Update `docs/protocol/org-image.md` and the guide sentence on free
       storage.
 
 ## Milestone 6: Verification, commit, review, and pull request

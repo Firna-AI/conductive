@@ -2,9 +2,9 @@
 
 This doc holds the requirements and the decisions in force for the
 [sandbox software](../architecture.md#terms), the app's own software in
-each sandbox. It covers the releases, the updates of each sandbox, and the
-install in a build. [Software image](software-image.md) covers the
-software image that a first build starts from.
+each sandbox. It covers the releases, the updates of each sandbox, the
+install in a build, and the disk hold. [Software image](software-image.md)
+covers the software image that a first build starts from.
 It belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md).
 [Sandbox software](../architecture/sandbox-software.md) in the
 architecture docs describes its parts. The terms are those of the
@@ -238,3 +238,11 @@ step of a build.
   or its update fails, the step downloads the full program and installs
   the release with it. Reason: either way, each build and each refresh end
   with the newest release.
+
+## The disk hold
+
+- A part of the sandbox software holds the [disk line](disk-line.md) of
+  its sandbox. It runs as root, apart from the agent runner.
+  [The hold](disk-line.md#the-hold) states when it sets the hold.
+- That part comes with each release, as the other parts do. So an update
+  brings it to an older sandbox, as [Updates](#updates) says.

@@ -228,6 +228,19 @@ The operator saves the stop time of idle sandboxes on the Settings tab, as
 each record and start job stores, the client that each call uses, and the
 [org image of each account](provider-accounts.md#org-images).
 
+The [provider account settings](../sandbox/accounts.ts) set a disk line
+for Boat. [Sandbox variables](sandbox-environment.ts) pass it as
+`CONDUCTIVE_DISK_LINE_BYTES` at create and resume, including disk
+retention. The Worker drops any org value with that name for every account.
+The [startup journal command](command-intents.ts) releases the disk hold
+before its first write for a workspace or retention start.
+It uses the kernel setting directly, so older sandbox software can start.
+The [startup command](image-software.ts) calls `conductive disk hold` as
+its final step. The hold uses the restore-safe value while the restore
+marker is missing. A start continues if either disk command fails.
+[Free storage](image-builds.md#free-storage) describes how builds use the
+line for their storage measurement.
+
 ## Development
 
 Run `npm run test -- worker/lifecycle` from the repository root with Node 24.

@@ -179,12 +179,13 @@ Apply calls `current/system/install-system.sh`. That script installs all
 release units into `/etc/systemd/system`, copies the udev rule, sets the
 system Git credential helper, and links the `gh` wrapper. It also links
 `/usr/local/bin/conductive` to `/opt/conductive/current/conductive`.
-That program serves workspace commands, MCP, previews, Git credentials, and release updates.
+That program serves workspace commands, MCP, previews, Git credentials, release updates, and the disk hold.
 The credential alias `/usr/local/bin/conductive-git-credential` links to the
 same program and selects `git-credential`.
 It runs
-`systemctl daemon-reload` and enables the runner, relay, terminal, and
-check timer. It changes no package, and it starts no stopped service.
+`systemctl daemon-reload` and enables the runner, relay, terminal, check
+timer, disk hold timer, and disk hold path unit. It changes no package,
+and it starts no stopped service.
 A changed start of a running unit, such as its commands, user, or
 environment, applies only at the next start of that unit. The reload
 applies a changed `OOMPolicy` of a running unit at once.
@@ -198,6 +199,9 @@ The release units are:
 
 - `conductive-update-check.service`: root background download.
 - `conductive-update-check.timer`: boot checks and a check every 10 minutes.
+- `conductive-disk-hold.service`: root command to set the ext4 disk hold.
+- `conductive-disk-hold.timer`: boot check and a check every five minutes.
+- `conductive-disk-hold.path`: starts the hold service when the restore marker changes.
 - `conductive-runner.service`: root activation in pre-start, then the Rust runner as `user`.
 - `conductive-preview-relay.service` and `.socket`: Rust relay as `user`.
 - `conductive-terminal.service` and `conductive-terminal-sessions.service`: terminal services as `user`.

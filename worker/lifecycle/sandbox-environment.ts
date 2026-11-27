@@ -11,6 +11,7 @@ import { readUser } from '../data/users'
 import { workspaceLink } from '../data/workspace-link'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
+import { configuredProviderAccount } from '../sandbox/accounts'
 import { workspaceParent } from '../tools/workspace-parent-data'
 import { environmentValues, type OrgEnvironment } from './org-environment'
 import {
@@ -32,12 +33,15 @@ const TURN_VARIABLES: ReadonlySet<string> = new Set([
   ...COMMIT_AUTHOR_VARIABLES,
 ])
 
-const CONTEXT_VARIABLES: ReadonlySet<string> = new Set([
+const DISK_LINE_VARIABLE = 'CONDUCTIVE_DISK_LINE_BYTES'
+
+const WORKSPACE_VARIABLES: ReadonlySet<string> = new Set([
   'CONDUCTIVE_WORKSPACE_LINK',
   'CONDUCTIVE_WORKSPACE_DEPTH',
   'CONDUCTIVE_WORKSPACE_MAX_DEPTH',
   'CONDUCTIVE_PARENT_WORKSPACE_ID',
   'CONDUCTIVE_PARENT_WORKSPACE_LINK',
+  DISK_LINE_VARIABLE,
 ])
 
 export async function sandboxEnvironment(
@@ -63,10 +67,11 @@ export async function sandboxEnvironment(
       'workspace_not_found',
       'The workspace is not available.',
     )
+  const { diskLine } = configuredProviderAccount(env, workspace.providerAccount)
   return {
     ...Object.fromEntries(
       Object.entries(environmentValues(environment)).filter(
-        ([name]) => !TURN_VARIABLES.has(name) && !CONTEXT_VARIABLES.has(name),
+        ([name]) => !TURN_VARIABLES.has(name) && !WORKSPACE_VARIABLES.has(name),
       ),
     ),
     ...repositoryEnvironment(locations),
@@ -102,6 +107,7 @@ export async function sandboxEnvironment(
       workspace.repositoryId,
     ),
     CONDUCTIVE_DISK_KEEPALIVE: input.diskKeepalive ? '1' : '0',
+    ...(diskLine && { [DISK_LINE_VARIABLE]: String(diskLine.bytes) }),
   }
 }
 

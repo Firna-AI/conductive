@@ -11,7 +11,7 @@ use tracing::field::{Field, Visit};
 use tracing::span::{Attributes, Id, Record};
 use tracing::{Event, Level, Metadata, Subscriber};
 
-use crate::config::Configuration;
+use crate::config::{Configuration, DISK_LINE_ENV};
 use crate::error::Result;
 
 use super::build;
@@ -81,6 +81,31 @@ fn gives_screenshot_guidance_after_computer_tools() -> Result<()> {
                 "When you design or check an interface in a browser, save a screenshot of the result as a PNG file in the context folder. Show it in your reply as a Markdown image."
             ),
             "{agent:?}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn gives_the_disk_limit_line_only_when_the_environment_sets_it() -> Result<()> {
+    let expected = r#"The cloud computer keeps its files under a fixed disk limit. Writes past it fail with "No space left on device". When that happens, delete build output that can be rebuilt, such as Rust target/ folders, and never change the disk hold."#;
+    for agent in [Agent::Claude, Agent::Codex] {
+        let mut env = settings();
+        let cwd = Path::new("/repo");
+        let home = Path::new("/home/user");
+        let config = Configuration::parse(&env, cwd, home)?;
+        let (text, _) = build(&config, None, None, &agent)?;
+        assert_eq!(
+            text.split("\n\n").filter(|line| *line == expected).count(),
+            0
+        );
+
+        env.insert(DISK_LINE_ENV.into(), "72000000000".into());
+        let config = Configuration::parse(&env, cwd, home)?;
+        let (text, _) = build(&config, None, None, &agent)?;
+        assert_eq!(
+            text.split("\n\n").filter(|line| *line == expected).count(),
+            1
         );
     }
     Ok(())

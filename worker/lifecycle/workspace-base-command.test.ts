@@ -87,9 +87,11 @@ async function resumeStartupFixture(baseBranch = 'main') {
   )
   const software = `${f.root}/software`
   await mkdir(`${software}/current`, { recursive: true })
-  await writeFile(`${software}/current/conductive`, '#!/bin/sh\nexit 0\n', {
-    mode: 0o755,
-  })
+  await writeFile(
+    `${software}/current/conductive`,
+    "#!/bin/sh\nprintf '%s\\n' 'unknown command' >&2\nexit 2\n",
+    { mode: 0o755 },
+  )
   const local = command
     .replaceAll(
       'sudo -n install -d -m 700 -o user -g user /run/conductive',
@@ -99,6 +101,7 @@ async function resumeStartupFixture(baseBranch = 'main') {
       'sudo -n flock /run/conductive/bootstrap-activate.lock systemctl restart conductive-runner.service',
       "printf '%s\\n' 'runner restarted'",
     )
+    .replaceAll('sudo -n -- /bin/sh -c ', '/bin/sh -c ')
     .replaceAll('/run/conductive', `${f.root}/runtime`)
     .replaceAll('/opt/conductive', software)
     .replaceAll('. /run/ascii-secrets/env.sh', ':')

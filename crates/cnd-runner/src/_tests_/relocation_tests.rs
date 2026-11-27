@@ -44,6 +44,7 @@ fn configuration() -> Configuration {
         ]),
         workspace_context: None,
         state_path: "/state".into(),
+        disk_hold_enabled: false,
     }
 }
 

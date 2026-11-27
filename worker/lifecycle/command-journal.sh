@@ -1,4 +1,3 @@
-set -eu
 umask 077
 
 command_directory=$1

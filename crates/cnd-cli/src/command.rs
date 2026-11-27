@@ -6,6 +6,7 @@ use std::path::PathBuf;
 
 use clap::{Args, Subcommand};
 
+use crate::disk_command::DiskArgs;
 use crate::update_command::UpdateArgs;
 
 /// Command families served by the Conductive program.
@@ -27,6 +28,8 @@ pub(crate) enum Command {
     GitCredential(PendingArgs),
     /// Stage or apply a sandbox software update.
     Update(UpdateArgs),
+    /// Set or release the disk hold. Requires root to change the hold.
+    Disk(DiskArgs),
     /// Manage workspaces.
     Workspaces(PendingArgs),
     /// Manage sessions.
@@ -58,6 +61,7 @@ impl fmt::Display for Command {
             Self::Mcp(_) => "mcp",
             Self::GitCredential(_) => "git-credential",
             Self::Update(_) => "update",
+            Self::Disk(_) => "disk",
             Self::Workspaces(_) => "workspaces",
             Self::Sessions(_) => "sessions",
             Self::Messages(_) => "messages",

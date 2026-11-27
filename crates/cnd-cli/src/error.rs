@@ -6,10 +6,14 @@ use internal_error::InternalError;
 use thiserror::Error;
 
 use crate::command::Command;
+use crate::disk_command::DiskError;
 
 /// A failure to execute a Conductive command.
 #[derive(Debug, Error, internal_error::ErrorContract)]
 pub(crate) enum Error {
+    /// The disk hold command failed.
+    #[error("{0}")]
+    Disk(#[source] DiskError),
     /// The unit helper preserved an unsuccessful child result in runtime storage.
     #[error("[cnd-cli/services] the service command ended unsuccessfully")]
     ServiceExit,

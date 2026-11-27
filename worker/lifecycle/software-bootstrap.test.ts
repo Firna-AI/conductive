@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 
+import { lifecycleCommand } from './command-intents'
 import { readSavedScript } from './saved-script'
 import { SOFTWARE_RELEASE as SOFTWARE } from './software-release-test-support'
 import { installImageSoftware, workspaceStartupCommand } from './image-software'
@@ -7,6 +8,46 @@ import { installImageSoftware, workspaceStartupCommand } from './image-software'
 function unquote(command: string): string {
   return command.replaceAll("'\"'\"'", "'")
 }
+
+it.each(['workspace', 'retention'] as const)(
+  'releases the disk hold before the %s startup journal writes',
+  (mode) => {
+    const command = lifecycleCommand(
+      { kind: 'workspace', id: 'workspace-one', attempt: 'start-one' },
+      'startup',
+      workspaceStartupCommand(readSavedScript(''), null, mode),
+    )
+    const [strictMode, release, ...journal] = unquote(command).split('\n')
+
+    expect(strictMode).toBe("bash -c 'set -eu")
+    expect(release).toContain('/sys/fs/ext4/*/reserved_clusters')
+    expect(release).toContain('sudo -n')
+    expect(release).toContain('echo 4096')
+    expect(release).toMatch(/2>\/dev\/null \|\| true$/)
+    expect(journal).toContain('mkdir -p -- "$command_directory"')
+  },
+)
+
+it.each([
+  {
+    mode: 'workspace',
+    previous:
+      'sudo -n flock /run/conductive/bootstrap-activate.lock systemctl restart conductive-runner.service',
+  },
+  {
+    mode: 'retention',
+    previous: "bash '/run/conductive/retention-startup.sh'",
+  },
+] as const)(
+  'reapplies the disk hold at the end of $mode startup',
+  ({ mode, previous }) => {
+    const command = workspaceStartupCommand(readSavedScript(''), null, mode)
+    expect(command.split('\n').slice(-2)).toEqual([
+      previous,
+      "sudo -n -- /bin/sh -c '/opt/conductive/current/conductive disk hold' 2>/dev/null || true",
+    ])
+  },
+)
 
 it('installs verified release software and apt packages without the legacy installers', () => {
   const command = unquote(installImageSoftware(SOFTWARE))

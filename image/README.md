@@ -95,6 +95,12 @@ The runner requests a background check after each start. `conductive-update-chec
 30 seconds of boot and every 10 minutes. The root check service runs the program
 and then exits. No separate updater process remains resident.
 
+The root `conductive-disk-hold.service` sets the hold when the sandbox
+has a configured disk line. Its timer schedules a run 20 seconds after
+boot and every five minutes. Its path unit runs the service when the
+restore marker is created or touched. The timer covers a marker that
+exists before the path unit starts.
+
 A running runner also applies a staged release when its workspace is idle,
 as the [runner service guide](../runner/service/README.md) describes. It
 runs `update apply` through `sudo -n`, then executes the new

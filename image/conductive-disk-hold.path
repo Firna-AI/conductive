@@ -1,0 +1,9 @@
+[Unit]
+Description=Set the Conductive workspace disk hold when the restore ends
+
+[Path]
+PathChanged=/run/conductive-terminal/restore-ended
+Unit=conductive-disk-hold.service
+
+[Install]
+WantedBy=paths.target

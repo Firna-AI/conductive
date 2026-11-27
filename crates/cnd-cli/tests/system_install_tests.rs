@@ -53,6 +53,9 @@ fn system_install_restarts_a_running_relay_after_the_units_change() -> Result<()
     assert_eq!(calls.len(), 3);
     assert_eq!(calls[0], "daemon-reload");
     assert!(calls[1].starts_with("enable "));
+    let enabled: Vec<_> = calls[1].split_whitespace().skip(1).collect();
+    assert!(enabled.contains(&"conductive-disk-hold.timer"));
+    assert!(enabled.contains(&"conductive-disk-hold.path"));
     assert_eq!(calls[2], RELAY_RESTART);
     Ok(())
 }

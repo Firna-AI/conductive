@@ -1,3 +1,4 @@
+import type { ProviderDiskLine } from '../sandbox/accounts'
 import type { SandboxProvider } from '../sandbox/provider'
 import { warnWorker } from '../warnings'
 
@@ -13,15 +14,12 @@ export const BUILD_STORAGE_COLUMNS = `CASE WHEN image_builds.state = 'succeeded'
     AND image_builds.provider_account = (SELECT provider_account FROM orgs WHERE orgs.id = image_builds.org_id)
     THEN image_builds.storage_free_bytes END AS storageFreeBytes`
 
-/** The folder that holds the repositories of each new cloud computer. */
-const HOME_FOLDER = '/home/user'
-
 /**
- * The size and the free space of the file system of the home folder, in
- * bytes. The free space is the "Avail" column of `df`: the space that the
- * user of the cloud computer can write, without the part kept for root.
+ * Measure the root file system before the home folder restore can finish.
+ * The "Avail" column gives the bytes the user can write.
  */
-export const STORAGE_COMMAND = `df --block-size=1 --output=size,avail -- ${HOME_FOLDER} | tail -n 1`
+export const STORAGE_COMMAND =
+  'df --block-size=1 --output=size,used,avail -- / | tail -n 1'
 
 export interface ImageStorage {
   totalBytes: number
@@ -29,19 +27,30 @@ export interface ImageStorage {
 }
 
 /** Reads the last line of `STORAGE_COMMAND`, or null when it is not valid. */
-export function readImageStorage(stdout: string): ImageStorage | null {
-  const match = /^\s*(\d+)\s+(\d+)\s*$/.exec(stdout)
+export function readImageStorage(
+  stdout: string,
+  diskLine?: ProviderDiskLine,
+): ImageStorage | null {
+  const match = /^\s*(\d+)\s+(\d+)\s+(\d+)\s*$/.exec(stdout)
   if (!match) return null
   const totalBytes = Number(match[1])
-  const freeBytes = Number(match[2])
+  const usedBytes = Number(match[2])
+  const freeBytes = Number(match[3])
   if (
     !Number.isSafeInteger(totalBytes) ||
+    !Number.isSafeInteger(usedBytes) ||
     !Number.isSafeInteger(freeBytes) ||
     totalBytes === 0 ||
-    freeBytes > totalBytes
+    usedBytes > totalBytes ||
+    freeBytes > totalBytes - usedBytes
   )
     return null
-  return { totalBytes, freeBytes }
+  if (!diskLine) return { totalBytes, freeBytes }
+  const writableBytes = diskLine.bytes - diskLine.rootReserveBytes
+  return {
+    totalBytes: writableBytes,
+    freeBytes: Math.max(0, writableBytes - usedBytes),
+  }
 }
 
 /**
@@ -52,12 +61,13 @@ export function readImageStorage(stdout: string): ImageStorage | null {
 export async function measureImageStorage(
   provider: SandboxProvider,
   sandboxId: string,
+  diskLine: ProviderDiskLine | undefined,
 ): Promise<ImageStorage | null> {
   try {
     const result = await provider.runCommand(sandboxId, STORAGE_COMMAND)
     const storage =
       result.exitCode === 0 && !result.timedOut
-        ? readImageStorage(result.stdout)
+        ? readImageStorage(result.stdout, diskLine)
         : null
     if (storage) return storage
   } catch {

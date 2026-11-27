@@ -45,6 +45,7 @@ export async function localSavedScriptFixture(
     [scriptPaths.install, install],
     ['/home/user/code', join(directory, 'code')],
     ['/tmp/conductive-lifecycle', join(directory, 'command-journal')],
+    ['/sys/fs/ext4', join(directory, 'ext4')],
   ])
   await mkdir(repository)
   await mkdir(join(software, 'current'), { recursive: true })
@@ -134,7 +135,7 @@ export async function localSavedScriptFixture(
         )
       mapped = mapCommandPaths(mapped)
       const unmapped = mapped.replaceAll(directory, '<isolated-sandbox>')
-      if (/\/(?:run|opt|home\/user|tmp|\.git)(?:\/|\b)/.test(unmapped))
+      if (/\/(?:run|opt|home\/user|sys|tmp|\.git)(?:\/|\b)/.test(unmapped))
         throw new Error('A script command keeps a production path')
       if (
         mapped.includes(scriptPaths.install) ||

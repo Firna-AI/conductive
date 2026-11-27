@@ -2,13 +2,30 @@ import { isRecord } from '../http'
 import { warnWorker } from '../warnings'
 import { validDomain } from './e2b/identity'
 
+export interface ProviderDiskLine {
+  readonly bytes: number
+  readonly rootReserveBytes: number
+}
+
+const BOAT_DISK_LINE: ProviderDiskLine = {
+  bytes: 72_000_000_000,
+  // Boat's default ext4 disk keeps these blocks for root.
+  rootReserveBytes: 846_051 * 4_096,
+}
+
 export type ProviderAccountConfiguration =
-  | { readonly kind: 'boat'; readonly apiKey: string; readonly orgId: string }
+  | {
+      readonly kind: 'boat'
+      readonly apiKey: string
+      readonly orgId: string
+      readonly diskLine: ProviderDiskLine
+    }
   | {
       readonly kind: 'e2b'
       readonly apiKey: string
       readonly domain: string
       readonly templateId: string
+      readonly diskLine?: never
     }
 
 export type ProviderAccountConfigurations = Readonly<
@@ -44,15 +61,22 @@ export function configuredProviderAccounts(
   if (invalid) warnWorker({ kind: 'provider_accounts_invalid' })
   return {
     ...Object.fromEntries(entries),
-    boat: { kind: 'boat', apiKey: env.BOAT_API_KEY, orgId: env.BOAT_ORG_ID },
+    boat: boatAccount(env.BOAT_API_KEY, env.BOAT_ORG_ID),
   }
+}
+
+function boatAccount(
+  apiKey: string,
+  orgId: string,
+): ProviderAccountConfiguration {
+  return { kind: 'boat', apiKey, orgId, diskLine: BOAT_DISK_LINE }
 }
 
 function readAccount(value: unknown): ProviderAccountConfiguration | null {
   if (!isRecord(value) || typeof value.apiKey !== 'string' || !value.apiKey)
     return null
   if (value.kind === 'boat' && typeof value.orgId === 'string' && value.orgId)
-    return { kind: 'boat', apiKey: value.apiKey, orgId: value.orgId }
+    return boatAccount(value.apiKey, value.orgId)
   if (
     value.kind === 'e2b' &&
     typeof value.domain === 'string' &&

@@ -4,7 +4,9 @@ output=$1
 staging=$(mktemp -d)
 trap 'rm -rf "$staging"' EXIT
 mkdir -p "$output"
-for file in runner-start.sh preview-relay-start.sh github-cli.sh 60-conductive-disk-cache.rules install-system.sh conductive-preview-relay.socket conductive-update-check.service conductive-update-check.timer; do
+for file in runner-start.sh preview-relay-start.sh github-cli.sh 60-conductive-disk-cache.rules \
+  install-system.sh conductive-preview-relay.socket conductive-update-check.service conductive-update-check.timer \
+  conductive-disk-hold.service conductive-disk-hold.timer conductive-disk-hold.path; do
   cp "image/$file" "$staging/$file"
 done
 cp image/release/* "$staging/"
@@ -41,7 +43,7 @@ unlinkSync(`${folder}/bridge-files.mjs`)
 JS
 chmod 755 "$staging"
 chmod 755 "$staging"/*.sh "$staging"/terminal "$staging"/terminal-attach "$staging"/terminal-password "$staging"/terminal-sessions
-chmod 644 "$staging"/*.service "$staging"/*.socket "$staging"/*.timer "$staging"/*.rules
+chmod 644 "$staging"/*.service "$staging"/*.socket "$staging"/*.timer "$staging"/*.path "$staging"/*.rules
 tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -czf "$output/system.tar.gz" -C "$staging" .
 digest=$(sha256sum "$output/system.tar.gz")
 digest=${digest%% *}

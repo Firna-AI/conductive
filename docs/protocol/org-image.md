@@ -16,7 +16,8 @@ decision number names a decision of the change that adds E2B as the second
 says. A switch decision number names a decision of the change that adds
 [Switch account](switch-account.md), as that doc says. A storage decision
 number names a decision of the change that shows the free storage of a
-build.
+build. A disk hold decision number names a decision of the change that
+adds the [disk line](disk-line.md).
 
 ## The org image
 
@@ -89,11 +90,27 @@ build.
   and its length.
 - Each good build also shows the free storage that its image leaves for
   each new cloud computer, with the size of the disk, such as "31.2 GB
-  free of 50.1 GB" (storage decision 1). Reason: an admin then sees when
+  free of 68.5 GB" (storage decision 1). Reason: an admin then sees when
   the install script and the repositories fill the disk.
-- A build measures the free storage just before it saves the image. The
-  free storage is the space that the user of the cloud computer can write,
-  on the disk of the home folder.
+- A build measures the free storage just before it saves the image, on
+  the disk of `/`. The free storage is the space that the user of the
+  cloud computer can write.
+- Reason for `/`: a build does not wait for the
+  [background restore of the disk](terminal-shell.md#the-shell). Until
+  that restore ends, the home folder is a separate view, not the disk
+  itself.
+- On a provider with a [disk line](disk-line.md), the size is the used
+  size of the disk at which the writes of the user of the cloud computer
+  stop. The free storage is that size minus the used size, and never less
+  than zero (disk hold decision 6 A).
+- Reason: each new workspace can write only up to the line, so the card
+  shows the room that the work really gets.
+- A build gets no disk hold. So the line fails no build, and an image can
+  be above the line. A workspace from such an image keeps working, as
+  [A disk above the line](disk-line.md#a-disk-above-the-line) says.
+- A hold in each build and a check just before the save were rejected
+  (disk hold decision 6). Reason: each adds a build error, because a build
+  above the line then fails.
 - A failed build shows no free storage, because it does not replace the
   image. A build without a measurement, such as a build from before the
   measurement, shows none either.

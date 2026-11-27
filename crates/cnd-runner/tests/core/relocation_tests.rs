@@ -105,6 +105,7 @@ async fn start(root: tempfile::TempDir) -> Harness {
         ]),
         workspace_context: None,
         state_path: root.path().join("state.json"),
+        disk_hold_enabled: false,
     };
     std::fs::create_dir_all(billing.join(".git")).unwrap();
     std::fs::create_dir_all(root.path().join("empty")).unwrap();

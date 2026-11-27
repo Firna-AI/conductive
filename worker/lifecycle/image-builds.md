@@ -176,10 +176,15 @@ step saved.
 The save step of each build and refresh measures the free storage of the
 image, as [The org image](../../docs/protocol/org-image.md#the-org-image)
 requires. While the job has no snapshot name, `measureImageStorage` in
-[`image-storage.ts`](image-storage.ts) runs `df` on the home folder after
-the command journals are removed. `saveImageStorage` writes the size and
-the "Avail" bytes to `image_builds.storage_total_bytes` and
-`storage_free_bytes`. A repeat of the step writes the same columns again.
+[`image-storage.ts`](image-storage.ts) runs `df` on `/` after the command
+journals are removed. The root file system is available before the home
+folder restore ends. Build sandboxes get no disk line variable or hold.
+For an account with a disk line, the total is the line minus the ext4 root
+reserve. The free storage is that total minus the used bytes, with a
+minimum of zero. Other accounts use the "Size" and "Avail" bytes from
+`df`. `saveImageStorage` writes both values to
+`image_builds.storage_total_bytes` and `storage_free_bytes`. A repeat of
+the step writes the same columns again.
 A failed or unreadable `df` records the `image_storage_unmeasured` warning
 and leaves both columns null, and the save goes on.
 

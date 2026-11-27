@@ -25,6 +25,7 @@ each resume, together with the org's env vars:
 | `CONDUCTIVE_REPOSITORY_DIR` | The folder of the workspace's repository, from the folder map that the workspace captured. |
 | `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | The folder of each repository of the image, with one variable for each repository. |
 | `CONDUCTIVE_DISK_KEEPALIVE` | `1` in a disk retention restart, and `0` otherwise. |
+| `CONDUCTIVE_DISK_LINE_BYTES` | The disk line in used bytes, when the cloud computer has a disk limit. |
 
 The sandbox variables hold no value of an agent turn. The runner gives each
 agent process the turn ID, `CONDUCTIVE_TURN_ID`, and the commit author of
@@ -94,6 +95,12 @@ a failure. The terminal backend describes its launcher, its shell server,
 its password, and its automatic restart in its
 [README](../worker/terminal/README.md). That README also says how the
 workspace shell keeps running when a terminal connection drops.
+
+The disk hold service runs independently of the runner. When a disk line
+is set, it keeps the default reserve until
+`/run/conductive-terminal/restore-ended` exists.
+The path unit applies the configured hold when the restore watch
+creates or touches that marker. The timer also applies it on its next run.
 
 The preview relay runs in `conductive-preview-relay.service` as `user`.
 Boat starts its enabled socket and service after each resume and fork.

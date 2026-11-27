@@ -55,11 +55,14 @@ pub(super) fn build(
             "You work in a workspace of {product}. A workspace has its own cloud computer and one branch at a time. It can hold one task after another."
         ),
         "Every workspace agent runs in conductive-runner.service. Stopping or restarting that service ends every running turn in every session. Use sudo journalctl -u conductive-runner.service to see why it stopped.".into(),
-        format!(
-            "Workspace repository folder: {}",
-            quoted(&config.cwd.to_string_lossy())?
-        ),
     ];
+    if config.disk_hold_enabled {
+        lines.push(r#"The cloud computer keeps its files under a fixed disk limit. Writes past it fail with "No space left on device". When that happens, delete build output that can be rebuilt, such as Rust target/ folders, and never change the disk hold."#.into());
+    }
+    lines.push(format!(
+        "Workspace repository folder: {}",
+        quoted(&config.cwd.to_string_lossy())?
+    ));
     for (name, directory) in &config.repository_directories {
         lines.push(format!("{name}: {}", quoted(&directory.to_string_lossy())?));
     }

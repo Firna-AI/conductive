@@ -3,6 +3,7 @@
 pub mod clock;
 pub mod config;
 pub mod disk;
+mod disk_files;
 pub mod emitter;
 pub mod engine;
 pub mod error;
