@@ -237,8 +237,19 @@ Depends on: 3, 4, 5, 6
 
 Measure the cost of one agent edit before and after the change.
 
-- [ ] Measure one edit of one file at 1,000 and at 5,000 listed rows, with `CHANGES_DELTAS` on in a local test: the Worker CPU, the rows written, the history growth, and the bytes on each socket, for a current socket and for an older socket. Save the evidence under `.context/changes-deltas/`.
-- [ ] Record the summary of the results under this milestone.
+- [x] Measure one edit of one file at 1,000 and at 5,000 listed rows, with `CHANGES_DELTAS` on in a local test: the Worker CPU, the rows written, the history growth, and the bytes on each socket, for a current socket and for an older socket. Save the evidence under `.context/changes-deltas/`.
+- [x] Record the summary of the results under this milestone.
+
+Summary, medians of nine edits in the local Worker harness, 27 November 2026. The evidence is `.context/changes-deltas/m7/`. The wall time includes local scheduling, so it is not the CPU measure of 20 November 2026.
+
+| Rows | Path | Wall time | Row changes | New history | Tab bytes |
+| ---: | --- | ---: | ---: | ---: | ---: |
+| 1,000 | Full list | 84 ms | 18 | 118 KB | 118 KB |
+| 1,000 | Delta, current tab | 37 ms | 11 | 0.5 KB | 0.5 KB |
+| 1,000 | Delta, older tab | 48 ms | 11 | 0.5 KB | 118 KB |
+| 5,000 | Full list | 161 ms | 58 | 590 KB | 590 KB |
+| 5,000 | Delta, current tab | 56 ms | 11 | 0.5 KB | 0.5 KB |
+| 5,000 | Delta, older tab | 49 ms | 11 | 0.5 KB | 590 KB |
 
 ## Milestone 8: Verification, commit, review, and pull request
 
