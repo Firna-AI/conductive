@@ -25,6 +25,8 @@ work.
   agent. The agent then works again in the same turn.
 - The turn ends when the agent is idle and no live work remains. The agent
   is idle when no reply runs and no message of the turn waits for an answer.
+  The work of a parked subagent can hold the turn open a little longer, as
+  [Work of a parked subagent](#work-of-a-parked-subagent) says.
 - That end has the state `finished`. Its duration and its files cover the
   whole turn, with each wait.
 - Each end of a Claude turn closes the agent program. The close ends its
@@ -71,6 +73,38 @@ work.
   background work keeps the promise of each tool.
 - A wait with no note was rejected, because a forgotten dev server would
   then hold each turn until the limit.
+
+### Work of a parked subagent
+
+- A subagent is an agent that the main agent of a Claude turn starts. A
+  subagent that ends its reply while its own task runs is parked. The
+  agent program wakes it when that task ends.
+- A task that a parked subagent started is live work until it ends. After
+  it ends, the turn stays open for a grace time of 2 minutes, so that the
+  agent program can wake the subagent (background work decision 4).
+- The grace time ends early when the subagent runs again.
+- When the subagent does not run again in the grace time, the main agent
+  gets one note in the same turn. The note names each such task, its
+  subagent, how the task ended, and where its output is. It asks the main
+  agent to resume the subagent or to finish the work itself.
+- The note names each task run at most once in a turn. Tasks that end
+  together share one note.
+- A task that an agent stopped gets no grace time and no note.
+- The turn stays open until the reply to the note ends. That reply is a
+  wake-up reply of the same turn. It answers no member message.
+- The note follows the rules of [The note](#the-note): the chat never
+  shows it, and it follows the naming rules.
+- Reason: the agent program sends the result of such a task only to its
+  subagent. Without the grace time, the turn could end while the agent
+  program wakes the subagent, and the work stopped halfway.
+- A note at once, with no grace time, was rejected, because the agent
+  program usually wakes the subagent itself. The note would then often be
+  a false alarm, and the same work could run twice.
+- A grace time with no note was rejected, because a wake that fails would
+  still end the turn with the work half done.
+- A rule that a subagent waits in the foreground for its own tasks was
+  rejected, because it depends on each agent, and a foreground wait stops
+  after 10 minutes.
 
 ### The time limit
 

@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 import type { SDKUserMessage } from '@anthropic-ai/claude-agent-sdk'
 
 import { InputQueue } from './queue'
@@ -5,6 +7,21 @@ import { InputQueue } from './queue'
 const MAX_OUTSTANDING_MESSAGES = 64
 
 type UserMessage = SDKUserMessage & { uuid: string }
+
+/** One input of the main agent, which runs after the current step. */
+export function userInput(
+  sessionId: string,
+  content: SDKUserMessage['message']['content'],
+): UserMessage {
+  return {
+    type: 'user',
+    uuid: randomUUID(),
+    session_id: sessionId,
+    parent_tool_use_id: null,
+    message: { role: 'user', content },
+    priority: 'next',
+  }
+}
 
 export class ClaudeInputWindow implements AsyncIterable<SDKUserMessage> {
   readonly ids = new Map<string, readonly string[]>()

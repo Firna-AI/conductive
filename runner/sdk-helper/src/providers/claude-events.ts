@@ -99,6 +99,7 @@ export class ClaudeEvents {
       (continuation
         ? continuation.wake && !reply.userMessageIds.length
         : !this.answersOutstandingInput(input))
+    if (input.type === 'result') this.background.answered(uuids)
     if (wake && !this.background.waited && !continuation) return
     if (
       this.background.waited &&
@@ -221,6 +222,10 @@ export class ClaudeEvents {
   }
 
   private answersOutstandingInput(input: Record<string, unknown>): boolean {
+    const uuids = userUuids(input)
+    // The reply to a note of the runner is a wake-up reply in the same turn.
+    if (uuids.length && uuids.every((uuid) => this.background.isNote(uuid)))
+      return false
     const origin = input.origin
     if (
       typeof origin !== 'object' ||
@@ -229,7 +234,7 @@ export class ClaudeEvents {
       origin.kind !== 'task-notification'
     )
       return true
-    return userUuids(input).some(this.hasOutstanding)
+    return uuids.some(this.hasOutstanding)
   }
 
   private partial(event: Record<string, unknown>): void {

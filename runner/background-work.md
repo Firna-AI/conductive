@@ -65,6 +65,37 @@ states the line of the chat at the limit. An automatic update gives existing wor
   text follows the naming rules of the
   [agent instructions](../docs/protocol/agent-instructions.md#what-the-instructions-hold).
 
+## Work of a parked subagent
+
+[Work of a parked subagent](../docs/protocol/background-work.md#work-of-a-parked-subagent)
+states the requirement.
+
+- The adapter keeps the description, the run ID, and the owner of each
+  listed task until its agent process ends. The owner is the
+  `parent_task_id` of the entry. The pinned program can drop that field
+  once the owner stops, so the adapter keeps the first value it saw.
+- It reads `task_started` for the tool use ID of each subagent, and
+  `task_notification` for the end status and the output file of each task.
+- A listed task leaves the list while its owner is not listed. The adapter
+  then starts the grace time for that task, unless its status is
+  `stopped`, or an earlier note of the turn named its run. Tasks that
+  leave in one list change share one grace time.
+- While a grace time runs, `ClaudeBackground.live` is true. So the engine
+  keeps the turn open with its current rules, and the Rust engine needs no
+  change.
+- The grace time ends early when the owner is listed again, or when an
+  `assistant` message of the owner arrives. A delivered notice alone does
+  not end it.
+- At the end of the grace time, the adapter sends one user message with the
+  note on the input path, with the priority `next`. Its key
+  `orphan:<task>:<run>` joins the set of named work of the turn.
+- `live` stays true until a result names the note message. A result that
+  answers only note messages is a wake-up reply. It frees no held input.
+- A probe with the pinned program, 0.3.318, showed this order: the shell
+  of a parked subagent leaves the list, and the subagent joins the list
+  again 10 ms later with a new run ID. Check it again after each SDK
+  update.
+
 ## The time limit
 
 - The turn owns its wait clock. The first wait sets a deadline 30 days
@@ -95,6 +126,8 @@ states the line of the chat at the limit. An automatic update gives existing wor
 - [claude-background.ts](sdk-helper/src/providers/claude-background.ts) tracks live tasks, ambient tasks, and scheduled wake-ups.
 - [claude-background-note.ts](sdk-helper/src/providers/claude-background-note.ts) formats each new-work note.
 - [claude-events.ts](sdk-helper/src/providers/claude-events.ts) maps SDK background signals.
+- [claude-orphans.ts](sdk-helper/src/providers/claude-orphans.ts) holds the grace time of the work of a parked subagent and sends its note.
+- [claude-orphan-note.ts](sdk-helper/src/providers/claude-orphan-note.ts) formats that note.
 
 ## Tests
 
@@ -103,5 +136,6 @@ states the line of the chat at the limit. An automatic update gives existing wor
 - [claude-background-note.test.ts](sdk-helper/src/providers/claude-background-note.test.ts) and
   [claude-background-note-handoff.test.ts](sdk-helper/src/providers/claude-background-note-handoff.test.ts) check helper task and note behavior.
 - [claude-background-wait.test.ts](sdk-helper/src/providers/claude-background-wait.test.ts) checks a wake-up reply after a task that ended before the reply.
+- [claude-orphan-task.test.ts](sdk-helper/src/providers/claude-orphan-task.test.ts) checks the grace time, the note, and its wake-up reply.
 
 The helper uses fake SDK events. Check their real order again after each SDK update.

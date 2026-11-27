@@ -1,5 +1,3 @@
-import { randomUUID } from 'node:crypto'
-
 import { query, type Query } from '@anthropic-ai/claude-agent-sdk'
 
 import { WORKSPACE_TOOLS_MCP } from '../../../../src/shared/agent-tools'
@@ -7,9 +5,10 @@ import { claudeBinary } from './binaries'
 import { ClaudeEvents } from './claude-events'
 import { ClaudeBackground } from './claude-background'
 import { ClaudeBackgroundNote } from './claude-background-note'
+import { ClaudeOrphans } from './claude-orphans'
 import { claudeEffortSettings, claudeStart } from './claude-effort'
 import { claudeInput } from './claude-input'
-import { ClaudeInputWindow } from './claude-input-window'
+import { ClaudeInputWindow, userInput } from './claude-input-window'
 import { spawnClaudeProcess } from './claude-process'
 import { writeClaudeProfile } from './claude-profile'
 import { claudeSkillSettings, prepareClaudeSkills } from './claude-skills'
@@ -96,10 +95,24 @@ export function createClaudeFactory(
     const input = new ClaudeInputWindow()
     const receipts = new InputReceipts(options.event)
     const background = new ClaudeBackground(options.event)
+    const named = options.backgroundNoteIds ?? new Set<string>()
     const note = new ClaudeBackgroundNote(
       (id) => background.isAmbient(id),
-      options.backgroundNoteIds,
+      named,
     )
+    let closed = false
+    const orphans = new ClaudeOrphans({
+      named,
+      saveNamed: () => options.backgroundNotes?.([...named]),
+      deliver: (content) => {
+        if (closed) return null
+        const message = userInput(options.conversationId ?? '', content)
+        input.continue([], message)
+        return message.uuid
+      },
+      changed: () => background.publish(),
+    })
+    background.watch(orphans)
     env.CLAUDE_CODE_EMIT_SESSION_STATE_EVENTS = '1'
     const mapper = new ClaudeEvents(
       input.ids,
@@ -108,27 +121,18 @@ export function createClaudeFactory(
       background,
       options.choice.fast,
       (userMessageIds) => {
-        const uuid = randomUUID()
-        input.continue(userMessageIds, {
-          type: 'user',
-          uuid,
-          session_id: options.conversationId ?? '',
-          parent_tool_use_id: null,
-          message: {
-            role: 'user',
-            content:
-              'The connection to the model dropped before your last response finished. Continue from where you stopped. Do not repeat work that is already done. Start your reply with one short sentence that says that the connection to the model dropped and that you continue.',
-          },
-          priority: 'next',
-        })
+        const message = userInput(
+          options.conversationId ?? '',
+          'The connection to the model dropped before your last response finished. Continue from where you stopped. Do not repeat work that is already done. Start your reply with one short sentence that says that the connection to the model dropped and that you continue.',
+        )
+        input.continue(userMessageIds, message)
         options.warn(
           'The Claude answer stream dropped. Continuing the agent once.',
         )
-        return uuid
+        return message.uuid
       },
       receipts.read,
     )
-    let closed = false
     let stream: ClaudeQuery
     try {
       options.signal?.throwIfAborted()
@@ -151,9 +155,7 @@ export function createClaudeFactory(
                       background.stop(hook.session_crons ?? [])
                       const context = note.context(hook)
                       if (context !== undefined) {
-                        options.backgroundNotes?.([
-                          ...(options.backgroundNoteIds ?? []),
-                        ])
+                        options.backgroundNotes?.([...named])
                         return {
                           hookSpecificOutput: {
                             hookEventName: 'Stop',
@@ -229,6 +231,7 @@ export function createClaudeFactory(
       options.signal?.removeEventListener('abort', abort)
       if (closed) return closing ?? lifetime.close()
       closed = true
+      orphans.close()
       input.discard()
       closing = (async () => {
         const exited = lifetime.close()
@@ -248,21 +251,16 @@ export function createClaudeFactory(
     return {
       send: async (command) => {
         background.input()
-        const uuid = randomUUID()
         const content = await claudeInput(
           command,
           options.cwd,
           options,
           orgView.names,
         )
-        input.push(receipts.add(command), {
-          type: 'user',
-          uuid,
-          session_id: options.conversationId ?? '',
-          parent_tool_use_id: null,
-          message: { role: 'user', content },
-          priority: 'next',
-        })
+        input.push(
+          receipts.add(command),
+          userInput(options.conversationId ?? '', content),
+        )
       },
       model: async (choice) => {
         await stream.setModel(choice.model)
