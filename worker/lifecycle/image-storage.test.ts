@@ -32,8 +32,8 @@ it('measures before the image saves and reports the current writable space', asy
   const { boat, org, runtime } = fixture
   const id = await build(fixture)
   const storage = {
-    storageTotalBytes: 68_534_575_104,
-    storageFreeBytes: 31_534_575_104,
+    storageTotalBytes: 72_000_000_000,
+    storageFreeBytes: 35_000_000_000,
   }
   const history = await readBuildHistory(runtime.env.DB, org.id)
   expect(history.builds[0]).toMatchObject({ id, ...storage })
@@ -50,12 +50,10 @@ it('measures before the image saves and reports the current writable space', asy
   expect(boat.starts[0]).toHaveProperty('env')
   expect(boat.starts[0]).not.toHaveProperty('env.CONDUCTIVE_DISK_LINE_BYTES')
 
-  const diskLines = new Map([
-    ['boat', { bytes: 70_000_000_000, rootReserveBytes: 4_000_000_000 }],
-  ])
+  const diskLines = new Map([['boat', { bytes: 70_000_000_000 }]])
   const changedStorage = {
-    storageTotalBytes: 66_000_000_000,
-    storageFreeBytes: 29_000_000_000,
+    storageTotalBytes: 70_000_000_000,
+    storageFreeBytes: 33_000_000_000,
   }
   const changedHistory = await readBuildHistory(
     runtime.env.DB,
@@ -77,7 +75,7 @@ it('finishes a build past the workspace disk line and reports zero free storage'
 
   expect((await readBuild(runtime.env.DB, org.id, id)).build).toMatchObject({
     state: 'succeeded',
-    storageTotalBytes: 68_534_575_104,
+    storageTotalBytes: 72_000_000_000,
     storageFreeBytes: 0,
   })
 })

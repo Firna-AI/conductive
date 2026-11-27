@@ -12,12 +12,14 @@ use unimock::{Clause, MockFn, Unimock, matching};
 use super::hold::{MOUNT_INFO, RESTORE_MARKER, SAVED_LINE, Space, apply};
 use super::settings::{ENV_FILE, configured_line};
 use super::{
-    DiskError, HoldLock, MockAvailableBytes, MockExists, MockLeasePaths, MockLock, MockRead,
-    MockReadLink, MockRemoveLine, MockSaveLine, MockSpace, MockWriteHold,
+    DiskError, HoldLock, MockAllocateReserve, MockExists, MockLeasePaths, MockLock, MockPrimaryGid,
+    MockRead, MockReadLink, MockRemountRoot, MockRemoveLine, MockSaveLine, MockSpace,
+    MockWriteHold,
 };
 
 const VDA_SETTING: &str = "/sys/fs/ext4/vda1/reserved_clusters";
 const CONFIGURED: &str = "72000000000";
+const RESERVE: &str = "/var/lib/conductive/runner-reserve";
 
 #[path = "disk_lease_tests.rs"]
 mod disk_lease_tests;
@@ -32,6 +34,16 @@ fn lock() -> impl Clause {
 }
 
 fn ext4_root() -> impl Clause {
+    (
+        locked_ext4_root(),
+        MockPrimaryGid
+            .some_call(matching!("user"))
+            .returns(Ok(Some(1200))),
+        MockRemountRoot.some_call(matching!(1200)).returns(Ok(())),
+    )
+}
+
+fn locked_ext4_root() -> impl Clause {
     (
         lock(),
         MockRead
@@ -58,18 +70,23 @@ fn no_leases() -> impl Clause {
 }
 
 fn root_space(free: u64) -> impl Clause {
-    (
-        measured_space(free),
-        MockAvailableBytes.some_call(matching!()).returns(Ok(0)),
-    )
+    MockSpace
+        .each_call(matching!())
+        .answers_arc(Arc::new(move |_| Ok(measured_space(free))))
 }
 
-fn measured_space(free: u64) -> impl Clause {
-    MockSpace.some_call(matching!()).returns(Ok(Space {
+fn measured_space(free: u64) -> Space {
+    Space {
         blocks: 20_000_000,
         free,
         fragment_bytes: 4096,
-    }))
+    }
+}
+
+fn allocate_reserve() -> impl Clause {
+    MockAllocateReserve
+        .some_call(matching!((path, 268_435_456) if *path == Path::new(RESERVE)))
+        .returns(Ok(()))
 }
 
 fn write_hold(clusters: u64) -> impl Clause {
@@ -127,6 +144,7 @@ fn saves_headroom_when_usage_is_one_byte_above_the_line() {
             .some_call(matching!(74_000_000_000))
             .returns(Ok(())),
         write_hold(1_933_594),
+        allocate_reserve(),
     ));
     apply(&disk, 71_999_999_999).unwrap();
 }
@@ -177,6 +195,20 @@ fn leaves_non_ext4_root_alone_even_with_an_ext4_data_disk() {
 }
 
 #[test]
+fn skips_the_hold_when_the_workspace_account_is_missing() {
+    let disk = Unimock::new((
+        locked_ext4_root(),
+        MockPrimaryGid
+            .some_call(matching!("user"))
+            .returns(Ok(None)),
+    ));
+    assert!(matches!(
+        apply(&disk, 72_000_000_000),
+        Err(DiskError::WorkspaceUserMissing)
+    ));
+}
+
+#[test]
 fn saves_headroom_once_and_reduces_it_as_the_disk_frees_space() {
     for (free, saved, write_line, clusters) in [
         (2_000_000, None, Some(75_728_000_000), 1_511_719),
@@ -186,12 +218,6 @@ fn saves_headroom_once_and_reduces_it_as_the_disk_frees_space() {
             Some("75728000000\n"),
             Some(75_318_400_000),
             1_611_719,
-        ),
-        (
-            2_300_000,
-            Some("71000000000\n"),
-            Some(72_000_000_000),
-            2_300_000,
         ),
     ] {
         let reads_and_hold = (
@@ -217,11 +243,30 @@ fn saves_headroom_once_and_reduces_it_as_the_disk_frees_space() {
                         assert_eq!(line, expected);
                         Ok(())
                     })),
+                allocate_reserve(),
             )),
-            None => Unimock::new(reads_and_hold),
+            None => Unimock::new((reads_and_hold, allocate_reserve())),
         };
         apply(&disk, 72_000_000_000).unwrap();
     }
+}
+
+#[test]
+fn raises_a_saved_line_below_the_provider_line_to_the_provider_line() {
+    let disk = Unimock::new((
+        ext4_root(),
+        no_leases(),
+        restore_ended(true),
+        root_space(2_300_000),
+        MockRead
+            .some_call(matching!((path) if *path == Path::new(SAVED_LINE)))
+            .returns(Ok(b"71000000000\n".to_vec())),
+        MockSaveLine
+            .some_call(matching!(72_000_000_000))
+            .returns(Ok(())),
+        write_hold(2_300_000),
+    ));
+    apply(&disk, 72_000_000_000).unwrap();
 }
 
 #[test]

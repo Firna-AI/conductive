@@ -66,7 +66,7 @@ trait HoldLock: Send + Sync {}
 #[cfg_attr(
     test,
     unimock::unimock(api = [
-        MockLock, MockRead, MockReadLink, MockExists, MockSpace, MockAvailableBytes,
+        MockLock, MockRead, MockReadLink, MockExists, MockSpace, MockPrimaryGid, MockRemountRoot,
         MockAllocateReserve, MockRemoveReserve, MockSaveLine, MockRemoveLine,
         MockWriteHold, MockLeasePaths, MockRemoveLease, MockUnixSeconds, MockProcessExists
     ])
@@ -77,7 +77,8 @@ trait DiskIo {
     fn read_link(&self, path: &Path) -> io::Result<PathBuf>;
     fn exists(&self, path: &Path) -> io::Result<bool>;
     fn space(&self) -> io::Result<Space>;
-    fn available_bytes(&self) -> io::Result<u64>;
+    fn primary_gid(&self, account: &str) -> io::Result<Option<u32>>;
+    fn remount_root(&self, reserve_gid: u32) -> io::Result<()>;
     fn allocate_reserve(&self, path: &Path, bytes: u64) -> io::Result<()>;
     fn remove_reserve(&self, path: &Path) -> io::Result<()>;
     fn save_line(&self, bytes: u64) -> io::Result<()>;
@@ -98,6 +99,8 @@ pub(crate) enum DiskError {
     InvalidLine { location: &'static str },
     #[error("[cnd-cli/disk] could not identify the root filesystem in mount information")]
     InvalidMount,
+    #[error("[cnd-cli/disk] the workspace account user does not exist")]
+    WorkspaceUserMissing,
     #[error("[cnd-cli/disk] invalid root filesystem size or free space")]
     InvalidSpace,
     #[error("[cnd-cli/disk] could not {operation}: {source}")]

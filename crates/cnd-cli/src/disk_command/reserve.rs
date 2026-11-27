@@ -8,9 +8,26 @@ use std::path::Path;
 use rustix::fs::{AtFlags, FallocateFlags, Mode, OFlags, fallocate, open, openat, unlinkat};
 use rustix::io::Errno;
 
+use super::{DiskIo, DiskResult, IoContext};
+
 pub(super) const PATH: &str = "/var/lib/conductive/runner-reserve";
-pub(super) const BYTES: u64 = 256 * 1024 * 1024;
-pub(super) const MIN_AVAILABLE_BYTES: u64 = 1024 * 1024 * 1024;
+const BYTES: u64 = 256 * 1024 * 1024;
+const MIN_AVAILABLE_BYTES: u64 = 1024 * 1024 * 1024;
+
+pub(super) fn keep(disk: &dyn DiskIo, held_clusters: u64) -> DiskResult<()> {
+    let space = disk
+        .space()
+        .during("measure space available to the runner")?;
+    let available = space
+        .free
+        .saturating_sub(held_clusters)
+        .saturating_mul(space.fragment_bytes);
+    if available < MIN_AVAILABLE_BYTES {
+        return Ok(());
+    }
+    disk.allocate_reserve(Path::new(PATH), BYTES)
+        .during("allocate the runner disk reserve")
+}
 
 pub(super) fn allocate(path: &Path, bytes: u64) -> io::Result<()> {
     let folder = private_folder(path.parent().ok_or(ErrorKind::InvalidInput)?)?;

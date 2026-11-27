@@ -202,11 +202,11 @@ warning and the image save continues.
 
 Build history, details, and log streams show storage only for good builds
 of the org's current provider account. For an account with a disk line,
-`readBuildStorage` subtracts the current ext4 root reserve from the current
-line to get total writable space. It subtracts the measured used bytes
-from that total to get free space, with a minimum of zero. It returns null
-for both fields when the row has no root usage measurement. An account
-without a disk line uses the saved size and available bytes.
+`readBuildStorage` uses the full current line as the total. It subtracts
+the measured used bytes from the line to get free space, with a minimum
+of zero. It returns null for both fields when the row has no root usage
+measurement. An account without a disk line uses the saved size and
+available bytes.
 
 ## Step records
 

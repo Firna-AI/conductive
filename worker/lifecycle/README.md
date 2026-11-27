@@ -250,10 +250,10 @@ owner overwrites the allocated bytes and renames the file to publish the
 exit status.
 
 The owner opens a root-owned lease for up to 25 minutes under
-`/run/conductive-disk/leases` and calls `conductive disk hold`. The lease
-makes the command release the hold on the root ext4 device when a disk
-line is set. If the lease write or command fails, the owner uses the
-mount table to reset that device directly when a disk line is set.
+`/run/conductive-disk/leases` and calls `conductive disk hold`. With a disk
+line, the command shares the ext4 root reserve with `user` and releases
+the hold during the lease. If the lease write or command fails, the owner
+uses the mount table to reset that device directly when a disk line is set.
 After it publishes the result, the owner removes the lease and calls
 `conductive disk hold` again. Replays read the saved journal. The disk
 commands are best effort.
@@ -269,7 +269,7 @@ Disk retention uses its existing provider status checks to mark a completed
 restore.
 
 [Free storage](image-builds.md#free-storage) describes how build reads
-use the current disk line to calculate writable space.
+use the full current disk line as the total when the account has a line.
 
 ## Development
 

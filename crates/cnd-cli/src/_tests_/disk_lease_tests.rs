@@ -27,7 +27,7 @@ fn leases(paths: &[&str]) -> impl Clause {
 }
 
 #[test]
-fn uses_the_default_hold_when_a_lease_owner_is_live_after_restore() {
+fn shares_the_root_reserve_and_uses_the_default_hold_with_a_live_lease() {
     let disk = Unimock::new((
         ext4_root(),
         leases(&[LIVE_LEASE]),

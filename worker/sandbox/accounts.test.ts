@@ -5,7 +5,7 @@ import { configuredProviderAccounts, ProviderAccountError } from './accounts'
 import { providerForAccount } from './client'
 import { ProviderError } from './errors'
 
-const boatDiskLine = { bytes: 72_000_000_000, rootReserveBytes: 3_465_424_896 }
+const boatDiskLine = { bytes: 72_000_000_000 }
 
 it('uses each account organization and key while keeping the default account pinned', async () => {
   const server = new FakeBoat()

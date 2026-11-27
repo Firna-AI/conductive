@@ -4,6 +4,8 @@ use std::fs::{self, File, Permissions, TryLockError};
 use std::io::{self, ErrorKind, Write};
 use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
 use std::path::{Path, PathBuf};
+use std::process::Command;
+use std::str;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use rustix::fs::statvfs;
@@ -61,9 +63,41 @@ impl DiskIo for LinuxDisk {
         })
     }
 
-    fn available_bytes(&self) -> io::Result<u64> {
-        let stats = statvfs("/")?;
-        Ok(stats.f_bavail.saturating_mul(stats.f_frsize))
+    fn primary_gid(&self, account: &str) -> io::Result<Option<u32>> {
+        let output = Command::new("/usr/bin/getent")
+            .args(["passwd", account])
+            .output()?;
+        if output.status.code() == Some(2) {
+            return Ok(None);
+        }
+        if !output.status.success() {
+            return Err(io::Error::other(format!(
+                "getent exited with {}",
+                output.status
+            )));
+        }
+        let gid = output
+            .stdout
+            .split(|&byte| byte == b':')
+            .nth(3)
+            .and_then(|field| str::from_utf8(field).ok())
+            .and_then(|field| field.parse().ok())
+            .ok_or(ErrorKind::InvalidData)?;
+        Ok(Some(gid))
+    }
+
+    fn remount_root(&self, reserve_gid: u32) -> io::Result<()> {
+        let options = format!("remount,resgid={reserve_gid}");
+        let output = Command::new("/usr/bin/mount")
+            .args(["-o", &options, "/"])
+            .output()?;
+        if output.status.success() {
+            return Ok(());
+        }
+        Err(io::Error::other(format!(
+            "mount exited with {}",
+            output.status
+        )))
     }
 
     fn allocate_reserve(&self, path: &Path, bytes: u64) -> io::Result<()> {

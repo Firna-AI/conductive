@@ -128,9 +128,14 @@ for the image-build sequence and the folder layout.
 
 `conductive disk hold` runs as root. It reads
 `CONDUCTIVE_DISK_LINE_BYTES` from its environment or from the saved
-exports in `/run/ascii-secrets/env.sh`. The line sets where root writes
-stop, in bytes used on the root filesystem. The command skips the hold if the
+exports in `/run/ascii-secrets/env.sh`. The line sets where writes stop,
+in bytes used on the root filesystem. The command skips the hold if the
 line is absent or the root filesystem uses a type other than ext4.
+
+Each run with a line remounts the ext4 root filesystem with `resgid` set
+to the primary group of the account `user`. This lets `user` and root
+share space up to the line. If the account is missing, the command
+reports it and skips the hold.
 
 On ext4 it uses the default hold of 4,096 clusters while the
 `/run/conductive-terminal/restore-ended` marker is missing or a workspace
@@ -146,8 +151,9 @@ saved line.
 
 When the hold applies and at least 1 GiB remains available to the
 sandbox user, `conductive disk hold` keeps a 256 MiB reserve with
-allocated blocks at `/var/lib/conductive/runner-reserve`. The parent
-directory is root-owned with mode `0700`.
+allocated blocks at `/var/lib/conductive/runner-reserve`. It counts all
+free blocks outside the hold, including the shared ext4 root reserve.
+The parent directory is root-owned with mode `0700`.
 
 `conductive disk free-reserve` runs as root and removes that file if
 it exists. Both disk commands report a failure in one line on standard

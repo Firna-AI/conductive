@@ -18,7 +18,7 @@ import {
 
 const backendFixture = setupBackendTests()
 
-it('omits legacy storage from history, details, and the stream for an account with a disk line', async () => {
+it('serves storage under the full disk line only when the build measured root usage', async () => {
   const fixture = backendFixture()
   const { org, runtime, session } = fixture
   const { env } = runtime
@@ -69,5 +69,22 @@ it('omits legacy storage from history, details, and the stream for an account wi
   expect(eventsResponse.status).toBe(200)
   expect(await eventsResponse.text()).toBe(
     `event: build\ndata: ${JSON.stringify(build)}\n\n`,
+  )
+
+  await env.DB.prepare(
+    'UPDATE image_builds SET storage_root_used_bytes = ? WHERE id = ?',
+  )
+    .bind(37_000_000_000, id)
+    .run()
+
+  const measuredEvents = await get(buildEventsPath(org.id, id))
+  expect(measuredEvents.status).toBe(200)
+  const measuredBuild: ImageBuild = {
+    ...build,
+    storageTotalBytes: 72_000_000_000,
+    storageFreeBytes: 35_000_000_000,
+  }
+  expect(await measuredEvents.text()).toBe(
+    `event: build\ndata: ${JSON.stringify(measuredBuild)}\n\n`,
   )
 })

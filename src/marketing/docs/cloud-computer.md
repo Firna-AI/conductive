@@ -410,7 +410,7 @@ An [automatic software update](#apply-setup-changes) adds support for these name
 
 A successful build updates the starting setup for new workspaces.
 A failed build keeps the last successful setup.
-A successful build can show the free storage it leaves under the storage limit for new workspaces, such as "31.2 GB free of 68.5 GB".
+A successful build can show the free storage it leaves under the storage limit for new workspaces, such as "34.7 GB free of 72.0 GB".
 Use it to check that your repositories and install script leave enough space.
 Existing workspaces keep their files.
 

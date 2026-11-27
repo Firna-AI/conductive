@@ -122,6 +122,24 @@ Contract owners:
 - **Decision:** **A**, from Cal on 2026-11-26: "6 = A". Builds get no hold,
   and the build card shows the free storage under the line.
 
+### 8. Members cannot write on a disk above the line (review findings 2 and 6)
+
+- **Decision:** **E**, from Cal on 2026-11-27: "8 = E". On every disk with a
+  line, `user` may use the ext4 root reserve, so every program stops at the
+  line itself. Members' own files then reach about 50 GB, Boat's described
+  limit, and a disk above the line gives members its 2 GB of headroom.
+  Rejected: A (root's limit would pass the documented 51 GB), B (a setting
+  written into the disk), C (separate budgets, Large), D (sharing only above
+  the line). Root programs lose their private margin when members fill the
+  disk.
+
+### 9. A protocol rule that protects member files from the runner
+
+- **Decision:** **A**, from Cal on 2026-11-27: "9 = A". The protocol keeps
+  the rule that the runner's root command deletes only the reserve.
+  Rejected: B (no rule), C (a wider rule for every file, with a code
+  change).
+
 ## Design
 
 My calls, all on 2026-11-26:
@@ -219,6 +237,14 @@ My calls, all on 2026-11-26:
     Reason: review finding 12, 2026-11-27. They run no workspace command,
     and this keeps the behaviour of `origin/main`.
 
+18. **Sharing the root reserve.** When a line is set, each run of
+    `conductive disk hold` remounts `/` with `resgid` set to the group of
+    `user`. The mount table does not show the option, so each run sets it
+    again. Without a line, nothing changes. A test on a throwaway Boat
+    sandbox on 2026-11-27 showed that `user` then writes up to the line
+    and root writes nothing more. `df` still shows the smaller free space
+    for `user`. Reason: decision 8.
+
 ## Milestone 1: Documentation and protocol
 
 Depends on: none
@@ -306,6 +332,16 @@ Depends on: 2
       does not wait for its restore. A build gets no hold.
 - [x] Update `docs/protocol/org-image.md` and the guide sentence on free
       storage.
+
+## Milestone 7: Members share the root reserve
+
+Depends on: 3, and decision 8
+
+- [x] `conductive disk hold` remounts `/` with `resgid` set to the group of
+      `user` when a line is set, as design call 18 says. Tests.
+- [x] The build card counts the whole line as writable for `user`. Tests.
+- [x] Update `docs/protocol/disk-line.md`, `docs/protocol/org-image.md`, the
+      guide figure "68.5 GB", and the READMEs.
 
 ## Milestone 6: Verification, commit, review, and pull request
 

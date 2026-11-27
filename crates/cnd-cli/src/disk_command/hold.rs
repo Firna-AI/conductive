@@ -47,6 +47,13 @@ pub(super) fn apply(disk: &dyn DiskIo, line: u64) -> DiskResult<()> {
         return Ok(());
     };
     let _lock = disk.lock()?;
+    let gid = disk
+        .primary_gid("user")
+        .during("resolve the primary group of user")?
+        .ok_or(DiskError::WorkspaceUserMissing)?;
+    disk.remount_root(gid)
+        .during("share the ext4 root reserve with user")?;
+
     if leases::any_active(disk)?
         || !disk
             .exists(Path::new(RESTORE_MARKER))
@@ -61,17 +68,10 @@ pub(super) fn apply(disk: &dyn DiskIo, line: u64) -> DiskResult<()> {
         .space()
         .during("measure space on the root filesystem")?;
     let effective = effective_line(disk, line, space.used_bytes()?)?;
-    disk.write_hold(&setting, space.hold(effective))
+    let clusters = space.hold(effective);
+    disk.write_hold(&setting, clusters)
         .during("set reserved clusters on the root filesystem")?;
-    if disk
-        .available_bytes()
-        .during("measure space available to the runner")?
-        >= reserve::MIN_AVAILABLE_BYTES
-    {
-        disk.allocate_reserve(Path::new(reserve::PATH), reserve::BYTES)
-            .during("allocate the runner disk reserve")?;
-    }
-    Ok(())
+    reserve::keep(disk, clusters)
 }
 
 fn effective_line(disk: &dyn DiskIo, line: u64, used: u64) -> DiskResult<u64> {

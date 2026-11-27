@@ -6,29 +6,29 @@ use std::path::Path;
 use unimock::{MockFn, Unimock, matching};
 
 use super::super::{
-    MockAllocateReserve, MockAvailableBytes, MockRemoveReserve, MockWriteHold, Operation, run,
+    MockAllocateReserve, MockRemoveReserve, MockSpace, MockWriteHold, Operation, run,
 };
 use super::{
-    CONFIGURED, ENV_FILE, MockRead, MockRemoveLine, VDA_SETTING, ext4_root, lock, measured_space,
-    no_leases, restore_ended, write_hold,
+    CONFIGURED, ENV_FILE, MockRead, MockRemoveLine, RESERVE, VDA_SETTING, ext4_root, lock,
+    measured_space, no_leases, restore_ended,
 };
 
-const RESERVE: &str = "/var/lib/conductive/runner-reserve";
-
 #[test]
-fn allocates_the_reserve_when_user_has_one_gib_after_the_hold() {
+fn allocates_the_reserve_when_user_has_one_gib_in_the_shared_space() {
     let disk = Unimock::new((
         ext4_root(),
         no_leases(),
         restore_ended(true),
-        measured_space(4_000_000),
+        MockSpace
+            .next_call(matching!())
+            .returns(Ok(measured_space(2_684_019))),
         MockRemoveLine.some_call(matching!()).returns(Ok(())),
         MockWriteHold
             .next_call(matching!((path, 2_421_875) if *path == Path::new(VDA_SETTING)))
             .returns(Ok(())),
-        MockAvailableBytes
+        MockSpace
             .next_call(matching!())
-            .returns(Ok(1_073_741_824)),
+            .returns(Ok(measured_space(2_684_019))),
         MockAllocateReserve
             .next_call(matching!((path, 268_435_456) if *path == Path::new(RESERVE)))
             .returns(Ok(())),
@@ -42,12 +42,16 @@ fn skips_the_reserve_when_user_has_less_than_one_gib_after_the_hold() {
         ext4_root(),
         no_leases(),
         restore_ended(true),
-        measured_space(4_000_000),
+        MockSpace
+            .next_call(matching!())
+            .returns(Ok(measured_space(2_684_019))),
         MockRemoveLine.some_call(matching!()).returns(Ok(())),
-        write_hold(2_421_875),
-        MockAvailableBytes
-            .some_call(matching!())
-            .returns(Ok(1_073_741_823)),
+        MockWriteHold
+            .next_call(matching!((path, 2_421_875) if *path == Path::new(VDA_SETTING)))
+            .returns(Ok(())),
+        MockSpace
+            .next_call(matching!())
+            .returns(Ok(measured_space(2_684_018))),
     ));
     run(&disk, Operation::Hold, Some(OsStr::new(CONFIGURED))).unwrap();
 }

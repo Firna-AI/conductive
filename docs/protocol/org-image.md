@@ -106,9 +106,9 @@ the change that adds the [disk line](disk-line.md).
 - The Cloud computer tab lists the builds, each with its time, its result,
   and its length.
 - Each good build also shows the free storage that its image leaves for
-  each new cloud computer, with the size of the disk, such as "31.2 GB
-  free of 68.5 GB" (storage decision 1). Reason: an admin then sees when
-  the install script and the repositories fill the disk.
+  each new cloud computer, such as "34.7 GB free of 72.0 GB" (storage
+  decision 1). Reason: an admin then sees when the install script and
+  the repositories fill the disk.
 - A build measures the disk of `/` just before it saves the image. The
   free storage is the space that the user of the cloud computer can
   write.
@@ -116,15 +116,13 @@ the change that adds the [disk line](disk-line.md).
   [background restore of the disk](terminal-shell.md#the-shell). Until
   that restore ends, the home folder is a separate view, not the disk
   itself.
-- On a provider with a [disk line](disk-line.md), the size is the used
-  size of the disk at which the writes of the user of the cloud computer
-  stop. The free storage is that size minus the used size that the build
-  measured, and never less than zero (disk hold decision 6 A).
+- On a provider with a [disk line](disk-line.md), the card shows the full
+  line as the total. The free storage is the line minus the used size that
+  the build measured, with a minimum of zero (disk hold decisions 6 A and
+  8 E).
 - The size and the free storage follow the current line of the provider
   account. So a change of the line changes them for each build, with no
   new build.
-- Reason: each new workspace can write only up to the line, so the card
-  shows the room that the work really gets.
 - A build gets no disk hold. So the line fails no build, and an image can
   be above the line. A workspace from such an image keeps working, as
   [A disk above the line](disk-line.md#a-disk-above-the-line) says.

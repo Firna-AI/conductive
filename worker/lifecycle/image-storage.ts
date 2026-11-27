@@ -31,13 +31,9 @@ export function readBuildStorage(
       return { storageTotalBytes, storageFreeBytes }
     }
     if (row.storageRootUsedBytes !== null) {
-      const storageTotalBytes = line.bytes - line.rootReserveBytes
       return {
-        storageTotalBytes,
-        storageFreeBytes: Math.max(
-          0,
-          storageTotalBytes - row.storageRootUsedBytes,
-        ),
+        storageTotalBytes: line.bytes,
+        storageFreeBytes: Math.max(0, line.bytes - row.storageRootUsedBytes),
       }
     }
   }
@@ -46,7 +42,7 @@ export function readBuildStorage(
 
 /**
  * Measure the root file system before the home folder restore can finish.
- * The "Avail" column gives the bytes the user can write.
+ * Accounts without a disk line use the available bytes that df reports.
  */
 export const STORAGE_COMMAND =
   'df --block-size=1 --output=size,used,avail -- / | tail -n 1'

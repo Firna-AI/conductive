@@ -21,6 +21,11 @@ adds the disk line.
   disk line is the used size of the disk of `/` at which all writes stop,
   also the writes of root. A hold of the file system keeps the space above
   the line free from every program, also from root and from Docker.
+- The workspace user can use the ext4 root reserve on a disk with a line
+  (disk hold decision 8 E). Programs that run as root share the same
+  space. When the workspace user fills the disk to the line, root writes
+  also stop. The available space that `df` reports still excludes the
+  root reserve.
 - At the line, each write fails with "No space left on device", so the
   work stops there. Writes work again when files go, such as when the
   agent or a member deletes build output.
@@ -54,9 +59,6 @@ adds the disk line.
 - So the Boat line is 72 GB of used disk: the 21.95 GB that a new Boat
   sandbox uses, plus 51 GB, rounded down to a whole GB. The own files then
   stay under about 50 GB.
-- Root writes stop at the line. Writes of the user of the cloud computer,
-  such as the agents and the terminals, stop 3.47 GB earlier, at the space
-  that the file system keeps for root.
 - Reason: Cal chose Boat's documented limit, not the largest budget of
   76 GB of used disk that a Boat error once named (disk hold decision 1).
   Boat's measure for a resume seems to keep the highest size of own files
@@ -94,7 +96,8 @@ adds the disk line.
 - While the restore runs, the app checks for its end every 5 seconds,
   also during a start.
 - Each time, it holds the line only when the line applies. Otherwise, it
-  releases the hold.
+  releases the hold. On a disk with a line, the workspace user gets
+  access to the ext4 root reserve each time.
 - Reason: the hold then also covers Docker, the programs that the startup
   script leaves running, and a restarted runner. The check every 5 minutes
   also sets the hold again after a change, such as a change by an agent
@@ -112,6 +115,7 @@ adds the disk line.
 
 - A disk that is already above the line keeps working. Its first hold
   gives it a line of its own, 2 GB above its used size.
+  Members and root programs can use those 2 GB.
 - That line never moves up. It moves down as files go, until it reaches
   the line of the provider. A new machine keeps that line too.
 - Reason: each workspace that works today keeps working, and a new machine
@@ -182,7 +186,8 @@ adds the disk line.
   reserve of 256 MiB on the disk of `/`, in a folder that only root can
   reach. The reserve counts as used disk under the line. That part makes
   the reserve only when the line applies and at least 1 GiB is free for
-  the user of the cloud computer.
+  the user of the cloud computer. That free space includes the shared
+  ext4 root reserve.
 - When a state save of the runner fails because the disk is full, the
   runner runs a root command of that part, which deletes the reserve. The
   runner then tries the save once more. That command deletes only the

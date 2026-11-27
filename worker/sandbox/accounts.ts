@@ -5,13 +5,10 @@ import { validDomain } from './e2b/identity'
 
 export interface ProviderDiskLine {
   readonly bytes: number
-  readonly rootReserveBytes: number
 }
 
 const BOAT_DISK_LINE: ProviderDiskLine = {
   bytes: 72_000_000_000,
-  // Boat's default ext4 disk keeps these blocks for root.
-  rootReserveBytes: 846_051 * 4_096,
 }
 
 export type ProviderDiskLines = ReadonlyMap<string, ProviderDiskLine>
