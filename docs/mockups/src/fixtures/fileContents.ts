@@ -8,21 +8,37 @@ import type { TableCells } from '../../../../src/markdown/table-rows'
  * A block of a Markdown file. Its text keeps the inline Markdown that the
  * preview reads: code in backticks, images, the marks of bold text,
  * emphasis, and strikethrough, and line-break tags. A list item can start
- * with a task box, such as `[x]`.
+ * with a task box, such as `[x]`. A code block keeps its text as written.
  */
 export type MarkdownBlock =
   | { kind: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p'; text: string }
   | { kind: 'ol' | 'ul'; items: readonly string[] }
-  | { kind: 'code'; text: string }
+  | {
+      kind: 'code'
+      text: string
+      /**
+       * The fence label of the block, in lower case, such as `ts` for
+       * ```ts. A label that names a language gives the colours of a file
+       * tab of that language. A block without a label has none.
+       */
+      label?: string
+    }
   | ({ kind: 'table' } & TableCells<string>)
   | { kind: 'quote'; blocks: readonly MarkdownBlock[] }
   | { kind: 'rule' }
 
+/** The use of the hook in `README.md`, in a code block with the label `ts`. */
+const hookUse = `import { useAddressAutocomplete } from '@/app/checkout/useAddressAutocomplete'
+
+// Lookups start at the third character.
+const { suggestions, loading } = useAddressAutocomplete(line1)`
+
 /**
  * `README.md`, already split into blocks: a note in a quote, a table with a
- * line break in a cell and a variable that the branch removed, emphasis, a
- * picture at a web address, a task list with done and open tasks, and a
- * rule before the tests.
+ * line break in a cell and a variable that the branch removed, emphasis,
+ * the use of the hook in a code block with the label `ts`, a picture at a
+ * web address, a task list with done and open tasks, a rule before the
+ * tests, and the test commands in code blocks without a label.
  */
 export const readme: readonly MarkdownBlock[] = [
   { kind: 'h1', text: 'Storefront' },
@@ -65,6 +81,8 @@ export const readme: readonly MarkdownBlock[] = [
     kind: 'p',
     text: 'Checkout suggests addresses as you type. Suggestions come from `/api/places`, which needs `PLACES_API_KEY`. Without the key, the form falls back to *manual entry*.',
   },
+  { kind: 'p', text: 'A form reads the suggestions with the hook:' },
+  { kind: 'code', label: 'ts', text: hookUse },
   {
     kind: 'p',
     text: '![Suggestions under the address field](https://design.acme.example/forms/address/suggestions.png)',

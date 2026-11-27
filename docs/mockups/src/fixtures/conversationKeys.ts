@@ -79,6 +79,7 @@ export const conversationKeys = [
   'formatting-in-work',
   'marks-as-typed',
   'web-images',
+  'code-blocks',
   'postcode-history',
   'chat-links',
   'chat-link-labels',

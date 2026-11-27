@@ -77,6 +77,12 @@ Its variants:
   only, and the screenshot of the workspace, which shows as its picture
   and opens its file, as `app/file-mentions/answers` shows.
 
+`app/chat/code-blocks` draws the code blocks of a reply, from code colours
+decision 1 A of 26 November 2026: an answer with the example of the guide
+of the places API in a code block with the fence label `rust`, in the
+colours of a Rust file tab, and the requests of a session in a code block
+without a label, as plain text.
+
 `app/chat/links` draws the links of chat text, as the user chose on 10
 November 2026 with D of chat link decision 1, C of chat link decision 2,
 and B of chat link decision 3. Its canonical screen has an answer with the

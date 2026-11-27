@@ -100,6 +100,8 @@ code that draws them.
 - [Chat Markdown](../../docs/protocol/chat-markdown.md) states the
   formatting of agent messages, with their headings and lists.
   [Chat tables](../../docs/protocol/chat-tables.md) states their tables.
+  [Chat code blocks](../../docs/protocol/chat-code-blocks.md) states the
+  colours and the Copy code button of their code blocks.
   [Chat message lines](../../docs/protocol/chat-message-lines.md) states
   their lines in the work of a turn.
   [Chat links](../../docs/protocol/chat-links.md) states the links of sent
@@ -111,9 +113,10 @@ code that draws them.
   them: the chat adapter on the shared Markdown parser, and the heading,
   list, and table parts that the chat shares with the file preview and the
   mockups. Its linked guides [Message lines](message-lines.md),
-  [Text links](text-links.md), and
+  [Code blocks](code-blocks.md), [Text links](text-links.md), and
   [Pictures in answers](answer-pictures.md) give the message lines of the
-  work of a turn, the links and the chips, and the pictures.
+  work of a turn, the code blocks, the links and the chips, and the
+  pictures.
 - The links of chat text open through the link opener of the app shell, in
   `../shell/ui/text-links.tsx`. The workspace screen gives it the pages of
   the app and the port previews of the workspace, as
@@ -209,6 +212,8 @@ the mentions, the pictures, and the Markdown of chat text.
   agent messages, with their headings and lists.
 - [Chat tables](../../docs/protocol/chat-tables.md): the tables of agent
   messages.
+- [Chat code blocks](../../docs/protocol/chat-code-blocks.md): the colours
+  and the Copy code button of the code blocks of agent messages.
 - [Chat message lines](../../docs/protocol/chat-message-lines.md): the
   lines of agent messages in the work of a turn.
 - [Chat links](../../docs/protocol/chat-links.md): the links of sent

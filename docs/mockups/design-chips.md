@@ -101,9 +101,12 @@ the chat.
   - `MentionChip` in `src/components/chat/` draws the chip of a `FilePart`
     of the app, with its line target and the page that a press opens.
 - `CodeBlock` in `src/components/chat/` draws a code block of an answer
-  with the look of a code block of a Markdown file. On a phone a Copy code
-  button shows in its top corner. With a mouse the button shows only while
-  the pointer is on the block, so a desktop view draws none.
+  with the look of a code block of a Markdown file. A block with the fence
+  label of a known language shows the colours of a file tab of that
+  language, and a block without a label stays plain, as
+  [Code blocks](design-markdown.md#code-blocks) gives. On a phone a Copy
+  code button shows in its top corner. With a mouse the button shows only
+  while the pointer is on the block, so a desktop view draws none.
 - `FileMentionList` in `src/components/chat/` draws the list of `@` above
   the message box: the icon, the name, and the folder of each entry that
   matches the query, with the first row highlighted. One line takes the

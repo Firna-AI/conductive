@@ -86,7 +86,10 @@ export const agentBlocksSchema = {
         start: { type: 'integer' },
         items: listItems,
       }),
-      node('code', ['text'], { text: string }),
+      node('code', ['text'], {
+        text: string,
+        label: { type: ['string', 'null'] },
+      }),
       node('quote', ['blocks'], { blocks: children }),
       node('rule', [], {}),
       node('table', ['head', 'rows', 'align'], {

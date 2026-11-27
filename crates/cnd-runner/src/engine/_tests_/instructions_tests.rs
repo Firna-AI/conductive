@@ -1,4 +1,4 @@
-//! Workspace tree facts in the exact instruction text of new sessions.
+//! The exact instruction text of new sessions.
 
 #![allow(clippy::unwrap_used)]
 
@@ -106,6 +106,28 @@ fn gives_the_disk_limit_line_only_when_the_environment_sets_it() -> Result<()> {
         assert_eq!(
             text.split("\n\n").filter(|line| *line == expected).count(),
             1
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn asks_both_agents_to_label_code_fences_in_replies() -> Result<()> {
+    let config = Configuration::parse(
+        &configured("0"),
+        Path::new("/repo"),
+        Path::new("/home/user"),
+    )?;
+    for agent in [Agent::Claude, Agent::Codex] {
+        let (text, _) = build(&config, None, None, &agent)?;
+        assert_eq!(
+            text.split("\n\n")
+                .skip_while(|line| !line.starts_with("Name a file or a folder of the repository"))
+                .nth(1),
+            Some(
+                "Label each opening code fence in your reply with its language, such as ```rust, or use ```text for command output."
+            ),
+            "{agent:?}"
         );
     }
     Ok(())

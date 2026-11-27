@@ -84,7 +84,8 @@ it('ends a list item at an unindented line after a code block or a table, as Com
       'That is all.',
     ].join('\n'),
   )
-  expect(html).toContain('npm ci</pre></li></ol><p>Done.</p>')
+  // The fence label `sh` colours the block, so its line is a token span.
+  expect(html).toContain('npm ci</span></pre></li></ol><p>Done.</p>')
   expect(html).toMatch(/<\/table><\/div><\/li><\/ul><p>That is all\.<\/p>/)
 })
 
@@ -105,7 +106,10 @@ it('keeps a fence with an info string as one code block', () => {
   const html = render(
     '```bash\nnpm test\n# not a heading\n```\n\nAfter the tests.',
   )
-  expect(html).toMatch(/<pre[^>]*>npm test\n# not a heading<\/pre>/)
+  // The fence label `bash` colours the block, so `#` starts a comment.
+  expect(bare(html)).toContain(
+    '<pre><span>npm test</span>\n<span># not a heading</span></pre>',
+  )
   expect(html).toContain('<p>After the tests.</p>')
   expect(html).not.toContain('<h1>')
 })

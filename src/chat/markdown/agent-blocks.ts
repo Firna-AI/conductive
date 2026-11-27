@@ -1,3 +1,4 @@
+import { fenceLabel } from '../../markdown/fence-label'
 import { maxDepth, parseMarkdownTokens } from '../../markdown/parser'
 import { readTaskBox, type ListItem } from '../../markdown/task-boxes'
 import { closeOf, containerLines, tokenRead } from '../../markdown/token-read'
@@ -25,7 +26,7 @@ export type TextBlock =
   | { kind: 'heading'; level: HeadingLevel; text: InlineText }
   | { kind: 'ul'; items: readonly TextItem[] }
   | { kind: 'ol'; start: number; items: readonly TextItem[] }
-  | { kind: 'code'; text: string }
+  | { kind: 'code'; text: string; label: string | null }
   | { kind: 'quote'; blocks: readonly TextBlock[] }
   | { kind: 'rule' }
   | TextTable
@@ -123,7 +124,13 @@ function block(read: AgentRead, depth: number, quotes: number): TextBlock[] {
     case 'fence':
     case 'code_block':
       read.index += 1
-      return [{ kind: 'code', text: token.content.replace(/\n$/u, '') }]
+      return [
+        {
+          kind: 'code',
+          text: token.content.replace(/\n$/u, ''),
+          label: token.type === 'fence' ? fenceLabel(token.info) : null,
+        },
+      ]
     case 'table_open': {
       const { tokens, lines } = read
       const { table, next } = readTable(tokens, read.index, lines, quotes, read)

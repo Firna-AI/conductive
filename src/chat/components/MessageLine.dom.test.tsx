@@ -2,6 +2,8 @@
 import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, it } from 'vitest'
+import codeStyles from '../../files/code/code.module.css'
+import lineBlocks from '../../ui/components/chat/LineBlocks.module.css'
 import toolGroup from '../../ui/components/chat/ToolGroup.module.css'
 import a11y from '../../ui/components/common/a11y.module.css'
 import { accessibleName } from '../../test-support/dom-queries'
@@ -58,6 +60,35 @@ it('shows each heading of a closed message line as text of the line in the headi
     line: 'Plan Wait 250 ms after the last key press. Then Run the checkout tests.',
     headings: ['Plan', 'Then'],
     elements: 0,
+  })
+})
+
+it('shows a code block of a closed line as plain text in the line, and of an open line in the colours of its fence label, as an answer does', async () => {
+  const code = 'fn main() {\n\tlet greeting = "hi";\n}'
+  const text = ['Run this:', '', '```rust', code, '```'].join('\n')
+  const keywords = (root: ParentNode | null) =>
+    Array.from(
+      root?.querySelectorAll(`.${codeStyles.keyword}`) ?? [],
+      (element) => element.textContent,
+    )
+  const page = document.createElement('div')
+  page.innerHTML = renderToStaticMarkup(
+    <MessageLine id="agent:1" text={text} />,
+  )
+  const closed = page.querySelector('summary')
+  const open = await openLine(<MessageLine id="agent:1" text={text} />)
+  expect({
+    closed: { keywords: keywords(closed), line: textOf(closed) },
+    open: {
+      keywords: keywords(open),
+      code: open.querySelector(`.${lineBlocks.code}`)?.textContent,
+    },
+  }).toEqual({
+    closed: {
+      keywords: [],
+      line: 'Run this: fn main() { let greeting = "hi"; }',
+    },
+    open: { keywords: ['fn', 'let'], code },
   })
 })
 

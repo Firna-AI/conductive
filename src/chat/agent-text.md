@@ -4,12 +4,15 @@ This guide belongs to [the chat](README.md). It gives the rules of the code
 that formats the text of agent messages: in the chat, and in a message line
 of an open work fold.
 [Chat Markdown](../../docs/protocol/chat-markdown.md),
-[Chat tables](../../docs/protocol/chat-tables.md), and
+[Chat tables](../../docs/protocol/chat-tables.md),
+[Chat code blocks](../../docs/protocol/chat-code-blocks.md), and
 [Chat message lines](../../docs/protocol/chat-message-lines.md) state the
-requirements. Two linked guides hold the rest of the code:
+requirements. Three linked guides hold the rest of the code:
 
 - [Message lines](message-lines.md) gives the code of a message line in
   the work of a turn.
+- [Code blocks](code-blocks.md) gives the colours and the Copy code button
+  of code blocks.
 - [Text links](text-links.md) gives the web links, the workspace chips,
   and the file chips of sent messages and answers. Its linked guide
   [Pictures in answers](answer-pictures.md) gives the pictures of answers.
@@ -73,7 +76,13 @@ React.
   item, as [Lists](../../docs/protocol/chat-markdown.md#lists) says, and
   takes it out of the text.
 - A fence and an indented code block are `code` blocks, with their text
-  as the agent wrote it, without the line break at the end.
+  as the agent wrote it, without the line break at the end. A fence also
+  keeps its `label`. `fenceLabel` of `src/markdown/fence-label.ts` reads
+  it from the info string of the fence: the first word, in lower case.
+  White space or a comma ends the word. The file preview reads its labels
+  with the same function. An indented code block has no label, so its
+  `label` is `null`. The label is a string, so the block stays plain data
+  for `samePlainData`.
 - `answerParts` in `markdown/answer-parts.ts` reads the inline tree of one
   block with the context of the chat: the workspaces, the web links of the
   screen, and the file tree. [Text links](text-links.md) gives its rules.
@@ -102,8 +111,9 @@ React.
 - Each view gives the blocks an `AgentDrawing`, from `agentDrawing.ts`
   beside them. Its `text` draws an inline tree at its `TextPlace`: in a
   message line or not, and with pictures or not. Its `code` draws a code
-  block of an answer. Its `ShowsWords` draws a heading only while the
-  text of the heading shows words where it draws.
+  block of an answer with the colours of its label. `LineBlocks` gives an
+  open message line the same colours with `FenceText`. Its `ShowsWords` draws a heading
+  only while the text of the heading shows words where it draws.
 - `answerDrawing` in `components/answer-drawing.tsx` gives the drawing of
   the app for one message: `AnswerText`, `CodeBlock`, and `useShowsWords`,
   with the pictures of that message. The mockups give `fixtureDrawing`,
@@ -143,13 +153,8 @@ React.
   the `ol`. A message line writes each number from it. As in CommonMark, a
   number has one to nine digits, so a longer number starts no list.
 - In the app, `AgentBlocks` draws each code block through `CodeBlock`, the
-  `code` of `answerDrawing`. Inside a `CodeCopyProvider`, `CodeBlock` adds
-  a Copy code button beside the `<pre>`, so the text of the `<pre>` stays
-  the code alone. `ChatBody` in `WorkspaceChat` gives the provider around
-  the chat of the open session. Its copy uses the `copy` services of the
-  chat and shows a toast with the result. Outside a provider, a code block
-  has no button. The size of the button comes from the control sizes, so
-  the block keeps room for the 40 px button on a phone.
+  `code` of `answerDrawing`. [Code blocks](code-blocks.md) gives its
+  colours, its Copy code button, and the code blocks of a message line.
 - `AgentText`, `AnswerText`, and `MessageLine` draw React text and
   elements only, so no HTML of a message reaches the page. The parser
   reads HTML as text, apart from a line-break tag.

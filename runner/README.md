@@ -67,7 +67,8 @@ recovery, agent settings, filtering, and shutdown.
 ## Background work
 
 [Background work](background-work.md) gives how a Claude turn waits for the
-background work of its agent, the note at the end of a reply, the time
+background work of its agent, the note at the end of a reply, the grace
+time and the note after the work of a parked subagent ends, the time
 limit of 30 days, the end reason, and their key code. A workspace gets
 this behavior when its software update applies.
 

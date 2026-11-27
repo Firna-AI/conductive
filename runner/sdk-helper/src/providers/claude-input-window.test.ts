@@ -7,6 +7,7 @@ import { fakeToolContext } from '../../test-support/input'
 import { string } from '../parse'
 import { providerFixture } from '../../test-support/fixture'
 import { createClaudeFactory } from './claude'
+import { ClaudeInputWindow, userInput } from './claude-input-window'
 
 beforeEach(mockComputerServer)
 
@@ -205,4 +206,42 @@ it('discards the held 65th Claude message when Stop closes SDK input', async () 
   expect(await pending).toEqual({ done: true, value: undefined })
   expect(h.sdk.closed).toBe(true)
   expect(h.warnings).toEqual([])
+})
+
+it('holds a runner note while 64 inputs wait, and keeps its slot until a result answers it', async () => {
+  const window = new ClaudeInputWindow()
+  onTestFinished(() => window.discard())
+  const input = window[Symbol.asyncIterator]()
+  const nextUuid = async () => {
+    const next = await input.next()
+    return next.done ? null : string(next.value.uuid)
+  }
+  const settled = () => new Promise((resolve) => setImmediate(resolve))
+  const members = async (from: number) => {
+    for (let id = from; id < from + 64; id++)
+      window.push(`message-${id}`, userInput('sdk-session', `Message ${id}.`))
+    const sent: string[] = []
+    for (let id = 0; id < 63; id++) sent.push(string(await nextUuid()))
+    return sent
+  }
+  const first = await members(1)
+  first.push(string(await nextUuid()))
+  const note = userInput('sdk-session', 'Note.')
+  window.note(note)
+  let delivered: string | null = null
+  const noteSent = nextUuid().then((uuid) => (delivered = uuid))
+  await settled()
+  expect(delivered).toBeNull()
+  window.complete(first)
+  await noteSent
+  expect(delivered).toBe(note.uuid)
+  expect(window.pending).toBe(false)
+  await members(65)
+  let last: string | null = null
+  const lastSent = nextUuid().then((uuid) => (last = uuid))
+  await settled()
+  expect(last).toBeNull()
+  window.settle(note.uuid)
+  await lastSent
+  expect(last).not.toBeNull()
 })

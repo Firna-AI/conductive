@@ -295,6 +295,7 @@ An agent powered by Claude can leave work running in the background, such as a c
 After its reply, the turn stays open while background tasks or scheduled wake-ups remain.
 The chat shows **Working**, and **Stop** stays available.
 When a task ends or a wake-up arrives, the agent continues in the same turn.
+This also holds for a task that a helper agent of the agent started. If the helper does not continue within 2 minutes, the agent picks up its result.
 The turn ends when the agent finishes and no background work remains.
 
 The time limit is 30 days from the start of the first wait.
@@ -346,6 +347,7 @@ For paths that **All files** leaves out, `@` mentions and Markdown links show as
 A Markdown image that points to one of these paths shows only its label.
 If the label is blank, chat shows nothing for the image.
 
+A code block shows syntax colours, as a file does, when the agent names its language after the opening backticks.
 To copy a code block, select **Copy code** in its top corner.
 With a mouse, the button shows when you point at the block.
 **Code copied** confirms the copy.
