@@ -7,11 +7,15 @@ import {
   readCount,
   type JsonObject,
 } from './guards'
-import { parseChanges } from './parse-changes'
+import { parseChanges, parseChangesDelta } from './parse-changes'
 import { parseFileTree, parseTreeDelta } from './parse-tree'
 
+/** A malformed changes delta still tells the store to read the list again. */
+export type ParsedFileEvent =
+  FileEvent | { type: 'changes.changed'; delta: null }
+
 /** A file event of the workspace stream, or null for any other event. */
-function parseFileEvent(value: unknown): FileEvent | null {
+function parseFileEvent(value: unknown): ParsedFileEvent | null {
   if (!isObject(value)) return null
   switch (value.type) {
     case 'files.snapshot': {
@@ -27,6 +31,12 @@ function parseFileEvent(value: unknown): FileEvent | null {
     case 'changes.updated': {
       const changes = parseChanges(value.changes)
       return changes ? { type: 'changes.updated', changes } : null
+    }
+    case 'changes.changed': {
+      const delta = parseChangesDelta(value.delta)
+      return delta
+        ? { type: 'changes.changed', delta }
+        : { type: 'changes.changed', delta: null }
     }
     default:
       return null
@@ -84,7 +94,7 @@ function parseRepositoryId(value: unknown): string | null {
  */
 export interface StreamEnvelope {
   eventNumber: number
-  event: FileEvent | null
+  event: ParsedFileEvent | null
   failedRepair: FailedFileRepair | null
   /** The repository of a `workspace.updated` event, or null. */
   repositoryId: string | null

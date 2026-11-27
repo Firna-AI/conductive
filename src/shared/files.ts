@@ -1,7 +1,7 @@
 import type { FileTreeResponse } from './generated/FileTreeResponse'
 import type { FileTreeDelta } from './generated/FileTreeDelta'
 import type { ChangesDelta } from './generated/ChangesDelta'
-import type { ChangesResponse } from './generated/ChangesResponse'
+import type { BrowserChangesResponse } from './generated/BrowserChangesResponse'
 import { workspacePath } from './workspaces'
 
 function fileQuery(orgId: string, id: string, route: string, path: string) {
@@ -26,7 +26,7 @@ export type FileEvent =
   | { type: 'files.snapshot'; tree: FileTreeResponse }
   | { type: 'files.unavailable' }
   | { type: 'files.changed'; delta: FileTreeDelta }
-  | { type: 'changes.updated'; changes: ChangesResponse }
+  | { type: 'changes.updated'; changes: BrowserChangesResponse }
   | { type: 'changes.changed'; delta: ChangesDelta }
 
 /**

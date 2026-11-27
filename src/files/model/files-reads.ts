@@ -1,4 +1,4 @@
-import type { ChangesResponse } from '../../shared/generated/ChangesResponse'
+import type { BrowserChangesResponse } from '../../shared/generated/BrowserChangesResponse'
 import type { FileTreeResponse } from '../../shared/generated/FileTreeResponse'
 import type { FilesClient, FilesListResult } from '../api/files-client'
 
@@ -6,7 +6,7 @@ export type FileList = 'tree' | 'changes'
 
 export type FileListRead =
   | { list: 'tree'; result: FilesListResult<FileTreeResponse> }
-  | { list: 'changes'; result: FilesListResult<ChangesResponse> }
+  | { list: 'changes'; result: FilesListResult<BrowserChangesResponse> }
 
 /** Owns the pending reads and the two cutoffs of the first visit. */
 export class FilesReads {

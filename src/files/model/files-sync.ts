@@ -1,14 +1,16 @@
-import type { ChangesResponse } from '../../shared/generated/ChangesResponse'
+import type { BrowserChangesResponse } from '../../shared/generated/BrowserChangesResponse'
+import type { ChangesDelta } from '../../shared/generated/ChangesDelta'
 import type { FileTreeDelta } from '../../shared/generated/FileTreeDelta'
 import type { FileTreeResponse } from '../../shared/generated/FileTreeResponse'
-import type { FileEvent } from '../../shared/files'
 import type { FilesError } from '../api/files-errors'
+import type { ParsedFileEvent } from '../api/parse-events'
+import { applyChangesDelta, listedPaths } from './changes-model'
 import type { FileListRead } from './files-reads'
 import { applyTreeDelta, treeFromSnapshot, type FileTree } from './tree-model'
 
 interface ListState<T> {
   value: T | null
-  /** The read cutoff or the newest event that changed the list. */
+  /** The read cutoff or the newest event that the list must account for. */
   floor: number
   error: FilesError | null
 }
@@ -26,7 +28,9 @@ export interface FilesSync {
   pending: readonly TreeUpdate[]
   /** An update skipped a revision, so the tree must be read again. */
   treeStale: boolean
-  changes: ListState<ChangesResponse>
+  changes: ListState<BrowserChangesResponse>
+  /** The changes list must be read again after an update it could not apply. */
+  changesStale: boolean
 }
 
 /** A merge result, with the paths whose content may have changed. */
@@ -43,6 +47,7 @@ export const emptySync: FilesSync = {
   pending: [],
   treeStale: false,
   changes: { value: null, floor: -1, error: null },
+  changesStale: false,
 }
 
 const none: ReadonlySet<string> = new Set()
@@ -53,24 +58,6 @@ function unchanged(sync: FilesSync): SyncStep {
 
 function unknownPaths(sync: FilesSync): SyncStep {
   return { sync, touched: none, allTouched: true }
-}
-
-/**
- * The paths of both change lists. A new change list can change any diff,
- * also one with the same line counts, such as after the default branch
- * moves. So every listed path counts as touched.
- */
-function listedPaths(
-  before: ChangesResponse | null,
-  after: ChangesResponse,
-): ReadonlySet<string> {
-  if (!before) return none
-  const touched = new Set<string>()
-  for (const file of [...before.files, ...after.files]) {
-    touched.add(file.path)
-    if (file.previousPath) touched.add(file.previousPath)
-  }
-  return touched
 }
 
 function fetchedTree(
@@ -105,14 +92,14 @@ export function syncRead(
 ): SyncStep | null {
   const cutoff = result.stateRead?.eventNumber
   const { floor, value } = sync[list]
-  const repairingTree = list === 'tree' && sync.treeStale
+  const repairing = list === 'tree' ? sync.treeStale : sync.changesStale
   if (
     cutoff !== undefined &&
-    (cutoff < floor || (cutoff === floor && !repairingTree))
+    (cutoff < floor || (cutoff === floor && !repairing))
   )
     return null
   if (result.ok) {
-    if (cutoff === undefined && value && !repairingTree) return unchanged(sync)
+    if (cutoff === undefined && value && !repairing) return unchanged(sync)
     const next =
       list === 'tree'
         ? fetchedTree(sync, result.value, cutoff)
@@ -123,8 +110,9 @@ export function syncRead(
               floor: cutoff ?? floor,
               error: null,
             },
+            changesStale: false,
           }
-    return cutoff !== undefined || repairingTree
+    return cutoff !== undefined || repairing
       ? unknownPaths(next)
       : unchanged(next)
   }
@@ -143,7 +131,7 @@ export function syncRead(
           treeStale: false,
           pending: sync.pending.filter((update) => update.eventNumber > cutoff),
         }
-      : {}),
+      : { changesStale: false }),
   })
 }
 
@@ -172,10 +160,37 @@ function syncDelta(sync: FilesSync, update: TreeUpdate): SyncStep {
   }
 }
 
+function syncChangesDelta(
+  sync: FilesSync,
+  delta: ChangesDelta | null,
+  eventNumber: number,
+): SyncStep {
+  const before = sync.changes.value
+  const next =
+    delta && before && !sync.changesStale
+      ? applyChangesDelta(before, delta)
+      : null
+  if (!next) {
+    return unchanged({
+      ...sync,
+      changes: { ...sync.changes, floor: eventNumber },
+      changesStale: true,
+    })
+  }
+  return {
+    sync: {
+      ...sync,
+      changes: { value: next.changes, floor: eventNumber, error: null },
+    },
+    touched: next.touched,
+    allTouched: false,
+  }
+}
+
 /** Applies one file event of the stream, in event order. */
 export function syncEvent(
   sync: FilesSync,
-  event: FileEvent,
+  event: ParsedFileEvent,
   eventNumber: number,
 ): SyncStep {
   switch (event.type) {
@@ -209,12 +224,15 @@ export function syncEvent(
         sync: {
           ...sync,
           changes: { value: event.changes, floor: eventNumber, error: null },
+          changesStale: false,
         },
-        touched: listedPaths(sync.changes.value, event.changes),
+        touched: sync.changes.value
+          ? listedPaths(sync.changes.value, event.changes)
+          : none,
         allTouched: sync.changes.value === null,
       }
     case 'changes.changed':
-      return unchanged(sync)
+      return syncChangesDelta(sync, event.delta, eventNumber)
   }
 }
 
@@ -241,7 +259,10 @@ export function syncMoved(
         }
       : {}),
     ...(changes
-      ? { changes: { value: null, floor: eventNumber, error: null } }
+      ? {
+          changes: { value: null, floor: eventNumber, error: null },
+          changesStale: false,
+        }
       : {}),
   })
 }

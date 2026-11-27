@@ -14,15 +14,23 @@ cutoff. As soon as a read gives no readable cutoff, the store starts its
 stream after event 0. A stream report can fill the missing list while the
 other read is still pending.
 
-Each list has an event floor. Its read cutoff sets the floor. An event
-that changes the list advances it. An event at or below a list's floor
+Each list has an event floor. Its read cutoff sets the floor. A stream
+event can also advance it. An event at or below a list's floor
 has no effect on that list. Each new event still counts for stream order.
 A read with a cutoff above the list's floor replaces the list. When a
-tree revision gap still needs repair, a tree reply at the floor also
-applies. It includes the event that set the floor. If the tree reply has
-a cutoff below the floor and the gap remains, the store reads the tree
-again after that reply. An error without a cutoff starts no retry. A
-legacy reply can fill a missing list or repair a gap in the tree revisions.
+list needs a read after a delta, a reply at its floor also applies. It
+includes the event that set the floor. If a reply has a cutoff below the
+floor and the list still needs a read, the store reads it again after that
+reply. A legacy reply can fill a missing list or recover a list after a
+delta. A read error without a cutoff leaves recovery to the next stream
+update or an explicit retry.
+
+The changes list takes its revision from its read or the last complete
+event. A missing revision is unknown. A changes delta applies only at
+the next revision and when its rows fit the list. Otherwise the store
+keeps the list and reads it again. Each skipped delta advances the floor
+while the read waits. A full list from the stream can replace the list
+at once. [Changes deltas](../../docs/protocol/changes-deltas.md#in-the-browser)
 
 The stream reads stored history in pages, then applies live events.
 The pages share one cutoff and can omit event numbers. Live events wait
@@ -37,6 +45,10 @@ open page of such a path reads again.
 An add-or-replace (`upsert`) with unchanged entry fields reports a content
 change, so the open file and diff read again.
 
+An applied changes delta touches the removed and upserted paths. It also
+touches the previous path of each rename in the affected rows. A full
+changes list touches each path of the old and the new list.
+
 Some events cannot name their paths:
 
 - a new full tree
@@ -49,8 +61,8 @@ event. Then it applies them once.
 
 An accepted list read with a cutoff also refreshes every open file, diff,
 and HTML page preview. This includes a 503 with a cutoff. The read cannot
-name the paths of the events it covers. A legacy tree read that repairs a
-revision gap also refreshes all open paths. A legacy read that fills a
+name the paths of the events it covers. A legacy read that recovers a
+list after a delta also refreshes all open paths. A legacy read that fills a
 missing list leaves the open paths as they are.
 
 The workspace can refuse an update of a file list. After such a first
@@ -66,12 +78,12 @@ the two lists:
   full report of that list, in Unix milliseconds.
 - Only a marker with `repairFailed: true` and no session adds a failed
   repair. A first loss adds nothing. The chat owns the markers of a session.
-- A later full report of the same list in the stream clears it. A
-  tree delta and a report of the other list clear nothing.
+- A later full report of the same list in the stream clears it.
   [File reports](../../docs/protocol/file-reports.md)
   says which reports replace a list.
-- A read with a newer cutoff gives the open failure of its list. A legacy
-  reply without a cutoff leaves the failure in place.
+- A read with a newer cutoff gives the open failure of its list. A
+  changes read at the floor during recovery also gives the open failure.
+  A legacy reply without a cutoff leaves the failure in place.
 - A further failure of a failed list keeps the time of the first one.
 - A new store takes each failure and its first time from its own list
   read. Full replay can recover failures for a list read with no cutoff.
@@ -121,7 +133,7 @@ says. Each list starts with the repository from its read. Later
 A limited report leaves out entries or changed files, and it gives their
 totals. The tree keeps the count of its report in
 `FileTree.omittedEntryCount`, and the changes keep theirs in
-`ChangesResponse.omitted`. Each report replaces or keeps them, as
+`BrowserChangesResponse.omitted`. Each report replaces or keeps them, as
 [Omitted totals](../../docs/protocol/file-reports.md#omitted-totals) and
 [Updates and refreshes](../../docs/protocol/file-reports.md#updates-and-refreshes)
 say. A missing total is unknown, so no notice shows.

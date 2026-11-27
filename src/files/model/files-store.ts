@@ -98,7 +98,10 @@ export class WorkspaceFiles {
       !this.reads.has('tree')
     )
       this.read('tree')
-    if (!this.sync.changes.value && !this.reads.has('changes'))
+    if (
+      (!this.sync.changes.value || this.sync.changesStale) &&
+      !this.reads.has('changes')
+    )
       this.read('changes')
   }
 
@@ -181,6 +184,7 @@ export class WorkspaceFiles {
     if (!event && !failedRepair) return false
     const list =
       event?.type === 'changes.updated' ||
+      event?.type === 'changes.changed' ||
       failedRepair?.report === 'changes.updated'
         ? 'changes'
         : 'tree'
@@ -212,6 +216,8 @@ export class WorkspaceFiles {
     if (this.changesMoved) {
       this.changesMoved = false
       this.read('changes', false)
+    } else if (this.sync.changesStale && !this.reads.has('changes')) {
+      this.read('changes', false)
     }
     this.publish(invalidation.apply(this.snapshot))
   }
@@ -235,11 +241,16 @@ export class WorkspaceFiles {
     } = read
     const step = syncRead(this.sync, read)
     if (!step) {
-      if (list === 'tree' && this.sync.treeStale) this.read('tree', false)
+      const stale =
+        list === 'tree' ? this.sync.treeStale : this.sync.changesStale
+      if (stale) this.read(list, false)
       this.publish({})
       return
     }
-    if (stateRead && stateRead.eventNumber > this.sync[list].floor) {
+    if (
+      stateRead &&
+      (list === 'changes' || stateRead.eventNumber > this.sync[list].floor)
+    ) {
       this.repositories[list].seed(stateRead.repositoryId)
       const report = list === 'tree' ? 'files.snapshot' : 'changes.updated'
       this.repairs = setFailedRepair(

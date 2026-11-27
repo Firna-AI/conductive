@@ -1,4 +1,4 @@
-import type { ChangesResponse } from '../../shared/generated/ChangesResponse'
+import type { BrowserChangesResponse } from '../../shared/generated/BrowserChangesResponse'
 import type { FilesError } from '../api/files-errors'
 import type { FailedRepairs } from './failed-repairs'
 import type { FileTree } from './tree-model'
@@ -13,7 +13,7 @@ export interface FilesSnapshot {
    * or empty when none was saved. A newer full report or cutoff can clear it.
    */
   treeUnavailable: boolean
-  changes: ChangesResponse | null
+  changes: BrowserChangesResponse | null
   changesError: FilesError | null
   /** The folders that the user opened or closed in this page session. */
   folders: ReadonlyMap<string, boolean>

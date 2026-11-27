@@ -41,10 +41,7 @@ const changed: ChangesResponse = {
 }
 
 /** Browser events contain the joined tree and changes reports. */
-const browserFileEvents: readonly Exclude<
-  FileEvent,
-  { type: 'changes.changed' }
->[] = [
+const browserFileEvents: readonly FileEvent[] = [
   { type: 'files.snapshot', tree: data.files },
   { type: 'changes.updated', changes: data.changes },
   {
@@ -87,15 +84,14 @@ const browserFileEvents: readonly Exclude<
   { type: 'changes.updated', changes: changed },
 ]
 
-type RecordedRunnerFileEvent = Exclude<
-  RunnerFileEvent,
-  { type: 'changes.changed' }
->
-
 /** Complete reports for readers that do not yet join runner parts. */
-export const recordedRunnerFileEvents: readonly RecordedRunnerFileEvent[] =
-  browserFileEvents.map((event): RecordedRunnerFileEvent => {
-    if (event.type === 'files.changed' || event.type === 'files.unavailable')
+export const recordedRunnerFileEvents: readonly RunnerFileEvent[] =
+  browserFileEvents.map((event): RunnerFileEvent => {
+    if (
+      event.type === 'files.changed' ||
+      event.type === 'files.unavailable' ||
+      event.type === 'changes.changed'
+    )
       return event
     if (event.type === 'files.snapshot')
       return {
@@ -116,7 +112,8 @@ export const recordedRunnerFileEvents: readonly RecordedRunnerFileEvent[] =
 /** @public Multipart reports for the fake endpoint and future workspace joining. */
 export const recordedMultipartRunnerFileEvents: readonly RunnerFileEvent[] =
   recordedRunnerFileEvents.flatMap((event): readonly RunnerFileEvent[] => {
-    if (event.type === 'files.unavailable') return [event]
+    if (event.type === 'files.unavailable' || event.type === 'changes.changed')
+      return [event]
     if (event.type === 'files.changed') {
       return [0, 1].map((index) => ({
         type: 'files.changed',

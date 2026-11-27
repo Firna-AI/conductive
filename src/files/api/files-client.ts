@@ -1,4 +1,4 @@
-import type { ChangesResponse } from '../../shared/generated/ChangesResponse'
+import type { BrowserChangesResponse } from '../../shared/generated/BrowserChangesResponse'
 import type { DiffResponse } from '../../shared/generated/DiffResponse'
 import type { FileResponse } from '../../shared/generated/FileResponse'
 import type { FileTreeResponse } from '../../shared/generated/FileTreeResponse'
@@ -27,7 +27,9 @@ export type FilesListResult<T> = FilesResult<T> & { stateRead?: FilesStateRead }
 /** The file reads and the download address of one workspace. No method throws. */
 export interface FilesClient {
   readTree(signal?: AbortSignal): Promise<FilesListResult<FileTreeResponse>>
-  readChanges(signal?: AbortSignal): Promise<FilesListResult<ChangesResponse>>
+  readChanges(
+    signal?: AbortSignal,
+  ): Promise<FilesListResult<BrowserChangesResponse>>
   readFile(
     path: string,
     signal?: AbortSignal,

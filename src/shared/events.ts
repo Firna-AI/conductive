@@ -15,7 +15,11 @@ export function workspaceEventsPath(
   workspaceId: string,
   afterEventNumber = 0,
 ): string {
-  return `${workspacePath(orgId, workspaceId)}/events?after=${afterEventNumber}`
+  const query = new URLSearchParams({
+    after: String(afterEventNumber),
+    forms: 'changes.changed',
+  })
+  return `${workspacePath(orgId, workspaceId)}/events?${query}`
 }
 export function chatHistoryPath(
   orgId: string,

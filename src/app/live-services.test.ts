@@ -83,6 +83,9 @@ describe('createLiveServices', () => {
           'tty',
         ],
       ])
+      expect(new URL(addresses[0][0]).searchParams.get('forms')).toBe(
+        'changes.changed',
+      )
       stop()
       terminal?.close()
       expect(close).toHaveBeenCalledTimes(2)

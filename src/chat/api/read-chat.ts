@@ -67,6 +67,7 @@ const readRunnerEventType = oneOf<RunnerEventRefused['runnerEventType']>({
   'files.unavailable': true,
   'files.changed': true,
   'changes.updated': true,
+  'changes.changed': true,
   'ports.updated': true,
   'skills.updated': true,
   'runner.ready': true,

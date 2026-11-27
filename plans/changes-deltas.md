@@ -181,15 +181,15 @@ Depends on: 2
 
 The Worker accepts, checks, stores, and repairs deltas. Its welcome reads `CHANGES_DELTAS`, which stays `"off"`.
 
-- [ ] Parse `changes.changed` in the runner input and check its event limits.
-- [ ] Apply a delta at the next changes revision only. Write the touched buckets, the order text, and the manifest with its `revision`. Write the `revision` with each full list too.
-- [ ] Refuse a delta that breaks the contract, and ask for one full changes list, as decision 2 says. Map the refusal marker to the changes list.
-- [ ] Mask the labels of each delta row in the workspace output filter.
-- [ ] Keep the newest delta in the history beside the newest full list, and parse a stored delta in the history pages. Pass a stored file event of an unknown type through the history reader.
-- [ ] Return the `revision` from the changes read.
-- [ ] Add `CHANGES_DELTAS = "off"` to `wrangler.jsonc` and the binding types. Accept in the welcome only when it is `"on"` and the hello offers deltas.
-- [ ] Test the next-revision rule, each refusal, the repair, the history replacement, the masking, and a rollback that resends deltas to a Worker with the variable off.
-- [ ] Update `worker/files/README.md` and `worker/chat/report-repairs.md`.
+- [x] Parse `changes.changed` in the runner input and check its event limits.
+- [x] Apply a delta at the next changes revision only. Write the touched buckets, the order text, and the manifest with its `revision`. Write the `revision` with each full list too.
+- [x] Refuse a delta that breaks the contract, and ask for one full changes list, as decision 2 says. Map the refusal marker to the changes list.
+- [x] Mask the labels of each delta row in the workspace output filter.
+- [x] Keep the newest delta in the history beside the newest full list, and parse a stored delta in the history pages. Pass a stored file event of an unknown type through the history reader.
+- [x] Return the `revision` from the changes read.
+- [x] Add `CHANGES_DELTAS = "off"` to `wrangler.jsonc` and the binding types. Accept in the welcome only when it is `"on"` and the hello offers deltas.
+- [x] Test the next-revision rule, each refusal, the repair, the history replacement, the masking, and a rollback that resends deltas to a Worker with the variable off.
+- [x] Update `worker/files/README.md` and `worker/chat/report-repairs.md`.
 
 ## Milestone 4: Two forms for the sockets
 
@@ -197,11 +197,11 @@ Depends on: 3
 
 Each socket gets the form that it asks for, live and in replays.
 
-- [ ] Read `forms` from the `/events` address of each socket, and keep the forms in the socket attachment.
-- [ ] Send each delta to the sockets that name its form. Send the complete list, built once for each event, to each other socket.
-- [ ] In a replay, send the newest delta as the complete list to a socket that does not name the form, or leave it out when the projection does not hold its revision.
-- [ ] Test that both forms give the same list at each event number, live and in replays, also after the object wakes, and that no socket gets an event twice or out of order.
-- [ ] Update the README of `worker/chat/` that describes the browser sockets.
+- [x] Read `forms` from the `/events` address of each socket, and keep the forms in the socket attachment.
+- [x] Send each delta to the sockets that name its form. Send the complete list, built once for each event, to each other socket.
+- [x] In a replay, send the newest delta as the complete list to a socket that does not name the form, or leave it out when the projection does not hold its revision.
+- [x] Test that both forms give the same list at each event number, live and in replays, also after the object wakes, and that no socket gets an event twice or out of order.
+- [x] Update the README of `worker/chat/` that describes the browser sockets.
 
 ## Milestone 5: Browser applies deltas
 
@@ -209,12 +209,12 @@ Depends on: 4
 
 The Files store applies deltas and asks for them. The Changes panel looks the same.
 
-- [ ] Parse `changes.changed`, and the `revision` of a full list and of the changes read.
-- [ ] Apply a delta at the next revision. Read the list again after a gap or with an unknown revision.
-- [ ] Mark the paths of each delta as touched.
-- [ ] Add `forms=changes.changed` to the address of each event socket.
-- [ ] Test the order rule, the gap, the unknown revision, and the touched paths.
-- [ ] Update `src/files/store.md`, if it describes the changes updates.
+- [x] Parse `changes.changed`, and the `revision` of a full list and of the changes read.
+- [x] Apply a delta at the next revision. Read the list again after a gap or with an unknown revision.
+- [x] Mark the paths of each delta as touched.
+- [x] Add `forms=changes.changed` to the address of each event socket.
+- [x] Test the order rule, the gap, the unknown revision, and the touched paths.
+- [x] Update `src/files/store.md`, if it describes the changes updates.
 
 ## Milestone 6: Runner sends deltas
 
@@ -222,14 +222,14 @@ Depends on: 2
 
 The runner offers deltas and sends them when the welcome accepts.
 
-- [ ] Offer `changesDeltas` in the hello. Keep the flag of each welcome.
-- [ ] Build a delta from the last emitted rows and the new rows, with the `index` of each upsert and the complete header.
-- [ ] Send one full list after each connect, after a base change, and when a delta does not fit 512 changes or 256 KiB.
-- [ ] Keep all changes events of a scan before its tree update.
-- [ ] Mask the labels of each delta row in the runner filter.
-- [ ] Test the delta of each kind of edit, the omitted-only edit, the limit boundary, the size fallback, the base change, the reconnect, the restart, and the resend.
-- [ ] Update `runner/file-reports.md`, `runner/event-limits.md`, and `crates/cnd-runner/README.md`.
-- [ ] Run the Rust checks named in `AGENTS.md`.
+- [x] Offer `changesDeltas` in the hello. Keep the flag of each welcome.
+- [x] Build a delta from the last emitted rows and the new rows, with the `index` of each upsert and the complete header.
+- [x] Send one full list after each connect, after a base change, and when a delta does not fit 512 changes or 256 KiB.
+- [x] Keep all changes events of a scan before its tree update.
+- [x] Mask the labels of each delta row in the runner filter.
+- [x] Test the delta of each kind of edit, the omitted-only edit, the limit boundary, the size fallback, the base change, the reconnect, the restart, and the resend.
+- [x] Update `runner/file-reports.md`, `runner/event-limits.md`, and `crates/cnd-runner/README.md`.
+- [x] Run the Rust checks named in `AGENTS.md`.
 
 ## Milestone 7: Measurement
 
