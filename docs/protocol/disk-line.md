@@ -191,7 +191,7 @@ adds the disk line.
 - When a state save of the runner fails because the disk is full, the
   runner runs a root command of that part, which deletes the reserve. The
   runner then tries the save once more. That command deletes only the
-  reserve.
+  reserve (disk hold decision 9 A).
 - Reason: a program without root rights cannot put a file at the path of
   the reserve, so the delete never removes a file that the sandbox
   software did not make. A reserve that the runner keeps beside its state

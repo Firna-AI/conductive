@@ -356,7 +356,7 @@ Depends on: every other milestone
       Evidence: `.context/workspace-disk-hold/smoke.log`. A stop and a
       resume at the line were checked in Milestone 1.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record follow-up
       items under `plans/follow-ups/` for the rest, re-review once, and
