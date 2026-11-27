@@ -144,9 +144,14 @@ can save a higher line in
 When usage is at or below the configured line, the command removes the
 saved line.
 
-`conductive disk release` runs as root and restores 4,096 reserved
-clusters on every ext4 device. Both commands report a failure in one
-line on standard error and return a non-zero exit status.
+When the hold applies and at least 1 GiB remains available to the
+sandbox user, `conductive disk hold` keeps a 256 MiB reserve with
+allocated blocks at `/var/lib/conductive/runner-reserve`. The parent
+directory is root-owned with mode `0700`.
+
+`conductive disk free-reserve` runs as root and removes that file if
+it exists. Both disk commands report a failure in one line on standard
+error and return a non-zero exit status.
 
 ### Session watches
 

@@ -32,13 +32,13 @@ adds the disk line.
   automatic deletes of build output, such as before each stop or by a
   timer. Cal also rejected a resume on a larger size, a limit that the
   provider enforces, and a disk warning in the app.
-- A reserve file was rejected, because it counts as used disk, and a
-  forced stop skips its delete. A larger root reserve of the file system
-  and a user quota were rejected, because root and Docker pass them. A
-  volume for build output was rejected, because other files still fill the
-  disk. A line that the agent runner keeps for agent commands, with no
-  hold, was rejected, because the hold keeps the line exactly and also
-  stops Docker.
+- A reserve file in place of the hold was rejected, because it counts as
+  used disk, and a forced stop skips its delete. A larger root reserve of
+  the file system and a user quota were rejected, because root and Docker
+  pass them. A volume for build output was rejected, because other files
+  still fill the disk. A line that the agent runner keeps for agent
+  commands, with no hold, was rejected, because the hold keeps the line
+  exactly and also stops Docker.
 - A notice in the chat before the line, and a start step near the line,
   were not chosen (disk hold decision 1). The app shows no notice when a
   sandbox nears or reaches the line. The
@@ -73,6 +73,10 @@ adds the disk line.
   variable `CONDUCTIVE_DISK_LINE_BYTES`, in bytes, at each create and each
   resume. A sandbox without that variable gets no hold. Reason: the Worker
   chooses the provider of each sandbox.
+- Two resumes get no line: the restart near day 14 of an archived
+  workspace, and the restart near day 14 of a workspace whose org is
+  [deleted](delete-org.md).
+  [When the line applies](#when-the-line-applies) gives the reason.
 - No org env var with that name reaches a sandbox, on any provider.
   Reason: an org then can neither set nor change the line.
 
@@ -83,9 +87,12 @@ adds the disk line.
   decision 1).
 - That part sets the hold at these times:
   - at each boot of the sandbox, and again every 5 minutes
-  - at once when the
-    [background restore of the disk](terminal-shell.md#the-shell) ends
+  - at once when the app sees that the
+    [background restore of the disk](terminal-shell.md#the-shell) has
+    ended
   - at once when a [workspace command](#when-the-line-applies) ends
+- While the restore runs, the app checks for its end every 5 seconds,
+  also during a start.
 - Each time, it holds the line only when the line applies. Otherwise, it
   releases the hold.
 - Reason: the hold then also covers Docker, the programs that the startup
@@ -126,11 +133,20 @@ adds the disk line.
 - The line applies only when the
   [background restore of the disk](terminal-shell.md#the-shell) has ended
   and no workspace command runs. This holds also at the restart near
-  day 14 of a stop. At other times, the hold is released, and writes can
-  pass the line.
+  day 14 of a stop, with the two exceptions below. At other times, the
+  hold is released, and writes can pass the line.
 - So the hold never blocks a workspace command or the background restore
   of the disk. Until the restore ends, the released hold lets back each
   disk that the provider accepted.
+- The line does not apply at the
+  [restart near day 14](stop-and-resume.md#the-restart-near-day-14) of an
+  archived workspace, or at that of a workspace whose org is
+  [deleted](delete-org.md). These restarts only keep the disk of a stopped
+  sandbox, and they run no workspace command. They get no line, so the
+  sandbox software neither holds the line nor releases the hold during
+  them.
+- Reason: these restarts run no startup script, no agent runner, and no
+  work of a member. They only resume the sandbox and stop it again.
 - Each workspace command releases the hold when it begins. This also
   releases the hold that a resume onto the same machine keeps from its
   last run. The hold stays released until the command ends, also when the
@@ -138,6 +154,12 @@ adds the disk line.
 - Reason: a command at the line can then still write its files and its
   result. Without them, a start fails, and its members cannot use their
   workspace.
+- The release changes only the hold of the disk of `/`, and only in a
+  sandbox with a line. It changes nothing on another disk. Reason: the
+  release then undoes only the hold that the sandbox software sets. A
+  release of every disk of the sandbox was rejected, because it also
+  changed disks that have no hold. On a small disk, that change can take
+  away free space.
 - When a workspace command ends, the line applies again at once, unless
   the restore has not ended or another workspace command runs.
 - A workspace command keeps the hold released for at most 25 minutes.
@@ -151,5 +173,22 @@ adds the disk line.
 - Risk: writes while the hold is released, such as during the restore or
   during a workspace command, can take the disk past the line. The next
   hold then treats it as [a disk above the line](#a-disk-above-the-line).
+
+## Saves of the agent runner
+
 - When writes fail at the line, the agent runner still saves its own
   state as a best effort, so that the chat keeps its events.
+- For that, the part of the sandbox software that sets the hold keeps a
+  reserve of 256 MiB on the disk of `/`, in a folder that only root can
+  reach. The reserve counts as used disk under the line. That part makes
+  the reserve only when the line applies and at least 1 GiB is free for
+  the user of the cloud computer.
+- When a state save of the runner fails because the disk is full, the
+  runner runs a root command of that part, which deletes the reserve. The
+  runner then tries the save once more. That command deletes only the
+  reserve.
+- Reason: a program without root rights cannot put a file at the path of
+  the reserve, so the delete never removes a file that the sandbox
+  software did not make. A reserve that the runner keeps beside its state
+  file was rejected, because another program can put its own file at that
+  path before the delete.

@@ -35,16 +35,11 @@ call and keeps its pending changes. Later saves write the complete pending
 state. Sends and resends read only committed events. A confirmation removes
 an accepted turn record only when it covers the turn's end.
 
-For an absolute state file path, the runner allocates a 256 MiB reserve at
-`<state file>.reserve`. It creates the file exclusively and marks the file
-with an extended attribute. Only a file with the runner's ownership marker
-can be removed or resized. A name collision logs a warning once and
-disables the reserve for that runner instance.
-
-If a state save fails with ENOSPC, the runner removes its reserve and
-retries the save once. A later successful save can rebuild the reserve
-when at least 1 GiB is available on that filesystem. Reserve maintenance
-is best effort.
+If a state save fails with ENOSPC, the runner calls `conductive disk
+free-reserve` through `sudo -n` and retries the save once. The runner logs
+the first failure to free the reserve for that state store. The root disk
+hold command maintains the reserve when the disk line applies and there
+is space for it. See [Workspace disk hold](../cnd-cli/README.md#workspace-disk-hold).
 
 Recovery appends one stopped end for each unfinished saved turn. A recovered
 started turn marks its files as unavailable. A saved end keeps its original

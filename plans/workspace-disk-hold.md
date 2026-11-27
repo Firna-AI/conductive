@@ -188,14 +188,36 @@ My calls, all on 2026-11-26:
     them. Reason: review findings 1 and 4, 2026-11-27. This replaces the
     start-time release of design call 5 and the trailing hold of design
     call 10.
-12. **The runner reserve.** It is `<state file>.reserve`, created exclusively
-    and marked, and the runner deletes only a reserve that it made. A
-    relative state path gets no reserve. Reason: review finding 3,
-    2026-11-27. This refines design call 7.
+12. **The runner reserve.** Changed on 2026-11-27 after review finding 9:
+    `conductive disk hold` keeps a 256 MiB reserve in the root-only folder
+    `/var/lib/conductive/runner-reserve`, only when the line applies, no
+    lease is valid, and at least 1 GiB is free for `user`. When a state save
+    fails because the disk is full, the runner runs `conductive disk
+    free-reserve` through `sudo -n`, then retries once. Reason: a reserve
+    beside the state file could delete a member's file, and Boat gives
+    restored files new inode numbers, so an ownership mark on the file
+    breaks after a resume. This replaces design call 7.
 13. **The build card.** A build saves the used bytes of `/`, and the free
     storage is computed at read time from the account's current line. Older
     rows on an account with a line show no figure. Reason: review finding 5,
     2026-11-27.
+
+14. **Release only the root disk.** A workspace command releases the hold
+    through `conductive disk hold`, which changes only the disk of `/` and
+    only when a line is set. A shell fallback does the same when `/run` is
+    full. `conductive disk release` is gone. Reason: review finding 11,
+    2026-11-27.
+15. **Journal storage.** A workspace journal truncates the output of
+    journals settled for 30 minutes, and pre-writes its result file, so a
+    result always publishes. Reason: review finding 8, 2026-11-27. The full
+    rework is the follow-up item `workspace-journal-supervisor.md`.
+16. **A restore that ends during a start.** The Worker checks every 5
+    seconds during a start, also during the runner wait, and a failed
+    restart keeps the check. Reason: review finding 7, 2026-11-27.
+17. **Restarts that only keep a disk.** The archive restart and the
+    deleted-org restart near day 14 get no line and no restore marker.
+    Reason: review finding 12, 2026-11-27. They run no workspace command,
+    and this keeps the behaviour of `origin/main`.
 
 ## Milestone 1: Documentation and protocol
 

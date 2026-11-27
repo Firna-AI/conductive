@@ -161,6 +161,9 @@ number names a decision of the change that adds the
   sandbox and stops it again.
 - Reason: Archive revokes the workspace token, and an archived workspace
   has no tools.
+- The restart of an archived sandbox, and the restart of a workspace whose
+  org is [deleted](delete-org.md), get no disk line, as
+  [When the line applies](disk-line.md#when-the-line-applies) says.
 - After a [Restore](workspace-life.md#restore), a workspace on Boat gets
   this restart again, near day 14 of its last stop. When that time has
   passed, the restart runs at once.
@@ -175,4 +178,5 @@ number names a decision of the change that adds the
   provider, when that provider has one, so that its saved disk stays small
   enough to resume (disk hold decision 1). [Disk line](disk-line.md)
   states the line of each provider, the hold that keeps it, a disk above
-  the line, and when the line applies.
+  the line, when the line applies, and the saves of the agent runner at
+  the line.

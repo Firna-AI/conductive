@@ -230,23 +230,43 @@ each record and start job stores, the client that each call uses, and the
 
 The [provider account settings](../sandbox/accounts.ts) set a disk line
 for Boat. [Sandbox variables](sandbox-environment.ts) pass it as
-`CONDUCTIVE_DISK_LINE_BYTES` at create and resume, including disk
-retention. The Worker drops any org value with that name for every account.
+`CONDUCTIVE_DISK_LINE_BYTES` at create and resume, including the disk
+retention restart of a workspace that is not archived. The Worker drops
+any org value with that name for every account.
+
+The [archive maintenance restart](archive-maintenance.ts) and the
+[deleted-org disk restart](../members/retention.md) resume with no env
+values. So they get no disk line and write no restore marker, as
+[When the line applies](../../docs/protocol/disk-line.md#when-the-line-applies)
+says.
 
 The [command journal](command-intents.ts) uses `/run/conductive-lifecycle`
 for workspace commands. It can still recover existing journals in
 `/tmp/conductive-lifecycle`, which also holds image build journals.
-The owner of a workspace journal opens a root-owned lease for up to
-25 minutes under `/run/conductive-disk/leases`. It then releases the disk
-hold directly through the kernel setting, which also works with older
-sandbox software. After it publishes the command result, the owner removes
-the lease and calls `conductive disk hold`. A replay reads the journal
-without changing the hold. The disk commands are best effort.
+Before it runs a command, the workspace journal owner empties the output
+files of journals with results older than 30 minutes. It also writes a
+temporary result before the command starts. When the command ends, the
+owner overwrites the allocated bytes and renames the file to publish the
+exit status.
+
+The owner opens a root-owned lease for up to 25 minutes under
+`/run/conductive-disk/leases` and calls `conductive disk hold`. The lease
+makes the command release the hold on the root ext4 device when a disk
+line is set. If the lease write or command fails, the owner uses the
+mount table to reset that device directly when a disk line is set.
+After it publishes the result, the owner removes the lease and calls
+`conductive disk hold` again. Replays read the saved journal. The disk
+commands are best effort.
 
 If the provider reports a completed restore at readiness, the first
 workspace command writes the restore marker on accounts with a disk line.
+If the restore is still in progress, the start checks it every 5 seconds,
+including while it waits for the runner. It writes the marker when the
+provider reports completion. A valid command lease keeps the hold released.
+The [lifecycle restore watch](workspace-object.md#creates-and-resumes)
+can still mark a restore after startup.
 Disk retention uses its existing provider status checks to mark a completed
-restore. The terminal restore watch can still mark a restore after startup.
+restore.
 
 [Free storage](image-builds.md#free-storage) describes how build reads
 use the current disk line to calculate writable space.

@@ -1,19 +1,19 @@
-//! Disk hold and release against a fake filesystem.
+//! Disk hold against a fake filesystem.
 
 #![allow(clippy::unwrap_used)]
 
 use std::ffi::OsStr;
-use std::io::{self, ErrorKind};
+use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use unimock::{Clause, MockFn, Unimock, matching};
 
-use super::hold::{MOUNT_INFO, RESTORE_MARKER, SAVED_LINE, Space, apply, release};
+use super::hold::{MOUNT_INFO, RESTORE_MARKER, SAVED_LINE, Space, apply};
 use super::settings::{ENV_FILE, configured_line};
 use super::{
-    DiskError, HoldLock, MockExists, MockLeasePaths, MockLock, MockRead, MockReadLink,
-    MockRemoveLine, MockSaveLine, MockSettings, MockSpace, MockWriteHold,
+    DiskError, HoldLock, MockAvailableBytes, MockExists, MockLeasePaths, MockLock, MockRead,
+    MockReadLink, MockRemoveLine, MockSaveLine, MockSpace, MockWriteHold,
 };
 
 const VDA_SETTING: &str = "/sys/fs/ext4/vda1/reserved_clusters";
@@ -21,6 +21,8 @@ const CONFIGURED: &str = "72000000000";
 
 #[path = "disk_lease_tests.rs"]
 mod disk_lease_tests;
+#[path = "disk_reserve_tests.rs"]
+mod disk_reserve_tests;
 
 impl HoldLock for () {}
 
@@ -56,6 +58,13 @@ fn no_leases() -> impl Clause {
 }
 
 fn root_space(free: u64) -> impl Clause {
+    (
+        measured_space(free),
+        MockAvailableBytes.some_call(matching!()).returns(Ok(0)),
+    )
+}
+
+fn measured_space(free: u64) -> impl Clause {
     MockSpace.some_call(matching!()).returns(Ok(Space {
         blocks: 20_000_000,
         free,
@@ -229,23 +238,4 @@ fn bounds_the_hold_by_the_default_then_free_and_total_space() {
         };
         assert_eq!(space.hold(72_000_000_000), expected, "{space:?}");
     }
-}
-
-#[test]
-fn release_attempts_every_setting_even_after_a_write_fails() {
-    let disk = Unimock::new((
-        lock(),
-        MockSettings.some_call(matching!()).returns(Ok(vec![
-            PathBuf::from("/sys/fs/ext4/vda2/reserved_clusters"),
-            PathBuf::from(VDA_SETTING),
-        ])),
-        MockWriteHold
-            .some_call(matching!((path, 4096) if *path == Path::new("/sys/fs/ext4/vda2/reserved_clusters")))
-            .returns(Err(io::Error::from(ErrorKind::PermissionDenied))),
-        write_hold(4096),
-    ));
-    assert!(matches!(
-        release(&disk),
-        Err(DiskError::Io { source, .. }) if source.kind() == ErrorKind::PermissionDenied
-    ));
 }

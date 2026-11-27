@@ -8,6 +8,7 @@ import { createCompletedWorkspace } from './completed-creation-test-support'
 import { resumeCompletedWorkspace } from './completed-resume-test-support'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { DISK_KEEPALIVE_MS } from './durable-types'
+import { readyWorkspace } from './software-restart.test-support'
 import { stopWorkspaceSandbox } from './workspace-actions'
 import { suspendOrg } from '../operator/suspend-org'
 
@@ -197,6 +198,31 @@ it('ends the restore watch when an org suspension leaves its stop pending', asyn
   fixture.boat.hydrated = true
   await fixture.advanceTo(startedAt + 35_000, id)
   expect(markerCommands(fixture)).toEqual([])
+})
+
+it('writes the restore marker after a software restart fails with the sandbox still running', async () => {
+  const fixture = fixtureForTest()
+  fixture.boat.hydrated = false
+  const { restart, lifecycle, workspaceId } = await readyWorkspace(fixture)
+  const startedAt = fixture.runtime.dependencies.now()
+  fixture.boat.synchronousExitCode = 1
+  await expect(restart()).rejects.toMatchObject({ code: 'restart_failed' })
+  fixture.boat.synchronousExitCode = 0
+  const reads = fixture.boat.sandboxReads.length
+
+  await fixture.advanceTo(startedAt + 5_000, workspaceId)
+  expect(markerCommands(fixture)).toEqual([])
+  fixture.boat.hydrated = true
+  await fixture.advanceTo(startedAt + 10_000, workspaceId)
+  expect(markerCommands(fixture)).toMatchObject([
+    { sandboxId: 'bx_1', detached: false },
+  ])
+  expect(fixture.boat.sandboxReads.slice(reads)).toEqual(['bx_1', 'bx_1'])
+  expect(fixture.boat.stopIds).toEqual([])
+  expect(await lifecycle()).toMatchObject({
+    state: 'error',
+    error: { code: 'restart_failed' },
+  })
 })
 
 it('keeps the restore watch after Boat read and marker command errors', async () => {

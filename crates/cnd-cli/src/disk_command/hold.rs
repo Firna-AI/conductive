@@ -3,11 +3,12 @@
 use std::path::{Path, PathBuf};
 
 use super::leases;
+use super::reserve;
 use super::settings::decimal_line;
 use super::{DiskError, DiskIo, DiskResult, IoContext, read_optional};
 
-pub(super) const EXT4: &str = "/sys/fs/ext4";
-pub(super) const SETTING: &str = "reserved_clusters";
+const EXT4: &str = "/sys/fs/ext4";
+const SETTING: &str = "reserved_clusters";
 pub(super) const MOUNT_INFO: &str = "/proc/self/mountinfo";
 pub(super) const RESTORE_MARKER: &str = "/run/conductive-terminal/restore-ended";
 pub(super) const SAVED_LINE: &str = "/var/lib/conductive/disk-line";
@@ -46,36 +47,31 @@ pub(super) fn apply(disk: &dyn DiskIo, line: u64) -> DiskResult<()> {
         return Ok(());
     };
     let _lock = disk.lock()?;
-    let hold = if !leases::any_active(disk)?
-        && disk
+    if leases::any_active(disk)?
+        || !disk
             .exists(Path::new(RESTORE_MARKER))
             .during("check the restore marker")?
     {
-        let space = disk
-            .space()
-            .during("measure space on the root filesystem")?;
-        let effective = effective_line(disk, line, space.used_bytes()?)?;
-        space.hold(effective)
-    } else {
-        DEFAULT_HOLD
-    };
-    disk.write_hold(&setting, hold)
-        .during("set reserved clusters on the root filesystem")
-}
-
-pub(super) fn release(disk: &dyn DiskIo) -> DiskResult<()> {
-    let _lock = disk.lock()?;
-    let mut result = Ok(());
-    for setting in disk
-        .settings()
-        .during("list ext4 reserved cluster settings")?
-    {
-        let write = disk
+        return disk
             .write_hold(&setting, DEFAULT_HOLD)
-            .during("release ext4 reserved clusters");
-        result = result.and(write);
+            .during("set the default hold on the root filesystem");
     }
-    result
+
+    let space = disk
+        .space()
+        .during("measure space on the root filesystem")?;
+    let effective = effective_line(disk, line, space.used_bytes()?)?;
+    disk.write_hold(&setting, space.hold(effective))
+        .during("set reserved clusters on the root filesystem")?;
+    if disk
+        .available_bytes()
+        .during("measure space available to the runner")?
+        >= reserve::MIN_AVAILABLE_BYTES
+    {
+        disk.allocate_reserve(Path::new(reserve::PATH), reserve::BYTES)
+            .during("allocate the runner disk reserve")?;
+    }
+    Ok(())
 }
 
 fn effective_line(disk: &dyn DiskIo, line: u64, used: u64) -> DiskResult<u64> {

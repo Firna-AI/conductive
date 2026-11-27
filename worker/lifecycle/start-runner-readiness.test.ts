@@ -1,14 +1,68 @@
 import { expect, it } from 'vitest'
 
+import { TERMINAL_RESTORE_MARKER } from '../terminal/scripts'
 import { TEST_TIME } from '../test-support/harness'
+import { heldOperation } from '../test-support/held-operation'
 import { recordOrgSuspension } from '../operator/org-data'
 import { suspendUser } from '../operator/suspend-user'
 import { joinedMember } from '../operator/suspension-test-support'
 import { setupBackendTests } from './backend-test-hooks'
 import { startRetryFixture } from './retry-test-support'
+import { pendingCreate } from './start-chain.test-support'
+import { expectSettled } from './start-outside.test-support'
 import { advanceToRunner, resumedStartup } from './start-resume-test-support'
 
 const fixtureForTest = setupBackendTests()
+
+it('writes the restore marker during the runner wait after reconstructing the workspace', async () => {
+  const fixture = fixtureForTest()
+  fixture.boat.hydrated = false
+  const start = await pendingCreate(fixture)
+  const readyAt = TEST_TIME + 1_000
+  await start.actor.advance(readyAt)
+  await advanceToRunner(start)
+  const reads = fixture.boat.sandboxReads.length
+  const markers = () =>
+    fixture.boat.commandRequests.filter(({ command }) =>
+      command.includes(TERMINAL_RESTORE_MARKER),
+    )
+
+  await start.actor.advance(readyAt + 5_000)
+  expect(markers()).toEqual([])
+  fixture.boat.hydrated = true
+  await start.restart()
+  await start.actor.advance(readyAt + 10_000)
+  expect(markers()).toMatchObject([{ sandboxId: 'bx_1', detached: false }])
+  expect(fixture.boat.sandboxReads.slice(reads)).toEqual(['bx_1', 'bx_1'])
+  expect(await start.job()).toMatchObject({ phase: 'runner' })
+  expect((await start.endpoint.readLifecycle())?.runnerConnected).toBe(false)
+  expect(await start.actor.storage.getAlarm()).toBe(TEST_TIME + 1_200_000)
+})
+
+it('finishes the start when the runner connects during a restore check', async () => {
+  const fixture = fixtureForTest()
+  fixture.boat.hydrated = false
+  const start = await pendingCreate(fixture)
+  const readyAt = TEST_TIME + 1_000
+  await start.actor.advance(readyAt)
+  await advanceToRunner(start)
+  fixture.boat.hydrated = true
+  const held = heldOperation()
+  fixture.boat.beforeSandboxRead = () => held.wait()
+  const checking = start.actor.advance(readyAt + 5_000)
+  try {
+    await expectSettled(held.entered)
+    await expectSettled(
+      start.endpoint.reportRunnerLifecycle({ type: 'runner.ready' }),
+    )
+  } finally {
+    held.release()
+    await checking
+  }
+
+  expect((await start.job())?.phase).toBeUndefined()
+  expect(await start.wait()).toEqual({ ok: true })
+})
 
 it('keeps the create pending through runner readiness and fails at its original deadline', async () => {
   const fixture = fixtureForTest()

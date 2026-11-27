@@ -28,7 +28,7 @@ pub(crate) enum Command {
     GitCredential(PendingArgs),
     /// Stage or apply a sandbox software update.
     Update(UpdateArgs),
-    /// Set or release the disk hold. Requires root to change the hold.
+    /// Manage the disk hold and the runner's reserve. Requires root.
     Disk(DiskArgs),
     /// Manage workspaces.
     Workspaces(PendingArgs),

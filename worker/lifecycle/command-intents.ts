@@ -44,6 +44,7 @@ export function lifecycleCommand(
     : ''
   const journal = [
     'set -eu',
+    `workspace_journal_root=${shellQuote(workspace ? WORKSPACE_COMMAND_ROOT : '')}`,
     ...(workspace
       ? [
           `if [ ! -L ${ownerFile} ] && [ -L ${oldOwnerFile} ]; then`,

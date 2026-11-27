@@ -11,8 +11,9 @@ use rustix::io::Errno;
 use rustix::process::{Pid, geteuid, test_kill_process};
 use tempfile::NamedTempFile;
 
-use super::hold::{EXT4, SAVED_LINE, SETTING, Space};
+use super::hold::{SAVED_LINE, Space};
 use super::leases;
+use super::reserve;
 use super::{DiskError, DiskIo, DiskResult, HoldLock, IoContext};
 
 pub(super) struct LinuxDisk;
@@ -60,40 +61,35 @@ impl DiskIo for LinuxDisk {
         })
     }
 
+    fn available_bytes(&self) -> io::Result<u64> {
+        let stats = statvfs("/")?;
+        Ok(stats.f_bavail.saturating_mul(stats.f_frsize))
+    }
+
+    fn allocate_reserve(&self, path: &Path, bytes: u64) -> io::Result<()> {
+        reserve::allocate(path, bytes)
+    }
+
+    fn remove_reserve(&self, path: &Path) -> io::Result<()> {
+        reserve::remove(path)
+    }
+
     fn save_line(&self, bytes: u64) -> io::Result<()> {
-        let folder = "/var/lib/conductive";
-        fs::create_dir_all(folder)?;
+        let folder = Path::new(SAVED_LINE)
+            .parent()
+            .ok_or(ErrorKind::InvalidInput)?;
+        let directory = reserve::private_folder(folder)?;
         let mut file = NamedTempFile::new_in(folder)?;
         writeln!(file, "{bytes}")?;
         file.as_file()
             .set_permissions(Permissions::from_mode(0o644))?;
         file.as_file().sync_all()?;
         file.into_temp_path().persist(SAVED_LINE)?;
-        File::open(folder)?.sync_all()
+        directory.sync_all()
     }
 
     fn remove_line(&self) -> io::Result<()> {
         remove_if_exists(Path::new(SAVED_LINE))
-    }
-
-    fn settings(&self) -> io::Result<Vec<PathBuf>> {
-        let entries = match fs::read_dir(EXT4) {
-            Ok(entries) => entries,
-            Err(error) if error.kind() == ErrorKind::NotFound => return Ok(Vec::new()),
-            Err(error) => return Err(error),
-        };
-        let mut paths = Vec::new();
-        for entry in entries {
-            let entry = entry?;
-            if !entry.file_type()?.is_dir() {
-                continue;
-            }
-            let setting = entry.path().join(SETTING);
-            if setting.try_exists()? {
-                paths.push(setting);
-            }
-        }
-        Ok(paths)
     }
 
     fn write_hold(&self, path: &Path, clusters: u64) -> io::Result<()> {

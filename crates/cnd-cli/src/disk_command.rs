@@ -1,6 +1,7 @@
-//! Root commands that set or release the ext4 disk hold.
+//! Root commands for the ext4 disk hold and the runner's reserve.
 
 use std::env;
+use std::ffi::OsStr;
 use std::io;
 use std::path::{Path, PathBuf};
 
@@ -17,6 +18,7 @@ use self::linux::LinuxDisk;
 mod hold;
 mod leases;
 mod linux;
+mod reserve;
 mod settings;
 
 /// Options for the disk hold command.
@@ -30,29 +32,32 @@ pub(crate) struct DiskArgs {
 enum Operation {
     /// Apply the configured hold to the root filesystem.
     Hold,
-    /// Restore the default hold on every ext4 filesystem.
-    Release,
+    /// Free space for a runner state save.
+    FreeReserve,
 }
 
 /// Report any failure as one line at the command boundary.
 pub(crate) fn execute(args: DiskArgs) -> Result<()> {
-    match run(args.operation) {
+    let value = env::var_os(DISK_LINE_ENV);
+    match run(&LinuxDisk, args.operation, value.as_deref()) {
         Ok(()) => Ok(()),
         Err(error) => Err(Error::Disk(error)),
     }
 }
 
-fn run(operation: Operation) -> DiskResult<()> {
-    let disk = LinuxDisk;
+fn run(disk: &dyn DiskIo, operation: Operation, value: Option<&OsStr>) -> DiskResult<()> {
     match operation {
         Operation::Hold => {
-            let value = env::var_os(DISK_LINE_ENV);
-            if let Some(line) = settings::configured_line(&disk, value.as_deref())? {
-                hold::apply(&disk, line)?;
+            if let Some(line) = settings::configured_line(disk, value)? {
+                hold::apply(disk, line)?;
             }
             Ok(())
         }
-        Operation::Release => hold::release(&disk),
+        Operation::FreeReserve => {
+            let _lock = disk.lock()?;
+            disk.remove_reserve(Path::new(reserve::PATH))
+                .during("free the runner disk reserve")
+        }
     }
 }
 
@@ -61,9 +66,9 @@ trait HoldLock: Send + Sync {}
 #[cfg_attr(
     test,
     unimock::unimock(api = [
-        MockLock, MockRead, MockReadLink, MockExists, MockSpace, MockSaveLine, MockRemoveLine,
-        MockSettings, MockWriteHold, MockLeasePaths, MockRemoveLease, MockUnixSeconds,
-        MockProcessExists
+        MockLock, MockRead, MockReadLink, MockExists, MockSpace, MockAvailableBytes,
+        MockAllocateReserve, MockRemoveReserve, MockSaveLine, MockRemoveLine,
+        MockWriteHold, MockLeasePaths, MockRemoveLease, MockUnixSeconds, MockProcessExists
     ])
 )]
 trait DiskIo {
@@ -72,9 +77,11 @@ trait DiskIo {
     fn read_link(&self, path: &Path) -> io::Result<PathBuf>;
     fn exists(&self, path: &Path) -> io::Result<bool>;
     fn space(&self) -> io::Result<Space>;
+    fn available_bytes(&self) -> io::Result<u64>;
+    fn allocate_reserve(&self, path: &Path, bytes: u64) -> io::Result<()>;
+    fn remove_reserve(&self, path: &Path) -> io::Result<()>;
     fn save_line(&self, bytes: u64) -> io::Result<()>;
     fn remove_line(&self) -> io::Result<()>;
-    fn settings(&self) -> io::Result<Vec<PathBuf>>;
     fn write_hold(&self, path: &Path, clusters: u64) -> io::Result<()>;
     fn lease_paths(&self) -> io::Result<Vec<PathBuf>>;
     fn remove_lease(&self, path: &Path) -> io::Result<()>;
@@ -85,7 +92,7 @@ trait DiskIo {
 /// A disk command failure, with a diagnostic that contains no environment values.
 #[derive(Debug, Error)]
 pub(crate) enum DiskError {
-    #[error("[cnd-cli/disk] changing the disk hold requires root")]
+    #[error("[cnd-cli/disk] this disk command requires root")]
     RootRequired,
     #[error("[cnd-cli/disk] expected a decimal byte count in {location}")]
     InvalidLine { location: &'static str },

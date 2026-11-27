@@ -1,30 +1,23 @@
-//! Filesystem operations for the runner state file and its reserve.
+//! Save runner state and call the root command that frees its reserve.
 
+use std::env;
 use std::io;
 use std::path::Path;
+use std::process::Stdio;
 
 use async_trait::async_trait;
-use rustix::fs::statvfs;
 use tokio::fs::{self, DirBuilder, OpenOptions};
 use tokio::io::AsyncWriteExt;
-use tokio::task::spawn_blocking;
+use tokio::process::Command;
 
-mod reserve;
-
-/// State replacement and real space allocation on the same filesystem.
+/// State replacement and recovery from a full filesystem.
 #[cfg_attr(test, unimock::unimock(api = StateFilesMock))]
 #[async_trait]
 pub(crate) trait StateFiles: Send + Sync {
     /// Replace the state file in one rename after the complete write.
     async fn replace(&self, path: &Path, bytes: &[u8]) -> io::Result<()>;
-    /// Remove the reserve if the runner owns it.
-    async fn remove_reserve(&self, path: &Path) -> io::Result<()>;
-    /// Check whether the runner's reserve occupies its full size on disk.
-    async fn reserve_ready(&self, path: &Path) -> io::Result<bool>;
-    /// Get the space available to the runner in the state folder.
-    async fn available_bytes(&self, folder: &Path) -> io::Result<u64>;
-    /// Allocate real blocks for the reserve and preserve other files.
-    async fn allocate_reserve(&self, path: &Path, bytes: u64) -> io::Result<()>;
+    /// Free the space set aside for state saves.
+    async fn free_reserve(&self) -> io::Result<()>;
 }
 
 /// Native operations for a local state folder.
@@ -52,23 +45,22 @@ impl StateFiles for LocalStateFiles {
         fs::rename(&temporary, path).await
     }
 
-    async fn remove_reserve(&self, path: &Path) -> io::Result<()> {
-        let path = path.to_owned();
-        spawn_blocking(move || reserve::remove(&path)).await?
-    }
-
-    async fn reserve_ready(&self, path: &Path) -> io::Result<bool> {
-        let path = path.to_owned();
-        spawn_blocking(move || reserve::ready(&path)).await?
-    }
-
-    async fn available_bytes(&self, folder: &Path) -> io::Result<u64> {
-        let stats = statvfs(folder)?;
-        Ok(stats.f_bavail.saturating_mul(stats.f_frsize))
-    }
-
-    async fn allocate_reserve(&self, path: &Path, bytes: u64) -> io::Result<()> {
-        let path = path.to_owned();
-        spawn_blocking(move || reserve::allocate(&path, bytes)).await?
+    async fn free_reserve(&self) -> io::Result<()> {
+        let status = Command::new("/usr/bin/sudo")
+            .args(["-n", "--"])
+            .arg(env::current_exe()?)
+            .args(["disk", "free-reserve"])
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .await?;
+        if status.success() {
+            Ok(())
+        } else {
+            Err(io::Error::other(format!(
+                "disk free-reserve exited with {status}"
+            )))
+        }
     }
 }

@@ -1,7 +1,7 @@
 //! Atomic state-file replacement with private Unix permissions.
 
-use std::io::{self, ErrorKind};
-use std::path::{Path, PathBuf};
+use std::io::ErrorKind;
+use std::path::PathBuf;
 
 use async_trait::async_trait;
 use tokio::fs;
@@ -9,10 +9,6 @@ use tokio::sync::Mutex;
 
 use crate::disk_files::{LocalStateFiles, StateFiles};
 use crate::error::{ErrorResultExt, Result};
-
-/// Real bytes reserved on the filesystem that holds the state file.
-pub(crate) const RESERVE_BYTES: u64 = 256 * 1024 * 1024;
-const REBUILD_MIN_BYTES: u64 = 1024 * 1024 * 1024;
 
 /// Read and atomically replace the runner's complete state.
 #[cfg_attr(test, unimock::unimock(api = DiskMock))]
@@ -27,7 +23,7 @@ pub trait Disk: Send + Sync {
 /// The Node-compatible state file and its adjacent `.next` file.
 pub struct AtomicDisk {
     path: PathBuf,
-    reserve: Mutex<Option<PathBuf>>,
+    reserve_failure_logged: Mutex<bool>,
     files: Box<dyn StateFiles>,
 }
 
@@ -38,25 +34,11 @@ impl AtomicDisk {
     }
 
     fn with_files(path: PathBuf, files: Box<dyn StateFiles>) -> Self {
-        let reserve = (path.is_absolute() && path.file_name().is_some())
-            .then(|| path.with_added_extension("reserve"));
         Self {
             path,
-            reserve: Mutex::new(reserve),
+            reserve_failure_logged: Mutex::new(false),
             files,
         }
-    }
-
-    async fn replenish_reserve(&self, reserve: &Path) -> io::Result<()> {
-        if self.files.reserve_ready(reserve).await? {
-            return Ok(());
-        }
-        if let Some(folder) = reserve.parent()
-            && self.files.available_bytes(folder).await? >= REBUILD_MIN_BYTES
-        {
-            self.files.allocate_reserve(reserve, RESERVE_BYTES).await?;
-        }
-        Ok(())
     }
 }
 
@@ -71,19 +53,15 @@ impl Disk for AtomicDisk {
     }
 
     async fn write(&self, bytes: &[u8]) -> Result<()> {
-        let mut reserve = self.reserve.lock().await;
+        let mut reserve_failure_logged = self.reserve_failure_logged.lock().await;
         match self.files.replace(&self.path, bytes).await {
-            Ok(()) => {
-                if let Some(path) = reserve.as_deref() {
-                    let result = self.replenish_reserve(path).await;
-                    disable_reserve_on_collision(&mut reserve, result);
-                }
-                Ok(())
-            }
+            Ok(()) => Ok(()),
             Err(error) if error.kind() == ErrorKind::StorageFull => {
-                if let Some(path) = reserve.as_deref() {
-                    let result = self.files.remove_reserve(path).await;
-                    disable_reserve_on_collision(&mut reserve, result);
+                if let Err(error) = self.files.free_reserve().await
+                    && !*reserve_failure_logged
+                {
+                    tracing::warn!(%error, "Could not free the runner disk reserve");
+                    *reserve_failure_logged = true;
                 }
                 self.files.replace(&self.path, bytes).await.internal()
             }
@@ -92,15 +70,6 @@ impl Disk for AtomicDisk {
     }
 }
 
-fn disable_reserve_on_collision(reserve: &mut Option<PathBuf>, result: io::Result<()>) {
-    if let Err(error) = result
-        && error.kind() == ErrorKind::AlreadyExists
-        && let Some(path) = reserve.take()
-    {
-        tracing::warn!(path = %path.display(), "Runner state reserve path is already in use");
-    }
-}
-
 #[cfg(test)]
-#[path = "_tests_/disk_reserve_tests.rs"]
-mod disk_reserve_tests;
+#[path = "_tests_/disk_pressure_tests.rs"]
+mod disk_pressure_tests;

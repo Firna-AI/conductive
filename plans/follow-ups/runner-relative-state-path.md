@@ -4,7 +4,7 @@
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-27, from branch `calummoore/failed-message-action-kssx`, round 1 check of review finding 3.
 - **Location:** `crates/cnd-runner/src/config.rs:124`, `crates/cnd-runner/src/disk_files.rs:37`
-- **Reason:** the behaviour is on `origin/main`, outside the disk hold change, which only stopped the new reserve file from using a relative path.
+- **Reason:** the behaviour is on `origin/main`, outside the disk hold change.
 
 - **Terms:**
   - **State file:** the runner's file of chat events and turn records, `~/.conductive/runner-state.json` by default, or the path in `CONDUCTIVE_STATE_PATH`.
