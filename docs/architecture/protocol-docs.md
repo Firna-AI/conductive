@@ -248,8 +248,8 @@ This page lists each protocol doc and what it covers.
     of a change note, and the access of a turn, which does not depend on
     the sender line.
   - [Agent instructions: facts that change](../protocol/agent-instructions-changes.md):
-    the parent, the depth, and the capabilities, which can change during a
-    session.
+    the branches, the parent, the depth, and the capabilities, which can
+    change during a session.
   - [Base prompts](../protocol/base-prompts.md): the base prompt of Claude
     agents and the base instructions of Codex agents.
   - [Agent instructions: how each agent gets them](../protocol/agent-instructions-delivery.md):

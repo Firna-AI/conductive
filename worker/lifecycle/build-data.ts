@@ -5,22 +5,21 @@ import type {
 } from '../../src/shared/org-settings'
 import { HttpError } from '../http'
 import { readOrgProviderAccount } from '../data/org-provider-account'
+import {
+  DEFAULT_PROVIDER_DISK_LINES,
+  type ProviderDiskLines,
+} from '../sandbox/accounts'
 import type { CommandStatus } from '../sandbox/provider'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
-import { readBuildSnapshot } from './build-log-reader'
+import { BUILD_READ_COLUMNS, readBuildSnapshot } from './build-log-reader'
 import { buildLogStatements } from './build-log-statements'
 import { decodeBuildJob, type StoredBuildJob } from './build-job-codec'
 import type { ProviderRetryState } from './provider-retry'
 import type { SavedScript } from './saved-script'
 import { readBuildChanges } from './build-changes-data'
 import { writeBuildEnd } from './build-end-data'
-import {
-  buildRequestedColumn,
-  readBuildRow,
-  type BuildRow,
-} from './build-request'
+import { readBuildRow, type BuildRow } from './build-request'
 import type { SwitchBuildFailure } from './provider-switch-end'
-import { BUILD_STORAGE_COLUMNS } from './image-storage'
 
 export type BuildPhase =
   | 'create'
@@ -79,11 +78,6 @@ const jobColumns = `b.id AS buildId, b.org_id AS orgId, b.kind, b.state, b.start
   j.previous_image_name AS previousImageName, j.software_image_name AS softwareImageName,
   j.provider_account AS previousProviderAccount,
   b.provider_retry_json AS providerRetryJson`
-
-const buildColumns = `id, org_id AS orgId, kind, state, started_at AS startedAt,
-  completed_at AS completedAt, CASE WHEN completed_at IS NULL THEN NULL
-  ELSE completed_at - started_at END AS durationMs, error, ${BUILD_STORAGE_COLUMNS},
-  ${buildRequestedColumn('image_builds')} AS buildRequested`
 
 export async function readBuildJob(
   db: D1Database,
@@ -219,16 +213,17 @@ export async function failBuild(
 export async function readBuildHistory(
   db: D1Database,
   orgId: string,
+  diskLines: ProviderDiskLines = DEFAULT_PROVIDER_DISK_LINES,
 ): Promise<BuildsResponse> {
   const providerAccount = await readOrgProviderAccount(db, orgId)
   const { results } = await db
     .prepare(
-      `SELECT ${buildColumns} FROM image_builds WHERE org_id = ?
+      `SELECT ${BUILD_READ_COLUMNS} FROM image_builds WHERE org_id = ?
        AND operator_switch_id IS NULL ORDER BY started_at DESC, id DESC`,
     )
     .bind(orgId)
     .all<BuildRow>()
-  const builds = results.map(readBuildRow)
+  const builds = results.map((row) => readBuildRow(row, diskLines))
   const image = await db
     .prepare(
       `SELECT i.image_build_id AS imageBuildId, b.operator_switch_id AS operatorSwitchId
@@ -251,8 +246,9 @@ export async function readBuild(
   db: D1Database,
   orgId: string,
   buildId: string,
+  diskLines?: ProviderDiskLines,
 ): Promise<BuildResponse> {
-  return readBuildSnapshot(db, orgId, buildId)
+  return readBuildSnapshot(db, orgId, buildId, { diskLines })
 }
 
 export function jobSoftware(job: BuildJob): ImageSoftwareArtifact {

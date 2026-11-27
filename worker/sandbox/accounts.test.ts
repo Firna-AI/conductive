@@ -5,6 +5,8 @@ import { configuredProviderAccounts, ProviderAccountError } from './accounts'
 import { providerForAccount } from './client'
 import { ProviderError } from './errors'
 
+const boatDiskLine = { bytes: 72_000_000_000 }
+
 it('uses each account organization and key while keeping the default account pinned', async () => {
   const server = new FakeBoat()
   const secondary = {
@@ -49,8 +51,18 @@ it('reads JSON secret accounts and retains valid entries when another entry is m
     }),
   }
   expect(configuredProviderAccounts(env)).toEqual({
-    boat: { kind: 'boat', apiKey: 'pinned-key', orgId: 'pinned-org' },
-    good: { kind: 'boat', apiKey: 'other-key', orgId: 'other-org' },
+    boat: {
+      kind: 'boat',
+      apiKey: 'pinned-key',
+      orgId: 'pinned-org',
+      diskLine: boatDiskLine,
+    },
+    good: {
+      kind: 'boat',
+      apiKey: 'other-key',
+      orgId: 'other-org',
+      diskLine: boatDiskLine,
+    },
   })
   expect(warning.mock.calls).toEqual([
     [
@@ -70,7 +82,12 @@ it('recovers malformed JSON secrets with pinned Boat and a safe warning', () => 
     SANDBOX_PROVIDER_ACCOUNTS: '{sensitive-invalid-key',
   }
   expect(configuredProviderAccounts(env)).toEqual({
-    boat: { kind: 'boat', apiKey: 'pinned-key', orgId: 'pinned-org' },
+    boat: {
+      kind: 'boat',
+      apiKey: 'pinned-key',
+      orgId: 'pinned-org',
+      diskLine: boatDiskLine,
+    },
   })
   expect(warning.mock.calls).toEqual([
     [
@@ -96,7 +113,12 @@ it('reads a configured E2B account from the JSON secret beside pinned Boat', () 
       SANDBOX_PROVIDER_ACCOUNTS: JSON.stringify({ e2b: account }),
     }),
   ).toEqual({
-    boat: { kind: 'boat', apiKey: 'boat-key', orgId: 'boat-org' },
+    boat: {
+      kind: 'boat',
+      apiKey: 'boat-key',
+      orgId: 'boat-org',
+      diskLine: boatDiskLine,
+    },
     e2b: account,
   })
 })

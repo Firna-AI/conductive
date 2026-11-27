@@ -34,7 +34,8 @@ tracing = "0.1.44"
 tracing-subscriber = "0.3.23"
 serde = { version = "1.0.229", features = ["derive"] }
 uuid = { version = "1.29.2", features = ["v4"] }
-rustix = { version = "1.1.6", features = ["process"] }
+rustix = { version = "1.1.6", features = ["fs", "process"] }
+tempfile = "3.27.0"
 
 [build-dependencies]
 cnd-release = { workspace = true }
@@ -43,6 +44,5 @@ cnd-release = { workspace = true }
 workspace = true
 
 [dev-dependencies]
-tempfile = "3.27.0"
 tokio = { version = "1.54.1", features = ["process", "io-util", "net", "test-util"] }
 unimock = "0.6.8"

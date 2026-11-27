@@ -1,4 +1,5 @@
-import { providerState, type ProviderState } from './provider-state'
+import type { Sandbox } from '../sandbox/provider'
+import { providerState } from './provider-state'
 import { requireActiveUser } from '../data/user-access'
 import { configuredProviderAccount } from '../sandbox/accounts'
 import { WorkspaceStartError } from './workspace-start'
@@ -25,6 +26,7 @@ import {
 import type { DurableLifecycle } from './durable'
 import {
   advanceRetentionCommand,
+  markRetainedRestore,
   type RetentionCommandPort,
 } from './retention-command'
 import { stopRetention } from './retention-stop'
@@ -52,15 +54,23 @@ export async function keepWorkspaceDisk(
     error: null,
   }
   progress = await expireRetention(context, progress, deadlineAt)
-  let status: ProviderState
+  let sandbox: Sandbox
   try {
-    status = providerState((await provider.get(sandboxId)).state)
+    sandbox = await provider.get(sandboxId)
   } catch (error) {
     if (progress.phase === 'stop' && progress.error !== null)
       return { done: false, error: progress.error }
     throw error
   }
+  const status = providerState(sandbox.state)
   progress = await expireRetention(context, progress, deadlineAt)
+  if (
+    status === 'ready' &&
+    sandbox.hydrated !== false &&
+    progress.phase !== 'resume' &&
+    context.dependencies.now() < deadlineAt
+  )
+    await markRetainedRestore(provider, sandboxId, command)
   if (progress.phase === 'stop')
     return stopRetention(
       context,
@@ -88,6 +98,9 @@ export async function keepWorkspaceDisk(
   }
   if (progress.phase === 'resume') {
     await setRetention(env.DB, workspaceId, 'resume')
+    const state = command.read()
+    if (state.restoreMarked)
+      await command.save({ ...state, restoreMarked: undefined })
     if (status === 'stopping') return { done: false, error: null }
     if (status === 'stopped') {
       await requireActiveUser(env.DB, row.ownerUserId, orgId)

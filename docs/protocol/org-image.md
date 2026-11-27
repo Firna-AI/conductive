@@ -18,7 +18,8 @@ says. A switch decision number names a decision of the change that adds
 number names a decision of the change that shows the free storage of a
 build. A refresh-build decision number names a decision of the change that
 saves Build computer during a refresh, from 26 November 2026. Its pull
-request keeps the record.
+request keeps the record. A disk hold decision number names a decision of
+the change that adds the [disk line](disk-line.md).
 
 ## The org image
 
@@ -105,15 +106,36 @@ request keeps the record.
 - The Cloud computer tab lists the builds, each with its time, its result,
   and its length.
 - Each good build also shows the free storage that its image leaves for
-  each new cloud computer, with the size of the disk, such as "31.2 GB
-  free of 50.1 GB" (storage decision 1). Reason: an admin then sees when
-  the install script and the repositories fill the disk.
-- A build measures the free storage just before it saves the image. The
-  free storage is the space that the user of the cloud computer can write,
-  on the disk of the home folder.
+  each new cloud computer, such as "34.7 GB free of 72.0 GB" (storage
+  decision 1). Reason: an admin then sees when the install script and
+  the repositories fill the disk.
+- A build measures the disk of `/` just before it saves the image. The
+  free storage is the space that the user of the cloud computer can
+  write.
+- Reason for `/`: a build does not wait for the
+  [background restore of the disk](terminal-shell.md#the-shell). Until
+  that restore ends, the home folder is a separate view, not the disk
+  itself.
+- On a provider with a [disk line](disk-line.md), the card shows the full
+  line as the total. The free storage is the line minus the used size that
+  the build measured, with a minimum of zero (disk hold decisions 6 A and
+  8 E).
+- The size and the free storage follow the current line of the provider
+  account. So a change of the line changes them for each build, with no
+  new build.
+- A build gets no disk hold. So the line fails no build, and an image can
+  be above the line. A workspace from such an image keeps working, as
+  [A disk above the line](disk-line.md#a-disk-above-the-line) says.
+- A hold in each build and a check just before the save were rejected
+  (disk hold decision 6). Reason: each adds a build error, because a build
+  above the line then fails.
 - A failed build shows no free storage, because it does not replace the
   image. A build without a measurement, such as a build from before the
   measurement, shows none either.
+- On a provider with a disk line, a build whose measurement has no used
+  size shows no free storage either. An example is a build from before the
+  disk line. Reason: its figures do not give the room under the line, and
+  they can show more room than the work gets.
 - The free storage only informs. When the measurement fails, the build
   goes on and shows no free storage. Reason: a failed measurement does not
   make the image wrong.

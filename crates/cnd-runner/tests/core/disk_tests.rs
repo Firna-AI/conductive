@@ -20,9 +20,11 @@ async fn atomically_saves_private_node_format_and_reads_it_after_restart() {
     let directory = tempdir().unwrap();
     let folder = directory.path().join("private");
     let path = folder.join("state.json");
+    let neighbor = path.with_added_extension("reserve");
     let disk: Arc<dyn Disk> = Arc::new(AtomicDisk::new(path.clone()));
     assert_eq!(disk.read().await.unwrap(), None);
     let store = fixture::open(disk.clone()).await;
+    std::fs::write(&neighbor, b"member data").unwrap();
     store
         .append(title("é😀\n"), 100, Some("receipt".into()))
         .await
@@ -31,6 +33,7 @@ async fn atomically_saves_private_node_format_and_reads_it_after_restart() {
     let saved = RunnerState::decode(&raw).unwrap();
     assert_eq!(saved, store.snapshot().await);
     assert_eq!(fixture::open(disk.clone()).await.snapshot().await, saved);
+    assert_eq!(std::fs::read(neighbor).unwrap(), b"member data");
     #[cfg(unix)]
     {
         assert_eq!(

@@ -37,6 +37,7 @@ fn engine(state: RunnerState) -> AgentEngine {
                 workspace_context: None,
                 repository_directories: BTreeMap::new(),
                 state_path: "/state".into(),
+                disk_hold_enabled: false,
             },
             store: Arc::new(Unimock::new(
                 EventStoreMock::snapshot

@@ -7,7 +7,7 @@ also exposes the update engine through a library API.
 ## Responsibilities
 
 Provide one command entry point for the agent runner, preview relay, MCP
-server, Git credential helper, software updates, and workspace tools.
+server, Git credential helper, software updates, disk hold, and workspace tools.
 
 ## What This Crate Does
 
@@ -22,7 +22,7 @@ variables together. The build validates the version and the parts with
 variables uses `0.0.0-dev` and an empty parts list. This development version
 sorts below every release.
 
-The commands are `runner`, `relay`, `mcp`, `git-credential`, `update`,
+The commands are `runner`, `relay`, `mcp`, `git-credential`, `update`, `disk`,
 `workspaces`, `sessions`, `messages`, `sections`, `repositories`, `models`,
 `previews`, `mac`, `secrets`, and `services`. The workspace commands and
 `mcp` run 27 Worker calls and five local service calls in
@@ -124,6 +124,41 @@ program already has the newest version. An existing active release still
 prevents a downgrade. See [the install guide](../../image/install.md#release-installation)
 for the image-build sequence and the folder layout.
 
+### Workspace disk hold
+
+`conductive disk hold` runs as root. It reads
+`CONDUCTIVE_DISK_LINE_BYTES` from its environment or from the saved
+exports in `/run/ascii-secrets/env.sh`. The line sets where writes stop,
+in bytes used on the root filesystem. The command skips the hold if the
+line is absent or the root filesystem uses a type other than ext4.
+
+Each run with a line remounts the ext4 root filesystem with `resgid` set
+to the primary group of the account `user`. This lets `user` and root
+share space up to the line. If the account is missing, the command
+reports it and skips the hold.
+
+On ext4 it uses the default hold of 4,096 clusters while the
+`/run/conductive-terminal/restore-ended` marker is missing or a workspace
+command holds a valid lease. The command reads leases in
+`/run/conductive-disk/leases`. It removes a lease if its owner has exited
+or its deadline has passed. Once the marker exists and the last lease has
+ended, the command sets `reserved_clusters` from the line and the free
+space on `/`. When disk usage is above the configured line, the command
+can save a higher line in
+`/var/lib/conductive/disk-line`. The saved line can fall as space returns.
+When usage is at or below the configured line, the command removes the
+saved line.
+
+When the hold applies and at least 1 GiB remains available to the
+sandbox user, `conductive disk hold` keeps a 256 MiB reserve with
+allocated blocks at `/var/lib/conductive/runner-reserve`. It counts all
+free blocks outside the hold, including the shared ext4 root reserve.
+The parent directory is root-owned with mode `0700`.
+
+`conductive disk free-reserve` runs as root and removes that file if
+it exists. Both disk commands report a failure in one line on standard
+error and return a non-zero exit status.
+
 ### Session watches
 
 `conductive sessions watch --session ID [--workspace ID] [--turn-id ID]`
@@ -144,9 +179,10 @@ cargo run -p cnd-cli -- --help
 cargo run -p cnd-cli -- --version
 cargo run -p cnd-cli -- update --help
 cargo run -p cnd-cli -- update parts
+cargo run -p cnd-cli -- disk --help
 ```
 
-The last command prints the embedded parts without a network request.
+`update parts` prints the embedded parts without a network request.
 
 To create a workspace from a branch and target another branch:
 
@@ -178,6 +214,7 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [main.rs](src/main.rs) connects command parsing, error output, and exit status.
 - [cli.rs](src/cli.rs) owns `Cli` and the command execution boundary.
 - [command.rs](src/command.rs) defines the command families and reserved arguments.
+- [disk_command.rs](src/disk_command.rs) connects the disk commands to the root filesystem.
 - [error.rs](src/error.rs) defines typed command errors and the internal error fallback.
 - [build.rs](build.rs) validates and embeds the release inputs.
 - [release.rs](src/release.rs) reads the embedded version and parts.

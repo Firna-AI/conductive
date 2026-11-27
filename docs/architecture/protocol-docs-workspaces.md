@@ -12,8 +12,8 @@ protocol docs.
     to another provider account by an operator, its switch build, what
     members see of it, and its box on the page of the org.
 - [Sandbox software](../protocol/sandbox-software.md): the releases of the
-  app's own software, the updates of each sandbox, and the install in a
-  build.
+  app's own software, the updates of each sandbox, the install in a
+  build, and the disk hold.
   - [Software image](../protocol/software-image.md): the software image
     that a first build starts from, its build at each deploy, and the
     images that the app keeps.
@@ -51,6 +51,10 @@ protocol docs.
   - [Stop and resume](../protocol/stop-and-resume.md): the stop of an
     idle sandbox, the resume, the starts from the agent tools, and the
     restart near day 14 of a stop.
+    - [Disk line](../protocol/disk-line.md): the disk line that keeps each
+      saved disk small enough to resume, the line of each provider, the
+      hold that keeps it, a disk above the line, when the line applies,
+      and the saves of the agent runner at the line.
   - [Restart the software](../protocol/restart-the-software.md): Restart
     in the workspace header, what it restarts, the download of the newest
     release before it, and the automatic restart of an agent runner that

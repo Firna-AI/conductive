@@ -39,12 +39,14 @@ export async function advanceLifecycleAlarm(
   state = await recoverLifecycleTurns(state, hooks)
   let stopPending = false
   const restoreDue =
-    state.restoreWatchAt !== undefined && state.restoreWatchAt <= now()
+    state.restoreWatchAt !== undefined &&
+    state.restoreWatchAt <= now() &&
+    (state.state !== 'error' || isFailedRestart(state))
   if (
     !state.runnerConnected &&
     !isConfirmedStopped(state) &&
     hooks.reconcile &&
-    !(restoreDue && hooks.checkRestore && state.state !== 'error')
+    !(restoreDue && hooks.checkRestore)
   ) {
     state = reconciledLifecycle(state, await hooks.reconcile(), now())
   }
@@ -83,7 +85,7 @@ export async function advanceLifecycleAlarm(
     restoreDue &&
     !stopPending &&
     !isConfirmedStopped(state) &&
-    state.state !== 'error' &&
+    (state.state !== 'error' || isFailedRestart(state)) &&
     hooks.checkRestore
   ) {
     const result = await hooks.checkRestore()

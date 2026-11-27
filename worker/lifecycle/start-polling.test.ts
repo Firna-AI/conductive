@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 
+import { TERMINAL_RESTORE_MARKER } from '../terminal/scripts'
 import { TEST_TIME } from '../test-support/harness'
 import { setupBackendTests } from './backend-test-hooks'
 import { pendingCreate } from './start-chain.test-support'
@@ -9,6 +10,30 @@ import { START_JOB_KEY } from './start-storage'
 import type { WorkspaceValues } from './platform-storage'
 
 const fixtureForTest = setupBackendTests()
+
+it('writes the restore marker while the fetch command is still running', async () => {
+  const fixture = fixtureForTest()
+  fixture.boat.hydrated = false
+  const start = await pendingCreate(fixture)
+  const readyAt = TEST_TIME + 1_000
+  await start.actor.advance(readyAt)
+  expect(await start.job()).toMatchObject({ phase: 'fetch', processId: 1 })
+  fixture.boat.commandRunning = true
+  fixture.boat.hydrated = true
+  const reads = fixture.boat.sandboxReads.length
+  const markers = () =>
+    fixture.boat.commandRequests.filter(({ command }) =>
+      command.includes(TERMINAL_RESTORE_MARKER),
+    )
+
+  await start.actor.advance(readyAt + 4_999)
+  expect(fixture.boat.sandboxReads.slice(reads)).toEqual([])
+  expect(markers()).toEqual([])
+  await start.actor.advance(readyAt + 5_000)
+  expect(markers()).toMatchObject([{ sandboxId: 'bx_1', detached: false }])
+  expect(fixture.boat.sandboxReads.slice(reads)).toEqual(['bx_1'])
+  expect(await start.job()).toMatchObject({ phase: 'fetch', processId: 1 })
+})
 
 it('polls a running command at 250 ms through reconstruction, clears regular deferral, and backs off at five seconds', async () => {
   const fixture = fixtureForTest()

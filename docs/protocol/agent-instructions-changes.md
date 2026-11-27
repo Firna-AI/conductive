@@ -2,8 +2,8 @@
 
 This page belongs to [Agent instructions](agent-instructions.md), which
 states what the instructions hold and gives the terms. It states how the
-instructions hold two kinds of fact that can change during a session: the
-parent and the depth, and the capabilities.
+instructions hold three kinds of fact that can change during a session:
+the branches, the parent and the depth, and the capabilities.
 [Session instructions](session-instructions.md) states that a session
 keeps the same text for its whole life.
 [Message lines](message-lines.md) states the lines that name the current
@@ -15,6 +15,33 @@ adds [parent changes](parent-changes.md), as that doc says. A capability
 prompts decision number names a decision of the change that tells each
 agent the capabilities of its session, as
 [Capabilities: what agents learn](capabilities-agents.md) says.
+
+## The branches
+
+- The instructions take the workspace branch from the Worker's record of
+  the workspace. They do not take the current branch in the cloud
+  computer.
+- Reason: the app tracks the branch of its record, and the Git branch in
+  the cloud computer can change.
+- When an older or manual runner start has no workspace branch, the
+  runner warns and continues. Its instructions name no workspace branch.
+  They never substitute the current Git branch for the missing fact.
+- The app finds the pull request of a workspace by the name of its branch.
+  It also routes the GitHub events of the workspace by that name, as
+  [State of a branch](github-banner.md#state-of-a-branch) says. After a
+  rename, the pull request bar no longer follows the work. This is the
+  reason for the rule of the
+  [agent instructions](agent-instructions.md#what-the-instructions-hold)
+  that keeps the branch name.
+- A Git guard that refuses a rename of the branch was rejected. It covers
+  one fact only, and it adds a refusal that no user asked for.
+- After a merge, [Continue](continue.md) moves the workspace to a new
+  branch. The Worker's record then names the new branch, and the pull
+  request bar follows it. Continue is a branch change of the app, not a
+  rename by the agent.
+- A [repository change](repository-change.md) also moves the workspace to
+  a new branch, in the folder of another repository. It is a change of
+  the app too.
 
 ## The parent and the depth
 

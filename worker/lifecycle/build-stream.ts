@@ -1,5 +1,6 @@
 import type { AppEnv } from '../env'
 import { privateResponse } from '../http'
+import { configuredProviderDiskLines } from '../sandbox/accounts'
 import { requireOrgMember } from './access'
 import { readBuildSnapshot } from './build-log-reader'
 
@@ -12,12 +13,12 @@ export async function buildEventsResponse(input: {
   wait?: () => Promise<void>
 }): Promise<Response> {
   await requireOrgMember(input.env.DB, input.orgId, input.userId)
+  const diskLines = configuredProviderDiskLines(input.env)
   const initial = await readBuildSnapshot(
     input.env.DB,
     input.orgId,
     input.buildId,
-    input.after,
-    1,
+    { after: input.after, limit: 1, diskLines },
   )
   let first = true
   let live = true
@@ -37,8 +38,7 @@ export async function buildEventsResponse(input: {
                 input.env.DB,
                 input.orgId,
                 input.buildId,
-                cursor,
-                1,
+                { after: cursor, limit: 1, diskLines },
               )
           first = false
           if (!live) return

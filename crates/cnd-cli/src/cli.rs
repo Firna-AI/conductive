@@ -3,6 +3,7 @@
 use clap::Parser;
 
 use crate::command::Command;
+use crate::disk_command;
 use crate::error::{Error, Result};
 use crate::release;
 use crate::runner_command;
@@ -29,6 +30,9 @@ impl Cli {
         let _parts = release::parts()?;
         if let Command::Update(arguments) = self.command {
             return update_command::execute(arguments).await;
+        }
+        if let Command::Disk(arguments) = self.command {
+            return disk_command::execute(arguments);
         }
         if let Command::Runner = self.command {
             return runner_command::execute().await;

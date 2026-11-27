@@ -28,6 +28,10 @@ interface WorkspaceStartData {
   commandAttempt?: string
   /** A retained create rebuilds runtime files from this phase after readiness. */
   afterReadyPhase?: 'fetch' | 'branch' | 'startup'
+  /** Publish the restore marker from the first command of this machine. */
+  markRestoreEnded?: boolean
+  /** Next restore check when the ready machine is still restoring. */
+  restorePollAt?: number
   creation?: WorkspaceCreation
   processId: number | null
   stdoutOffset: number

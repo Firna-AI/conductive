@@ -1,0 +1,10 @@
+[Unit]
+Description=Refresh the Conductive workspace disk hold
+
+[Timer]
+OnBootSec=20s
+OnUnitActiveSec=5min
+Unit=conductive-disk-hold.service
+
+[Install]
+WantedBy=timers.target

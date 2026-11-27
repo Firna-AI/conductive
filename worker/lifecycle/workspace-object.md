@@ -230,7 +230,8 @@ create and resume. The workspace object runs that start:
   phase ends, before the workspace becomes ready.
 - The start then saves its runner phase. Its success waits for the runner
   readiness report within the original start deadline. The readiness wait
-  runs no startup command again and keeps its due time at that deadline.
+  wakes for a pending restore check or at the start deadline. It runs no
+  startup command again.
   Each alarm and readiness report still checks the owner and requester.
   The shared success path prepares the lifecycle only after its final
   access, cancellation, deadline, and runner connection checks.
@@ -299,7 +300,15 @@ create and resume. The workspace object runs that start:
   stop ends, the next lifecycle run queues the held start with every
   admission check again. An Archive after the request changes the stop
   epoch and drops it. So does a wait past the start time limit.
-- The first lifecycle prepare of each create and resume also starts the
+- On an account with a disk line, the start checks for restore completion
+  after the sandbox becomes ready. If the provider reports a completed
+  restore at readiness, the first command writes the marker. If the restore
+  is still in progress, `restorePollAt` in the start job gives the next check.
+  The start checks every 5 seconds during commands and the runner wait.
+  The start guard covers the read and the marker command. When the provider
+  reports completion, the start writes the marker and clears that due time.
+  A valid command lease keeps the hold released until the command ends.
+- The first lifecycle prepare of each create and resume starts the
   restore watch. After a start from a saved snapshot, Boat downloads the
   file content in the background. The
   [terminal backend](../terminal/README.md) moves an early shell only after
@@ -311,21 +320,26 @@ create and resume. The workspace object runs that start:
   - A reply with `hydrated: false` keeps the watch.
   - A reply with `hydrated: true`, or without `hydrated`, ends the watch.
     The watch then writes the restore marker with
-    `markTerminalRestoreEnded`. The terminal and the agent runner read it.
-    Boat's schema makes the field optional, and Boat says that a sandbox
-    that restored nothing is hydrated from the start.
+    `markTerminalRestoreEnded`. The terminal, the agent runner, and the
+    [disk hold](../../docs/protocol/disk-line.md#when-the-line-applies)
+    read it. Boat's schema makes the field optional, and Boat says that a
+    sandbox that restored nothing is hydrated from the start.
   - A stopped or error state ends the watch, and the alarm applies that
     state as the provider state read does. A stopping state, such as
     `archiving`, also ends the watch. Neither writes the marker.
   - A Boat error or a failed marker command keeps the watch. The alarm
     error handling tries again in 30 seconds.
-  - A stop, an error, an archive, or a new start ends the watch. An access
-    stop, such as at an org suspension, also ends it when Boat still runs
-    the sandbox and the stop waits for a retry. The watch has no deadline
-    of its own, so it can last until a stop, such as the idle stop after the
-    stop time without activity.
-  - A disk retention restart starts no watch, because it starts no
-    terminal.
+  - A stop, a sandbox error, an archive, or a new start ends the watch.
+    An access stop, such as at an org suspension, also ends it when Boat
+    still runs the sandbox and the stop waits for a retry. A failed software
+    restart keeps the watch while the sandbox runs. The watch has no
+    deadline of its own, so it can last until the idle stop.
+  - A disk retention restart starts no watch. It starts no terminal and no
+    agent runner, and each of its steps already reads the sandbox from
+    Boat. The disk hold still needs the marker. So when such a read
+    reports a ready sandbox without `hydrated: false`, the retention writes
+    the marker once after each resume, as
+    [Provider accounts](README.md#provider-accounts) says.
 - The end of a create stores its result in the object, with the first
   retry time of its D1 publication. The create then writes that result to
   D1. A failed write retries at the publication's own due time, also while

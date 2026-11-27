@@ -1,4 +1,5 @@
 import type { SandboxProvider } from '../sandbox/provider'
+import { markTerminalRestoreEnded } from '../terminal/service'
 import { lifecycleCommand } from './command-intents'
 import type { DiskRetentionResult } from './durable-types'
 import { workspaceStartupCommand } from './image-software'
@@ -14,11 +15,26 @@ export interface RetentionCommandState {
   stdoutOffset: number
   stderrOffset: number
   stopRequestedAt?: number
+  restoreMarked?: boolean
 }
 
 export interface RetentionCommandPort {
   read(): RetentionCommandState
   save(state: RetentionCommandState): Promise<void>
+}
+
+export async function markRetainedRestore(
+  provider: SandboxProvider,
+  sandboxId: string,
+  command: RetentionCommandPort,
+): Promise<void> {
+  if (command.read().restoreMarked) return
+  try {
+    await markTerminalRestoreEnded(provider, sandboxId)
+  } catch {
+    return
+  }
+  await command.save({ ...command.read(), restoreMarked: true })
 }
 
 export async function advanceRetentionCommand(

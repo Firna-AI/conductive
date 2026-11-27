@@ -49,7 +49,10 @@ it('reads no retained log rows when polling after the latest event', async () =>
     },
   })
 
-  const control = await readBuildSnapshot(readerDatabase, org.id, id, 998, 2)
+  const control = await readBuildSnapshot(readerDatabase, org.id, id, {
+    after: 998,
+    limit: 2,
+  })
   expect(control.log).toEqual([
     { eventNumber: 999, occurredAt: TEST_TIME, text: 'retained 999\n' },
     { eventNumber: 1_000, occurredAt: TEST_TIME, text: 'retained 1000\n' },
@@ -57,7 +60,10 @@ it('reads no retained log rows when polling after the latest event', async () =>
   expect(readRows).toHaveLength(1)
   expect(readRows[0]).toBeGreaterThan(emptyIndexRead.meta.rows_read)
 
-  const empty = await readBuildSnapshot(readerDatabase, org.id, id, 1_000, 1)
+  const empty = await readBuildSnapshot(readerDatabase, org.id, id, {
+    after: 1_000,
+    limit: 1,
+  })
   expect(empty.build).toEqual(control.build)
   expect(empty.log).toEqual([])
   expect(readRows).toHaveLength(2)

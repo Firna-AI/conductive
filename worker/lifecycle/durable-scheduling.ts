@@ -19,7 +19,7 @@ export async function writeLifecycleState(
   if (
     state.restoreWatchAt !== undefined &&
     (state.state === 'stopped' ||
-      state.state === 'error' ||
+      (state.state === 'error' && !isFailedRestart(state)) ||
       state.state === 'archived' ||
       state.startStop !== undefined)
   )

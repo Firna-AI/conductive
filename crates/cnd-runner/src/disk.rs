@@ -4,9 +4,10 @@ use std::io::ErrorKind;
 use std::path::PathBuf;
 
 use async_trait::async_trait;
-use tokio::fs::{self, DirBuilder, OpenOptions};
-use tokio::io::AsyncWriteExt;
+use tokio::fs;
+use tokio::sync::Mutex;
 
+use crate::disk_files::{LocalStateFiles, StateFiles};
 use crate::error::{ErrorResultExt, Result};
 
 /// Read and atomically replace the runner's complete state.
@@ -22,12 +23,22 @@ pub trait Disk: Send + Sync {
 /// The Node-compatible state file and its adjacent `.next` file.
 pub struct AtomicDisk {
     path: PathBuf,
+    reserve_failure_logged: Mutex<bool>,
+    files: Box<dyn StateFiles>,
 }
 
 impl AtomicDisk {
     /// Configure a state path without performing IO.
     pub fn new(path: PathBuf) -> Self {
-        Self { path }
+        Self::with_files(path, Box::new(LocalStateFiles))
+    }
+
+    fn with_files(path: PathBuf, files: Box<dyn StateFiles>) -> Self {
+        Self {
+            path,
+            reserve_failure_logged: Mutex::new(false),
+            files,
+        }
     }
 }
 
@@ -42,23 +53,23 @@ impl Disk for AtomicDisk {
     }
 
     async fn write(&self, bytes: &[u8]) -> Result<()> {
-        if let Some(parent) = self.path.parent().filter(|p| !p.as_os_str().is_empty()) {
-            let mut builder = DirBuilder::new();
-            builder.recursive(true);
-            #[cfg(unix)]
-            builder.mode(0o700);
-            builder.create(parent).await.internal()?;
+        let mut reserve_failure_logged = self.reserve_failure_logged.lock().await;
+        match self.files.replace(&self.path, bytes).await {
+            Ok(()) => Ok(()),
+            Err(error) if error.kind() == ErrorKind::StorageFull => {
+                if let Err(error) = self.files.free_reserve().await
+                    && !*reserve_failure_logged
+                {
+                    tracing::warn!(%error, "Could not free the runner disk reserve");
+                    *reserve_failure_logged = true;
+                }
+                self.files.replace(&self.path, bytes).await.internal()
+            }
+            Err(error) => Err(error).internal(),
         }
-        let mut temporary = self.path.as_os_str().to_os_string();
-        temporary.push(".next");
-        let mut options = OpenOptions::new();
-        options.write(true).create(true).truncate(true);
-        #[cfg(unix)]
-        options.mode(0o600);
-        let mut file = options.open(&temporary).await.internal()?;
-        file.write_all(bytes).await.internal()?;
-        file.flush().await.internal()?;
-        fs::rename(&temporary, &self.path).await.internal()?;
-        Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/disk_pressure_tests.rs"]
+mod disk_pressure_tests;

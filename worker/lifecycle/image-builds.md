@@ -191,16 +191,22 @@ step saved.
 The save step of each build and refresh measures the free storage of the
 image, as [The org image](../../docs/protocol/org-image.md#the-org-image)
 requires. While the job has no snapshot name, `measureImageStorage` in
-[`image-storage.ts`](image-storage.ts) runs `df` on the home folder after
-the command journals are removed. `saveImageStorage` writes the size and
-the "Avail" bytes to `image_builds.storage_total_bytes` and
-`storage_free_bytes`. A repeat of the step writes the same columns again.
-A failed or unreadable `df` records the `image_storage_unmeasured` warning
-and leaves both columns null, and the save goes on.
+[`image-storage.ts`](image-storage.ts) runs `df` on `/` after the command
+journals are removed. The root file system is available before the home
+folder restore ends. Build sandboxes get no disk line variable or hold.
+`saveImageStorage` writes the raw "Size", "Avail", and "Used" bytes to
+`image_builds.storage_total_bytes`, `storage_free_bytes`, and
+`storage_root_used_bytes`. A repeat of the step writes the same columns
+again. A failed or unreadable `df` records the `image_storage_unmeasured`
+warning and the image save continues.
 
-`BUILD_STORAGE_COLUMNS` gives the two fields of `ImageBuild` to the build
-list and the build snapshot. It returns them only for a good build of the
-org's current provider account, and null for every other row.
+Build history, details, and log streams show storage only for good builds
+of the org's current provider account. For an account with a disk line,
+`readBuildStorage` uses the full current line as the total. It subtracts
+the measured used bytes from the line to get free space, with a minimum
+of zero. It returns null for both fields when the row has no root usage
+measurement. An account without a disk line uses the saved size and
+available bytes.
 
 ## Step records
 

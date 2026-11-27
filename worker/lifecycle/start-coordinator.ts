@@ -34,7 +34,11 @@ import {
 } from './start-provider-retry'
 import { JobTimeLimit } from './job-time-limit'
 import { applyStartRunnerReady } from './start-runner'
-import { prepareStartSuccess, runnerStartConnected } from './start-completion'
+import {
+  pollStartRestore,
+  prepareStartSuccess,
+  prepareStartRunner,
+} from './start-completion'
 import { finishArchivedStart, recoverArchivedStart } from './archive-start'
 import { publishStartCompletion } from './start-result'
 import { enqueueWorkspaceStart } from './start-admission'
@@ -143,11 +147,7 @@ export class WorkspaceStartCoordinator {
     await this.storage.schedule(now)
   }
 
-  advance(turn?: QueueTurn): Promise<boolean> {
-    return this.advanceOwned(turn)
-  }
-
-  private async advanceOwned(turn?: QueueTurn): Promise<boolean> {
+  async advance(turn?: QueueTurn): Promise<boolean> {
     const job = await readStartForAdvance(
       this.storage,
       this.endpoint,
@@ -166,13 +166,18 @@ export class WorkspaceStartCoordinator {
     )
       return true
     const expired = startTimeLimitReached(job, this.dependencies.now())
+    const progress = {
+      env: this.env,
+      dependencies: this.dependencies,
+      endpoint: this.endpoint,
+      storage: this.storage,
+      job,
+      call,
+    }
     let provider: SandboxProvider | undefined
     try {
-      if (job.phase === 'runner' && !job.cancelled && !job.failure) {
-        await call(() => requireActiveStartUsers(this.env.DB, job))
-        const connected = await runnerStartConnected(this.endpoint)
-        if (!expired && !connected) return false
-      }
+      const current = await prepareStartRunner(progress)
+      if (!current) return false
       if (job.phase === 'records' && !job.cancelled && !job.failure) {
         await call(() => requireActiveStartUsers(this.env.DB, job))
         if (expired) throw new JobTimeLimit('start')
@@ -221,13 +226,10 @@ export class WorkspaceStartCoordinator {
       if (providerRetryExpired(job.providerRetry, this.dependencies.now()))
         throw new ProviderRetryExhausted()
       return await advanceStartPhases({
-        env: this.env,
-        dependencies: this.dependencies,
-        endpoint: this.endpoint,
-        storage: this.storage,
+        ...progress,
         provider,
-        job,
-        call,
+        job:
+          job.phase === 'runner' ? current : await pollStartRestore(progress),
         finish: () => this.finish({ ok: true }, call),
       })
     } catch (error) {

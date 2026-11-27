@@ -10,6 +10,7 @@ import { publishCreationResult } from './creation-publication'
 import { START_JOB_KEY } from './start-storage'
 import { retryAllocationCleanup } from './start-allocation-cleanup'
 import { startAlarmDeadline } from './start-provider-retry'
+import { startRestorePollAt } from './start-completion'
 import type { WorkspaceAccessStop } from './workspace-suspension'
 import type { WorkspaceArchive } from './archive-state'
 import type { ComputerStopTask } from './computer-stop-task'
@@ -173,12 +174,13 @@ export async function runWorkspaceAlarm(input: {
                     job.phase === 'startup' ||
                     job.phase === 'terminal')))
             await input.startStorage.setAlarm(
-              job?.phase === 'runner' && !job.cancelled && !job.failure
-                ? startAlarmDeadline(job, now)
-                : Math.min(
-                    Math.max(now + (polling ? 250 : 1_000), retryAt),
-                    startAlarmDeadline(job, now),
-                  ),
+              Math.min(
+                startAlarmDeadline(job, now),
+                startRestorePollAt(job),
+                job?.phase === 'runner' && !job.cancelled && !job.failure
+                  ? Infinity
+                  : Math.max(now + (polling ? 250 : 1_000), retryAt),
+              ),
             )
           }
         } catch (error) {

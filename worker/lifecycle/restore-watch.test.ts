@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 
-import { privilegedCommand, shellArgument } from '../terminal/privileged'
+import { shellArgument } from '../terminal/privileged'
 import { TERMINAL_RESTORE_MARKER } from '../terminal/scripts'
 import { setupBackendTests } from './backend-test-hooks'
 import type { backendFixture } from './backend-test-support'
@@ -8,6 +8,7 @@ import { createCompletedWorkspace } from './completed-creation-test-support'
 import { resumeCompletedWorkspace } from './completed-resume-test-support'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { DISK_KEEPALIVE_MS } from './durable-types'
+import { readyWorkspace } from './software-restart.test-support'
 import { stopWorkspaceSandbox } from './workspace-actions'
 import { suspendOrg } from '../operator/suspend-org'
 
@@ -28,9 +29,11 @@ async function startWorkspace(fixture: Fixture) {
   return { actor, id, startedAt: runtime.dependencies.now() }
 }
 
-function markerCommands(fixture: Fixture) {
-  return fixture.boat.commandRequests.filter(({ command }) =>
-    command.includes(TERMINAL_RESTORE_MARKER),
+function markerCommands(fixture: Fixture, detached = false) {
+  return fixture.boat.commandRequests.filter(
+    (request) =>
+      request.detached === detached &&
+      request.command.includes(TERMINAL_RESTORE_MARKER),
   )
 }
 
@@ -48,24 +51,29 @@ it('writes the restore marker once after hydration and keeps the watch across a 
   await actor.restart()
   fixture.boat.hydrated = true
   await fixture.advanceTo(startedAt + 10_000, id)
-  expect(markerCommands(fixture)).toEqual([
+  const markers = markerCommands(fixture)
+  expect(markers).toEqual([
     {
       sandboxId: 'bx_1',
-      command: privilegedCommand(
-        `touch ${shellArgument(TERMINAL_RESTORE_MARKER)}`,
-      ),
+      command: expect.stringContaining('sudo -n -- /bin/sh -c '),
       detached: false,
     },
   ])
+  expect(markers[0]?.command.replaceAll(`'"'"'`, "'")).toContain(
+    `touch ${shellArgument(TERMINAL_RESTORE_MARKER)}`,
+  )
   await fixture.advanceTo(startedAt + 15_000, id)
   expect(fixture.boat.sandboxReads.slice(reads)).toEqual(['bx_1', 'bx_1'])
   expect(markerCommands(fixture)).toHaveLength(1)
 })
 
-it('writes the restore marker when hydrated is absent after create and resume', async () => {
+it('marks a restore reported complete in the first command of create and resume', async () => {
   const fixture = fixtureForTest()
   const { runtime, org, user } = fixture
   const { actor, id, startedAt } = await startWorkspace(fixture)
+  expect(markerCommands(fixture, true)).toEqual([
+    expect.objectContaining({ command: expect.stringContaining('/fetch') }),
+  ])
   await fixture.advanceTo(startedAt + 5_000, id)
   expect(markerCommands(fixture)).toHaveLength(1)
   await stopWorkspaceSandbox({
@@ -79,6 +87,10 @@ it('writes the restore marker when hydrated is absent after create and resume', 
     resumeCompletedWorkspace(runtime, org.id, id, user.id),
   )
   const resumedAt = runtime.dependencies.now()
+  expect(markerCommands(fixture, true)).toEqual([
+    expect.objectContaining({ command: expect.stringContaining('/fetch') }),
+    expect.objectContaining({ command: expect.stringContaining('/startup') }),
+  ])
   expect(markerCommands(fixture)).toHaveLength(1)
   await fixture.advanceTo(resumedAt + 5_000, id)
   expect(markerCommands(fixture)).toHaveLength(2)
@@ -88,7 +100,7 @@ it('writes the restore marker when hydrated is absent after create and resume', 
   expect(markerCommands(fixture)).toHaveLength(2)
 })
 
-it('ends the restore watch at stop and does not restart it for disk retention', async () => {
+it('ends the foreground watch at stop and marks a restored disk during retention', async () => {
   const fixture = fixtureForTest()
   const { runtime, org } = fixture
   fixture.boat.hydrated = false
@@ -107,14 +119,22 @@ it('ends the restore watch at stop and does not restart it for disk retention', 
   const stoppedReads = fixture.boat.sandboxReads.length
   await fixture.advanceTo(startedAt + 10_000, id)
   expect(fixture.boat.sandboxReads).toHaveLength(stoppedReads)
+  fixture.boat.hydrated = false
   await fixture.setTime(runtime.dependencies.now() + DISK_KEEPALIVE_MS)
-  for (let step = 0; step < 5; step++) await actor.endpoint().advance()
+  for (let step = 0; step < 3; step++) await actor.endpoint().advance()
+  expect(markerCommands(fixture)).toEqual([])
+  fixture.boat.hydrated = true
+  await actor.endpoint().advance()
+  expect(markerCommands(fixture)).toEqual([
+    expect.objectContaining({ sandboxId: 'bx_1', detached: false }),
+  ])
+  await actor.endpoint().advance()
   expect(fixture.boat.resumeIds).toEqual(['bx_1'])
   expect((await actor.endpoint().readLifecycle())?.state).toBe('stopped')
   const retainedReads = fixture.boat.sandboxReads.length
   await fixture.advanceTo(runtime.dependencies.now() + 5_000, id)
   expect(fixture.boat.sandboxReads).toHaveLength(retainedReads)
-  expect(markerCommands(fixture)).toEqual([])
+  expect(markerCommands(fixture)).toHaveLength(1)
 })
 
 it.each([
@@ -178,6 +198,31 @@ it('ends the restore watch when an org suspension leaves its stop pending', asyn
   fixture.boat.hydrated = true
   await fixture.advanceTo(startedAt + 35_000, id)
   expect(markerCommands(fixture)).toEqual([])
+})
+
+it('writes the restore marker after a software restart fails with the sandbox still running', async () => {
+  const fixture = fixtureForTest()
+  fixture.boat.hydrated = false
+  const { restart, lifecycle, workspaceId } = await readyWorkspace(fixture)
+  const startedAt = fixture.runtime.dependencies.now()
+  fixture.boat.synchronousExitCode = 1
+  await expect(restart()).rejects.toMatchObject({ code: 'restart_failed' })
+  fixture.boat.synchronousExitCode = 0
+  const reads = fixture.boat.sandboxReads.length
+
+  await fixture.advanceTo(startedAt + 5_000, workspaceId)
+  expect(markerCommands(fixture)).toEqual([])
+  fixture.boat.hydrated = true
+  await fixture.advanceTo(startedAt + 10_000, workspaceId)
+  expect(markerCommands(fixture)).toMatchObject([
+    { sandboxId: 'bx_1', detached: false },
+  ])
+  expect(fixture.boat.sandboxReads.slice(reads)).toEqual(['bx_1', 'bx_1'])
+  expect(fixture.boat.stopIds).toEqual([])
+  expect(await lifecycle()).toMatchObject({
+    state: 'error',
+    error: { code: 'restart_failed' },
+  })
 })
 
 it('keeps the restore watch after Boat read and marker command errors', async () => {

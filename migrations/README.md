@@ -652,6 +652,12 @@ previous Worker does not read or write them, so it keeps working.
 [Image builds](../worker/lifecycle/image-builds.md#free-storage) says how
 the Worker fills them.
 
+`202611271200_image_build_root_used.sql` adds the nullable integer column
+`image_builds.storage_root_used_bytes`. It holds the used bytes of `/`
+when the build measures its disk. Existing rows and inserts from the
+previous Worker leave it null. The previous Worker can still read and
+write `storage_total_bytes` and `storage_free_bytes`.
+
 `202611261500_build_requests.sql` adds the nullable column
 `image_build_jobs.requested_build_user_id`. It holds the admin who selected
 Build computer during a refresh, until the build starts when the refresh

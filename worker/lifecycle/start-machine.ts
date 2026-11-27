@@ -1,6 +1,7 @@
 import { requireActiveStartUsers } from './start-access'
 import { providerState } from './provider-state'
 import type { AppDependencies, AppEnv } from '../env'
+import { configuredProviderAccount } from '../sandbox/accounts'
 import type { SandboxProvider } from '../sandbox/provider'
 import type { WorkspaceRow } from './workspace-row'
 import { allocateWorkspace } from './start-allocation'
@@ -22,6 +23,7 @@ import type {
 } from './start-types'
 import type { StartCall } from './start-guard'
 import { workspaceAutoStopSeconds } from './idle-stop'
+import { RESTORE_POLL_MS } from './durable-types'
 
 export async function advanceStartMachine(
   env: AppEnv,
@@ -35,6 +37,8 @@ export async function advanceStartMachine(
 ): Promise<{
   phase: WorkspaceMachinePhase
   environmentCiphertext: string | null
+  markRestoreEnded?: boolean
+  restorePollAt?: number
 } | null> {
   const sandboxId = row.sandboxId
   if (job.phase === 'machine') {
@@ -134,6 +138,7 @@ export async function advanceStartMachine(
   if (!sandboxId) throw new WorkspaceStartError(null)
   if (job.phase === 'ready') {
     const machine = await call(() => provider.get(sandboxId))
+    const checkedAt = dependencies.now()
     const status = providerState(machine.state)
     if (status === 'stopped')
       return {
@@ -164,10 +169,19 @@ export async function advanceStartMachine(
         : 'Resuming with your files as you left them',
       'completed',
     )
+    const diskLine = configuredProviderAccount(
+      env,
+      row.providerAccount,
+    ).diskLine
     return {
       phase:
         job.afterReadyPhase ?? (job.kind === 'create' ? 'fetch' : 'startup'),
       environmentCiphertext: job.environmentCiphertext,
+      markRestoreEnded: Boolean(diskLine) && machine.hydrated !== false,
+      restorePollAt:
+        diskLine && machine.hydrated === false
+          ? checkedAt + RESTORE_POLL_MS
+          : undefined,
     }
   }
   return null

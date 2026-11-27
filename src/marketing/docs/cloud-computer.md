@@ -11,6 +11,10 @@ A build prepares your org's setup with its chosen repositories and installed sof
 Each new workspace starts its own cloud computer from that setup.
 Workspaces then have their own files and branches.
 
+Some cloud computers have room for about 50 GB of your own files.
+When your cloud computer reaches its storage limit, writes fail with "No space left on device".
+Delete build output that you can rebuild, such as Rust `target/` folders, to make room.
+
 Only an org admin can change repositories, scripts, environment variables, and the skills repository.
 Other members can read the settings without changing them.
 If you joined an org, its admin handles this setup for you.
@@ -406,7 +410,7 @@ An [automatic software update](#apply-setup-changes) adds support for these name
 
 A successful build updates the starting setup for new workspaces.
 A failed build keeps the last successful setup.
-Each successful build shows the free storage that it leaves for new workspaces, such as "31.2 GB free of 50.1 GB".
+A successful build can show the free storage it leaves under the storage limit for new workspaces, such as "34.7 GB free of 72.0 GB".
 Use it to check that your repositories and install script leave enough space.
 Existing workspaces keep their files.
 

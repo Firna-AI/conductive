@@ -12,6 +12,7 @@ import {
   type WorkspaceResponse,
 } from '../../src/shared/workspaces'
 import { HttpError, privateResponse } from '../http'
+import { configuredProviderDiskLines } from '../sandbox/accounts'
 import type { RequestContext } from '../security/gate'
 import { ServerTiming, SERVER_TIMING_HEADER } from '../server-timing'
 import { requireOrgMember } from './access'
@@ -77,10 +78,23 @@ export async function handleLifecycleRequest(
     return response
   }
   await requireOrgMember(runtime.env.DB, orgId, context.user.id)
+  const buildForResponse = (id: string) =>
+    readBuild(
+      runtime.env.DB,
+      orgId,
+      id,
+      configuredProviderDiskLines(runtime.env),
+    )
   if (path === orgSettingsPaths.builds(orgId)) {
     if (request.method === 'GET')
       return privateResponse(
-        Response.json(await readBuildHistory(runtime.env.DB, orgId)),
+        Response.json(
+          await readBuildHistory(
+            runtime.env.DB,
+            orgId,
+            configuredProviderDiskLines(runtime.env),
+          ),
+        ),
       )
     if (request.method === 'POST') {
       const id = await startImageBuild(runtime.images, {
@@ -94,7 +108,7 @@ export async function handleLifecycleRequest(
         ),
       })
       return privateResponse(
-        Response.json(await readBuild(runtime.env.DB, orgId, id), {
+        Response.json(await buildForResponse(id), {
           status: 202,
         }),
       )
@@ -111,7 +125,7 @@ export async function handleLifecycleRequest(
       ),
     })
     return privateResponse(
-      Response.json(await readBuild(runtime.env.DB, orgId, id), {
+      Response.json(await buildForResponse(id), {
         status: 202,
       }),
     )
@@ -121,9 +135,7 @@ export async function handleLifecycleRequest(
     .split('/')[0]
   if (buildId && request.method === 'GET') {
     if (path === buildPath(orgId, buildId))
-      return privateResponse(
-        Response.json(await readBuild(runtime.env.DB, orgId, buildId)),
-      )
+      return privateResponse(Response.json(await buildForResponse(buildId)))
     if (path === buildEventsPath(orgId, buildId)) {
       const after = Number(
         request.headers.get('Last-Event-ID') ??
