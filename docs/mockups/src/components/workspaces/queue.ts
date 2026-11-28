@@ -43,15 +43,12 @@ export type MergeQueueList = {
  * at `index`, which counts the units without the lifted one. `add`: a row
  * of a section over the group, which joins at the end of the block of its
  * repository. `refused`: a row of a section that cannot join, over the
- * group, which names the reason in words and takes no drop. `zone`: a
- * drag between two sections, while the group waits as a drop zone, also
- * when no queue has entries.
+ * group, which names the reason in words and takes no drop.
  */
 export type QueueDrag =
   | { kind: 'reorder'; workspace: string; index: number }
   | { kind: 'add'; workspace: string }
   | { kind: 'refused'; workspace: string; reason: string }
-  | { kind: 'zone' }
 
 /**
  * The drop that the group draws, with the lifted row of a section when one
@@ -61,7 +58,14 @@ export type GroupDrop =
   | { kind: 'reorder'; workspace: string; index: number }
   | { kind: 'add'; row: WorkspaceRow }
   | { kind: 'refused'; row: WorkspaceRow; reason: string }
-  | { kind: 'zone' }
+
+/**
+ * The blocks that the group shows: each queue with entries. The group
+ * shows only while this list has a block, as in the app.
+ */
+export function shownBlocks(queue: MergeQueueList): readonly QueueBlock[] {
+  return queue.blocks.filter((block) => block.entries.length > 0)
+}
 
 /** The entries of every block, in the order of the blocks. */
 export function queueEntries(queue: MergeQueueList): QueueEntry[] {

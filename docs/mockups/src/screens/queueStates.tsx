@@ -16,7 +16,6 @@ import {
 } from '../components/workspaces/rowControls'
 import {
   workspaceSections,
-  type ListDrag,
   type SidebarSection,
 } from '../components/workspaces/sections'
 import { withTrees } from '../components/workspaces/trees'
@@ -25,7 +24,6 @@ import { viewerMembership } from '../fixtures/members'
 import { queuedWorkspace, releaseBranch } from '../fixtures/mergeQueue'
 import { repositories } from '../fixtures/repositories'
 import { parentOf } from '../fixtures/subWorkspaces'
-import { workspaceDrag } from '../fixtures/workspaces'
 import {
   queueListOf,
   queuedKeys,
@@ -51,9 +49,8 @@ import { flatSections, type TreeListView } from './subWorkspaceStates'
  * step, a merge of two layers, the queue after that merge, the list after
  * the last merge with no group, two queues, the group collapsed, a member
  * stack and its drag, the drag of an entry, a row of a section over the
- * group, the drop zone during a drag between sections and with a row over
- * it, a row that cannot join over the group, for another branch and for a
- * member without write access, and over the zone, a queued parent and a
+ * group, a row that cannot join over the group, for another branch and for
+ * a member without write access, a queued parent and a
  * queued sub-workspace, the trees after that parent left the queue, and
  * the menus of a row of a section and of a queued row.
  */
@@ -69,11 +66,8 @@ export const mergeQueueStates = [
   'stack-drag',
   'reorder',
   'add',
-  'zone',
-  'add-empty',
   'refused-branch',
   'refused-access',
-  'refused-zone',
   'trees',
   'trees-left',
   'menu',
@@ -91,7 +85,6 @@ type Scenario = {
   merged?: readonly string[]
   collapsed?: boolean
   queueDrag?: QueueDrag
-  drag?: ListDrag
   focus?: RowFocus
   /** Priya, a member with read access to acme/storefront, looks at the list. */
   member?: boolean
@@ -143,11 +136,6 @@ const scenarios: Readonly<Record<Exclude<MergeQueueState, 'none'>, Scenario>> =
       spec: dragQueue,
       queueDrag: { kind: 'add', workspace: 'fix-cart-flake' },
     },
-    zone: { spec: [], queueDrag: { kind: 'zone' }, drag: workspaceDrag },
-    'add-empty': {
-      spec: [],
-      queueDrag: { kind: 'add', workspace: 'apple-pay' },
-    },
     // The pull request of Fix flaky cart test targets the release branch.
     'refused-branch': {
       spec: dragQueue,
@@ -166,10 +154,6 @@ const scenarios: Readonly<Record<Exclude<MergeQueueState, 'none'>, Scenario>> =
       }),
       member: true,
       queueable: [],
-    },
-    'refused-zone': {
-      spec: [],
-      queueDrag: refusedDrag('email-dark-mode', { kind: 'no-pull-request' }),
     },
     trees: { spec: treeQueue, trees: true },
     'trees-left': { spec: treeLeftQueue, trees: true },
@@ -237,8 +221,9 @@ function sheetOf(view: Omit<QueueListView, 'over'>): ReactNode {
 
 /**
  * The list that a state of the merge queue draws: its sections without the
- * queued workspaces, the Merge queue group, a drag, the row whose menu is
- * open, and on a phone the sheet of that menu. Nothing without a state.
+ * queued workspaces, the Merge queue group, a drag of the group, the row
+ * whose menu is open, and on a phone the sheet of that menu. Nothing
+ * without a state.
  */
 export function queueListView(
   state: MergeQueueState | undefined,
@@ -255,7 +240,6 @@ export function queueListView(
     rail: acmeRail,
     ...(scenario.focus ? { focus: scenario.focus } : {}),
     ...(scenario.queueDrag ? { queueDrag: scenario.queueDrag } : {}),
-    ...(scenario.drag ? { drag: scenario.drag } : {}),
   }
   return { ...view, over: viewport === 'mobile' ? sheetOf(view) : null }
 }

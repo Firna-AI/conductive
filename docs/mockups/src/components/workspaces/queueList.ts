@@ -2,6 +2,7 @@ import type { Membership } from '../../fixtures/members'
 import { mayArchiveWorkspace } from './permissions'
 import {
   queueEntries,
+  shownBlocks,
   type GroupDrop,
   type MergeQueueList,
   type QueueDrag,
@@ -24,16 +25,18 @@ export type ListQueue = {
 
 /**
  * The drop that the group draws for the drag of a list: a row of a section
- * over the group, with that row and the reason when it cannot join, the
- * move of an entry in its block, or the zone during a drag between
- * sections.
+ * over the group, with that row and the reason when it cannot join, or the
+ * move of an entry in its block. While no queue has entries, the list shows
+ * no group, so a drag gives no drop.
  */
 export function groupDropOf(
   props: ListQueue & { sections: readonly SidebarSection[] },
 ): GroupDrop | undefined {
   const drag = props.queueDrag
-  if (!drag || !props.queue) return undefined
-  if (drag.kind === 'reorder' || drag.kind === 'zone') return drag
+  if (!drag || !props.queue || shownBlocks(props.queue).length === 0) {
+    return undefined
+  }
+  if (drag.kind === 'reorder') return drag
   const found = props.sections
     .flatMap((item) => item.rows)
     .find((item) => item.workspace.key === drag.workspace)

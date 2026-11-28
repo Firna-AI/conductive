@@ -1,76 +1,23 @@
 import { ChevronDown, ChevronRight } from 'lucide-react'
-import { workspaceRow } from '../../entries/components/workspaces/WorkspaceRow.mockup'
-import { instanceKey } from '../../instanceKey'
-import {
-  queueAddStatus,
-  queueLabels,
-  queueRefusedStatus,
-} from '../../../../../src/ui/components/workspace/queueCopy'
-import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { queueLabels } from '../../../../../src/ui/components/workspace/queueCopy'
 import { classes } from '../../../../../src/ui/components/common/classes'
 import type { DrawnRow } from './ArchivedGroup'
-import { queueCount, type GroupDrop, type MergeQueueList } from './queue'
+import {
+  queueCount,
+  shownBlocks,
+  type GroupDrop,
+  type MergeQueueList,
+} from './queue'
 import { QueueBlockView } from './QueueBlock'
-import type { WorkspaceRow } from './sections'
 import sectionStyles from '../../../../../src/ui/components/workspaces/SectionList.module.css'
 import styles from '../../../../../src/ui/components/workspaces/MergeQueue.module.css'
 
 type Variant = 'sidebar' | 'page'
 
 /**
- * The group while a drag runs and no queue has entries: a zone with its
- * words. A row of a section over it, `row`, lifts over the zone, and the
- * zone takes the accent. For a row that cannot join, `reason` takes the
- * place of the words, and the zone keeps its dashed outline.
- */
-function DropZone(props: {
-  row?: WorkspaceRow
-  reason?: string
-  variant: Variant
-}) {
-  const { row, reason } = props
-  return (
-    <div
-      className={classes(
-        styles.zone,
-        row && reason === undefined && styles.zoneOver,
-        row && styles.zoneHeld,
-        props.variant === 'page' && styles.pageZone,
-      )}
-    >
-      {reason ?? queueLabels.drop}
-      {row ? (
-        <>
-          <span aria-hidden className={styles.lift}>
-            <workspaceRow.Component
-              drag="lifted"
-              moklyInstance={`${instanceKey(row.workspace.key)}-lifted`}
-              row={row}
-              variant={props.variant}
-            />
-          </span>
-          <span className={a11y.hidden} role="status">
-            {reason === undefined
-              ? queueAddStatus(row.workspace.name, 1)
-              : queueRefusedStatus(row.workspace.name, reason)}
-          </span>
-        </>
-      ) : null}
-    </div>
-  )
-}
-
-/** The row of a section over the zone, and the reason when it cannot join. */
-function zoneProps(drop: GroupDrop | undefined) {
-  if (drop?.kind === 'add') return { row: drop.row }
-  if (drop?.kind === 'refused') return { row: drop.row, reason: drop.reason }
-  return {}
-}
-
-/**
  * The Merge queue group at the top of the list. It shows while a queue has
- * entries, with one block for each queue, and while a drag runs, as a drop
- * zone, also when no queue has entries (decision 317). Each row is the
+ * entries, with one block for each queue. During a drag of a row of a
+ * section, it is also a drop target (decision 317). Each row is the
  * normal row of a workspace, and a line joins the marks of each stack. The
  * blocks name their repositories only when two or more queues have
  * entries. The group is the app's own, not a section of the user, so it
@@ -90,24 +37,24 @@ export function MergeQueueGroup(props: {
   const { queue, variant, drop } = props
   const collapsed = queue.collapsed === true
   const Chevron = collapsed ? ChevronRight : ChevronDown
-  const body =
-    queue.blocks.length === 0 ? (
-      <DropZone variant={variant} {...zoneProps(drop)} />
-    ) : (
-      <div className={styles.blocks}>
-        {queue.blocks.map((block) => (
-          <QueueBlockView
-            archivable={props.archivable}
-            block={block}
-            drawn={props.drawn}
-            drop={drop}
-            key={block.repository}
-            named={queue.blocks.length > 1}
-            variant={variant}
-          />
-        ))}
-      </div>
-    )
+  const blocks = shownBlocks(queue)
+  // Without entries, the app shows no group.
+  if (blocks.length === 0) return null
+  const body = (
+    <div className={styles.blocks}>
+      {blocks.map((block) => (
+        <QueueBlockView
+          archivable={props.archivable}
+          block={block}
+          drawn={props.drawn}
+          drop={drop}
+          key={block.repository}
+          named={blocks.length > 1}
+          variant={variant}
+        />
+      ))}
+    </div>
+  )
   return (
     <section aria-label={queueLabels.group} className={sectionStyles.section}>
       <div

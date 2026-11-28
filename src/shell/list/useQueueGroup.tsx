@@ -38,12 +38,13 @@ export type SharedRow = Omit<
 
 /**
  * The Merge queue group of a list: the group at the top while a queue has
- * entries or a drag of a row of a section runs, the drag of its entries,
- * and the rows that it shows for the keys of the list. A member with write
- * access drags an entry to another place of its block, and a finger lifts
- * it with a long press. A row of a read-only list, or of a member who may
- * not change the queue, does not drag. `rowDrag` is the drag of a row of a
- * section, which the group shows as a drop target.
+ * entries, the drag of its entries, and the rows that it shows for the
+ * keys of the list. A member with write access drags an entry to another
+ * place of its block, and a finger lifts it with a long press. A row of a
+ * read-only list, or of a member who may not change the queue, does not
+ * drag. `rowDrag` is the drag of a row of a section, which the group shows
+ * as a drop target. While no queue has entries, a drag shows no group, so
+ * the sections keep their places.
  */
 export function useQueueGroup(props: {
   queue: QueueList | undefined
@@ -102,7 +103,7 @@ export function useQueueGroup(props: {
     )
   }
   const adding: QueueAdd | null =
-    rowDrag && queue
+    rowDrag && queue && blocks.length > 0
       ? {
           workspace: rowDrag.item,
           over: isQueuePlace(rowDrag.place),
@@ -111,7 +112,7 @@ export function useQueueGroup(props: {
       : null
   const { drag } = queueDrag
   const group =
-    queue && (blocks.length > 0 || adding) ? (
+    queue && blocks.length > 0 ? (
       <MergeQueueGroup
         adding={adding}
         blocks={blocks}

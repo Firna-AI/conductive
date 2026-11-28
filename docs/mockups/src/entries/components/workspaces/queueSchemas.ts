@@ -67,14 +67,6 @@ const reorderSchema = {
   },
 } as const
 
-/** The drop zone during a drag between sections, as both drags give it. */
-const zoneSchema = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['kind'],
-  properties: { kind: { const: 'zone' } },
-} as const
-
 /** A drag that the group draws, as `QueueDrag`. */
 export const queueDragSchema = {
   anyOf: [
@@ -96,7 +88,6 @@ export const queueDragSchema = {
         reason: { type: 'string' },
       },
     },
-    zoneSchema,
   ],
 } as const
 
@@ -121,7 +112,6 @@ export const groupDropSchema = {
         reason: { type: 'string' },
       },
     },
-    zoneSchema,
   ],
 } as const
 

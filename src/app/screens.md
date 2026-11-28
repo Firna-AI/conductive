@@ -194,8 +194,9 @@ the Help row of the command palette opens.
   group does, because the collapse has no stored value.
 - A member with write access drags an entry inside its block, by a long
   press on a phone, or moves it by Alt with Up or Down. Each moves the
-  whole unit of the entry. During each drag of a row of a section, the
-  group shows as a drop target. A row that can join takes the outline of
+  whole unit of the entry. While the group shows, it is a drop target
+  during each drag of a row of a section. While no queue has entries, a
+  drag shows no group. A row that can join takes the outline of
   the block of its repository, or the zone of the group when that
   repository has no queue with entries, or when the group is collapsed.
   A row that cannot join names its reason there and takes no drop. Add,

@@ -66,15 +66,20 @@ question, reason, and prompt.
   section row returns to its own place.
 - When the move fails, the rows go back to their places, and a toast names
   the failure, as for a move between sections.
-- During each drag of a row of a section, the group shows as a drop target
-  (decision 317). While no queue has entries, the group shows as a zone
-  with a dashed outline.
+- While the group shows, it is a drop target during each drag of a row of
+  a section (decision 317). When no shown block takes the row, the group
+  shows a zone with a dashed outline.
+- While no queue has entries, a drag of a row shows no group. Reason: a
+  group that appears at the start of a drag moves every section down, so
+  the list jumps under the pointer. The user chose this. A drop zone that
+  shows during each drag, also when no queue has entries, was rejected for
+  this reason.
 - Over the group, a row that can join shows where it joins: after the last
   entry of the queue of its repository, because a new entry joins at the
   top of the stack. A drop adds the workspace, as Add to merge queue does.
 - A row that cannot join takes no drop. The group names the reason in
-  place of the drop line. Reason: decision 317 shows the target during each
-  drag, and a drop must not fail with no reason.
+  place of the drop line. Reason: the group is a target during each drag
+  while it shows, and a drop must not fail with no reason.
 - The reasons are a branch with no open pull request, a unit that targets
   another branch than the default branch, a pull request from a fork, a
   member without write access to the repository, a default branch that
@@ -92,8 +97,9 @@ question, reason, and prompt.
 
 - A member adds a workspace from the bar, from the menu of its row, from
   the menu of the header, from the palette, or with a drag of its row into
-  the group (decision 317). The user chose the menus, the palette, and the
-  drag, and also asked for a control in the bar.
+  the group while the group shows (decision 317). The user chose the
+  menus, the palette, and the drag, and also asked for a control in the
+  bar.
 - Reason: the menus and the palette keep the rule of one main action in
   the bar, and a drag into the group matches a drag between sections.
 - Each place offers Add to merge queue only for a workspace that can join,
